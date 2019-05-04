@@ -1,0 +1,11 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  script:
+  - gem install dpl
+  - dpl --provider=heroku --app=boruta --api-key=$HEROKU_API_KEY
+  only:
+  - master
+
