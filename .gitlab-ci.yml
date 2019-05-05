@@ -1,5 +1,25 @@
 stages:
   - deploy
+  - test
+
+services:
+  - postgres:latest
+
+test:
+  stage: test
+  image: elixir:1.8.1-alpine
+  script:
+  - apk --update add postgresql-client
+  - mix local.hex --force
+  - mix local.rebar --force
+  - mix deps.get
+  - mix test --trace
+  variables:
+    POSTGRES_DATABASE: boruta_test
+    POSTGRES_HOST: postgres
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    MIX_ENV: test
 
 deploy:
   stage: deploy
