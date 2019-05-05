@@ -6,8 +6,8 @@ use Mix.Config
 
 # Configure your database
 config :boruta, Boruta.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "boruta_test",
-  hostname: "localhost",
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_test",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
