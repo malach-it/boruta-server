@@ -38,7 +38,9 @@ defmodule Boruta.MixProject do
     [
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
-      {:jason, "~> 1.0"}
+      {:jason, "~> 1.0"},
+      {:coherence, git: "https://github.com/appprova/coherence.git", branch: "upgrade-to-phoenix-1.4"},
+      {:authable, git: "https://github.com/patatoid/authable.git"}
     ]
   end
 
