@@ -3,6 +3,8 @@ defmodule BorutaWeb.OauthControllerTest do
 
   import Boruta.Factory
 
+  import Boruta.Factory
+
   setup %{conn: conn} do
     {:ok, conn: conn}
   end

@@ -16,12 +16,8 @@ defmodule SchemaValidationPlug do
     case conn.assigns[:validation_errors] do
       nil ->
         conn
-      validation_errors ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(BorutaWeb.JsonSchemaView)
-        |> render("error.json", errors: %{validation_errors: validation_errors})
-        |> halt
+      errors ->
+        render_error(conn, errors)
     end
   end
 
@@ -35,5 +31,13 @@ defmodule SchemaValidationPlug do
         conn
         |> assign(:validation_errors, Enum.into(validation_errors, %{:"#{type}" => errors}))
     end
+  end
+
+  defp render_error(conn, errors) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(BorutaWeb.JsonSchemaView)
+    |> render("error.json", errors: errors)
+    |> halt
   end
 end

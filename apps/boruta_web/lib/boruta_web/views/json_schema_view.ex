@@ -1,7 +1,7 @@
 defmodule BorutaWeb.JsonSchemaView do
   use BorutaWeb, :view
 
-  def render("error.json", %{validation_errors: errors}) do
+  def render("error.json", %{errors: errors}) do
     Enum.reduce(errors, [], &serialize/2)
   end
 
