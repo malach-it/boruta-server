@@ -39,4 +39,10 @@ defmodule BorutaWeb.Router do
 
     get "/", PageController, :index
   end
+
+  scope "/oauth", BorutaWeb do
+    pipe_through :api
+
+    post "/token", OauthController, :token
+  end
 end

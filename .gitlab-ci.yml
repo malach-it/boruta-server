@@ -10,7 +10,7 @@ test:
   stage: test
   image: elixir:1.8.1-alpine
   script:
-  - apk --update add postgresql-client
+  - apk --update add postgresql-client git make g++
   - mix local.hex --force
   - mix local.rebar --force
   - mix deps.get
@@ -29,7 +29,7 @@ test:
   stage: test
   image: elixir:1.8.1-alpine
   script:
-  - apk --update add postgresql-client
+  - apk --update add postgresql-client git make g++
   - mix local.hex --force
   - mix local.rebar --force
   - mix deps.get
