@@ -13,4 +13,8 @@ defmodule BorutaWeb.ErrorView do
   def template_not_found(template, _assigns) do
     Phoenix.Controller.status_message_from_template(template)
   end
+
+  def render("error.json", %{error: error, message: message}) do
+    %{error: error, message: message}
+  end
 end
