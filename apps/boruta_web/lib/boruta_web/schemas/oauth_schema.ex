@@ -1,6 +1,26 @@
 defmodule BorutaWeb.OauthSchema do
   alias ExJsonSchema.Schema
 
+  def authorize(:query_params) do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "response_type" => %{"type" => "string", "pattern" => "token"},
+        "client_id" => %{
+          "type" => "string",
+          "pattern" => "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
+        },
+        "redirect_uri" => %{"type" => "string"},
+        "scope" => %{"type" => "string"},
+        "state" => %{"type" => "string"}
+      },
+      "required" => ["response_type", "client_id", "redirect_uri"]
+    } |> Schema.resolve
+  end
+  def authorize(:body_params) do
+    %{} |> Schema.resolve
+  end
+
   def token(:query_params) do
     %{
       "type" => "object",

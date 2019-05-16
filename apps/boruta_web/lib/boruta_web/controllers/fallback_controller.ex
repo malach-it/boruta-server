@@ -17,6 +17,13 @@ defmodule BorutaWeb.FallbackController do
     conn
     |> put_status(:unauthorized)
     |> put_view(BorutaWeb.OauthView)
-    |> render("error.json", error: "invalid_client", error_description: error_description)
+    |> render("error." <> get_format(conn), error: "invalid_client", error_description: error_description)
+  end
+
+  def call(conn, {:error, %{invalid_scope: error_description}, :bad_request}) do
+    conn
+    |> put_status(:bad_request)
+    |> put_view(BorutaWeb.OauthView)
+    |> render("error." <> get_format(conn), error: "invalid_scope", error_description: error_description)
   end
 end

@@ -22,4 +22,31 @@ defmodule BorutaWeb.OauthController do
       |> render("token.json", token: token)
     end
   end
+
+  def authorize(%Plug.Conn{} = conn, params) do
+    case conn.assigns[:current_user] do
+      nil ->
+        conn
+        |> put_session(:oauth_request, %{
+          "response_type" => params["response_type"],
+          "client_id" => params["client_id"],
+          "redirect_uri" => params["redirect_uri"],
+          "scope" => params["scope"],
+          "state" => params["state"]
+        })
+        |> redirect(to: Routes.session_path(conn, :new))
+      user ->
+        with %Token{} = token <- Authable.OAuth2.authorize(%{
+          "grant_type" => "implicit",
+          "user" => user,
+          "client_id" => params["client_id"],
+          "redirect_uri" => params["redirect_uri"],
+          "scope" => params["scope"]
+        }) do
+          url = "#{params["redirect_uri"]}#access_token=#{token.value}"
+          conn
+          |> redirect(external: url)
+        end
+    end
+  end
 end

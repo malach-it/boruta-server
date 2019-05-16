@@ -29,7 +29,8 @@ config :authable,
       authorization_code: Authable.GrantType.AuthorizationCode,
       client_credentials: Authable.GrantType.ClientCredentials,
       password: Authable.GrantType.Password,
-      refresh_token: Authable.GrantType.RefreshToken
+      refresh_token: Authable.GrantType.RefreshToken,
+      implicit: Authable.GrantType.Implicit
     },
     auth_strategies: %{
       headers: %{

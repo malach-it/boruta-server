@@ -45,4 +45,10 @@ defmodule BorutaWeb.Router do
 
     post "/token", OauthController, :token
   end
+
+  scope "/oauth", BorutaWeb do
+    pipe_through :browser
+
+    get "/authorize", OauthController, :authorize
+  end
 end
