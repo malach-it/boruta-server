@@ -42,6 +42,7 @@ defmodule Coherence.Redirects do
 
   """
   use Redirects
+  use BorutaWeb, :controller
   # Uncomment the import below if adding overrides
   # import BorutaWeb.Router.Helpers
 
@@ -49,5 +50,18 @@ defmodule Coherence.Redirects do
 
   # Example usage
   # Uncomment the following line to return the user to the login form after logging out
-  # def session_delete(conn, _), do: redirect(conn, to: session_path(conn, :new))
+  def session_create(conn, _) do
+    case get_session(conn, :oauth_request) do
+      nil ->
+        redirect(conn, to: "/")
+      params ->
+        redirect(conn, to: Routes.oauth_path(conn, :authorize, %{
+          response_type: params["response_type"],
+          client_id: params["client_id"],
+          redirect_uri: params["redirect_uri"],
+          scope: params["scope"],
+          state: params["state"]
+        }))
+    end
+  end
 end

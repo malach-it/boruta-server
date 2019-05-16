@@ -1,0 +1,1 @@
+<h2><%= @error_description %></h2>

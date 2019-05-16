@@ -47,9 +47,9 @@ defmodule BorutaWeb.OauthValidationPlug do
     error_description = List.first(errors)
 
     conn
-    |> put_status(:unprocessable_entity)
+    |> put_status(:bad_request)
     |> put_view(BorutaWeb.OauthView)
-    |> render("error.json", error: "invalid_request", error_description: error_description)
+    |> render("error." <> get_format(conn), error: "invalid_request", error_description: error_description)
     |> halt
   end
 
