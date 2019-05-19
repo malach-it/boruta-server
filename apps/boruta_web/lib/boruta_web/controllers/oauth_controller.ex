@@ -43,7 +43,10 @@ defmodule BorutaWeb.OauthController do
           "redirect_uri" => params["redirect_uri"],
           "scope" => params["scope"]
         }) do
-          url = "#{params["redirect_uri"]}#access_token=#{token.value}"
+          {:ok, expires_at} = DateTime.from_unix(token.expires_at)
+          expires_in =  DateTime.diff(expires_at, DateTime.utc_now)
+
+          url = "#{params["redirect_uri"]}#access_token=#{token.value}&expires_in=#{expires_in}&state=#{params["state"]}"
           conn
           |> redirect(external: url)
         end

@@ -210,7 +210,7 @@ defmodule BorutaWeb.OauthControllerTest do
       }
     end
 
-    test "redirects to redirect_uri with token if user is set", %{
+    test "redirects to redirect_uri with token if current_user is set", %{
       conn: conn,
       client: client,
       redirect_uri: redirect_uri,
@@ -229,10 +229,13 @@ defmodule BorutaWeb.OauthControllerTest do
         })
       )
 
-      assert Regex.match?(
-        ~r/#{redirect_uri}#access_token=.+/,
+      [_, access_token, expires_in, state] = Regex.run(
+        ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)&state=(.+)/,
         redirected_to(conn)
       )
+      assert access_token
+      assert expires_in
+      assert state
     end
   end
 end
