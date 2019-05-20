@@ -1,5 +1,6 @@
 defmodule BorutaWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boruta_web
+  use NewRelic.Phoenix.Transaction
 
   socket "/socket", BorutaWeb.UserSocket,
     websocket: true,

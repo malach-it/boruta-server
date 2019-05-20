@@ -24,7 +24,7 @@ defmodule BorutaWeb.MixProject do
   def application do
     [
       mod: {BorutaWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools, :coherence]
+      extra_applications: [:logger, :runtime_tools, :coherence, :new_relic_phoenix]
     ]
   end
 
@@ -48,7 +48,8 @@ defmodule BorutaWeb.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:ex_json_schema, "~> 0.6.0-rc.1"},
       {:authable, git: "https://github.com/patatoid/authable.git"},
-      {:ex_machina, "~> 2.3"}
+      {:ex_machina, "~> 2.3"},
+      {:new_relic_phoenix, "~> 0.2"}
     ]
   end
 
