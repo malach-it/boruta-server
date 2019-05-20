@@ -1,28 +1,44 @@
 defmodule BorutaWeb.OauthController do
+  @behaviour Boruta.Oauth.Application
+
   use BorutaWeb, :controller
 
+  alias Boruta.Oauth
   alias BorutaWeb.OauthValidationPlug
   alias BorutaWeb.OauthSchema
   alias BorutaWeb.OauthView
   alias Authable.Model.Token
-
   alias BorutaWeb.OauthSchema
 
   plug OauthValidationPlug, OauthSchema
 
   action_fallback BorutaWeb.FallbackController
 
-  def token(conn, params) do
-    with %Token{} = token <- Authable.OAuth2.authorize(%{
-      "grant_type" => "client_credentials",
-      "client_id" => params["client_id"],
-      "client_secret" => params["client_secret"],
-      "scope" => params["scope"] || "" # TODO make it optional in Authable
-    }) do
-      conn
-      |> put_view(OauthView)
-      |> render("token.json", token: token)
-    end
+  def token(conn, _params) do
+    conn
+    |> Oauth.token(__MODULE__)
+  end
+
+  @impl Boruta.Oauth.Application
+  def token_success(conn, %Token{} = token) do
+    conn
+    |> put_view(OauthView)
+    |> render("token.json", token: token)
+  end
+
+  @impl Boruta.Oauth.Application
+  def token_error(conn, {status, %{error: error, error_description: error_description}}) do
+    conn
+    |> put_status(status)
+    |> put_view(OauthView)
+    |> render("error.json", error: error, error_description: error_description)
+  end
+  # TODO remove after Authable refactor
+  def token_error(conn, {:error, %{invalid_client: error_description}, status}) do
+    conn
+    |> put_status(status)
+    |> put_view(OauthView)
+    |> render("error.json", error: "invalid_client", error_description: error_description)
   end
 
   def authorize(%Plug.Conn{} = conn, params) do
