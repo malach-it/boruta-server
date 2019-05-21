@@ -48,7 +48,7 @@ defmodule BorutaWeb.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:ex_json_schema, "~> 0.6.0-rc.1"},
       {:authable, git: "https://github.com/patatoid/authable.git"},
-      {:ex_machina, "~> 2.3"},
+      {:ex_machina, "~> 2.3", only: :test},
       {:new_relic_phoenix, "~> 0.2"}
     ]
   end
