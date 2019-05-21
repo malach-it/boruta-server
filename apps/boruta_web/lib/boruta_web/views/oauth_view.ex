@@ -1,7 +1,6 @@
 defmodule BorutaWeb.OauthView do
   use BorutaWeb, :view
 
-  alias BorutaWeb.OauthView
   alias Authable.Model.Token
 
   def render("token.json", %{token: %Token{} = token}) do
