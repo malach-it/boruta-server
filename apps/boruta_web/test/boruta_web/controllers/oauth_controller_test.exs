@@ -13,7 +13,7 @@ defmodule BorutaWeb.OauthControllerTest do
     setup %{conn: conn} do
       user = insert(:user)
       client = insert(:client, user_id: user.id)
-      {:ok, conn: conn, client: client}
+      {:ok, conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"), client: client}
     end
 
     test "returns an error with invalid query parameters", %{conn: conn} do
@@ -21,52 +21,46 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Query params validation failed. Required property grant_type is missing at #"
+        "error_description" => "Request body validation failed. Required properties grant_type, client_id, client_secret are missing at #."
       }
     end
 
     test "returns an error with an invalid grant type", %{conn: conn} do
-      conn = post(conn, "/oauth/token?grant_type=bad_grant_type")
+      conn = post(conn, "/oauth/token", "grant_type=bad_grant_type")
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Query params validation failed. #/grant_type do match required pattern /client_credentials/"
+        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials/. Required properties client_id, client_secret are missing at #."
       }
     end
 
     test "returns an error with invalid body parameters", %{conn: conn} do
-      conn = post(conn, "/oauth/token?grant_type=client_credentials")
+      conn = post(conn, "/oauth/token", "grant_type=client_credentials")
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. Required properties client_secret, client_id are missing at #"
+        "error_description" => "Request body validation failed. Required properties client_id, client_secret are missing at #."
       }
     end
 
     test "returns an error with invalid client_id", %{conn: conn} do
-      conn = conn
-      |> put_req_header("content-type", "application/x-www-form-urlencoded")
-
       conn = post(
         conn,
-        "/oauth/token?grant_type=client_credentials",
-        "client_id=666&client_secret=666"
+        "/oauth/token",
+        "grant_type=client_credentials&client_id=666&client_secret=666"
       )
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/"
+        "error_description" => "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/."
       }
     end
 
     test "returns an error with invalid client_id/secret couple", %{conn: conn} do
-      conn = conn
-      |> put_req_header("content-type", "application/x-www-form-urlencoded")
-
       conn = post(
         conn,
-        "/oauth/token?grant_type=client_credentials",
-        "client_id=6a2f41a3-c54c-fce8-32d2-0324e1c32e22&client_secret=666"
+        "/oauth/token",
+        "grant_type=client_credentials&client_id=6a2f41a3-c54c-fce8-32d2-0324e1c32e22&client_secret=666"
       )
 
       assert json_response(conn, 401) == %{
@@ -76,13 +70,10 @@ defmodule BorutaWeb.OauthControllerTest do
     end
 
     test "returns an error with invalid client_secret", %{conn: conn, client: client} do
-      conn = conn
-      |> put_req_header("content-type", "application/x-www-form-urlencoded")
-
       conn = post(
         conn,
-        "/oauth/token?grant_type=client_credentials",
-        "client_id=#{client.id}&client_secret=666"
+        "/oauth/token",
+        "grant_type=client_credentials&client_id=#{client.id}&client_secret=666"
       )
 
       assert json_response(conn, 401) == %{
@@ -92,13 +83,10 @@ defmodule BorutaWeb.OauthControllerTest do
     end
 
     test "returns a token response with valid client_id/client_secret", %{conn: conn, client: client} do
-      conn = conn
-      |> put_req_header("content-type", "application/x-www-form-urlencoded")
-
       conn = post(
         conn,
-        "/oauth/token?grant_type=client_credentials",
-        "client_id=#{client.id}&client_secret=#{client.secret}"
+        "/oauth/token",
+        "grant_type=client_credentials&client_id=#{client.id}&client_secret=#{client.secret}"
       )
 
       %{

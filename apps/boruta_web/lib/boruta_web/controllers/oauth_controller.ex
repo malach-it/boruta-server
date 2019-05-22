@@ -10,7 +10,7 @@ defmodule BorutaWeb.OauthController do
   alias Authable.Model.Token
   alias BorutaWeb.OauthSchema
 
-  plug OauthValidationPlug, OauthSchema
+  plug OauthValidationPlug, OauthSchema when action in [:authorize]
 
   action_fallback BorutaWeb.FallbackController
 

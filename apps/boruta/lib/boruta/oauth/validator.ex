@@ -14,7 +14,7 @@ defmodule Boruta.Oauth.Validator do
       :ok ->
         params
       {:error, errors} ->
-        {:error, "Body params validation failed. " <> Enum.join(errors, " ")}
+        {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
     end
   end
 end
