@@ -9,13 +9,13 @@ defmodule ExJsonSchema.Validator.Error.BorutaFormatter do
   end
 
   def format(%Error.Required{missing: [missing]}, path) do
-    "Required property #{missing} is missing at #{path}"
+    "Required property #{missing} is missing at #{path}."
   end
   def format(%Error.Required{missing: missing}, path) do
-    "Required properties #{Enum.join(missing, ", ")} are missing at #{path}"
+    "Required properties #{Enum.join(missing, ", ")} are missing at #{path}."
   end
 
   def format(%Error.Pattern{expected: expected}, path) do
-    "#{path} do match required pattern /#{expected}/"
+    "#{path} do match required pattern /#{expected}/."
   end
 end

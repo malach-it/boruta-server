@@ -47,4 +47,21 @@ defmodule Boruta.Oauth.Schema do
     } |> Schema.resolve
     {:body_params, schema}
   end
+
+  def client_credentials() do
+    schema = %{
+      "type" => "object",
+      "properties" => %{
+        "grant_type" => %{"type" => "string", "pattern" => "client_credentials"},
+        "client_id" => %{
+          "type" => "string",
+          "pattern" => "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
+        },
+        "client_secret" => %{"type" => "string"},
+        "scope" => %{"type" => "string"},
+      },
+      "required" => ["grant_type", "client_id", "client_secret"]
+    } |> Schema.resolve
+    {:body_params, schema}
+  end
 end
