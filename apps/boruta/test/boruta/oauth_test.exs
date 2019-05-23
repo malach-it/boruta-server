@@ -26,7 +26,7 @@ defmodule Boruta.OauthTest do
         :bad_request,
         %{
           error: "invalid_request",
-          error_description: "Request body validation failed. Required properties grant_type, client_id, client_secret are missing at #."
+          error_description: "Request body validation failed. Required property grant_type is missing at #."
         }
       }}
     end
@@ -36,7 +36,7 @@ defmodule Boruta.OauthTest do
         :bad_request,
         %{
           error: "invalid_request",
-          error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials/. Required properties client_id, client_secret are missing at #."
+          error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials|password/."
         }
       }}
     end
@@ -91,15 +91,21 @@ defmodule Boruta.OauthTest do
   end
 
   describe "resource owner password credentials grant" do
+    setup do
+      resource_owner = insert(:user)
+      user = insert(:user)
+      client = insert(:client, user_id: user.id)
+      {:ok, client: client, resource_owner: resource_owner}
+    end
+
     test "returns an error if Basic auth fails" do
       assert Oauth.token(
         %{
           req_headers: [{"authorization", "boom"}],
-          query_params: %{},
           body_params: %{}
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_client", error_description: "`boom` is not a valid Basic authorization header"}}}
+      ) == {:token_error, {:bad_request, %{error: "invalid_request", error_description: "`boom` is not a valid Basic authorization header"}}}
     end
 
     test "returns an error if request is invalid" do
@@ -107,11 +113,32 @@ defmodule Boruta.OauthTest do
       assert Oauth.token(
         %{
           req_headers: [{"authorization", authorization_header}],
-          query_params: %{},
-          body_params: %{}
+          body_params: %{"grant_type" => "password"}
         },
         __MODULE__
-      ) == {:token_error, {:bad_request, %{error: "invalid_request", error_description: ""}}}
+      ) == {:token_error, {:bad_request, %{error: "invalid_request", error_description: "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/. Required properties username, password are missing at #."}}}
+    end
+
+    test "returns an error if client_id/secret are invalid" do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("6a2f41a3-c54c-fce8-32d2-0324e1c32e22", "test")
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{"grant_type" => "password", "username" => "username", "password" => "password"}
+        },
+        __MODULE__
+      ) == {:token_error, {:error, %{invalid_client: "Invalid client id or secret."}, :unauthorized}}
+    end
+
+    test "returns an error if username/password are invalid", %{client: client} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{"grant_type" => "password", "username" => "username", "password" => "password"}
+        },
+        __MODULE__
+      ) == {:token_error, {:error, %{invalid_client: "Invalid client id or secret."}, :unauthorized}}
     end
   end
 

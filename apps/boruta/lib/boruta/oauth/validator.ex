@@ -1,16 +1,25 @@
 defmodule Boruta.Oauth.Validator do
   alias ExJsonSchema.Validator.Error.BorutaFormatter
+  alias Boruta.Oauth.Schema
 
-  def validate(params, {:query_params, schema}) do
-    case ExJsonSchema.Validator.validate(schema, params, error_formatter: BorutaFormatter) do
+  def validate(%{"grant_type" => "password"} = params) do
+    case ExJsonSchema.Validator.validate(Schema.resource_owner_password_credentials, params, error_formatter: BorutaFormatter) do
       :ok ->
         params
       {:error, errors} ->
-        {:error, "Query params validation failed. " <> Enum.join(errors, " ")}
+        {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
     end
   end
-  def validate(params, {:body_params, schema}) do
-    case ExJsonSchema.Validator.validate(schema, params, error_formatter: BorutaFormatter) do
+  def validate(%{"grant_type" => "client_credentials"} = params) do
+    case ExJsonSchema.Validator.validate(Schema.client_credentials, params, error_formatter: BorutaFormatter) do
+      :ok ->
+        params
+      {:error, errors} ->
+        {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
+    end
+  end
+  def validate(params) do
+    case ExJsonSchema.Validator.validate(Schema.grant_type, params, error_formatter: BorutaFormatter) do
       :ok ->
         params
       {:error, errors} ->
