@@ -21,7 +21,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. Required properties grant_type, client_id, client_secret are missing at #."
+        "error_description" => "Request body validation failed. Required property grant_type is missing at #."
       }
     end
 
@@ -30,7 +30,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials/. Required properties client_id, client_secret are missing at #."
+        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials|password/."
       }
     end
 

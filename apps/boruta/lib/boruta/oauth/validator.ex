@@ -1,6 +1,6 @@
 defmodule Boruta.Oauth.Validator do
   alias ExJsonSchema.Validator.Error.BorutaFormatter
-  alias Boruta.Oauth.Schema
+  alias Boruta.Oauth.Json.Schema
 
   def validate(%{"grant_type" => "password"} = params) do
     case ExJsonSchema.Validator.validate(Schema.resource_owner_password_credentials, params, error_formatter: BorutaFormatter) do

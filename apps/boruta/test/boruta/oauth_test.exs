@@ -127,10 +127,10 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => "username", "password" => "password"}
         },
         __MODULE__
-      ) == {:token_error, {:error, %{invalid_client: "Invalid client id or secret."}, :unauthorized}}
+      ) == {:token_error, {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or client_secret"}}}
     end
 
-    test "returns an error if username/password are invalid", %{client: client} do
+    test "returns an error if username is invalid", %{client: client} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       assert Oauth.token(
         %{
@@ -138,7 +138,35 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => "username", "password" => "password"}
         },
         __MODULE__
-      ) == {:token_error, {:error, %{invalid_client: "Invalid client id or secret."}, :unauthorized}}
+      ) == {:token_error, {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password"}}}
+    end
+
+    test "returns an error if password is invalid", %{client: client, resource_owner: resource_owner} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{"grant_type" => "password", "username" => resource_owner.email, "password" => "boom"}
+        },
+        __MODULE__
+      ) == {:token_error, {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password"}}}
+    end
+
+    test "returns a token if username/password are valid", %{client: client, resource_owner: resource_owner} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      with {:token_success, %Boruta.Oauth.Token{user_id: user_id, client_id: client_id}} <- Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{"grant_type" => "password", "username" => resource_owner.email, "password" => "password"}
+        },
+        __MODULE__
+      ) do
+        assert user_id == resource_owner.id
+        assert client_id == client.id
+      else
+        _ ->
+          assert false
+      end
     end
   end
 
