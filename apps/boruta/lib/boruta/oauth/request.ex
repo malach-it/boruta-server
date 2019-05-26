@@ -2,6 +2,7 @@ defmodule Boruta.Oauth.Request do
   alias Boruta.Oauth.Validator
   alias Boruta.Oauth.ClientCredentialsRequest
   alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
+  alias Boruta.Oauth.ImplicitRequest
   alias Boruta.BasicAuth
 
   # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
@@ -40,15 +41,26 @@ defmodule Boruta.Oauth.Request do
     end
   end
   def token_request(_) do
-    {:bad_request, %{error: "invalid_request", error_description: "Must provide body_params"}}
+    {:bad_request, %{error: "invalid_request", error_description: "Must provide body_params."}}
+  end
+
+  def authorize_request(%{query_params: query_params, assigns: %{current_user: user}}) do
+    with %{} = params <- Validator.validate(query_params) do
+      build_request(Enum.into(params, %{"user" => user}))
+    else
+      {:error, error_description} ->
+        {:bad_request, %{error: "invalid_request", error_description: error_description}}
+    end
+  end
+  def authorize_request(_) do
+    {:bad_request, %{error: "invalid_request", error_description: "Must provide query_params and assigned current_user."}}
   end
 
   # private
   defp build_request(%{"grant_type" => "client_credentials"} = params) do
     {:ok, struct(ClientCredentialsRequest, %{
       client_id: params["client_id"],
-      client_secret: params["client_secret"],
-      scope: params["scope"] || ""
+      client_secret: params["client_secret"]
     })}
   end
   defp build_request(%{"grant_type" => "password"} = params) do
@@ -56,8 +68,14 @@ defmodule Boruta.Oauth.Request do
       client_id: params["client_id"],
       client_secret: params["client_secret"],
       username: params["username"],
-      password: params["password"],
-      scope: params["scope"] || ""
+      password: params["password"]
+    })}
+  end
+  defp build_request(%{"response_type" => "token"} = params) do
+    {:ok, struct(ImplicitRequest, %{
+      client_id: params["client_id"],
+      redirect_uri: params["redirect_uri"],
+      user: params["user"]
     })}
   end
 end

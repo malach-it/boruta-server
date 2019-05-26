@@ -21,7 +21,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. Required property grant_type is missing at #."
+        "error_description" => "Request is not a valid OAuth request. Need a grant_type or a response_type param."
       }
     end
 
@@ -65,7 +65,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 401) == %{
         "error" => "invalid_client",
-        "error_description" => "Invalid client id or secret."
+        "error_description" => "Invalid client_id or client_secret."
       }
     end
 
@@ -78,7 +78,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 401) == %{
         "error" => "invalid_client",
-        "error_description" => "Invalid client id or secret."
+        "error_description" => "Invalid client_id or client_secret."
       }
     end
 
@@ -92,13 +92,11 @@ defmodule BorutaWeb.OauthControllerTest do
       %{
         "access_token" => access_token,
         "token_type" => token_type,
-        "expires_in" => expires_in,
-        "refresh_token" => refresh_token
+        "expires_in" => expires_in
       } = json_response(conn, 200)
       assert access_token
       assert token_type == "bearer"
       assert expires_in
-      assert refresh_token
     end
   end
 
@@ -116,7 +114,7 @@ defmodule BorutaWeb.OauthControllerTest do
       conn = get(conn, "/oauth/authorize")
 
       assert response_content_type(conn, :html)
-      assert response(conn, 400) =~ "Query params validation failed"
+      assert response(conn, 400) =~ "Request is not a valid OAuth request. Need a grant_type or a response_type param."
     end
 
     test "returns an error if client_id is invalid", %{
@@ -138,54 +136,29 @@ defmodule BorutaWeb.OauthControllerTest do
       )
 
       assert response_content_type(conn, :html)
-      assert response(conn, 401) =~ "Invalid client id or redirect_uri."
+      assert response(conn, 401) =~ "Invalid client_id or redirect_uri."
     end
 
-    test "returns an error if scopes are invalid", %{
-      conn: conn,
-      client: client,
-      redirect_uri: redirect_uri,
-      resource_owner: resource_owner
-    } do
-      conn = assign(conn, :current_user, resource_owner)
-
+    test "redirect to user authentication page", %{conn: conn, client: client} do
       conn = get(
         conn,
         Routes.oauth_path(conn, :authorize, %{
           response_type: "token",
           client_id: client.id,
-          redirect_uri: redirect_uri,
-          scope: "boom",
-          state: "state"
-        })
-      )
-
-      assert response_content_type(conn, :html)
-      assert response(conn, 400) =~ ~r/Allowed scopes for the token are .+, restricted./
-    end
-
-    test "redirect to user authentication page", %{conn: conn} do
-      conn = get(
-        conn,
-        Routes.oauth_path(conn, :authorize, %{
-          response_type: "token",
-          client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
-          redirect_uri: "http://redirect.uri",
-          scope: "scope",
-          state: "state"
+          redirect_uri: client.redirect_uri
         })
       )
 
       assert redirected_to(conn) =~ "/sessions/new"
     end
 
-    test "stores oauth request params in session when current_user is not set", %{conn: conn} do
+    test "stores oauth request params in session when current_user is not set", %{conn: conn, client: client} do
       conn = get(
         conn,
         Routes.oauth_path(conn, :authorize, %{
           response_type: "token",
-          client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
-          redirect_uri: "http://redirect.uri",
+          client_id: client.id,
+          redirect_uri: client.redirect_uri,
           scope: "scope",
           state: "state"
         })
@@ -193,10 +166,8 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert get_session(conn, :oauth_request) == %{
         "response_type" => "token",
-        "client_id" => "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
-        "redirect_uri" => "http://redirect.uri",
-        "scope" => "scope",
-        "state" => "state"
+        "client_id" => client.id,
+        "redirect_uri" => client.redirect_uri
       }
     end
 
@@ -219,13 +190,12 @@ defmodule BorutaWeb.OauthControllerTest do
         })
       )
 
-      [_, access_token, expires_in, state] = Regex.run(
-        ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)&state=(.+)/,
+      [_, access_token, expires_in] = Regex.run(
+        ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)/,
         redirected_to(conn)
       )
       assert access_token
       assert expires_in
-      assert state
     end
   end
 
