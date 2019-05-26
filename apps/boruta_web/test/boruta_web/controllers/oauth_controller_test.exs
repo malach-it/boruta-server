@@ -65,7 +65,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 401) == %{
         "error" => "invalid_client",
-        "error_description" => "Invalid client id or secret."
+        "error_description" => "Invalid client_id or client_secret."
       }
     end
 
@@ -78,7 +78,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 401) == %{
         "error" => "invalid_client",
-        "error_description" => "Invalid client id or secret."
+        "error_description" => "Invalid client_id or client_secret."
       }
     end
 
@@ -92,13 +92,11 @@ defmodule BorutaWeb.OauthControllerTest do
       %{
         "access_token" => access_token,
         "token_type" => token_type,
-        "expires_in" => expires_in,
-        "refresh_token" => refresh_token
+        "expires_in" => expires_in
       } = json_response(conn, 200)
       assert access_token
       assert token_type == "bearer"
       assert expires_in
-      assert refresh_token
     end
   end
 

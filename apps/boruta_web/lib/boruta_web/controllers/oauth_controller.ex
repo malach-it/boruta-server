@@ -20,11 +20,6 @@ defmodule BorutaWeb.OauthController do
   end
 
   @impl Boruta.Oauth.Application
-  def token_success(conn, %Token{} = token) do
-    conn
-    |> put_view(OauthView)
-    |> render("token.json", token: token)
-  end
   def token_success(conn, %Boruta.Oauth.Token{} = token) do
     conn
     |> put_view(OauthView)
@@ -37,13 +32,6 @@ defmodule BorutaWeb.OauthController do
     |> put_status(status)
     |> put_view(OauthView)
     |> render("error.json", error: error, error_description: error_description)
-  end
-  # TODO remove after Authable refactor
-  def token_error(conn, {:error, %{invalid_client: error_description}, status}) do
-    conn
-    |> put_status(status)
-    |> put_view(OauthView)
-    |> render("error.json", error: "invalid_client", error_description: error_description)
   end
 
   def authorize(%Plug.Conn{} = conn, params) do

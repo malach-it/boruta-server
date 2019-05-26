@@ -8,7 +8,7 @@ defmodule Boruta.OauthTest do
   import Boruta.Factory
 
   alias Boruta.Oauth
-  alias Authable.Model.Token
+  alias Boruta.Oauth.Token
 
   describe "token request" do
     test "returns an error without params" do
@@ -70,9 +70,10 @@ defmodule Boruta.OauthTest do
         },
         __MODULE__
       ) == {:token_error, {
-        :error,
-        %{invalid_client: "Invalid client id or secret."},
-        :unauthorized
+        :unauthorized, %{
+          error: "invalid_client",
+          error_description: "Invalid client_id or client_secret."
+        }
       }}
     end
 
@@ -127,7 +128,7 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => "username", "password" => "password"}
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or client_secret"}}}
+      ) == {:token_error, {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or client_secret."}}}
     end
 
     test "returns an error if username is invalid", %{client: client} do
@@ -138,7 +139,7 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => "username", "password" => "password"}
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password"}}}
+      ) == {:token_error, {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password."}}}
     end
 
     test "returns an error if password is invalid", %{client: client, resource_owner: resource_owner} do
@@ -149,7 +150,7 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => resource_owner.email, "password" => "boom"}
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password"}}}
+      ) == {:token_error, {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password."}}}
     end
 
     test "returns a token if username/password are valid", %{client: client, resource_owner: resource_owner} do
