@@ -1,4 +1,4 @@
-defmodule Boruta.Oauth.Schemas.Client do
+defmodule Boruta.Oauth.Client do
   use Ecto.Schema
   import Ecto.Changeset
 

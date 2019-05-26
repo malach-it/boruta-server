@@ -23,7 +23,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ResourceOwnerPasswordCrede
   alias Boruta.Coherence.User
   alias Boruta.Oauth
   alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
-  alias Boruta.Oauth.Schemas.Client
+  alias Boruta.Oauth.Client
   alias Boruta.Oauth.Token
   alias Boruta.Repo
 
@@ -35,9 +35,9 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ResourceOwnerPasswordCrede
     scope: scope
   }) do
 
-    with %Client{} = client <- Oauth.Schemas.get_by_client(id: client_id, secret: client_secret) do
-      with %User{} = user <- Coherence.Schemas.get_user_by_email(username),
-        true <- User.checkpw(password, user.password_hash) do
+    with %Client{} = client <- Repo.get_by(Client, id: client_id, secret: client_secret) do
+      with %User{} = user <- Repo.get_by(User, email: username),
+           true <- User.checkpw(password, user.password_hash) do
         Token.resource_owner_changeset(%Token{}, %{
           client_id: client.id,
           user_id: user.id
