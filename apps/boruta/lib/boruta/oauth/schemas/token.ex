@@ -1,7 +1,11 @@
 defmodule Boruta.Oauth.Token do
   use Ecto.Schema
+
   import Ecto.Changeset
   import Authable.Config, only: [expires_in: 0]
+
+  alias Boruta.Oauth.Client
+  alias Boruta.Coherence.User
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id

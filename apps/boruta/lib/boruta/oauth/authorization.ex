@@ -7,8 +7,8 @@ defmodule Boruta.Oauth.Authorization.Base do
   alias Boruta.Oauth.Client
   alias Boruta.Repo
 
-  def client(client_id, client_secret) do
-    with %Client{} = client <- Repo.get_by(Client, id: client_id, secret: client_secret) do
+  def client(id: id, secret: secret) do
+    with %Client{} = client <- Repo.get_by(Client, id: id, secret: secret) do
       {:ok, client}
     else
       nil ->
@@ -16,7 +16,16 @@ defmodule Boruta.Oauth.Authorization.Base do
     end
   end
 
-  def user(username, password) do
+  def client(id: id, redirect_uri: redirect_uri) do
+    with %Client{} = client <- Repo.get_by(Client, id: id, redirect_uri: redirect_uri) do
+      {:ok, client}
+    else
+      nil ->
+        {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or redirect_uri."}}
+    end
+  end
+
+  def user(email: username, password: password) do
     with %User{} = user <- Repo.get_by(User, email: username),
          true <- User.checkpw(password, user.password_hash) do
       {:ok, user}
@@ -25,6 +34,8 @@ defmodule Boruta.Oauth.Authorization.Base do
         {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password."}}
     end
   end
+  def user(%User{} = user), do: {:ok, user}
+  def user(_), do: {:unauthorized, %{error: "invalid_resource_owner", error_description: "Resource owner is invalid."}}
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest do
@@ -34,8 +45,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
   alias Boruta.Oauth.Token
   alias Boruta.Repo
 
-  def token(%ClientCredentialsRequest{client_id: client_id, client_secret: client_secret, scope: scope}) do
-    with {:ok, client} <- client(client_id, client_secret) do
+  def token(%ClientCredentialsRequest{client_id: client_id, client_secret: client_secret}) do
+    with {:ok, client} <- client(id: client_id, secret: client_secret) do
       Token.machine_changeset(%Token{}, %{
         client_id: client.id
       })
@@ -58,9 +69,33 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ResourceOwnerPasswordCrede
     password: password
   }) do
 
-    with {:ok, client} <- client(client_id, client_secret),
-         {:ok, user} <- user(username, password) do
+    with {:ok, client} <- client(id: client_id, secret: client_secret),
+         {:ok, user} <- user(email: username, password: password) do
       Token.resource_owner_changeset(%Token{}, %{
+        client_id: client.id,
+        user_id: user.id
+      })
+      |> Repo.insert()
+    end
+  end
+end
+
+defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ImplicitRequest do
+  import Boruta.Oauth.Authorization.Base
+
+  alias Boruta.Oauth.ImplicitRequest
+  alias Boruta.Oauth.Token
+  alias Boruta.Repo
+
+  def token(%ImplicitRequest{
+    client_id: client_id,
+    redirect_uri: redirect_uri,
+    user: user
+  }) do
+
+    with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
+         {:ok, user} <- user(user) do
+      Token.resource_owner_changeset(%Token{user: user, client: client}, %{
         client_id: client.id,
         user_id: user.id
       })

@@ -5,6 +5,7 @@ defmodule Boruta.Oauth.Client do
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "clients" do
     field(:secret, :string)
+    field(:redirect_uri, :string)
 
     timestamps()
   end
