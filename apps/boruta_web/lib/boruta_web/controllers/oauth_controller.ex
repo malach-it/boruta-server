@@ -25,6 +25,11 @@ defmodule BorutaWeb.OauthController do
     |> put_view(OauthView)
     |> render("token.json", token: token)
   end
+  def token_success(conn, %Boruta.Oauth.Token{} = token) do
+    conn
+    |> put_view(OauthView)
+    |> render("token.json", token: token)
+  end
 
   @impl Boruta.Oauth.Application
   def token_error(conn, {status, %{error: error, error_description: error_description}}) do

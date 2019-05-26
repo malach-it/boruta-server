@@ -17,7 +17,8 @@ defmodule Boruta.Factory do
   def user_factory do
     %Boruta.Coherence.User{
       email: sequence(:email, &"foo-#{&1}@example.com"),
-      password: Comeonin.Bcrypt.hashpwsalt("12345678")
+      password: "password",
+      password_hash: Boruta.Coherence.User.encrypt_password("password")
     }
   end
 end

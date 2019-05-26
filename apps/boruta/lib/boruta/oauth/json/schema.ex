@@ -1,4 +1,4 @@
-defmodule Boruta.Oauth.Schema do
+defmodule Boruta.Oauth.Json.Schema do
   alias ExJsonSchema.Schema
 
   def authorize(:query_params) do
@@ -49,7 +49,7 @@ defmodule Boruta.Oauth.Schema do
   end
 
   def client_credentials() do
-    schema = %{
+    %{
       "type" => "object",
       "properties" => %{
         "grant_type" => %{"type" => "string", "pattern" => "client_credentials"},
@@ -62,6 +62,33 @@ defmodule Boruta.Oauth.Schema do
       },
       "required" => ["grant_type", "client_id", "client_secret"]
     } |> Schema.resolve
-    {:body_params, schema}
+  end
+
+  def resource_owner_password_credentials() do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "grant_type" => %{"type" => "string", "pattern" => "password"},
+        "client_id" => %{
+          "type" => "string",
+          "pattern" => "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
+        },
+        "client_secret" => %{"type" => "string"},
+        "username" => %{"type" => "string"},
+        "password" => %{"type" => "string"},
+        "scope" => %{"type" => "string"},
+      },
+      "required" => ["grant_type", "client_id", "client_secret", "username", "password"]
+    } |> Schema.resolve
+  end
+
+  def grant_type() do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "grant_type" => %{"type" => "string", "pattern" => "client_credentials|password"},
+      },
+      "required" => ["grant_type"]
+    } |> Schema.resolve
   end
 end

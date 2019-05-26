@@ -4,7 +4,7 @@ defmodule Boruta.Oauth do
 
   def token(conn, module) do
     with {:ok, request} <- Request.token_request(conn),
-         {:ok, token} <- Authorization.authorize(request) do
+         {:ok, token} <- Authorization.token(request) do
       module.token_success(conn, token)
     else
       error ->

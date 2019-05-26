@@ -1,9 +1,11 @@
 defmodule BorutaWeb.OauthView do
   use BorutaWeb, :view
 
-  alias Authable.Model.Token
+  def render("token.json", %{token: %Authable.Model.Token{} = token}) do
+    token
+  end
 
-  def render("token.json", %{token: %Token{} = token}) do
+  def render("token.json", %{token: %Boruta.Oauth.Token{} = token}) do
     token
   end
 
@@ -14,7 +16,7 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
-  defimpl Jason.Encoder, for: Token do
+  defimpl Jason.Encoder, for: Authable.Model.Token do
     def encode(token, options) do
       {:ok, expires_at} = DateTime.from_unix(token.expires_at)
       expires_in =  DateTime.diff(expires_at, DateTime.utc_now)
@@ -24,6 +26,19 @@ defmodule BorutaWeb.OauthView do
         token_type: "bearer",
         expires_in: expires_in,
         refresh_token: token.details[:refresh_token]
+      }, options)
+    end
+  end
+  defimpl Jason.Encoder, for: Boruta.Oauth.Token do
+    def encode(token, options) do
+      {:ok, expires_at} = DateTime.from_unix(token.expires_at)
+      expires_in =  DateTime.diff(expires_at, DateTime.utc_now)
+
+      Jason.Encode.map(%{
+        access_token: token.value,
+        token_type: "bearer",
+        expires_in: expires_in
+        # refresh_token: token.details[:refresh_token]
       }, options)
     end
   end

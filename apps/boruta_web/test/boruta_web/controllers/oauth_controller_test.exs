@@ -21,7 +21,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. Required properties grant_type, client_id, client_secret are missing at #."
+        "error_description" => "Request body validation failed. Required property grant_type is missing at #."
       }
     end
 
@@ -30,7 +30,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials/. Required properties client_id, client_secret are missing at #."
+        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials|password/."
       }
     end
 
@@ -226,6 +226,33 @@ defmodule BorutaWeb.OauthControllerTest do
       assert access_token
       assert expires_in
       assert state
+    end
+  end
+
+  describe "password grant" do
+    # TODO test not happy paths
+    setup %{conn: conn} do
+      resource_owner = insert(:user)
+      user = insert(:user)
+      client = insert(:client, user_id: user.id)
+      {:ok, conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"), client: client, resource_owner: resource_owner}
+    end
+
+    test "returns a token response with valid client_id/client_secret", %{conn: conn, client: client, resource_owner: resource_owner} do
+      conn = post(
+        conn,
+        "/oauth/token",
+        "grant_type=password&username=#{resource_owner.email}&password=#{resource_owner.password}&client_id=#{client.id}&client_secret=#{client.secret}"
+      )
+
+      %{
+        "access_token" => access_token,
+        "token_type" => token_type,
+        "expires_in" => expires_in
+      } = json_response(conn, 200)
+      assert access_token
+      assert token_type == "bearer"
+      assert expires_in
     end
   end
 end
