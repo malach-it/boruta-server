@@ -27,16 +27,22 @@ defmodule BorutaWeb.OauthController do
     |> render("error.json", error: error, error_description: error_description)
   end
 
-  def authorize(%Plug.Conn{} = conn, _) do
+  def authorize(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.authorize(__MODULE__)
   end
 
   @impl Boruta.Oauth.Application
-  def authorize_success(conn, %Boruta.Oauth.Token{} = token) do
+  def authorize_success(conn, %Boruta.Oauth.Token{type: "access_token"} = token) do
     {:ok, expires_at} = DateTime.from_unix(token.expires_at)
     expires_in =  DateTime.diff(expires_at, DateTime.utc_now)
 
     url = "#{token.client.redirect_uri}#access_token=#{token.value}&expires_in=#{expires_in}"
+    conn
+    |> redirect(external: url)
+  end
+
+  def authorize_success(conn, %Boruta.Oauth.Token{type: "code", client: client, value: value}) do
+    url = "#{client.redirect_uri}?code=#{value}"
     conn
     |> redirect(external: url)
   end
@@ -54,7 +60,16 @@ defmodule BorutaWeb.OauthController do
     })
     |> redirect(to: Routes.session_path(conn, :new))
   end
-
+  def authorize_error(conn, {_status, %{error: error, error_description: error_description, format: :query, redirect_uri: redirect_uri}}) do
+    query = URI.encode_query(%{error: error, error_description: error_description})
+    conn
+    |> redirect(external: "#{redirect_uri}?#{query}")
+  end
+  def authorize_error(conn, {_status, %{error: error, error_description: error_description, format: :fragment, redirect_uri: redirect_uri}}) do
+    query = URI.encode_query(%{error: error, error_description: error_description})
+    conn
+    |> redirect(external: "#{redirect_uri}##{query}")
+  end
   def authorize_error(conn, {status, %{error: error, error_description: error_description}}) do
     conn
     |> put_status(status)

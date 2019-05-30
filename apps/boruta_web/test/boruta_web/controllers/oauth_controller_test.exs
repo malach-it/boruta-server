@@ -30,7 +30,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials|password/."
+        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code/."
       }
     end
 
@@ -135,8 +135,12 @@ defmodule BorutaWeb.OauthControllerTest do
         })
       )
 
-      assert response_content_type(conn, :html)
-      assert response(conn, 401) =~ "Invalid client_id or redirect_uri."
+      [_, error, error_description] = Regex.run(
+        ~r/error=(.+)&error_description=(.+)/,
+        redirected_to(conn)
+      )
+      assert error
+      assert error_description
     end
 
     test "redirect to user authentication page", %{conn: conn, client: client} do
@@ -223,6 +227,64 @@ defmodule BorutaWeb.OauthControllerTest do
       assert access_token
       assert token_type == "bearer"
       assert expires_in
+    end
+  end
+
+  describe "authorization code grant" do
+    # TODO test not happy paths
+    setup %{conn: conn} do
+      resource_owner = insert(:user)
+      user = insert(:user)
+      client = insert(:client, user_id: user.id)
+      {:ok, conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"), client: client, resource_owner: resource_owner}
+    end
+
+    test "redirects to redirect_uri with errors in query if redirect_uri is invalid", %{
+      conn: conn,
+      client: client
+    } do
+      conn = get(
+        conn,
+        Routes.oauth_path(conn, :authorize, %{
+          response_type: "code",
+          client_id: client.id,
+          redirect_uri: "http://bad.redirect.uri",
+          scope: "all",
+          state: "state"
+        })
+      )
+
+      [_, error, error_description] = Regex.run(
+        ~r/error=(.+)&error_description=(.+)/,
+        redirected_to(conn)
+      )
+      assert error
+      assert error_description
+    end
+
+    test "redirects to redirect_uri with token if current_user is set", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner
+    } do
+      conn = assign(conn, :current_user, resource_owner)
+
+      conn = get(
+        conn,
+        Routes.oauth_path(conn, :authorize, %{
+          response_type: "code",
+          client_id: client.id,
+          redirect_uri: client.redirect_uri,
+          scope: "all",
+          state: "state"
+        })
+      )
+
+      [_, code] = Regex.run(
+        ~r/#{client.redirect_uri}\?code=(.+)/,
+        redirected_to(conn)
+      )
+      assert code
     end
   end
 end

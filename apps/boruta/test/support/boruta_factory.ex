@@ -3,14 +3,9 @@ defmodule Boruta.Factory do
   use Authable.RepoBase
 
   def client_factory do
-    %@client{
-      name: sequence(:name, &"client#{&1}"),
+    %Boruta.Oauth.Client{
       secret: SecureRandom.urlsafe_base64(),
-      redirect_uri: "https://example.com/oauth2-redirect-path",
-      settings: %{
-        name: "example",
-        icon: "https://example.com/icon.png"
-      }
+      redirect_uri: "https://redirect.uri/oauth2-redirect-path"
     }
   end
 
@@ -19,6 +14,12 @@ defmodule Boruta.Factory do
       email: sequence(:email, &"foo-#{&1}@example.com"),
       password: "password",
       password_hash: Boruta.Coherence.User.encrypt_password("password")
+    }
+  end
+
+  def token_factory do
+    %Boruta.Oauth.Token{
+      value: SecureRandom.urlsafe_base64(),
     }
   end
 end
