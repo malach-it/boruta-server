@@ -70,11 +70,42 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
+  def code() do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "response_type" => %{"type" => "string", "pattern" => "code"},
+        "client_id" => %{
+          "type" => "string",
+          "pattern" => "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
+        },
+        "redirect_uri" => %{"type" => "string"}
+      },
+      "required" => ["response_type", "client_id", "redirect_uri"]
+    } |> Schema.resolve
+  end
+
+  def authorization_code() do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "grant_type" => %{"type" => "string", "pattern" => "authorization_code"},
+        "client_id" => %{
+          "type" => "string",
+          "pattern" => "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
+        },
+        "code" => %{"type" => "string"},
+        "redirect_uri" => %{"type" => "string"}
+      },
+      "required" => ["grant_type", "code", "redirect_uri"]
+    } |> Schema.resolve
+  end
+
   def grant_type() do
     %{
       "type" => "object",
       "properties" => %{
-        "grant_type" => %{"type" => "string", "pattern" => "client_credentials|password"},
+        "grant_type" => %{"type" => "string", "pattern" => "client_credentials|password|authorization_code"},
       },
       "required" => ["grant_type"]
     } |> Schema.resolve
@@ -84,7 +115,7 @@ defmodule Boruta.Oauth.Json.Schema do
     %{
       "type" => "object",
       "properties" => %{
-        "response_type" => %{"type" => "string", "pattern" => "token"},
+        "response_type" => %{"type" => "string", "pattern" => "token|code"},
       },
       "required" => ["response_type"]
     } |> Schema.resolve

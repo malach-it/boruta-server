@@ -36,7 +36,7 @@ defmodule Boruta.OauthTest do
         :bad_request,
         %{
           error: "invalid_request",
-          error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials|password/."
+          error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code/."
         }
       }}
     end
@@ -66,7 +66,7 @@ defmodule Boruta.OauthTest do
         :bad_request,
         %{
           error: "invalid_request",
-          error_description: "Query params validation failed. #/response_type do match required pattern /token/."
+          error_description: "Query params validation failed. #/response_type do match required pattern /token|code/."
         }
       }}
     end
@@ -205,6 +205,186 @@ defmodule Boruta.OauthTest do
     end
   end
 
+  describe "authorization code grant - authorize" do
+    setup do
+      resource_owner = insert(:user)
+      user = insert(:user)
+      client = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri")
+      {:ok, client: client, resource_owner: resource_owner}
+    end
+
+    test "returns an error if `response_type` is 'code' and schema is invalid" do
+      assert Oauth.authorize(%{query_params: %{"response_type" => "code"}}, __MODULE__) == {:authorize_error, {
+        :bad_request,
+        %{
+          error: "invalid_request",
+          error_description: "Query params validation failed. Required properties client_id, redirect_uri are missing at #."
+        }
+      }}
+    end
+
+    test "returns an error if `client_id` is invalid" do
+      assert Oauth.authorize(%{
+          query_params: %{
+            "response_type" => "code",
+            "client_id" => "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
+            "redirect_uri" => "http://redirect.uri"
+          }
+      }, __MODULE__) == {:authorize_error, {
+        :unauthorized,
+        %{
+          error: "invalid_client",
+          error_description: "Invalid client_id or redirect_uri.",
+          format: :query,
+          redirect_uri: "http://redirect.uri"
+        }
+      }}
+    end
+
+    test "returns an error if `redirect_uri` is invalid", %{client: client} do
+      assert Oauth.authorize(%{
+          query_params: %{
+            "response_type" => "code",
+            "client_id" => client.id,
+            "redirect_uri" => "http://bad.redirect.uri"
+          }
+      }, __MODULE__) == {:authorize_error, {
+        :unauthorized,
+        %{
+          error: "invalid_client",
+          error_description: "Invalid client_id or redirect_uri.",
+          format: :query,
+          redirect_uri: "http://bad.redirect.uri"
+        }
+      }}
+    end
+
+    test "returns an error if user is invalid", %{client: client} do
+      assert Oauth.authorize(%{
+          query_params: %{
+            "response_type" => "code",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri
+          }
+      }, __MODULE__) == {:authorize_error, {
+        :unauthorized,
+        %{
+          error: "invalid_resource_owner",
+          error_description: "Resource owner is invalid.",
+          format: :query,
+          redirect_uri: client.redirect_uri
+        }
+      }}
+    end
+
+    test "returns a code if user is valid", %{client: client, resource_owner: resource_owner} do
+      with {
+        :authorize_success,
+        %Boruta.Oauth.Token{type: "code", user_id: user_id, client_id: client_id, value: value}
+      } <- Oauth.authorize(%{
+          query_params: %{
+            "response_type" => "code",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri
+          },
+        assigns: %{current_user: resource_owner}
+      }, __MODULE__) do
+        assert user_id == resource_owner.id
+        assert client_id == client.id
+        assert value
+      else
+        _ ->
+          assert false
+      end
+    end
+  end
+
+  describe "authorization code grant - token" do
+    setup do
+      resource_owner = insert(:user)
+      user = insert(:user)
+      client = insert(:client, user_id: user.id)
+      code = insert(:token, type: "code", client_id: client.id, user_id: resource_owner.id)
+      {:ok, client: client, resource_owner: resource_owner, code: code}
+    end
+
+    test "returns an error if request is invalid" do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{"grant_type" => "authorization_code"}
+        },
+        __MODULE__
+      ) == {:token_error, {
+        :bad_request, %{
+          error: "invalid_request",
+          error_description: "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/. Required properties code, redirect_uri are missing at #."
+        }
+      }}
+    end
+
+    test "returns an error if `client_id` is invalid" do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
+
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{
+            "grant_type" => "authorization_code",
+            "client_id" => "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
+            "code" => "bad_code",
+            "redirect_uri" => "http://redirect.uri"
+          }
+        },
+        __MODULE__
+      ) == {:token_error, {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or redirect_uri."}}}
+    end
+
+    test "returns an error if `code` is invalid", %{client: client} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
+
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{
+            "grant_type" => "authorization_code",
+            "client_id" => client.id,
+            "code" => "bad_code",
+            "redirect_uri" => client.redirect_uri
+          }
+        },
+        __MODULE__
+      ) == {:token_error, {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}}
+    end
+
+    test "returns a token if `code` is valid", %{client: client, code: code} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
+      with {
+        :token_success,
+        %Boruta.Oauth.Token{user_id: user_id, client_id: client_id, value: value}
+      } <- Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{
+            "grant_type" => "authorization_code",
+            "client_id" => client.id,
+            "code" => code.value,
+            "redirect_uri" => client.redirect_uri
+          }
+        },
+        __MODULE__
+      ) do
+        assert user_id == code.user_id
+        assert client_id == client.id
+        assert value
+      else
+        _ ->
+          assert false
+      end
+    end
+  end
+
   describe "implicit grant" do
     setup do
       resource_owner = insert(:user)
@@ -236,7 +416,9 @@ defmodule Boruta.OauthTest do
       ) == {:authorize_error, {
         :unauthorized, %{
           error: "invalid_client",
-          error_description: "Invalid client_id or redirect_uri."
+          error_description: "Invalid client_id or redirect_uri.",
+          format: :fragment,
+          redirect_uri: "http://redirect.uri"
         }
       }}
     end
@@ -254,7 +436,9 @@ defmodule Boruta.OauthTest do
       ) == {:authorize_error, {
         :unauthorized, %{
           error: "invalid_client",
-          error_description: "Invalid client_id or redirect_uri."
+          error_description: "Invalid client_id or redirect_uri.",
+          format: :fragment,
+          redirect_uri: "http://bad.redirect.uri"
         }
       }}
     end
@@ -272,7 +456,9 @@ defmodule Boruta.OauthTest do
       ) == {:authorize_error, {
         :unauthorized, %{
           error: "invalid_resource_owner",
-          error_description: "Resource owner is invalid."
+          error_description: "Resource owner is invalid.",
+          format: :fragment,
+          redirect_uri: client.redirect_uri
         }
       }}
     end

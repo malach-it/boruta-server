@@ -1,9 +1,11 @@
 defmodule Boruta.Oauth.Request do
-  alias Boruta.Oauth.Validator
-  alias Boruta.Oauth.ClientCredentialsRequest
-  alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
-  alias Boruta.Oauth.ImplicitRequest
   alias Boruta.BasicAuth
+  alias Boruta.Oauth.AuthorizationCodeRequest
+  alias Boruta.Oauth.ClientCredentialsRequest
+  alias Boruta.Oauth.CodeRequest
+  alias Boruta.Oauth.ImplicitRequest
+  alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
+  alias Boruta.Oauth.Validator
 
   # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
   def token_request(%Plug.Conn{req_headers: req_headers, body_params: %{} = body_params}) do
@@ -71,8 +73,23 @@ defmodule Boruta.Oauth.Request do
       password: params["password"]
     })}
   end
+  defp build_request(%{"grant_type" => "authorization_code"} = params) do
+    {:ok, struct(AuthorizationCodeRequest, %{
+      client_id: params["client_id"],
+      code: params["code"],
+      redirect_uri: params["redirect_uri"]
+    })}
+  end
+
   defp build_request(%{"response_type" => "token"} = params) do
     {:ok, struct(ImplicitRequest, %{
+      client_id: params["client_id"],
+      redirect_uri: params["redirect_uri"],
+      user: params["user"]
+    })}
+  end
+  defp build_request(%{"response_type" => "code"} = params) do
+    {:ok, struct(CodeRequest, %{
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
       user: params["user"]
