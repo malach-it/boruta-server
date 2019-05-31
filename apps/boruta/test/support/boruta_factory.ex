@@ -1,6 +1,5 @@
 defmodule Boruta.Factory do
   use ExMachina.Ecto, repo: Boruta.Repo
-  use Authable.RepoBase
 
   def client_factory do
     %Boruta.Oauth.Client{

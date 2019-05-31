@@ -40,9 +40,9 @@ defmodule Boruta.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},
       {:coherence, git: "https://github.com/appprova/coherence.git", branch: "upgrade-to-phoenix-1.4"},
-      {:authable, git: "https://github.com/patatoid/authable.git"},
       {:ex_machina, "~> 2.3", only: :test},
-      {:ex_json_schema, "~> 0.6.0-rc.1"}
+      {:ex_json_schema, "~> 0.6.0-rc.1"},
+      {:secure_random, "~> 0.5"}
     ]
   end
 

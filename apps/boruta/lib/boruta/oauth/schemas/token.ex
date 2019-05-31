@@ -2,7 +2,7 @@ defmodule Boruta.Oauth.Token do
   use Ecto.Schema
 
   import Ecto.Changeset
-  import Authable.Config, only: [expires_in: 0]
+  import Boruta.Config, only: [access_token_expires_in: 0, authorization_code_expires_in: 0]
 
   alias Boruta.Oauth.Client
   alias Boruta.Coherence.User
@@ -34,7 +34,7 @@ defmodule Boruta.Oauth.Token do
     |> put_change(:type, "access_token")
     # TODO better token randomization
     |> put_change(:value, :crypto.strong_rand_bytes(32) |> Base.encode16())
-    |> put_change(:expires_at, :os.system_time(:seconds) + expires_in()[:access_token])
+    |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
   end
 
   def machine_changeset(token, attrs) do
@@ -44,7 +44,7 @@ defmodule Boruta.Oauth.Token do
     |> put_change(:type, "access_token")
     # TODO better token randomization
     |> put_change(:value, :crypto.strong_rand_bytes(32) |> Base.encode16())
-    |> put_change(:expires_at, :os.system_time(:seconds) + expires_in()[:access_token])
+    |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
   end
 
   def authorization_code_changeset(token, attrs) do
@@ -54,6 +54,6 @@ defmodule Boruta.Oauth.Token do
     |> put_change(:type, "code")
     # TODO better token randomization
     |> put_change(:value, :crypto.strong_rand_bytes(16) |> Base.encode16())
-    |> put_change(:expires_at, :os.system_time(:seconds) + expires_in()[:authorization_code])
+    |> put_change(:expires_at, :os.system_time(:seconds) + authorization_code_expires_in())
   end
 end
