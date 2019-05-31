@@ -46,16 +46,16 @@ defmodule Boruta.Oauth.Request do
     {:bad_request, %{error: "invalid_request", error_description: "Must provide body_params."}}
   end
 
-  def authorize_request(%{query_params: query_params, assigns: %{current_user: user}}) do
+  def authorize_request(%{query_params: query_params, assigns: assigns}) do
     with %{} = params <- Validator.validate(query_params) do
-      build_request(Enum.into(params, %{"resource_owner" => user}))
+      build_request(Enum.into(params, %{"resource_owner" => assigns[:current_user]}))
     else
       {:error, error_description} ->
         {:bad_request, %{error: "invalid_request", error_description: error_description}}
     end
   end
   def authorize_request(_) do
-    {:bad_request, %{error: "invalid_request", error_description: "Must provide query_params and assigned current_user."}}
+    {:bad_request, %{error: "invalid_request", error_description: "Must provide query_params and assigns."}}
   end
 
   # private

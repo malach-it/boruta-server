@@ -14,7 +14,7 @@ defmodule Boruta.Oauth do
     end
   end
 
-  def authorize(%{assigns: %{current_user: _}} = conn, module) do
+  def authorize(conn, module) do
     with {:ok, request} <- Request.authorize_request(conn),
          {:ok, token} <- Authorization.token(request) do
       module.authorize_success(conn, token)
@@ -27,9 +27,6 @@ defmodule Boruta.Oauth do
             module.authorize_error(conn, error)
         end
     end
-  end
-  def authorize(conn, module) do
-    authorize(%{query_params: conn[:query_params], assigns: %{current_user: nil}}, module)
   end
 
   defp error_with_format(%CodeRequest{redirect_uri: redirect_uri}, {status, error}) do

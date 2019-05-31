@@ -48,13 +48,13 @@ defmodule Boruta.OauthTest do
         :bad_request,
         %{
           error: "invalid_request",
-          error_description: "Request is not a valid OAuth request. Need a grant_type or a response_type param."
+          error_description: "Must provide query_params and assigns."
         }
       }}
     end
 
     test "returns an error with empty params" do
-      assert Oauth.authorize(%{query_params: %{}}, __MODULE__) == {:authorize_error,
+      assert Oauth.authorize(%{query_params: %{}, assigns: %{}}, __MODULE__) == {:authorize_error,
         {:bad_request, %{
           error: "invalid_request", error_description: "Request is not a valid OAuth request. Need a grant_type or a response_type param."
         }}
@@ -62,7 +62,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns an error with invalid response_type" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "boom"}}, __MODULE__) == {:authorize_error, {
+      assert Oauth.authorize(%{query_params: %{"response_type" => "boom"}, assigns: %{}}, __MODULE__) == {:authorize_error, {
         :bad_request,
         %{
           error: "invalid_request",
@@ -214,7 +214,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns an error if `response_type` is 'code' and schema is invalid" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "code"}}, __MODULE__) == {:authorize_error, {
+      assert Oauth.authorize(%{query_params: %{"response_type" => "code"}, assigns: %{}}, __MODULE__) == {:authorize_error, {
         :bad_request,
         %{
           error: "invalid_request",
@@ -225,11 +225,12 @@ defmodule Boruta.OauthTest do
 
     test "returns an error if `client_id` is invalid" do
       assert Oauth.authorize(%{
-          query_params: %{
-            "response_type" => "code",
-            "client_id" => "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
-            "redirect_uri" => "http://redirect.uri"
-          }
+        query_params: %{
+          "response_type" => "code",
+          "client_id" => "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
+          "redirect_uri" => "http://redirect.uri"
+        },
+        assigns: %{}
       }, __MODULE__) == {:authorize_error, {
         :unauthorized,
         %{
@@ -243,11 +244,12 @@ defmodule Boruta.OauthTest do
 
     test "returns an error if `redirect_uri` is invalid", %{client: client} do
       assert Oauth.authorize(%{
-          query_params: %{
-            "response_type" => "code",
-            "client_id" => client.id,
-            "redirect_uri" => "http://bad.redirect.uri"
-          }
+        query_params: %{
+          "response_type" => "code",
+          "client_id" => client.id,
+          "redirect_uri" => "http://bad.redirect.uri"
+        },
+        assigns: %{}
       }, __MODULE__) == {:authorize_error, {
         :unauthorized,
         %{
@@ -261,11 +263,12 @@ defmodule Boruta.OauthTest do
 
     test "returns an error if user is invalid", %{client: client} do
       assert Oauth.authorize(%{
-          query_params: %{
-            "response_type" => "code",
-            "client_id" => client.id,
-            "redirect_uri" => client.redirect_uri
-          }
+        query_params: %{
+          "response_type" => "code",
+          "client_id" => client.id,
+          "redirect_uri" => client.redirect_uri
+        },
+        assigns: %{}
       }, __MODULE__) == {:authorize_error, {
         :unauthorized,
         %{
@@ -394,7 +397,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns an error if `response_type` is 'token' and schema is invalid" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "token"}}, __MODULE__) == {:authorize_error, {
+      assert Oauth.authorize(%{query_params: %{"response_type" => "token"}, assigns: %{}}, __MODULE__) == {:authorize_error, {
         :bad_request,
         %{
           error: "invalid_request",
@@ -410,7 +413,8 @@ defmodule Boruta.OauthTest do
             "response_type" => "token",
             "client_id" => "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
             "redirect_uri" => "http://redirect.uri"
-          }
+          },
+          assigns: %{}
         },
         __MODULE__
       ) == {:authorize_error, {
@@ -430,7 +434,8 @@ defmodule Boruta.OauthTest do
             "response_type" => "token",
             "client_id" => client.id,
             "redirect_uri" => "http://bad.redirect.uri"
-          }
+          },
+          assigns: %{}
         },
         __MODULE__
       ) == {:authorize_error, {
@@ -450,7 +455,8 @@ defmodule Boruta.OauthTest do
             "response_type" => "token",
             "client_id" => client.id,
             "redirect_uri" => client.redirect_uri
-          }
+          },
+          assigns: %{}
         },
         __MODULE__
       ) == {:authorize_error, {
