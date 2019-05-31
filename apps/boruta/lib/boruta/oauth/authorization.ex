@@ -44,7 +44,7 @@ defmodule Boruta.Oauth.Authorization.Base do
         {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password."}}
     end
   end
-  def resource_owner(%User{} = resource_owner), do: {:ok, resource_owner}
+  def resource_owner(%User{__meta__: %{state: :loaded}} = resource_owner), do: {:ok, resource_owner}
   # TODO return more explicit error (that should be rescued in controller and not be sent to the client)
   def resource_owner(_), do: {:unauthorized, %{error: "invalid_resource_owner", error_description: "Resource owner is invalid."}}
 
