@@ -33,7 +33,7 @@ defmodule Boruta.Oauth.Token do
     |> validate_required([:client_id, :resource_owner_id])
     |> put_change(:type, "access_token")
     # TODO better token randomization
-    |> put_change(:value, :crypto.strong_rand_bytes(32) |> Base.encode16())
+    |> put_change(:value, SecureRandom.uuid)
     |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
   end
 
@@ -43,17 +43,18 @@ defmodule Boruta.Oauth.Token do
     |> validate_required([:client_id])
     |> put_change(:type, "access_token")
     # TODO better token randomization
-    |> put_change(:value, :crypto.strong_rand_bytes(32) |> Base.encode16())
+    |> put_change(:value, SecureRandom.uuid)
     |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
   end
 
+  # TODO rename to code_changeset
   def authorization_code_changeset(token, attrs) do
     token
     |> cast(attrs, [:client_id, :resource_owner_id])
     |> validate_required([:client_id, :resource_owner_id])
     |> put_change(:type, "code")
     # TODO better token randomization
-    |> put_change(:value, :crypto.strong_rand_bytes(16) |> Base.encode16())
+    |> put_change(:value, SecureRandom.uuid)
     |> put_change(:expires_at, :os.system_time(:seconds) + authorization_code_expires_in())
   end
 end
