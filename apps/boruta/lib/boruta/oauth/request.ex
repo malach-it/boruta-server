@@ -48,7 +48,7 @@ defmodule Boruta.Oauth.Request do
 
   def authorize_request(%{query_params: query_params, assigns: %{current_user: user}}) do
     with %{} = params <- Validator.validate(query_params) do
-      build_request(Enum.into(params, %{"user" => user}))
+      build_request(Enum.into(params, %{"resource_owner" => user}))
     else
       {:error, error_description} ->
         {:bad_request, %{error: "invalid_request", error_description: error_description}}
@@ -85,14 +85,14 @@ defmodule Boruta.Oauth.Request do
     {:ok, struct(ImplicitRequest, %{
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
-      user: params["user"]
+      resource_owner: params["resource_owner"]
     })}
   end
   defp build_request(%{"response_type" => "code"} = params) do
     {:ok, struct(CodeRequest, %{
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
-      user: params["user"]
+      resource_owner: params["resource_owner"]
     })}
   end
 end

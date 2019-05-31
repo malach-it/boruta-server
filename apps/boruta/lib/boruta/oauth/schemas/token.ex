@@ -15,7 +15,7 @@ defmodule Boruta.Oauth.Token do
     field(:expires_at, :integer)
 
     belongs_to(:client, Client)
-    belongs_to(:user, User)
+    belongs_to(:resource_owner, User)
 
     timestamps()
   end
@@ -29,8 +29,8 @@ defmodule Boruta.Oauth.Token do
 
   def resource_owner_changeset(token, attrs) do
     token
-    |> cast(attrs, [:client_id, :user_id])
-    |> validate_required([:client_id, :user_id])
+    |> cast(attrs, [:client_id, :resource_owner_id])
+    |> validate_required([:client_id, :resource_owner_id])
     |> put_change(:type, "access_token")
     # TODO better token randomization
     |> put_change(:value, :crypto.strong_rand_bytes(32) |> Base.encode16())
@@ -49,8 +49,8 @@ defmodule Boruta.Oauth.Token do
 
   def authorization_code_changeset(token, attrs) do
     token
-    |> cast(attrs, [:client_id, :user_id])
-    |> validate_required([:client_id, :user_id])
+    |> cast(attrs, [:client_id, :resource_owner_id])
+    |> validate_required([:client_id, :resource_owner_id])
     |> put_change(:type, "code")
     # TODO better token randomization
     |> put_change(:value, :crypto.strong_rand_bytes(16) |> Base.encode16())

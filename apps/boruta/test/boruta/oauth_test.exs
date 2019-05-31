@@ -187,7 +187,7 @@ defmodule Boruta.OauthTest do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       with {
         :token_success,
-        %Boruta.Oauth.Token{user_id: user_id, client_id: client_id, value: value}
+        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value}
       } <- Oauth.token(
         %{
           req_headers: [{"authorization", authorization_header}],
@@ -195,7 +195,7 @@ defmodule Boruta.OauthTest do
         },
         __MODULE__
       ) do
-        assert user_id == resource_owner.id
+        assert resource_owner_id == resource_owner.id
         assert client_id == client.id
         assert value
       else
@@ -280,7 +280,7 @@ defmodule Boruta.OauthTest do
     test "returns a code if user is valid", %{client: client, resource_owner: resource_owner} do
       with {
         :authorize_success,
-        %Boruta.Oauth.Token{type: "code", user_id: user_id, client_id: client_id, value: value}
+        %Boruta.Oauth.Token{type: "code", resource_owner_id: resource_owner_id, client_id: client_id, value: value}
       } <- Oauth.authorize(%{
           query_params: %{
             "response_type" => "code",
@@ -289,7 +289,7 @@ defmodule Boruta.OauthTest do
           },
         assigns: %{current_user: resource_owner}
       }, __MODULE__) do
-        assert user_id == resource_owner.id
+        assert resource_owner_id == resource_owner.id
         assert client_id == client.id
         assert value
       else
@@ -304,7 +304,7 @@ defmodule Boruta.OauthTest do
       resource_owner = insert(:user)
       user = insert(:user)
       client = insert(:client, user_id: user.id)
-      code = insert(:token, type: "code", client_id: client.id, user_id: resource_owner.id)
+      code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id)
       {:ok, client: client, resource_owner: resource_owner, code: code}
     end
 
@@ -362,7 +362,7 @@ defmodule Boruta.OauthTest do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
       with {
         :token_success,
-        %Boruta.Oauth.Token{user_id: user_id, client_id: client_id, value: value}
+        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value}
       } <- Oauth.token(
         %{
           req_headers: [{"authorization", authorization_header}],
@@ -375,7 +375,7 @@ defmodule Boruta.OauthTest do
         },
         __MODULE__
       ) do
-        assert user_id == code.user_id
+        assert resource_owner_id == code.resource_owner_id
         assert client_id == client.id
         assert value
       else
@@ -466,7 +466,7 @@ defmodule Boruta.OauthTest do
     test "returns a token if user is valid", %{client: client, resource_owner: resource_owner} do
       with {
         :authorize_success,
-        %Boruta.Oauth.Token{user_id: user_id, client_id: client_id, value: value}
+        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value}
       } <- Oauth.authorize(
         %{
           query_params: %{
@@ -480,7 +480,7 @@ defmodule Boruta.OauthTest do
         },
         __MODULE__
       ) do
-        assert user_id == resource_owner.id
+        assert resource_owner_id == resource_owner.id
         assert client_id == client.id
         assert value
       else
