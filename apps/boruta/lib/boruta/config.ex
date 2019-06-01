@@ -5,14 +5,14 @@ defmodule Boruta.Config do
   }
 
   def access_token_expires_in() do
-    Keyword.get(oauth_config(), :expires_in)[:access_token]
+    Keyword.fetch!(oauth_config(), :expires_in)[:access_token]
   end
 
   def authorization_code_expires_in() do
-    Keyword.get(oauth_config(), :expires_in)[:authorization_code]
+    Keyword.fetch!(oauth_config(), :expires_in)[:authorization_code]
   end
 
-  def secret_key_base(), do: Keyword.get(
+  def secret_key_base(), do: Keyword.fetch!(
     Application.get_env(:boruta, Boruta.Oauth),
     :secret_key_base
   )
