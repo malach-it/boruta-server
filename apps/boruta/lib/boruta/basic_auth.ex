@@ -1,4 +1,8 @@
 defmodule Boruta.BasicAuth do
+  @moduledoc """
+  TODO HTTP BasicAuth utilities
+  """
+
   def decode("Basic " <> encoded) do
     with {:ok, decoded} <- Base.decode64(encoded) do
       {:ok, String.split(decoded, ":")}

@@ -1,4 +1,8 @@
 defmodule Boruta.Oauth.Client do
+  @moduledoc """
+  TODO OAuth client
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 

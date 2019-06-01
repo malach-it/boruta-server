@@ -1,5 +1,9 @@
 defmodule Boruta.Factory do
+  @moduledoc false
+
   use ExMachina.Ecto, repo: Boruta.Repo
+
+  alias Boruta.Coherence.User
 
   def client_factory do
     %Boruta.Oauth.Client{
@@ -9,10 +13,10 @@ defmodule Boruta.Factory do
   end
 
   def user_factory do
-    %Boruta.Coherence.User{
+    %User{
       email: sequence(:email, &"foo-#{&1}@example.com"),
       password: "password",
-      password_hash: Boruta.Coherence.User.encrypt_password("password")
+      password_hash: User.encrypt_password("password")
     }
   end
 

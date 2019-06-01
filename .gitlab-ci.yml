@@ -14,7 +14,7 @@ test:
   - mix local.hex --force
   - mix local.rebar --force
   - mix deps.get
-  - mix test --trace
+  - mix test --trace --cover
   variables:
     POSTGRES_DATABASE: boruta_test
     POSTGRES_HOST: postgres

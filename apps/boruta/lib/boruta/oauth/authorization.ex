@@ -3,6 +3,10 @@ defprotocol Boruta.Oauth.Authorization do
 end
 
 defmodule Boruta.Oauth.Authorization.Base do
+  @moduledoc """
+  TODO Base artifacts authorization
+  """
+
   alias Boruta.Coherence.User
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Token
@@ -70,10 +74,11 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
 
   def token(%ClientCredentialsRequest{client_id: client_id, client_secret: client_secret}) do
     with {:ok, client} <- client(id: client_id, secret: client_secret) do
-      Token.machine_changeset(%Token{}, %{
+      token = Token.machine_changeset(%Token{}, %{
         client_id: client.id
       })
-      |> Repo.insert()
+
+      Repo.insert(token)
     end
   end
 end
@@ -94,11 +99,12 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ResourceOwnerPasswordCrede
 
     with {:ok, client} <- client(id: client_id, secret: client_secret),
          {:ok, resource_owner} <- resource_owner(email: username, password: password) do
-      Token.resource_owner_changeset(%Token{}, %{
+      token = Token.resource_owner_changeset(%Token{}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id
       })
-      |> Repo.insert()
+
+      Repo.insert(token)
     end
   end
 end
@@ -118,11 +124,12 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
          {:ok, code} <- code(value: code, redirect_uri: redirect_uri),
          {:ok, resource_owner} <- resource_owner(id: code.resource_owner_id) do
-      Token.resource_owner_changeset(%Token{}, %{
+      token = Token.resource_owner_changeset(%Token{}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id
       })
-      |> Repo.insert()
+
+      Repo.insert(token)
     end
   end
 end
@@ -143,12 +150,13 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ImplicitRequest do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
-      Token.resource_owner_changeset(%Token{resource_owner: resource_owner, client: client}, %{
+      token = Token.resource_owner_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,
         state: state
       })
-      |> Repo.insert()
+
+      Repo.insert(token)
     end
   end
 end
@@ -169,13 +177,14 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
-      Token.authorization_code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
+      token = Token.authorization_code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,
         redirect_uri: redirect_uri,
         state: state
       })
-      |> Repo.insert()
+
+      Repo.insert(token)
     end
   end
 end

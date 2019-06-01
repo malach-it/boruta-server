@@ -1,4 +1,6 @@
 defmodule ExJsonSchema.Validator.Error.BorutaFormatter do
+  @moduledoc false
+
   alias ExJsonSchema.Validator.Error
 
   @spec format(ExJsonSchema.Validator.errors()) :: [String.t()]

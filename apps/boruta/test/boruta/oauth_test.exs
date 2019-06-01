@@ -114,8 +114,7 @@ defmodule Boruta.OauthTest do
       ) do
         assert token
       else
-        error ->
-          IO.inspect error
+        _ ->
           assert false
       end
     end
@@ -305,7 +304,13 @@ defmodule Boruta.OauthTest do
       given_state = "state"
       with {
         :authorize_success,
-        %Boruta.Oauth.Token{type: "code", resource_owner_id: resource_owner_id, client_id: client_id, value: value, state: state}
+        %Boruta.Oauth.Token{
+          type: "code",
+          resource_owner_id: resource_owner_id,
+          client_id: client_id,
+          value: value,
+          state: state
+        }
       } <- Oauth.authorize(%{
           query_params: %{
             "response_type" => "code",
@@ -331,10 +336,35 @@ defmodule Boruta.OauthTest do
       resource_owner = insert(:user)
       user = insert(:user)
       client = insert(:client, user_id: user.id)
-      code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id, redirect_uri: client.redirect_uri)
-      expired_code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id, redirect_uri: client.redirect_uri, expires_at: :os.system_time(:seconds) - 10)
-      bad_redirect_uri_code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id, redirect_uri: "http://bad.redirect.uri")
-      {:ok, client: client, resource_owner: resource_owner, code: code, bad_redirect_uri_code: bad_redirect_uri_code, expired_code: expired_code}
+      code = insert(
+        :token,
+        type: "code",
+        client_id: client.id,
+        resource_owner_id: resource_owner.id,
+        redirect_uri: client.redirect_uri
+      )
+      expired_code = insert(
+        :token,
+        type: "code",
+        client_id: client.id,
+        resource_owner_id: resource_owner.id,
+        redirect_uri: client.redirect_uri,
+        expires_at: :os.system_time(:seconds) - 10
+      )
+      bad_redirect_uri_code = insert(
+        :token,
+        type: "code",
+        client_id: client.id,
+        resource_owner_id: resource_owner.id,
+        redirect_uri: "http://bad.redirect.uri"
+      )
+      {:ok,
+        client: client,
+        resource_owner: resource_owner,
+        code: code,
+        bad_redirect_uri_code: bad_redirect_uri_code,
+        expired_code: expired_code
+      }
     end
 
     test "returns an error if request is invalid" do
@@ -548,8 +578,7 @@ defmodule Boruta.OauthTest do
         assert client_id == client.id
         assert value
       else
-        error ->
-          IO.inspect error
+        _ ->
           assert false
       end
     end

@@ -1,4 +1,8 @@
 defmodule Boruta.Hash do
+  @moduledoc """
+  TODO Utilities to hash and check passwords
+  """
+
   import Boruta.Config, only: [secret_key_base: 0]
 
   def hashpwsalt(password) do
@@ -13,5 +17,5 @@ defmodule Boruta.Hash do
     :crypto.hmac(:sha512, salt(), string) |> Base.encode16
   end
 
-  defp salt(), do: secret_key_base()
+  defp salt, do: secret_key_base()
 end
