@@ -137,19 +137,20 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ImplicitRequest do
   def token(%ImplicitRequest{
     client_id: client_id,
     redirect_uri: redirect_uri,
-    resource_owner: resource_owner
+    resource_owner: resource_owner,
+    state: state
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
       Token.resource_owner_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
-        resource_owner_id: resource_owner.id
+        resource_owner_id: resource_owner.id,
+        state: state
       })
       |> Repo.insert()
     end
   end
-
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
@@ -162,7 +163,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
   def token(%CodeRequest{
     client_id: client_id,
     redirect_uri: redirect_uri,
-    resource_owner: resource_owner
+    resource_owner: resource_owner,
+    state: state
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
@@ -170,7 +172,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
       Token.authorization_code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,
-        redirect_uri: redirect_uri
+        redirect_uri: redirect_uri,
+        state: state
       })
       |> Repo.insert()
     end
