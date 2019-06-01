@@ -5,6 +5,7 @@ defmodule Boruta.Oauth.Token do
   import Boruta.Config, only: [access_token_expires_in: 0, authorization_code_expires_in: 0]
 
   alias Boruta.Oauth.Client
+  alias Boruta.Oauth.Token
   alias Boruta.Coherence.User
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -19,6 +20,13 @@ defmodule Boruta.Oauth.Token do
     belongs_to(:resource_owner, User)
 
     timestamps()
+  end
+
+  def expired?(%Token{expires_at: expires_at}) do
+    case :os.system_time(:seconds) < expires_at do
+      true -> :ok
+      false -> {:error, "Token expired."}
+    end
   end
 
   @doc false

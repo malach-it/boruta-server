@@ -308,8 +308,9 @@ defmodule Boruta.OauthTest do
       user = insert(:user)
       client = insert(:client, user_id: user.id)
       code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id, redirect_uri: client.redirect_uri)
+      expired_code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id, redirect_uri: client.redirect_uri, expires_at: :os.system_time(:seconds) - 10)
       bad_redirect_uri_code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id, redirect_uri: "http://bad.redirect.uri")
-      {:ok, client: client, resource_owner: resource_owner, code: code, bad_redirect_uri_code: bad_redirect_uri_code}
+      {:ok, client: client, resource_owner: resource_owner, code: code, bad_redirect_uri_code: bad_redirect_uri_code, expired_code: expired_code}
     end
 
     test "returns an error if request is invalid" do
@@ -362,7 +363,7 @@ defmodule Boruta.OauthTest do
       ) == {:token_error, {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}}
     end
 
-    test "returns an error if `code` and resuest redirect_uri do not match", %{client: client, bad_redirect_uri_code: bad_redirect_uri_code} do
+    test "returns an error if `code` and request redirect_uri do not match", %{client: client, bad_redirect_uri_code: bad_redirect_uri_code} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
       assert Oauth.token(
         %{
@@ -376,6 +377,22 @@ defmodule Boruta.OauthTest do
         },
         __MODULE__
       ) == {:token_error, {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}}
+    end
+
+    test "returns an error if `code` is expired", %{client: client, expired_code: expired_code} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{
+            "grant_type" => "authorization_code",
+            "client_id" => client.id,
+            "code" => expired_code.value,
+            "redirect_uri" => client.redirect_uri
+          }
+        },
+        __MODULE__
+      ) == {:token_error, {:unauthorized, %{error: "invalid_code", error_description: "Token expired."}}}
     end
 
     test "returns a token if `code` is valid", %{client: client, code: code} do
