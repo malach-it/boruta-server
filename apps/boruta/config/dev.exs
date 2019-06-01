@@ -11,3 +11,10 @@ config :boruta, Boruta.Repo,
   database: "boruta_dev",
   hostname: "localhost",
   pool_size: 10
+
+config :boruta, Boruta.Oauth,
+  expires_in: %{
+    access_token: 24 * 3600,
+    authorization_code: 60
+  },
+  secret_key_base: "secret"
