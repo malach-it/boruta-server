@@ -32,19 +32,34 @@ defmodule BorutaWeb.OauthController do
   end
 
   @impl Boruta.Oauth.Application
-  def authorize_success(conn, %Boruta.Oauth.Token{type: "access_token"} = token) do
-    {:ok, expires_at} = DateTime.from_unix(token.expires_at)
+  def authorize_success(conn, %Boruta.Oauth.Token{type: "access_token", expires_at: expires_at, value: value, client: client, state: "" <> state}) do
+    {:ok, expires_at} = DateTime.from_unix(expires_at)
     expires_in =  DateTime.diff(expires_at, DateTime.utc_now)
 
-    url = "#{token.client.redirect_uri}#access_token=#{token.value}&expires_in=#{expires_in}"
+    query = URI.encode_query(%{access_token: value, expires_in: expires_in, state: state})
+    url = "#{client.redirect_uri}##{query}"
+    conn
+    |> redirect(external: url)
+  end
+  def authorize_success(conn, %Boruta.Oauth.Token{type: "access_token", expires_at: expires_at, value: value, client: client}) do
+    {:ok, expires_at} = DateTime.from_unix(expires_at)
+    expires_in =  DateTime.diff(expires_at, DateTime.utc_now)
+
+    query = URI.encode_query(%{access_token: value, expires_in: expires_in})
+    url = "#{client.redirect_uri}##{query}"
     conn
     |> redirect(external: url)
   end
 
+  def authorize_success(conn, %Boruta.Oauth.Token{type: "code", client: client, value: value, state: "" <> state}) do
+    query = URI.encode_query(%{code: value, state: state})
+    url = "#{client.redirect_uri}?#{query}"
+    conn |> redirect(external: url)
+  end
   def authorize_success(conn, %Boruta.Oauth.Token{type: "code", client: client, value: value}) do
-    url = "#{client.redirect_uri}?code=#{value}"
-    conn
-    |> redirect(external: url)
+    query = URI.encode_query(%{code: value})
+    url = "#{client.redirect_uri}?#{query}"
+    conn |> redirect(external: url)
   end
 
   @impl Boruta.Oauth.Application

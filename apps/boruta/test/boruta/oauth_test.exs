@@ -300,6 +300,30 @@ defmodule Boruta.OauthTest do
           assert false
       end
     end
+
+    test "returns a code with state", %{client: client, resource_owner: resource_owner} do
+      given_state = "state"
+      with {
+        :authorize_success,
+        %Boruta.Oauth.Token{type: "code", resource_owner_id: resource_owner_id, client_id: client_id, value: value, state: state}
+      } <- Oauth.authorize(%{
+          query_params: %{
+            "response_type" => "code",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri,
+            "state" => given_state
+          },
+        assigns: %{current_user: resource_owner}
+      }, __MODULE__) do
+        assert resource_owner_id == resource_owner.id
+        assert client_id == client.id
+        assert value
+        assert state == given_state
+      else
+        _ ->
+          assert false
+      end
+    end
   end
 
   describe "authorization code grant - token" do

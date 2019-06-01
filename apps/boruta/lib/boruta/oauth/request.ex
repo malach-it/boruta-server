@@ -85,14 +85,16 @@ defmodule Boruta.Oauth.Request do
     {:ok, struct(ImplicitRequest, %{
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
-      resource_owner: params["resource_owner"]
+      resource_owner: params["resource_owner"],
+      state: params["state"]
     })}
   end
   defp build_request(%{"response_type" => "code"} = params) do
     {:ok, struct(CodeRequest, %{
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
-      resource_owner: params["resource_owner"]
+      resource_owner: params["resource_owner"],
+      state: params["state"]
     })}
   end
 end
