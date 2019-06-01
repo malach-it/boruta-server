@@ -45,11 +45,3 @@ config :coherence,
 config :coherence, BorutaWeb.Coherence.Mailer,
   adapter: Swoosh.Adapters.Sendgrid,
   api_key: "your api key here"
-
-config :boruta,
-  oauth: %{
-    expires_in: %{
-      access_token: 24 * 3600
-    }
-  }
-

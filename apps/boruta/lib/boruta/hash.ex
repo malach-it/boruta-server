@@ -1,5 +1,6 @@
 defmodule Boruta.Hash do
-  # maybe not the better secure way to hash password but way faster than Bcrypt
+  import Boruta.Config, only: [secret_key_base: 0]
+
   def hashpwsalt(password) do
     hash(password)
   end
@@ -9,6 +10,8 @@ defmodule Boruta.Hash do
   end
 
   defp hash(string) when is_binary(string) do
-    :crypto.hash(:sha512, string) |> Base.encode16
+    :crypto.hmac(:sha512, salt(), string) |> Base.encode16
   end
+
+  defp salt(), do: secret_key_base()
 end

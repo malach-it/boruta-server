@@ -11,3 +11,10 @@ config :boruta, Boruta.Repo,
   database: System.get_env("POSTGRES_DATABASE") || "boruta_test",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :boruta, Boruta.Oauth,
+  expires_in: %{
+    access_token: 24 * 3600,
+    authorization_code: 60
+  },
+  secret_key_base: "secret"
