@@ -1,4 +1,8 @@
 defmodule Boruta.Oauth.Request do
+  @moduledoc """
+  TODO OAuth request
+  """
+
   alias Boruta.BasicAuth
   alias Boruta.Oauth.AuthorizationCodeRequest
   alias Boruta.Oauth.ClientCredentialsRequest

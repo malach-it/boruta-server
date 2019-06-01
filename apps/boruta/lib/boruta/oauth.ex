@@ -1,8 +1,12 @@
 defmodule Boruta.Oauth do
-  alias Boruta.Oauth.Request
+  @moduledoc """
+  TODO Boruta OAuth
+  """
+
+  alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.ImplicitRequest
-  alias Boruta.Oauth.Authorization
+  alias Boruta.Oauth.Request
 
   def token(conn, module) do
     with {:ok, request} <- Request.token_request(conn),

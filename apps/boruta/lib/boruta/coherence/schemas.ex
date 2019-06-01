@@ -1,4 +1,6 @@
 defmodule Boruta.Coherence.Schemas do
+  @moduledoc false
+
   use Coherence.Config
 
   import Ecto.Query
@@ -124,8 +126,6 @@ defmodule Boruta.Coherence.Schemas do
       end
     end
   )
-
-  
 
   def query_by(schema, opts) do
     Enum.reduce(opts, schema, fn {k, v}, query ->

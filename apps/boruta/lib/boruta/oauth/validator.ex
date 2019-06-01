@@ -1,11 +1,19 @@
 defmodule Boruta.Oauth.Validator do
+  @moduledoc """
+  TODO OAuth requests validator
+  """
+
   # TODO fid a way to difference query from body params
   # TODO return {:ok, params} on successful response
-  alias ExJsonSchema.Validator.Error.BorutaFormatter
   alias Boruta.Oauth.Json.Schema
+  alias ExJsonSchema.Validator.Error.BorutaFormatter
 
   def validate(%{"grant_type" => "password"} = params) do
-    case ExJsonSchema.Validator.validate(Schema.resource_owner_password_credentials, params, error_formatter: BorutaFormatter) do
+    case ExJsonSchema.Validator.validate(
+      Schema.resource_owner_password_credentials,
+      params,
+      error_formatter: BorutaFormatter
+    ) do
       :ok ->
         params
       {:error, errors} ->
@@ -13,7 +21,11 @@ defmodule Boruta.Oauth.Validator do
     end
   end
   def validate(%{"grant_type" => "client_credentials"} = params) do
-    case ExJsonSchema.Validator.validate(Schema.client_credentials, params, error_formatter: BorutaFormatter) do
+    case ExJsonSchema.Validator.validate(
+      Schema.client_credentials,
+      params,
+      error_formatter: BorutaFormatter
+    ) do
       :ok ->
         params
       {:error, errors} ->
@@ -21,7 +33,11 @@ defmodule Boruta.Oauth.Validator do
     end
   end
   def validate(%{"grant_type" => "authorization_code"} = params) do
-    case ExJsonSchema.Validator.validate(Schema.authorization_code, params, error_formatter: BorutaFormatter) do
+    case ExJsonSchema.Validator.validate(
+      Schema.authorization_code,
+      params,
+      error_formatter: BorutaFormatter
+    ) do
       :ok ->
         params
       {:error, errors} ->
@@ -29,7 +45,11 @@ defmodule Boruta.Oauth.Validator do
     end
   end
   def validate(%{"grant_type" => _} = params) do
-    case ExJsonSchema.Validator.validate(Schema.grant_type, params, error_formatter: BorutaFormatter) do
+    case ExJsonSchema.Validator.validate(
+      Schema.grant_type,
+      params,
+      error_formatter: BorutaFormatter
+    ) do
       :ok ->
         params
       {:error, errors} ->

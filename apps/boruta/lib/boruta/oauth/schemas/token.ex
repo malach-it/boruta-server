@@ -1,12 +1,16 @@
 defmodule Boruta.Oauth.Token do
+  @moduledoc """
+  TODO Oauth token
+  """
+
   use Ecto.Schema
 
   import Ecto.Changeset
   import Boruta.Config, only: [access_token_expires_in: 0, authorization_code_expires_in: 0]
 
+  alias Boruta.Coherence.User
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Token
-  alias Boruta.Coherence.User
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id

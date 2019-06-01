@@ -1,4 +1,7 @@
 defmodule Boruta.Oauth.Json.Schema do
+  @moduledoc """
+  TODO OAuth json schemas
+  """
   alias ExJsonSchema.Schema
 
   def authorize(:query_params) do
@@ -21,7 +24,7 @@ defmodule Boruta.Oauth.Json.Schema do
     %{} |> Schema.resolve
   end
 
-  def client_credentials() do
+  def client_credentials do
     %{
       "type" => "object",
       "properties" => %{
@@ -37,7 +40,7 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
-  def resource_owner_password_credentials() do
+  def resource_owner_password_credentials do
     %{
       "type" => "object",
       "properties" => %{
@@ -55,7 +58,7 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
-  def authorization_code() do
+  def authorization_code do
     %{
       "type" => "object",
       "properties" => %{
@@ -71,7 +74,7 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
-  def token() do
+  def token do
     %{
       "type" => "object",
       "properties" => %{
@@ -87,7 +90,7 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
-  def code() do
+  def code do
     %{
       "type" => "object",
       "properties" => %{
@@ -103,7 +106,7 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
-  def grant_type() do
+  def grant_type do
     %{
       "type" => "object",
       "properties" => %{
@@ -113,7 +116,7 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
-  def response_type() do
+  def response_type do
     %{
       "type" => "object",
       "properties" => %{
