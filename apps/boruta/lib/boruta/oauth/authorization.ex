@@ -49,9 +49,12 @@ defmodule Boruta.Oauth.Authorization.Base do
   def resource_owner(_), do: {:unauthorized, %{error: "invalid_resource_owner", error_description: "Resource owner is invalid."}}
 
   def code(value: value, redirect_uri: redirect_uri) do
-    with %Token{} = token <- Repo.get_by(Token, type: "code", value: value, redirect_uri: redirect_uri) do
+    with %Token{} = token <- Repo.get_by(Token, type: "code", value: value, redirect_uri: redirect_uri),
+      :ok <- Token.expired?(token) do
       {:ok, token}
     else
+      {:error, error} ->
+        {:unauthorized, %{error: "invalid_code", error_description: error}}
       nil ->
         {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}
     end
