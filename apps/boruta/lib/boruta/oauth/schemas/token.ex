@@ -12,6 +12,7 @@ defmodule Boruta.Oauth.Token do
   schema "tokens" do
     field(:type, :string)
     field(:value, :string)
+    field(:redirect_uri, :string)
     field(:expires_at, :integer)
 
     belongs_to(:client, Client)
@@ -50,8 +51,8 @@ defmodule Boruta.Oauth.Token do
   # TODO rename to code_changeset
   def authorization_code_changeset(token, attrs) do
     token
-    |> cast(attrs, [:client_id, :resource_owner_id])
-    |> validate_required([:client_id, :resource_owner_id])
+    |> cast(attrs, [:client_id, :resource_owner_id, :redirect_uri])
+    |> validate_required([:client_id, :resource_owner_id, :redirect_uri])
     |> put_change(:type, "code")
     # TODO better token randomization
     |> put_change(:value, SecureRandom.uuid)

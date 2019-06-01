@@ -48,8 +48,8 @@ defmodule Boruta.Oauth.Authorization.Base do
   # TODO return more explicit error (that should be rescued in controller and not be sent to the client)
   def resource_owner(_), do: {:unauthorized, %{error: "invalid_resource_owner", error_description: "Resource owner is invalid."}}
 
-  def code(value: value) do
-    with %Token{} = token <- Repo.get_by(Token, type: "code", value: value) do
+  def code(value: value, redirect_uri: redirect_uri) do
+    with %Token{} = token <- Repo.get_by(Token, type: "code", value: value, redirect_uri: redirect_uri) do
       {:ok, token}
     else
       nil ->
@@ -113,7 +113,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
     redirect_uri: redirect_uri,
   }) do
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
-         {:ok, code} <- code(value: code),
+         {:ok, code} <- code(value: code, redirect_uri: redirect_uri),
          {:ok, resource_owner} <- resource_owner(id: code.resource_owner_id) do
       Token.resource_owner_changeset(%Token{}, %{
         client_id: client.id,
@@ -166,7 +166,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
          {:ok, resource_owner} <- resource_owner(resource_owner) do
       Token.authorization_code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
-        resource_owner_id: resource_owner.id
+        resource_owner_id: resource_owner.id,
+        redirect_uri: redirect_uri
       })
       |> Repo.insert()
     end

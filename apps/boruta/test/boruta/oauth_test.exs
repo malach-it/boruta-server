@@ -307,8 +307,9 @@ defmodule Boruta.OauthTest do
       resource_owner = insert(:user)
       user = insert(:user)
       client = insert(:client, user_id: user.id)
-      code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id)
-      {:ok, client: client, resource_owner: resource_owner, code: code}
+      code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id, redirect_uri: client.redirect_uri)
+      bad_redirect_uri_code = insert(:token, type: "code", client_id: client.id, resource_owner_id: resource_owner.id, redirect_uri: "http://bad.redirect.uri")
+      {:ok, client: client, resource_owner: resource_owner, code: code, bad_redirect_uri_code: bad_redirect_uri_code}
     end
 
     test "returns an error if request is invalid" do
@@ -354,6 +355,22 @@ defmodule Boruta.OauthTest do
             "grant_type" => "authorization_code",
             "client_id" => client.id,
             "code" => "bad_code",
+            "redirect_uri" => client.redirect_uri
+          }
+        },
+        __MODULE__
+      ) == {:token_error, {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}}
+    end
+
+    test "returns an error if `code` and resuest redirect_uri do not match", %{client: client, bad_redirect_uri_code: bad_redirect_uri_code} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{
+            "grant_type" => "authorization_code",
+            "client_id" => client.id,
+            "code" => bad_redirect_uri_code.value,
             "redirect_uri" => client.redirect_uri
           }
         },
