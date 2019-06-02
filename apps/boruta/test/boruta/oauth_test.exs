@@ -72,11 +72,12 @@ defmodule Boruta.OauthTest do
     end
   end
 
-  describe "clients credentials grant" do
+  describe "client credentials grant" do
     setup do
       user = insert(:user)
       client = insert(:client, user_id: user.id)
-      {:ok, client: client}
+      client_with_scope = insert(:client, user_id: user.id, authorize_scope: true, authorized_scopes: ["scope", "other"])
+      {:ok, client: client, client_with_scope: client_with_scope}
     end
 
     test "returns an error if `grant_type` is 'client_credentials' and schema is invalid" do
@@ -108,15 +109,81 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns a token if client_id/scret are valid", %{client: client} do
-      with {:token_success, %Token{} = token} <- Oauth.token(
-        %{body_params: %{"grant_type" => "client_credentials", "client_id" => client.id, "client_secret" => client.secret}},
+      with {:token_success, %Token{client_id: client_id, value: value}} <- Oauth.token(
+        %{
+          body_params: %{
+            "grant_type" => "client_credentials",
+            "client_id" => client.id,
+            "client_secret" => client.secret
+          }
+        },
         __MODULE__
       ) do
-        assert token
+        assert client_id == client.id
+        assert value
       else
         _ ->
           assert false
       end
+    end
+
+    test "returns a token with scope", %{client: client} do
+      given_scope = "hello world"
+      with {:token_success, %Token{client_id: client_id, scope: scope, value: value}} <- Oauth.token(
+        %{
+          body_params: %{
+            "grant_type" => "client_credentials",
+            "client_id" => client.id,
+            "client_secret" => client.secret,
+            "scope" => given_scope
+          }
+        },
+        __MODULE__
+      ) do
+        assert client_id == client.id
+        assert value
+        assert scope == given_scope
+      else
+        _ ->
+          assert false
+      end
+    end
+
+    test "returns a token if scope is authorized", %{client_with_scope: client} do
+      given_scope = List.first(client.authorized_scopes)
+      with {:token_success, %Token{client_id: client_id, scope: scope, value: value}} <- Oauth.token(
+        %{
+          body_params: %{
+            "grant_type" => "client_credentials",
+            "client_id" => client.id,
+            "client_secret" => client.secret,
+            "scope" => given_scope
+          }
+        },
+        __MODULE__
+      ) do
+        assert client_id == client.id
+        assert value
+        assert scope == given_scope
+      else
+        _ ->
+          assert false
+      end
+    end
+
+    test "returns an error if scopes are not authorized", %{client_with_scope: client} do
+      given_scope = "bad_scope"
+      assert Oauth.token(
+        %{
+          body_params: %{
+            "grant_type" => "client_credentials",
+            "client_id" => client.id,
+            "client_secret" => client.secret,
+            "scope" => given_scope
+          }
+        },
+        __MODULE__
+      ) == {:token_error, {:bad_request, %{error: "invalid_scope", error_description: "Given scopes are not authorized."}}}
     end
   end
 
@@ -125,7 +192,8 @@ defmodule Boruta.OauthTest do
       resource_owner = insert(:user)
       user = insert(:user)
       client = insert(:client, user_id: user.id)
-      {:ok, client: client, resource_owner: resource_owner}
+      client_with_scope = insert(:client, user_id: user.id, authorize_scope: true, authorized_scopes: ["scope", "other"])
+      {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
     test "returns an error if Basic auth fails" do
@@ -202,6 +270,64 @@ defmodule Boruta.OauthTest do
           assert false
       end
     end
+
+    test "returns a token with scope", %{client: client, resource_owner: resource_owner} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      given_scope = "hello world"
+      with {
+        :token_success,
+        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
+      } <- Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{"grant_type" => "password", "username" => resource_owner.email, "password" => "password", "scope" => given_scope}
+        },
+        __MODULE__
+      ) do
+        assert resource_owner_id == resource_owner.id
+        assert client_id == client.id
+        assert value
+        assert scope == given_scope
+      else
+        _ ->
+          assert false
+      end
+    end
+
+    test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      given_scope = List.first(client.authorized_scopes)
+      with {
+        :token_success,
+        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
+      } <- Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{"grant_type" => "password", "username" => resource_owner.email, "password" => "password", "scope" => given_scope}
+        },
+        __MODULE__
+      ) do
+        assert resource_owner_id == resource_owner.id
+        assert client_id == client.id
+        assert value
+        assert scope == given_scope
+      else
+        _ ->
+          assert false
+      end
+    end
+
+    test "returns an error if scope is not authorized by the client", %{client_with_scope: client, resource_owner: resource_owner} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      given_scope = "bad_scope"
+      assert Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{"grant_type" => "password", "username" => resource_owner.email, "password" => "password", "scope" => given_scope}
+        },
+        __MODULE__
+      ) == {:token_error, {:bad_request, %{error: "invalid_scope", error_description: "Given scopes are not authorized."}}}
+    end
   end
 
   describe "authorization code grant - authorize" do
@@ -209,7 +335,8 @@ defmodule Boruta.OauthTest do
       resource_owner = insert(:user)
       user = insert(:user)
       client = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri")
-      {:ok, client: client, resource_owner: resource_owner}
+      client_with_scope = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri", authorize_scope: true, authorized_scopes: ["scope", "other"])
+      {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
     test "returns an error if `response_type` is 'code' and schema is invalid" do
@@ -300,6 +427,82 @@ defmodule Boruta.OauthTest do
       end
     end
 
+    test "returns a token with scope", %{client: client, resource_owner: resource_owner} do
+      given_scope = "hello world"
+      with {
+        :authorize_success,
+        %Boruta.Oauth.Token{
+          type: "code",
+          resource_owner_id: resource_owner_id,
+          client_id: client_id,
+          value: value,
+          scope: scope
+        }
+      } <- Oauth.authorize(%{
+          query_params: %{
+            "response_type" => "code",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri,
+            "scope" =>  given_scope
+          },
+        assigns: %{current_user: resource_owner}
+      }, __MODULE__) do
+        assert resource_owner_id == resource_owner.id
+        assert client_id == client.id
+        assert value
+        assert scope == given_scope
+      else
+        _ ->
+          assert false
+      end
+    end
+
+    test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
+      given_scope = List.first(client.authorized_scopes)
+      with {
+        :authorize_success,
+        %Boruta.Oauth.Token{
+          type: "code",
+          resource_owner_id: resource_owner_id,
+          client_id: client_id,
+          value: value,
+          scope: scope
+        }
+      } <- Oauth.authorize(%{
+          query_params: %{
+            "response_type" => "code",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri,
+            "scope" =>  given_scope
+          },
+        assigns: %{current_user: resource_owner}
+      }, __MODULE__) do
+        assert resource_owner_id == resource_owner.id
+        assert client_id == client.id
+        assert value
+        assert scope == given_scope
+      else
+        _ ->
+          assert false
+      end
+    end
+
+    test "returns an error if scope is not authorized", %{client_with_scope: client, resource_owner: resource_owner} do
+      given_scope = "bad_scope"
+      assert Oauth.authorize(%{
+          query_params: %{
+            "response_type" => "code",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri,
+            "scope" =>  given_scope
+          },
+        assigns: %{current_user: resource_owner}
+      }, __MODULE__) == {:authorize_error, {
+        :bad_request,
+        %{error: "invalid_scope", error_description: "Given scopes are not authorized.", format: :query, redirect_uri: "https://redirect.uri"}
+      }}
+    end
+
     test "returns a code with state", %{client: client, resource_owner: resource_owner} do
       given_state = "state"
       with {
@@ -358,12 +561,21 @@ defmodule Boruta.OauthTest do
         resource_owner_id: resource_owner.id,
         redirect_uri: "http://bad.redirect.uri"
       )
+      code_with_scope = insert(
+        :token,
+        type: "code",
+        client_id: client.id,
+        resource_owner_id: resource_owner.id,
+        redirect_uri: client.redirect_uri,
+        scope: "hello world"
+      )
       {:ok,
         client: client,
         resource_owner: resource_owner,
         code: code,
         bad_redirect_uri_code: bad_redirect_uri_code,
-        expired_code: expired_code
+        expired_code: expired_code,
+        code_with_scope: code_with_scope
       }
     end
 
@@ -474,6 +686,33 @@ defmodule Boruta.OauthTest do
           assert false
       end
     end
+
+    test "returns a token with scope", %{client: client, code_with_scope: code} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
+      with {
+        :token_success,
+        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
+      } <- Oauth.token(
+        %{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{
+            "grant_type" => "authorization_code",
+            "client_id" => client.id,
+            "code" => code.value,
+            "redirect_uri" => client.redirect_uri
+          }
+        },
+        __MODULE__
+      ) do
+        assert resource_owner_id == code.resource_owner_id
+        assert client_id == client.id
+        assert value
+        assert scope == code.scope
+      else
+        _ ->
+          assert false
+      end
+    end
   end
 
   describe "implicit grant" do
@@ -481,7 +720,8 @@ defmodule Boruta.OauthTest do
       resource_owner = insert(:user)
       user = insert(:user)
       client = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri")
-      {:ok, client: client, resource_owner: resource_owner}
+      client_with_scope = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri", authorize_scope: true, authorized_scopes: ["scope", "other"])
+      {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
     test "returns an error if `response_type` is 'token' and schema is invalid" do
@@ -581,6 +821,85 @@ defmodule Boruta.OauthTest do
         _ ->
           assert false
       end
+    end
+
+    test "returns a token with scope", %{client: client, resource_owner: resource_owner} do
+      given_scope = "hello world"
+      with {
+        :authorize_success,
+        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
+      } <- Oauth.authorize(
+        %{
+          query_params: %{
+            "response_type" => "token",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri,
+            "scope" => given_scope
+          },
+          assigns: %{
+            current_user: resource_owner
+          }
+        },
+        __MODULE__
+      ) do
+        assert resource_owner_id == resource_owner.id
+        assert client_id == client.id
+        assert value
+        assert scope == given_scope
+      else
+        _ ->
+          assert false
+      end
+    end
+
+    test "returns a token id scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
+      given_scope = List.first(client.authorized_scopes)
+      with {
+        :authorize_success,
+        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
+      } <- Oauth.authorize(
+        %{
+          query_params: %{
+            "response_type" => "token",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri,
+            "scope" => given_scope
+          },
+          assigns: %{
+            current_user: resource_owner
+          }
+        },
+        __MODULE__
+      ) do
+        assert resource_owner_id == resource_owner.id
+        assert client_id == client.id
+        assert value
+        assert scope == given_scope
+      else
+        _ ->
+          assert false
+      end
+    end
+
+    test "returns an error if scope is not authorized", %{client_with_scope: client, resource_owner: resource_owner} do
+      given_scope = "bad_scope"
+      assert Oauth.authorize(
+        %{
+          query_params: %{
+            "response_type" => "token",
+            "client_id" => client.id,
+            "redirect_uri" => client.redirect_uri,
+            "scope" => given_scope
+          },
+          assigns: %{
+            current_user: resource_owner
+          }
+        },
+        __MODULE__
+      ) == {:authorize_error, {
+        :bad_request,
+        %{error: "invalid_scope", error_description: "Given scopes are not authorized.", format: :fragment, redirect_uri: "https://redirect.uri"}
+      }}
     end
   end
 

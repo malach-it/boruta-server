@@ -63,6 +63,16 @@ defmodule Boruta.Oauth.Authorization.Base do
         {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}
     end
   end
+
+  def scope(scope: scope, client: %Client{authorize_scope: false}), do: {:ok, scope}
+  def scope(scope: scope, client: %Client{authorize_scope: true, authorized_scopes: authorized_scopes}) do
+    scopes = String.split(scope, " ")
+    case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
+      true -> {:ok, scope}
+      false ->
+        {:bad_request, %{error: "invalid_scope", error_description: "Given scopes are not authorized."}}
+    end
+  end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest do
@@ -72,10 +82,16 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
   alias Boruta.Oauth.Token
   alias Boruta.Repo
 
-  def token(%ClientCredentialsRequest{client_id: client_id, client_secret: client_secret}) do
-    with {:ok, client} <- client(id: client_id, secret: client_secret) do
+  def token(%ClientCredentialsRequest{
+    client_id: client_id,
+    client_secret: client_secret,
+    scope: scope
+  }) do
+    with {:ok, client} <- client(id: client_id, secret: client_secret),
+      {:ok, scope} <- scope(scope: scope, client: client) do
       token = Token.machine_changeset(%Token{}, %{
-        client_id: client.id
+        client_id: client.id,
+        scope: scope
       })
 
       Repo.insert(token)
@@ -94,14 +110,17 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ResourceOwnerPasswordCrede
     client_id: client_id,
     client_secret: client_secret,
     username: username,
-    password: password
+    password: password,
+    scope: scope
   }) do
 
     with {:ok, client} <- client(id: client_id, secret: client_secret),
+         {:ok, scope} <- scope(scope: scope, client: client),
          {:ok, resource_owner} <- resource_owner(email: username, password: password) do
       token = Token.resource_owner_changeset(%Token{}, %{
         client_id: client.id,
-        resource_owner_id: resource_owner.id
+        resource_owner_id: resource_owner.id,
+        scope: scope
       })
 
       Repo.insert(token)
@@ -126,7 +145,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
          {:ok, resource_owner} <- resource_owner(id: code.resource_owner_id) do
       token = Token.resource_owner_changeset(%Token{}, %{
         client_id: client.id,
-        resource_owner_id: resource_owner.id
+        resource_owner_id: resource_owner.id,
+        scope: code.scope
       })
 
       Repo.insert(token)
@@ -145,15 +165,18 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ImplicitRequest do
     client_id: client_id,
     redirect_uri: redirect_uri,
     resource_owner: resource_owner,
-    state: state
+    state: state,
+    scope: scope
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
+         {:ok, scope} <- scope(scope: scope, client: client),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
       token = Token.resource_owner_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,
-        state: state
+        state: state,
+        scope: scope
       })
 
       Repo.insert(token)
@@ -172,16 +195,19 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
     client_id: client_id,
     redirect_uri: redirect_uri,
     resource_owner: resource_owner,
-    state: state
+    state: state,
+    scope: scope
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
+         {:ok, scope} <- scope(scope: scope, client: client),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
       token = Token.authorization_code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,
         redirect_uri: redirect_uri,
-        state: state
+        state: state,
+        scope: scope
       })
 
       Repo.insert(token)

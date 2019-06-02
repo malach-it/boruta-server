@@ -66,7 +66,8 @@ defmodule Boruta.Oauth.Request do
   defp build_request(%{"grant_type" => "client_credentials"} = params) do
     {:ok, struct(ClientCredentialsRequest, %{
       client_id: params["client_id"],
-      client_secret: params["client_secret"]
+      client_secret: params["client_secret"],
+      scope: params["scope"]
     })}
   end
   defp build_request(%{"grant_type" => "password"} = params) do
@@ -74,7 +75,8 @@ defmodule Boruta.Oauth.Request do
       client_id: params["client_id"],
       client_secret: params["client_secret"],
       username: params["username"],
-      password: params["password"]
+      password: params["password"],
+      scope: params["scope"]
     })}
   end
   defp build_request(%{"grant_type" => "authorization_code"} = params) do
@@ -90,7 +92,8 @@ defmodule Boruta.Oauth.Request do
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
       resource_owner: params["resource_owner"],
-      state: params["state"]
+      state: params["state"],
+      scope: params["scope"]
     })}
   end
   defp build_request(%{"response_type" => "code"} = params) do
@@ -98,7 +101,8 @@ defmodule Boruta.Oauth.Request do
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
       resource_owner: params["resource_owner"],
-      state: params["state"]
+      state: params["state"],
+      scope: params["scope"]
     })}
   end
 end
