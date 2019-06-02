@@ -63,6 +63,16 @@ defmodule Boruta.Oauth.Authorization.Base do
         {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}
     end
   end
+
+  def scope(scope: scope, client: %Client{authorize_scope: false}), do: {:ok, scope}
+  def scope(scope: scope, client: %Client{authorize_scope: true, authorized_scopes: authorized_scopes}) do
+    scopes = String.split(scope, " ")
+    case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
+      true -> {:ok, scope}
+      false ->
+        {:bad_request, %{error: "invalid_scope", error_description: "Given scopes are not authorized."}}
+    end
+  end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest do
@@ -77,7 +87,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
     client_secret: client_secret,
     scope: scope
   }) do
-    with {:ok, client} <- client(id: client_id, secret: client_secret) do
+    with {:ok, client} <- client(id: client_id, secret: client_secret),
+      {:ok, scope} <- scope(scope: scope, client: client) do
       token = Token.machine_changeset(%Token{}, %{
         client_id: client.id,
         scope: scope
@@ -104,6 +115,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ResourceOwnerPasswordCrede
   }) do
 
     with {:ok, client} <- client(id: client_id, secret: client_secret),
+         {:ok, scope} <- scope(scope: scope, client: client),
          {:ok, resource_owner} <- resource_owner(email: username, password: password) do
       token = Token.resource_owner_changeset(%Token{}, %{
         client_id: client.id,
@@ -158,6 +170,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ImplicitRequest do
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
+         {:ok, scope} <- scope(scope: scope, client: client),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
       token = Token.resource_owner_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
@@ -187,6 +200,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
+         {:ok, scope} <- scope(scope: scope, client: client),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
       token = Token.authorization_code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
