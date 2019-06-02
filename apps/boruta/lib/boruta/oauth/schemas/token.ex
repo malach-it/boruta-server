@@ -18,6 +18,7 @@ defmodule Boruta.Oauth.Token do
     field(:type, :string)
     field(:value, :string)
     field(:state, :string)
+    field(:scope, :string)
     field(:redirect_uri, :string)
     field(:expires_at, :integer)
 
@@ -43,7 +44,7 @@ defmodule Boruta.Oauth.Token do
 
   def resource_owner_changeset(token, attrs) do
     token
-    |> cast(attrs, [:client_id, :resource_owner_id, :state])
+    |> cast(attrs, [:client_id, :resource_owner_id, :state, :scope])
     |> validate_required([:client_id, :resource_owner_id])
     |> put_change(:type, "access_token")
     # TODO better token randomization
@@ -53,7 +54,7 @@ defmodule Boruta.Oauth.Token do
 
   def machine_changeset(token, attrs) do
     token
-    |> cast(attrs, [:client_id])
+    |> cast(attrs, [:client_id, :scope])
     |> validate_required([:client_id])
     |> put_change(:type, "access_token")
     # TODO better token randomization
@@ -64,7 +65,7 @@ defmodule Boruta.Oauth.Token do
   # TODO rename to code_changeset
   def authorization_code_changeset(token, attrs) do
     token
-    |> cast(attrs, [:client_id, :resource_owner_id, :redirect_uri, :state])
+    |> cast(attrs, [:client_id, :resource_owner_id, :redirect_uri, :state, :scope])
     |> validate_required([:client_id, :resource_owner_id, :redirect_uri])
     |> put_change(:type, "code")
     # TODO better token randomization

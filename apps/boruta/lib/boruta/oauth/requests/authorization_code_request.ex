@@ -3,5 +3,5 @@ defmodule Boruta.Oauth.AuthorizationCodeRequest do
   TODO Authorization code request
   """
 
-  defstruct client_id: "", code: "", redirect_uri: ""
+  defstruct client_id: "", code: "", redirect_uri: "", scope: ""
 end
