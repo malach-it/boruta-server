@@ -106,6 +106,21 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
+  def introspect do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "client_id" => %{
+          "type" => "string",
+          "pattern" => "[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}"
+        },
+        "client_secret" => %{"type" => "string"},
+        "token" => %{"type" => "string"},
+      },
+      "required" => ["client_id", "client_secret", "token"]
+    } |> Schema.resolve
+  end
+
   def grant_type do
     %{
       "type" => "object",

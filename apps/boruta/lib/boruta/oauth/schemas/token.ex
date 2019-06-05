@@ -14,6 +14,7 @@ defmodule Boruta.Oauth.Token do
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
+  @timestamps_opts type: :utc_datetime
   schema "tokens" do
     field(:type, :string)
     field(:value, :string)

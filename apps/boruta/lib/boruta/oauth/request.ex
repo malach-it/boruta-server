@@ -8,6 +8,7 @@ defmodule Boruta.Oauth.Request do
   alias Boruta.Oauth.ClientCredentialsRequest
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.ImplicitRequest
+  alias Boruta.Oauth.IntrospectRequest
   alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
   alias Boruta.Oauth.Validator
 
@@ -62,6 +63,45 @@ defmodule Boruta.Oauth.Request do
     {:bad_request, %{error: "invalid_request", error_description: "Must provide query_params and assigns."}}
   end
 
+  # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
+  def introspect_request(%Plug.Conn{req_headers: req_headers, body_params: %{} = body_params}) do
+    with {"authorization", authorization_header} <- Enum.find(
+      req_headers,
+      fn (header) -> elem(header, 0) == "authorization" end
+    ) do
+      introspect_request(%{
+        req_headers: [{"authorization", authorization_header}],
+        body_params: %{} = body_params
+      })
+    else
+      nil ->
+        introspect_request(%{body_params: %{} = body_params})
+    end
+  end
+
+  def introspect_request(%{req_headers: [{"authorization", authorization_header}], body_params: %{} = body_params}) do
+    with {:ok, [client_id, client_secret]} <- BasicAuth.decode(authorization_header),
+         %{} = params <- Validator.validate(
+           Enum.into(body_params, %{"response_type" => "introspect", "client_id" => client_id, "client_secret" => client_secret})
+         ) do
+      build_request(params)
+    else
+      {:error, error} ->
+        {:bad_request, %{error: "invalid_request", error_description: error}}
+    end
+  end
+  def introspect_request(%{body_params: %{} = body_params}) do
+    with %{} = params <- Validator.validate(Enum.into(body_params, %{"response_type" => "introspect"})) do
+      build_request(params)
+    else
+      {:error, error_description} ->
+        {:bad_request, %{error: "invalid_request", error_description: error_description}}
+    end
+  end
+  def introspect_request(_) do
+    {:bad_request, %{error: "invalid_request", error_description: "Must provide body_params."}}
+  end
+
   # private
   defp build_request(%{"grant_type" => "client_credentials"} = params) do
     {:ok, struct(ClientCredentialsRequest, %{
@@ -103,6 +143,13 @@ defmodule Boruta.Oauth.Request do
       resource_owner: params["resource_owner"],
       state: params["state"],
       scope: params["scope"]
+    })}
+  end
+  defp build_request(%{"response_type" => "introspect"} = params) do
+    {:ok, struct(IntrospectRequest, %{
+      client_id: params["client_id"],
+      client_secret: params["client_secret"],
+      token: params["token"]
     })}
   end
 end

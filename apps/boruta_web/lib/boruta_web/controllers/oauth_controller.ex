@@ -8,7 +8,26 @@ defmodule BorutaWeb.OauthController do
 
   action_fallback BorutaWeb.FallbackController
 
-  def token(conn, _params) do
+  def introspect(%Plug.Conn{} = conn, _params) do
+    conn |> Oauth.introspect(__MODULE__)
+  end
+
+  @impl Boruta.Oauth.Application
+  def introspect_success(conn, introspect) do
+    conn
+    |> put_view(OauthView)
+    |> render("introspect.json", introspect: introspect)
+  end
+
+  @impl Boruta.Oauth.Application
+  def introspect_error(conn, {status, %{error: error, error_description: error_description}}) do
+    conn
+    |> put_status(status)
+    |> put_view(OauthView)
+    |> render("error.json", error: error, error_description: error_description)
+  end
+
+  def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
   end
 

@@ -5,6 +5,10 @@ defmodule BorutaWeb.OauthView do
     token
   end
 
+  def render("introspect.json", %{introspect: %{} = introspect}) do
+    introspect
+  end
+
   def render("error.json", %{error: error, error_description: error_description}) do
     %{
       error: error,
