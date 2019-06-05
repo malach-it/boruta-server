@@ -6,6 +6,7 @@ defmodule Boruta.Oauth do
   alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.ImplicitRequest
+  alias Boruta.Oauth.Introspect
   alias Boruta.Oauth.Request
 
   def token(conn, module) do
@@ -30,6 +31,16 @@ defmodule Boruta.Oauth do
           _ ->
             module.authorize_error(conn, error)
         end
+    end
+  end
+
+  def introspect(conn, module) do
+    with {:ok, request} <- Request.introspect_request(conn),
+         {:ok, response} <- Introspect.token(request) do
+      module.introspect_success(conn, response)
+    else
+      error ->
+        module.introspect_error(conn, error)
     end
   end
 

@@ -44,6 +44,7 @@ defmodule BorutaWeb.Router do
     pipe_through :api
 
     post "/token", OauthController, :token
+    post "/introspect", OauthController, :introspect
   end
 
   scope "/oauth", BorutaWeb do

@@ -227,12 +227,15 @@ defmodule BorutaWeb.OauthControllerTest do
   end
 
   describe "password grant" do
-    # TODO test not happy paths
+    # TODO test unhappy paths
     setup %{conn: conn} do
       resource_owner = insert(:user)
-      user = insert(:user)
-      client = insert(:client, user_id: user.id)
-      {:ok, conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"), client: client, resource_owner: resource_owner}
+      client = insert(:client)
+      {:ok,
+        conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
+        client: client,
+        resource_owner: resource_owner
+      }
     end
 
     test "returns a token response with valid client_id/client_secret", %{conn: conn, client: client, resource_owner: resource_owner} do
@@ -331,6 +334,94 @@ defmodule BorutaWeb.OauthControllerTest do
       )
       assert code
       assert state == given_state
+    end
+  end
+
+  describe "introspect" do
+    setup %{conn: conn} do
+      client = insert(:client)
+      client_token = insert(:token, type: "access_token", value: "777", client_id: client.id)
+      resource_owner = insert(:user)
+      resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, resource_owner_id: resource_owner.id)
+      {:ok,
+        conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
+        client: client,
+        client_token: client_token,
+        resource_owner_token: resource_owner_token,
+        resource_owner: resource_owner
+      }
+    end
+
+    test "returns an error if request is invalid", %{conn: conn} do
+      conn = post(
+        conn,
+        "/oauth/introspect"
+      )
+      assert json_response(conn, 400) == %{
+        "error" => "invalid_request",
+        "error_description" => "Request validation failed. Required properties client_id, client_secret, token are missing at #."
+      }
+    end
+
+    test "returns an error if client is invalid", %{conn: conn, client: client} do
+      conn = post(
+        conn,
+        "/oauth/introspect",
+        "client_id=#{client.id}&client_secret=bad_secret&token=token"
+      )
+
+      assert json_response(conn, 401) == %{
+        "error" => "invalid_client",
+        "error_description" => "Invalid client_id or client_secret."
+      }
+    end
+
+    test "returns an inactive token response if token is invalid", %{conn: conn, client: client} do
+      conn = post(
+        conn,
+        "/oauth/introspect",
+        "client_id=#{client.id}&client_secret=#{client.secret}&token=bad_token"
+      )
+
+      assert json_response(conn, 200) == %{"active" => false}
+    end
+
+    test "returns an introspect token response if client token is invalid", %{conn: conn, client: client, client_token: token} do
+      conn = post(
+        conn,
+        "/oauth/introspect",
+        "client_id=#{client.id}&client_secret=#{client.secret}&token=#{token.value}"
+      )
+
+      assert json_response(conn, 200) == %{
+        "active" => true,
+        "client_id" => client.id,
+        "exp" => token.expires_at,
+        "iat" => DateTime.to_unix(token.inserted_at),
+        "iss" => "boruta",
+        "scope" => token.scope,
+        "sub" => nil,
+        "username" => nil
+      }
+    end
+
+    test "returns an introspect token response if resource owner token is invalid", %{conn: conn, client: client, resource_owner_token: token, resource_owner: resource_owner} do
+      conn = post(
+        conn,
+        "/oauth/introspect",
+        "client_id=#{client.id}&client_secret=#{client.secret}&token=#{token.value}"
+      )
+
+      assert json_response(conn, 200) == %{
+        "active" => true,
+        "client_id" => client.id,
+        "exp" => token.expires_at,
+        "iat" => DateTime.to_unix(token.inserted_at),
+        "iss" => "boruta",
+        "scope" => token.scope,
+        "sub" => resource_owner.id,
+        "username" => resource_owner.email
+      }
     end
   end
 end
