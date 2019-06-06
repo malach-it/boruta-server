@@ -6,6 +6,7 @@ defmodule Boruta.Oauth.Introspect do
   # TODO defstruct
 
   alias Boruta.Oauth.Authorization
+  alias Boruta.Oauth.Error
   alias Boruta.Oauth.IntrospectRequest
   alias Boruta.Oauth.Token
 
@@ -28,7 +29,7 @@ defmodule Boruta.Oauth.Introspect do
         "iat" => DateTime.to_unix(inserted_at)
       }}
     else
-      {_status, %{error: "invalid_access_token"}} ->
+      {:error, %Error{error: :invalid_access_token}} ->
         {:ok, %{"active" => false}}
       error -> error
     end

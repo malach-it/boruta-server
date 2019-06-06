@@ -4,6 +4,7 @@ defmodule BorutaWeb.OauthController do
   use BorutaWeb, :controller
 
   alias Boruta.Oauth
+  alias Boruta.Oauth.Error
   alias BorutaWeb.OauthView
 
   action_fallback BorutaWeb.FallbackController
@@ -20,7 +21,7 @@ defmodule BorutaWeb.OauthController do
   end
 
   @impl Boruta.Oauth.Application
-  def introspect_error(conn, {status, %{error: error, error_description: error_description}}) do
+  def introspect_error(conn, %Error{status: status, error: error, error_description: error_description}) do
     conn
     |> put_status(status)
     |> put_view(OauthView)
@@ -39,7 +40,7 @@ defmodule BorutaWeb.OauthController do
   end
 
   @impl Boruta.Oauth.Application
-  def token_error(conn, {status, %{error: error, error_description: error_description}}) do
+  def token_error(conn, %Error{status: status, error: error, error_description: error_description}) do
     conn
     |> put_status(status)
     |> put_view(OauthView)
@@ -84,7 +85,7 @@ defmodule BorutaWeb.OauthController do
   @impl Boruta.Oauth.Application
   def authorize_error(
     %Plug.Conn{query_params: query_params} = conn,
-    {:unauthorized, %{error: "invalid_resource_owner"}}
+    %Error{status: :unauthorized, error: :invalid_resource_owner}
   ) do
     conn
     |> put_session(:oauth_request, %{
@@ -94,17 +95,36 @@ defmodule BorutaWeb.OauthController do
     })
     |> redirect(to: Routes.session_path(conn, :new))
   end
-  def authorize_error(conn, {_status, %{error: error, error_description: error_description, format: :query, redirect_uri: redirect_uri}}) do
+  def authorize_error(
+    conn,
+    %Error{
+      error: error,
+      error_description: error_description,
+      format: :query,
+      redirect_uri: redirect_uri
+    }
+  ) do
     query = URI.encode_query(%{error: error, error_description: error_description})
     conn
     |> redirect(external: "#{redirect_uri}?#{query}")
   end
-  def authorize_error(conn, {_status, %{error: error, error_description: error_description, format: :fragment, redirect_uri: redirect_uri}}) do
+  def authorize_error(
+    conn,
+    %Error{
+      error: error,
+      error_description: error_description,
+      format: :fragment,
+      redirect_uri: redirect_uri
+    }
+  ) do
     query = URI.encode_query(%{error: error, error_description: error_description})
     conn
     |> redirect(external: "#{redirect_uri}##{query}")
   end
-  def authorize_error(conn, {status, %{error: error, error_description: error_description}}) do
+  def authorize_error(
+    conn,
+    %Error{status: status, error: error, error_description: error_description}
+  ) do
     conn
     |> put_status(status)
     |> put_view(BorutaWeb.OauthView)

@@ -7,6 +7,7 @@ defmodule Boruta.Oauth.Authorization.Base do
 
   alias Boruta.Coherence.User
   alias Boruta.Oauth.Client
+  alias Boruta.Oauth.Error
   alias Boruta.Oauth.Token
   alias Boruta.Repo
 
@@ -15,7 +16,7 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, client}
     else
       nil ->
-        {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or client_secret."}}
+        {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or client_secret."}}
     end
   end
 
@@ -24,7 +25,7 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, client}
     else
       nil ->
-        {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or redirect_uri."}}
+        {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or redirect_uri."}}
     end
   end
 
@@ -33,7 +34,7 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, resource_owner}
     else
       _ ->
-        {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password."}}
+        {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Invalid username or password."}}
     end
   end
   # TODO return more explicit error (that should be rescued in controller and not be sent to the client)
@@ -43,12 +44,12 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, resource_owner}
     else
       _ ->
-        {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password."}}
+        {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Invalid username or password."}}
     end
   end
   def resource_owner(%User{__meta__: %{state: :loaded}} = resource_owner), do: {:ok, resource_owner}
   # TODO return more explicit error (that should be rescued in controller and not be sent to the client)
-  def resource_owner(_), do: {:unauthorized, %{error: "invalid_resource_owner", error_description: "Resource owner is invalid."}}
+  def resource_owner(_), do: {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Resource owner is invalid."}}
 
   def code(value: value, redirect_uri: redirect_uri) do
     with %Token{} = token <- Repo.get_by(Token, type: "code", value: value, redirect_uri: redirect_uri),
@@ -56,9 +57,9 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, token}
     else
       {:error, error} ->
-        {:unauthorized, %{error: "invalid_code", error_description: error}}
+        {:error, %Error{status: :unauthorized, error: :invalid_code, error_description: error}}
       nil ->
-        {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}
+            {:error, %Error{status: :unauthorized, error: :invalid_code, error_description: "Provided authorization code is incorrect."}}
     end
   end
 
@@ -74,9 +75,9 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, token}
     else
       {:error, error} ->
-        {:unauthorized, %{error: "invalid_access_token", error_description: error}}
+        {:error, %Error{status: :unauthorized, error: :invalid_access_token, error_description: error}}
       nil ->
-        {:unauthorized, %{error: "invalid_access_token", error_description: "Provided authorization code is incorrect."}}
+            {:error, %Error{status: :unauthorized, error: :invalid_access_token, error_description: "Provided authorization code is incorrect."}}
     end
   end
 
@@ -86,7 +87,7 @@ defmodule Boruta.Oauth.Authorization.Base do
     case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
       true -> {:ok, scope}
       false ->
-        {:bad_request, %{error: "invalid_scope", error_description: "Given scopes are not authorized."}}
+        {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
     end
   end
 end
