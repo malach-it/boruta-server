@@ -8,66 +8,59 @@ defmodule Boruta.OauthTest do
   import Boruta.Factory
 
   alias Boruta.Oauth
+  alias Boruta.Oauth.Error
   alias Boruta.Oauth.Token
 
   describe "token request" do
     test "returns an error without params" do
-      assert Oauth.token(%{}, __MODULE__) == {:token_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Must provide body_params."
-        }
+      assert Oauth.token(%{}, __MODULE__) == {:token_error, %Error{
+        error: :invalid_request,
+        error_description: "Must provide body_params.",
+        status: :bad_request
       }}
     end
 
     test "returns an error with empty params" do
-      assert Oauth.token(%{body_params: %{}}, __MODULE__) == {:token_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Request is not a valid OAuth request. Need a grant_type or a response_type param."
-        }
+      assert Oauth.token(%{body_params: %{}}, __MODULE__) == {:token_error, %Error{
+        error: :invalid_request,
+        error_description: "Request is not a valid OAuth request. Need a grant_type or a response_type param.",
+        status: :bad_request
       }}
     end
 
     test "returns an error with invalid grant_type" do
-      assert Oauth.token(%{body_params: %{"grant_type" => "boom"}}, __MODULE__) == {:token_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code/."
-        }
+      assert Oauth.token(%{body_params: %{"grant_type" => "boom"}}, __MODULE__) == {:token_error,  %Error{
+        error: :invalid_request,
+        error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code/.",
+        status: :bad_request
       }}
     end
   end
 
   describe "authorize request" do
     test "returns an error without params" do
-      assert Oauth.authorize(%{}, __MODULE__) == {:authorize_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Must provide query_params and assigns."
-        }
+      assert Oauth.authorize(%{}, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_request,
+        error_description: "Must provide query_params and assigns.",
+        status: :bad_request
       }}
     end
 
     test "returns an error with empty params" do
       assert Oauth.authorize(%{query_params: %{}, assigns: %{}}, __MODULE__) == {:authorize_error,
-        {:bad_request, %{
-          error: "invalid_request", error_description: "Request is not a valid OAuth request. Need a grant_type or a response_type param."
-        }}
+        %Error{
+          error: :invalid_request,
+          error_description: "Request is not a valid OAuth request. Need a grant_type or a response_type param.",
+          status: :bad_request
+        }
       }
     end
 
     test "returns an error with invalid response_type" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "boom"}, assigns: %{}}, __MODULE__) == {:authorize_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Query params validation failed. #/response_type do match required pattern /token|code/."
-        }
+      assert Oauth.authorize(%{query_params: %{"response_type" => "boom"}, assigns: %{}}, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_request,
+        error_description: "Query params validation failed. #/response_type do match required pattern /token|code/.",
+        status: :bad_request
       }}
     end
   end
@@ -80,12 +73,10 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns an error if `grant_type` is 'client_credentials' and schema is invalid" do
-      assert Oauth.token(%{body_params: %{"grant_type" => "client_credentials"}}, __MODULE__) == {:token_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Request body validation failed. Required properties client_id, client_secret are missing at #."
-        }
+      assert Oauth.token(%{body_params: %{"grant_type" => "client_credentials"}}, __MODULE__) == {:token_error, %Error{
+        error: :invalid_request,
+        error_description: "Request body validation failed. Required properties client_id, client_secret are missing at #.",
+        status: :bad_request
       }}
     end
 
@@ -99,11 +90,10 @@ defmodule Boruta.OauthTest do
           }
         },
         __MODULE__
-      ) == {:token_error, {
-        :unauthorized, %{
-          error: "invalid_client",
-          error_description: "Invalid client_id or client_secret."
-        }
+      ) == {:token_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or client_secret.",
+        status: :unauthorized
       }}
     end
 
@@ -182,7 +172,11 @@ defmodule Boruta.OauthTest do
           }
         },
         __MODULE__
-      ) == {:token_error, {:bad_request, %{error: "invalid_scope", error_description: "Given scopes are not authorized."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_scope,
+        error_description: "Given scopes are not authorized.",
+        status: :bad_request
+      }}
     end
   end
 
@@ -202,7 +196,11 @@ defmodule Boruta.OauthTest do
           body_params: %{}
         },
         __MODULE__
-      ) == {:token_error, {:bad_request, %{error: "invalid_request", error_description: "`boom` is not a valid Basic authorization header"}}}
+      ) == {:token_error, %Boruta.Oauth.Error{
+        error: :invalid_request,
+        error_description: "`boom` is not a valid Basic authorization header",
+        status: :bad_request
+      }}
     end
 
     test "returns an error if request is invalid" do
@@ -213,7 +211,11 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password"}
         },
         __MODULE__
-      ) == {:token_error, {:bad_request, %{error: "invalid_request", error_description: "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/. Required properties username, password are missing at #."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_request,
+        error_description: "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/. Required properties username, password are missing at #.",
+        status: :bad_request
+      }}
     end
 
     test "returns an error if client_id/secret are invalid" do
@@ -224,7 +226,11 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => "username", "password" => "password"}
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or client_secret."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or client_secret.",
+        status: :unauthorized
+      }}
     end
 
     test "returns an error if username is invalid", %{client: client} do
@@ -235,7 +241,11 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => "username", "password" => "password"}
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_resource_owner,
+        error_description: "Invalid username or password.",
+        status: :unauthorized
+      }}
     end
 
     test "returns an error if password is invalid", %{client: client, resource_owner: resource_owner} do
@@ -246,7 +256,11 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => resource_owner.email, "password" => "boom"}
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_resource_owner", error_description: "Invalid username or password."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_resource_owner,
+        error_description: "Invalid username or password.",
+        status: :unauthorized
+      }}
     end
 
     test "returns a token if username/password are valid", %{client: client, resource_owner: resource_owner} do
@@ -325,7 +339,11 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "password", "username" => resource_owner.email, "password" => "password", "scope" => given_scope}
         },
         __MODULE__
-      ) == {:token_error, {:bad_request, %{error: "invalid_scope", error_description: "Given scopes are not authorized."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_scope,
+        error_description: "Given scopes are not authorized.",
+        status: :bad_request
+      }}
     end
   end
 
@@ -339,12 +357,10 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns an error if `response_type` is 'code' and schema is invalid" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "code"}, assigns: %{}}, __MODULE__) == {:authorize_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Query params validation failed. Required properties client_id, redirect_uri are missing at #."
-        }
+      assert Oauth.authorize(%{query_params: %{"response_type" => "code"}, assigns: %{}}, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_request,
+        error_description: "Query params validation failed. Required properties client_id, redirect_uri are missing at #.",
+        status: :bad_request
       }}
     end
 
@@ -356,14 +372,12 @@ defmodule Boruta.OauthTest do
           "redirect_uri" => "http://redirect.uri"
         },
         assigns: %{}
-      }, __MODULE__) == {:authorize_error, {
-        :unauthorized,
-        %{
-          error: "invalid_client",
-          error_description: "Invalid client_id or redirect_uri.",
-          format: :query,
-          redirect_uri: "http://redirect.uri"
-        }
+      }, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or redirect_uri.",
+        status: :unauthorized,
+        format: :query,
+        redirect_uri: "http://redirect.uri"
       }}
     end
 
@@ -375,14 +389,12 @@ defmodule Boruta.OauthTest do
           "redirect_uri" => "http://bad.redirect.uri"
         },
         assigns: %{}
-      }, __MODULE__) == {:authorize_error, {
-        :unauthorized,
-        %{
-          error: "invalid_client",
-          error_description: "Invalid client_id or redirect_uri.",
-          format: :query,
-          redirect_uri: "http://bad.redirect.uri"
-        }
+      }, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or redirect_uri.",
+        status: :unauthorized,
+        format: :query,
+        redirect_uri: "http://bad.redirect.uri"
       }}
     end
 
@@ -394,14 +406,12 @@ defmodule Boruta.OauthTest do
           "redirect_uri" => client.redirect_uri
         },
         assigns: %{}
-      }, __MODULE__) == {:authorize_error, {
-        :unauthorized,
-        %{
-          error: "invalid_resource_owner",
-          error_description: "Resource owner is invalid.",
-          format: :query,
-          redirect_uri: client.redirect_uri
-        }
+      }, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_resource_owner,
+        error_description: "Resource owner is invalid.",
+        status: :unauthorized,
+        format: :query,
+        redirect_uri: client.redirect_uri
       }}
     end
 
@@ -496,9 +506,12 @@ defmodule Boruta.OauthTest do
             "scope" =>  given_scope
           },
         assigns: %{current_user: resource_owner}
-      }, __MODULE__) == {:authorize_error, {
-        :bad_request,
-        %{error: "invalid_scope", error_description: "Given scopes are not authorized.", format: :query, redirect_uri: "https://redirect.uri"}
+      }, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_scope,
+        error_description: "Given scopes are not authorized.",
+        format: :query,
+        redirect_uri: "https://redirect.uri",
+        status: :bad_request
       }}
     end
 
@@ -586,11 +599,10 @@ defmodule Boruta.OauthTest do
           body_params: %{"grant_type" => "authorization_code"}
         },
         __MODULE__
-      ) == {:token_error, {
-        :bad_request, %{
-          error: "invalid_request",
-          error_description: "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/. Required properties code, redirect_uri are missing at #."
-        }
+      ) == {:token_error, %Error{
+        error: :invalid_request,
+        error_description: "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/. Required properties code, redirect_uri are missing at #.",
+        status: :bad_request
       }}
     end
 
@@ -608,7 +620,11 @@ defmodule Boruta.OauthTest do
           }
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_client", error_description: "Invalid client_id or redirect_uri."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or redirect_uri.",
+        status: :unauthorized
+      }}
     end
 
     test "returns an error if `code` is invalid", %{client: client} do
@@ -625,7 +641,11 @@ defmodule Boruta.OauthTest do
           }
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_code,
+        error_description: "Provided authorization code is incorrect.",
+        status: :unauthorized
+      }}
     end
 
     test "returns an error if `code` and request redirect_uri do not match", %{client: client, bad_redirect_uri_code: bad_redirect_uri_code} do
@@ -641,7 +661,11 @@ defmodule Boruta.OauthTest do
           }
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_code", error_description: "Provided authorization code is incorrect."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_code,
+        error_description: "Provided authorization code is incorrect.",
+        status: :unauthorized
+      }}
     end
 
     test "returns an error if `code` is expired", %{client: client, expired_code: expired_code} do
@@ -657,7 +681,11 @@ defmodule Boruta.OauthTest do
           }
         },
         __MODULE__
-      ) == {:token_error, {:unauthorized, %{error: "invalid_code", error_description: "Token expired."}}}
+      ) == {:token_error, %Error{
+        error: :invalid_code,
+        error_description: "Token expired.",
+        status: :unauthorized
+      }}
     end
 
     test "returns a token if `code` is valid", %{client: client, code: code} do
@@ -724,12 +752,10 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns an error if `response_type` is 'token' and schema is invalid" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "token"}, assigns: %{}}, __MODULE__) == {:authorize_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Query params validation failed. Required properties client_id, redirect_uri are missing at #."
-        }
+      assert Oauth.authorize(%{query_params: %{"response_type" => "token"}, assigns: %{}}, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_request,
+        error_description: "Query params validation failed. Required properties client_id, redirect_uri are missing at #.",
+        status: :bad_request
       }}
     end
 
@@ -744,13 +770,12 @@ defmodule Boruta.OauthTest do
           assigns: %{}
         },
         __MODULE__
-      ) == {:authorize_error, {
-        :unauthorized, %{
-          error: "invalid_client",
-          error_description: "Invalid client_id or redirect_uri.",
-          format: :fragment,
-          redirect_uri: "http://redirect.uri"
-        }
+      ) == {:authorize_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or redirect_uri.",
+        status: :unauthorized,
+        format: :fragment,
+        redirect_uri: "http://redirect.uri"
       }}
     end
 
@@ -765,13 +790,12 @@ defmodule Boruta.OauthTest do
           assigns: %{}
         },
         __MODULE__
-      ) == {:authorize_error, {
-        :unauthorized, %{
-          error: "invalid_client",
-          error_description: "Invalid client_id or redirect_uri.",
-          format: :fragment,
-          redirect_uri: "http://bad.redirect.uri"
-        }
+      ) == {:authorize_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or redirect_uri.",
+        status: :unauthorized,
+        format: :fragment,
+        redirect_uri: "http://bad.redirect.uri"
       }}
     end
 
@@ -786,13 +810,12 @@ defmodule Boruta.OauthTest do
           assigns: %{}
         },
         __MODULE__
-      ) == {:authorize_error, {
-        :unauthorized, %{
-          error: "invalid_resource_owner",
-          error_description: "Resource owner is invalid.",
-          format: :fragment,
-          redirect_uri: client.redirect_uri
-        }
+      ) == {:authorize_error,  %Error{
+        error: :invalid_resource_owner,
+        error_description: "Resource owner is invalid.",
+        status: :unauthorized,
+        format: :fragment,
+        redirect_uri: client.redirect_uri
       }}
     end
 
@@ -895,9 +918,12 @@ defmodule Boruta.OauthTest do
           }
         },
         __MODULE__
-      ) == {:authorize_error, {
-        :bad_request,
-        %{error: "invalid_scope", error_description: "Given scopes are not authorized.", format: :fragment, redirect_uri: "https://redirect.uri"}
+      ) == {:authorize_error, %Error{
+        error: :invalid_scope,
+        error_description: "Given scopes are not authorized.",
+        format: :fragment,
+        redirect_uri: "https://redirect.uri",
+        status: :bad_request
       }}
     end
   end
@@ -911,22 +937,18 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns an error without params" do
-      assert Oauth.introspect(%{}, __MODULE__) == {:introspect_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Must provide body_params."
-        }
+      assert Oauth.introspect(%{}, __MODULE__) == {:introspect_error, %Error{
+        error: :invalid_request,
+        error_description: "Must provide body_params.",
+        status: :bad_request
       }}
     end
 
     test "returns an error with invalid request" do
-      assert Oauth.introspect(%{body_params: %{}}, __MODULE__) == {:introspect_error, {
-        :bad_request,
-        %{
-          error: "invalid_request",
-          error_description: "Request validation failed. Required properties client_id, client_secret, token are missing at #."
-        }
+      assert Oauth.introspect(%{body_params: %{}}, __MODULE__) == {:introspect_error, %Error{
+        error: :invalid_request,
+        error_description: "Request validation failed. Required properties client_id, client_secret, token are missing at #.",
+        status: :bad_request
       }}
     end
 
@@ -936,9 +958,10 @@ defmodule Boruta.OauthTest do
       assert Oauth.introspect(%{
         body_params: %{"token" => "token"},
         req_headers: [{"authorization", authorization_header}]
-      }, __MODULE__) == {:introspect_error, {
-        :unauthorized,
-        %{error: "invalid_client", error_description: "Invalid client_id or client_secret."}
+      }, __MODULE__) == {:introspect_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or client_secret.",
+        status: :unauthorized
       }}
     end
 

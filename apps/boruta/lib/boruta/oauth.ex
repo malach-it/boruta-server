@@ -5,6 +5,7 @@ defmodule Boruta.Oauth do
 
   alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.CodeRequest
+  alias Boruta.Oauth.Error
   alias Boruta.Oauth.ImplicitRequest
   alias Boruta.Oauth.Introspect
   alias Boruta.Oauth.Request
@@ -14,7 +15,7 @@ defmodule Boruta.Oauth do
          {:ok, token} <- Authorization.token(request) do
       module.token_success(conn, token)
     else
-      error ->
+      {:error, %Error{} = error} ->
         module.token_error(conn, error)
     end
   end
@@ -24,7 +25,7 @@ defmodule Boruta.Oauth do
          {:ok, token} <- Authorization.token(request) do
       module.authorize_success(conn, token)
     else
-      error ->
+      {:error, %Error{} = error} ->
         with {:ok, request} <- Request.authorize_request(conn) do
           module.authorize_error(conn, error_with_format(request, error))
         else
@@ -39,16 +40,16 @@ defmodule Boruta.Oauth do
          {:ok, response} <- Introspect.token(request) do
       module.introspect_success(conn, response)
     else
-      error ->
+      {:error, %Error{} = error} ->
         module.introspect_error(conn, error)
     end
   end
 
-  defp error_with_format(%CodeRequest{redirect_uri: redirect_uri}, {status, error}) do
-    {status, Enum.into(error, %{format: :query, redirect_uri: redirect_uri})}
+  defp error_with_format(%CodeRequest{redirect_uri: redirect_uri}, %Error{} = error) do
+    %{error | format: :query, redirect_uri: redirect_uri}
   end
-  defp error_with_format(%ImplicitRequest{redirect_uri: redirect_uri}, {status, error}) do
-    {status, Enum.into(error, %{format: :fragment, redirect_uri: redirect_uri})}
+  defp error_with_format(%ImplicitRequest{redirect_uri: redirect_uri}, %Error{} = error) do
+    %{error | format: :fragment, redirect_uri: redirect_uri}
   end
   defp error_with_format(_, error), do: error
 end
