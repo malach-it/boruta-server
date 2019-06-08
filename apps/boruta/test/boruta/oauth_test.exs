@@ -198,7 +198,7 @@ defmodule Boruta.OauthTest do
         __MODULE__
       ) == {:token_error, %Boruta.Oauth.Error{
         error: :invalid_request,
-        error_description: "`boom` is not a valid Basic authorization header",
+        error_description: "`boom` is not a valid Basic authorization header.",
         status: :bad_request
       }}
     end
