@@ -1,6 +1,6 @@
 defmodule Boruta.Oauth.Introspect do
   @moduledoc """
-  TODO OAuth Introspect
+  OAuth Introspect
   """
 
   # TODO defstruct
@@ -10,6 +10,18 @@ defmodule Boruta.Oauth.Introspect do
   alias Boruta.Oauth.IntrospectRequest
   alias Boruta.Oauth.Token
 
+  @doc """
+  Build an introspect response for the give `%IntrospectRequest{}`
+
+  ## Examples
+      iex> token(%IntrospectRequest{
+        client_id: "client_id",
+        client_secret: "client_secret",
+        token: "token"
+      })
+      {:ok, %{"active" => false}}
+  """
+  @spec token(request :: IntrospectRequest.t()) :: {:ok, response :: Map.t()} | error :: any()
   def token(%IntrospectRequest{client_id: client_id, client_secret: client_secret, token: token}) do
     with {:ok, client} <- Authorization.Base.client(id: client_id, secret: client_secret),
          {:ok, %Token{

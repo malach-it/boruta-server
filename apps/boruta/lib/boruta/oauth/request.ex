@@ -5,6 +5,8 @@ defmodule Boruta.Oauth.Request do
   Note : Input can be a `%Plug.Conn{}` request.
   """
 
+  # TODO unit test
+
   alias Boruta.BasicAuth
   alias Boruta.Oauth.AuthorizationCodeRequest
   alias Boruta.Oauth.ClientCredentialsRequest

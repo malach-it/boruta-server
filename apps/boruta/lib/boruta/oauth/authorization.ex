@@ -1,4 +1,10 @@
 defprotocol Boruta.Oauth.Authorization do
+  @moduledoc """
+  """
+
+  @doc """
+  Returns a token for given request, depending of implementation.
+  """
   def token(request)
 end
 
