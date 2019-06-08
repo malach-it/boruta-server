@@ -1,12 +1,31 @@
 defmodule Boruta.Oauth.Validator do
   @moduledoc """
-  TODO OAuth requests validator
+  Utility to validate the request according to the given parameters.
   """
 
   # TODO fid a way to difference query from body params
+  # TODO unit test
   alias Boruta.Oauth.Json.Schema
   alias ExJsonSchema.Validator.Error.BorutaFormatter
 
+  @doc """
+  Validates given OAuth parameters.
+  ## Examples
+      iex> validate(%{
+        "grant_type" => "client_credentials",
+        "client_id" => "client_id",
+        "client_secret" => "client_secret"
+      })
+      {:ok, %{
+        "grant_type" => "client_credentials",
+        "client_id" => "client_id",
+        "client_secret" => "client_secret"
+      }}
+
+      iex> validate(%{})
+      {:error, "Request is not a valid OAuth request. Need a grant_type or a response_type param."}
+  """
+  @spec validate(params :: Map.t()) :: {:ok, params :: Map.t()} | {:error, message :: String.t()}
   def validate(%{"grant_type" => "password"} = params) do
     case ExJsonSchema.Validator.validate(
       Schema.resource_owner_password_credentials,
