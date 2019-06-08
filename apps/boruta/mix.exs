@@ -13,7 +13,8 @@ defmodule Boruta.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -43,7 +44,42 @@ defmodule Boruta.MixProject do
       {:ex_machina, "~> 2.3", only: :test},
       {:ex_json_schema, "~> 0.6.0-rc.1"},
       {:secure_random, "~> 0.5"},
-      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      groups_for_modules: [
+        "Authorization": [
+          Boruta.Oauth.Authorization,
+          Boruta.Oauth.Authorization.Base
+        ],
+        "Introspection": [
+          Boruta.Oauth.Introspect
+        ],
+        "Schemas": [
+          Boruta.Oauth.Token,
+          Boruta.Oauth.Client
+        ],
+        "OAuth request": [
+          Boruta.Oauth.ImplicitRequest,
+          Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest,
+          Boruta.Oauth.AuthorizationCodeRequest,
+          Boruta.Oauth.ClientCredentialsRequest,
+          Boruta.Oauth.CodeRequest,
+          Boruta.Oauth.IntrospectRequest,
+          Boruta.Oauth.Request
+        ],
+        "Utilities": [
+          Boruta.BasicAuth,
+          Boruta.Oauth.Validator
+        ],
+        "Errors": [
+          Boruta.Oauth.Error
+        ]
+      ]
     ]
   end
 
