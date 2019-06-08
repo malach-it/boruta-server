@@ -21,7 +21,7 @@ defmodule Boruta.Oauth.Introspect do
       })
       {:ok, %{"active" => false}}
   """
-  @spec token(request :: IntrospectRequest.t()) :: {:ok, response :: Map.t()} | error :: any()
+  @spec token(request :: IntrospectRequest.t()) :: {:ok, response :: Map.t()} | {:error , error :: Boruta.Oauth.Error.t()}
   def token(%IntrospectRequest{client_id: client_id, client_secret: client_secret, token: token}) do
     with {:ok, client} <- Authorization.Base.client(id: client_id, secret: client_secret),
          {:ok, %Token{
