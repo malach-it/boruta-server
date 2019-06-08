@@ -4,7 +4,6 @@ defmodule Boruta.Oauth.Validator do
   """
 
   # TODO fid a way to difference query from body params
-  # TODO return {:ok, params} on successful response
   alias Boruta.Oauth.Json.Schema
   alias ExJsonSchema.Validator.Error.BorutaFormatter
 
@@ -14,8 +13,7 @@ defmodule Boruta.Oauth.Validator do
       params,
       error_formatter: BorutaFormatter
     ) do
-      :ok ->
-        params
+      :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
     end
@@ -26,8 +24,7 @@ defmodule Boruta.Oauth.Validator do
       params,
       error_formatter: BorutaFormatter
     ) do
-      :ok ->
-        params
+      :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
     end
@@ -38,8 +35,7 @@ defmodule Boruta.Oauth.Validator do
       params,
       error_formatter: BorutaFormatter
     ) do
-      :ok ->
-        params
+      :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
     end
@@ -50,8 +46,7 @@ defmodule Boruta.Oauth.Validator do
       params,
       error_formatter: BorutaFormatter
     ) do
-      :ok ->
-        params
+      :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
     end
@@ -59,32 +54,28 @@ defmodule Boruta.Oauth.Validator do
 
   def validate(%{"response_type" => "token"} = params) do
     case ExJsonSchema.Validator.validate(Schema.token, params, error_formatter: BorutaFormatter) do
-      :ok ->
-        params
+      :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Query params validation failed. " <> Enum.join(errors, " ")}
     end
   end
   def validate(%{"response_type" => "code"} = params) do
     case ExJsonSchema.Validator.validate(Schema.code, params, error_formatter: BorutaFormatter) do
-      :ok ->
-        params
+      :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Query params validation failed. " <> Enum.join(errors, " ")}
     end
   end
   def validate(%{"response_type" => "introspect"} = params) do
     case ExJsonSchema.Validator.validate(Schema.introspect, params, error_formatter: BorutaFormatter) do
-      :ok ->
-        params
+      :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Request validation failed. " <> Enum.join(errors, " ")}
     end
   end
   def validate(%{"response_type" => _} = params) do
     case ExJsonSchema.Validator.validate(Schema.response_type, params, error_formatter: BorutaFormatter) do
-      :ok ->
-        params
+      :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Query params validation failed. " <> Enum.join(errors, " ")}
     end
