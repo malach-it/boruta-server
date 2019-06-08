@@ -1,6 +1,8 @@
 defmodule Boruta.Oauth do
   @moduledoc """
-  TODO Boruta OAuth
+  Boruta OAuth entrypoint, handles OAuth requests.
+
+  Note : this module works in association with `Boruta.Oauth.Application` behaviour
   """
 
   alias Boruta.Oauth.Authorization
@@ -10,6 +12,10 @@ defmodule Boruta.Oauth do
   alias Boruta.Oauth.Introspect
   alias Boruta.Oauth.Request
 
+  @doc """
+  Triggers `token_success` in case of success and `token_error` in case of failure of the given module correspondig to the response to the request corresponding to `conn`
+  """
+  @spec token(conn :: Map.t(), module :: atom()) :: any()
   def token(conn, module) do
     with {:ok, request} <- Request.token_request(conn),
          {:ok, token} <- Authorization.token(request) do
@@ -20,6 +26,9 @@ defmodule Boruta.Oauth do
     end
   end
 
+  @doc """
+  Triggers `authorize_success` in case of success and `authorize_error` in case of failure of the given module correspondig to the response to the request corresponding to `conn`
+  """
   def authorize(conn, module) do
     with {:ok, request} <- Request.authorize_request(conn),
          {:ok, token} <- Authorization.token(request) do
@@ -35,6 +44,9 @@ defmodule Boruta.Oauth do
     end
   end
 
+  @doc """
+  Triggers `introspect_success` in case of success and `introspect_error` in case of failure of the given module correspondig to the response to the request corresponding to `conn`
+  """
   def introspect(conn, module) do
     with {:ok, request} <- Request.introspect_request(conn),
          {:ok, response} <- Introspect.token(request) do
@@ -45,6 +57,7 @@ defmodule Boruta.Oauth do
     end
   end
 
+  # private
   defp error_with_format(%CodeRequest{redirect_uri: redirect_uri}, %Error{} = error) do
     %{error | format: :query, redirect_uri: redirect_uri}
   end
