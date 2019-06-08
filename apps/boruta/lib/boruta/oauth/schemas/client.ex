@@ -1,6 +1,6 @@
 defmodule Boruta.Oauth.Client do
   @moduledoc """
-  TODO OAuth client
+  OAuth client schema
   """
 
   use Ecto.Schema
@@ -17,12 +17,5 @@ defmodule Boruta.Oauth.Client do
     belongs_to(:user, User)
 
     timestamps()
-  end
-
-  @doc false
-  def changeset(client, attrs) do
-    client
-    |> cast(attrs, [])
-    |> validate_required([])
   end
 end
