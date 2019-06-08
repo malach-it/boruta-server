@@ -1,7 +1,5 @@
 defmodule Boruta.Config do
-  @moduledoc """
-  Boruta config shortcuts
-  """
+  @moduledoc false
 
   @defaults expires_in: %{
     access_token: 3600,
