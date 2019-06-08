@@ -129,7 +129,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
          {:ok, scope} <- scope(scope: scope, client: client),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
-      token = Token.authorization_code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
+      token = Token.code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,
         redirect_uri: redirect_uri,

@@ -29,6 +29,7 @@ defmodule Boruta.Oauth.Token do
     timestamps()
   end
 
+  # TODO move this out of the schema
   def expired?(%Token{expires_at: expires_at}) do
     case :os.system_time(:seconds) < expires_at do
       true -> :ok
@@ -63,8 +64,7 @@ defmodule Boruta.Oauth.Token do
     |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
   end
 
-  # TODO rename to code_changeset
-  def authorization_code_changeset(token, attrs) do
+  def code_changeset(token, attrs) do
     token
     |> cast(attrs, [:client_id, :resource_owner_id, :redirect_uri, :state, :scope])
     |> validate_required([:client_id, :resource_owner_id, :redirect_uri])
