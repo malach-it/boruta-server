@@ -13,7 +13,7 @@ defmodule Boruta.Oauth do
   alias Boruta.Oauth.TokenRequest
 
   @doc """
-  Triggers `token_success` in case of success and `token_error` in case of failure of the given module correspondig to the response to the request corresponding to `conn`
+  Triggers `token_success` in case of success and `token_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
   """
   @spec token(conn :: map(), module :: atom()) :: any()
   def token(conn, module) do
@@ -27,7 +27,7 @@ defmodule Boruta.Oauth do
   end
 
   @doc """
-  Triggers `authorize_success` in case of success and `authorize_error` in case of failure of the given module correspondig to the response to the request corresponding to `conn`
+  Triggers `authorize_success` in case of success and `authorize_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
   """
   @spec authorize(conn :: map(), module :: atom()) :: any()
   def authorize(conn, module) do
@@ -46,7 +46,7 @@ defmodule Boruta.Oauth do
   end
 
   @doc """
-  Triggers `introspect_success` in case of success and `introspect_error` in case of failure of the given module correspondig to the response to the request corresponding to `conn`
+  Triggers `introspect_success` in case of success and `introspect_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
   """
   @spec introspect(conn :: map(), module :: atom()) :: any()
   def introspect(conn, module) do

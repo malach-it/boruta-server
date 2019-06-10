@@ -2,7 +2,7 @@ defmodule Boruta.Oauth.Application do
   @moduledoc """
   OAuth application behaviour
 
-  Implement this behaviour in the application layer of your OAuth provider.
+  Implement this behaviour in the application layer of your OAuth provider. The callbacks are triggered while calling functions from `Boruta.Oauth` module.
   """
 
   @doc """

@@ -12,7 +12,7 @@ defmodule Boruta.Oauth.Authorization.Base do
   alias Boruta.Repo
 
   @doc """
-  Authorize the client corresponding to the given params and returns its persisted struct.
+  Authorize the client corresponding to the given params.
 
   ## Examples
       iex> client(id: "id", secret: "secret")
@@ -46,13 +46,13 @@ defmodule Boruta.Oauth.Authorization.Base do
   end
 
   @doc """
-  Authorize the resource owner corresponding to the given params and returns its persisted struct.
+  Authorize the resource owner corresponding to the given params.
 
   ## Examples
       iex> resource_owner(id: "id")
       {:ok, %User{...}}
   """
-  @spec resource_owner(any()) ::
+  @spec resource_owner([id: String.t()] | [email: String.t(), password: String.t()] | User.t()) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_resource_owner,
@@ -85,13 +85,13 @@ defmodule Boruta.Oauth.Authorization.Base do
   def resource_owner(_), do: {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Resource owner is invalid."}}
 
   @doc """
-  Authorize the code corresponding to the given params and returns its persisted struct.
+  Authorize the code corresponding to the given params.
 
   ## Examples
       iex> code(value: "value", redirect_uri: "redirect_uri")
       {:ok, %Boruta.Oauth.Token{...}}
   """
-  @spec code([{:redirect_uri, String.t()} | {:value, String.t()} | any()]) ::
+  @spec code([value: String.t(), redirect_uri: String.t()]) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_code,
@@ -114,13 +114,13 @@ defmodule Boruta.Oauth.Authorization.Base do
   end
 
   @doc """
-  Authorize the access token corresponding to the given params and returns its persisted struct.
+  Authorize the access token corresponding to the given params.
 
   ## Examples
       iex> access_token(value: "value")
       {:ok, %Boruta.Oauth.Token{...}}
   """
-  @spec access_token([{:value, String.t()} | any()]) ::
+  @spec access_token([value: String.t()]) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_access_token,
@@ -149,13 +149,13 @@ defmodule Boruta.Oauth.Authorization.Base do
   end
 
   @doc """
-  Authorize the given scope according to the given client and returns itself
+  Authorize the given scope according to the given client.
 
   ## Examples
       iex> scope(scope: "scope", client: %Boruta.Oauth.Client{...})
       {:ok, "scope"}
   """
-  @spec scope([{:scope, scope :: String.t()} | {:client, client :: Client.t()}]) ::
+  @spec scope([scope: String.t(), client: Client.t()]) ::
     {:ok, scope :: String.t()} | {:error, Error.t()}
   def scope(scope: scope, client: %Client{authorize_scope: false}), do: {:ok, scope}
   def scope(scope: scope, client: %Client{authorize_scope: true, authorized_scopes: authorized_scopes}) do

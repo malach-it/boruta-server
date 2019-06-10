@@ -9,12 +9,12 @@ defmodule Boruta.Oauth.Client do
 
   alias Boruta.Oauth.Client
 
-  @type t :: [
+  @type t :: %__MODULE__{
     secret: String.t(),
     authorize_scope: boolean(),
     authorized_scopes: list(String.t()),
     redirect_uri: String.t()
-  ]
+  }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id

@@ -3,8 +3,9 @@ defprotocol Boruta.Oauth.Authorization do
   """
 
   @doc """
-  Returns a token for given request, depending of implementation.
+  Creates and returns a token for given request, depending of implementation.
   """
+  # TODO type check implementations
   def token(request)
 end
 

@@ -14,7 +14,7 @@ defmodule Boruta.Oauth.Token do
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Token
 
-  @type t :: [
+  @type t :: %__MODULE__{
     type:  String.t(),
     value: String.t(),
     state: String.t(),
@@ -23,7 +23,7 @@ defmodule Boruta.Oauth.Token do
     expires_at: integer(),
     client: Client.t(),
     resource_owner: User.t()
-  ]
+  }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id

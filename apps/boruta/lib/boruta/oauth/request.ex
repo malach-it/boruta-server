@@ -1,8 +1,8 @@
 defmodule Boruta.Oauth.Request do
   @moduledoc """
-  Build a typed request from given input.
+  Build a business structs from given input.
 
-  Note : Input can be a `%Plug.Conn{}` request.
+  Note : Input must have the shape or be a `%Plug.Conn{}` request.
   """
 
   # TODO unit test
@@ -17,7 +17,20 @@ defmodule Boruta.Oauth.Request do
   alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Validator
 
-  @spec token_request(Plug.Conn.t() | map() | any()) ::
+  @doc """
+  Create business struct from an OAuth token request.
+
+  ## Examples
+      iex>token_request(%{
+        body_params: %{
+          "grant_type" => "client_credentials",
+          "client_id" => "client_id",
+          "client_secret" => "client_secret"
+        }
+      })
+      {:ok, %ClientCredentialsRequest{...}}
+  """
+  @spec token_request(conn :: Plug.Conn.t() | map()) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_request,
@@ -66,11 +79,25 @@ defmodule Boruta.Oauth.Request do
         {:error, %Error{status: :bad_request, error: :invalid_request, error_description: error_description}}
     end
   end
-  def token_request(_) do
+  def token_request(%{}) do
     {:error, %Error{status: :bad_request, error: :invalid_request, error_description: "Must provide body_params."}}
   end
 
-  @spec authorize_request(map() | any()) ::
+  @doc """
+  Create business struct from an OAuth authorize request.
+
+  ## Examples
+      iex>authorize_request(%{
+        query_params: %{
+          "response_type" => "token",
+          "client_id" => "client_id",
+          "redirect_uri" => "redirect_uri",
+        },
+        assigns: %{current_user: %User{...}}
+      })
+      {:ok, %TokenRequest{...}}
+  """
+  @spec authorize_request(conn :: map()) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_request,
@@ -92,11 +119,24 @@ defmodule Boruta.Oauth.Request do
         {:error, %Error{status: :bad_request, error: :invalid_request, error_description: error_description}}
     end
   end
-  def authorize_request(_) do
+  def authorize_request(%{}) do
     {:error, %Error{status: :bad_request, error: :invalid_request, error_description: "Must provide query_params and assigns."}}
   end
 
-  @spec introspect_request(Plug.Conn.t() | map() | any()) ::
+  @doc """
+  Create business struct from an OAuth introspect request.
+
+  ## Examples
+      iex>introspect_request(%{
+        body_params: %{
+          "token" => "token",
+          "client_id" => "client_id",
+          "client_secret" => "client_secret",
+        }
+      })
+      {:ok, %TokenRequest{...}}
+  """
+  @spec introspect_request(conn :: Plug.Conn.t() | map()) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_request,
@@ -141,7 +181,7 @@ defmodule Boruta.Oauth.Request do
         {:error, %Error{status: :bad_request, error: :invalid_request, error_description: error_description}}
     end
   end
-  def introspect_request(_) do
+  def introspect_request(%{}) do
     {:error, %Error{status: :bad_request, error: :invalid_request, error_description: "Must provide body_params."}}
   end
 

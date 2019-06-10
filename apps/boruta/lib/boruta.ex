@@ -12,9 +12,9 @@ defmodule Boruta do
 
   ## Integration
   This implementation follows a pseudo hexagonal architecture to invert dependencies to Application layer.
-  In order to expose endpoints of an OAuth server with Boruta, you need implement the behaviour `Boruta.Oauth.Application` with all needed callbacks for token, authorize and introspect endpoints.
+  In order to expose endpoints of an OAuth server with Boruta, you need implement the behaviour `Boruta.Oauth.Application` with all needed callbacks for `token/2`, `authorize/2` and `introspect/2` calls from `Boruta.Oauth`.
 
-  This library has some specific interfaces to interact with `Plug.Conn` requests (see: `Boruta.Oauth.Request.token_request/1` and `Boruta.Oauth.Request.introspect_request/1`)
+  This library has specific interfaces to interact with `Plug.Conn` requests.
 
   ## Feedback
   It is a work in progress, all feedbacks / feature requests / improvments are welcome -> [me](mailto:pascal.knoth@gmx.com)
