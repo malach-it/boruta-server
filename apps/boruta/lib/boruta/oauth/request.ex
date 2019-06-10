@@ -12,9 +12,9 @@ defmodule Boruta.Oauth.Request do
   alias Boruta.Oauth.ClientCredentialsRequest
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.ImplicitRequest
   alias Boruta.Oauth.IntrospectRequest
   alias Boruta.Oauth.PasswordRequest
+  alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Validator
 
   @spec token_request(Plug.Conn.t() | map() | any()) ::
@@ -29,7 +29,7 @@ defmodule Boruta.Oauth.Request do
     | {:ok, oauth_request :: %AuthorizationCodeRequest{}
       | %ClientCredentialsRequest{}
       | %CodeRequest{}
-      | %ImplicitRequest{}
+      | %TokenRequest{}
       | %PasswordRequest{}}
   # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
   def token_request(%Plug.Conn{req_headers: req_headers, body_params: %{} = body_params}) do
@@ -82,7 +82,7 @@ defmodule Boruta.Oauth.Request do
     | {:ok, oauth_request :: %AuthorizationCodeRequest{}
       | %ClientCredentialsRequest{}
       | %CodeRequest{}
-      | %ImplicitRequest{}
+      | %TokenRequest{}
       | %PasswordRequest{}}
   def authorize_request(%{query_params: query_params, assigns: assigns}) do
     with {:ok, params} <- Validator.validate(query_params) do
@@ -171,7 +171,7 @@ defmodule Boruta.Oauth.Request do
   end
 
   defp build_request(%{"response_type" => "token"} = params) do
-    {:ok, struct(ImplicitRequest, %{
+    {:ok, struct(TokenRequest, %{
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
       resource_owner: params["resource_owner"],

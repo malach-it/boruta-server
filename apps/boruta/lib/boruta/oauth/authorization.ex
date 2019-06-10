@@ -87,14 +87,14 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
   end
 end
 
-defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ImplicitRequest do
+defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
   import Boruta.Oauth.Authorization.Base
 
-  alias Boruta.Oauth.ImplicitRequest
+  alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Token
   alias Boruta.Repo
 
-  def token(%ImplicitRequest{
+  def token(%TokenRequest{
     client_id: client_id,
     redirect_uri: redirect_uri,
     resource_owner: resource_owner,

@@ -1,4 +1,4 @@
-defmodule Boruta.Oauth.ImplicitRequest do
+defmodule Boruta.Oauth.TokenRequest do
   @moduledoc """
   Implicit request
   """

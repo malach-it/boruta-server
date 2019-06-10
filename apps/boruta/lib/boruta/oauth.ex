@@ -8,9 +8,9 @@ defmodule Boruta.Oauth do
   alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.ImplicitRequest
   alias Boruta.Oauth.Introspect
   alias Boruta.Oauth.Request
+  alias Boruta.Oauth.TokenRequest
 
   @doc """
   Triggers `token_success` in case of success and `token_error` in case of failure of the given module correspondig to the response to the request corresponding to `conn`
@@ -63,7 +63,7 @@ defmodule Boruta.Oauth do
   defp error_with_format(%CodeRequest{redirect_uri: redirect_uri}, %Error{} = error) do
     %{error | format: :query, redirect_uri: redirect_uri}
   end
-  defp error_with_format(%ImplicitRequest{redirect_uri: redirect_uri}, %Error{} = error) do
+  defp error_with_format(%TokenRequest{redirect_uri: redirect_uri}, %Error{} = error) do
     %{error | format: :fragment, redirect_uri: redirect_uri}
   end
   defp error_with_format(_, error), do: error
