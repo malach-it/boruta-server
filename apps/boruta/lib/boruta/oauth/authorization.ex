@@ -32,14 +32,14 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
   end
 end
 
-defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest do
+defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
   import Boruta.Oauth.Authorization.Base
 
-  alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
+  alias Boruta.Oauth.PasswordRequest
   alias Boruta.Oauth.Token
   alias Boruta.Repo
 
-  def token(%ResourceOwnerPasswordCredentialsRequest{
+  def token(%PasswordRequest{
     client_id: client_id,
     client_secret: client_secret,
     username: username,

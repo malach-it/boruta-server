@@ -14,7 +14,7 @@ defmodule Boruta.Oauth.Request do
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ImplicitRequest
   alias Boruta.Oauth.IntrospectRequest
-  alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
+  alias Boruta.Oauth.PasswordRequest
   alias Boruta.Oauth.Validator
 
   @spec token_request(Plug.Conn.t() | map() | any()) ::
@@ -30,7 +30,7 @@ defmodule Boruta.Oauth.Request do
       | %ClientCredentialsRequest{}
       | %CodeRequest{}
       | %ImplicitRequest{}
-      | %ResourceOwnerPasswordCredentialsRequest{}}
+      | %PasswordRequest{}}
   # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
   def token_request(%Plug.Conn{req_headers: req_headers, body_params: %{} = body_params}) do
     with {"authorization", authorization_header} <- Enum.find(
@@ -83,7 +83,7 @@ defmodule Boruta.Oauth.Request do
       | %ClientCredentialsRequest{}
       | %CodeRequest{}
       | %ImplicitRequest{}
-      | %ResourceOwnerPasswordCredentialsRequest{}}
+      | %PasswordRequest{}}
   def authorize_request(%{query_params: query_params, assigns: assigns}) do
     with {:ok, params} <- Validator.validate(query_params) do
       build_request(Enum.into(params, %{"resource_owner" => assigns[:current_user]}))
@@ -154,7 +154,7 @@ defmodule Boruta.Oauth.Request do
     })}
   end
   defp build_request(%{"grant_type" => "password"} = params) do
-    {:ok, struct(ResourceOwnerPasswordCredentialsRequest, %{
+    {:ok, struct(PasswordRequest, %{
       client_id: params["client_id"],
       client_secret: params["client_secret"],
       username: params["username"],

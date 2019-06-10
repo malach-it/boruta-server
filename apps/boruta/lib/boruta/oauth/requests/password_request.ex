@@ -1,4 +1,4 @@
-defmodule Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest do
+defmodule Boruta.Oauth.PasswordRequest do
   @moduledoc """
   Resource owner password credentials request
   """
