@@ -25,7 +25,7 @@ defmodule Boruta.Oauth.Validator do
       iex> validate(%{})
       {:error, "Request is not a valid OAuth request. Need a grant_type or a response_type param."}
   """
-  @spec validate(params :: Map.t()) :: {:ok, params :: Map.t()} | {:error, message :: String.t()}
+  @spec validate(params :: map()) :: {:ok, params :: map()} | {:error, message :: String.t()}
   def validate(%{"grant_type" => "password"} = params) do
     case ExJsonSchema.Validator.validate(
       Schema.resource_owner_password_credentials,

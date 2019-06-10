@@ -18,7 +18,16 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> client(id: "id", secret: "secret")
       {:ok, %Boruta.Oauth.Client{...}}
   """
-  @spec client([id: id :: String.t(), secret: String.t()]) :: {:ok, client :: Client.t()} | {:error, Error.t()}
+  @spec client([id: String.t(), secret: String.t()] | [id: String.t(), redirect_uri: String.t()]) ::
+    {:ok, %Boruta.Oauth.Client{}}
+    | {:error,
+      %Boruta.Oauth.Error{
+        :error => :invalid_client,
+        :error_description => String.t(),
+        :format => nil,
+        :redirect_uri => nil,
+        :status => :unauthorized
+      }}
   def client(id: id, secret: secret) do
     with %Client{} = client <- Repo.get_by(Client, id: id, secret: secret) do
       {:ok, client}
@@ -27,7 +36,6 @@ defmodule Boruta.Oauth.Authorization.Base do
         {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or client_secret."}}
     end
   end
-  @spec client([id: id :: String.t(), redirect_uri: String.t()]) :: {:ok, client :: Client.t()} | {:error, Error.t()}
   def client(id: id, redirect_uri: redirect_uri) do
     with %Client{} = client <- Repo.get_by(Client, id: id, redirect_uri: redirect_uri) do
       {:ok, client}
@@ -44,7 +52,16 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> resource_owner(id: "id")
       {:ok, %User{...}}
   """
-  @spec resource_owner([id: id :: String.t()]) :: {:ok, resource_owner :: User.t()} | {:error, Error.t()}
+  @spec resource_owner(any()) ::
+    {:error,
+     %Boruta.Oauth.Error{
+       :error => :invalid_resource_owner,
+       :error_description => String.t(),
+       :format => nil,
+       :redirect_uri => nil,
+       :status => :unauthorized
+     }}
+    | {:ok, %Boruta.Coherence.User{}}
   def resource_owner(id: id) do
     with %User{} = resource_owner <- Repo.get_by(User, id: id) do
       {:ok, resource_owner}
@@ -53,7 +70,6 @@ defmodule Boruta.Oauth.Authorization.Base do
         {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Invalid username or password."}}
     end
   end
-  @spec resource_owner([email: email :: String.t(), password: password :: String.t()]) :: {:ok, resource_owner :: User.t()} | {:error, Error.t()}
   # TODO return more explicit error (that should be rescued in controller and not be sent to the client)
   def resource_owner(email: username, password: password) do
     with %User{} = resource_owner <- Repo.get_by(User, email: username),
@@ -64,7 +80,6 @@ defmodule Boruta.Oauth.Authorization.Base do
         {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Invalid username or password."}}
     end
   end
-  @spec resource_owner(User.t()) :: {:ok, resource_owner :: User.t()} | {:error, Error.t()}
   def resource_owner(%User{__meta__: %{state: :loaded}} = resource_owner), do: {:ok, resource_owner}
   # TODO return more explicit error (that should be rescued in controller and not be sent to the client)
   def resource_owner(_), do: {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Resource owner is invalid."}}
@@ -76,7 +91,16 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> code(value: "value", redirect_uri: "redirect_uri")
       {:ok, %Boruta.Oauth.Token{...}}
   """
-  @spec code([value: value :: String.t(), rediect_uri: rediect_uri :: String.t()]) :: {:ok, token :: Token.t()} | {:error, Error.t()}
+  @spec code([{:redirect_uri, String.t()} | {:value, String.t()} | any()]) ::
+    {:error,
+     %Boruta.Oauth.Error{
+       :error => :invalid_code,
+       :error_description => String.t(),
+       :format => nil,
+       :redirect_uri => nil,
+       :status => :unauthorized
+     }}
+    | {:ok, %Boruta.Oauth.Token{}}
   def code(value: value, redirect_uri: redirect_uri) do
     with %Token{} = token <- Repo.get_by(Token, type: "code", value: value, redirect_uri: redirect_uri),
       :ok <- Token.expired?(token) do
@@ -96,7 +120,16 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> access_token(value: "value")
       {:ok, %Boruta.Oauth.Token{...}}
   """
-  @spec access_token([value: value :: String.t()]) :: {:ok, token :: Token.t()} | {:error, Error.t()}
+  @spec access_token([{:value, String.t()} | any()]) ::
+    {:error,
+     %Boruta.Oauth.Error{
+       :error => :invalid_access_token,
+       :error_description => String.t(),
+       :format => nil,
+       :redirect_uri => nil,
+       :status => :unauthorized
+     }}
+    | {:ok, %Boruta.Oauth.Token{}}
   def access_token(value: value) do
     with %Token{} = token <- Repo.one(
       from t in Token,
@@ -122,7 +155,8 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> scope(scope: "scope", client: %Boruta.Oauth.Client{...})
       {:ok, "scope"}
   """
-  @spec scope([scope: scope :: String.t(), client: client :: Client.t()]) :: {:ok, scope :: String.t()} | {:error, Error.t()}
+  @spec scope([{:scope, scope :: String.t()} | {:client, client :: Client.t()}]) ::
+    {:ok, scope :: String.t()} | {:error, Error.t()}
   def scope(scope: scope, client: %Client{authorize_scope: false}), do: {:ok, scope}
   def scope(scope: scope, client: %Client{authorize_scope: true, authorized_scopes: authorized_scopes}) do
     scopes = String.split(scope, " ")

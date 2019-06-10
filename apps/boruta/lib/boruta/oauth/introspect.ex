@@ -21,7 +21,8 @@ defmodule Boruta.Oauth.Introspect do
       })
       {:ok, %{"active" => false}}
   """
-  @spec token(request :: IntrospectRequest.t()) :: {:ok, response :: Map.t()} | {:error , error :: Boruta.Oauth.Error.t()}
+  @spec token(request :: %IntrospectRequest{client_id: String.t(), client_secret: String.t(), token: String.t()}) ::
+  {:ok, response :: map()} | {:error , error :: Error.t()}
   def token(%IntrospectRequest{client_id: client_id, client_secret: client_secret, token: token}) do
     with {:ok, client} <- Authorization.Base.client(id: client_id, secret: client_secret),
          {:ok, %Token{
@@ -43,7 +44,7 @@ defmodule Boruta.Oauth.Introspect do
     else
       {:error, %Error{error: :invalid_access_token}} ->
         {:ok, %{"active" => false}}
-      error -> error
+      {:error, %Error{} = error} -> {:error, error}
     end
   end
 end

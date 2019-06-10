@@ -14,6 +14,17 @@ defmodule Boruta.Oauth.Token do
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Token
 
+  @type t :: [
+    type:  String.t(),
+    value: String.t(),
+    state: String.t(),
+    scope: String.t(),
+    redirect_uri: String.t(),
+    expires_at: integer(),
+    client: Client.t(),
+    resource_owner: User.t()
+  ]
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   @timestamps_opts type: :utc_datetime
@@ -42,7 +53,7 @@ defmodule Boruta.Oauth.Token do
       {:error, "Token expired."}
   """
   # TODO move this out of the schema
-  @spec expired?(token :: Token.t()) :: :ok | {:error, String.t()}
+  @spec expired?(%Boruta.Oauth.Token{expires_at: integer()}) :: :ok | {:error, any()}
   def expired?(%Token{expires_at: expires_at}) do
     case :os.system_time(:seconds) < expires_at do
       true -> :ok

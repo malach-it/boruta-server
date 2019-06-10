@@ -17,7 +17,20 @@ defmodule Boruta.Oauth.Request do
   alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
   alias Boruta.Oauth.Validator
 
-  @spec token_request(request :: Plug.Conn.t() | Map.t()) :: oauth_request :: AuthorizationCodeRequest.t() | ClientCredentialsRequest.t() | CodeRequest.t() | ImplicitRequest.t() | ResourceOwnerPasswordCredentialsRequest.t() | Error.t()
+  @spec token_request(Plug.Conn.t() | map() | any()) ::
+    {:error,
+     %Boruta.Oauth.Error{
+       :error => :invalid_request,
+       :error_description => String.t(),
+       :format => nil,
+       :redirect_uri => nil,
+       :status => :bad_request
+     }}
+    | {:ok, oauth_request :: %AuthorizationCodeRequest{}
+      | %ClientCredentialsRequest{}
+      | %CodeRequest{}
+      | %ImplicitRequest{}
+      | %ResourceOwnerPasswordCredentialsRequest{}}
   # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
   def token_request(%Plug.Conn{req_headers: req_headers, body_params: %{} = body_params}) do
     with {"authorization", authorization_header} <- Enum.find(
@@ -57,7 +70,20 @@ defmodule Boruta.Oauth.Request do
     {:error, %Error{status: :bad_request, error: :invalid_request, error_description: "Must provide body_params."}}
   end
 
-  @spec authorize_request(request :: Plug.Conn.t() | Map.t()) :: oauth_request :: AuthorizationCodeRequest.t() | ClientCredentialsRequest.t() | CodeRequest.t() | ImplicitRequest.t() | ResourceOwnerPasswordCredentialsRequest.t() | Error.t()
+  @spec authorize_request(map() | any()) ::
+    {:error,
+     %Boruta.Oauth.Error{
+       :error => :invalid_request,
+       :error_description => String.t(),
+       :format => nil,
+       :redirect_uri => nil,
+       :status => :bad_request
+     }}
+    | {:ok, oauth_request :: %AuthorizationCodeRequest{}
+      | %ClientCredentialsRequest{}
+      | %CodeRequest{}
+      | %ImplicitRequest{}
+      | %ResourceOwnerPasswordCredentialsRequest{}}
   def authorize_request(%{query_params: query_params, assigns: assigns}) do
     with {:ok, params} <- Validator.validate(query_params) do
       build_request(Enum.into(params, %{"resource_owner" => assigns[:current_user]}))
@@ -70,7 +96,16 @@ defmodule Boruta.Oauth.Request do
     {:error, %Error{status: :bad_request, error: :invalid_request, error_description: "Must provide query_params and assigns."}}
   end
 
-  @spec introspect_request(request :: Plug.Conn.t() | Map.t()) :: introspect_request :: IntrospectRequest.t() | Error.t()
+  @spec introspect_request(Plug.Conn.t() | map() | any()) ::
+    {:error,
+     %Boruta.Oauth.Error{
+       :error => :invalid_request,
+       :error_description => String.t(),
+       :format => nil,
+       :redirect_uri => nil,
+       :status => :bad_request
+     }}
+    | {:ok, introspect_request :: %IntrospectRequest{}}
   # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
   def introspect_request(%Plug.Conn{req_headers: req_headers, body_params: %{} = body_params}) do
     with {"authorization", authorization_header} <- Enum.find(

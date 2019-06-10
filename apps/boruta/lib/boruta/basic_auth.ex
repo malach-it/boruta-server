@@ -16,7 +16,7 @@ defmodule Boruta.BasicAuth do
       {:error, "`bad_authorization_header` is not a valid Basic authorization header."}
 
   """
-  @spec decode(authorization_header :: String.t()) :: {result :: atom(), message :: String.t()}
+  @spec decode(authorization_header :: String.t()) :: {:ok, list(String.t())} | {:error, String.t()}
   def decode("Basic " <> encoded) do
     with {:ok, decoded} <- Base.decode64(encoded),
       [username, password] <- String.split(decoded, ":") do
