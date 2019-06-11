@@ -11,8 +11,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
   describe "client_credentials grant" do
     setup %{conn: conn} do
-      user = insert(:user)
-      client = insert(:client, user_id: user.id)
+      client = insert(:client)
       {:ok, conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"), client: client}
     end
 
@@ -103,9 +102,8 @@ defmodule BorutaWeb.OauthControllerTest do
   describe "implicit grant" do
     setup %{conn: conn} do
       resource_owner = insert(:user)
-      user = insert(:user)
       redirect_uri = "http://redirect.uri"
-      client = insert(:client, redirect_uri: redirect_uri, user_id: user.id)
+      client = insert(:client, redirect_uri: redirect_uri)
       {:ok, conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
     end
 
@@ -260,8 +258,7 @@ defmodule BorutaWeb.OauthControllerTest do
     # TODO test not happy paths
     setup %{conn: conn} do
       resource_owner = insert(:user)
-      user = insert(:user)
-      client = insert(:client, user_id: user.id)
+      client = insert(:client)
       {:ok, conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"), client: client, resource_owner: resource_owner}
     end
 

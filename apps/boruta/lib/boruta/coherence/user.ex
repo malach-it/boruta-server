@@ -1,5 +1,8 @@
 defmodule Boruta.Coherence.User do
   @moduledoc false
+
+  @behaviour Boruta.Oauth.ResourceOwner
+
   use Ecto.Schema
   use Coherence.Schema
 

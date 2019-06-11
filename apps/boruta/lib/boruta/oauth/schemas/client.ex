@@ -24,8 +24,6 @@ defmodule Boruta.Oauth.Client do
     field(:authorized_scopes, {:array, :string})
     field(:redirect_uri, :string)
 
-    belongs_to(:user, User)
-
     timestamps()
   end
 end

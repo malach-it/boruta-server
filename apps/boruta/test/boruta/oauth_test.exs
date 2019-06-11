@@ -183,9 +183,8 @@ defmodule Boruta.OauthTest do
   describe "resource owner password credentials grant" do
     setup do
       resource_owner = insert(:user)
-      user = insert(:user)
-      client = insert(:client, user_id: user.id)
-      client_with_scope = insert(:client, user_id: user.id, authorize_scope: true, authorized_scopes: ["scope", "other"])
+      client = insert(:client)
+      client_with_scope = insert(:client, authorize_scope: true, authorized_scopes: ["scope", "other"])
       {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
@@ -350,9 +349,8 @@ defmodule Boruta.OauthTest do
   describe "authorization code grant - authorize" do
     setup do
       resource_owner = insert(:user)
-      user = insert(:user)
-      client = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri")
-      client_with_scope = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri", authorize_scope: true, authorized_scopes: ["scope", "other"])
+      client = insert(:client, redirect_uri: "https://redirect.uri")
+      client_with_scope = insert(:client, redirect_uri: "https://redirect.uri", authorize_scope: true, authorized_scopes: ["scope", "other"])
       {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
@@ -549,8 +547,7 @@ defmodule Boruta.OauthTest do
   describe "authorization code grant - token" do
     setup do
       resource_owner = insert(:user)
-      user = insert(:user)
-      client = insert(:client, user_id: user.id)
+      client = insert(:client)
       code = insert(
         :token,
         type: "code",
@@ -745,9 +742,8 @@ defmodule Boruta.OauthTest do
   describe "implicit grant" do
     setup do
       resource_owner = insert(:user)
-      user = insert(:user)
-      client = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri")
-      client_with_scope = insert(:client, user_id: user.id, redirect_uri: "https://redirect.uri", authorize_scope: true, authorized_scopes: ["scope", "other"])
+      client = insert(:client, redirect_uri: "https://redirect.uri")
+      client_with_scope = insert(:client, redirect_uri: "https://redirect.uri", authorize_scope: true, authorized_scopes: ["scope", "other"])
       {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
