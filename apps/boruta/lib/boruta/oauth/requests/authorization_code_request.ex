@@ -1,7 +1,15 @@
 defmodule Boruta.Oauth.AuthorizationCodeRequest do
   @moduledoc """
-  TODO Authorization code request
+  Authorization code request
   """
 
-  defstruct client_id: "", code: "", redirect_uri: "", scope: ""
+  @typedoc """
+  Type representing an authorization code request as stated in [OAuth 2.0 RFC](https://tools.ietf.org/html/rfc6749#section-4.1.3).
+  """
+  @type t :: %__MODULE__{
+    client_id: String.t(),
+    redirect_uri: String.t(),
+    code: String.t()
+  }
+  defstruct client_id: "", redirect_uri: "", code: ""
 end

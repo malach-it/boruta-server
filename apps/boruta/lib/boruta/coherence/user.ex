@@ -3,6 +3,9 @@ defmodule Boruta.Coherence.User do
   use Ecto.Schema
   use Coherence.Schema
 
+  @type t :: [
+    email: String.t()
+  ]
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "users" do
     field(:name, :string)
@@ -13,7 +16,7 @@ defmodule Boruta.Coherence.User do
   end
 
   @doc false
-  @spec changeset(Ecto.Schema.t(), Map.t()) :: Ecto.Changeset.t()
+  @spec changeset(Ecto.Schema.t(), map()) :: Ecto.Changeset.t()
   def changeset(model, params \\ %{}) do
     model
     |> cast(params, ~w(name email)a ++ coherence_fields())
@@ -24,7 +27,6 @@ defmodule Boruta.Coherence.User do
   end
 
   @doc false
-  @spec changeset(Ecto.Schema.t(), Map.t(), atom) :: Ecto.Changeset.t()
   def changeset(model, params, :password) do
     model
     |> cast(
@@ -35,7 +37,6 @@ defmodule Boruta.Coherence.User do
   end
 
   @doc false
-  @spec changeset(Ecto.Schema.t(), Map.t(), atom) :: Ecto.Changeset.t()
   def changeset(model, params, :registration) do
     changeset = changeset(model, params)
 

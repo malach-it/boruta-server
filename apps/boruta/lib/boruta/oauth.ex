@@ -1,15 +1,21 @@
 defmodule Boruta.Oauth do
   @moduledoc """
-  TODO Boruta OAuth
+  Boruta OAuth entrypoint, handles OAuth requests.
+
+  Note : this module works in association with `Boruta.Oauth.Application` behaviour
   """
 
   alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.ImplicitRequest
   alias Boruta.Oauth.Introspect
   alias Boruta.Oauth.Request
+  alias Boruta.Oauth.TokenRequest
 
+  @doc """
+  Triggers `token_success` in case of success and `token_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
+  """
+  @spec token(conn :: map(), module :: atom()) :: any()
   def token(conn, module) do
     with {:ok, request} <- Request.token_request(conn),
          {:ok, token} <- Authorization.token(request) do
@@ -20,6 +26,10 @@ defmodule Boruta.Oauth do
     end
   end
 
+  @doc """
+  Triggers `authorize_success` in case of success and `authorize_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
+  """
+  @spec authorize(conn :: map(), module :: atom()) :: any()
   def authorize(conn, module) do
     with {:ok, request} <- Request.authorize_request(conn),
          {:ok, token} <- Authorization.token(request) do
@@ -35,6 +45,10 @@ defmodule Boruta.Oauth do
     end
   end
 
+  @doc """
+  Triggers `introspect_success` in case of success and `introspect_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
+  """
+  @spec introspect(conn :: map(), module :: atom()) :: any()
   def introspect(conn, module) do
     with {:ok, request} <- Request.introspect_request(conn),
          {:ok, response} <- Introspect.token(request) do
@@ -45,10 +59,11 @@ defmodule Boruta.Oauth do
     end
   end
 
+  # private
   defp error_with_format(%CodeRequest{redirect_uri: redirect_uri}, %Error{} = error) do
     %{error | format: :query, redirect_uri: redirect_uri}
   end
-  defp error_with_format(%ImplicitRequest{redirect_uri: redirect_uri}, %Error{} = error) do
+  defp error_with_format(%TokenRequest{redirect_uri: redirect_uri}, %Error{} = error) do
     %{error | format: :fragment, redirect_uri: redirect_uri}
   end
   defp error_with_format(_, error), do: error

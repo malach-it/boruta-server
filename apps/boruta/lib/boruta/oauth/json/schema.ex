@@ -1,7 +1,5 @@
 defmodule Boruta.Oauth.Json.Schema do
-  @moduledoc """
-  TODO OAuth json schemas
-  """
+  @moduledoc false
   alias ExJsonSchema.Schema
 
   def authorize(:query_params) do

@@ -1,7 +1,5 @@
-defmodule Boruta.Hash do
-  @moduledoc """
-  TODO Utilities to hash and check passwords
-  """
+defmodule Boruta.Coherence.HashSalt do
+  @moduledoc false
 
   import Boruta.Config, only: [secret_key_base: 0]
 

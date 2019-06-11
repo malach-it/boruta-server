@@ -1,4 +1,11 @@
 defprotocol Boruta.Oauth.Authorization do
+  @moduledoc """
+  """
+
+  @doc """
+  Creates and returns a token for given request, depending of implementation.
+  """
+  # TODO type check implementations
   def token(request)
 end
 
@@ -26,14 +33,14 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
   end
 end
 
-defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest do
+defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
   import Boruta.Oauth.Authorization.Base
 
-  alias Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest
+  alias Boruta.Oauth.PasswordRequest
   alias Boruta.Oauth.Token
   alias Boruta.Repo
 
-  def token(%ResourceOwnerPasswordCredentialsRequest{
+  def token(%PasswordRequest{
     client_id: client_id,
     client_secret: client_secret,
     username: username,
@@ -81,14 +88,14 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
   end
 end
 
-defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ImplicitRequest do
+defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
   import Boruta.Oauth.Authorization.Base
 
-  alias Boruta.Oauth.ImplicitRequest
+  alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Token
   alias Boruta.Repo
 
-  def token(%ImplicitRequest{
+  def token(%TokenRequest{
     client_id: client_id,
     redirect_uri: redirect_uri,
     resource_owner: resource_owner,
@@ -129,7 +136,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
          {:ok, scope} <- scope(scope: scope, client: client),
          {:ok, resource_owner} <- resource_owner(resource_owner) do
-      token = Token.authorization_code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
+      token = Token.code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,
         redirect_uri: redirect_uri,

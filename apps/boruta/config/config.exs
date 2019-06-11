@@ -15,7 +15,7 @@ config :coherence,
   module: Boruta,
   web_module: BorutaWeb,
   router: BorutaWeb.Router,
-  password_hashing_alg: Boruta.Hash,
+  password_hashing_alg: Boruta.Coherence.HashSalt,
   messages_backend: BorutaWeb.Coherence.Messages,
   registration_permitted_attributes: [
     "email",

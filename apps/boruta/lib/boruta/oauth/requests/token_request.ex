@@ -1,12 +1,12 @@
-defmodule Boruta.Oauth.CodeRequest do
+defmodule Boruta.Oauth.TokenRequest do
   @moduledoc """
-  Code request
+  Implicit request
   """
 
   alias Boruta.Coherence.User
 
   @typedoc """
-  Type representing a code request as stated in [OAuth 2.0 RFC](https://tools.ietf.org/html/rfc6749#section-4.1.1).
+  Type representing an implicit request as stated in [OAuth 2.0 RFC](https://tools.ietf.org/html/rfc6749#section-4.2.1).
 
   Note : `resource_owner` is an addition that must be provided by the application layer.
   """

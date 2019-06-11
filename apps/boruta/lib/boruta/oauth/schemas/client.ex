@@ -1,10 +1,20 @@
 defmodule Boruta.Oauth.Client do
   @moduledoc """
-  TODO OAuth client
+  OAuth client schema
   """
 
   use Ecto.Schema
+
   import Ecto.Changeset
+
+  alias Boruta.Oauth.Client
+
+  @type t :: %__MODULE__{
+    secret: String.t(),
+    authorize_scope: boolean(),
+    authorized_scopes: list(String.t()),
+    redirect_uri: String.t()
+  }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -17,12 +27,5 @@ defmodule Boruta.Oauth.Client do
     belongs_to(:user, User)
 
     timestamps()
-  end
-
-  @doc false
-  def changeset(client, attrs) do
-    client
-    |> cast(attrs, [])
-    |> validate_required([])
   end
 end
