@@ -28,6 +28,8 @@ defmodule Boruta.Oauth do
 
   @doc """
   Triggers `authorize_success` in case of success and `authorize_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
+
+  Note : resource owner must be provided as current_user assigns.
   """
   @spec authorize(conn :: map(), module :: atom()) :: any()
   def authorize(conn, module) do
