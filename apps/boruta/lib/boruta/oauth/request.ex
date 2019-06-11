@@ -86,12 +86,14 @@ defmodule Boruta.Oauth.Request do
   @doc """
   Create business struct from an OAuth authorize request.
 
+  Note : resource owner must be provided as current_user assigns.
+
   ## Examples
       iex>authorize_request(%{
         query_params: %{
           "response_type" => "token",
           "client_id" => "client_id",
-          "redirect_uri" => "redirect_uri",
+          "redirect_uri" => "redirect_uri"
         },
         assigns: %{current_user: %User{...}}
       })

@@ -67,22 +67,35 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, resource_owner}
     else
       _ ->
-        {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Invalid username or password."}}
+        {:error, %Error{
+          status: :unauthorized,
+          error: :invalid_resource_owner,
+          error_description: "User not found."
+        }}
     end
   end
-  # TODO return more explicit error (that should be rescued in controller and not be sent to the client)
   def resource_owner(email: username, password: password) do
     with %User{} = resource_owner <- Repo.get_by(User, email: username),
          true <- User.checkpw(password, resource_owner.password_hash) do
       {:ok, resource_owner}
     else
       _ ->
-        {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Invalid username or password."}}
+        {:error, %Error{
+          status: :unauthorized,
+          error: :invalid_resource_owner,
+          error_description: "Invalid username or password."
+        }}
     end
   end
   def resource_owner(%User{__meta__: %{state: :loaded}} = resource_owner), do: {:ok, resource_owner}
-  # TODO return more explicit error (that should be rescued in controller and not be sent to the client)
-  def resource_owner(_), do: {:error, %Error{status: :unauthorized, error: :invalid_resource_owner, error_description: "Resource owner is invalid."}}
+  def resource_owner(_) do
+    {:error, %Error{
+      status: :unauthorized,
+      error: :invalid_resource_owner,
+      error_description: "Resource owner is invalid.",
+      format: :internal
+    }}
+  end
 
   @doc """
   Authorize the code corresponding to the given params.
