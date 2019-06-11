@@ -9,13 +9,19 @@ defmodule Boruta.Config do
       access_token: 24 * 3600,
       authorization_code: 60
     },
-    secret_key_base: System.get_env("SECRET_KEY_BASE")
+    secret_key_base: System.get_env("SECRET_KEY_BASE"),
+    resource_owner: %{
+      schema: Boruta.Coherence.User
+    }
   ```
   """
 
   @defaults expires_in: %{
     access_token: 3600,
     authorization_code: 60
+  },
+  resource_owner: %{
+    schema: Boruta.Coherence.User
   }
 
   @doc false
@@ -29,10 +35,10 @@ defmodule Boruta.Config do
   end
 
   @doc false
-  def secret_key_base, do: Keyword.fetch!(
-    Application.get_env(:boruta, Boruta.Oauth),
-    :secret_key_base
-  )
+  def secret_key_base, do: Keyword.fetch!(oauth_config(), :secret_key_base)
+
+  @doc false
+  def resource_owner_schema, do: Keyword.fetch!(oauth_config(), :resource_owner)[:schema]
 
   defp oauth_config, do: assign_defaults(Application.get_env(:boruta, Boruta.Oauth))
 

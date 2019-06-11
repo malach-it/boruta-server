@@ -4,8 +4,8 @@ defmodule Boruta.Oauth.Authorization.Base do
   """
 
   import Ecto.Query, only: [from: 2]
+  import Boruta.Config, only: [resource_owner_schema: 0]
 
-  alias Boruta.Coherence.User
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Token
@@ -52,7 +52,7 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> resource_owner(id: "id")
       {:ok, %User{...}}
   """
-  @spec resource_owner([id: String.t()] | [email: String.t(), password: String.t()] | User.t()) ::
+  @spec resource_owner([id: String.t()] | [email: String.t(), password: String.t()] | struct()) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_resource_owner,
@@ -61,9 +61,9 @@ defmodule Boruta.Oauth.Authorization.Base do
        :redirect_uri => nil,
        :status => :unauthorized
      }}
-    | {:ok, %Boruta.Coherence.User{}}
+    | {:ok, user :: struct()}
   def resource_owner(id: id) do
-    with %User{} = resource_owner <- Repo.get_by(User, id: id) do
+    with %{__struct__: _} = resource_owner <- Repo.get_by(resource_owner_schema(), id: id) do # if resource_owner is a struct
       {:ok, resource_owner}
     else
       _ ->
@@ -75,8 +75,8 @@ defmodule Boruta.Oauth.Authorization.Base do
     end
   end
   def resource_owner(email: username, password: password) do
-    with %User{} = resource_owner <- Repo.get_by(User, email: username),
-         true <- User.checkpw(password, resource_owner.password_hash) do
+    with %{__struct__: _} = resource_owner <- Repo.get_by(resource_owner_schema(), email: username), # if resource_owner is a struct
+         true <- resource_owner_schema().checkpw(password, resource_owner.password_hash) do
       {:ok, resource_owner}
     else
       _ ->
@@ -87,7 +87,7 @@ defmodule Boruta.Oauth.Authorization.Base do
         }}
     end
   end
-  def resource_owner(%User{__meta__: %{state: :loaded}} = resource_owner), do: {:ok, resource_owner}
+  def resource_owner(%{__meta__: %{state: :loaded}} = resource_owner), do: {:ok, resource_owner}
   def resource_owner(_) do
     {:error, %Error{
       status: :unauthorized,

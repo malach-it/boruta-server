@@ -8,9 +8,12 @@ defmodule Boruta.Oauth.Token do
   use Ecto.Schema
 
   import Ecto.Changeset
-  import Boruta.Config, only: [access_token_expires_in: 0, authorization_code_expires_in: 0]
+  import Boruta.Config, only: [
+    access_token_expires_in: 0,
+    authorization_code_expires_in: 0,
+    resource_owner_schema: 0
+  ]
 
-  alias Boruta.Coherence.User
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Token
 
@@ -22,7 +25,7 @@ defmodule Boruta.Oauth.Token do
     redirect_uri: String.t(),
     expires_at: integer(),
     client: Client.t(),
-    resource_owner: User.t()
+    resource_owner: struct()
   }
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -37,7 +40,7 @@ defmodule Boruta.Oauth.Token do
     field(:expires_at, :integer)
 
     belongs_to(:client, Client)
-    belongs_to(:resource_owner, User)
+    belongs_to(:resource_owner, resource_owner_schema())
 
     timestamps()
   end

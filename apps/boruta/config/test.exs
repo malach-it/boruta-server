@@ -17,4 +17,7 @@ config :boruta, Boruta.Oauth,
     access_token: 24 * 3600,
     authorization_code: 60
   },
-  secret_key_base: "secret"
+  secret_key_base: "secret",
+  resource_owner: %{
+    schema: Boruta.Coherence.User
+  }

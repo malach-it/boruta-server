@@ -3,8 +3,6 @@ defmodule Boruta.Oauth.CodeRequest do
   Code request
   """
 
-  alias Boruta.Coherence.User
-
   @typedoc """
   Type representing a code request as stated in [OAuth 2.0 RFC](https://tools.ietf.org/html/rfc6749#section-4.1.1).
 
@@ -15,7 +13,7 @@ defmodule Boruta.Oauth.CodeRequest do
     redirect_uri: String.t(),
     state: String.t(),
     scope: String.t(),
-    resource_owner: any()
+    resource_owner: struct()
   }
-  defstruct client_id: "", redirect_uri: "", state: "", scope: "", resource_owner: %User{}
+  defstruct client_id: "", redirect_uri: "", state: "", scope: "", resource_owner: nil
 end
