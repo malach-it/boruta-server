@@ -4,12 +4,11 @@ defmodule Boruta.Oauth.Authorization.Base do
   """
 
   import Ecto.Query, only: [from: 2]
-  import Boruta.Config, only: [resource_owner_schema: 0]
+  import Boruta.Config, only: [resource_owner_schema: 0, repo: 0]
 
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Token
-  alias Boruta.Repo
 
   @doc """
   Authorize the client corresponding to the given params.
@@ -29,7 +28,7 @@ defmodule Boruta.Oauth.Authorization.Base do
         :status => :unauthorized
       }}
   def client(id: id, secret: secret) do
-    with %Client{} = client <- Repo.get_by(Client, id: id, secret: secret) do
+    with %Client{} = client <- repo().get_by(Client, id: id, secret: secret) do
       {:ok, client}
     else
       nil ->
@@ -37,7 +36,7 @@ defmodule Boruta.Oauth.Authorization.Base do
     end
   end
   def client(id: id, redirect_uri: redirect_uri) do
-    with %Client{} = client <- Repo.get_by(Client, id: id, redirect_uri: redirect_uri) do
+    with %Client{} = client <- repo().get_by(Client, id: id, redirect_uri: redirect_uri) do
       {:ok, client}
     else
       nil ->
@@ -63,7 +62,7 @@ defmodule Boruta.Oauth.Authorization.Base do
      }}
     | {:ok, user :: struct()}
   def resource_owner(id: id) do
-    with %{__struct__: _} = resource_owner <- Repo.get_by(resource_owner_schema(), id: id) do # if resource_owner is a struct
+    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), id: id) do # if resource_owner is a struct
       {:ok, resource_owner}
     else
       _ ->
@@ -75,7 +74,7 @@ defmodule Boruta.Oauth.Authorization.Base do
     end
   end
   def resource_owner(email: username, password: password) do
-    with %{__struct__: _} = resource_owner <- Repo.get_by(resource_owner_schema(), email: username), # if resource_owner is a struct
+    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), email: username), # if resource_owner is a struct
          true <- resource_owner_schema().checkpw(password, resource_owner.password_hash) do
       {:ok, resource_owner}
     else
@@ -115,7 +114,7 @@ defmodule Boruta.Oauth.Authorization.Base do
      }}
     | {:ok, %Boruta.Oauth.Token{}}
   def code(value: value, redirect_uri: redirect_uri) do
-    with %Token{} = token <- Repo.get_by(Token, type: "code", value: value, redirect_uri: redirect_uri),
+    with %Token{} = token <- repo().get_by(Token, type: "code", value: value, redirect_uri: redirect_uri),
       :ok <- Token.expired?(token) do
       {:ok, token}
     else
@@ -144,7 +143,7 @@ defmodule Boruta.Oauth.Authorization.Base do
      }}
     | {:ok, %Boruta.Oauth.Token{}}
   def access_token(value: value) do
-    with %Token{} = token <- Repo.one(
+    with %Token{} = token <- repo().one(
       from t in Token,
       left_join: c in assoc(t, :client),
       left_join: u in assoc(t, :resource_owner),

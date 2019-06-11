@@ -13,6 +13,7 @@ config :boruta, Boruta.Repo,
   pool_size: 10
 
 config :boruta, Boruta.Oauth,
+  repo: Boruta.Repo,
   expires_in: %{
     access_token: 24 * 3600,
     authorization_code: 60

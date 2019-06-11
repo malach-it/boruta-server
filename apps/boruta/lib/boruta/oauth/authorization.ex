@@ -11,10 +11,10 @@ end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest do
   import Boruta.Oauth.Authorization.Base
+  import Boruta.Config, only: [repo: 0]
 
   alias Boruta.Oauth.ClientCredentialsRequest
   alias Boruta.Oauth.Token
-  alias Boruta.Repo
 
   def token(%ClientCredentialsRequest{
     client_id: client_id,
@@ -28,17 +28,17 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
         scope: scope
       })
 
-      Repo.insert(token)
+      repo().insert(token)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
   import Boruta.Oauth.Authorization.Base
+  import Boruta.Config, only: [repo: 0]
 
   alias Boruta.Oauth.PasswordRequest
   alias Boruta.Oauth.Token
-  alias Boruta.Repo
 
   def token(%PasswordRequest{
     client_id: client_id,
@@ -57,17 +57,17 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
         scope: scope
       })
 
-      Repo.insert(token)
+      repo().insert(token)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest do
   import Boruta.Oauth.Authorization.Base
+  import Boruta.Config, only: [repo: 0]
 
   alias Boruta.Oauth.AuthorizationCodeRequest
   alias Boruta.Oauth.Token
-  alias Boruta.Repo
 
   def token(%AuthorizationCodeRequest{
     client_id: client_id,
@@ -83,17 +83,17 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
         scope: code.scope
       })
 
-      Repo.insert(token)
+      repo().insert(token)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
   import Boruta.Oauth.Authorization.Base
+  import Boruta.Config, only: [repo: 0]
 
   alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Token
-  alias Boruta.Repo
 
   def token(%TokenRequest{
     client_id: client_id,
@@ -113,17 +113,17 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
         scope: scope
       })
 
-      Repo.insert(token)
+      repo().insert(token)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
   import Boruta.Oauth.Authorization.Base
+  import Boruta.Config, only: [repo: 0]
 
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.Token
-  alias Boruta.Repo
 
   def token(%CodeRequest{
     client_id: client_id,
@@ -144,7 +144,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
         scope: scope
       })
 
-      Repo.insert(token)
+      repo().insert(token)
     end
   end
 end

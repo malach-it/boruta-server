@@ -5,6 +5,7 @@ defmodule Boruta.Config do
   Configuration can be set as following in `config.exs`
   ```
   config :boruta, Boruta.Oauth,
+    repo: Boruta.Repo,
     expires_in: %{
       access_token: 24 * 3600,
       authorization_code: 60
@@ -16,13 +17,15 @@ defmodule Boruta.Config do
   ```
   """
 
-  @defaults expires_in: %{
-    access_token: 3600,
-    authorization_code: 60
-  },
-  resource_owner: %{
-    schema: Boruta.Coherence.User
-  }
+
+  @defaults repo: Boruta.Repo,
+    expires_in: %{
+      access_token: 3600,
+      authorization_code: 60
+    },
+    resource_owner: %{
+      schema: Boruta.Coherence.User
+    }
 
   @doc false
   def access_token_expires_in do
@@ -39,6 +42,9 @@ defmodule Boruta.Config do
 
   @doc false
   def resource_owner_schema, do: Keyword.fetch!(oauth_config(), :resource_owner)[:schema]
+
+  @doc false
+  def repo, do: Keyword.fetch!(oauth_config(), :repo)
 
   defp oauth_config, do: assign_defaults(Application.get_env(:boruta, Boruta.Oauth))
 
