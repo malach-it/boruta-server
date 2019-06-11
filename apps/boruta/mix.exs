@@ -62,11 +62,12 @@ defmodule Boruta.MixProject do
         ],
         "Schemas": [
           Boruta.Oauth.Token,
-          Boruta.Oauth.Client
+          Boruta.Oauth.Client,
+          Boruta.Oauth.ResourceOwner
         ],
         "OAuth request": [
-          Boruta.Oauth.ImplicitRequest,
-          Boruta.Oauth.ResourceOwnerPasswordCredentialsRequest,
+          Boruta.Oauth.TokenRequest,
+          Boruta.Oauth.PasswordRequest,
           Boruta.Oauth.AuthorizationCodeRequest,
           Boruta.Oauth.ClientCredentialsRequest,
           Boruta.Oauth.CodeRequest,
