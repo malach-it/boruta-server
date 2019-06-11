@@ -49,6 +49,12 @@ defmodule Boruta.Config do
   defp oauth_config, do: assign_defaults(Application.get_env(:boruta, Boruta.Oauth))
 
   defp assign_defaults(config) do
-    Keyword.merge(@defaults, config, fn _, a, b -> Map.merge(a, b) end)
+    Keyword.merge(@defaults, config, fn _, a, b ->
+      if is_map(a) && is_map(b) do
+        Map.merge(a, b)
+      else
+        b
+      end
+    end)
   end
 end
