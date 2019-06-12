@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Boruta.Gen.Migration do
+  @moduledoc false
+
   use Mix.Task
 
   import Mix.Generator

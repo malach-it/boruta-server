@@ -62,7 +62,8 @@ defmodule Boruta.Oauth.Authorization.Base do
      }}
     | {:ok, user :: struct()}
   def resource_owner(id: id) do
-    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), id: id) do # if resource_owner is a struct
+    # if resource_owner is a struct
+    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), id: id) do
       {:ok, resource_owner}
     else
       _ ->
@@ -74,7 +75,8 @@ defmodule Boruta.Oauth.Authorization.Base do
     end
   end
   def resource_owner(email: username, password: password) do
-    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), email: username), # if resource_owner is a struct
+    # if resource_owner is a struct
+    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), email: username),
          true <- resource_owner_schema().checkpw(password, resource_owner.password_hash) do
       {:ok, resource_owner}
     else

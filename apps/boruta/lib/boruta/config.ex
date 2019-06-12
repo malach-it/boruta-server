@@ -17,7 +17,6 @@ defmodule Boruta.Config do
   ```
   """
 
-
   @defaults repo: Boruta.Repo,
     expires_in: %{
       access_token: 3600,
