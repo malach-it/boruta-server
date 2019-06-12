@@ -10,6 +10,30 @@ defmodule Boruta do
 
   Note : Refresh tokens are not implemented yet
 
+  ## Installation
+  1. __Schemas migration__
+
+  Boruta need a migration for its schemas and persist both tokens and clients. This can be done by running
+  ```
+  mix boruta.gen.migration
+  ```
+
+  2. __Configuration__
+
+  Boruta provides several configuration options, to customize them you can add configurations in `config.exs` as following
+  ```
+  config :boruta, Boruta.Oauth,
+    repo: Boruta.Repo,
+    expires_in: %{
+      access_token: 24 * 3600,
+      authorization_code: 60
+    },
+    secret_key_base: System.get_env("SECRET_KEY_BASE"),
+    resource_owner: %{
+      schema: Boruta.Coherence.User
+    }
+  ```
+
   ## Integration
   This implementation follows a pseudo hexagonal architecture to invert dependencies to Application layer.
   In order to expose endpoints of an OAuth server with Boruta, you need implement the behaviour `Boruta.Oauth.Application` with all needed callbacks for `token/2`, `authorize/2` and `introspect/2` calls from `Boruta.Oauth`.

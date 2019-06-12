@@ -52,6 +52,8 @@ defmodule Boruta.MixProject do
 
   defp docs do
     [
+      main: "Boruta",
+      # TODO source_url: "",
       groups_for_modules: [
         "Authorization": [
           Boruta.Oauth.Authorization,
