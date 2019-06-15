@@ -1,5 +1,18 @@
 defmodule Mix.Tasks.Boruta.Gen.Migration do
-  @moduledoc false
+  @moduledoc """
+  Migration task for Boruta.
+
+  Creates `clients`, `tokens` tables
+  ```
+  mix boruta.gen.migration
+  ```
+
+  It can also create migration for boruta coherence with `--with-coherence` arg
+  ```
+  mix boruta.gen.migration --with-coherence
+  ```
+
+  """
 
   use Mix.Task
 
@@ -9,6 +22,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
 
   @shortdoc "Generates Boruta migrations"
 
+  @doc false
   def run(args) do
     no_umbrella!("boruta.gen.migration")
     repos = parse_repo(args)
