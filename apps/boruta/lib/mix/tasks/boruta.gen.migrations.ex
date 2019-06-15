@@ -2,15 +2,16 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
   @moduledoc """
   Migration task for Boruta.
 
-  Creates `clients`, `tokens` tables
+  Creates `clients`, `tokens` tables. It can also create migration for boruta coherence with `--with-coherence` arg.
+
+  ## Examples
   ```
   mix boruta.gen.migration
-  ```
-
-  It can also create migration for boruta coherence with `--with-coherence` arg
-  ```
   mix boruta.gen.migration --with-coherence
   ```
+
+  ## Command line options
+  - `--with-coherence` - creates Boruta coherence migration
 
   """
 
