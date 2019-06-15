@@ -26,7 +26,7 @@ defmodule Boruta.Oauth.Application do
   @doc """
   This function will be triggered in case of success triggering `Boruta.Oauth.introspect/2`
   """
-  @callback introspect_success(conn :: Plug.Conn.t(), response :: map()) :: Plug.Conn.t()
+  @callback introspect_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.Token.t()) :: Plug.Conn.t()
   @doc """
   This function will be triggered in case of failure triggering `Boruta.Oauth.introspect/2`
   """

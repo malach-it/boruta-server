@@ -160,7 +160,7 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:error, error} ->
         {:error, %Error{status: :unauthorized, error: :invalid_access_token, error_description: error}}
       nil ->
-            {:error, %Error{status: :unauthorized, error: :invalid_access_token, error_description: "Provided authorization code is incorrect."}}
+            {:error, %Error{status: :unauthorized, error: :invalid_access_token, error_description: "Provided access token is incorrect."}}
     end
   end
 
