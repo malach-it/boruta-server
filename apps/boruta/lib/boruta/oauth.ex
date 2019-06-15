@@ -15,7 +15,7 @@ defmodule Boruta.Oauth do
   @doc """
   Triggers `token_success` in case of success and `token_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
   """
-  @spec token(conn :: map(), module :: atom()) :: any()
+  @spec token(conn :: Plug.Conn.t() | map(), module :: atom()) :: any()
   def token(conn, module) do
     with {:ok, request} <- Request.token_request(conn),
          {:ok, token} <- Authorization.token(request) do
@@ -31,7 +31,7 @@ defmodule Boruta.Oauth do
 
   Note : resource owner must be provided as current_user assigns.
   """
-  @spec authorize(conn :: map(), module :: atom()) :: any()
+  @spec authorize(conn :: Plug.Conn.t() | map(), module :: atom()) :: any()
   def authorize(conn, module) do
     with {:ok, request} <- Request.authorize_request(conn),
          {:ok, token} <- Authorization.token(request) do
@@ -50,7 +50,7 @@ defmodule Boruta.Oauth do
   @doc """
   Triggers `introspect_success` in case of success and `introspect_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
   """
-  @spec introspect(conn :: map(), module :: atom()) :: any()
+  @spec introspect(conn :: Plug.Conn.t() | map(), module :: atom()) :: any()
   def introspect(conn, module) do
     with {:ok, request} <- Request.introspect_request(conn),
          {:ok, response} <- Introspect.token(request) do
