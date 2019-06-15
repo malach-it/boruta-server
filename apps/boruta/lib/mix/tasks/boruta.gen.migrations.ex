@@ -1,5 +1,18 @@
 defmodule Mix.Tasks.Boruta.Gen.Migration do
-  @moduledoc false
+  @moduledoc """
+  Migration task for Boruta.
+
+  Creates `clients`, `tokens` tables
+  ```
+  mix boruta.gen.migration
+  ```
+
+  It can also create migration for boruta coherence with `--with-coherence` arg
+  ```
+  mix boruta.gen.migration --with-coherence
+  ```
+
+  """
 
   use Mix.Task
 
@@ -9,6 +22,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
 
   @shortdoc "Generates Boruta migrations"
 
+  @doc false
   def run(args) do
     no_umbrella!("boruta.gen.migration")
     repos = parse_repo(args)
@@ -16,7 +30,10 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
     Enum.map repos, fn repo ->
       path = Path.join(source_repo_priv(repo), "migrations")
       file = Path.join(path, "#{timestamp()}_create_boruta.exs")
-      assigns = [mod: Module.concat([repo, Migrations, "CreateBoruta"])]
+      assigns = [
+        mod: Module.concat([repo, Migrations, "CreateBoruta"]),
+        coherence: Enum.member?(args, "--with-coherence")
+      ]
 
       fuzzy_path = Path.join(path, "*_create_boruta.exs")
       if Path.wildcard(fuzzy_path) != [] do
@@ -53,6 +70,8 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:secret, :string)
         add(:redirect_uri, :string)
         add(:scope, :string)
+        add(:authorize_scope, :boolean, default: false)
+        add(:authorized_scopes, {:array, :string}, default: [])
 
         timestamps()
       end
@@ -71,7 +90,35 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
 
         timestamps()
       end
+      <%= if @coherence do %>
+      create table(:users, primary_key: false) do
+        add :id, :uuid, primary_key: true
 
+        add :name, :string
+        add :email, :string
+
+        # authenticatable
+        add :password_hash, :string
+        # recoverable
+        add :reset_password_token, :string
+        add :reset_password_sent_at, :utc_datetime
+        # lockable
+        add :failed_attempts, :integer, default: 0
+        add :locked_at, :utc_datetime
+        # trackable
+        add :sign_in_count, :integer, default: 0
+        add :current_sign_in_at, :utc_datetime
+        add :last_sign_in_at, :utc_datetime
+        add :current_sign_in_ip, :string
+        add :last_sign_in_ip, :string
+        # unlockable_with_token
+        add :unlock_token, :string
+
+        timestamps()
+      end
+
+      create unique_index(:users, [:email])
+      <% end %>
       create unique_index(:clients, [:id, :secret])
       create unique_index(:clients, [:id, :redirect_uri])
       create index("tokens", [:value])
