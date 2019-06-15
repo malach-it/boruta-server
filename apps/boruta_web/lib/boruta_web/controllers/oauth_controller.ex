@@ -14,13 +14,18 @@ defmodule BorutaWeb.OauthController do
   end
 
   @impl Boruta.Oauth.Application
-  def introspect_success(conn, introspect) do
+  def introspect_success(conn, token) do
     conn
     |> put_view(OauthView)
-    |> render("introspect.json", introspect: introspect)
+    |> render("introspect.json", token: token)
   end
 
   @impl Boruta.Oauth.Application
+  def introspect_error(conn, %Error{error: :invalid_access_token}) do
+    conn
+    |> put_view(OauthView)
+    |> render("introspect.json", active: false)
+  end
   def introspect_error(conn, %Error{status: status, error: error, error_description: error_description}) do
     conn
     |> put_status(status)

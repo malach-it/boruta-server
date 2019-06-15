@@ -13,37 +13,22 @@ defmodule Boruta.Oauth.Introspect do
   @doc """
   Build an introspect response for the given `IntrospectRequest`
 
+  Note : Invalid tokens returns an error `{:error, %Error{error: :invalid_access_token, ...}}`. That must be rescued to return `%{"active" => false}` in application implementation.
   ## Examples
       iex> token(%IntrospectRequest{
         client_id: "client_id",
         client_secret: "client_secret",
         token: "token"
       })
-      {:ok, %{"active" => false}}
+      {:ok, %Token{...}}
   """
   @spec token(request :: %IntrospectRequest{client_id: String.t(), client_secret: String.t(), token: String.t()}) ::
     {:ok, response :: map()} | {:error , error :: Error.t()}
   def token(%IntrospectRequest{client_id: client_id, client_secret: client_secret, token: token}) do
-    with {:ok, client} <- Authorization.Base.client(id: client_id, secret: client_secret),
-         {:ok, %Token{
-           resource_owner: resource_owner,
-           expires_at: expires_at,
-           scope: scope,
-           inserted_at: inserted_at
-         }} <- Authorization.Base.access_token(value: token) do
-      {:ok, %{
-        "active" => true,
-        "client_id" => client.id,
-        "username" => resource_owner && resource_owner.email,
-        "scope" => scope,
-        "sub" => resource_owner && resource_owner.id,
-        "iss" => "boruta", # TODO change to hostname
-        "exp" => expires_at,
-        "iat" => DateTime.to_unix(inserted_at)
-      }}
+    with {:ok, _client} <- Authorization.Base.client(id: client_id, secret: client_secret),
+         {:ok, token} <- Authorization.Base.access_token(value: token) do
+      {:ok, token}
     else
-      {:error, %Error{error: :invalid_access_token}} ->
-        {:ok, %{"active" => false}}
       {:error, %Error{} = error} -> {:error, error}
     end
   end

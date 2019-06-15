@@ -5,8 +5,26 @@ defmodule BorutaWeb.OauthView do
     token
   end
 
-  def render("introspect.json", %{introspect: %{} = introspect}) do
-    introspect
+  def render("introspect.json", %{active: false}) do
+    %{"active" => false}
+  end
+  def render("introspect.json", %{token: %Boruta.Oauth.Token{
+    client: client,
+    resource_owner: resource_owner,
+    expires_at: expires_at,
+    scope: scope,
+    inserted_at: inserted_at
+  }}) do
+    %{
+      "active" => true,
+      "client_id" => client.id,
+      "username" => resource_owner && resource_owner.email,
+      "scope" => scope,
+      "sub" => resource_owner && resource_owner.id,
+      "iss" => "boruta", # TODO change to hostname
+      "exp" => expires_at,
+      "iat" => DateTime.to_unix(inserted_at)
+    }
   end
 
   def render("error.json", %{error: error, error_description: error_description}) do

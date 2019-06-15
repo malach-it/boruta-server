@@ -967,26 +967,25 @@ defmodule Boruta.OauthTest do
       assert Oauth.introspect(%{
         body_params: %{"token" => "token"},
         req_headers: [{"authorization", authorization_header}]
-      }, __MODULE__) == {:introspect_success, %{"active" => false}}
+      }, __MODULE__) == {:introspect_error, %Boruta.Oauth.Error{
+        error: :invalid_access_token,
+        error_description: "Provided access token is incorrect.",
+        format: nil,
+        redirect_uri: nil,
+        status: :unauthorized
+      }}
     end
 
     test "returns a token introspected if token is active", %{client: client, token: token} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       token = Repo.preload(token, [:resource_owner, :client])
 
-      assert Oauth.introspect(%{
+      with {:introspect_success, %Token{} = token} <- Oauth.introspect(%{
         body_params: %{"token" => token.value},
         req_headers: [{"authorization", authorization_header}]
-      }, __MODULE__) == {:introspect_success, %{
-        "active" => true,
-        "client_id" => client.id,
-        "username" => token.resource_owner.email,
-        "scope" => token.scope,
-        "sub" => token.resource_owner.id,
-        "iss" => "boruta", # TODO change to hostname
-        "exp" => token.expires_at,
-        "iat" => DateTime.to_unix(token.inserted_at)
-}}
+      }, __MODULE__) do
+        assert token == token
+      end
     end
   end
 
