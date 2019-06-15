@@ -10,6 +10,7 @@ defmodule Boruta.Config do
       access_token: 24 * 3600,
       authorization_code: 60
     },
+    token_generator: Boruta.TokenGenerator,
     secret_key_base: System.get_env("SECRET_KEY_BASE"),
     resource_owner: %{
       schema: Boruta.Coherence.User
@@ -22,6 +23,7 @@ defmodule Boruta.Config do
       access_token: 3600,
       authorization_code: 60
     },
+    token_generator: Boruta.TokenGenerator,
     resource_owner: %{
       schema: Boruta.Coherence.User
     }
@@ -34,6 +36,11 @@ defmodule Boruta.Config do
   @doc false
   def authorization_code_expires_in do
     Keyword.fetch!(oauth_config(), :expires_in)[:authorization_code]
+  end
+
+  @doc false
+  def token_generator do
+    Keyword.fetch!(oauth_config(), :token_generator)
   end
 
   @doc false

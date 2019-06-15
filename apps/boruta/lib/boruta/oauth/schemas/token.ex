@@ -11,7 +11,8 @@ defmodule Boruta.Oauth.Token do
   import Boruta.Config, only: [
     access_token_expires_in: 0,
     authorization_code_expires_in: 0,
-    resource_owner_schema: 0
+    resource_owner_schema: 0,
+    token_generator: 0
   ]
 
   alias Boruta.Oauth.Client
@@ -71,7 +72,7 @@ defmodule Boruta.Oauth.Token do
     |> validate_required([:client_id, :resource_owner_id])
     |> put_change(:type, "access_token")
     # TODO better token randomization
-    |> put_change(:value, SecureRandom.uuid)
+    |> put_value()
     |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
   end
 
@@ -93,7 +94,11 @@ defmodule Boruta.Oauth.Token do
     |> validate_required([:client_id, :resource_owner_id, :redirect_uri])
     |> put_change(:type, "code")
     # TODO better token randomization
-    |> put_change(:value, SecureRandom.uuid)
+    |> put_value()
     |> put_change(:expires_at, :os.system_time(:seconds) + authorization_code_expires_in())
+  end
+
+  defp put_value(%Ecto.Changeset{data: data, changes: changes} = changeset) do
+    put_change( changeset, :value, token_generator().generate(struct(data, changes)))
   end
 end

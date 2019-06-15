@@ -28,6 +28,7 @@ defmodule Boruta do
       access_token: 24 * 3600,
       authorization_code: 60
     },
+    token_generator: Boruta.TokenGenerator,
     secret_key_base: System.get_env("SECRET_KEY_BASE"),
     resource_owner: %{
       schema: Boruta.Coherence.User

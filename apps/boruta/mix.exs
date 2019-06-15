@@ -53,7 +53,7 @@ defmodule Boruta.MixProject do
   defp docs do
     [
       main: "Boruta",
-      # TODO source_url: "",
+      source_url: "https://gitlab.com/patatoid/boruta-core",
       groups_for_modules: [
         "Authorization": [
           Boruta.Oauth.Authorization,
@@ -78,7 +78,8 @@ defmodule Boruta.MixProject do
         ],
         "Utilities": [
           Boruta.BasicAuth,
-          Boruta.Oauth.Validator
+          Boruta.Oauth.Validator,
+          Boruta.Oauth.TokenGenerator
         ],
         "Errors": [
           Boruta.Oauth.Error

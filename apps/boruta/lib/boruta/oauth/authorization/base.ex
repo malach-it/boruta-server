@@ -88,7 +88,9 @@ defmodule Boruta.Oauth.Authorization.Base do
         }}
     end
   end
-  def resource_owner(%{__meta__: %{state: :loaded}} = resource_owner), do: {:ok, resource_owner}
+  def resource_owner(%{__meta__: %{state: :loaded}} = resource_owner) do # resource_owner is persisted
+    {:ok, resource_owner}
+  end
   def resource_owner(_) do
     {:error, %Error{
       status: :unauthorized,
