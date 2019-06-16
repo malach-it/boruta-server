@@ -59,7 +59,7 @@ defmodule Boruta.Oauth.Request do
         token_request(%{body_params: %{} = body_params})
     end
   end
-  def token_request(%{req_headers: [{"authorization", authorization_header}], body_params: %{} = body_params}) do
+  def token_request(%{req_headers: [{"authorization", "Basic " <> _ = authorization_header}], body_params: %{} = body_params}) do
     with {:ok, [client_id, client_secret]} <- BasicAuth.decode(authorization_header),
          {:ok, params} <- Validator.validate(
            Enum.into(body_params, %{"client_id" => client_id, "client_secret" => client_secret})
@@ -162,7 +162,7 @@ defmodule Boruta.Oauth.Request do
         introspect_request(%{body_params: %{} = body_params})
     end
   end
-  def introspect_request(%{req_headers: [{"authorization", authorization_header}], body_params: %{} = body_params}) do
+  def introspect_request(%{req_headers: [{"authorization", "Basic " <> _ = authorization_header}], body_params: %{} = body_params}) do
     with {:ok, [client_id, client_secret]} <- BasicAuth.decode(authorization_header),
          {:ok, params} <- Validator.validate(
            Enum.into(body_params, %{"response_type" => "introspect", "client_id" => client_id, "client_secret" => client_secret})
