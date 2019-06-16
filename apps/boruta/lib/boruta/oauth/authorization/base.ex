@@ -175,7 +175,7 @@ defmodule Boruta.Oauth.Authorization.Base do
     {:ok, scope :: String.t()} | {:error, Error.t()}
   def scope(scope: scope, client: %Client{authorize_scope: false}), do: {:ok, scope}
   def scope(scope: scope, client: %Client{authorize_scope: true, authorized_scopes: authorized_scopes}) do
-    scopes = String.split(scope, " ")
+    scopes = Enum.filter(String.split(scope, " "), fn (scope) -> scope != "" end) # remove empty strings
     case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
       true -> {:ok, scope}
       false ->
