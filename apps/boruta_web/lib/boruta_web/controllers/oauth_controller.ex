@@ -64,6 +64,7 @@ defmodule BorutaWeb.OauthController do
     query = URI.encode_query(%{access_token: value, expires_in: expires_in, state: state})
     url = "#{client.redirect_uri}##{query}"
     conn
+    |> delete_session(:oauth_request)
     |> redirect(external: url)
   end
   def authorize_success(conn, %Boruta.Oauth.Token{type: "access_token", expires_at: expires_at, value: value, client: client}) do
@@ -73,18 +74,23 @@ defmodule BorutaWeb.OauthController do
     query = URI.encode_query(%{access_token: value, expires_in: expires_in})
     url = "#{client.redirect_uri}##{query}"
     conn
+    |> delete_session(:oauth_request)
     |> redirect(external: url)
   end
 
   def authorize_success(conn, %Boruta.Oauth.Token{type: "code", client: client, value: value, state: "" <> state}) do
     query = URI.encode_query(%{code: value, state: state})
     url = "#{client.redirect_uri}?#{query}"
-    conn |> redirect(external: url)
+    conn
+    |> delete_session(:oauth_request)
+    |> redirect(external: url)
   end
   def authorize_success(conn, %Boruta.Oauth.Token{type: "code", client: client, value: value}) do
     query = URI.encode_query(%{code: value})
     url = "#{client.redirect_uri}?#{query}"
-    conn |> redirect(external: url)
+    conn
+    |> delete_session(:oauth_request)
+    |> redirect(external: url)
   end
 
   @impl Boruta.Oauth.Application
@@ -96,7 +102,8 @@ defmodule BorutaWeb.OauthController do
     |> put_session(:oauth_request, %{
       "response_type" => query_params["response_type"],
       "client_id" => query_params["client_id"],
-      "redirect_uri" => query_params["redirect_uri"]
+      "redirect_uri" => query_params["redirect_uri"],
+      "state" => query_params["state"]
     })
     |> redirect(to: Routes.session_path(conn, :new))
   end

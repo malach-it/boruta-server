@@ -5,10 +5,6 @@ defmodule Boruta.Oauth.Client do
 
   use Ecto.Schema
 
-  import Ecto.Changeset
-
-  alias Boruta.Oauth.Client
-
   @type t :: %__MODULE__{
     secret: String.t(),
     authorize_scope: boolean(),

@@ -46,7 +46,8 @@ defmodule Boruta.MixProject do
       {:secure_random, "~> 0.5"},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.6", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0.0-rc.6", only: [:dev], runtime: false},
+      {:puid, "~> 1.0"}
     ]
   end
 
