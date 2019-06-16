@@ -3,8 +3,6 @@ defmodule Boruta.Oauth.Introspect do
   OAuth Introspect
   """
 
-  # TODO defstruct
-
   alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.IntrospectRequest

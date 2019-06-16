@@ -980,11 +980,11 @@ defmodule Boruta.OauthTest do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       token = Repo.preload(token, [:resource_owner, :client])
 
-      with {:introspect_success, %Token{} = token} <- Oauth.introspect(%{
+      with {:introspect_success, %Token{} = response_token} <- Oauth.introspect(%{
         body_params: %{"token" => token.value},
         req_headers: [{"authorization", authorization_header}]
       }, __MODULE__) do
-        assert token == token
+        assert response_token == token
       end
     end
   end

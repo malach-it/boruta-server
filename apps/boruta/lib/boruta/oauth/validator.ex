@@ -3,8 +3,7 @@ defmodule Boruta.Oauth.Validator do
   Utility to validate the request according to the given parameters.
   """
 
-  # TODO fid a way to difference query from body params
-  # TODO unit test
+  # TODO find a way to difference query from body params
   alias Boruta.Oauth.Json.Schema
   alias ExJsonSchema.Validator.Error.BorutaFormatter
 
