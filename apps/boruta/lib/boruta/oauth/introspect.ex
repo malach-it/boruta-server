@@ -6,7 +6,6 @@ defmodule Boruta.Oauth.Introspect do
   alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.IntrospectRequest
-  alias Boruta.Oauth.Token
 
   @doc """
   Build an introspect response for the given `IntrospectRequest`
