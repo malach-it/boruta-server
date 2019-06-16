@@ -167,7 +167,8 @@ defmodule BorutaWeb.OauthControllerTest do
       assert get_session(conn, :oauth_request) == %{
         "response_type" => "token",
         "client_id" => client.id,
-        "redirect_uri" => client.redirect_uri
+        "redirect_uri" => client.redirect_uri,
+        "state" => "state"
       }
     end
 

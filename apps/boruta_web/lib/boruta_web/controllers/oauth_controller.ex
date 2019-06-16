@@ -102,7 +102,8 @@ defmodule BorutaWeb.OauthController do
     |> put_session(:oauth_request, %{
       "response_type" => query_params["response_type"],
       "client_id" => query_params["client_id"],
-      "redirect_uri" => query_params["redirect_uri"]
+      "redirect_uri" => query_params["redirect_uri"],
+      "state" => query_params["state"]
     })
     |> redirect(to: Routes.session_path(conn, :new))
   end
