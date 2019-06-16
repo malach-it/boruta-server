@@ -191,13 +191,13 @@ defmodule Boruta.OauthTest do
     test "returns an error if Basic auth fails" do
       assert Oauth.token(
         %{
-          req_headers: [{"authorization", "boom"}],
+          req_headers: [{"authorization", "Basic boom"}],
           body_params: %{}
         },
         __MODULE__
       ) == {:token_error, %Boruta.Oauth.Error{
         error: :invalid_request,
-        error_description: "`boom` is not a valid Basic authorization header.",
+        error_description: "Given credentials are invalid.",
         status: :bad_request
       }}
     end
