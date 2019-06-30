@@ -25,31 +25,10 @@ defmodule Boruta.Oauth.Validator do
       {:error, "Request is not a valid OAuth request. Need a grant_type or a response_type param."}
   """
   @spec validate(params :: map()) :: {:ok, params :: map()} | {:error, message :: String.t()}
-  def validate(%{"grant_type" => "password"} = params) do
+  def validate(%{"grant_type" => grant_type} = params)
+  when grant_type in ["password", "client_credentials", "authorization_code", "refresh_token"] do
     case ExJsonSchema.Validator.validate(
-      Schema.resource_owner_password_credentials,
-      params,
-      error_formatter: BorutaFormatter
-    ) do
-      :ok -> {:ok, params}
-      {:error, errors} ->
-        {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
-    end
-  end
-  def validate(%{"grant_type" => "client_credentials"} = params) do
-    case ExJsonSchema.Validator.validate(
-      Schema.client_credentials,
-      params,
-      error_formatter: BorutaFormatter
-    ) do
-      :ok -> {:ok, params}
-      {:error, errors} ->
-        {:error, "Request body validation failed. " <> Enum.join(errors, " ")}
-    end
-  end
-  def validate(%{"grant_type" => "authorization_code"} = params) do
-    case ExJsonSchema.Validator.validate(
-      Schema.authorization_code,
+      apply(Schema, String.to_atom(grant_type), []),
       params,
       error_formatter: BorutaFormatter
     ) do
@@ -70,20 +49,19 @@ defmodule Boruta.Oauth.Validator do
     end
   end
 
-  def validate(%{"response_type" => "token"} = params) do
-    case ExJsonSchema.Validator.validate(Schema.token, params, error_formatter: BorutaFormatter) do
+  def validate(%{"response_type" => response_type} = params)
+  when response_type in ["token", "code"] do
+    case ExJsonSchema.Validator.validate(
+      apply(Schema, String.to_atom(response_type), []),
+      params,
+      error_formatter: BorutaFormatter
+    ) do
       :ok -> {:ok, params}
       {:error, errors} ->
         {:error, "Query params validation failed. " <> Enum.join(errors, " ")}
     end
   end
-  def validate(%{"response_type" => "code"} = params) do
-    case ExJsonSchema.Validator.validate(Schema.code, params, error_formatter: BorutaFormatter) do
-      :ok -> {:ok, params}
-      {:error, errors} ->
-        {:error, "Query params validation failed. " <> Enum.join(errors, " ")}
-    end
-  end
+  # TODO response_type may not be the right key for introspect
   def validate(%{"response_type" => "introspect"} = params) do
     case ExJsonSchema.Validator.validate(Schema.introspect, params, error_formatter: BorutaFormatter) do
       :ok -> {:ok, params}

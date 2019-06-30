@@ -31,7 +31,7 @@ defmodule Boruta.OauthTest do
     test "returns an error with invalid grant_type" do
       assert Oauth.token(%{body_params: %{"grant_type" => "boom"}}, __MODULE__) == {:token_error,  %Error{
         error: :invalid_request,
-        error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code/.",
+        error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code|refresh_token/.",
         status: :bad_request
       }}
     end
@@ -557,7 +557,7 @@ defmodule Boruta.OauthTest do
         client_id: client.id,
         resource_owner_id: resource_owner.id,
         redirect_uri: client.redirect_uri
-      )
+     )
       expired_code = insert(
         :token,
         type: "code",
@@ -644,7 +644,7 @@ defmodule Boruta.OauthTest do
       ) == {:token_error, %Error{
         error: :invalid_code,
         error_description: "Provided authorization code is incorrect.",
-        status: :unauthorized
+        status: :bad_request
       }}
     end
 
@@ -664,7 +664,7 @@ defmodule Boruta.OauthTest do
       ) == {:token_error, %Error{
         error: :invalid_code,
         error_description: "Provided authorization code is incorrect.",
-        status: :unauthorized
+        status: :bad_request
       }}
     end
 
@@ -684,7 +684,7 @@ defmodule Boruta.OauthTest do
       ) == {:token_error, %Error{
         error: :invalid_code,
         error_description: "Token expired.",
-        status: :unauthorized
+        status: :bad_request
       }}
     end
 
@@ -939,6 +939,113 @@ defmodule Boruta.OauthTest do
     end
   end
 
+  describe "refresh_token" do
+    setup do
+      client = insert(:client)
+      expired_access_token = insert(
+        :token,
+        type: "access_token",
+        refresh_token: "from_an_expired_token",
+        client_id: client.id,
+        redirect_uri: client.redirect_uri,
+        expires_at: :os.system_time(:seconds) - 10
+      )
+      access_token = insert(
+        :token,
+        type: "access_token",
+        refresh_token: "from_an_access_token",
+        client_id: client.id,
+        redirect_uri: client.redirect_uri,
+        expires_at: :os.system_time(:seconds) + 10,
+        scope: "scope"
+      )
+      {:ok, client: client, expired_access_token: expired_access_token, access_token: access_token}
+    end
+
+    test "returns an error if `grant_type` is 'refresh_token' and schema is invalid" do
+      assert Oauth.token(%{body_params: %{"grant_type" => "refresh_token"}}, __MODULE__) == {:token_error, %Error{
+        error: :invalid_request,
+        error_description: "Request body validation failed. Required property refresh_token is missing at #.",
+        status: :bad_request
+      }}
+    end
+
+    test "returns an error if client is invalid" do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("6a2f41a3-c54c-fce8-32d2-0324e1c32e22", "test")
+      assert Oauth.token(%{
+        body_params: %{"grant_type" => "refresh_token", "refresh_token" => "refresh_token"},
+        req_headers: [{"authorization", authorization_header}]
+      }, __MODULE__) == {:token_error, %Error{
+        error: :invalid_client,
+        error_description: "Invalid client_id or client_secret.",
+        status: :unauthorized
+      }}
+    end
+
+    test "returns an error if refresh_token is invalid", %{client: client} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      assert Oauth.token(%{
+        body_params: %{"grant_type" => "refresh_token", "refresh_token" => "bad_refresh_token"},
+        req_headers: [{"authorization", authorization_header}]
+      }, __MODULE__) == {:token_error, %Error{
+        error: :invalid_refresh_token,
+        error_description: "Provided refresh token is incorrect.",
+        status: :bad_request
+      }}
+    end
+
+    test "returns an error if access_token associated is expired", %{client: client, expired_access_token: token} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      assert Oauth.token(%{
+        body_params: %{"grant_type" => "refresh_token", "refresh_token" => token.refresh_token},
+        req_headers: [{"authorization", authorization_header}]
+      }, __MODULE__) == {:token_error, %Error{
+        error: :invalid_refresh_token,
+        error_description: "Token expired.",
+        status: :bad_request
+      }}
+    end
+
+    test "returns an error if scope is not authorized", %{client: client, access_token: token} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      assert Oauth.token(%{
+        body_params: %{"grant_type" => "refresh_token", "refresh_token" => token.refresh_token, "scope" => "bad_scope"},
+        req_headers: [{"authorization", authorization_header}]
+      }, __MODULE__) == {:token_error, %Error{
+        error: :invalid_scope,
+        error_description: "Given scopes are not authorized.",
+        status: :bad_request
+      }}
+    end
+
+    test "returns token", %{client: client, access_token: token} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      with {
+        :token_success,
+        %Boruta.Oauth.Token{
+          client_id: client_id,
+          value: value,
+          refresh_token: refresh_token,
+          expires_at: expires_at
+        }
+      } <- Oauth.token(
+        %{
+          body_params: %{"grant_type" => "refresh_token", "refresh_token" => token.refresh_token, "scope" => "scope"},
+          req_headers: [{"authorization", authorization_header}]
+        },
+        __MODULE__
+      ) do
+        assert client_id == token.client_id
+        assert value
+        assert refresh_token
+        assert expires_at > token.expires_at
+      else
+        _ ->
+          assert false
+      end
+    end
+  end
+
   describe "introspect request" do
     setup do
       client = insert(:client)
@@ -987,7 +1094,7 @@ defmodule Boruta.OauthTest do
         error_description: "Provided access token is incorrect.",
         format: nil,
         redirect_uri: nil,
-        status: :unauthorized
+        status: :bad_request
       }}
     end
 

@@ -22,7 +22,7 @@ defmodule Boruta.Factory do
 
   def token_factory do
     %Boruta.Oauth.Token{
-      value: SecureRandom.urlsafe_base64(),
+      value: Boruta.TokenGenerator.generate(),
       expires_at: :os.system_time(:seconds) + 10
     }
   end

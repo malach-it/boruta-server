@@ -99,6 +99,17 @@ defmodule Boruta.Oauth.Token do
   end
 
   @doc false
+  def refresh_token_changeset(token, attrs) do
+    token
+    |> cast(attrs, [:client_id, :resource_owner_id, :scope])
+    |> validate_required([:client_id])
+    |> put_change(:type, "access_token")
+    |> put_value()
+    |> put_refresh_token()
+    |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
+  end
+
+  @doc false
   def code_changeset(token, attrs) do
     token
     |> cast(attrs, [:client_id, :resource_owner_id, :redirect_uri, :state, :scope])
