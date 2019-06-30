@@ -98,7 +98,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns a token if client_id/scret are valid", %{client: client} do
-      with {:token_success, %Token{client_id: client_id, value: value}} <- Oauth.token(
+      with {:token_success, %Token{client_id: client_id, value: value, refresh_token: refresh_token}} <- Oauth.token(
         %{
           body_params: %{
             "grant_type" => "client_credentials",
@@ -110,6 +110,7 @@ defmodule Boruta.OauthTest do
       ) do
         assert client_id == client.id
         assert value
+        assert refresh_token
       else
         _ ->
           assert false
@@ -262,11 +263,11 @@ defmodule Boruta.OauthTest do
       }}
     end
 
-    test "returns a token if username/password are valid", %{client: client, resource_owner: resource_owner} do
+    test "returns a token", %{client: client, resource_owner: resource_owner} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       with {
         :token_success,
-        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value}
+        %Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, refresh_token: refresh_token}
       } <- Oauth.token(
         %{
           req_headers: [{"authorization", authorization_header}],
@@ -277,6 +278,7 @@ defmodule Boruta.OauthTest do
         assert resource_owner_id == resource_owner.id
         assert client_id == client.id
         assert value
+        assert refresh_token
       else
         _ ->
           assert false
@@ -413,10 +415,10 @@ defmodule Boruta.OauthTest do
       }}
     end
 
-    test "returns a code if user is valid", %{client: client, resource_owner: resource_owner} do
+    test "returns a code", %{client: client, resource_owner: resource_owner} do
       with {
         :authorize_success,
-        %Boruta.Oauth.Token{type: "code", resource_owner_id: resource_owner_id, client_id: client_id, value: value}
+        %Token{type: "code", resource_owner_id: resource_owner_id, client_id: client_id, value: value, refresh_token: refresh_token}
       } <- Oauth.authorize(%{
           query_params: %{
             "response_type" => "code",
@@ -428,6 +430,7 @@ defmodule Boruta.OauthTest do
         assert resource_owner_id == resource_owner.id
         assert client_id == client.id
         assert value
+        assert !refresh_token
       else
         _ ->
           assert false
@@ -685,11 +688,16 @@ defmodule Boruta.OauthTest do
       }}
     end
 
-    test "returns a token if `code` is valid", %{client: client, code: code} do
+    test "returns a token", %{client: client, code: code} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
       with {
         :token_success,
-        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value}
+        %Boruta.Oauth.Token{
+          resource_owner_id: resource_owner_id,
+          client_id: client_id,
+          value: value,
+          refresh_token: refresh_token
+        }
       } <- Oauth.token(
         %{
           req_headers: [{"authorization", authorization_header}],
@@ -705,6 +713,7 @@ defmodule Boruta.OauthTest do
         assert resource_owner_id == code.resource_owner_id
         assert client_id == client.id
         assert value
+        assert refresh_token
       else
         _ ->
           assert false
@@ -815,10 +824,15 @@ defmodule Boruta.OauthTest do
       }}
     end
 
-    test "returns a token if user is valid", %{client: client, resource_owner: resource_owner} do
+    test "returns a token", %{client: client, resource_owner: resource_owner} do
       with {
         :authorize_success,
-        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value}
+        %Boruta.Oauth.Token{
+          resource_owner_id: resource_owner_id,
+          client_id: client_id,
+          value: value,
+          refresh_token: refresh_token
+        }
       } <- Oauth.authorize(
         %{
           query_params: %{
@@ -835,6 +849,7 @@ defmodule Boruta.OauthTest do
         assert resource_owner_id == resource_owner.id
         assert client_id == client.id
         assert value
+        assert !refresh_token
       else
         _ ->
           assert false

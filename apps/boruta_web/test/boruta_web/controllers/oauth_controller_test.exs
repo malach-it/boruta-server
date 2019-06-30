@@ -91,11 +91,13 @@ defmodule BorutaWeb.OauthControllerTest do
       %{
         "access_token" => access_token,
         "token_type" => token_type,
-        "expires_in" => expires_in
+        "expires_in" => expires_in,
+        "refresh_token" => refresh_token
       } = json_response(conn, 200)
       assert access_token
       assert token_type == "bearer"
       assert expires_in
+      assert refresh_token
     end
   end
 
@@ -226,7 +228,6 @@ defmodule BorutaWeb.OauthControllerTest do
   end
 
   describe "password grant" do
-    # TODO test unhappy paths
     setup %{conn: conn} do
       resource_owner = insert(:user)
       client = insert(:client)
@@ -247,16 +248,18 @@ defmodule BorutaWeb.OauthControllerTest do
       %{
         "access_token" => access_token,
         "token_type" => token_type,
-        "expires_in" => expires_in
+        "expires_in" => expires_in,
+        "refresh_token" => refresh_token
       } = json_response(conn, 200)
       assert access_token
       assert token_type == "bearer"
       assert expires_in
+      assert refresh_token
     end
   end
 
   describe "authorization code grant" do
-    # TODO test not happy paths
+    # TODO est token delivrance with code
     setup %{conn: conn} do
       resource_owner = insert(:user)
       client = insert(:client)

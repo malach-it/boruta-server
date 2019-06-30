@@ -42,8 +42,8 @@ defmodule BorutaWeb.OauthView do
       Jason.Encode.map(%{
         access_token: token.value,
         token_type: "bearer",
-        expires_in: expires_in
-        # refresh_token: token.details[:refresh_token]
+        expires_in: expires_in,
+        refresh_token: token.refresh_token
       }, options)
     end
   end
