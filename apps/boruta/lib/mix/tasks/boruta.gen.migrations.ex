@@ -81,6 +81,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:id, :uuid, primary_key: true)
         add(:type, :string)
         add(:value, :string)
+        add(:refresh_token, :string)
         add(:expires_at, :integer)
         add(:redirect_uri, :string)
         add(:state, :string)
@@ -124,6 +125,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
       create unique_index(:clients, [:id, :redirect_uri])
       create index("tokens", [:value])
       create unique_index("tokens", [:client_id, :value])
+      create unique_index("tokens", [:client_id, :refresh_token])
     end
   end
   """
