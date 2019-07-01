@@ -8,7 +8,7 @@ defmodule Boruta.TokenGenerator do
   alias Boruta.Oauth.Token
 
   @impl Boruta.Oauth.TokenGenerator
-  def generate(%Token{}) do
+  def generate(_, %Token{}) do
     generate()
   end
 end

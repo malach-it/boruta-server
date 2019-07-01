@@ -114,7 +114,7 @@ defmodule Boruta.Oauth.Authorization.Base do
        :error_description => String.t(),
        :format => nil,
        :redirect_uri => nil,
-       :status => :unauthorized
+       :status => :bad_request
      }}
     | {:ok, %Boruta.Oauth.Token{}}
   def code(value: value, redirect_uri: redirect_uri) do
@@ -123,9 +123,9 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, token}
     else
       {:error, error} ->
-        {:error, %Error{status: :unauthorized, error: :invalid_code, error_description: error}}
+        {:error, %Error{status: :bad_request, error: :invalid_code, error_description: error}}
       nil ->
-        {:error, %Error{status: :unauthorized, error: :invalid_code, error_description: "Provided authorization code is incorrect."}}
+        {:error, %Error{status: :bad_request, error: :invalid_code, error_description: "Provided authorization code is incorrect."}}
     end
   end
 
@@ -136,7 +136,7 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> access_token(value: "value")
       {:ok, %Boruta.Oauth.Token{...}}
   """
-  @spec access_token([value: String.t()]) ::
+  @spec access_token([value: String.t()] | [refresh_token: String.t()]) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_access_token,
@@ -158,9 +158,26 @@ defmodule Boruta.Oauth.Authorization.Base do
       {:ok, token}
     else
       {:error, error} ->
-        {:error, %Error{status: :unauthorized, error: :invalid_access_token, error_description: error}}
+        {:error, %Error{status: :bad_request, error: :invalid_access_token, error_description: error}}
       nil ->
-            {:error, %Error{status: :unauthorized, error: :invalid_access_token, error_description: "Provided access token is incorrect."}}
+        {:error, %Error{status: :bad_request, error: :invalid_access_token, error_description: "Provided access token is incorrect."}}
+    end
+  end
+  def access_token(refresh_token: refresh_token) do
+    with %Token{} = token <- repo().one(
+      from t in Token,
+      left_join: c in assoc(t, :client),
+      left_join: u in assoc(t, :resource_owner),
+      where: t.type == "access_token" and t.refresh_token == ^refresh_token,
+      preload: [client: c, resource_owner: u]
+    ),
+      :ok <- Token.expired?(token) do
+      {:ok, token}
+    else
+      {:error, error} ->
+        {:error, %Error{status: :bad_request, error: :invalid_refresh_token, error_description: error}}
+      nil ->
+        {:error, %Error{status: :bad_request, error: :invalid_refresh_token, error_description: "Provided refresh token is incorrect."}}
     end
   end
 
@@ -171,10 +188,25 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> scope(scope: "scope", client: %Boruta.Oauth.Client{...})
       {:ok, "scope"}
   """
-  @spec scope([scope: String.t(), client: Client.t()]) ::
+  @spec scope([scope: String.t(), client: Client.t()] | [scope: String.t(), token: Token.t()]) ::
     {:ok, scope :: String.t()} | {:error, Error.t()}
   def scope(scope: scope, client: %Client{authorize_scope: false}), do: {:ok, scope}
   def scope(scope: scope, client: %Client{authorize_scope: true, authorized_scopes: authorized_scopes}) do
+    scopes = Enum.filter(String.split(scope, " "), fn (scope) -> scope != "" end) # remove empty strings
+    case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
+      true -> {:ok, scope}
+      false ->
+        {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
+    end
+  end
+
+  # TODO default token scope may be an empty string
+  def scope(scope: "", token: %Token{scope: nil}), do: {:ok, ""}
+  def scope(scope: "" <> _, token: %Token{scope: nil}) do
+    {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
+  end
+  def scope(scope: scope, token: %Token{scope: "" <> authorized_scope}) do
+    authorized_scopes = Enum.filter(String.split(authorized_scope, " "), fn (scope) -> scope != "" end) # remove empty strings
     scopes = Enum.filter(String.split(scope, " "), fn (scope) -> scope != "" end) # remove empty strings
     case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
       true -> {:ok, scope}

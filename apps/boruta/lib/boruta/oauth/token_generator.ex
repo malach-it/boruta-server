@@ -6,5 +6,5 @@ defmodule Boruta.Oauth.TokenGenerator do
   @doc """
   Generates a token value from token entity.
   """
-  @callback generate(token :: Boruta.Oauth.Token.t()) :: value :: String.t()
+  @callback generate(type :: :access_token | :refresh_token, token :: Boruta.Oauth.Token.t()) :: value :: String.t()
 end

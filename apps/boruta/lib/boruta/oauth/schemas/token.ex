@@ -35,6 +35,7 @@ defmodule Boruta.Oauth.Token do
   schema "tokens" do
     field(:type, :string)
     field(:value, :string)
+    field(:refresh_token, :string)
     field(:state, :string)
     field(:scope, :string)
     field(:redirect_uri, :string)
@@ -76,12 +77,35 @@ defmodule Boruta.Oauth.Token do
   end
 
   @doc false
+  def resource_owner_with_refresh_token_changeset(token, attrs) do
+    token
+    |> cast(attrs, [:client_id, :resource_owner_id, :state, :scope])
+    |> validate_required([:client_id, :resource_owner_id])
+    |> put_change(:type, "access_token")
+    |> put_value()
+    |> put_refresh_token()
+    |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
+  end
+
+  @doc false
   def machine_changeset(token, attrs) do
     token
     |> cast(attrs, [:client_id, :scope])
     |> validate_required([:client_id])
     |> put_change(:type, "access_token")
     |> put_value()
+    |> put_refresh_token()
+    |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
+  end
+
+  @doc false
+  def refresh_token_changeset(token, attrs) do
+    token
+    |> cast(attrs, [:client_id, :resource_owner_id, :scope])
+    |> validate_required([:client_id])
+    |> put_change(:type, "access_token")
+    |> put_value()
+    |> put_refresh_token()
     |> put_change(:expires_at, :os.system_time(:seconds) + access_token_expires_in())
   end
 
@@ -96,6 +120,10 @@ defmodule Boruta.Oauth.Token do
   end
 
   defp put_value(%Ecto.Changeset{data: data, changes: changes} = changeset) do
-    put_change(changeset, :value, token_generator().generate(struct(data, changes)))
+    put_change(changeset, :value, token_generator().generate(:access_token, struct(data, changes)))
+  end
+
+  defp put_refresh_token(%Ecto.Changeset{data: data, changes: changes} = changeset) do
+    put_change(changeset, :refresh_token, token_generator().generate(:refresh_token, struct(data, changes)))
   end
 end

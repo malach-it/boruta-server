@@ -18,7 +18,7 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
-  def resource_owner_password_credentials do
+  def password do
     %{
       "type" => "object",
       "properties" => %{
@@ -68,6 +68,18 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
+  def refresh_token do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "grant_type" => %{"type" => "string", "pattern" => "refresh_token"},
+        "refresh_token" => %{"type" => "string"},
+        "scope" => %{"type" => "string"}
+      },
+      "required" => ["grant_type", "refresh_token"]
+    } |> Schema.resolve
+  end
+
   def code do
     %{
       "type" => "object",
@@ -103,7 +115,7 @@ defmodule Boruta.Oauth.Json.Schema do
     %{
       "type" => "object",
       "properties" => %{
-        "grant_type" => %{"type" => "string", "pattern" => "client_credentials|password|authorization_code"},
+        "grant_type" => %{"type" => "string", "pattern" => "client_credentials|password|authorization_code|refresh_token"},
       },
       "required" => ["grant_type"]
     } |> Schema.resolve

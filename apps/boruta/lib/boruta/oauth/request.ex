@@ -12,6 +12,7 @@ defmodule Boruta.Oauth.Request do
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.IntrospectRequest
   alias Boruta.Oauth.PasswordRequest
+  alias Boruta.Oauth.RefreshTokenRequest
   alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Validator
 
@@ -205,6 +206,14 @@ defmodule Boruta.Oauth.Request do
       client_id: params["client_id"],
       code: params["code"],
       redirect_uri: params["redirect_uri"]
+    })}
+  end
+  defp build_request(%{"grant_type" => "refresh_token"} = params) do
+    {:ok, struct(RefreshTokenRequest, %{
+      client_id: params["client_id"],
+      client_secret: params["client_secret"],
+      refresh_token: params["refresh_token"],
+      scope: params["scope"]
     })}
   end
 

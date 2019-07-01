@@ -29,7 +29,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code/."
+        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code|refresh_token/."
       }
     end
 
@@ -91,11 +91,13 @@ defmodule BorutaWeb.OauthControllerTest do
       %{
         "access_token" => access_token,
         "token_type" => token_type,
-        "expires_in" => expires_in
+        "expires_in" => expires_in,
+        "refresh_token" => refresh_token
       } = json_response(conn, 200)
       assert access_token
       assert token_type == "bearer"
       assert expires_in
+      assert refresh_token
     end
   end
 
@@ -226,7 +228,6 @@ defmodule BorutaWeb.OauthControllerTest do
   end
 
   describe "password grant" do
-    # TODO test unhappy paths
     setup %{conn: conn} do
       resource_owner = insert(:user)
       client = insert(:client)
@@ -247,16 +248,18 @@ defmodule BorutaWeb.OauthControllerTest do
       %{
         "access_token" => access_token,
         "token_type" => token_type,
-        "expires_in" => expires_in
+        "expires_in" => expires_in,
+        "refresh_token" => refresh_token
       } = json_response(conn, 200)
       assert access_token
       assert token_type == "bearer"
       assert expires_in
+      assert refresh_token
     end
   end
 
   describe "authorization code grant" do
-    # TODO test not happy paths
+    # TODO est token delivrance with code
     setup %{conn: conn} do
       resource_owner = insert(:user)
       client = insert(:client)
