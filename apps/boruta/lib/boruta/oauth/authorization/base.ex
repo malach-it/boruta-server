@@ -190,8 +190,9 @@ defmodule Boruta.Oauth.Authorization.Base do
   """
   @spec scope([scope: String.t(), client: Client.t()] | [scope: String.t(), token: Token.t()]) ::
     {:ok, scope :: String.t()} | {:error, Error.t()}
-  def scope(scope: scope, client: %Client{authorize_scope: false}), do: {:ok, scope}
-  def scope(scope: scope, client: %Client{authorize_scope: true, authorized_scopes: authorized_scopes}) do
+  def scope(scope: nil, client: _), do: {:ok, nil}
+  def scope(scope: "" <> scope, client: %Client{authorize_scope: false}), do: {:ok, scope}
+  def scope(scope: "" <> scope, client: %Client{authorize_scope: true, authorized_scopes: authorized_scopes}) do
     scopes = Enum.filter(String.split(scope, " "), fn (scope) -> scope != "" end) # remove empty strings
     case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
       true -> {:ok, scope}
@@ -201,6 +202,7 @@ defmodule Boruta.Oauth.Authorization.Base do
   end
 
   # TODO default token scope may be an empty string
+  def scope(scope: nil, token: _), do: {:ok, nil}
   def scope(scope: "", token: %Token{scope: nil}), do: {:ok, ""}
   def scope(scope: "" <> _, token: %Token{scope: nil}) do
     {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
