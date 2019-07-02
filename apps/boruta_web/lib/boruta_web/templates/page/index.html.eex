@@ -1,35 +1,32 @@
-<section class="phx-hero">
-  <h1><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
-  <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
-</section>
+<h1>Boruta live example</h1>
+<p>This is a running example of an OAuth provider implemented with Boruta. Please note that this is a work in progress.</p>
+<p>This server is intended to follow <a href="https://tools.ietf.org/html/rfc6749">RFC 6749 - The OAuth 2.0 Authorization Framework</a> and <a href="https://tools.ietf.org/html/rfc7662">RFC 7662 - OAuth 2.0 Token Introspection</a>
+<p>The core of this project is open source, the code is available <a href="https://github.com/patatoid/boruta-core">here</a>
 
-<section class="row">
-  <article class="column">
-    <h2>Resources</h2>
-    <ul>
-      <li>
-        <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix">Source</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix/blob/v1.4/CHANGELOG.md">v1.4 Changelog</a>
-      </li>
-    </ul>
-  </article>
-  <article class="column">
-    <h2>Help</h2>
-    <ul>
-      <li>
-        <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
-      </li>
-      <li>
-        <a href="https://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on Freenode IRC</a>
-      </li>
-      <li>
-        <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
-      </li>
-    </ul>
-  </article>
-</section>
+<hr />
+<div class="ui message">
+  <div class="header">This server implements the following routes</div>
+  <ul class="list">
+    <li>POST /oauth/token</li>
+    <li>GET /oauth/authorize</li>
+    <li>POST /oauth/introspect</li>
+  </ul>
+</div>
+<hr />
+<div class="ui message">
+  <div class="header">Example client credentials</div>
+  <ul class="list">
+    <li><strong>client_id :</strong> b0f838ad-53dc-4ead-b34a-83326a7e95fd</li>
+    <li><strong>client_secret :</strong> 777</li>
+  </ul>
+</div>
+<hr />
+<div class="ui message">
+  <div class="header">A cURL example</div>
+  <pre>
+  curl -X POST \
+    https://boruta.herokuapp.com/oauth/token \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'client_id=b0f838ad-53dc-4ead-b34a-83326a7e95fd&client_secret=777&grant_type=client_credentials'
+  </pre>
+</div>
