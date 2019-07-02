@@ -1,5 +1,4 @@
 # Boruta
-
 Boruta is the core of an OAuth provider giving business logic of authentication and authorization.
 
 It is intended to follow RFCs :
@@ -9,6 +8,9 @@ It is intended to follow RFCs :
 As it, it helps implement a provider for authorization code, implicit, client credentials and resource owner password credentials grants. Then it follows Introspection to check tokens.
 
 Note : Refresh tokens are not implemented yet
+
+## Live example
+A live example can be found [here](https://boruta.herokuapp.com/)
 
 ## Installation
 1. __Schemas migration__
