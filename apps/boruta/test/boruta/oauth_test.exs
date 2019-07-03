@@ -23,7 +23,7 @@ defmodule Boruta.OauthTest do
     test "returns an error with empty params" do
       assert Oauth.token(%{body_params: %{}}, __MODULE__) == {:token_error, %Error{
         error: :invalid_request,
-        error_description: "Request is not a valid OAuth request. Need a grant_type or a response_type param.",
+        error_description: "Request is not a valid OAuth request. Need a grant_type param.",
         status: :bad_request
       }}
     end
@@ -31,7 +31,7 @@ defmodule Boruta.OauthTest do
     test "returns an error with invalid grant_type" do
       assert Oauth.token(%{body_params: %{"grant_type" => "boom"}}, __MODULE__) == {:token_error,  %Error{
         error: :invalid_request,
-        error_description: "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code|refresh_token/.",
+        error_description: "Request body validation failed. #/grant_type do match required pattern /^(client_credentials|password|authorization_code|refresh_token)$/.",
         status: :bad_request
       }}
     end
@@ -50,7 +50,7 @@ defmodule Boruta.OauthTest do
       assert Oauth.authorize(%{query_params: %{}, assigns: %{}}, __MODULE__) == {:authorize_error,
         %Error{
           error: :invalid_request,
-          error_description: "Request is not a valid OAuth request. Need a grant_type or a response_type param.",
+          error_description: "Request is not a valid OAuth request. Need a response_type param.",
           status: :bad_request
         }
       }
@@ -59,7 +59,7 @@ defmodule Boruta.OauthTest do
     test "returns an error with invalid response_type" do
       assert Oauth.authorize(%{query_params: %{"response_type" => "boom"}, assigns: %{}}, __MODULE__) == {:authorize_error, %Error{
         error: :invalid_request,
-        error_description: "Query params validation failed. #/response_type do match required pattern /token|code/.",
+        error_description: "Query params validation failed. #/response_type do match required pattern /^(token|code)$/.",
         status: :bad_request
       }}
     end

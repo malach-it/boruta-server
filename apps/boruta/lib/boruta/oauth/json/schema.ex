@@ -115,7 +115,7 @@ defmodule Boruta.Oauth.Json.Schema do
     %{
       "type" => "object",
       "properties" => %{
-        "grant_type" => %{"type" => "string", "pattern" => "client_credentials|password|authorization_code|refresh_token"},
+        "grant_type" => %{"type" => "string", "pattern" => "^(client_credentials|password|authorization_code|refresh_token)$"},
       },
       "required" => ["grant_type"]
     } |> Schema.resolve
@@ -125,7 +125,7 @@ defmodule Boruta.Oauth.Json.Schema do
     %{
       "type" => "object",
       "properties" => %{
-        "response_type" => %{"type" => "string", "pattern" => "token|code"},
+        "response_type" => %{"type" => "string", "pattern" => "^(token|code)$"},
       },
       "required" => ["response_type"]
     } |> Schema.resolve

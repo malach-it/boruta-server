@@ -61,6 +61,7 @@ defmodule Boruta.Oauth.Request do
   def token_request(%{req_headers: [{"authorization", "Basic " <> _ = authorization_header}], body_params: %{} = body_params}) do
     with {:ok, [client_id, client_secret]} <- BasicAuth.decode(authorization_header),
          {:ok, params} <- Validator.validate(
+           :token,
            Enum.into(body_params, %{"client_id" => client_id, "client_secret" => client_secret})
          ) do
       build_request(params)
@@ -70,7 +71,7 @@ defmodule Boruta.Oauth.Request do
     end
   end
   def token_request(%{body_params: %{} = body_params}) do
-    with {:ok, params} <- Validator.validate(body_params) do
+    with {:ok, params} <- Validator.validate(:token, body_params) do
       build_request(params)
     else
       {:error, error_description} ->
@@ -112,7 +113,7 @@ defmodule Boruta.Oauth.Request do
       | %TokenRequest{}
       | %PasswordRequest{}}
   def authorize_request(%{query_params: query_params, assigns: assigns}) do
-    with {:ok, params} <- Validator.validate(query_params) do
+    with {:ok, params} <- Validator.validate(:authorize, query_params) do
       build_request(Enum.into(params, %{"resource_owner" => assigns[:current_user]}))
     else
       {:error, error_description} ->
@@ -164,6 +165,7 @@ defmodule Boruta.Oauth.Request do
   def introspect_request(%{req_headers: [{"authorization", "Basic " <> _ = authorization_header}], body_params: %{} = body_params}) do
     with {:ok, [client_id, client_secret]} <- BasicAuth.decode(authorization_header),
          {:ok, params} <- Validator.validate(
+           :introspect,
            Enum.into(body_params, %{"response_type" => "introspect", "client_id" => client_id, "client_secret" => client_secret})
          ) do
       build_request(params)
@@ -173,7 +175,7 @@ defmodule Boruta.Oauth.Request do
     end
   end
   def introspect_request(%{body_params: %{} = body_params}) do
-    with {:ok, params} <- Validator.validate(Enum.into(body_params, %{"response_type" => "introspect"})) do
+    with {:ok, params} <- Validator.validate(:introspect, Enum.into(body_params, %{"response_type" => "introspect"})) do
       build_request(params)
     else
       {:error, error_description} ->

@@ -20,7 +20,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request is not a valid OAuth request. Need a grant_type or a response_type param."
+        "error_description" => "Request is not a valid OAuth request. Need a grant_type param."
       }
     end
 
@@ -29,7 +29,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert json_response(conn, 400) == %{
         "error" => "invalid_request",
-        "error_description" => "Request body validation failed. #/grant_type do match required pattern /client_credentials|password|authorization_code|refresh_token/."
+        "error_description" => "Request body validation failed. #/grant_type do match required pattern /^(client_credentials|password|authorization_code|refresh_token)$/."
       }
     end
 
@@ -114,7 +114,7 @@ defmodule BorutaWeb.OauthControllerTest do
       conn = get(conn, "/oauth/authorize")
 
       assert response_content_type(conn, :html)
-      assert response(conn, 400) =~ "Request is not a valid OAuth request. Need a grant_type or a response_type param."
+      assert response(conn, 400) =~ "Request is not a valid OAuth request. Need a response_type param."
     end
 
     test "returns an error if client_id is invalid", %{
