@@ -18,6 +18,7 @@
   <ul class="list">
     <li><strong>client_id :</strong> b0f838ad-53dc-4ead-b34a-83326a7e95fd</li>
     <li><strong>client_secret :</strong> 777</li>
+    <li><strong>redirect_uri :</strong> http://redirect.uri</li>
   </ul>
 </div>
 <hr />
