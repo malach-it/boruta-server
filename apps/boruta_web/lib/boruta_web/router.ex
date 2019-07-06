@@ -47,6 +47,12 @@ defmodule BorutaWeb.Router do
     post "/introspect", OauthController, :introspect
   end
 
+  scope "/admin", BorutaWeb.Admin, as: :admin do
+    pipe_through :api
+
+    resources "/clients", ClientController
+  end
+
   scope "/oauth", BorutaWeb do
     pipe_through :browser
 

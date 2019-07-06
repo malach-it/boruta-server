@@ -5,6 +5,8 @@ defmodule Boruta.Oauth.Client do
 
   use Ecto.Schema
 
+  import Ecto.Changeset
+
   @type t :: %__MODULE__{
     secret: String.t(),
     authorize_scope: boolean(),
@@ -16,10 +18,15 @@ defmodule Boruta.Oauth.Client do
   @foreign_key_type :binary_id
   schema "clients" do
     field(:secret, :string)
-    field(:authorize_scope, :boolean)
-    field(:authorized_scopes, {:array, :string})
+    field(:authorize_scope, :boolean, default: false)
+    field(:authorized_scopes, {:array, :string}, default: [])
     field(:redirect_uri, :string)
 
     timestamps()
+  end
+
+  def changeset(client, attrs) do
+    client
+    |> cast(attrs, [:redirect_uri])
   end
 end
