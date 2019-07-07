@@ -50,8 +50,8 @@ defmodule Boruta.Admin do
 
   """
   def create_client(attrs \\ %{}) do
-    %Client{}
-    |> Client.changeset(attrs)
+    client = %Client{}
+    |> Client.create_changeset(attrs)
     |> Repo.insert()
   end
 
@@ -69,7 +69,7 @@ defmodule Boruta.Admin do
   """
   def update_client(%Client{} = client, attrs) do
     client
-    |> Client.changeset(attrs)
+    |> Client.update_changeset(attrs)
     |> Repo.update()
   end
 
@@ -87,18 +87,5 @@ defmodule Boruta.Admin do
   """
   def delete_client(%Client{} = client) do
     Repo.delete(client)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking client changes.
-
-  ## Examples
-
-      iex> change_client(client)
-      %Ecto.Changeset{source: %Client{}}
-
-  """
-  def change_client(%Client{} = client) do
-    Client.changeset(client, %{})
   end
 end

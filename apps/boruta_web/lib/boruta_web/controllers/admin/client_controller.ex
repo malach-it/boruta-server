@@ -4,6 +4,8 @@ defmodule BorutaWeb.Admin.ClientController do
   alias Boruta.Admin
   alias Boruta.Oauth.Client
 
+  plug BorutaWeb.AuthorizationPlug
+
   action_fallback BorutaWeb.FallbackController
 
   def index(conn, _params) do

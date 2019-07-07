@@ -4,4 +4,10 @@ defmodule BorutaWeb.PageController do
   def index(conn, _params) do
     render(conn, "index.html")
   end
+
+  def admin(conn, _params) do
+    conn
+    |> put_layout(false)
+    |> render("admin.html")
+  end
 end

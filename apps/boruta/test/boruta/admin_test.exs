@@ -3,66 +3,77 @@ defmodule Boruta.AdminTest do
 
   alias Boruta.Admin
 
-  describe "clients" do
-    alias Boruta.Oauth.Client
+  alias Boruta.Oauth.Client
 
-    @valid_attrs %{
-      redirect_uri: "http://redirect.uri"
-    }
-    @update_attrs %{
-      redirect_uri: "http://updated.redirect.uri"
-    }
-    @invalid_attrs %{}
+  @valid_attrs %{
+    redirect_uri: "https://redirect.uri"
+  }
+  @update_attrs %{
+    redirect_uri: "https://updated.redirect.uri"
+  }
 
-    def client_fixture(attrs \\ %{}) do
-      {:ok, client} =
-        attrs
-        |> Enum.into(@valid_attrs)
-        |> Admin.create_client()
+  def client_fixture(attrs \\ %{}) do
+    {:ok, client} =
+      attrs
+      |> Enum.into(@valid_attrs)
+      |> Admin.create_client()
 
-      client
-    end
+    client
+  end
 
-    test "list_clients/0 returns all clients" do
+  describe "list_clients/0" do
+    test "returns all clients" do
       client = client_fixture()
       assert Admin.list_clients() == [client]
     end
+  end
 
-    test "get_client!/1 returns the client with given id" do
+  describe "get_client/1" do
+    test "returns the client with given id" do
       client = client_fixture()
       assert Admin.get_client!(client.id) == client
     end
+  end
 
-    test "create_client/1 with valid data creates a client" do
+  describe "create_client/1" do
+    @tag :skip
+    test "returns error changeset with invalid redirect_uri (bad URI format)" do
+      assert {:error, %Ecto.Changeset{}} = Admin.create_client(%{
+        redirect_uri: "\\bad_redirect_uri"
+      })
+    end
+
+    test "creates a client" do
       assert {:ok, %Client{} = client} = Admin.create_client(@valid_attrs)
     end
 
-    @tag :skip
-    test "create_client/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Admin.create_client(@invalid_attrs)
+    test "creates a client with a secret" do
+      {:ok, %Client{secret: secret}} = Admin.create_client(@valid_attrs)
+      assert secret
     end
+  end
 
-    test "update_client/2 with valid data updates the client" do
-      client = client_fixture()
-      assert {:ok, %Client{} = client} = Admin.update_client(client, @update_attrs)
-    end
-
+  describe "update_client/2" do
     @tag :skip
-    test "update_client/2 with invalid data returns error changeset" do
+    test "returns error changeset with invalid redirect_uri (bad URI format)" do
       client = client_fixture()
-      assert {:error, %Ecto.Changeset{}} = Admin.update_client(client, @invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Admin.update_client(client, %{
+        redirect_uri: "$bad_redirect_uri"
+      })
       assert client == Admin.get_client!(client.id)
     end
 
-    test "delete_client/1 deletes the client" do
+    test "updates the client" do
+      client = client_fixture()
+      assert {:ok, %Client{} = client} = Admin.update_client(client, @update_attrs)
+    end
+  end
+
+  describe "delete_client/1" do
+    test "deletes the client" do
       client = client_fixture()
       assert {:ok, %Client{}} = Admin.delete_client(client)
       assert_raise Ecto.NoResultsError, fn -> Admin.get_client!(client.id) end
-    end
-
-    test "change_client/1 returns a client changeset" do
-      client = client_fixture()
-      assert %Ecto.Changeset{} = Admin.change_client(client)
     end
   end
 end

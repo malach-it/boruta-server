@@ -14,7 +14,9 @@ defmodule BorutaWeb.Admin.ClientView do
     %{
       id: client.id,
       secret: client.secret,
-      redirect_uri: client.redirect_uri
+      redirect_uri: client.redirect_uri,
+      authorize_scope: client.authorize_scope,
+      authorized_scopes: client.authorized_scopes
     }
   end
 end
