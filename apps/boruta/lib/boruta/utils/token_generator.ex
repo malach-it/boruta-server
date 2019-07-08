@@ -3,12 +3,15 @@ defmodule Boruta.TokenGenerator do
 
   @behaviour Boruta.Oauth.TokenGenerator
 
-  use Puid, bits: 512, charset: :alphanum
-
-  alias Boruta.Oauth.Token
+  use Puid, bits: 256, charset: :alphanum
 
   @impl Boruta.Oauth.TokenGenerator
-  def generate(_, %Token{}) do
+  def generate(_, %Boruta.Oauth.Token{}) do
+    generate()
+  end
+
+  @impl Boruta.Oauth.TokenGenerator
+  def secret(%Boruta.Oauth.Client{}) do
     generate()
   end
 end

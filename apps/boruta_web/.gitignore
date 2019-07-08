@@ -31,3 +31,5 @@ boruta_web-*.tar
 /config/*.secret.exs
 
 /tmp/
+
+/priv/static/admin

@@ -52,4 +52,16 @@ defmodule BorutaWeb.Router do
 
     get "/authorize", OauthController, :authorize
   end
+
+  scope "/api", BorutaWeb.Admin, as: :admin do
+    pipe_through :api
+
+    resources "/clients", ClientController
+  end
+
+  scope "/admin", BorutaWeb do
+    pipe_through :browser
+
+    match :get, "/*path", PageController, :admin
+  end
 end

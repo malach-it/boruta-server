@@ -15,7 +15,14 @@ config :boruta_web, BorutaWeb.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: []
+  watchers: [
+    node: [
+      "node_modules/@vue/cli-service/bin/vue-cli-service.js",
+      "build",
+      "--watch",
+      cd: Path.expand("../assets", __DIR__)
+    ]
+  ]
 
 # ## SSL Support
 #
