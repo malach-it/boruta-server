@@ -2,7 +2,7 @@
   <div class="edit-client">
     <div class="ui container">
       <h1>Edit a client</h1>
-      <div class="ui big segment">
+      <div class="ui big teal segment">
         <p><strong>Client id:</strong> {{ client.id }}</p>
         <p><strong>Client secret:</strong> {{ client.secret }}</p>
         <form class="ui form" v-on:submit.prevent="updateClient()">
@@ -17,7 +17,7 @@
             </div>
           </div>
           <div v-if="client.authorize_scope" class="field">
-            <div v-for="scope in client.authorized_scopes" class="field" :key="scope.name">
+            <div v-for="(scope, index) in client.authorized_scopes" class="field" :key="index">
               <div class="ui right icon input">
                 <input type="text" v-model="scope.name" placeholder="iam:a:scope">
                 <i v-on:click="deleteScope(scope)" class="close icon"></i>

@@ -50,7 +50,7 @@ defmodule Boruta.Admin do
 
   """
   def create_client(attrs \\ %{}) do
-    client = %Client{}
+    %Client{}
     |> Client.create_changeset(attrs)
     |> Repo.insert()
   end

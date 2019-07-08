@@ -2,7 +2,7 @@
   <div class="new-client">
     <div class="ui container">
       <h1>New Client</h1>
-      <div class="ui big segment">
+      <div class="ui big teal segment">
         <form class="ui form" v-on:submit.prevent="createClient()">
           <div class="field">
             <label>Redirect URI</label>
@@ -15,7 +15,7 @@
             </div>
           </div>
           <div v-if="client.authorize_scope" class="field">
-            <div v-for="scope in client.authorized_scopes" class="field" :key="scope.name">
+            <div v-for="(scope, index) in client.authorized_scopes" class="field" :key="index">
               <div class="ui right icon input">
                 <input type="text" v-model="scope.name" placeholder="iam:a:scope">
                 <i v-on:click="deleteScope(scope)" class="close icon"></i>

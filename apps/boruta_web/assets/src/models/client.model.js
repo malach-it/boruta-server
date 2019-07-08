@@ -58,7 +58,7 @@ Client.api = function () {
   const accessToken = localStorage.getItem('vue-authenticate.vueauth_token')
 
   return axios.create({
-    baseURL: 'http://localhost:4000/api/clients',
+    baseURL: `${process.env.VUE_APP_BORUTA_BASE_URL}/api/clients`,
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 }

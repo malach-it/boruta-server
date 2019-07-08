@@ -14,9 +14,9 @@ Vue.use(VueAuthenticate, {
   providers: {
     boruta: {
       name: 'boruta',
-      authorizationEndpoint: 'http://localhost:4000/oauth/authorize',
+      authorizationEndpoint: `${process.env.VUE_APP_BORUTA_BASE_URL}/oauth/authorize`,
       clientId: process.env.VUE_APP_ADMIN_CLIENT_ID,
-      redirectUri: 'http://localhost:4000/admin',
+      redirectUri: `${process.env.VUE_APP_BORUTA_BASE_URL}/admin`,
       responseType: 'token',
       oauthType: '2.0'
     }
