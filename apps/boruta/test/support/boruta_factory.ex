@@ -12,6 +12,13 @@ defmodule Boruta.Factory do
     }
   end
 
+  def scope_factory do
+    %Boruta.Oauth.Scope{
+      name: "scope",
+      public: false
+    }
+  end
+
   def user_factory do
     %User{
       email: sequence(:email, &"foo-#{&1}@example.com"),

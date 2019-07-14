@@ -56,7 +56,8 @@ defmodule BorutaWeb.Router do
   scope "/api", BorutaWeb.Admin, as: :admin do
     pipe_through :api
 
-    resources "/clients", ClientController
+    resources "/scopes", ScopeController, except: [:new, :edit]
+    resources "/clients", ClientController, except: [:new, :edit]
   end
 
   scope "/admin", BorutaWeb do

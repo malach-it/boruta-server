@@ -7,6 +7,9 @@
       <router-link :to="{ name: 'client-list' }" class="item">
         Clients
       </router-link>
+      <router-link :to="{ name: 'scope-list' }" class="item">
+        Scopes
+      </router-link>
       <div class="right menu">
         <a v-if="isAuthenticated" v-on:click="logout()" class="ui item">
           Logout
@@ -20,22 +23,20 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-
 export default {
   name: 'Header',
-  data() {
+  data () {
     return {
       isAuthenticated: this.$auth.isAuthenticated()
     }
   },
   methods: {
-    login() {
+    login () {
       this.$auth.authenticate('boruta').then(({ access_token, expires_in }) => {
         this.isAuthenticated = this.$auth.isAuthenticated()
       })
     },
-    logout() {
+    logout () {
       localStorage.removeItem('vue-authenticate.vueauth_token')
       this.isAuthenticated = this.$auth.isAuthenticated()
     }

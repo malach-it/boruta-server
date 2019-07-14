@@ -19,15 +19,23 @@ export default {
 </script>
 
 <style lang="scss">
-h1 {
-  padding: 1em 0;
-  margin: 0;
-}
-a {
-  cursor: pointer;
-}
-.actions {
-  text-align: right;
-  margin: 1em 0;
+#main {
+  h1 {
+    padding: 1em 0;
+    margin: 0;
+  }
+  a {
+    cursor: pointer;
+  }
+  .actions {
+    text-align: right;
+    margin: 1em 0;
+  }
+  .ui.input.error>input {
+    background-color: #fff6f6;
+    border-color: #e0b4b4;
+    color: #9f3a38;
+    box-shadow: none;
+  }
 }
 </style>
