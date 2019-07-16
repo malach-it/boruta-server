@@ -71,7 +71,7 @@ defmodule Boruta.OauthTest do
       client = insert(:client)
       client_with_scope = insert(:client,
         authorize_scope: true,
-        authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
+        authorized_scopes: [insert(:scope, name: "public", public: true), insert(:scope, name: "private", public: false)]
       )
       {:ok, client: client, client_with_scope: client_with_scope}
     end
@@ -121,8 +121,8 @@ defmodule Boruta.OauthTest do
       end
     end
 
-    test "returns a token with scope", %{client: client} do
-      given_scope = "scope other"
+    test "returns a token with public scope", %{client: client} do
+      given_scope = "public"
       with {:token_success, %Token{client_id: client_id, scope: scope, value: value}} <- Oauth.token(
         %{
           body_params: %{
@@ -141,6 +141,29 @@ defmodule Boruta.OauthTest do
         _ ->
           assert false
       end
+    end
+
+    test "returns an error with private scope", %{client: client} do
+      given_scope = "private"
+      assert Oauth.token(
+        %{
+          body_params: %{
+            "grant_type" => "client_credentials",
+            "client_id" => client.id,
+            "client_secret" => client.secret,
+            "scope" => given_scope
+          }
+        },
+        __MODULE__
+      ) == {:token_error,
+        %Boruta.Oauth.Error{
+          error: :invalid_scope,
+          error_description: "Given scopes are not authorized.",
+          format: nil,
+          redirect_uri: nil,
+          status: :bad_request
+        }
+      }
     end
 
     test "returns a token if scope is authorized", %{client_with_scope: client} do
@@ -362,7 +385,7 @@ defmodule Boruta.OauthTest do
       client_with_scope = insert(:client,
         redirect_uri: "https://redirect.uri",
         authorize_scope: true,
-        authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
+        authorized_scopes: [insert(:scope, name: "public", public: true), insert(:scope, name: "private", public: false)]
       )
       {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
@@ -448,8 +471,8 @@ defmodule Boruta.OauthTest do
       end
     end
 
-    test "returns a token with scope", %{client: client, resource_owner: resource_owner} do
-      given_scope = "scope other"
+    test "returns a token with public scope", %{client: client, resource_owner: resource_owner} do
+      given_scope = "public"
       with {
         :authorize_success,
         %Boruta.Oauth.Token{
@@ -476,6 +499,25 @@ defmodule Boruta.OauthTest do
         _ ->
           assert false
       end
+    end
+
+    test "returns an error with private scope", %{client: client, resource_owner: resource_owner} do
+      given_scope = "private"
+      assert Oauth.authorize(%{
+        query_params: %{
+          "response_type" => "code",
+          "client_id" => client.id,
+          "redirect_uri" => client.redirect_uri,
+          "scope" =>  given_scope
+        },
+        assigns: %{current_user: resource_owner}
+      }, __MODULE__) == {:authorize_error, %Error{
+        error: :invalid_scope,
+        error_description: "Given scopes are not authorized.",
+        status: :bad_request,
+        format: :query,
+        redirect_uri: client.redirect_uri
+      }}
     end
 
     test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
