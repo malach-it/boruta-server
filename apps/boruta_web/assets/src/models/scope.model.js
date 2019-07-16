@@ -12,7 +12,7 @@ const assign = {
   edit: function ({ edit }) { this.edit = edit },
   public: function ({ public: e }) { this.public = e }
 }
-class Client {
+class Scope {
   constructor (params = {}) {
     Object.assign(this, defaults)
 
@@ -68,7 +68,7 @@ class Client {
   }
 }
 
-Client.api = function () {
+Scope.api = function () {
   const accessToken = localStorage.getItem('vue-authenticate.vueauth_token')
 
   return axios.create({
@@ -77,16 +77,16 @@ Client.api = function () {
   })
 }
 
-Client.all = function () {
+Scope.all = function () {
   return this.api().get('/').then(({ data }) => {
-    return data.data.map((client) => new Client(client))
+    return data.data.map((client) => new Scope(client))
   })
 }
 
-Client.get = function (id) {
+Scope.get = function (id) {
   return this.api().get(`/${id}`).then(({ data }) => {
-    return new Client(data.data)
+    return new Scope(data.data)
   })
 }
 
-export default Client
+export default Scope

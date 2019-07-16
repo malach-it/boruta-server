@@ -4,7 +4,7 @@ defmodule Boruta.Admin do
   """
 
   import Ecto.Query, warn: false
-  alias Boruta.Repo
+  import Boruta.Config, only: [repo: 0]
 
   alias Boruta.Oauth.Client
 
@@ -18,7 +18,8 @@ defmodule Boruta.Admin do
 
   """
   def list_clients do
-    Repo.all(Client)
+    repo().all(Client)
+    |> repo().preload(:authorized_scopes)
   end
 
   @doc """
@@ -35,7 +36,10 @@ defmodule Boruta.Admin do
       ** (Ecto.NoResultsError)
 
   """
-  def get_client!(id), do: Repo.get!(Client, id)
+  def get_client!(id) do
+    repo().get!(Client, id)
+    |> repo().preload(:authorized_scopes)
+  end
 
   @doc """
   Creates a client.
@@ -52,7 +56,7 @@ defmodule Boruta.Admin do
   def create_client(attrs \\ %{}) do
     %Client{}
     |> Client.create_changeset(attrs)
-    |> Repo.insert()
+    |> repo().insert()
   end
 
   @doc """
@@ -70,7 +74,7 @@ defmodule Boruta.Admin do
   def update_client(%Client{} = client, attrs) do
     client
     |> Client.update_changeset(attrs)
-    |> Repo.update()
+    |> repo().update()
   end
 
   @doc """
@@ -86,7 +90,7 @@ defmodule Boruta.Admin do
 
   """
   def delete_client(%Client{} = client) do
-    Repo.delete(client)
+    repo().delete(client)
   end
 
   alias Boruta.Oauth.Scope
@@ -101,7 +105,7 @@ defmodule Boruta.Admin do
 
   """
   def list_scopes do
-    Repo.all(Scope)
+    repo().all(Scope)
   end
 
   @doc """
@@ -118,7 +122,7 @@ defmodule Boruta.Admin do
       ** (Ecto.NoResultsError)
 
   """
-  def get_scope!(id), do: Repo.get!(Scope, id)
+  def get_scope!(id), do: repo().get!(Scope, id)
 
   @doc """
   Creates a scope.
@@ -135,7 +139,7 @@ defmodule Boruta.Admin do
   def create_scope(attrs \\ %{}) do
     %Scope{}
     |> Scope.changeset(attrs)
-    |> Repo.insert()
+    |> repo().insert()
   end
 
   @doc """
@@ -153,7 +157,7 @@ defmodule Boruta.Admin do
   def update_scope(%Scope{} = scope, attrs) do
     scope
     |> Scope.changeset(attrs)
-    |> Repo.update()
+    |> repo().update()
   end
 
   @doc """
@@ -169,6 +173,6 @@ defmodule Boruta.Admin do
 
   """
   def delete_scope(%Scope{} = scope) do
-    Repo.delete(scope)
+    repo().delete(scope)
   end
 end

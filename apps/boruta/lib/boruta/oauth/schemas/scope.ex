@@ -18,10 +18,18 @@ defmodule Boruta.Oauth.Scope do
   @doc false
   def changeset(scope, attrs) do
     scope
-    |> cast(attrs, [:name, :public])
+    |> cast(attrs, [:id, :name, :public])
+    |> unique_constraint(:id)
+    |> unique_constraint(:name)
     |> validate_required([:name])
     |> validate_not_nil(:public)
     |> validate_no_whitespace(:name)
+  end
+
+  def assoc_changeset(scope, attrs) do
+    scope
+    |> cast(attrs, [:id])
+    |> validate_required([:id])
   end
 
   defp validate_not_nil(changeset, field) do

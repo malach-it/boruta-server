@@ -1,9 +1,11 @@
 defmodule Boruta.AdminTest do
   use Boruta.DataCase
 
+  import Boruta.Factory
+
   alias Boruta.Admin
-  alias Boruta.Oauth.Scope
   alias Boruta.Oauth.Client
+  alias Boruta.Oauth.Scope
 
   @client_valid_attrs %{
     redirect_uri: "https://redirect.uri"
@@ -19,7 +21,7 @@ defmodule Boruta.AdminTest do
       |> Enum.into(@client_valid_attrs)
       |> Admin.create_client()
 
-    client
+    Boruta.Repo.preload(client, :authorized_scopes)
   end
 
   describe "list_clients/0" do
@@ -52,6 +54,13 @@ defmodule Boruta.AdminTest do
       {:ok, %Client{secret: secret}} = Admin.create_client(@client_valid_attrs)
       assert secret
     end
+
+    test "creates a client with authorized scopes" do
+      scope = insert(:scope)
+      assert {:ok,
+        %Client{authorized_scopes: authorized_scopes}} = Admin.create_client(%{"authorized_scopes" => [%{"id" => scope.id}]})
+      assert authorized_scopes == [scope]
+    end
   end
 
   describe "update_client/2" do
@@ -67,6 +76,14 @@ defmodule Boruta.AdminTest do
     test "updates the client" do
       client = client_fixture()
       assert {:ok, %Client{} = client} = Admin.update_client(client, @client_update_attrs)
+    end
+
+    test "updates the client with authorized scopes" do
+      scope = insert(:scope)
+      client = client_fixture()
+      assert {:ok,
+        %Client{authorized_scopes: authorized_scopes}} = Admin.update_client(client, %{"authorized_scopes" => [%{"id" => scope.id}]})
+      assert authorized_scopes == [scope]
     end
   end
 
@@ -85,7 +102,7 @@ defmodule Boruta.AdminTest do
   def scope_fixture(attrs \\ %{}) do
     {:ok, scope} =
       attrs
-      |> Enum.into(@scope_valid_attrs)
+      |> Enum.into(%{name: SecureRandom.hex(64)})
       |> Admin.create_scope()
 
     scope

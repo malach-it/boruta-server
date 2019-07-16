@@ -9,6 +9,7 @@ defmodule Boruta.OauthTest do
 
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
+  alias Boruta.Oauth.Scope
   alias Boruta.Oauth.Token
 
   describe "token request" do
@@ -68,7 +69,10 @@ defmodule Boruta.OauthTest do
   describe "client credentials grant" do
     setup do
       client = insert(:client)
-      client_with_scope = insert(:client, authorize_scope: true, authorized_scopes: ["scope", "other"])
+      client_with_scope = insert(:client,
+        authorize_scope: true,
+        authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
+      )
       {:ok, client: client, client_with_scope: client_with_scope}
     end
 
@@ -118,7 +122,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns a token with scope", %{client: client} do
-      given_scope = "hello world"
+      given_scope = "scope other"
       with {:token_success, %Token{client_id: client_id, scope: scope, value: value}} <- Oauth.token(
         %{
           body_params: %{
@@ -140,7 +144,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns a token if scope is authorized", %{client_with_scope: client} do
-      given_scope = List.first(client.authorized_scopes)
+      %Scope{name: given_scope} = List.first(client.authorized_scopes)
       with {:token_success, %Token{client_id: client_id, scope: scope, value: value}} <- Oauth.token(
         %{
           body_params: %{
@@ -185,7 +189,10 @@ defmodule Boruta.OauthTest do
     setup do
       resource_owner = insert(:user)
       client = insert(:client)
-      client_with_scope = insert(:client, authorize_scope: true, authorized_scopes: ["scope", "other"])
+      client_with_scope = insert(:client,
+        authorize_scope: true,
+        authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
+      )
       {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
@@ -310,7 +317,7 @@ defmodule Boruta.OauthTest do
 
     test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
-      given_scope = List.first(client.authorized_scopes)
+      %Scope{name: given_scope} = List.first(client.authorized_scopes)
       with {
         :token_success,
         %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
@@ -352,7 +359,11 @@ defmodule Boruta.OauthTest do
     setup do
       resource_owner = insert(:user)
       client = insert(:client, redirect_uri: "https://redirect.uri")
-      client_with_scope = insert(:client, redirect_uri: "https://redirect.uri", authorize_scope: true, authorized_scopes: ["scope", "other"])
+      client_with_scope = insert(:client,
+        redirect_uri: "https://redirect.uri",
+        authorize_scope: true,
+        authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
+      )
       {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
@@ -438,7 +449,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns a token with scope", %{client: client, resource_owner: resource_owner} do
-      given_scope = "hello world"
+      given_scope = "scope other"
       with {
         :authorize_success,
         %Boruta.Oauth.Token{
@@ -468,7 +479,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
-      given_scope = List.first(client.authorized_scopes)
+      %Scope{name: given_scope} = List.first(client.authorized_scopes)
       with {
         :authorize_success,
         %Boruta.Oauth.Token{
@@ -752,7 +763,11 @@ defmodule Boruta.OauthTest do
     setup do
       resource_owner = insert(:user)
       client = insert(:client, redirect_uri: "https://redirect.uri")
-      client_with_scope = insert(:client, redirect_uri: "https://redirect.uri", authorize_scope: true, authorized_scopes: ["scope", "other"])
+      client_with_scope = insert(:client,
+        redirect_uri: "https://redirect.uri",
+        authorize_scope: true,
+        authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
+      )
       {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
     end
 
@@ -886,7 +901,7 @@ defmodule Boruta.OauthTest do
     end
 
     test "returns a token id scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
-      given_scope = List.first(client.authorized_scopes)
+      %Scope{name: given_scope} = List.first(client.authorized_scopes)
       with {
         :authorize_success,
         %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
