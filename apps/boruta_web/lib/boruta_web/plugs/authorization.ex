@@ -1,20 +1,40 @@
 defmodule BorutaWeb.AuthorizationPlug do
   @moduledoc """
   TODO AuthorizationPlug documentation
+  TODO unit test
+  TODO typespec
   """
   import Plug.Conn
 
-  def init(_), do: true
+  alias Boruta.Oauth.Authorization
+  alias Boruta.Oauth.Scope
+  alias Boruta.Oauth.Token
 
-  def call(conn, _) do
+  def init(required_scopes), do: required_scopes || []
+
+  def call(conn, required_scopes) do
     with ["Bearer " <> value] <- get_req_header(conn, "authorization"),
-         {:ok, %Boruta.Oauth.Token{}} <- Boruta.Oauth.Authorization.Base.access_token(value: value) do
+         {:ok, %Token{scope: scope}} <- Authorization.Base.access_token(value: value),
+         {:ok, _} <- validate_scopes(scope, required_scopes)
+    do
       conn
     else
+      {:error, "required scopes are not present."} ->
+        conn
+        |> send_resp(:forbidden, "")
+        |> halt()
       _error ->
         conn
         |> send_resp(:unauthorized, "")
         |> halt()
+    end
+  end
+
+  defp validate_scopes(scope, required_scopes) do
+    scopes = Scope.split(scope)
+    case Enum.empty?(required_scopes -- scopes) do
+      true -> {:ok, scopes}
+      false -> {:error, "required scopes are not present."}
     end
   end
 end

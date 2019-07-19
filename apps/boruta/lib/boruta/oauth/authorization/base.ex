@@ -193,7 +193,7 @@ defmodule Boruta.Oauth.Authorization.Base do
     {:ok, scope :: String.t()} | {:error, Error.t()}
   def scope(scope: nil, client: _), do: {:ok, nil}
   def scope(scope: "" <> scope, client: %Client{authorize_scope: false}) do
-    scopes = Enum.filter(String.split(scope, " "), fn (scope) -> scope != "" end) # remove empty strings
+    scopes = Scope.split(scope)
 
     private_scopes = repo().all(from s in Scope, select: s.name, where: s.public == false)
     case Enum.any?(scopes, fn (scope) -> scope in private_scopes end) do # if all scopes are authorized
@@ -222,8 +222,8 @@ defmodule Boruta.Oauth.Authorization.Base do
     {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
   end
   def scope(scope: scope, token: %Token{scope: "" <> authorized_scope}) do
-    authorized_scopes = Enum.filter(String.split(authorized_scope, " "), fn (scope) -> scope != "" end) # remove empty strings
-    scopes = Enum.filter(String.split(scope, " "), fn (scope) -> scope != "" end) # remove empty strings
+    authorized_scopes = Scope.split(authorized_scope)
+    scopes = Scope.split(scope)
     case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
       true -> {:ok, scope}
       false ->

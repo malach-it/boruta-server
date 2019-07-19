@@ -15,6 +15,17 @@ defmodule Boruta.Oauth.Scope do
     timestamps()
   end
 
+  @doc """
+  TODO documentation
+  """
+  def split(nil), do: []
+  def split(scope) do
+    Enum.filter(
+      String.split(scope, " "),
+      fn (scope) -> scope != "" end # remove empty strings
+    )
+  end
+
   @doc false
   def changeset(scope, attrs) do
     scope

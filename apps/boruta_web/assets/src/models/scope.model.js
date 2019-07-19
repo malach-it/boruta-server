@@ -69,7 +69,7 @@ class Scope {
 }
 
 Scope.api = function () {
-  const accessToken = localStorage.getItem('vue-authenticate.vueauth_token')
+  const accessToken = localStorage.getItem('access_token')
 
   return axios.create({
     baseURL: `${process.env.VUE_APP_BORUTA_BASE_URL}/api/scopes`,

@@ -24,9 +24,24 @@ defmodule BorutaWeb.Admin.ScopeControllerTest do
     assert response(conn, 401)
   end
 
-  describe "index" do
+  describe "with bad scope" do
     setup %{conn: conn} do
       token = insert(:token, type: "access_token")
+      conn = conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token.value}")
+      {:ok, conn: conn}
+    end
+
+    test "returns a 403", %{conn: conn} do
+      conn = get(conn, Routes.admin_scope_path(conn, :index))
+      assert response(conn, 403)
+    end
+  end
+
+  describe "index" do
+    setup %{conn: conn} do
+      token = insert(:token, type: "access_token", scope: "scopes:manage:all")
       conn = conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
@@ -41,7 +56,7 @@ defmodule BorutaWeb.Admin.ScopeControllerTest do
 
   describe "create scope" do
     setup %{conn: conn} do
-      token = insert(:token, type: "access_token")
+      token = insert(:token, type: "access_token", scope: "scopes:manage:all")
       conn = conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
@@ -70,7 +85,7 @@ defmodule BorutaWeb.Admin.ScopeControllerTest do
   describe "update scope" do
     setup %{conn: conn} do
       scope = insert(:scope)
-      token = insert(:token, type: "access_token")
+      token = insert(:token, type: "access_token", scope: "scopes:manage:all")
       conn = conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
@@ -99,7 +114,7 @@ defmodule BorutaWeb.Admin.ScopeControllerTest do
   describe "delete scope" do
     setup %{conn: conn} do
       scope = insert(:scope)
-      token = insert(:token, type: "access_token")
+      token = insert(:token, type: "access_token", scope: "scopes:manage:all")
       conn = conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")

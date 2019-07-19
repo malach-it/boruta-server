@@ -58,13 +58,6 @@
 import Scope from '@/models/scope.model'
 export default {
   name: 'client-list',
-  beforeRouteEnter (to, from, next) {
-    next(vm => {
-      if (!vm.$auth.isAuthenticated()) {
-        vm.$router.push({ name: 'home' })
-      }
-    })
-  },
   data () {
     return { scopes: [], errors: null }
   },

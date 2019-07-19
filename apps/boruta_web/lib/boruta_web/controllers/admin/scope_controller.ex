@@ -4,7 +4,7 @@ defmodule BorutaWeb.Admin.ScopeController do
   alias Boruta.Admin
   alias Boruta.Oauth.Scope
 
-  plug BorutaWeb.AuthorizationPlug
+  plug BorutaWeb.AuthorizationPlug, ["scopes:manage:all"]
 
   action_fallback BorutaWeb.FallbackController
 

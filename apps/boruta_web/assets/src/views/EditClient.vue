@@ -47,13 +47,6 @@ import Scope from '@/models/scope.model'
 export default {
   name: 'clients',
   // TODO look for async components
-  beforeRouteEnter (to, from, next) {
-    next(vm => {
-      if (!vm.$auth.isAuthenticated()) {
-        return vm.$router.push({ name: 'home' })
-      }
-    })
-  },
   mounted () {
     const { clientId } = this.$route.params
     Client.get(clientId).then((client) => {

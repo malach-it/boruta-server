@@ -9,6 +9,5 @@ defmodule Boruta.Repo.Migrations.CreateScopes do
 
       timestamps()
     end
-
   end
 end

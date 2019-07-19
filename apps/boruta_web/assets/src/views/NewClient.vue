@@ -44,13 +44,6 @@ import Scope from '@/models/scope.model'
 
 export default {
   name: 'clients',
-  beforeRouteEnter (to, from, next) {
-    next(vm => {
-      if (!vm.$auth.isAuthenticated()) {
-        vm.$router.push({ name: 'home' })
-      }
-    })
-  },
   mounted () {
     Scope.all().then((scopes) => {
       this.scopes = scopes

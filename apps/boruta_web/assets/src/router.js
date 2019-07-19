@@ -3,6 +3,8 @@ import Router from 'vue-router'
 
 import Home from './views/Home.vue'
 
+import OauthCallback from './views/OauthCallback.vue'
+
 import Clients from './views/Clients.vue'
 import ClientList from './views/ClientList.vue'
 import NewClient from './views/NewClient.vue'
@@ -21,6 +23,10 @@ const router = new Router({
       path: '/',
       name: 'home',
       component: Home
+    }, {
+      path: '/oauth-callback',
+      name: 'oauth-callback',
+      component: OauthCallback
     }, {
       path: '/clients',
       component: Clients,

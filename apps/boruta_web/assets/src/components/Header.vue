@@ -11,10 +11,7 @@
         Scopes
       </router-link>
       <div class="right menu">
-        <a v-if="isAuthenticated" v-on:click="logout()" class="ui item">
-          Logout
-        </a>
-        <a v-else v-on:click="login()" class="ui item">
+        <a v-on:click="login()" class="ui item">
           Login
         </a>
       </div>
@@ -23,23 +20,15 @@
 </template>
 
 <script>
+import oauth from '@/services/oauth.service'
+import { mapGetters } from 'vuex'
+
 export default {
   name: 'Header',
-  data () {
-    return {
-      isAuthenticated: this.$auth.isAuthenticated()
-    }
-  },
   methods: {
     login () {
-      this.$auth.authenticate('boruta').then(({ access_token, expires_in }) => {
-        this.isAuthenticated = this.$auth.isAuthenticated()
-      })
+      return oauth.login()
     },
-    logout () {
-      localStorage.removeItem('vue-authenticate.vueauth_token')
-      this.isAuthenticated = this.$auth.isAuthenticated()
-    }
   }
 }
 </script>

@@ -4,7 +4,7 @@ defmodule BorutaWeb.Admin.ClientController do
   alias Boruta.Admin
   alias Boruta.Oauth.Client
 
-  plug BorutaWeb.AuthorizationPlug
+  plug BorutaWeb.AuthorizationPlug, ["clients:manage:all"]
 
   action_fallback BorutaWeb.FallbackController
 
