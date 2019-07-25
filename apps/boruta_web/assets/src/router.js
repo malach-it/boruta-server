@@ -10,6 +10,9 @@ import ClientList from './views/ClientList.vue'
 import NewClient from './views/NewClient.vue'
 import EditClient from './views/EditClient.vue'
 
+import Users from './views/Users.vue'
+import UserList from './views/UserList.vue'
+
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/ScopeList.vue'
 
@@ -27,6 +30,16 @@ const router = new Router({
       path: '/oauth-callback',
       name: 'oauth-callback',
       component: OauthCallback
+    }, {
+      path: '/users',
+      component: Users,
+      children: [
+        {
+          path: '',
+          name: 'user-list',
+          component: UserList
+        }
+      ]
     }, {
       path: '/clients',
       component: Clients,

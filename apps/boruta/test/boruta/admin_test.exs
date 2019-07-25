@@ -184,4 +184,29 @@ defmodule Boruta.AdminTest do
       assert_raise Ecto.NoResultsError, fn -> Admin.get_scope!(scope.id) end
     end
   end
+
+  describe "users" do
+    alias Boruta.Coherence.User
+
+    def user_fixture(attrs \\ %{}) do
+      user = insert(:user)
+      Repo.reload(user)
+    end
+
+    test "list_users/0 returns all users" do
+      user = user_fixture()
+      assert Admin.list_users() == [user]
+    end
+
+    test "get_user!/1 returns the user with given id" do
+      user = user_fixture()
+      assert Admin.get_user!(user.id) == user
+    end
+
+    test "delete_user/1 deletes the user" do
+      user = user_fixture()
+      assert {:ok, %User{}} = Admin.delete_user(user)
+      assert_raise Ecto.NoResultsError, fn -> Admin.get_user!(user.id) end
+    end
+  end
 end

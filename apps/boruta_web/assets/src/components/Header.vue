@@ -4,6 +4,9 @@
       <router-link :to="{ name: 'home' }" exact class="item">
         Home
       </router-link>
+      <router-link :to="{ name: 'user-list' }" class="item">
+        Users
+      </router-link>
       <router-link :to="{ name: 'client-list' }" class="item">
         Clients
       </router-link>
