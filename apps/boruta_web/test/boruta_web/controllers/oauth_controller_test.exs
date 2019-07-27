@@ -160,7 +160,8 @@ defmodule BorutaWeb.OauthControllerTest do
           response_type: "token",
           client_id: client.id,
           redirect_uri: client.redirect_uri,
-          state: "state"
+          state: "state",
+          scope: "scope"
         })
       )
 
@@ -168,7 +169,8 @@ defmodule BorutaWeb.OauthControllerTest do
         "response_type" => "token",
         "client_id" => client.id,
         "redirect_uri" => client.redirect_uri,
-        "state" => "state"
+        "state" => "state",
+        "scope" => "scope"
       }
     end
 
