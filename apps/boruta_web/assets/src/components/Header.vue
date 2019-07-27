@@ -4,17 +4,23 @@
       <router-link :to="{ name: 'home' }" exact class="item">
         Home
       </router-link>
-      <router-link :to="{ name: 'user-list' }" class="item">
+      <router-link v-if="isAuthenticated" :to="{ name: 'user-list' }" class="item">
         Users
       </router-link>
-      <router-link :to="{ name: 'client-list' }" class="item">
+      <router-link v-if="isAuthenticated" :to="{ name: 'client-list' }" class="item">
         Clients
       </router-link>
-      <router-link :to="{ name: 'scope-list' }" class="item">
+      <router-link v-if="isAuthenticated" :to="{ name: 'scope-list' }" class="item">
         Scopes
       </router-link>
       <div class="right menu">
-        <a v-on:click="login()" class="ui item">
+        <span v-if="isAuthenticated" class="ui item">
+          {{ currentUser.email }}
+        </span>
+        <a v-if="isAuthenticated" v-on:click.prevent="logout()" class="ui item">
+          Logout
+        </a>
+        <a v-else v-on:click="login()" class="ui item">
           Login
         </a>
       </div>
@@ -28,9 +34,17 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'Header',
+  computed: {
+    ...mapGetters(['currentUser', 'isAuthenticated'])
+  },
   methods: {
     login () {
-      return oauth.login()
+      this.$store.dispatch('login')
+    },
+    logout () {
+      this.$store.dispatch('logout').then(() => {
+        this.$router.push({ name: 'home' })
+      })
     },
   }
 }

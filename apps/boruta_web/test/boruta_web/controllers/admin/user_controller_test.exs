@@ -42,6 +42,25 @@ defmodule BorutaWeb.Admin.UserControllerTest do
     end
   end
 
+  describe "current" do
+    setup %{conn: conn} do
+      user = insert(:user)
+      token = insert(:token, type: "access_token", scope: "users:manage:all", resource_owner_id: user.id)
+      conn = conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token.value}")
+      {:ok, conn: conn, user: user}
+    end
+
+    test "get current user", %{conn: conn, user: user} do
+      conn = get(conn, Routes.admin_user_path(conn, :current))
+      assert json_response(conn, 200)["data"] == %{
+        "id" => user.id,
+        "email" => user.email
+      }
+    end
+  end
+
   describe "delete user" do
     setup %{conn: conn} do
       token = insert(:token, type: "access_token", scope: "users:manage:all")

@@ -9,6 +9,7 @@ const assign = {
   id: function ({ id }) { this.id = id },
   email: function ({ email }) { this.email = email }
 }
+
 class User {
   constructor (params = {}) {
     Object.assign(this, defaults)
@@ -41,6 +42,14 @@ User.all = function () {
 
 User.get = function (id) {
   return this.api().get(`/${id}`).then(({ data }) => {
+    return new User(data.data)
+  })
+}
+
+User.default = defaults
+
+User.current = function () {
+  return this.api().get(`/current`).then(({ data }) => {
     return new User(data.data)
   })
 }

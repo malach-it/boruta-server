@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import oauth from '@/services/oauth.service'
 
 import Home from './views/Home.vue'
 
@@ -33,9 +34,15 @@ const router = new Router({
     }, {
       path: '/users',
       component: Users,
+      beforeEnter (to, from, next) {
+        if (oauth.isAuthenticated) {
+          return next()
+        }
+        return next({ name: 'home' })
+      },
       children: [
         {
-          path: '',
+          path: 'list',
           name: 'user-list',
           component: UserList
         }
@@ -43,6 +50,12 @@ const router = new Router({
     }, {
       path: '/clients',
       component: Clients,
+      beforeEnter (to, from, next) {
+        if (oauth.isAuthenticated) {
+          return next()
+        }
+        return next({ name: 'home' })
+      },
       children: [
         {
           path: '',
@@ -61,6 +74,12 @@ const router = new Router({
     }, {
       path: '/scopes',
       component: Scopes,
+      beforeEnter (to, from, next) {
+        if (oauth.isAuthenticated) {
+          return next()
+        }
+        return next({ name: 'home' })
+      },
       children: [
         {
           path: '',

@@ -14,6 +14,9 @@ export default {
   name: 'App',
   components: {
     Header
+  },
+  mounted () {
+    this.$store.dispatch('getCurrentUser')
   }
 }
 </script>

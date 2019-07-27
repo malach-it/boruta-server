@@ -3,6 +3,7 @@ defmodule BorutaWeb.Admin.UserController do
 
   alias Boruta.Admin
   alias Boruta.Coherence.User
+  alias Boruta.Oauth.Token
 
   plug BorutaWeb.AuthorizationPlug, ["users:manage:all"]
 
@@ -15,6 +16,12 @@ defmodule BorutaWeb.Admin.UserController do
 
   def show(conn, %{"id" => id}) do
     user = Admin.get_user!(id)
+    render(conn, "show.json", user: user)
+  end
+
+  def current(conn, _) do
+    %Token{resource_owner_id: resource_owner_id} = conn.assigns[:token]
+    user = Admin.get_user!(resource_owner_id)
     render(conn, "show.json", user: user)
   end
 
