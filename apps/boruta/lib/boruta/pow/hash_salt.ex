@@ -1,4 +1,4 @@
-defmodule Boruta.Coherence.HashSalt do
+defmodule Boruta.Pow.HashSalt do
   @moduledoc false
 
   import Boruta.Config, only: [secret_key_base: 0]

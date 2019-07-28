@@ -43,5 +43,8 @@ defmodule BorutaWeb.Endpoint do
     key: "_boruta_web_key",
     signing_salt: "OCKBuS86"
 
+
+  plug Pow.Plug.Session, otp_app: :boruta_web
+
   plug BorutaWeb.Router
 end

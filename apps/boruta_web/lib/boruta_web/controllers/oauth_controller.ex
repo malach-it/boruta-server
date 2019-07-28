@@ -106,7 +106,7 @@ defmodule BorutaWeb.OauthController do
       "state" => query_params["state"],
       "scope" => query_params["scope"]
     })
-    |> redirect(to: Routes.session_path(conn, :new))
+    |> redirect(to: Routes.pow_session_path(conn, :new))
   end
   def authorize_error(
     conn,
@@ -130,9 +130,9 @@ defmodule BorutaWeb.OauthController do
       redirect_uri: redirect_uri
     }
   ) do
-    query = URI.encode_query(%{error: error, error_description: error_description})
+    fragment = URI.encode_query(%{error: error, error_description: error_description})
     conn
-    |> redirect(external: "#{redirect_uri}##{query}")
+    |> redirect(external: "#{redirect_uri}##{fragment}")
   end
   def authorize_error(
     conn,

@@ -4,7 +4,7 @@ defmodule Boruta.Oauth.Authorization.Base do
   """
 
   import Ecto.Query, only: [from: 2]
-  import Boruta.Config, only: [resource_owner_schema: 0, repo: 0]
+  import Boruta.Config, only: [user_checkpw_method: 0, resource_owner_schema: 0, repo: 0]
 
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Error
@@ -78,7 +78,7 @@ defmodule Boruta.Oauth.Authorization.Base do
   def resource_owner(email: username, password: password) do
     # if resource_owner is a struct
     with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), email: username),
-         true <- resource_owner_schema().checkpw(password, resource_owner.password_hash) do
+         true <- apply(user_checkpw_method(), [password, resource_owner.password_hash]) do
       {:ok, resource_owner}
     else
       _ ->

@@ -10,8 +10,4 @@ config :boruta, Boruta.Repo,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
 config :boruta, Boruta.Oauth,
-  expires_in: %{
-    access_token: 24 * 3600,
-    authorization_code: 60
-  },
   secret_key_base: System.get_env("SECRET_KEY_BASE")

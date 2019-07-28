@@ -24,7 +24,7 @@ defmodule BorutaWeb.MixProject do
   def application do
     [
       mod: {BorutaWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools, :coherence]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 

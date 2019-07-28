@@ -186,7 +186,7 @@ defmodule Boruta.AdminTest do
   end
 
   describe "users" do
-    alias Boruta.Coherence.User
+    alias Boruta.Pow.User
 
     def user_fixture(attrs \\ %{}) do
       user = insert(:user)

@@ -15,7 +15,7 @@ defmodule Boruta do
 
   Boruta need a migration for its schemas and persist both tokens and clients. This can be done by running
   ```
-  mix boruta.gen.migration --with-coherence
+  mix boruta.gen.migration --with-pow
   ```
 
   2. __Configuration__
@@ -31,7 +31,8 @@ defmodule Boruta do
     token_generator: Boruta.TokenGenerator,
     secret_key_base: System.get_env("SECRET_KEY_BASE"),
     resource_owner: %{
-      schema: Boruta.Coherence.User
+      schema: Boruta.Pow.User,
+      checkpw_method: &Boruta.Pow.HashSalt.checkpw/2
     }
   ```
 

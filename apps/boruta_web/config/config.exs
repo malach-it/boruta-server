@@ -22,3 +22,12 @@ config :appsignal, :config,
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
+
+config :boruta_web, :pow,
+  repo: Boruta.Repo,
+  user: Boruta.Pow.User,
+  # extensions: [PowEmailConfirmation, PowResetPassword],
+  extensions: [PowResetPassword],
+  controller_callbacks: Pow.Extension.Phoenix.ControllerCallbacks,
+  routes_backend: BorutaWeb.Pow.Routes,
+  mailer_backend: BorutaWeb.Pow.Mailer

@@ -2,16 +2,16 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
   @moduledoc """
   Migration task for Boruta.
 
-  Creates `clients`, `tokens` tables. It can also create migration for boruta coherence with `--with-coherence` arg.
+  Creates `clients`, `tokens` tables. It can also create migration for boruta Pow (users) with `--with-pow` arg.
 
   ## Examples
   ```
   mix boruta.gen.migration
-  mix boruta.gen.migration --with-coherence
+  mix boruta.gen.migration --with-pow
   ```
 
   ## Command line options
-  - `--with-coherence` - creates Boruta coherence migration
+  - `--with-pow` - creates Boruta Pow (users) migration
 
   """
 
@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
       file = Path.join(path, "#{timestamp()}_create_boruta.exs")
       assigns = [
         mod: Module.concat([repo, Migrations, "CreateBoruta"]),
-        coherence: Enum.member?(args, "--with-coherence")
+        pow: Enum.member?(args, "--with-pow")
       ]
 
       fuzzy_path = Path.join(path, "*_create_boruta.exs")
@@ -72,7 +72,6 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:redirect_uri, :string)
         add(:scope, :string)
         add(:authorize_scope, :boolean, default: false)
-        add(:authorized_scopes, {:array, :string}, default: [])
 
         timestamps()
       end
@@ -92,33 +91,46 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
 
         timestamps()
       end
-      <%= if @coherence do %>
+
+      create table(:scopes, primary_key: false) do
+        add :id, :binary_id, primary_key: true
+        add :name, :string
+        add :public, :boolean, default: false, null: false
+
+        timestamps()
+      end
+
+      create table(:clients_scopes) do
+        add(:client_id, references(:clients, type: :uuid, on_delete: :delete_all))
+        add(:scope_id, references(:scopes, type: :uuid, on_delete: :delete_all))
+      end
+      <%= if @pow do %>
       create table(:users, primary_key: false) do
         add :id, :uuid, primary_key: true
 
         add :name, :string
         add :email, :string
 
-        # authenticatable
         add :password_hash, :string
-        # recoverable
         add :reset_password_token, :string
         add :reset_password_sent_at, :utc_datetime
-        # lockable
         add :failed_attempts, :integer, default: 0
         add :locked_at, :utc_datetime
-        # trackable
         add :sign_in_count, :integer, default: 0
         add :current_sign_in_at, :utc_datetime
         add :last_sign_in_at, :utc_datetime
         add :current_sign_in_ip, :string
         add :last_sign_in_ip, :string
-        # unlockable_with_token
         add :unlock_token, :string
+
+        add :email_confirmation_token, :string
+        add :email_confirmed_at,       :utc_datetime
+        add :unconfirmed_email,        :string
 
         timestamps()
       end
 
+      create unique_index(:users, :email_confirmation_token)
       create unique_index(:users, [:email])
       <% end %>
       create unique_index(:clients, [:id, :secret])
@@ -126,6 +138,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
       create index("tokens", [:value])
       create unique_index("tokens", [:client_id, :value])
       create unique_index("tokens", [:client_id, :refresh_token])
+      create unique_index("scopes", [:name])
     end
   end
   """

@@ -13,12 +13,4 @@ config :boruta, Boruta.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :boruta, Boruta.Oauth,
-  repo: Boruta.Repo,
-  expires_in: %{
-    access_token: 24 * 3600,
-    authorization_code: 60
-  },
-  secret_key_base: "secret",
-  resource_owner: %{
-    schema: Boruta.Coherence.User
-  }
+  secret_key_base: "secret"

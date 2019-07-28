@@ -25,7 +25,8 @@ defmodule Boruta.Config do
     },
     token_generator: Boruta.TokenGenerator,
     resource_owner: %{
-      schema: Boruta.Coherence.User
+      schema: Boruta.Pow.User,
+      checkpw_method: &Boruta.Pow.HashSalt.checkpw/2
     }
 
   @doc false
@@ -48,6 +49,11 @@ defmodule Boruta.Config do
 
   @doc false
   def resource_owner_schema, do: Keyword.fetch!(oauth_config(), :resource_owner)[:schema]
+
+  @doc false
+  def user_checkpw_method do
+    Keyword.fetch!(oauth_config(), :resource_owner)[:checkpw_method]
+  end
 
   @doc false
   def repo, do: Keyword.fetch!(oauth_config(), :repo)

@@ -24,7 +24,7 @@ defmodule Boruta.MixProject do
   def application do
     [
       mod: {Boruta.Application, []},
-      extra_applications: [:logger, :runtime_tools, :gettext]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -40,14 +40,14 @@ defmodule Boruta.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},
-      {:coherence, git: "https://github.com/appprova/coherence.git", branch: "upgrade-to-phoenix-1.4"},
       {:ex_machina, "~> 2.3", only: :test},
       {:ex_json_schema, "~> 0.6.0-rc.1"},
       {:secure_random, "~> 0.5"},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.6", only: [:dev], runtime: false},
-      {:puid, "~> 1.0"}
+      {:puid, "~> 1.0"},
+      {:pow, "~> 1.0.11"}
     ]
   end
 

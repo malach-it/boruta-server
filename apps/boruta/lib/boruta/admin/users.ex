@@ -6,7 +6,7 @@ defmodule Boruta.Admin.Users do
   import Ecto.Query, warn: false
   import Boruta.Config, only: [repo: 0]
 
-  alias Boruta.Coherence.User
+  alias Boruta.Pow.User
 
   @doc """
   Returns the list of users.
