@@ -1,10 +1,14 @@
 defmodule Boruta.Oauth.Scope do
-  # TODO move in Boruta.Oauth
   @moduledoc """
-  TODO Scope documentation
+  Schema defining an independent OAuth scope
   """
   use Ecto.Schema
   import Ecto.Changeset
+
+  @type t :: %__MODULE__{
+    name: String.t(),
+    public: boolean()
+  }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -16,8 +20,12 @@ defmodule Boruta.Oauth.Scope do
   end
 
   @doc """
-  TODO documentation
+  Splits an OAuth scope string into individual scopes as string
+  ## Examples
+      iex> scope("a:scope another:scope")
+      ["a:scope", "another:scope"]
   """
+  @spec split(oauth_scope :: String.t() | nil) :: list(String.t())
   def split(nil), do: []
   def split(scope) do
     Enum.filter(
@@ -37,6 +45,7 @@ defmodule Boruta.Oauth.Scope do
     |> validate_no_whitespace(:name)
   end
 
+  @doc false
   def assoc_changeset(scope, attrs) do
     scope
     |> cast(attrs, [:id])

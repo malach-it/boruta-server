@@ -3,8 +3,9 @@ defmodule Boruta.MixProject do
 
   def project do
     [
+      name: "Boruta core",
       app: :boruta,
-      version: "0.1.0",
+      version: "0.1.0-rc.2",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
@@ -14,7 +15,10 @@ defmodule Boruta.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      docs: docs()
+      docs: docs(),
+      package: package(),
+      description: description(),
+      source_url: "https://github.com/patatoid/boruta-core"
     ]
   end
 
@@ -41,7 +45,7 @@ defmodule Boruta.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},
       {:ex_machina, "~> 2.3", only: :test},
-      {:ex_json_schema, "~> 0.6.0-rc.1"},
+      {:ex_json_schema, "~> 0.6.1"},
       {:secure_random, "~> 0.5"},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
@@ -66,7 +70,7 @@ defmodule Boruta.MixProject do
         "Schemas": [
           Boruta.Oauth.Token,
           Boruta.Oauth.Client,
-          Boruta.Oauth.ResourceOwner
+          Boruta.Oauth.Scope
         ],
         "OAuth request": [
           Boruta.Oauth.TokenRequest,
@@ -75,7 +79,14 @@ defmodule Boruta.MixProject do
           Boruta.Oauth.ClientCredentialsRequest,
           Boruta.Oauth.CodeRequest,
           Boruta.Oauth.IntrospectRequest,
+          Boruta.Oauth.RefreshTokenRequest,
           Boruta.Oauth.Request
+        ],
+        "Admin": [
+          Boruta.Admin,
+          Boruta.Admin.Clients,
+          Boruta.Admin.Scopes,
+          Boruta.Admin.Users
         ],
         "Utilities": [
           Boruta.BasicAuth,
@@ -89,12 +100,22 @@ defmodule Boruta.MixProject do
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to create, migrate and run the seeds file at once:
-  #
-  #     $ mix ecto.setup
-  #
-  # See the documentation for `Mix` for more info on aliases.
+  defp package do
+    %{
+      name: "boruta",
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => "https://github.com/patatoid/boruta-core"
+      }
+    }
+  end
+
+  defp description do
+    """
+    Boruta is the core of an OAuth provider giving business logic of authentication and authorization.
+    """
+  end
+
   defp aliases do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
