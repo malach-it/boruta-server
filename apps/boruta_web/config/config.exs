@@ -16,6 +16,9 @@ config :boruta_web, BorutaWeb.Endpoint,
   render_errors: [view: BorutaWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: BorutaWeb.PubSub, adapter: Phoenix.PubSub.PG2]
 
+config :appsignal, :config,
+  filter_parameters: ["password", "current_password", "password_confirmation", "client_secret"]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
