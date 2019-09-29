@@ -46,7 +46,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
     end
 
     test "returns a token if client_id/scret are valid", %{client: client} do
-      with {:token_success, %Token{client_id: client_id, value: value, refresh_token: refresh_token}} <- Oauth.token(
+      case Oauth.token(
         %{
           body_params: %{
             "grant_type" => "client_credentials",
@@ -56,10 +56,16 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
         },
         ApplicationMock
       ) do
-        assert client_id == client.id
-        assert value
-        assert refresh_token
-      else
+        {:token_success,
+          %Token{
+            client_id: client_id,
+            value: value,
+            refresh_token: refresh_token
+          }
+        } ->
+          assert client_id == client.id
+          assert value
+          assert refresh_token
         _ ->
           assert false
       end
@@ -67,7 +73,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
 
     test "returns a token with public scope", %{client: client} do
       given_scope = "public"
-      with {:token_success, %Token{client_id: client_id, scope: scope, value: value}} <- Oauth.token(
+      case  Oauth.token(
         %{
           body_params: %{
             "grant_type" => "client_credentials",
@@ -78,10 +84,16 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
         },
         ApplicationMock
       ) do
-        assert client_id == client.id
-        assert value
-        assert scope == given_scope
-      else
+        {:token_success,
+          %Token{
+            client_id: client_id,
+            scope: scope,
+            value: value
+          }
+        } ->
+          assert client_id == client.id
+          assert value
+          assert scope == given_scope
         _ ->
           assert false
       end
@@ -112,7 +124,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
 
     test "returns a token if scope is authorized", %{client_with_scope: client} do
       %Scope{name: given_scope} = List.first(client.authorized_scopes)
-      with {:token_success, %Token{client_id: client_id, scope: scope, value: value}} <- Oauth.token(
+      case Oauth.token(
         %{
           body_params: %{
             "grant_type" => "client_credentials",
@@ -123,10 +135,16 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
         },
         ApplicationMock
       ) do
-        assert client_id == client.id
-        assert value
-        assert scope == given_scope
-      else
+        {:token_success,
+          %Token{
+            client_id: client_id,
+            scope: scope,
+            value: value
+          }
+        } ->
+          assert client_id == client.id
+          assert value
+          assert scope == given_scope
         _ ->
           assert false
       end

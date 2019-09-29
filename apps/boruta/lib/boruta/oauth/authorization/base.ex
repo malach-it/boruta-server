@@ -29,17 +29,17 @@ defmodule Boruta.Oauth.Authorization.Base do
         :status => :unauthorized
       }}
   def client(id: id, secret: secret) do
-    with %Client{} = client <- repo().get_by(Client, id: id, secret: secret) do
-      {:ok, client}
-    else
+    case repo().get_by(Client, id: id, secret: secret) do
+      %Client{} = client ->
+        {:ok, client}
       nil ->
         {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or client_secret."}}
     end
   end
   def client(id: id, redirect_uri: redirect_uri) do
-    with %Client{} = client <- repo().get_by(Client, id: id, redirect_uri: redirect_uri) do
-      {:ok, client}
-    else
+    case repo().get_by(Client, id: id, redirect_uri: redirect_uri) do
+      %Client{} = client ->
+        {:ok, client}
       nil ->
         {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or redirect_uri."}}
     end
@@ -64,9 +64,9 @@ defmodule Boruta.Oauth.Authorization.Base do
     | {:ok, user :: struct()}
   def resource_owner(id: id) do
     # if resource_owner is a struct
-    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), id: id) do
-      {:ok, resource_owner}
-    else
+    case repo().get_by(resource_owner_schema(), id: id) do
+      %{__struct__: _} = resource_owner ->
+        {:ok, resource_owner}
       _ ->
         {:error, %Error{
           status: :unauthorized,

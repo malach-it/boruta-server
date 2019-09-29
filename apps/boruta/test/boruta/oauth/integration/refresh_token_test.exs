@@ -92,26 +92,25 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
 
     test "returns token", %{client: client, access_token: token} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
-      with {
-        :token_success,
-        %Token{
-          client_id: client_id,
-          value: value,
-          refresh_token: refresh_token,
-          expires_at: expires_at
-        }
-      } <- Oauth.token(
+      case Oauth.token(
         %{
           body_params: %{"grant_type" => "refresh_token", "refresh_token" => token.refresh_token, "scope" => "scope"},
           req_headers: [{"authorization", authorization_header}]
         },
         ApplicationMock
       ) do
+        {:token_success,
+          %Token{
+            client_id: client_id,
+            value: value,
+            refresh_token: refresh_token,
+            expires_at: expires_at
+          }
+        } ->
         assert client_id == token.client_id
         assert value
         assert refresh_token
         assert expires_at > token.expires_at
-      else
         _ ->
           assert false
       end

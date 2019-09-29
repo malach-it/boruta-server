@@ -1,4 +1,5 @@
 defmodule Boruta.Oauth.ApplicationMock do
+  @moduledoc false
   @behaviour Boruta.Oauth.Application
 
   @impl Boruta.Oauth.Application

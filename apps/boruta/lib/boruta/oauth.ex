@@ -36,9 +36,9 @@ defmodule Boruta.Oauth do
       module.authorize_success(conn, token)
     else
       {:error, %Error{} = error} ->
-        with {:ok, request} <- Request.authorize_request(conn) do
-          module.authorize_error(conn, Error.with_format(error, request))
-        else
+        case Request.authorize_request(conn) do
+          {:ok, request} ->
+            module.authorize_error(conn, Error.with_format(error, request))
           _ ->
             module.authorize_error(conn, error)
         end

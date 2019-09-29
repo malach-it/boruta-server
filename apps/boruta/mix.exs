@@ -5,11 +5,7 @@ defmodule Boruta.MixProject do
     [
       name: "Boruta core",
       app: :boruta,
-      version: "0.1.0-rc.2",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
+      version: "0.1.0-rc.3",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -18,7 +14,10 @@ defmodule Boruta.MixProject do
       docs: docs(),
       package: package(),
       description: description(),
-      source_url: "https://github.com/patatoid/boruta-core"
+      source_url: "https://github.com/patatoid/boruta-core",
+      dialyzer: [
+        plt_add_apps: [:mix]
+      ]
     ]
   end
 
@@ -47,9 +46,9 @@ defmodule Boruta.MixProject do
       {:ex_machina, "~> 2.3", only: :test},
       {:ex_json_schema, "~> 0.6.1"},
       {:secure_random, "~> 0.5"},
-      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.6", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
       {:puid, "~> 1.0"},
       {:pow, "~> 1.0.11"}
     ]

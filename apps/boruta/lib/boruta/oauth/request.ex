@@ -40,24 +40,25 @@ defmodule Boruta.Oauth.Request do
      }}
     | {:ok, oauth_request :: %AuthorizationCodeRequest{}
       | %ClientCredentialsRequest{}
-      | %CodeRequest{}
+      | %AuthorizationCodeRequest{}
       | %TokenRequest{}
       | %PasswordRequest{}}
   # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
   def token_request(%Plug.Conn{req_headers: req_headers, body_params: %{} = body_params}) do
-    with {"authorization", authorization_header} <- Enum.find(
+    case Enum.find(
       req_headers,
       fn (header) -> elem(header, 0) == "authorization" end
     ) do
-      token_request(%{
-        req_headers: [{"authorization", authorization_header}],
-        body_params: %{} = body_params
-      })
-    else
+      {"authorization", authorization_header} ->
+        token_request(%{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{} = body_params
+        })
       nil ->
         token_request(%{body_params: %{} = body_params})
     end
   end
+
   def token_request(%{req_headers: [{"authorization", "Basic " <> _ = authorization_header}], body_params: %{} = body_params}) do
     with {:ok, [client_id, client_secret]} <- BasicAuth.decode(authorization_header),
          {:ok, params} <- Validator.validate(
@@ -71,9 +72,9 @@ defmodule Boruta.Oauth.Request do
     end
   end
   def token_request(%{body_params: %{} = body_params}) do
-    with {:ok, params} <- Validator.validate(:token, body_params) do
-      build_request(params)
-    else
+    case Validator.validate(:token, body_params) do
+      {:ok, params} ->
+        build_request(params)
       {:error, error_description} ->
         {:error, %Error{status: :bad_request, error: :invalid_request, error_description: error_description}}
     end
@@ -107,15 +108,12 @@ defmodule Boruta.Oauth.Request do
        :redirect_uri => nil,
        :status => :bad_request
      }}
-    | {:ok, oauth_request :: %AuthorizationCodeRequest{}
-      | %ClientCredentialsRequest{}
-      | %CodeRequest{}
-      | %TokenRequest{}
-      | %PasswordRequest{}}
+    | {:ok, oauth_request :: %CodeRequest{}
+      | %TokenRequest{}}
   def authorize_request(%{query_params: query_params, assigns: assigns}) do
-    with {:ok, params} <- Validator.validate(:authorize, query_params) do
-      build_request(Enum.into(params, %{"resource_owner" => assigns[:current_user]}))
-    else
+    case Validator.validate(:authorize, query_params) do
+      {:ok, params} ->
+        build_request(Enum.into(params, %{"resource_owner" => assigns[:current_user]}))
       {:error, error_description} ->
         {:error, %Error{status: :bad_request, error: :invalid_request, error_description: error_description}}
     end
@@ -137,7 +135,7 @@ defmodule Boruta.Oauth.Request do
       })
       {:ok, %IntrospectRequest{...}}
   """
-  @spec introspect_request(conn :: Plug.Conn.t() | map()) ::
+  @spec introspect_request(conn :: map() | map()) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_request,
@@ -149,19 +147,20 @@ defmodule Boruta.Oauth.Request do
     | {:ok, introspect_request :: %IntrospectRequest{}}
   # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
   def introspect_request(%Plug.Conn{req_headers: req_headers, body_params: %{} = body_params}) do
-    with {"authorization", authorization_header} <- Enum.find(
+    case Enum.find(
       req_headers,
       fn (header) -> elem(header, 0) == "authorization" end
     ) do
-      introspect_request(%{
-        req_headers: [{"authorization", authorization_header}],
-        body_params: %{} = body_params
-      })
-    else
+      {"authorization", authorization_header} ->
+        introspect_request(%{
+          req_headers: [{"authorization", authorization_header}],
+          body_params: %{} = body_params
+        })
       nil ->
         introspect_request(%{body_params: %{} = body_params})
     end
   end
+
   def introspect_request(%{req_headers: [{"authorization", "Basic " <> _ = authorization_header}], body_params: %{} = body_params}) do
     with {:ok, [client_id, client_secret]} <- BasicAuth.decode(authorization_header),
          {:ok, params} <- Validator.validate(
@@ -175,9 +174,9 @@ defmodule Boruta.Oauth.Request do
     end
   end
   def introspect_request(%{body_params: %{} = body_params}) do
-    with {:ok, params} <- Validator.validate(:introspect, Enum.into(body_params, %{"response_type" => "introspect"})) do
-      build_request(params)
-    else
+    case Validator.validate(:introspect, Enum.into(body_params, %{"response_type" => "introspect"})) do
+      {:ok, params} ->
+        build_request(params)
       {:error, error_description} ->
         {:error, %Error{status: :bad_request, error: :invalid_request, error_description: error_description}}
     end

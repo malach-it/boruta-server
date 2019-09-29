@@ -84,10 +84,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
     end
 
     test "returns a code", %{client: client, resource_owner: resource_owner} do
-      with {
-        :authorize_success,
-        %Token{type: "code", resource_owner_id: resource_owner_id, client_id: client_id, value: value, refresh_token: refresh_token}
-      } <- Oauth.authorize(%{
+      case  Oauth.authorize(%{
           query_params: %{
             "response_type" => "code",
             "client_id" => client.id,
@@ -95,11 +92,19 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
           },
         assigns: %{current_user: resource_owner}
       }, ApplicationMock) do
-        assert resource_owner_id == resource_owner.id
-        assert client_id == client.id
-        assert value
-        assert !refresh_token
-      else
+        {:authorize_success,
+          %Token{
+            type: "code",
+            resource_owner_id: resource_owner_id,
+            client_id: client_id,
+            value: value,
+            refresh_token: refresh_token
+          }
+        } ->
+          assert resource_owner_id == resource_owner.id
+          assert client_id == client.id
+          assert value
+          assert !refresh_token
         _ ->
           assert false
       end
@@ -107,16 +112,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
 
     test "returns a token with public scope", %{client: client, resource_owner: resource_owner} do
       given_scope = "public"
-      with {
-        :authorize_success,
-        %Boruta.Oauth.Token{
-          type: "code",
-          resource_owner_id: resource_owner_id,
-          client_id: client_id,
-          value: value,
-          scope: scope
-        }
-      } <- Oauth.authorize(%{
+      case  Oauth.authorize(%{
           query_params: %{
             "response_type" => "code",
             "client_id" => client.id,
@@ -125,11 +121,19 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
           },
         assigns: %{current_user: resource_owner}
       }, ApplicationMock) do
-        assert resource_owner_id == resource_owner.id
-        assert client_id == client.id
-        assert value
-        assert scope == given_scope
-      else
+        {:authorize_success,
+          %Boruta.Oauth.Token{
+            type: "code",
+            resource_owner_id: resource_owner_id,
+            client_id: client_id,
+            value: value,
+            scope: scope
+          }
+        } ->
+          assert resource_owner_id == resource_owner.id
+          assert client_id == client.id
+          assert value
+          assert scope == given_scope
         _ ->
           assert false
       end
@@ -156,16 +160,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
 
     test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
       %Scope{name: given_scope} = List.first(client.authorized_scopes)
-      with {
-        :authorize_success,
-        %Boruta.Oauth.Token{
-          type: "code",
-          resource_owner_id: resource_owner_id,
-          client_id: client_id,
-          value: value,
-          scope: scope
-        }
-      } <- Oauth.authorize(%{
+      case Oauth.authorize(%{
           query_params: %{
             "response_type" => "code",
             "client_id" => client.id,
@@ -174,11 +169,19 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
           },
         assigns: %{current_user: resource_owner}
       }, ApplicationMock) do
-        assert resource_owner_id == resource_owner.id
-        assert client_id == client.id
-        assert value
-        assert scope == given_scope
-      else
+        {:authorize_success,
+          %Boruta.Oauth.Token{
+            type: "code",
+            resource_owner_id: resource_owner_id,
+            client_id: client_id,
+            value: value,
+            scope: scope
+          }
+        } ->
+          assert resource_owner_id == resource_owner.id
+          assert client_id == client.id
+          assert value
+          assert scope == given_scope
         _ ->
           assert false
       end
@@ -205,16 +208,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
 
     test "returns a code with state", %{client: client, resource_owner: resource_owner} do
       given_state = "state"
-      with {
-        :authorize_success,
-        %Boruta.Oauth.Token{
-          type: "code",
-          resource_owner_id: resource_owner_id,
-          client_id: client_id,
-          value: value,
-          state: state
-        }
-      } <- Oauth.authorize(%{
+      case  Oauth.authorize(%{
           query_params: %{
             "response_type" => "code",
             "client_id" => client.id,
@@ -223,11 +217,19 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
           },
         assigns: %{current_user: resource_owner}
       }, ApplicationMock) do
-        assert resource_owner_id == resource_owner.id
-        assert client_id == client.id
-        assert value
-        assert state == given_state
-      else
+        {:authorize_success,
+          %Boruta.Oauth.Token{
+            type: "code",
+            resource_owner_id: resource_owner_id,
+            client_id: client_id,
+            value: value,
+            state: state
+          }
+        } ->
+          assert resource_owner_id == resource_owner.id
+          assert client_id == client.id
+          assert value
+          assert state == given_state
         _ ->
           assert false
       end
@@ -377,15 +379,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
 
     test "returns a token", %{client: client, code: code} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
-      with {
-        :token_success,
-        %Boruta.Oauth.Token{
-          resource_owner_id: resource_owner_id,
-          client_id: client_id,
-          value: value,
-          refresh_token: refresh_token
-        }
-      } <- Oauth.token(
+      case Oauth.token(
         %{
           req_headers: [{"authorization", authorization_header}],
           body_params: %{
@@ -397,11 +391,18 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         },
         ApplicationMock
       ) do
-        assert resource_owner_id == code.resource_owner_id
-        assert client_id == client.id
-        assert value
-        assert refresh_token
-      else
+        {:token_success,
+          %Boruta.Oauth.Token{
+            resource_owner_id: resource_owner_id,
+            client_id: client_id,
+            value: value,
+            refresh_token: refresh_token
+          }
+        } ->
+          assert resource_owner_id == code.resource_owner_id
+          assert client_id == client.id
+          assert value
+          assert refresh_token
         _ ->
           assert false
       end
@@ -409,10 +410,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
 
     test "returns a token with scope", %{client: client, code_with_scope: code} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth("test", "test")
-      with {
-        :token_success,
-        %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
-      } <- Oauth.token(
+      case Oauth.token(
         %{
           req_headers: [{"authorization", authorization_header}],
           body_params: %{
@@ -424,11 +422,18 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         },
         ApplicationMock
       ) do
-        assert resource_owner_id == code.resource_owner_id
-        assert client_id == client.id
-        assert value
-        assert scope == code.scope
-      else
+        {:token_success,
+          %Boruta.Oauth.Token{
+            resource_owner_id: resource_owner_id,
+            client_id: client_id,
+            value: value,
+            scope: scope
+          }
+        } ->
+          assert resource_owner_id == code.resource_owner_id
+          assert client_id == client.id
+          assert value
+          assert scope == code.scope
         _ ->
           assert false
       end

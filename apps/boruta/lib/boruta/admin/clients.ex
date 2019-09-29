@@ -18,8 +18,9 @@ defmodule Boruta.Admin.Clients do
 
   """
   def list_clients do
-    repo().all(Client)
-    |> repo().preload(:authorized_scopes)
+    clients = repo().all(Client)
+
+    repo().preload(clients, :authorized_scopes)
   end
 
   @doc """
@@ -37,8 +38,9 @@ defmodule Boruta.Admin.Clients do
 
   """
   def get_client!(id) do
-    repo().get!(Client, id)
-    |> repo().preload(:authorized_scopes)
+    client = repo().get!(Client, id)
+
+    repo().preload(client, :authorized_scopes)
   end
 
   @doc """

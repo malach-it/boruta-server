@@ -91,15 +91,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
     end
 
     test "returns a token", %{client: client, resource_owner: resource_owner} do
-      with {
-        :authorize_success,
-        %Token{
-          resource_owner_id: resource_owner_id,
-          client_id: client_id,
-          value: value,
-          refresh_token: refresh_token
-        }
-      } <- Oauth.authorize(
+      case Oauth.authorize(
         %{
           query_params: %{
             "response_type" => "token",
@@ -112,11 +104,18 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         },
         ApplicationMock
       ) do
-        assert resource_owner_id == resource_owner.id
-        assert client_id == client.id
-        assert value
-        assert !refresh_token
-      else
+        {:authorize_success,
+          %Token{
+            resource_owner_id: resource_owner_id,
+            client_id: client_id,
+            value: value,
+            refresh_token: refresh_token
+          }
+        } ->
+          assert resource_owner_id == resource_owner.id
+          assert client_id == client.id
+          assert value
+          assert !refresh_token
         _ ->
           assert false
       end
@@ -124,10 +123,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
 
     test "returns a token with scope", %{client: client, resource_owner: resource_owner} do
       given_scope = "hello world"
-      with {
-        :authorize_success,
-        %Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
-      } <- Oauth.authorize(
+      case  Oauth.authorize(
         %{
           query_params: %{
             "response_type" => "token",
@@ -141,11 +137,13 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         },
         ApplicationMock
       ) do
-        assert resource_owner_id == resource_owner.id
-        assert client_id == client.id
-        assert value
-        assert scope == given_scope
-      else
+        {:authorize_success,
+          %Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
+        } ->
+          assert resource_owner_id == resource_owner.id
+          assert client_id == client.id
+          assert value
+          assert scope == given_scope
         _ ->
           assert false
       end
@@ -153,10 +151,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
 
     test "returns a token id scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
       %Scope{name: given_scope} = List.first(client.authorized_scopes)
-      with {
-        :authorize_success,
-        %Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
-      } <- Oauth.authorize(
+      case  Oauth.authorize(
         %{
           query_params: %{
             "response_type" => "token",
@@ -170,11 +165,13 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         },
         ApplicationMock
       ) do
-        assert resource_owner_id == resource_owner.id
-        assert client_id == client.id
-        assert value
-        assert scope == given_scope
-      else
+        {:authorize_success,
+          %Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
+        } ->
+          assert resource_owner_id == resource_owner.id
+          assert client_id == client.id
+          assert value
+          assert scope == given_scope
         _ ->
           assert false
       end
@@ -205,4 +202,3 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
     end
   end
 end
-  use Phoenix.ConnTest

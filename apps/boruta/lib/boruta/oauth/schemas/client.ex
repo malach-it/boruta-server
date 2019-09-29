@@ -64,7 +64,9 @@ defmodule Boruta.Oauth.Client do
           _ -> nil
         end
       end
-    ) |> Enum.reject(&is_nil/1)
+    )
+    authorized_scope_ids = authorized_scope_ids
+                           |> Enum.reject(&is_nil/1)
 
     repo().all(
       from s in Scope,

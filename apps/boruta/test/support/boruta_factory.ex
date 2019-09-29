@@ -3,8 +3,8 @@ defmodule Boruta.Factory do
 
   use ExMachina.Ecto, repo: Boruta.Repo
 
-  alias Boruta.Pow.User
   alias Boruta.Pow.HashSalt
+  alias Boruta.Pow.User
 
   def client_factory do
     %Boruta.Oauth.Client{
