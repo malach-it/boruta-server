@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
   @moduledoc """
   Migration task for Boruta.
 
-  Creates `clients`, `tokens` tables. It can also create migration for boruta Pow (users) with `--with-pow` arg.
+  Creates `clients`, `tokens` tables. It can also create migration for boruta Accounts (users) with `--with-pow` arg.
 
   ## Examples
   ```
@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
   ```
 
   ## Command line options
-  - `--with-pow` - creates Boruta Pow (users) migration
+  - `--with-pow` - creates Boruta Accounts (users) migration
 
   """
 

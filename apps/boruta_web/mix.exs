@@ -37,18 +37,18 @@ defmodule BorutaWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:appsignal, "~> 1.0"},
+      {:boruta, in_umbrella: true},
+      {:ex_json_schema, "~> 0.6.0-rc.1"},
+      {:ex_machina, "~> 2.3", only: :test},
+      {:gettext, "~> 0.11"},
+      {:jason, "~> 1.0"},
       {:phoenix, "~> 1.4.3"},
-      {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:gettext, "~> 0.11"},
-      {:boruta, in_umbrella: true},
-      {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"},
-      {:ex_json_schema, "~> 0.6.0-rc.1"},
-      {:ex_machina, "~> 2.3", only: :test},
-      {:appsignal, "~> 1.0"}
+      {:phoenix_pubsub, "~> 1.1"},
+      {:plug_cowboy, "~> 2.0"}
     ]
   end
 

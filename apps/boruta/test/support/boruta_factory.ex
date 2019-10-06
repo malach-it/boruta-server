@@ -3,8 +3,8 @@ defmodule Boruta.Factory do
 
   use ExMachina.Ecto, repo: Boruta.Repo
 
-  alias Boruta.Pow.HashSalt
-  alias Boruta.Pow.User
+  alias Boruta.Accounts.HashSalt
+  alias Boruta.Accounts.User
 
   def client_factory do
     %Boruta.Oauth.Client{
@@ -15,7 +15,7 @@ defmodule Boruta.Factory do
 
   def scope_factory do
     %Boruta.Oauth.Scope{
-      name: "scope",
+      name: SecureRandom.hex(10),
       public: false
     }
   end

@@ -17,5 +17,11 @@ import Ecto.Changeset
   redirect_uri: "https://boruta.herokuapp.com/admin/oauth-callback",
   authorize_scope: true
 }, [:id, :secret, :redirect_uri, :authorize_scope])
+|> Boruta.Repo.insert()
+
+%Boruta.Accounts.User{}
+|> cast(%{
+
+})
 |> put_assoc(:authorized_scopes, [clients_scope, scopes_scope, users_scope])
 |> Boruta.Repo.insert()

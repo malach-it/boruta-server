@@ -6,7 +6,7 @@ defmodule Boruta.Admin.Users do
   import Ecto.Query, warn: false
   import Boruta.Config, only: [repo: 0]
 
-  alias Boruta.Pow.User
+  alias Boruta.Accounts.User
 
   @doc """
   Returns the list of users.
@@ -18,7 +18,9 @@ defmodule Boruta.Admin.Users do
 
   """
   def list_users do
-    repo().all(User)
+    users = repo().all(User)
+
+    repo().preload(users, :authorized_scopes)
   end
 
   @doc """
@@ -35,7 +37,29 @@ defmodule Boruta.Admin.Users do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: repo().get!(User, id)
+  def get_user!(id) do
+    user = repo().get!(User, id)
+
+    repo().preload(user, :authorized_scopes)
+  end
+
+  @doc """
+  Updates an user.
+
+  ## Examples
+
+      iex> update_user(user, %{field: new_value})
+      {:ok, %User{}}
+
+      iex> update_user(user, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.update_changeset!(attrs)
+    |> repo().update()
+  end
 
   @doc """
   Deletes a User.

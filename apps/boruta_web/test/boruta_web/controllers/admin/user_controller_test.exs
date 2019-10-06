@@ -3,6 +3,8 @@ defmodule BorutaWeb.Admin.UserControllerTest do
 
   import Boruta.Factory
 
+  alias Boruta.Accounts.User
+
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -56,8 +58,48 @@ defmodule BorutaWeb.Admin.UserControllerTest do
       conn = get(conn, Routes.admin_user_path(conn, :current))
       assert json_response(conn, 200)["data"] == %{
         "id" => user.id,
-        "email" => user.email
+        "email" => user.email,
+        "authorized_scopes" => []
       }
+    end
+  end
+
+  describe "update resource_owner" do
+    setup %{conn: conn} do
+      token = insert(:token, type: "access_token", scope: "users:manage:all")
+      resource_owner = insert(:user)
+      scope = insert(:scope)
+      conn = conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token.value}")
+      {:ok, conn: conn, resource_owner: resource_owner, scope: scope}
+    end
+
+    test "renders resource_owner when data is valid", %{
+      conn: conn,
+      resource_owner: %User{id: id} = resource_owner,
+      scope: scope
+    } do
+      conn = put(conn, Routes.admin_user_path(conn, :update, resource_owner), user: %{
+        "authorized_scopes" => [%{"id" => scope.id}]
+      })
+      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+
+      conn = get(conn, Routes.admin_user_path(conn, :show, id))
+
+      case json_response(conn, 200)["data"] do
+        %{
+          "id" => user_id,
+          "authorized_scopes" => [
+            %{"id" => scope_id, "name" => scope_name}
+          ]
+        } ->
+          assert user_id == id
+          assert scope_id == scope.id
+          assert scope_name == scope.name
+        _ ->
+          assert false
+      end
     end
   end
 

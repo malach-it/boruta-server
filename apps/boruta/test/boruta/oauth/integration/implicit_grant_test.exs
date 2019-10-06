@@ -121,35 +121,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
       end
     end
 
-    test "returns a token with scope", %{client: client, resource_owner: resource_owner} do
-      given_scope = "hello world"
-      case  Oauth.authorize(
-        %{
-          query_params: %{
-            "response_type" => "token",
-            "client_id" => client.id,
-            "redirect_uri" => client.redirect_uri,
-            "scope" => given_scope
-          },
-          assigns: %{
-            current_user: resource_owner
-          }
-        },
-        ApplicationMock
-      ) do
-        {:authorize_success,
-          %Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
-        } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
-          assert value
-          assert scope == given_scope
-        _ ->
-          assert false
-      end
-    end
-
-    test "returns a token id scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
+    test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
       %Scope{name: given_scope} = List.first(client.authorized_scopes)
       case  Oauth.authorize(
         %{

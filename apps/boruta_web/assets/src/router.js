@@ -13,6 +13,7 @@ import EditClient from './views/EditClient.vue'
 
 import Users from './views/Users.vue'
 import UserList from './views/UserList.vue'
+import EditUser from './views/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/ScopeList.vue'
@@ -45,6 +46,10 @@ const router = new Router({
           path: 'list',
           name: 'user-list',
           component: UserList
+        }, {
+          path: '/users/:userId/edit',
+          name: 'edit-user',
+          component: EditUser
         }
       ]
     }, {

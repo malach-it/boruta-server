@@ -17,5 +17,6 @@ defmodule Boruta.Admin do
 
   defdelegate list_users, to: Boruta.Admin.Users
   defdelegate get_user!(id), to: Boruta.Admin.Users
+  defdelegate update_user(user, attrs), to: Boruta.Admin.Users
   defdelegate delete_user(user), to: Boruta.Admin.Users
 end

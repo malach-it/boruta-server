@@ -49,8 +49,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
   }) do
 
     with {:ok, client} <- client(id: client_id, secret: client_secret),
-         {:ok, scope} <- scope(scope: scope, client: client),
-         {:ok, resource_owner} <- resource_owner(email: username, password: password) do
+         {:ok, resource_owner} <- resource_owner(email: username, password: password),
+         {:ok, scope} <- scope(scope: scope, client: client, resource_owner: resource_owner) do
       token = Token.resource_owner_with_refresh_token_changeset(
         %Token{client: client, resource_owner: resource_owner},
         %{client_id: client.id, resource_owner_id: resource_owner.id, scope: scope}
@@ -102,8 +102,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
-         {:ok, scope} <- scope(scope: scope, client: client),
-         {:ok, resource_owner} <- resource_owner(resource_owner) do
+         {:ok, resource_owner} <- resource_owner(resource_owner),
+         {:ok, scope} <- scope(scope: scope, client: client, resource_owner: resource_owner) do
       token = Token.resource_owner_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,
@@ -132,8 +132,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
-         {:ok, scope} <- scope(scope: scope, client: client),
-         {:ok, resource_owner} <- resource_owner(resource_owner) do
+         {:ok, resource_owner} <- resource_owner(resource_owner),
+         {:ok, scope} <- scope(scope: scope, client: client) do
       token = Token.code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
         client_id: client.id,
         resource_owner_id: resource_owner.id,

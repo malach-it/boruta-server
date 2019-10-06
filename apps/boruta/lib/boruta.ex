@@ -31,8 +31,8 @@ defmodule Boruta do
     token_generator: Boruta.TokenGenerator,
     secret_key_base: System.get_env("SECRET_KEY_BASE"),
     resource_owner: %{
-      schema: Boruta.Pow.User,
-      checkpw_method: &Boruta.Pow.HashSalt.checkpw/2
+      schema: Boruta.Accounts.User,
+      checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
     }
   ```
 

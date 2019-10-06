@@ -25,7 +25,7 @@ import_config "#{Mix.env()}.exs"
 
 config :boruta_web, :pow,
   repo: Boruta.Repo,
-  user: Boruta.Pow.User,
+  user: Boruta.Accounts.User,
   # extensions: [PowEmailConfirmation, PowResetPassword],
   extensions: [PowResetPassword],
   controller_callbacks: Pow.Extension.Phoenix.ControllerCallbacks,

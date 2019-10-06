@@ -58,7 +58,7 @@ defmodule BorutaWeb.Router do
     resources "/scopes", ScopeController, except: [:new, :edit]
     resources "/clients", ClientController, except: [:new, :edit]
     get "/users/current", UserController, :current
-    resources "/users", UserController, except: [:new, :edit, :create, :update]
+    resources "/users", UserController, except: [:new, :edit, :create]
   end
 
   scope "/admin", BorutaWeb do
