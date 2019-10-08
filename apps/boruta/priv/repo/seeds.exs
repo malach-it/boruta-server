@@ -19,9 +19,10 @@ import Ecto.Changeset
 }, [:id, :secret, :redirect_uri, :authorize_scope])
 |> Boruta.Repo.insert()
 
-%Boruta.Accounts.User{}
-|> cast(%{
-
+IO.inspect Boruta.Accounts.User.changeset(%Boruta.Accounts.User{}, %{
+  email: "test@test.test",
+  password: "passwordes",
+  confirm_password: "passwordes"
 })
 |> put_assoc(:authorized_scopes, [clients_scope, scopes_scope, users_scope])
 |> Boruta.Repo.insert()
