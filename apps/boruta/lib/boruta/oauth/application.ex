@@ -8,27 +8,27 @@ defmodule Boruta.Oauth.Application do
   @doc """
   This function will be triggered in case of success triggering `Boruta.Oauth.token/2`
   """
-  @callback token_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.Token.t()) :: Plug.Conn.t()
+  @callback token_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.Token.t()) :: any()
   @doc """
   This function will be triggered in case of failure triggering `Boruta.Oauth.token/2`
   """
-  @callback token_error(conn :: Plug.Conn.t(), oauth_error :: Boruta.Oauth.Error.t()) :: Plug.Conn.t()
+  @callback token_error(conn :: Plug.Conn.t(), oauth_error :: Boruta.Oauth.Error.t()) :: any()
 
   @doc """
   This function will be triggered in case of success triggering `Boruta.Oauth.authorize/2`
   """
-  @callback authorize_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.Token.t())  :: Plug.Conn.t()
+  @callback authorize_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.Token.t())  :: any()
   @doc """
   This function will be triggered in case of failure triggering `Boruta.Oauth.authorize/2`
   """
-  @callback authorize_error(conn :: Plug.Conn.t(), oauth_error :: Boruta.Oauth.Error.t()) :: Plug.Conn.t()
+  @callback authorize_error(conn :: Plug.Conn.t(), oauth_error :: Boruta.Oauth.Error.t()) :: any()
 
   @doc """
   This function will be triggered in case of success triggering `Boruta.Oauth.introspect/2`
   """
-  @callback introspect_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.Token.t()) :: Plug.Conn.t()
+  @callback introspect_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.Token.t()) :: any()
   @doc """
   This function will be triggered in case of failure triggering `Boruta.Oauth.introspect/2`
   """
-  @callback introspect_error(conn :: Plug.Conn.t(), oauth_error :: Boruta.Oauth.Error.t()) :: Plug.Conn.t()
+  @callback introspect_error(conn :: Plug.Conn.t(), oauth_error :: Boruta.Oauth.Error.t()) :: any()
 end

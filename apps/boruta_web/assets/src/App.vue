@@ -14,6 +14,9 @@ export default {
   name: 'App',
   components: {
     Header
+  },
+  mounted () {
+    this.$store.dispatch('getCurrentUser')
   }
 }
 </script>
@@ -21,6 +24,7 @@ export default {
 <style lang="scss">
 #main {
   h1 {
+    text-align: center;
     padding: 1em 0;
     margin: 0;
   }

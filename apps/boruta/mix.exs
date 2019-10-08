@@ -3,18 +3,21 @@ defmodule Boruta.MixProject do
 
   def project do
     [
+      name: "Boruta core",
       app: :boruta,
-      version: "0.1.0",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
+      version: "0.1.0-rc.3",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      docs: docs()
+      docs: docs(),
+      package: package(),
+      description: description(),
+      source_url: "https://github.com/patatoid/boruta-core",
+      dialyzer: [
+        plt_add_apps: [:mix]
+      ]
     ]
   end
 
@@ -40,14 +43,14 @@ defmodule Boruta.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},
-      {:coherence, git: "https://github.com/appprova/coherence.git", branch: "upgrade-to-phoenix-1.4"},
       {:ex_machina, "~> 2.3", only: :test},
-      {:ex_json_schema, "~> 0.6.0-rc.1"},
+      {:ex_json_schema, "~> 0.6.1"},
       {:secure_random, "~> 0.5"},
-      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.6", only: [:dev], runtime: false},
-      {:puid, "~> 1.0"}
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
+      {:puid, "~> 1.0"},
+      {:pow, "~> 1.0.11"}
     ]
   end
 
@@ -66,7 +69,7 @@ defmodule Boruta.MixProject do
         "Schemas": [
           Boruta.Oauth.Token,
           Boruta.Oauth.Client,
-          Boruta.Oauth.ResourceOwner
+          Boruta.Oauth.Scope
         ],
         "OAuth request": [
           Boruta.Oauth.TokenRequest,
@@ -75,7 +78,14 @@ defmodule Boruta.MixProject do
           Boruta.Oauth.ClientCredentialsRequest,
           Boruta.Oauth.CodeRequest,
           Boruta.Oauth.IntrospectRequest,
+          Boruta.Oauth.RefreshTokenRequest,
           Boruta.Oauth.Request
+        ],
+        "Admin": [
+          Boruta.Admin,
+          Boruta.Admin.Clients,
+          Boruta.Admin.Scopes,
+          Boruta.Admin.Users
         ],
         "Utilities": [
           Boruta.BasicAuth,
@@ -89,12 +99,22 @@ defmodule Boruta.MixProject do
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to create, migrate and run the seeds file at once:
-  #
-  #     $ mix ecto.setup
-  #
-  # See the documentation for `Mix` for more info on aliases.
+  defp package do
+    %{
+      name: "boruta",
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => "https://github.com/patatoid/boruta-core"
+      }
+    }
+  end
+
+  defp description do
+    """
+    Boruta is the core of an OAuth provider giving business logic of authentication and authorization.
+    """
+  end
+
   defp aliases do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],

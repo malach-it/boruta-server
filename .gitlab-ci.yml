@@ -9,11 +9,16 @@ services:
 test:
   stage: test
   image: elixir:1.8.1-alpine
-  script:
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+    - _build/
+  before_script:
   - apk --update add postgresql-client git make g++
   - mix local.hex --force
   - mix local.rebar --force
   - mix deps.get
+  script:
   - mix test --trace
   variables:
     POSTGRES_DATABASE: boruta_test

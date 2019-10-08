@@ -1,6 +1,6 @@
 defmodule BorutaWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boruta_web
-  use NewRelic.Phoenix.Transaction
+  use Appsignal.Phoenix
 
   socket "/socket", BorutaWeb.UserSocket,
     websocket: true,
@@ -42,6 +42,9 @@ defmodule BorutaWeb.Endpoint do
     store: :cookie,
     key: "_boruta_web_key",
     signing_salt: "OCKBuS86"
+
+
+  plug Pow.Plug.Session, otp_app: :boruta_web
 
   plug BorutaWeb.Router
 end

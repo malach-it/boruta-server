@@ -150,7 +150,7 @@ defmodule BorutaWeb.OauthControllerTest do
         })
       )
 
-      assert redirected_to(conn) =~ "/sessions/new"
+      assert redirected_to(conn) =~ "/session/new"
     end
 
     test "stores oauth request params in session when current_user is not set", %{conn: conn, client: client} do

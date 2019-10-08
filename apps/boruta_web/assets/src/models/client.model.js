@@ -27,6 +27,7 @@ class Client {
     })
   }
 
+  // TODO factorize with User#validate
   validate () {
     return new Promise((resolve, reject) => {
       this.authorized_scopes.forEach(({ model: scope }) => {
@@ -41,6 +42,7 @@ class Client {
     })
   }
   save () {
+    // TODO trigger validate
     const { id, serialized } = this
     if (id) {
       return this.constructor.api().patch(`/${id}`, { client: serialized })

@@ -11,6 +11,7 @@ export default {
   name: 'oauth-callback',
   mounted() {
     oauth.callback().then(() => {
+      this.$store.dispatch('getCurrentUser')
       this.$router.push({ name: 'home' })
     })
   }

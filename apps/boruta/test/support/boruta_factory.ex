@@ -3,7 +3,8 @@ defmodule Boruta.Factory do
 
   use ExMachina.Ecto, repo: Boruta.Repo
 
-  alias Boruta.Coherence.User
+  alias Boruta.Accounts.HashSalt
+  alias Boruta.Accounts.User
 
   def client_factory do
     %Boruta.Oauth.Client{
@@ -14,7 +15,7 @@ defmodule Boruta.Factory do
 
   def scope_factory do
     %Boruta.Oauth.Scope{
-      name: "scope",
+      name: SecureRandom.hex(10),
       public: false
     }
   end
@@ -23,7 +24,7 @@ defmodule Boruta.Factory do
     %User{
       email: sequence(:email, &"foo-#{&1}@example.com"),
       password: "password",
-      password_hash: User.encrypt_password("password")
+      password_hash: HashSalt.hashpwsalt("password")
     }
   end
 

@@ -4,8 +4,9 @@ defmodule Boruta.Oauth.Authorization.Base do
   """
 
   import Ecto.Query, only: [from: 2]
-  import Boruta.Config, only: [resource_owner_schema: 0, repo: 0]
+  import Boruta.Config, only: [user_checkpw_method: 0, resource_owner_schema: 0, repo: 0]
 
+  alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Scope
@@ -29,17 +30,17 @@ defmodule Boruta.Oauth.Authorization.Base do
         :status => :unauthorized
       }}
   def client(id: id, secret: secret) do
-    with %Client{} = client <- repo().get_by(Client, id: id, secret: secret) do
-      {:ok, client}
-    else
+    case repo().get_by(Client, id: id, secret: secret) do
+      %Client{} = client ->
+        {:ok, client}
       nil ->
         {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or client_secret."}}
     end
   end
   def client(id: id, redirect_uri: redirect_uri) do
-    with %Client{} = client <- repo().get_by(Client, id: id, redirect_uri: redirect_uri) do
-      {:ok, client}
-    else
+    case repo().get_by(Client, id: id, redirect_uri: redirect_uri) do
+      %Client{} = client ->
+        {:ok, client}
       nil ->
         {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or redirect_uri."}}
     end
@@ -64,9 +65,9 @@ defmodule Boruta.Oauth.Authorization.Base do
     | {:ok, user :: struct()}
   def resource_owner(id: id) do
     # if resource_owner is a struct
-    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), id: id) do
-      {:ok, resource_owner}
-    else
+    case repo().get_by(resource_owner_schema(), id: id) do
+      %{__struct__: _} = resource_owner ->
+        {:ok, resource_owner}
       _ ->
         {:error, %Error{
           status: :unauthorized,
@@ -78,7 +79,7 @@ defmodule Boruta.Oauth.Authorization.Base do
   def resource_owner(email: username, password: password) do
     # if resource_owner is a struct
     with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), email: username),
-         true <- resource_owner_schema().checkpw(password, resource_owner.password_hash) do
+         true <- apply(user_checkpw_method(), [password, resource_owner.password_hash]) do
       {:ok, resource_owner}
     else
       _ ->
@@ -189,45 +190,8 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> scope(scope: "scope", client: %Boruta.Oauth.Client{...})
       {:ok, "scope"}
   """
-  @spec scope([scope: String.t(), client: Client.t()] | [scope: String.t(), token: Token.t()]) ::
-    {:ok, scope :: String.t()} | {:error, Error.t()}
-  def scope(scope: nil, client: _), do: {:ok, nil}
-  def scope(scope: "" <> scope, client: %Client{authorize_scope: false}) do
-    scopes = Scope.split(scope)
-
-    private_scopes = repo().all(from s in Scope, select: s.name, where: s.public == false)
-    case Enum.any?(scopes, fn (scope) -> scope in private_scopes end) do # if all scopes are authorized
-      false -> {:ok, scope}
-      true ->
-        {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
-    end
-  end
-  def scope(scope: "" <> scope, client: %Client{authorize_scope: true} = client) do
-    scopes = Enum.filter(String.split(scope, " "), fn (scope) -> scope != "" end) # remove empty strings
-
-    client = repo().preload(client, :authorized_scopes)
-    authorized_scopes = Enum.map(client.authorized_scopes, fn (e) -> e.name end)
-
-    case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
-      true -> {:ok, scope}
-      false ->
-        {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
-    end
+  def scope(keyword) do
+    Authorization.Scope.authorize(keyword[:scope], Keyword.delete(keyword, :scope) |> Enum.into(%{}))
   end
 
-  # TODO default token scope may be an empty string
-  def scope(scope: nil, token: _), do: {:ok, nil}
-  def scope(scope: "", token: %Token{scope: nil}), do: {:ok, ""}
-  def scope(scope: "" <> _, token: %Token{scope: nil}) do
-    {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
-  end
-  def scope(scope: scope, token: %Token{scope: "" <> authorized_scope}) do
-    authorized_scopes = Scope.split(authorized_scope)
-    scopes = Scope.split(scope)
-    case Enum.empty?(scopes -- authorized_scopes) do # if all scopes are authorized
-      true -> {:ok, scope}
-      false ->
-        {:error, %Error{status: :bad_request, error: :invalid_scope, error_description: "Given scopes are not authorized."}}
-    end
-  end
 end

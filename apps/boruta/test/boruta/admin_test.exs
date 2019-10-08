@@ -3,6 +3,7 @@ defmodule Boruta.AdminTest do
 
   import Boruta.Factory
 
+  alias Boruta.Accounts.User
   alias Boruta.Admin
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Scope
@@ -182,6 +183,50 @@ defmodule Boruta.AdminTest do
       scope = scope_fixture()
       assert {:ok, %Scope{}} = Admin.delete_scope(scope)
       assert_raise Ecto.NoResultsError, fn -> Admin.get_scope!(scope.id) end
+    end
+  end
+
+  # users
+
+  def user_fixture(attrs \\ %{}) do
+    user = insert(:user, attrs)
+    user
+    |> Repo.reload()
+    |> Repo.preload(:authorized_scopes)
+  end
+
+  describe "list_users/0" do
+    test "returns all users" do
+      user = user_fixture()
+      assert Admin.list_users() == [user]
+    end
+  end
+
+  describe "get_user/1" do
+    test "returns the user with given id" do
+      user = user_fixture()
+      assert Admin.get_user!(user.id) == user
+    end
+  end
+
+  describe "update_user/2" do
+    test "updates the user with authorized scopes" do
+      scope = insert(:scope)
+      user = user_fixture()
+      assert {:ok,
+        %User{
+          authorized_scopes: authorized_scopes
+        }
+      } = Admin.update_user(user, %{"authorized_scopes" => [%{"id" => scope.id}]})
+      assert authorized_scopes == [scope]
+    end
+  end
+
+  describe "delete_user/1" do
+    test "deletes the user" do
+      user = user_fixture()
+      assert {:ok, %User{}} = Admin.delete_user(user)
+      assert_raise Ecto.NoResultsError, fn -> Admin.get_user!(user.id) end
     end
   end
 end

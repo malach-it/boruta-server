@@ -4,6 +4,8 @@
 # the umbrella root.
 use Mix.Config
 
+config :logger, level: :error
+
 # Configure your database
 config :boruta, Boruta.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
@@ -13,12 +15,4 @@ config :boruta, Boruta.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :boruta, Boruta.Oauth,
-  repo: Boruta.Repo,
-  expires_in: %{
-    access_token: 24 * 3600,
-    authorization_code: 60
-  },
-  secret_key_base: "secret",
-  resource_owner: %{
-    schema: Boruta.Coherence.User
-  }
+  secret_key_base: "secret"

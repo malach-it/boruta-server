@@ -3,7 +3,7 @@
     <div class="ui container">
       <h1>Scopes</h1>
       <div class="ui segments">
-        <div v-for="(scope, index) in scopes" class="ui mini segment" :key="index">
+        <div v-for="(scope, index) in scopes" class="ui brown mini segment" :key="index">
           <div v-if="scope.edit">
             <form v-on:submit.prevent="saveScope(scope)" class="ui form">
               <div class="ui grid">

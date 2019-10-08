@@ -13,7 +13,8 @@ defmodule Boruta.Config do
     token_generator: Boruta.TokenGenerator,
     secret_key_base: System.get_env("SECRET_KEY_BASE"),
     resource_owner: %{
-      schema: Boruta.Coherence.User
+      schema: Boruta.Accounts.User,
+      checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
     }
   ```
   """
@@ -25,7 +26,8 @@ defmodule Boruta.Config do
     },
     token_generator: Boruta.TokenGenerator,
     resource_owner: %{
-      schema: Boruta.Coherence.User
+      schema: Boruta.Accounts.User,
+      checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
     }
 
   @doc false
@@ -48,6 +50,11 @@ defmodule Boruta.Config do
 
   @doc false
   def resource_owner_schema, do: Keyword.fetch!(oauth_config(), :resource_owner)[:schema]
+
+  @doc false
+  def user_checkpw_method do
+    Keyword.fetch!(oauth_config(), :resource_owner)[:checkpw_method]
+  end
 
   @doc false
   def repo, do: Keyword.fetch!(oauth_config(), :repo)
