@@ -86,7 +86,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:state, :string)
         add(:scope, :string)
 
-        add(:client_id, :uuid)
+        add(:client_id, references(:clients, type: :uuid, on_delete: :nilify_all))
         add(:resource_owner_id, :uuid)
 
         timestamps()
@@ -128,6 +128,11 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add :unconfirmed_email,        :string
 
         timestamps()
+      end
+
+      create table(:scopes_users) do
+        add(:user_id, references(:users, type: :uuid, on_delete: :delete_all))
+        add(:scope_id, references(:scopes, type: :uuid, on_delete: :delete_all))
       end
 
       create unique_index(:users, :email_confirmation_token)
