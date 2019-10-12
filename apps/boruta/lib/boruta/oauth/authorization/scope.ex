@@ -10,56 +10,51 @@ defmodule Boruta.Oauth.Authorization.Scope do
   import Ecto.Query, only: [from: 2]
   import Boruta.Config, only: [repo: 0]
 
-  @type against :: %{
-    optional(:client) => %Client{},
-    optional(:resource_owner) => %User{},
-    optional(:token) => %Token{},
-  }
+  @type params :: [
+    scope: String.t(),
+    against: %{
+      optional(:client) => %Client{},
+      optional(:resource_owner) => %User{},
+      optional(:token) => %Token{},
+    }
+  ]
 
   @doc """
   Authorize the given scope according to the given client.
 
   ## Examples
-      iex> authorize("scope", client: %Client{...})
+      iex> authorize(%{scope: "scope", client: %Client{...}})
       {:ok, "scope"}
   """
-  @spec authorize(scope :: String.t(), against) ::
+  @spec authorize(params :: params) ::
     {:ok, scope :: String.t()} | {:error, Error.t()}
-  def authorize(nil, _), do: {:ok, ""}
-  def authorize("", _), do: {:ok, ""}
-
-  def authorize("" <> scope, %{client: client, resource_owner: resource_owner, token: token}) do
+  def authorize(scope: nil, against: %{client: _, resource_owner: _, token: _}), do: {:ok, ""}
+  def authorize(scope: "", against: %{client: _, resource_owner: _, token: _}), do: {:ok, ""}
+  def authorize(scope: "" <> scope, against: %{client: client, resource_owner: resource_owner, token: nil}) do
     scopes = Scope.split(scope)
 
-    authorized_scopes = case token do
-      nil ->
-        public_scopes = scopes |> keep_if_authorized(:public)
-        resource_owner_scopes = scopes |> keep_if_authorized(resource_owner)
-        client_scopes = scopes |> keep_if_authorized(client)
+    public_scopes = scopes |> keep_if_authorized(:public)
+    resource_owner_scopes = scopes |> keep_if_authorized(resource_owner)
+    client_scopes = scopes |> keep_if_authorized(client)
+    authorized_scopes = Enum.uniq(public_scopes ++ resource_owner_scopes ++ client_scopes)
 
-        Enum.uniq(public_scopes ++ resource_owner_scopes ++ client_scopes)
-      %Token{} ->
-        scopes |> keep_if_authorized(token)
-    end
-
-    case Enum.empty?(scopes -- authorized_scopes) do
-      true ->
-        authorized_scope = Enum.join(authorized_scopes, " ")
-        {:ok, authorized_scope}
-      false ->
-        {:error,  %Boruta.Oauth.Error{
-          error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
-          status: :bad_request
-        }}
-    end
+    authorized?(scopes, authorized_scopes)
   end
-  def authorize("" <> scope, %{} = params) do
-    authorize(scope, %{
-      client: params[:client],
-      resource_owner: params[:resource_owner],
-      token: params[:token]
-    })
+  def authorize(scope: "" <> scope, against: %{client: _, resource_owner: _, token: token}) do
+    scopes = Scope.split(scope)
+
+    authorized_scopes = scopes |> keep_if_authorized(token)
+
+    authorized?(scopes, authorized_scopes)
+  end
+  def authorize(scope: scope, against: %{} = against) do
+    authorize(
+      scope: scope,
+      against: %{
+        client: against[:client],
+        resource_owner: against[:resource_owner],
+        token: against[:token]
+      })
   end
 
   defp keep_if_authorized(_scopes, nil), do: []
@@ -100,5 +95,19 @@ defmodule Boruta.Oauth.Authorization.Scope do
       Enum.member?(authorized_scopes, scope)
     end)
   end
-  defp keep_if_authorized(scopes, _), do: []
+  defp keep_if_authorized(_scopes, _), do: []
+
+  defp authorized?(scopes, authorized_scopes) do
+    case Enum.empty?(scopes -- authorized_scopes) do
+      true ->
+        authorized_scope = Enum.join(authorized_scopes, " ")
+        {:ok, authorized_scope}
+      false ->
+        {:error,  %Boruta.Oauth.Error{
+          error: :invalid_scope,
+          error_description: "Given scopes are unknown or unauthorized.",
+          status: :bad_request
+        }}
+    end
+  end
 end

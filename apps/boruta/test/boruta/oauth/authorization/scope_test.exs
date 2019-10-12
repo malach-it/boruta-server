@@ -8,7 +8,7 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
 
   describe "with empty scope" do
     test "returns an empty string if nil given" do
-      case Scope.authorize(nil, %{}) do
+      case Scope.authorize(scope: nil, against: %{}) do
         {:ok, scope} ->
           assert scope == ""
         _ ->
@@ -17,7 +17,7 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     end
 
     test "returns an empty string if an empty string given" do
-      case Scope.authorize("", %{}) do
+      case Scope.authorize(scope: "", against: %{}) do
         {:ok, scope} ->
           assert scope == ""
         _ ->
@@ -46,11 +46,11 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join(["any", private_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{client: client}) == {
+      assert Scope.authorize(scope: given_scope, against: %{client: client}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -58,17 +58,17 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       }
     end
 
-    test "returns an error if some private scope are not authorized by the client", %{
+    test "returns an error if some private scope are unknown or unauthorized by the client", %{
       client_with_scope: client,
       private_scope: private_scope
     } do
       given_scope = Enum.join(["any", private_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{client: client}) == {
+      assert Scope.authorize(scope: given_scope, against: %{client: client}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -81,11 +81,11 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join(["any1", "any2"], " ")
 
-      assert Scope.authorize(given_scope, %{client: client}) == {
+      assert Scope.authorize(scope: given_scope, against: %{client: client}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -98,7 +98,7 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       public_scope: public_scope
     } do
       given_scope = Enum.join([public_scope.name], " ")
-      authorized_scope = Scope.authorize(given_scope, %{client: client})
+      authorized_scope = Scope.authorize(scope: given_scope, against: %{client: client})
 
       assert authorized_scope == {:ok, given_scope}
     end
@@ -109,7 +109,7 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join([private_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{client: client}) == {:ok, given_scope}
+      assert Scope.authorize(scope: given_scope, against: %{client: client}) == {:ok, given_scope}
     end
   end
 
@@ -133,11 +133,11 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join(["any", private_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{resource_owner: resource_owner}) == {
+      assert Scope.authorize(scope: given_scope, against: %{resource_owner: resource_owner}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -145,17 +145,17 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       }
     end
 
-    test "returns an error if some private scope are not authorized by the resource_owner", %{
+    test "returns an error if some private scope are unknown or unauthorized by the resource_owner", %{
       resource_owner_with_scope: resource_owner,
       private_scope: private_scope
     } do
       given_scope = Enum.join(["any", private_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{resource_owner: resource_owner}) == {
+      assert Scope.authorize(scope: given_scope, against: %{resource_owner: resource_owner}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -168,11 +168,11 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join(["any1", "any2"], " ")
 
-      assert Scope.authorize(given_scope, %{resource_owner: resource_owner}) == {
+      assert Scope.authorize(scope: given_scope, against: %{resource_owner: resource_owner}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -185,7 +185,7 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       public_scope: public_scope
     } do
       given_scope = Enum.join([public_scope.name], " ")
-      authorized_scope = Scope.authorize(given_scope, %{resource_owner: resource_owner})
+      authorized_scope = Scope.authorize(scope: given_scope, against: %{resource_owner: resource_owner})
 
       assert authorized_scope == {:ok, given_scope}
     end
@@ -196,7 +196,7 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join([private_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{resource_owner: resource_owner}) == {:ok, given_scope}
+      assert Scope.authorize(scope: given_scope, against: %{resource_owner: resource_owner}) == {:ok, given_scope}
     end
   end
 
@@ -221,8 +221,8 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = public_scope.name
       assert Scope.authorize(
-        given_scope,
-        %{client: client, resource_owner: resource_owner}
+        scope: given_scope,
+        against: %{client: client, resource_owner: resource_owner}
       ) == {:ok, given_scope}
     end
   end
@@ -255,11 +255,11 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join([public_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{token: token}) == {
+      assert Scope.authorize(scope: given_scope, against: %{token: token}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -267,17 +267,17 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       }
     end
 
-    test "returns an error if some private scope are not authorized by the token", %{
+    test "returns an error if some private scope are unknown or unauthorized by the token", %{
       token_with_scope: token,
       private_scope: private_scope
     } do
       given_scope = Enum.join(["any", private_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{token: token}) == {
+      assert Scope.authorize(scope: given_scope, against: %{token: token}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -285,16 +285,16 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       }
     end
 
-    test "returns an error if some non existing scope given are not authorized by the token", %{
+    test "returns an error if some non existing scope given are unknown or unauthorized by the token", %{
       token_with_scope: token
     } do
       given_scope = Enum.join(["any1", "any2"], " ")
 
-      assert Scope.authorize(given_scope, %{token: token}) == {
+      assert Scope.authorize(scope: given_scope, against: %{token: token}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -308,11 +308,11 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join([List.first(client.authorized_scopes).name], " ")
 
-      assert Scope.authorize(given_scope, %{token: token}) == {
+      assert Scope.authorize(scope: given_scope, against: %{token: token}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -320,17 +320,17 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       }
     end
 
-    test "returns an error if some public scope given are not authorized by the token", %{
+    test "returns an error if some public scope given are unknown or unauthorized by the token", %{
       token_with_scope: token,
       public_scope: public_scope
     } do
       given_scope = Enum.join([public_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{token: token}) == {
+      assert Scope.authorize(scope: given_scope, against: %{token: token}) == {
         :error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -344,7 +344,7 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join([private_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{token: token}) == {:ok, given_scope}
+      assert Scope.authorize(scope: given_scope, against: %{token: token}) == {:ok, given_scope}
     end
 
     test "returns scope if some public scope are authorized by the token", %{
@@ -353,7 +353,7 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
     } do
       given_scope = Enum.join([public_scope.name], " ")
 
-      assert Scope.authorize(given_scope, %{token: token}) == {:ok, given_scope}
+      assert Scope.authorize(scope: given_scope, against: %{token: token}) == {:ok, given_scope}
     end
   end
 end

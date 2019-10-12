@@ -114,7 +114,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
       ) == {:token_error,
         %Boruta.Oauth.Error{
           error: :invalid_scope,
-          error_description: "Given scopes are not authorized.",
+          error_description: "Given scopes are unknown or unauthorized.",
           format: nil,
           redirect_uri: nil,
           status: :bad_request
@@ -150,7 +150,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
       end
     end
 
-    test "returns an error if scopes are not authorized", %{client_with_scope: client} do
+    test "returns an error if scopes are unknown or unauthorized", %{client_with_scope: client} do
       given_scope = "bad_scope"
       assert Oauth.token(
         %{
@@ -164,7 +164,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
         ApplicationMock
       ) == {:token_error, %Error{
         error: :invalid_scope,
-        error_description: "Given scopes are not authorized.",
+        error_description: "Given scopes are unknown or unauthorized.",
         status: :bad_request
       }}
     end
