@@ -3,14 +3,7 @@ defmodule Boruta.Oauth.Authorization.Base do
   Base artifacts authorization
   """
 
-  import Ecto.Query, only: [from: 2]
-  import Boruta.Config, only: [user_checkpw_method: 0, resource_owner_schema: 0, repo: 0]
-
   alias Boruta.Oauth.Authorization
-  alias Boruta.Oauth.Client
-  alias Boruta.Oauth.Error
-  alias Boruta.Oauth.Scope
-  alias Boruta.Oauth.Token
 
   @doc """
   Authorize the client corresponding to the given params.
@@ -19,32 +12,7 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> client(id: "id", secret: "secret")
       {:ok, %Boruta.Oauth.Client{...}}
   """
-  @spec client([id: String.t(), secret: String.t()] | [id: String.t(), redirect_uri: String.t()]) ::
-    {:ok, %Boruta.Oauth.Client{}}
-    | {:error,
-      %Boruta.Oauth.Error{
-        :error => :invalid_client,
-        :error_description => String.t(),
-        :format => nil,
-        :redirect_uri => nil,
-        :status => :unauthorized
-      }}
-  def client(id: id, secret: secret) do
-    case repo().get_by(Client, id: id, secret: secret) do
-      %Client{} = client ->
-        {:ok, client}
-      nil ->
-        {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or client_secret."}}
-    end
-  end
-  def client(id: id, redirect_uri: redirect_uri) do
-    case repo().get_by(Client, id: id, redirect_uri: redirect_uri) do
-      %Client{} = client ->
-        {:ok, client}
-      nil ->
-        {:error, %Error{status: :unauthorized, error: :invalid_client, error_description: "Invalid client_id or redirect_uri."}}
-    end
-  end
+  defdelegate client(params), to: Authorization.Client, as: :authorize
 
   @doc """
   Authorize the resource owner corresponding to the given params.
@@ -53,54 +21,7 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> resource_owner(id: "id")
       {:ok, %User{...}}
   """
-  @spec resource_owner([id: String.t()] | [email: String.t(), password: String.t()] | struct()) ::
-    {:error,
-     %Boruta.Oauth.Error{
-       :error => :invalid_resource_owner,
-       :error_description => String.t(),
-       :format => nil,
-       :redirect_uri => nil,
-       :status => :unauthorized
-     }}
-    | {:ok, user :: struct()}
-  def resource_owner(id: id) do
-    # if resource_owner is a struct
-    case repo().get_by(resource_owner_schema(), id: id) do
-      %{__struct__: _} = resource_owner ->
-        {:ok, resource_owner}
-      _ ->
-        {:error, %Error{
-          status: :unauthorized,
-          error: :invalid_resource_owner,
-          error_description: "User not found."
-        }}
-    end
-  end
-  def resource_owner(email: username, password: password) do
-    # if resource_owner is a struct
-    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), email: username),
-         true <- apply(user_checkpw_method(), [password, resource_owner.password_hash]) do
-      {:ok, resource_owner}
-    else
-      _ ->
-        {:error, %Error{
-          status: :unauthorized,
-          error: :invalid_resource_owner,
-          error_description: "Invalid username or password."
-        }}
-    end
-  end
-  def resource_owner(%{__meta__: %{state: :loaded}} = resource_owner) do # resource_owner is persisted
-    {:ok, resource_owner}
-  end
-  def resource_owner(_) do
-    {:error, %Error{
-      status: :unauthorized,
-      error: :invalid_resource_owner,
-      error_description: "Resource owner is invalid.",
-      format: :internal
-    }}
-  end
+  defdelegate resource_owner(params), to: Authorization.ResourceOwner, as: :authorize
 
   @doc """
   Authorize the code corresponding to the given params.
@@ -109,79 +30,16 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> code(value: "value", redirect_uri: "redirect_uri")
       {:ok, %Boruta.Oauth.Token{...}}
   """
-  @spec code([value: String.t(), redirect_uri: String.t()]) ::
-    {:error,
-     %Boruta.Oauth.Error{
-       :error => :invalid_code,
-       :error_description => String.t(),
-       :format => nil,
-       :redirect_uri => nil,
-       :status => :bad_request
-     }}
-    | {:ok, %Boruta.Oauth.Token{}}
-  def code(value: value, redirect_uri: redirect_uri) do
-    with %Token{} = token <- repo().get_by(Token, type: "code", value: value, redirect_uri: redirect_uri),
-      :ok <- Token.expired?(token) do
-      {:ok, token}
-    else
-      {:error, error} ->
-        {:error, %Error{status: :bad_request, error: :invalid_code, error_description: error}}
-      nil ->
-        {:error, %Error{status: :bad_request, error: :invalid_code, error_description: "Provided authorization code is incorrect."}}
-    end
-  end
+  defdelegate code(params), to: Authorization.Code, as: :authorize
 
   @doc """
   Authorize the access token corresponding to the given params.
 
   ## Examples
-      iex> access_token(value: "value")
+      iex> access_token(%{value: "value"})
       {:ok, %Boruta.Oauth.Token{...}}
   """
-  @spec access_token([value: String.t()] | [refresh_token: String.t()]) ::
-    {:error,
-     %Boruta.Oauth.Error{
-       :error => :invalid_access_token,
-       :error_description => String.t(),
-       :format => nil,
-       :redirect_uri => nil,
-       :status => :unauthorized
-     }}
-    | {:ok, %Boruta.Oauth.Token{}}
-  def access_token(value: value) do
-    with %Token{} = token <- repo().one(
-      from t in Token,
-      left_join: c in assoc(t, :client),
-      left_join: u in assoc(t, :resource_owner),
-      where: t.type == "access_token" and t.value == ^value,
-      preload: [client: c, resource_owner: u]
-    ),
-      :ok <- Token.expired?(token) do
-      {:ok, token}
-    else
-      {:error, error} ->
-        {:error, %Error{status: :bad_request, error: :invalid_access_token, error_description: error}}
-      nil ->
-        {:error, %Error{status: :bad_request, error: :invalid_access_token, error_description: "Provided access token is incorrect."}}
-    end
-  end
-  def access_token(refresh_token: refresh_token) do
-    with %Token{} = token <- repo().one(
-      from t in Token,
-      left_join: c in assoc(t, :client),
-      left_join: u in assoc(t, :resource_owner),
-      where: t.type == "access_token" and t.refresh_token == ^refresh_token,
-      preload: [client: c, resource_owner: u]
-    ),
-      :ok <- Token.expired?(token) do
-      {:ok, token}
-    else
-      {:error, error} ->
-        {:error, %Error{status: :bad_request, error: :invalid_refresh_token, error_description: error}}
-      nil ->
-        {:error, %Error{status: :bad_request, error: :invalid_refresh_token, error_description: "Provided refresh token is incorrect."}}
-    end
-  end
+  defdelegate access_token(params), to: Authorization.AccessToken, as: :authorize
 
   @doc """
   Authorize the given scope according to the given client.
@@ -190,8 +48,5 @@ defmodule Boruta.Oauth.Authorization.Base do
       iex> scope(scope: "scope", client: %Boruta.Oauth.Client{...})
       {:ok, "scope"}
   """
-  def scope(keyword) do
-    Authorization.Scope.authorize(keyword[:scope], Keyword.delete(keyword, :scope) |> Enum.into(%{}))
-  end
-
+  defdelegate scope(params), to: Authorization.Scope, as: :authorize
 end

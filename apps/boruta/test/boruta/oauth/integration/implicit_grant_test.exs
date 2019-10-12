@@ -149,7 +149,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
       end
     end
 
-    test "returns an error if scope is not authorized", %{client_with_scope: client, resource_owner: resource_owner} do
+    test "returns an error if scope is unknown or unauthorized", %{client_with_scope: client, resource_owner: resource_owner} do
       given_scope = "bad_scope"
       assert Oauth.authorize(
         %{
@@ -166,7 +166,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         ApplicationMock
       ) == {:authorize_error, %Error{
         error: :invalid_scope,
-        error_description: "Given scopes are not authorized.",
+        error_description: "Given scopes are unknown or unauthorized.",
         format: :fragment,
         redirect_uri: "https://redirect.uri",
         status: :bad_request

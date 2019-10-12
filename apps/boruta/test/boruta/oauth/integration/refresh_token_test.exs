@@ -78,14 +78,14 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
       }}
     end
 
-    test "returns an error if scope is not authorized", %{client: client, access_token: token} do
+    test "returns an error if scope is unknown or unauthorized", %{client: client, access_token: token} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       assert Oauth.token(%{
         body_params: %{"grant_type" => "refresh_token", "refresh_token" => token.refresh_token, "scope" => "bad_scope"},
         req_headers: [{"authorization", authorization_header}]
       }, ApplicationMock) == {:token_error, %Error{
         error: :invalid_scope,
-        error_description: "Given scopes are not authorized.",
+        error_description: "Given scopes are unknown or unauthorized.",
         status: :bad_request
       }}
     end

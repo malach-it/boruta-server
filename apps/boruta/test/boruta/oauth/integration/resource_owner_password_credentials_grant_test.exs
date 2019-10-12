@@ -140,7 +140,7 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
       end
     end
 
-    test "returns an error if scope is not authorized by the client", %{client_with_scope: client, resource_owner: resource_owner} do
+    test "returns an error if scope is unknown or unauthorized by the client", %{client_with_scope: client, resource_owner: resource_owner} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       given_scope = "bad_scope"
       assert Oauth.token(
@@ -151,7 +151,7 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
         ApplicationMock
       ) == {:token_error, %Error{
         error: :invalid_scope,
-        error_description: "Given scopes are not authorized.",
+        error_description: "Given scopes are unknown or unauthorized.",
         status: :bad_request
       }}
     end
