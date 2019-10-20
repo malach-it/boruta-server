@@ -4,6 +4,8 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
 
   import Boruta.Factory
 
+  alias Boruta.Clients
+  alias Boruta.Codes
   alias Boruta.Oauth.Authorization.Scope
 
   describe "with empty scope" do
@@ -33,10 +35,10 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       private_scope = insert(:scope, public: false)
       client_with_scope = insert(:client, authorize_scope: true, authorized_scopes: [private_scope, public_scope])
       {:ok,
-        client: client,
+        client: Clients.to_oauth_schema(client),
         private_scope: private_scope,
         public_scope: public_scope,
-        client_with_scope: client_with_scope
+        client_with_scope: Clients.to_oauth_schema(client_with_scope)
       }
     end
 
@@ -243,8 +245,8 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
         public_scope: public_scope,
         token_private_scope: token_private_scope,
         token_public_scope: token_public_scope,
-        token_with_scope: token_with_scope,
-        client_with_scope: client_with_scope,
+        token_with_scope: Codes.to_oauth_schema(token_with_scope),
+        client_with_scope: Clients.to_oauth_schema(client_with_scope),
         resource_owner_with_scope: resource_owner_with_scope
       }
     end

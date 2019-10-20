@@ -20,9 +20,8 @@ defmodule BorutaWeb.Admin.UserController do
   end
 
   def current(conn, _) do
-    %Token{resource_owner_id: resource_owner_id} = conn.assigns[:token]
-    user = Admin.get_user!(resource_owner_id)
-    render(conn, "show.json", user: user)
+    %Token{resource_owner: resource_owner} = conn.assigns[:token]
+    render(conn, "show.json", user: resource_owner)
   end
 
   def update(conn, %{"id" => id, "user" => user_params}) do

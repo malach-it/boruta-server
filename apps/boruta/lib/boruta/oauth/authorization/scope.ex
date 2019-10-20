@@ -7,17 +7,7 @@ defmodule Boruta.Oauth.Authorization.Scope do
   alias Boruta.Oauth.Scope
   alias Boruta.Oauth.Token
 
-  import Ecto.Query, only: [from: 2]
-  import Boruta.Config, only: [repo: 0]
-
-  @type params :: [
-    scope: String.t(),
-    against: %{
-      optional(:client) => %Client{},
-      optional(:resource_owner) => %User{},
-      optional(:token) => %Token{},
-    }
-  ]
+  import Boruta.Config, only: [scopes: 0, clients: 0, resource_owners: 0]
 
   @doc """
   Authorize the given scope according to the given client.
@@ -26,8 +16,16 @@ defmodule Boruta.Oauth.Authorization.Scope do
       iex> authorize(%{scope: "scope", client: %Client{...}})
       {:ok, "scope"}
   """
-  @spec authorize(params :: params) ::
-    {:ok, scope :: String.t()} | {:error, Error.t()}
+  @spec authorize(params :: [
+    scope: String.t(),
+    against: %{
+      optional(:client) => %Client{},
+      optional(:resource_owner) => %User{},
+      optional(:token) => %Token{}
+    }
+  ]) ::
+  {:ok, scope :: String.t()} |
+  {:error, Error.t()}
   def authorize(scope: nil, against: %{client: _, resource_owner: _, token: _}), do: {:ok, ""}
   def authorize(scope: "", against: %{client: _, resource_owner: _, token: _}), do: {:ok, ""}
   def authorize(scope: "" <> scope, against: %{client: client, resource_owner: resource_owner, token: nil}) do
@@ -59,10 +57,7 @@ defmodule Boruta.Oauth.Authorization.Scope do
 
   defp keep_if_authorized(_scopes, nil), do: []
   defp keep_if_authorized(scopes, :public) do
-    authorized_scopes = repo().all(
-      from s in Scope,
-      where: s.public == true
-    )
+    authorized_scopes = scopes().public()
     |> Enum.map(fn (scope) -> scope.name end)
 
     Enum.filter(scopes, fn (scope) ->
@@ -73,16 +68,14 @@ defmodule Boruta.Oauth.Authorization.Scope do
     keep_if_authorized(scopes, :public)
   end
   defp keep_if_authorized(scopes, %Client{authorize_scope: true} = client) do
-    client = repo().preload(client, :authorized_scopes)
-    authorized_scopes = Enum.map(client.authorized_scopes, fn (e) -> e.name end)
+    authorized_scopes = Enum.map(clients().authorized_scopes(client), fn (e) -> e.name end)
 
     Enum.filter(scopes, fn (scope) ->
       Enum.member?(authorized_scopes, scope)
     end)
   end
   defp keep_if_authorized(scopes, %User{} = resource_owner) do
-    resource_owner = repo().preload(resource_owner, :authorized_scopes)
-    authorized_scopes = Enum.map(resource_owner.authorized_scopes, fn (e) -> e.name end)
+    authorized_scopes = Enum.map(resource_owners().authorized_scopes(resource_owner), fn (e) -> e.name end)
 
     Enum.filter(scopes, fn (scope) ->
       Enum.member?(authorized_scopes, scope)

@@ -6,6 +6,7 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
 
   import Boruta.Factory
 
+  alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
@@ -20,7 +21,11 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
         authorize_scope: true,
         authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
       )
-      {:ok, client: client, client_with_scope: client_with_scope, resource_owner: resource_owner}
+      {:ok,
+        client: Clients.to_oauth_schema(client),
+        client_with_scope: Clients.to_oauth_schema(client_with_scope),
+        resource_owner: resource_owner
+      }
     end
 
     test "returns an error if Basic auth fails" do
@@ -107,7 +112,12 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, refresh_token: refresh_token}
+          %Token{
+            resource_owner: %{id: resource_owner_id},
+            client: %{id: client_id},
+            value: value,
+            refresh_token: refresh_token
+          }
         } ->
           assert resource_owner_id == resource_owner.id
           assert client_id == client.id
@@ -129,7 +139,12 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Boruta.Oauth.Token{resource_owner_id: resource_owner_id, client_id: client_id, value: value, scope: scope}
+          %Boruta.Oauth.Token{
+            resource_owner: %{id: resource_owner_id},
+            client: %{id: client_id},
+            value: value,
+            scope: scope
+          }
         } ->
           assert resource_owner_id == resource_owner.id
           assert client_id == client.id

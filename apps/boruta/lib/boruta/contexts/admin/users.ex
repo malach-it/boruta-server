@@ -4,9 +4,7 @@ defmodule Boruta.Admin.Users do
   """
 
   import Ecto.Query, warn: false
-  import Boruta.Config, only: [repo: 0]
-
-  alias Boruta.Accounts.User
+  import Boruta.Config, only: [repo: 0, resource_owner_schema: 0]
 
   @doc """
   Returns the list of users.
@@ -18,7 +16,7 @@ defmodule Boruta.Admin.Users do
 
   """
   def list_users do
-    users = repo().all(User)
+    users = repo().all(resource_owner_schema())
 
     repo().preload(users, :authorized_scopes)
   end
@@ -38,7 +36,7 @@ defmodule Boruta.Admin.Users do
 
   """
   def get_user!(id) do
-    user = repo().get!(User, id)
+    user = repo().get!(resource_owner_schema(), id)
 
     repo().preload(user, :authorized_scopes)
   end
@@ -55,9 +53,9 @@ defmodule Boruta.Admin.Users do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_user(%User{} = user, attrs) do
+  def update_user(%_{} = user, attrs) do
     user
-    |> User.update_changeset!(attrs)
+    |> resource_owner_schema().update_changeset!(attrs)
     |> repo().update()
   end
 
@@ -73,7 +71,7 @@ defmodule Boruta.Admin.Users do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_user(%User{} = user) do
+  def delete_user(%_{} = user) do
     repo().delete(user)
   end
 end

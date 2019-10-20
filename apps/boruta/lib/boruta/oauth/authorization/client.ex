@@ -1,7 +1,7 @@
 defmodule Boruta.Oauth.Authorization.Client do
   @moduledoc false
 
-  import Boruta.Config, only: [repo: 0]
+  import Boruta.Config, only: [clients: 0]
 
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Error
@@ -20,7 +20,7 @@ defmodule Boruta.Oauth.Authorization.Client do
         :status => :unauthorized
       }}
   def authorize(id: id, secret: secret) do
-    case repo().get_by(Client, id: id, secret: secret) do
+    case clients().get_by(id: id, secret: secret) do
       %Client{} = client ->
         {:ok, client}
       nil ->
@@ -34,7 +34,7 @@ defmodule Boruta.Oauth.Authorization.Client do
     end
   end
   def authorize(id: id, redirect_uri: redirect_uri) do
-    case repo().get_by(Client, id: id, redirect_uri: redirect_uri) do
+    case clients().get_by(id: id, redirect_uri: redirect_uri) do
       %Client{} = client ->
         {:ok, client}
       nil ->

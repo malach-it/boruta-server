@@ -6,7 +6,7 @@ defmodule Boruta.Admin.Scopes do
   import Ecto.Query, warn: false
   import Boruta.Config, only: [repo: 0]
 
-  alias Boruta.Oauth.Scope
+  alias Boruta.Scope
 
   @doc """
   Returns the list of scopes.
