@@ -14,3 +14,5 @@ config :boruta, :pow,
   user: Boruta.Accounts.User,
   # extensions: [PowEmailConfirmation, PowResetPassword]
   extensions: [PowResetPassword]
+
+config :phoenix, :json_library, Jason

@@ -6,9 +6,9 @@ defmodule Boruta.Oauth.TokenGenerator do
   @doc """
   Generates a token value from token entity.
   """
-  @callback generate(type :: :access_token | :refresh_token, token :: Boruta.Oauth.Token.t()) :: value :: String.t()
+  @callback generate(type :: :access_token | :refresh_token, token :: struct()) :: value :: String.t()
   @doc """
   Generates a secret from client entity.
   """
-  @callback secret(client :: Boruta.Oauth.Client.t()) :: value :: String.t()
+  @callback secret(client :: struct()) :: value :: String.t()
 end

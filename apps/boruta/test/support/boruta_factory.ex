@@ -7,14 +7,14 @@ defmodule Boruta.Factory do
   alias Boruta.Accounts.User
 
   def client_factory do
-    %Boruta.Oauth.Client{
+    %Boruta.Client{
       secret: SecureRandom.urlsafe_base64(),
       redirect_uri: "https://redirect.uri/oauth2-redirect-path"
     }
   end
 
   def scope_factory do
-    %Boruta.Oauth.Scope{
+    %Boruta.Scope{
       name: SecureRandom.hex(10),
       public: false
     }
@@ -29,7 +29,7 @@ defmodule Boruta.Factory do
   end
 
   def token_factory do
-    %Boruta.Oauth.Token{
+    %Boruta.Token{
       value: Boruta.TokenGenerator.generate(),
       expires_at: :os.system_time(:seconds) + 10
     }

@@ -66,6 +66,13 @@ defmodule Boruta.MixProject do
         "Introspection": [
           Boruta.Oauth.Introspect
         ],
+        "Contexts": [
+          Boruta.Oauth.AccessTokens,
+          Boruta.Oauth.Clients,
+          Boruta.Oauth.Codes,
+          Boruta.Oauth.ResourceOwners,
+          Boruta.Oauth.Scopes,
+        ],
         "Schemas": [
           Boruta.Oauth.Token,
           Boruta.Oauth.Client,

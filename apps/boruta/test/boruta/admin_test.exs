@@ -5,8 +5,8 @@ defmodule Boruta.AdminTest do
 
   alias Boruta.Accounts.User
   alias Boruta.Admin
-  alias Boruta.Oauth.Client
-  alias Boruta.Oauth.Scope
+  alias Boruta.Client
+  alias Boruta.Scope
 
   @client_valid_attrs %{
     redirect_uri: "https://redirect.uri"

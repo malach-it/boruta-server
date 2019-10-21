@@ -6,6 +6,8 @@ defmodule Boruta.OauthTest.IntrospectTest do
 
   import Boruta.Factory
 
+  alias Boruta.AccessTokens
+  alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
@@ -16,7 +18,10 @@ defmodule Boruta.OauthTest.IntrospectTest do
       client = insert(:client)
       resource_owner = insert(:user)
       token = insert(:token, type: "access_token", client_id: client.id, scope: "scope", resource_owner_id: resource_owner.id)
-      {:ok, client: client, token: token}
+      {:ok,
+        client: Clients.to_oauth_schema(client),
+        token: AccessTokens.to_oauth_schema(token)
+      }
     end
 
     test "returns an error without params" do
@@ -56,7 +61,7 @@ defmodule Boruta.OauthTest.IntrospectTest do
         req_headers: [{"authorization", authorization_header}]
       }, ApplicationMock) == {:introspect_error, %Boruta.Oauth.Error{
         error: :invalid_access_token,
-        error_description: "Provided access token is incorrect.",
+        error_description: "Provided access token is invalid.",
         format: nil,
         redirect_uri: nil,
         status: :bad_request
@@ -65,8 +70,6 @@ defmodule Boruta.OauthTest.IntrospectTest do
 
     test "returns a token introspected if token is active", %{client: client, token: token} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
-      token = Repo.preload(token, [:resource_owner, :client])
-
       case Oauth.introspect(%{
         body_params: %{"token" => token.value},
         req_headers: [{"authorization", authorization_header}]

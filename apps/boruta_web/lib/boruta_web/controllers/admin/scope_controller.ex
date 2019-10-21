@@ -2,7 +2,7 @@ defmodule BorutaWeb.Admin.ScopeController do
   use BorutaWeb, :controller
 
   alias Boruta.Admin
-  alias Boruta.Oauth.Scope
+  alias Boruta.Scope
 
   plug BorutaWeb.AuthorizationPlug, ["scopes:manage:all"]
 

@@ -4,10 +4,10 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
 
   import Boruta.Factory
 
+  alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.Scope
   alias Boruta.Oauth.Token
 
   describe "client credentials grant" do
@@ -15,9 +15,15 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
       client = insert(:client)
       client_with_scope = insert(:client,
         authorize_scope: true,
-        authorized_scopes: [insert(:scope, name: "public", public: true), insert(:scope, name: "private", public: false)]
+        authorized_scopes: [
+          insert(:scope, name: "public", public: true),
+          insert(:scope, name: "private", public: false)
+        ]
       )
-      {:ok, client: client, client_with_scope: client_with_scope}
+      {:ok,
+        client: Clients.to_oauth_schema(client),
+        client_with_scope: Clients.to_oauth_schema(client_with_scope)
+      }
     end
 
     test "returns an error if `grant_type` is 'client_credentials' and schema is invalid" do
@@ -58,7 +64,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
       ) do
         {:token_success,
           %Token{
-            client_id: client_id,
+            client: %{id: client_id},
             value: value,
             refresh_token: refresh_token
           }
@@ -86,7 +92,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
       ) do
         {:token_success,
           %Token{
-            client_id: client_id,
+            client: %{id: client_id},
             scope: scope,
             value: value
           }
@@ -123,7 +129,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
     end
 
     test "returns a token if scope is authorized", %{client_with_scope: client} do
-      %Scope{name: given_scope} = List.first(client.authorized_scopes)
+      %{name: given_scope} = List.first(client.authorized_scopes)
       case Oauth.token(
         %{
           body_params: %{
@@ -137,7 +143,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
       ) do
         {:token_success,
           %Token{
-            client_id: client_id,
+            client: %{id: client_id},
             scope: scope,
             value: value
           }

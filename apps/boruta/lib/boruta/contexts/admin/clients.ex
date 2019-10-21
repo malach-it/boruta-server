@@ -6,7 +6,7 @@ defmodule Boruta.Admin.Clients do
   import Ecto.Query, warn: false
   import Boruta.Config, only: [repo: 0]
 
-  alias Boruta.Oauth.Client
+  alias Boruta.Client
 
   @doc """
   Returns the list of clients.

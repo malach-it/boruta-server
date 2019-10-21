@@ -101,7 +101,7 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
       ) do
         {:token_success,
           %Token{
-            client_id: client_id,
+            client: %{id: client_id},
             value: value,
             refresh_token: refresh_token,
             expires_at: expires_at

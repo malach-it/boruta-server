@@ -11,7 +11,7 @@ end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest do
   import Boruta.Oauth.Authorization.Base
-  import Boruta.Config, only: [repo: 0]
+  import Boruta.Config, only: [access_tokens: 0]
 
   alias Boruta.Oauth.ClientCredentialsRequest
   alias Boruta.Oauth.Token
@@ -22,20 +22,19 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
     scope: scope
   }) do
     with {:ok, client} <- client(id: client_id, secret: client_secret),
-      {:ok, scope} <- scope(scope: scope, against: %{client: client}) do
-      token = Token.machine_changeset(%Token{client: client}, %{
-        client_id: client.id,
+         {:ok, scope} <- scope(scope: scope, against: %{client: client}) do
+      # TODO rescue from creation errors
+      access_tokens().create(%{
+        client: client,
         scope: scope
-      })
-
-      repo().insert(token)
+      }, refresh_token: true)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
   import Boruta.Oauth.Authorization.Base
-  import Boruta.Config, only: [repo: 0]
+  import Boruta.Config, only: [access_tokens: 0]
 
   alias Boruta.Oauth.PasswordRequest
   alias Boruta.Oauth.Token
@@ -49,21 +48,21 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
   }) do
 
     with {:ok, client} <- client(id: client_id, secret: client_secret),
-         {:ok, resource_owner} <- resource_owner(email: username, password: password),
+         {:ok, resource_owner} <- resource_owner(username: username, password: password),
          {:ok, scope} <- scope(scope: scope, against: %{client: client, resource_owner: resource_owner}) do
-      token = Token.resource_owner_with_refresh_token_changeset(
-        %Token{client: client, resource_owner: resource_owner},
-        %{client_id: client.id, resource_owner_id: resource_owner.id, scope: scope}
-      )
-
-      repo().insert(token)
+      # TODO rescue from creation errors
+      access_tokens().create(%{
+        client: client,
+        resource_owner: resource_owner,
+        scope: scope,
+      }, refresh_token: true)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest do
   import Boruta.Oauth.Authorization.Base
-  import Boruta.Config, only: [repo: 0]
+  import Boruta.Config, only: [access_tokens: 0]
 
   alias Boruta.Oauth.AuthorizationCodeRequest
   alias Boruta.Oauth.Token
@@ -75,20 +74,20 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
   }) do
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
          {:ok, code} <- code(%{value: code, redirect_uri: redirect_uri}),
-         {:ok, resource_owner} <- resource_owner(id: code.resource_owner_id) do
-      token = Token.resource_owner_with_refresh_token_changeset(
-        %Token{client: client, resource_owner: resource_owner},
-        %{client_id: client.id, resource_owner_id: resource_owner.id, scope: code.scope}
-      )
-
-      repo().insert(token)
+         {:ok, resource_owner} <- resource_owner(resource_owner: code.resource_owner) do
+      # TODO rescue from creation errors
+      access_tokens().create(%{
+        client: client,
+        resource_owner: resource_owner,
+        scope: code.scope,
+      }, refresh_token: true)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
   import Boruta.Oauth.Authorization.Base
-  import Boruta.Config, only: [repo: 0]
+  import Boruta.Config, only: [access_tokens: 0]
 
   alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Token
@@ -102,23 +101,22 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
-         {:ok, resource_owner} <- resource_owner(resource_owner),
+         {:ok, resource_owner} <- resource_owner(resource_owner: resource_owner),
          {:ok, scope} <- scope(scope: scope, against: %{client: client, resource_owner: resource_owner}) do
-      token = Token.resource_owner_changeset(%Token{resource_owner: resource_owner, client: client}, %{
-        client_id: client.id,
-        resource_owner_id: resource_owner.id,
+      # TODO rescue from creation errors
+      access_tokens().create(%{
+        client: client,
+        resource_owner: resource_owner,
+        scope: scope,
         state: state,
-        scope: scope
-      })
-
-      repo().insert(token)
+      }, refresh_token: false)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
   import Boruta.Oauth.Authorization.Base
-  import Boruta.Config, only: [repo: 0]
+  import Boruta.Config, only: [codes: 0]
 
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.Token
@@ -132,24 +130,22 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
   }) do
 
     with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
-         {:ok, resource_owner} <- resource_owner(resource_owner),
+         {:ok, resource_owner} <- resource_owner(resource_owner: resource_owner),
          {:ok, scope} <- scope(scope: scope, against: %{client: client}) do
-      token = Token.code_changeset(%Token{resource_owner: resource_owner, client: client}, %{
-        client_id: client.id,
-        resource_owner_id: resource_owner.id,
-        redirect_uri: redirect_uri,
+      # TODO rescue from creation errors
+      codes().create(%{
+        client: client,
+        resource_owner: resource_owner,
         state: state,
         scope: scope
       })
-
-      repo().insert(token)
     end
   end
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.RefreshTokenRequest do
   import Boruta.Oauth.Authorization.Base
-  import Boruta.Config, only: [repo: 0]
+  import Boruta.Config, only: [access_tokens: 0]
 
   alias Boruta.Oauth.RefreshTokenRequest
   alias Boruta.Oauth.Token
@@ -163,19 +159,16 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.RefreshTokenRequest do
 
     with {:ok, _} <- client(id: client_id, secret: client_secret),
          {:ok, %Token{
-           client_id: client_id,
-           resource_owner_id: resource_owner_id,
            client: client,
            resource_owner: resource_owner
          } = token} <- access_token(refresh_token: refresh_token),
          {:ok, scope} <- scope(scope: scope, against: %{token: token}) do
-      token = Token.refresh_token_changeset(%Token{resource_owner: resource_owner, client: client}, %{
-        client_id: client_id,
-        resource_owner_id: resource_owner_id,
+      # TODO rescue from creation errors
+      access_tokens().create(%{
+        client: client,
+        resource_owner: resource_owner,
         scope: scope
-      })
-
-      repo().insert(token)
+      }, refresh_token: true)
     end
   end
 end
