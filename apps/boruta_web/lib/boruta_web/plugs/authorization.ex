@@ -14,7 +14,7 @@ defmodule BorutaWeb.AuthorizationPlug do
 
   def call(conn, required_scopes) do
     with ["Bearer " <> value] <- get_req_header(conn, "authorization"),
-         {:ok, %Token{scope: scope} = token} <- Authorization.Base.access_token(value: value),
+         {:ok, %Token{scope: scope} = token} <- Authorization.AccessToken.authorize(value: value),
          {:ok, _} <- validate_scopes(scope, required_scopes)
     do
       assign(conn, :token, token)
