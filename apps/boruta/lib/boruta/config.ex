@@ -44,6 +44,7 @@ defmodule Boruta.Config do
       resource_owner: Boruta.ResourceOwners
     }
 
+  @doc false
   def oauth_config do
       Keyword.merge(
         @defaults,

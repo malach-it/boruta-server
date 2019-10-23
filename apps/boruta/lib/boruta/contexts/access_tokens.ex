@@ -7,7 +7,6 @@ defmodule Boruta.AccessTokens do
 
   alias Boruta.Clients
   alias Boruta.Oauth
-  alias Boruta.ResourceOwners
 
   @impl Boruta.Oauth.AccessTokens
   def get_by(value: value) do

@@ -1,11 +1,20 @@
 defmodule Boruta.Oauth.Authorization.Code do
-  @moduledoc false
+  @moduledoc """
+  Code authorization
+  """
 
   import Boruta.Config, only: [codes: 0]
 
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Token
 
+  @doc """
+  Authorize the code corresponding to the given params.
+
+  ## Examples
+      iex> authorize(value: "value", redirect_uri: "redirect_uri")
+      {:ok, %Boruta.Oauth.Token{...}}
+  """
   @spec authorize(%{
     value: String.t(),
     redirect_uri: String.t()

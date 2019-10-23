@@ -15,7 +15,7 @@ defmodule Boruta do
 
   Boruta need a migration for its schemas and persist both tokens and clients. This can be done by running
   ```
-  mix boruta.gen.migration --with-pow
+  mix boruta.gen.migration --with-accounts
   ```
 
   2. __Configuration__

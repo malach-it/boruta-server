@@ -61,7 +61,11 @@ defmodule Boruta.MixProject do
       groups_for_modules: [
         "Authorization": [
           Boruta.Oauth.Authorization,
-          Boruta.Oauth.Authorization.Base
+          Boruta.Oauth.Authorization.AccessToken,
+          Boruta.Oauth.Authorization.Client,
+          Boruta.Oauth.Authorization.Code,
+          Boruta.Oauth.Authorization.ResourceOwner,
+          Boruta.Oauth.Authorization.Scope
         ],
         "Introspection": [
           Boruta.Oauth.Introspect

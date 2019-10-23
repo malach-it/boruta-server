@@ -1,11 +1,20 @@
 defmodule Boruta.Oauth.Authorization.Client do
-  @moduledoc false
+  @moduledoc """
+  Client authorization
+  """
 
   import Boruta.Config, only: [clients: 0]
 
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Error
 
+  @doc """
+  Authorize the client corresponding to the given params.
+
+  ## Examples
+      iex> authorize(id: "id", secret: "secret")
+      {:ok, %Boruta.Oauth.Client{...}}
+  """
   @spec authorize(
     [id: String.t(), secret: String.t()] |
     [id: String.t(), redirect_uri: String.t()]

@@ -6,6 +6,7 @@ defmodule Boruta.Oauth.Introspect do
   alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.IntrospectRequest
+  alias Boruta.Oauth.Token
 
   @doc """
   Build an introspect response for the given `IntrospectRequest`
@@ -24,11 +25,11 @@ defmodule Boruta.Oauth.Introspect do
     client_secret: String.t(),
     token: String.t()
   }) ::
-  {:ok, response :: map()} |
+  {:ok, token :: Token.t()} |
   {:error , error :: Error.t()}
   def token(%IntrospectRequest{client_id: client_id, client_secret: client_secret, token: token}) do
-    with {:ok, _client} <- Authorization.Base.client(id: client_id, secret: client_secret),
-         {:ok, token} <- Authorization.Base.access_token(value: token) do
+    with {:ok, _client} <- Authorization.Client.authorize(id: client_id, secret: client_secret),
+         {:ok, token} <- Authorization.AccessToken.authorize(value: token) do
       {:ok, token}
     else
       {:error, %Error{} = error} -> {:error, error}

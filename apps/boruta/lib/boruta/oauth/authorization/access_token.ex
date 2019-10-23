@@ -1,11 +1,20 @@
 defmodule Boruta.Oauth.Authorization.AccessToken do
-  @moduledoc false
+  @moduledoc """
+  Access token authorization
+  """
 
   import Boruta.Config, only: [access_tokens: 0]
 
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Token
 
+  @doc """
+  Authorize the access token corresponding to the given params.
+
+  ## Examples
+      iex> authorize(%{value: "value"})
+      {:ok, %Boruta.Oauth.Token{...}}
+  """
   @spec authorize(params ::
     [value: String.t()] |
     [refresh_token: String.t()]

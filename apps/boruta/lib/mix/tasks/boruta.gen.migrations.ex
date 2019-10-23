@@ -2,16 +2,16 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
   @moduledoc """
   Migration task for Boruta.
 
-  Creates `clients`, `tokens` tables. It can also create migration for boruta Accounts (users) with `--with-pow` arg.
+  Creates `clients`, `tokens` tables. It can also create migration for boruta Accounts (users) with `--with-accounts` arg.
 
   ## Examples
   ```
   mix boruta.gen.migration
-  mix boruta.gen.migration --with-pow
+  mix boruta.gen.migration --with-accounts
   ```
 
   ## Command line options
-  - `--with-pow` - creates Boruta Accounts (users) migration
+  - `--with-accounts` - creates Boruta Accounts (users) migration
 
   """
 
@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
       file = Path.join(path, "#{timestamp()}_create_boruta.exs")
       assigns = [
         mod: Module.concat([repo, Migrations, "CreateBoruta"]),
-        pow: Enum.member?(args, "--with-pow")
+        accounts: Enum.member?(args, "--with-accounts")
       ]
 
       fuzzy_path = Path.join(path, "*_create_boruta.exs")
@@ -104,7 +104,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:client_id, references(:clients, type: :uuid, on_delete: :delete_all))
         add(:scope_id, references(:scopes, type: :uuid, on_delete: :delete_all))
       end
-      <%= if @pow do %>
+      <%= if @accounts do %>
       create table(:users, primary_key: false) do
         add :id, :uuid, primary_key: true
 

@@ -1,10 +1,19 @@
 defmodule Boruta.Oauth.Authorization.ResourceOwner do
-  @moduledoc false
+  @moduledoc """
+  Resource owner authorization
+  """
 
   import Boruta.Config, only: [resource_owners: 0]
 
   alias Boruta.Oauth.Error
 
+  @doc """
+  Authorize the resource owner corresponding to the given params.
+
+  ## Examples
+      iex> authorize(id: "id")
+      {:ok, %User{...}}
+  """
   @spec authorize(
     [id: String.t()] |
     [email: String.t(), password: String.t()] |

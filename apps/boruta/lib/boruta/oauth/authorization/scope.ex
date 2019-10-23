@@ -1,5 +1,7 @@
 defmodule Boruta.Oauth.Authorization.Scope do
-  @moduledoc false
+  @moduledoc """
+  Scope authorization
+  """
 
   alias Boruta.Accounts.User
   alias Boruta.Oauth.Client

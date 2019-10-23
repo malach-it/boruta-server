@@ -10,9 +10,9 @@ defprotocol Boruta.Oauth.Authorization do
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest do
-  import Boruta.Oauth.Authorization.Base
   import Boruta.Config, only: [access_tokens: 0]
 
+  alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.ClientCredentialsRequest
   alias Boruta.Oauth.Token
 
@@ -21,8 +21,8 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
     client_secret: client_secret,
     scope: scope
   }) do
-    with {:ok, client} <- client(id: client_id, secret: client_secret),
-         {:ok, scope} <- scope(scope: scope, against: %{client: client}) do
+    with {:ok, client} <- Authorization.Client.authorize(id: client_id, secret: client_secret),
+         {:ok, scope} <- Authorization.Scope.authorize(scope: scope, against: %{client: client}) do
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
@@ -33,9 +33,9 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
-  import Boruta.Oauth.Authorization.Base
   import Boruta.Config, only: [access_tokens: 0]
 
+  alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.PasswordRequest
   alias Boruta.Oauth.Token
 
@@ -47,9 +47,12 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
     scope: scope
   }) do
 
-    with {:ok, client} <- client(id: client_id, secret: client_secret),
-         {:ok, resource_owner} <- resource_owner(username: username, password: password),
-         {:ok, scope} <- scope(scope: scope, against: %{client: client, resource_owner: resource_owner}) do
+    with {:ok, client} <- Authorization.Client.authorize(id: client_id, secret: client_secret),
+         {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(username: username, password: password),
+         {:ok, scope} <- Authorization.Scope.authorize(
+           scope: scope,
+           against: %{client: client, resource_owner: resource_owner}
+         ) do
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
@@ -61,9 +64,9 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.PasswordRequest do
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest do
-  import Boruta.Oauth.Authorization.Base
   import Boruta.Config, only: [access_tokens: 0]
 
+  alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.AuthorizationCodeRequest
   alias Boruta.Oauth.Token
 
@@ -72,9 +75,9 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
     code: code,
     redirect_uri: redirect_uri,
   }) do
-    with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
-         {:ok, code} <- code(%{value: code, redirect_uri: redirect_uri}),
-         {:ok, resource_owner} <- resource_owner(resource_owner: code.resource_owner) do
+    with {:ok, client} <- Authorization.Client.authorize(id: client_id, redirect_uri: redirect_uri),
+         {:ok, code} <- Authorization.Code.authorize(%{value: code, redirect_uri: redirect_uri}),
+         {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(resource_owner: code.resource_owner) do
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
@@ -86,9 +89,9 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
-  import Boruta.Oauth.Authorization.Base
   import Boruta.Config, only: [access_tokens: 0]
 
+  alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Token
 
@@ -100,9 +103,12 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
     scope: scope
   }) do
 
-    with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
-         {:ok, resource_owner} <- resource_owner(resource_owner: resource_owner),
-         {:ok, scope} <- scope(scope: scope, against: %{client: client, resource_owner: resource_owner}) do
+    with {:ok, client} <- Authorization.Client.authorize(id: client_id, redirect_uri: redirect_uri),
+         {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(resource_owner: resource_owner),
+         {:ok, scope} <- Authorization.Scope.authorize(
+           scope: scope,
+           against: %{client: client, resource_owner: resource_owner}
+         ) do
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
@@ -115,9 +121,9 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
-  import Boruta.Oauth.Authorization.Base
   import Boruta.Config, only: [codes: 0]
 
+  alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.Token
 
@@ -129,9 +135,9 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
     scope: scope
   }) do
 
-    with {:ok, client} <- client(id: client_id, redirect_uri: redirect_uri),
-         {:ok, resource_owner} <- resource_owner(resource_owner: resource_owner),
-         {:ok, scope} <- scope(scope: scope, against: %{client: client}) do
+    with {:ok, client} <- Authorization.Client.authorize(id: client_id, redirect_uri: redirect_uri),
+         {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(resource_owner: resource_owner),
+         {:ok, scope} <- Authorization.Scope.authorize(scope: scope, against: %{client: client}) do
       # TODO rescue from creation errors
       codes().create(%{
         client: client,
@@ -144,9 +150,9 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
 end
 
 defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.RefreshTokenRequest do
-  import Boruta.Oauth.Authorization.Base
   import Boruta.Config, only: [access_tokens: 0]
 
+  alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.RefreshTokenRequest
   alias Boruta.Oauth.Token
 
@@ -157,12 +163,12 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.RefreshTokenRequest do
     scope: scope
   }) do
 
-    with {:ok, _} <- client(id: client_id, secret: client_secret),
+    with {:ok, _} <- Authorization.Client.authorize(id: client_id, secret: client_secret),
          {:ok, %Token{
            client: client,
            resource_owner: resource_owner
-         } = token} <- access_token(refresh_token: refresh_token),
-         {:ok, scope} <- scope(scope: scope, against: %{token: token}) do
+         } = token} <- Authorization.AccessToken.authorize(refresh_token: refresh_token),
+         {:ok, scope} <- Authorization.Scope.authorize(scope: scope, against: %{token: token}) do
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
