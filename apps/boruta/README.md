@@ -15,7 +15,7 @@ A live example can be found [here](https://boruta.herokuapp.com/)
 
 Boruta need a migration for its schemas and persist both tokens and clients. This can be done by running
 ```
-mix boruta.gen.migration --with-coherence
+mix boruta.gen.migration --with-accounts
 ```
 
 2. __Configuration__
@@ -31,7 +31,15 @@ config :boruta, Boruta.Oauth,
   token_generator: Boruta.TokenGenerator,
   secret_key_base: System.get_env("SECRET_KEY_BASE"),
   resource_owner: %{
-    schema: Boruta.Coherence.User
+    schema: Boruta.Accounts.User,
+    checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
+  },
+  contexts: %{
+    client: Boruta.Clients,
+    scope: Boruta.Scopes,
+    access_token: Boruta.AccessTokens,
+    code: Boruta.Codes,
+    resource_owner: Boruta.ResourceOwners
   }
 ```
 
