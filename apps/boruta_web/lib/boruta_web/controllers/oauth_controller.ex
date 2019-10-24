@@ -4,7 +4,10 @@ defmodule BorutaWeb.OauthController do
   use BorutaWeb, :controller
 
   alias Boruta.Oauth
+  alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
+  alias Boruta.Oauth.IntrospectResponse
+  alias Boruta.Oauth.TokenResponse
   alias BorutaWeb.OauthView
 
   action_fallback BorutaWeb.FallbackController
@@ -14,18 +17,13 @@ defmodule BorutaWeb.OauthController do
   end
 
   @impl Boruta.Oauth.Application
-  def introspect_success(conn, token) do
+  def introspect_success(conn, %IntrospectResponse{} = response) do
     conn
     |> put_view(OauthView)
-    |> render("introspect.json", token: token)
+    |> render("introspect.json", response: response)
   end
 
   @impl Boruta.Oauth.Application
-  def introspect_error(conn, %Error{error: :invalid_access_token}) do
-    conn
-    |> put_view(OauthView)
-    |> render("introspect.json", active: false)
-  end
   def introspect_error(conn, %Error{status: status, error: error, error_description: error_description}) do
     conn
     |> put_status(status)
@@ -38,10 +36,10 @@ defmodule BorutaWeb.OauthController do
   end
 
   @impl Boruta.Oauth.Application
-  def token_success(conn, %Boruta.Oauth.Token{} = token) do
+  def token_success(conn, %TokenResponse{} = response) do
     conn
     |> put_view(OauthView)
-    |> render("token.json", token: token)
+    |> render("token.json", response: response)
   end
 
   @impl Boruta.Oauth.Application
@@ -57,37 +55,26 @@ defmodule BorutaWeb.OauthController do
   end
 
   @impl Boruta.Oauth.Application
-  def authorize_success(conn, %Boruta.Oauth.Token{type: "access_token", expires_at: expires_at, value: value, client: client, state: "" <> state}) do
-    {:ok, expires_at} = DateTime.from_unix(expires_at)
-    expires_in =  DateTime.diff(expires_at, DateTime.utc_now)
-
-    query = URI.encode_query(%{access_token: value, expires_in: expires_in, state: state})
-    url = "#{client.redirect_uri}##{query}"
-    conn
-    |> delete_session(:oauth_request)
-    |> redirect(external: url)
-  end
-  def authorize_success(conn, %Boruta.Oauth.Token{type: "access_token", expires_at: expires_at, value: value, client: client}) do
-    {:ok, expires_at} = DateTime.from_unix(expires_at)
-    expires_in =  DateTime.diff(expires_at, DateTime.utc_now)
-
-    query = URI.encode_query(%{access_token: value, expires_in: expires_in})
-    url = "#{client.redirect_uri}##{query}"
-    conn
-    |> delete_session(:oauth_request)
-    |> redirect(external: url)
-  end
-
-  def authorize_success(conn, %Boruta.Oauth.Token{type: "code", client: client, value: value, state: "" <> state}) do
-    query = URI.encode_query(%{code: value, state: state})
-    url = "#{client.redirect_uri}?#{query}"
-    conn
-    |> delete_session(:oauth_request)
-    |> redirect(external: url)
-  end
-  def authorize_success(conn, %Boruta.Oauth.Token{type: "code", client: client, value: value}) do
-    query = URI.encode_query(%{code: value})
-    url = "#{client.redirect_uri}?#{query}"
+  def authorize_success(
+    conn,
+    %AuthorizeResponse{
+      type: type,
+      redirect_uri: redirect_uri,
+      value: value,
+      expires_in: expires_in,
+      state: state
+    }
+  ) do
+    query = case {type, state} do
+      {"access_token", nil} -> URI.encode_query(%{access_token: value, expires_in: expires_in})
+      {"access_token", state} -> URI.encode_query(%{access_token: value, expires_in: expires_in, state: state})
+      {"code", nil} -> URI.encode_query(%{code: value})
+      {"code", state} -> URI.encode_query(%{code: value, state: state})
+    end
+    url = case type do
+      "access_token" -> "#{redirect_uri}##{query}"
+      "code" -> "#{redirect_uri}?#{query}"
+    end
     conn
     |> delete_session(:oauth_request)
     |> redirect(external: url)
@@ -113,26 +100,17 @@ defmodule BorutaWeb.OauthController do
     %Error{
       error: error,
       error_description: error_description,
-      format: :query,
+      format: format,
       redirect_uri: redirect_uri
     }
-  ) do
+  ) when not is_nil(format) do
     query = URI.encode_query(%{error: error, error_description: error_description})
+    url = case format do
+      :query -> "#{redirect_uri}?#{query}"
+      :fragment -> "#{redirect_uri}##{query}"
+    end
     conn
-    |> redirect(external: "#{redirect_uri}?#{query}")
-  end
-  def authorize_error(
-    conn,
-    %Error{
-      error: error,
-      error_description: error_description,
-      format: :fragment,
-      redirect_uri: redirect_uri
-    }
-  ) do
-    fragment = URI.encode_query(%{error: error, error_description: error_description})
-    conn
-    |> redirect(external: "#{redirect_uri}##{fragment}")
+    |> redirect(external: url)
   end
   def authorize_error(
     conn,

@@ -17,7 +17,7 @@ defmodule Boruta.Oauth.Application do
   @doc """
   This function will be triggered in case of success triggering `Boruta.Oauth.authorize/2`
   """
-  @callback authorize_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.Token.t())  :: any()
+  @callback authorize_success(conn :: Plug.Conn.t(), token :: Boruta.Oauth.AuthorizeResponse.t())  :: any()
   @doc """
   This function will be triggered in case of failure triggering `Boruta.Oauth.authorize/2`
   """

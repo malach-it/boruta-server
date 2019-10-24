@@ -11,7 +11,7 @@ defmodule Boruta.OauthTest.IntrospectTest do
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.Token
+  alias Boruta.Oauth.IntrospectResponse
 
   describe "introspect request" do
     setup do
@@ -59,13 +59,18 @@ defmodule Boruta.OauthTest.IntrospectTest do
       assert Oauth.introspect(%{
         body_params: %{"token" => "token"},
         req_headers: [{"authorization", authorization_header}]
-      }, ApplicationMock) == {:introspect_error, %Boruta.Oauth.Error{
-        error: :invalid_access_token,
-        error_description: "Provided access token is invalid.",
-        format: nil,
-        redirect_uri: nil,
-        status: :bad_request
-      }}
+      }, ApplicationMock) == {:introspect_success,
+        %IntrospectResponse{
+          active: false,
+          client_id: nil,
+          exp: nil,
+          iat: nil,
+          iss: "boruta",
+          scope: nil,
+          sub: nil,
+          username: nil
+        }
+      }
     end
 
     test "returns a token introspected if token is active", %{client: client, token: token} do
@@ -74,8 +79,24 @@ defmodule Boruta.OauthTest.IntrospectTest do
         body_params: %{"token" => token.value},
         req_headers: [{"authorization", authorization_header}]
       }, ApplicationMock) do
-        {:introspect_success, %Token{} = response_token} ->
-          assert response_token == token
+        {:introspect_success, %IntrospectResponse{
+          active: active,
+          client_id: client_id,
+          exp: exp,
+          iat: iat,
+          iss: iss,
+          scope: scope,
+          sub: sub,
+          username: username
+        }} ->
+          assert active
+          assert client_id
+          assert exp
+          assert iat
+          assert iss
+          assert scope
+          assert sub
+          assert username
         _ -> assert false
       end
     end

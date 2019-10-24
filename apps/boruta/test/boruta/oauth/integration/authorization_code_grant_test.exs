@@ -9,8 +9,9 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
   alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
+  alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.Token
+  alias Boruta.Oauth.TokenResponse
 
   describe "authorization code grant - authorize" do
     setup do
@@ -100,18 +101,15 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         assigns: %{current_user: resource_owner}
       }, ApplicationMock) do
         {:authorize_success,
-          %Token{
-            type: "code",
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
+          %AuthorizeResponse{
+            type: type,
             value: value,
-            refresh_token: refresh_token
+            expires_in: expires_in
           }
         } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
+          assert type == "code"
           assert value
-          assert !refresh_token
+          assert expires_in
         _ ->
           assert false
       end
@@ -129,18 +127,15 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         assigns: %{current_user: resource_owner}
       }, ApplicationMock) do
         {:authorize_success,
-          %Boruta.Oauth.Token{
-            type: "code",
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
+          %AuthorizeResponse{
+            type: type,
             value: value,
-            scope: scope
+            expires_in: expires_in
           }
         } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
+          assert type == "code"
           assert value
-          assert scope == given_scope
+          assert expires_in
         _ ->
           assert false
       end
@@ -177,18 +172,15 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         assigns: %{current_user: resource_owner}
       }, ApplicationMock) do
         {:authorize_success,
-          %Boruta.Oauth.Token{
-            type: "code",
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
+          %AuthorizeResponse{
+            type: type,
             value: value,
-            scope: scope
+            expires_in: expires_in
           }
         } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
+          assert type == "code"
           assert value
-          assert scope == given_scope
+          assert expires_in
         _ ->
           assert false
       end
@@ -225,17 +217,16 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         assigns: %{current_user: resource_owner}
       }, ApplicationMock) do
         {:authorize_success,
-          %Boruta.Oauth.Token{
-            type: "code",
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
+          %AuthorizeResponse{
+            type: type,
             value: value,
+            expires_in: expires_in,
             state: state
           }
         } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
+          assert type == "code"
           assert value
+          assert expires_in
           assert state == given_state
         _ ->
           assert false
@@ -399,16 +390,16 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Boruta.Oauth.Token{
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
-            value: value,
+          %TokenResponse{
+            token_type: token_type,
+            access_token: access_token,
+            expires_in: expires_in,
             refresh_token: refresh_token
           }
         } ->
-          assert resource_owner_id == code.resource_owner_id
-          assert client_id == client.id
-          assert value
+          assert token_type == "bearer"
+          assert access_token
+          assert expires_in
           assert refresh_token
         _ ->
           assert false
@@ -430,17 +421,17 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Boruta.Oauth.Token{
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
-            value: value,
-            scope: scope
+          %TokenResponse{
+            token_type: token_type,
+            access_token: access_token,
+            expires_in: expires_in,
+            refresh_token: refresh_token
           }
         } ->
-          assert resource_owner_id == code.resource_owner_id
-          assert client_id == client.id
-          assert value
-          assert scope == code.scope
+          assert token_type == "bearer"
+          assert access_token
+          assert expires_in
+          assert refresh_token
         _ ->
           assert false
       end

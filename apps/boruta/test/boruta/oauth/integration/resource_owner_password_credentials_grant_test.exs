@@ -11,7 +11,7 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Scope
-  alias Boruta.Oauth.Token
+  alias Boruta.Oauth.TokenResponse
 
   describe "resource owner password credentials grant" do
     setup do
@@ -112,16 +112,16 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Token{
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
-            value: value,
+          %TokenResponse{
+            token_type: token_type,
+            access_token: access_token,
+            expires_in: expires_in,
             refresh_token: refresh_token
           }
         } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
-          assert value
+          assert token_type == "bearer"
+          assert access_token
+          assert expires_in
           assert refresh_token
         _ ->
           assert false
@@ -139,17 +139,17 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Boruta.Oauth.Token{
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
-            value: value,
-            scope: scope
+          %TokenResponse{
+            token_type: token_type,
+            access_token: access_token,
+            expires_in: expires_in,
+            refresh_token: refresh_token
           }
         } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
-          assert value
-          assert scope == given_scope
+          assert token_type == "bearer"
+          assert access_token
+          assert expires_in
+          assert refresh_token
         _ ->
           assert false
       end

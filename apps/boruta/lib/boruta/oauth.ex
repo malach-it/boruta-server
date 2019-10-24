@@ -6,9 +6,13 @@ defmodule Boruta.Oauth do
   """
 
   alias Boruta.Oauth.Authorization
+  alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Introspect
+  alias Boruta.Oauth.IntrospectResponse
   alias Boruta.Oauth.Request
+  alias Boruta.Oauth.Token
+  alias Boruta.Oauth.TokenResponse
 
   @doc """
   Triggers `token_success` in case of success and `token_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
@@ -17,7 +21,10 @@ defmodule Boruta.Oauth do
   def token(conn, module) do
     with {:ok, request} <- Request.token_request(conn),
          {:ok, token} <- Authorization.token(request) do
-      module.token_success(conn, token)
+      module.token_success(
+        conn,
+        TokenResponse.from_token(token)
+      )
     else
       {:error, %Error{} = error} ->
         module.token_error(conn, error)
@@ -33,7 +40,10 @@ defmodule Boruta.Oauth do
   def authorize(conn, module) do
     with {:ok, request} <- Request.authorize_request(conn),
          {:ok, token} <- Authorization.token(request) do
-      module.authorize_success(conn, token)
+      module.authorize_success(
+        conn,
+        AuthorizeResponse.from_token(token)
+      )
     else
       {:error, %Error{} = error} ->
         case Request.authorize_request(conn) do
@@ -51,9 +61,11 @@ defmodule Boruta.Oauth do
   @spec introspect(conn :: Plug.Conn.t() | map(), module :: atom()) :: any()
   def introspect(conn, module) do
     with {:ok, request} <- Request.introspect_request(conn),
-         {:ok, response} <- Introspect.token(request) do
-      module.introspect_success(conn, response)
+         {:ok, token} <- Introspect.token(request) do
+      module.introspect_success(conn, IntrospectResponse.from_token(token))
     else
+      {:error, %Error{error: :invalid_access_token} = error} ->
+        module.introspect_success(conn, IntrospectResponse.from_error(error))
       {:error, %Error{} = error} ->
         module.introspect_error(conn, error)
     end

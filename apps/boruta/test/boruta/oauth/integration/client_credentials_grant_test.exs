@@ -8,7 +8,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.Token
+  alias Boruta.Oauth.TokenResponse
 
   describe "client credentials grant" do
     setup do
@@ -63,14 +63,16 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Token{
-            client: %{id: client_id},
-            value: value,
+          %TokenResponse{
+            token_type: token_type,
+            access_token: access_token,
+            expires_in: expires_in,
             refresh_token: refresh_token
           }
         } ->
-          assert client_id == client.id
-          assert value
+          assert token_type == "bearer"
+          assert access_token
+          assert expires_in
           assert refresh_token
         _ ->
           assert false
@@ -91,15 +93,17 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Token{
-            client: %{id: client_id},
-            scope: scope,
-            value: value
+          %TokenResponse{
+            token_type: token_type,
+            access_token: access_token,
+            expires_in: expires_in,
+            refresh_token: refresh_token
           }
         } ->
-          assert client_id == client.id
-          assert value
-          assert scope == given_scope
+          assert token_type == "bearer"
+          assert access_token
+          assert expires_in
+          assert refresh_token
         _ ->
           assert false
       end
@@ -142,15 +146,17 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
         ApplicationMock
       ) do
         {:token_success,
-          %Token{
-            client: %{id: client_id},
-            scope: scope,
-            value: value
+          %TokenResponse{
+            token_type: token_type,
+            access_token: access_token,
+            expires_in: expires_in,
+            refresh_token: refresh_token
           }
         } ->
-          assert client_id == client.id
-          assert value
-          assert scope == given_scope
+          assert token_type == "bearer"
+          assert access_token
+          assert expires_in
+          assert refresh_token
         _ ->
           assert false
       end

@@ -15,7 +15,6 @@ defmodule Boruta.Oauth.Authorization.ResourceOwner do
       {:ok, %User{...}}
   """
   @spec authorize(
-    [id: String.t()] |
     [email: String.t(), password: String.t()] |
     [resource_owner: struct()]
   ) ::
@@ -28,18 +27,6 @@ defmodule Boruta.Oauth.Authorization.ResourceOwner do
        :status => :unauthorized
      }}
     | {:ok, user :: struct()}
-  def authorize(id: id) do
-    case resource_owners().get(id) do
-      nil ->
-        {:error, %Error{
-          status: :unauthorized,
-          error: :invalid_resource_owner,
-          error_description: "User not found."
-        }}
-      resource_owner ->
-        {:ok, resource_owner}
-    end
-  end
   def authorize(username: username, password: password) do
     case resource_owners().get_by(username: username, password: password) do
       nil ->

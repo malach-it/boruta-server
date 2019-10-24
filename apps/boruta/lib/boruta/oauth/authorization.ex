@@ -16,11 +16,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.ClientCredentialsRequest d
   alias Boruta.Oauth.ClientCredentialsRequest
   alias Boruta.Oauth.Token
 
-  def token(%ClientCredentialsRequest{
-    client_id: client_id,
-    client_secret: client_secret,
-    scope: scope
-  }) do
+  def token(%ClientCredentialsRequest{client_id: client_id, client_secret: client_secret, scope: scope}) do
     with {:ok, client} <- Authorization.Client.authorize(id: client_id, secret: client_secret),
          {:ok, scope} <- Authorization.Scope.authorize(scope: scope, against: %{client: client}) do
       # TODO rescue from creation errors

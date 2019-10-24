@@ -61,109 +61,61 @@ defmodule Boruta.Config do
 
   @doc false
   defmacro access_token_expires_in do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :expires_in)[:access_token]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :expires_in)[:access_token]
   end
 
   @doc false
   defmacro authorization_code_expires_in do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :expires_in)[:authorization_code]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :expires_in)[:authorization_code]
   end
 
   @doc false
   defmacro token_generator do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :token_generator)
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :token_generator)
   end
 
   @doc false
   defmacro secret_key_base do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :secret_key_base)
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :secret_key_base)
   end
 
   @doc false
   defmacro resource_owner_schema do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :resource_owner)[:schema]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :resource_owner)[:schema]
   end
 
   @doc false
   defmacro clients do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :contexts)[:client]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :contexts)[:client]
   end
 
   @doc false
   defmacro scopes do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :contexts)[:scope]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :contexts)[:scope]
   end
 
   @doc false
   defmacro access_tokens do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :contexts)[:access_token]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :contexts)[:access_token]
   end
 
   @doc false
   defmacro codes do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :contexts)[:code]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :contexts)[:code]
   end
 
   @doc false
   defmacro resource_owners do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :contexts)[:resource_owner]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :contexts)[:resource_owner]
   end
 
   @doc false
   defmacro user_checkpw_method do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :resource_owner)[:checkpw_method]
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :resource_owner)[:checkpw_method]
   end
 
   @doc false
   defmacro repo do
-    quote bind_quoted: [
-      result: Keyword.fetch!(oauth_config(), :repo)
-    ] do
-      result
-    end
+    Keyword.fetch!(oauth_config(), :repo)
   end
 end

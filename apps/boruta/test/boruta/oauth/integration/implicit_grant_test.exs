@@ -7,8 +7,8 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
   alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
+  alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.Token
 
   describe "implicit grant" do
     setup do
@@ -109,17 +109,15 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         ApplicationMock
       ) do
         {:authorize_success,
-          %Token{
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
+          %AuthorizeResponse{
+            type: type,
             value: value,
-            refresh_token: refresh_token
+            expires_in: expires_in
           }
         } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
+          assert type == "access_token"
           assert value
-          assert !refresh_token
+          assert expires_in
         _ ->
           assert false
       end
@@ -142,17 +140,15 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         ApplicationMock
       ) do
         {:authorize_success,
-          %Token{
-            resource_owner: %{id: resource_owner_id},
-            client: %{id: client_id},
+          %AuthorizeResponse{
+            type: type,
             value: value,
-            scope: scope
+            expires_in: expires_in
           }
         } ->
-          assert resource_owner_id == resource_owner.id
-          assert client_id == client.id
+          assert type == "access_token"
           assert value
-          assert scope == given_scope
+          assert expires_in
         _ ->
           assert false
       end

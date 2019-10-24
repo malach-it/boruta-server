@@ -59,6 +59,11 @@ defmodule Boruta.MixProject do
       main: "Boruta",
       source_url: "https://gitlab.com/patatoid/boruta-core",
       groups_for_modules: [
+        "Responses": [
+          Boruta.Oauth.AuthorizeResponse,
+          Boruta.Oauth.TokenResponse,
+          Boruta.Oauth.IntrospectResponse
+        ],
         "Authorization": [
           Boruta.Oauth.Authorization,
           Boruta.Oauth.Authorization.AccessToken,
