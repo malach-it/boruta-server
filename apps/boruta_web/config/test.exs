@@ -8,4 +8,5 @@ use Mix.Config
 # you can enable the server option below.
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: 4002],
-  server: false
+  server: false,
+  secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"

@@ -11,7 +11,6 @@ defmodule Boruta.Oauth do
   alias Boruta.Oauth.Introspect
   alias Boruta.Oauth.IntrospectResponse
   alias Boruta.Oauth.Request
-  alias Boruta.Oauth.Token
   alias Boruta.Oauth.TokenResponse
 
   @doc """

@@ -22,7 +22,16 @@ config :boruta_web, BorutaWeb.Endpoint,
       "--watch",
       cd: Path.expand("../assets", __DIR__)
     ]
-  ]
+  ],
+  live_reload: [
+    patterns: [
+      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"priv/gettext/.*(po)$",
+      ~r"lib/boruta_web/{live,views}/.*(ex)$",
+      ~r"lib/boruta_web/templates/.*(eex)$"
+    ]
+  ],
+  secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
 
 # ## SSL Support
 #
@@ -49,12 +58,3 @@ config :boruta_web, BorutaWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :boruta_web, BorutaWeb.Endpoint,
-  live_reload: [
-    patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
-      ~r"priv/gettext/.*(po)$",
-      ~r"lib/boruta_web/{live,views}/.*(ex)$",
-      ~r"lib/boruta_web/templates/.*(eex)$"
-    ]
-  ]

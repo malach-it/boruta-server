@@ -35,6 +35,11 @@ defmodule BorutaWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
 
+  plug :put_secret_key_base
+  def put_secret_key_base(conn, _) do
+    put_in conn.secret_key_base, Application.get_env(:boruta_web, BorutaWeb.Endpoint)[:secret_key_base]
+  end
+
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
