@@ -6,13 +6,13 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
   alias Boruta.Client
 
   @create_attrs %{
-    redirect_uri: "http://redirect.uri"
+    redirect_uris: ["http://redirect.uri"]
   }
   @update_attrs %{
-    redirect_uri: "http://updated.redirect.uri"
+    redirect_uris: ["http://updated.redirect.uri"]
   }
   @invalid_attrs %{
-    redirect_uri: "bad_uri"
+    redirect_uris: ["bad_uri"]
   }
 
   setup %{conn: conn} do
@@ -74,7 +74,6 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
              } = json_response(conn, 200)["data"]
     end
 
-    @tag :skip
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post(conn, Routes.admin_client_path(conn, :create), client: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
@@ -102,7 +101,6 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
              } = json_response(conn, 200)["data"]
     end
 
-    @tag :skip
     test "renders errors when data is invalid", %{conn: conn, client: client} do
       conn = put(conn, Routes.admin_client_path(conn, :update, client), client: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}

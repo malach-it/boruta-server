@@ -3,13 +3,18 @@ import Scope from '@/models/scope.model'
 
 const defaults = {
   authorize_scopes: false,
-  authorized_scopes: []
+  authorized_scopes: [],
+  redirect_uris: []
 }
 
 const assign = {
   id: function ({ id }) { this.id = id },
   secret: function ({ secret }) { this.secret = secret },
-  redirect_uri: function ({ redirect_uri }) { this.redirect_uri = redirect_uri },
+  redirect_uris: function ({ redirect_uris }) {
+    this.redirect_uris = redirect_uris.map((redirectUri) => {
+      return { uri: redirectUri }
+    })
+  },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
@@ -17,6 +22,7 @@ const assign = {
     })
   }
 }
+
 class Client {
   constructor (params = {}) {
     Object.assign(this, defaults)
@@ -41,16 +47,24 @@ class Client {
       resolve()
     })
   }
+
   save () {
     // TODO trigger validate
+    let response
     const { id, serialized } = this
     if (id) {
-      return this.constructor.api().patch(`/${id}`, { client: serialized })
+      response = this.constructor.api().patch(`/${id}`, { client: serialized })
         .then(({ data }) => Object.assign(this, data.data))
     } else {
-      return this.constructor.api().post('/', { client: serialized })
+      response = this.constructor.api().post('/', { client: serialized })
         .then(({ data }) => Object.assign(this, data.data))
     }
+
+    return response.catch((error) => {
+      const { errors } = error.response.data
+      this.errors = errors
+      throw errors
+    })
   }
 
   destroy () {
@@ -58,12 +72,12 @@ class Client {
   }
 
   get serialized () {
-    const { id, secret, redirect_uri, authorize_scope, authorized_scopes } = this
+    const { id, secret, redirect_uris, authorize_scope, authorized_scopes } = this
 
     return {
       id,
       secret,
-      redirect_uri,
+      redirect_uris: redirect_uris.map(({ uri }) => uri),
       authorize_scope,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized)
     }

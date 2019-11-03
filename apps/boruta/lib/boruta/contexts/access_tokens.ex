@@ -33,9 +33,11 @@ defmodule Boruta.AccessTokens do
   ) do
     resource_owner = params[:resource_owner]
     state = params[:state]
+    redirect_uri = params[:redirect_uri]
     token_attributes = %{
       client_id: client.id,
       resource_owner_id: resource_owner && resource_owner.id,
+      redirect_uri: redirect_uri,
       state: state,
       scope: scope
     }

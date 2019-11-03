@@ -13,7 +13,13 @@
         <form class="ui form" v-on:submit.prevent="updateClient()">
           <div class="field">
             <label>Redirect URI</label>
-            <input type="text" v-model="client.redirect_uri" placeholder="http://redirect.uri">
+            <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">
+              <div class="ui right icon input">
+                <input type="text" v-model="redirectUri.uri" placeholder="http://redirect.uri" />
+                <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
+              </div>
+            </div>
+            <button v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</button>
           </div>
           <div class="field">
             <div class="ui toggle checkbox">
@@ -87,8 +93,17 @@ export default {
         this.errors = errors
       })
     },
+    addRedirectUri () {
+      this.client.redirect_uris.push({})
+    },
     addScope () {
       this.client.authorized_scopes.push({ model: new Scope() })
+    },
+    deleteRedirectUri (redirectUri) {
+      this.client.redirect_uris.splice(
+        this.client.redirect_uris.indexOf(redirectUri),
+        1
+      )
     },
     deleteScope (scope) {
       this.client.authorized_scopes.splice(
@@ -102,9 +117,13 @@ export default {
 
 <style scoped lang="scss">
 .edit-client {
+  .field {
+    position: relative;
+  }
   .ui.icon.input>i.icon.close {
     cursor: pointer;
     pointer-events: all;
+    position: absolute;
   }
   .authorized-scopes-select {
     margin-right: 3em;

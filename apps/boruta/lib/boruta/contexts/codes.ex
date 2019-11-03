@@ -17,13 +17,14 @@ defmodule Boruta.Codes do
   def create(%{
     client: client,
     resource_owner: resource_owner,
+    redirect_uri: redirect_uri,
     scope: scope,
     state: state
   }) do
     changeset = Boruta.Token.code_changeset(%Boruta.Token{}, %{
       client_id: client.id,
       resource_owner_id: resource_owner.id,
-      redirect_uri: client.redirect_uri,
+      redirect_uri: redirect_uri,
       state: state,
       scope: scope
     })

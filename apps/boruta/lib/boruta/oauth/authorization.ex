@@ -77,6 +77,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
+        redirect_uri: redirect_uri,
         resource_owner: resource_owner,
         scope: code.scope,
       }, refresh_token: true)
@@ -108,6 +109,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
+        redirect_uri: redirect_uri,
         resource_owner: resource_owner,
         scope: scope,
         state: state,
@@ -138,6 +140,7 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
       codes().create(%{
         client: client,
         resource_owner: resource_owner,
+        redirect_uri: redirect_uri,
         state: state,
         scope: scope
       })

@@ -9,10 +9,10 @@ defmodule Boruta.AdminTest do
   alias Boruta.Scope
 
   @client_valid_attrs %{
-    redirect_uri: "https://redirect.uri"
+    redirect_uri: ["https://redirect.uri"]
   }
   @client_update_attrs %{
-    redirect_uri: "https://updated.redirect.uri"
+    redirect_uri: ["https://updated.redirect.uri"]
   }
 
   # clients
@@ -40,15 +40,14 @@ defmodule Boruta.AdminTest do
   end
 
   describe "create_client/1" do
-    @tag :skip
     test "returns error changeset with invalid redirect_uri (bad URI format)" do
       assert {:error, %Ecto.Changeset{}} = Admin.create_client(%{
-        redirect_uri: "\\bad_redirect_uri"
+        redirect_uris: ["\\bad_redirect_uri"]
       })
     end
 
     test "creates a client" do
-      assert {:ok, %Client{} = client} = Admin.create_client(@client_valid_attrs)
+      assert {:ok, %Client{} } = Admin.create_client(@client_valid_attrs)
     end
 
     test "creates a client with a secret" do
@@ -65,11 +64,10 @@ defmodule Boruta.AdminTest do
   end
 
   describe "update_client/2" do
-    @tag :skip
     test "returns error changeset with invalid redirect_uri (bad URI format)" do
       client = client_fixture()
       assert {:error, %Ecto.Changeset{}} = Admin.update_client(client, %{
-        redirect_uri: "$bad_redirect_uri"
+        redirect_uris: ["$bad_redirect_uri"]
       })
       assert client == Admin.get_client!(client.id)
     end
