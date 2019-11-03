@@ -69,7 +69,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:id, :uuid, primary_key: true)
         add(:name, :string)
         add(:secret, :string)
-        add(:redirect_uri, :string)
+        add(:redirect_uris, {:array, :string})
         add(:scope, :string)
         add(:authorize_scope, :boolean, default: false)
 
