@@ -103,7 +103,7 @@ defmodule BorutaWeb.OauthControllerTest do
     setup %{conn: conn} do
       resource_owner = insert(:user)
       redirect_uri = "http://redirect.uri"
-      client = insert(:client, redirect_uri: redirect_uri)
+      client = insert(:client, redirect_uris: [redirect_uri])
       {:ok, conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
     end
 
@@ -140,26 +140,34 @@ defmodule BorutaWeb.OauthControllerTest do
       assert error_description
     end
 
-    test "redirect to user authentication page", %{conn: conn, client: client} do
+    test "redirect to user authentication page", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri
+    } do
       conn = get(
         conn,
         Routes.oauth_path(conn, :authorize, %{
           response_type: "token",
           client_id: client.id,
-          redirect_uri: client.redirect_uri
+          redirect_uri: redirect_uri
         })
       )
 
       assert redirected_to(conn) =~ "/session/new"
     end
 
-    test "stores oauth request params in session when current_user is not set", %{conn: conn, client: client} do
+    test "stores oauth request params in session when current_user is not set", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri
+    } do
       conn = get(
         conn,
         Routes.oauth_path(conn, :authorize, %{
           response_type: "token",
           client_id: client.id,
-          redirect_uri: client.redirect_uri,
+          redirect_uri: redirect_uri,
           state: "state",
           scope: "scope"
         })
@@ -168,7 +176,7 @@ defmodule BorutaWeb.OauthControllerTest do
       assert get_session(conn, :oauth_request) == %{
         "response_type" => "token",
         "client_id" => client.id,
-        "redirect_uri" => client.redirect_uri,
+        "redirect_uri" => redirect_uri,
         "state" => "state",
         "scope" => "scope"
       }
@@ -198,6 +206,7 @@ defmodule BorutaWeb.OauthControllerTest do
       assert access_token
       assert expires_in
     end
+
     test "redirects to redirect_uri with state", %{
       conn: conn,
       client: client,
@@ -294,18 +303,19 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = assign(conn, :current_user, resource_owner)
+      redirect_uri = List.first(client.redirect_uris)
 
       conn = get(
         conn,
         Routes.oauth_path(conn, :authorize, %{
           response_type: "code",
           client_id: client.id,
-          redirect_uri: client.redirect_uri
+          redirect_uri: redirect_uri
         })
       )
 
       [_, code] = Regex.run(
-        ~r/#{client.redirect_uri}\?code=(.+)/,
+        ~r/#{redirect_uri}\?code=(.+)/,
         redirected_to(conn)
       )
       assert code
@@ -318,19 +328,20 @@ defmodule BorutaWeb.OauthControllerTest do
     } do
       conn = assign(conn, :current_user, resource_owner)
       given_state = "state"
+      redirect_uri = List.first(client.redirect_uris)
 
       conn = get(
         conn,
         Routes.oauth_path(conn, :authorize, %{
           response_type: "code",
           client_id: client.id,
-          redirect_uri: client.redirect_uri,
+          redirect_uri: redirect_uri,
           state: given_state
         })
       )
 
       [_, code, state] = Regex.run(
-        ~r/#{client.redirect_uri}\?code=(.+)&state=(.+)/,
+        ~r/#{redirect_uri}\?code=(.+)&state=(.+)/,
         redirected_to(conn)
       )
       assert code

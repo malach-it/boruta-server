@@ -19,7 +19,7 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
         type: "access_token",
         refresh_token: "from_an_expired_token",
         client_id: client.id,
-        redirect_uri: client.redirect_uri,
+        redirect_uri: List.first(client.redirect_uris),
         expires_at: :os.system_time(:seconds) - 10
       )
       access_token = insert(
@@ -27,7 +27,7 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
         type: "access_token",
         refresh_token: "from_an_access_token",
         client_id: client.id,
-        redirect_uri: client.redirect_uri,
+        redirect_uri: List.first(client.redirect_uris),
         expires_at: :os.system_time(:seconds) + 10,
         scope: "scope"
       )

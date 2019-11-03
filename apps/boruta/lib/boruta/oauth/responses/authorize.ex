@@ -21,7 +21,7 @@ defmodule Boruta.Oauth.AuthorizeResponse do
     type: type,
     expires_at: expires_at,
     value: value,
-    client: client,
+    redirect_uri: redirect_uri,
     state: state
   }) do
     {:ok, expires_at} = DateTime.from_unix(expires_at)
@@ -29,7 +29,7 @@ defmodule Boruta.Oauth.AuthorizeResponse do
 
     %AuthorizeResponse{
       type: type,
-      redirect_uri: client.redirect_uri,
+      redirect_uri: redirect_uri,
       value: value,
       expires_in: expires_in,
       state: state

@@ -13,9 +13,9 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
   describe "implicit grant" do
     setup do
       resource_owner = insert(:user)
-      client = insert(:client, redirect_uri: "https://redirect.uri")
+      client = insert(:client, redirect_uris: ["https://redirect.uri"])
       client_with_scope = insert(:client,
-        redirect_uri: "https://redirect.uri",
+        redirect_uris: ["https://redirect.uri"],
         authorize_scope: true,
         authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
       )
@@ -75,12 +75,13 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
     end
 
     test "returns an error if user is invalid", %{client: client} do
+      redirect_uri = List.first(client.redirect_uris)
       assert Oauth.authorize(
         %{
           query_params: %{
             "response_type" => "token",
             "client_id" => client.id,
-            "redirect_uri" => client.redirect_uri
+            "redirect_uri" => redirect_uri
           },
           assigns: %{}
         },
@@ -90,17 +91,18 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         error_description: "Resource owner is invalid.",
         status: :unauthorized,
         format: :fragment,
-        redirect_uri: client.redirect_uri
+        redirect_uri: redirect_uri
       }}
     end
 
     test "returns a token", %{client: client, resource_owner: resource_owner} do
+      redirect_uri = List.first(client.redirect_uris)
       case Oauth.authorize(
         %{
           query_params: %{
             "response_type" => "token",
             "client_id" => client.id,
-            "redirect_uri" => client.redirect_uri
+            "redirect_uri" => redirect_uri
           },
           assigns: %{
             current_user: resource_owner
@@ -125,12 +127,13 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
 
     test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
       %{name: given_scope} = List.first(client.authorized_scopes)
+      redirect_uri = List.first(client.redirect_uris)
       case  Oauth.authorize(
         %{
           query_params: %{
             "response_type" => "token",
             "client_id" => client.id,
-            "redirect_uri" => client.redirect_uri,
+            "redirect_uri" => redirect_uri,
             "scope" => given_scope
           },
           assigns: %{
@@ -156,12 +159,13 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
 
     test "returns an error if scope is unknown or unauthorized", %{client_with_scope: client, resource_owner: resource_owner} do
       given_scope = "bad_scope"
+      redirect_uri = List.first(client.redirect_uris)
       assert Oauth.authorize(
         %{
           query_params: %{
             "response_type" => "token",
             "client_id" => client.id,
-            "redirect_uri" => client.redirect_uri,
+            "redirect_uri" => redirect_uri,
             "scope" => given_scope
           },
           assigns: %{

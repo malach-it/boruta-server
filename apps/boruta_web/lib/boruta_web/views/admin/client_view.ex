@@ -14,7 +14,7 @@ defmodule BorutaWeb.Admin.ClientView do
     %{
       id: client.id,
       secret: client.secret,
-      redirect_uri: client.redirect_uri,
+      redirect_uris: client.redirect_uris,
       authorize_scope: client.authorize_scope,
       authorized_scopes: Enum.map(client.authorized_scopes, fn (scope) ->
         %{

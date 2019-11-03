@@ -7,7 +7,7 @@
           <div v-for="client in clients" class="ui big client segments" :key="client.id">
             <div class="ui teal segment"><strong>Client ID:</strong> {{ client.id }}</div>
             <div class="ui segment"><strong>Client secret:</strong> {{ client.secret }}</div>
-            <div class="ui segment"><strong>Client redirect URI:</strong> {{ client.redirect_uri }}</div>
+            <div class="ui segment"><strong>Client redirect URIs:</strong> {{ client.redirect_uris.map(({ uri }) => uri).join(', ') }}</div>
             <div class="ui center aligned segment">
               <router-link
                 :to="{ name: 'edit-client', params: { clientId: client.id } }"

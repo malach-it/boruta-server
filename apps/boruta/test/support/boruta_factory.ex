@@ -9,7 +9,7 @@ defmodule Boruta.Factory do
   def client_factory do
     %Boruta.Client{
       secret: SecureRandom.urlsafe_base64(),
-      redirect_uri: "https://redirect.uri/oauth2-redirect-path"
+      redirect_uris: ["https://redirect.uri/oauth2-redirect-path"]
     }
   end
 

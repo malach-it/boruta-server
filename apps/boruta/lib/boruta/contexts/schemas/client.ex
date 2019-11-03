@@ -12,7 +12,7 @@ defmodule Boruta.Client do
     secret: String.t(),
     authorize_scope: boolean(),
     authorized_scopes: list(String.t()),
-    redirect_uri: String.t()
+    redirect_uris: list(String.t())
   }
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -20,7 +20,7 @@ defmodule Boruta.Client do
   schema "clients" do
     field(:secret, :string)
     field(:authorize_scope, :boolean, default: false)
-    field(:redirect_uri, :string)
+    field(:redirect_uris, {:array, :string})
 
     many_to_many :authorized_scopes, Scope, join_through: "clients_scopes", on_replace: :delete
 
@@ -31,25 +31,36 @@ defmodule Boruta.Client do
   def create_changeset(client, attrs) do
     client
     |> repo().preload(:authorized_scopes)
-    |> cast(attrs, [:redirect_uri, :authorize_scope])
+    |> cast(attrs, [:redirect_uris, :authorize_scope])
+    |> validate_redirect_uris
     |> put_assoc(:authorized_scopes, parse_authorized_scopes(attrs))
     |> put_secret()
-    |> validate_format(
-      :redirect_uri,
-      ~r{^(([a-z][a-z0-9\+\-\.]*):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?}i
-    ) # RFC 3986 URI format
   end
 
   @doc false
   def update_changeset(client, attrs) do
     client
     |> repo().preload(:authorized_scopes)
-    |> cast(attrs, [:redirect_uri, :authorize_scope])
+    |> cast(attrs, [:redirect_uris, :authorize_scope])
+    |> validate_redirect_uris
     |> put_assoc(:authorized_scopes, parse_authorized_scopes(attrs))
-    |> validate_format(
-      :redirect_uri,
-      ~r{^(([a-z][a-z0-9\+\-\.]*):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?}i
-    ) # RFC 3986 URI format
+  end
+
+  defp validate_redirect_uris(changeset) do
+    validate_change(changeset, :redirect_uris, fn (field, values) ->
+      Enum.map(values, &validate_uri/1)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.map(fn (error) -> {field, error} end)
+    end)
+  end
+
+  defp validate_uri(nil), do: "empty values are not allowed"
+  defp validate_uri("" <> uri) do
+    case URI.parse(uri) do
+      %URI{scheme: scheme, host: host}
+      when not is_nil(scheme) and not is_nil(host) -> nil
+      _ -> "`#{uri}` is invalid"
+    end
   end
 
   defp parse_authorized_scopes(attrs) do

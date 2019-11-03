@@ -3,6 +3,7 @@ defmodule Boruta.Clients do
 
   @behaviour Boruta.Oauth.Clients
 
+  import Ecto.Query, only: [from: 2]
   import Boruta.Config, only: [repo: 0]
 
   alias Boruta.Oauth
@@ -14,7 +15,9 @@ defmodule Boruta.Clients do
     end
   end
   def get_by(id: id, redirect_uri: redirect_uri) do
-    with %Boruta.Client{} = client <- repo().get_by(Boruta.Client, id: id, redirect_uri: redirect_uri) do
+    with %Boruta.Client{} = client <- repo()
+         .one(from c in Boruta.Client,
+           where: c.id == ^id and fragment("? = ANY (redirect_uris)", ^redirect_uri)) do
       to_oauth_schema(client)
     end
   end

@@ -45,7 +45,7 @@ defmodule Boruta.Token do
   @doc false
   def changeset(token, attrs) do
     token
-    |> cast(attrs, [:client_id, :resource_owner_id, :state, :scope])
+    |> cast(attrs, [:client_id, :redirect_uri, :resource_owner_id, :state, :scope])
     |> validate_required([:client_id])
     |> put_change(:type, "access_token")
     |> put_value()
@@ -55,7 +55,7 @@ defmodule Boruta.Token do
   @doc false
   def changeset_with_refresh_token(token, attrs) do
     token
-    |> cast(attrs, [:client_id, :resource_owner_id, :state, :scope])
+    |> cast(attrs, [:client_id, :redirect_uri, :resource_owner_id, :state, :scope])
     |> validate_required([:client_id])
     |> put_change(:type, "access_token")
     |> put_value()
