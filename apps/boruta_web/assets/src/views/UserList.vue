@@ -2,17 +2,20 @@
   <div class="user-list">
     <div class="ui container">
       <h1>Users</h1>
-      <div class="ui two column centered grid">
-        <div class="column">
-          <div v-for="user in users" class="ui big user segments" :key="user.id">
-            <div class="ui purple segment"><strong>Email:</strong> {{ user.email }}</div>
-            <div class="ui center aligned segment">
-              <router-link
-                :to="{ name: 'edit-user', params: { userId: user.id } }"
-                class="ui tiny blue button">edit</router-link>
-              <a v-on:click="deleteUser(user)" class="ui tiny red button">delete</a>
-            </div>
+      <div v-for="user in users" class="ui big user segments" :key="user.id">
+        <div class="ui segment">
+          <div class="actions">
+            <router-link
+              :to="{ name: 'edit-user', params: { userId: user.id } }"
+              class="ui tiny blue button">edit</router-link>
+            <a v-on:click="deleteUser(user)" class="ui tiny red button">delete</a>
           </div>
+          <p>
+            <strong>Email:</strong> {{ user.email }}
+            <span v-for="scope in user.authorized_scopes" class="ui olive label" :key="scope.model.id">
+              {{ scope.model.name }}
+            </span>
+          </p>
         </div>
       </div>
     </div>

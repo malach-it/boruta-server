@@ -4,15 +4,6 @@
       <router-link :to="{ name: 'home' }" exact class="item">
         Home
       </router-link>
-      <router-link v-if="isAuthenticated" :to="{ name: 'user-list' }" class="item">
-        Users
-      </router-link>
-      <router-link v-if="isAuthenticated" :to="{ name: 'client-list' }" class="item">
-        Clients
-      </router-link>
-      <router-link v-if="isAuthenticated" :to="{ name: 'scope-list' }" class="item">
-        Scopes
-      </router-link>
       <div class="right menu">
         <span v-if="isAuthenticated" class="ui item">
           {{ currentUser.email }}

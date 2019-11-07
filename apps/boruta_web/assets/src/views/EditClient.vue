@@ -2,7 +2,7 @@
   <div class="edit-client">
     <div class="ui container">
       <h1>Edit a client</h1>
-      <div class="ui big teal segment">
+      <div class="ui big segment">
         <div v-if="errors" class="ui error message">
           <ul>
             <li v-for="key in Object.keys(errors)"><strong>{{ key }} :</strong> {{ errors[key][0] }}</li>
@@ -27,17 +27,7 @@
               <label>Authorize scopes</label>
             </div>
           </div>
-          <div v-if="client.authorize_scope" class="field">
-            <div v-for="(authorizedScope, index) in client.authorized_scopes" class="field" :key="index">
-              <div class="ui right icon input">
-                <select type="text" v-model="authorizedScope.model" class="authorized-scopes-select">
-                  <option :value="scope" v-for="scope in scopeModels(authorizedScope)">{{ scope.name }}</option>
-                </select>
-                <i v-on:click="deleteScope(authorizedScope)" class="close icon"></i>
-              </div>
-            </div>
-            <button v-on:click.prevent="addScope()" class="ui blue fluid button">Add a scope</button>
-          </div>
+          <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           <button class="ui violet button" type="submit">Update</button>
           <router-link :to="{ name: 'client-list' }" class="ui button">Back</router-link>
         </form>
@@ -49,10 +39,16 @@
 <script>
 import Client from '@/models/client.model'
 import Scope from '@/models/scope.model'
+import ScopesField from '@/components/ScopesField.vue'
+import FormErrors from '@/components/FormErrors.vue'
 
 export default {
   name: 'clients',
   // TODO look for async components
+  components: {
+    ScopesField,
+    FormErrors
+  },
   mounted () {
     const { clientId } = this.$route.params
     Client.get(clientId).then((client) => {

@@ -3,10 +3,10 @@
     <div class="ui container">
       <h1>Scopes</h1>
       <div class="ui segments">
-        <div v-for="(scope, index) in scopes" class="ui brown mini segment" :key="index">
+        <div v-for="(scope, index) in scopes" class="ui mini segment" :key="index">
           <div v-if="scope.edit">
             <form v-on:submit.prevent="saveScope(scope)" class="ui form">
-              <div class="ui grid">
+              <div class="ui stackable grid">
                 <div class="eight wide column">
                   <div class="ui mini input" :class="{ 'error': scope.errors && scope.errors.name }">
                     <input type="text" v-model="scope.name" placeholder="iam:a:scope">
@@ -27,11 +27,9 @@
             </form>
           </div>
           <div v-else>
-            <div class="ui grid">
+            <div class="ui stackable grid">
               <div class="eight wide column">
-                <div class="ui mini input">
-                  {{ scope.name }}
-                </div>
+                <span class="ui basic olive label">{{ scope.name }}</span>
               </div>
               <div class="five wide column">
                 <div class="ui toggle checkbox">
@@ -48,7 +46,7 @@
         </div>
       </div>
       <div class="actions">
-        <button @click="addScope()" class="ui blue big button">Add a scope</button>
+        <button @click="addScope()" class="ui big teal button">Add a scope</button>
       </div>
     </div>
   </div>
