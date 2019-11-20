@@ -1,0 +1,8 @@
+<div class="choose-session">
+  <div class="ui massive center aligned segment">
+    <span><%= link "New login", to: Routes.pow_session_path(@conn, :delete), method: :delete %></span>
+  </div>
+  <div class="ui massive center aligned segment">
+    <span><%= link "Continue as #{current_user_email(@conn)}", to: authorize_url(@conn) %></span>
+  </div>
+</div>

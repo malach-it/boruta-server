@@ -3,6 +3,7 @@ defmodule BorutaWeb.OauthController do
 
   use BorutaWeb, :controller
 
+  alias Boruta.Accounts.User
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
@@ -50,8 +51,24 @@ defmodule BorutaWeb.OauthController do
     |> render("error.json", error: error, error_description: error_description)
   end
 
-  def authorize(%Plug.Conn{} = conn, _params) do
-    conn |> Oauth.authorize(__MODULE__)
+  def authorize(%Plug.Conn{query_params: query_params} = conn, _params) do
+    current_user = conn.assigns[:current_user]
+    session_chosen = get_session(conn, :session_chosen)
+
+    conn = conn
+    |> store_oauth_request(query_params)
+
+    # TODO use a preAuthorize to see if the request is valid
+    case {current_user, session_chosen} do
+      {%User{}, true} ->
+        conn
+        |> delete_session(:session_chosen)
+        |> Oauth.authorize(__MODULE__)
+      {%User{}, _} ->
+        redirect(conn, to: Routes.choose_session_path(conn, :new))
+      {_, _} ->
+        redirect(conn, to: Routes.pow_session_path(conn, :new))
+    end
   end
 
   @impl Boruta.Oauth.Application
@@ -82,17 +99,10 @@ defmodule BorutaWeb.OauthController do
 
   @impl Boruta.Oauth.Application
   def authorize_error(
-    %Plug.Conn{query_params: query_params} = conn,
+    %Plug.Conn{} = conn,
     %Error{status: :unauthorized, error: :invalid_resource_owner}
   ) do
     conn
-    |> put_session(:oauth_request, %{
-      "response_type" => query_params["response_type"],
-      "client_id" => query_params["client_id"],
-      "redirect_uri" => query_params["redirect_uri"],
-      "state" => query_params["state"],
-      "scope" => query_params["scope"]
-    })
     |> redirect(to: Routes.pow_session_path(conn, :new))
   end
   def authorize_error(
@@ -120,5 +130,16 @@ defmodule BorutaWeb.OauthController do
     |> put_status(status)
     |> put_view(BorutaWeb.OauthView)
     |> render("error." <> get_format(conn), error: error, error_description: error_description)
+  end
+
+  defp store_oauth_request(conn, params) do
+    conn
+    |> put_session(:oauth_request, %{
+      "response_type" => params["response_type"],
+      "client_id" => params["client_id"],
+      "redirect_uri" => params["redirect_uri"],
+      "state" => params["state"],
+      "scope" => params["scope"]
+    })
   end
 end
