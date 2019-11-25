@@ -29,6 +29,7 @@ defmodule BorutaWeb.Router do
   scope "/" do
     pipe_through :browser
 
+    get "/choose-session", BorutaWeb.ChooseSessionController, :new
     pow_routes()
     pow_extension_routes()
   end

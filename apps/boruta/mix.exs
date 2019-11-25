@@ -44,7 +44,7 @@ defmodule Boruta.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},
       {:ex_machina, "~> 2.3", only: :test},
-      {:ex_json_schema, "~> 0.6.1"},
+      {:ex_json_schema, "~> 0.7.2"},
       {:secure_random, "~> 0.5"},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},

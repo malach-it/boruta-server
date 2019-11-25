@@ -44,7 +44,7 @@ defmodule Boruta.Oauth.Token do
   # TODO move this out of the schema
   @spec expired?(%Token{expires_at: integer()}) :: :ok | {:error, any()}
   def expired?(%Token{expires_at: expires_at}) do
-    case :os.system_time(:seconds) < expires_at do
+    case :os.system_time(:seconds) <= expires_at do
       true -> :ok
       false -> {:error, "Token expired."}
     end

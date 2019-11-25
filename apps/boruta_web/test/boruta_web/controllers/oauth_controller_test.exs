@@ -7,6 +7,61 @@ defmodule BorutaWeb.OauthControllerTest do
     {:ok, conn: conn}
   end
 
+  describe "#authorize" do
+    setup %{conn: conn} do
+      resource_owner = insert(:user)
+      redirect_uri = "http://redirect.uri"
+      client = insert(:client, redirect_uris: [redirect_uri])
+      {:ok, conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
+    end
+
+    test "stores oauth request params in session when current_user is not set", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri
+    } do
+      conn = get(
+        conn,
+        Routes.oauth_path(conn, :authorize, %{
+          response_type: "token",
+          client_id: client.id,
+          redirect_uri: redirect_uri,
+          state: "state",
+          scope: "scope"
+        })
+      )
+
+      assert get_session(conn, :oauth_request) == %{
+        "response_type" => "token",
+        "client_id" => client.id,
+        "redirect_uri" => redirect_uri,
+        "state" => "state",
+        "scope" => "scope"
+      }
+    end
+
+    test "redirects to choose session if session not chosen", %{
+      conn: conn,
+      redirect_uri: redirect_uri,
+      resource_owner: resource_owner
+    } do
+      conn = conn
+             |> assign(:current_user, resource_owner)
+
+      conn = get(
+        conn,
+        Routes.oauth_path(conn, :authorize, %{
+          response_type: "token",
+          client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
+          redirect_uri: redirect_uri,
+          state: "state"
+        })
+      )
+
+      assert redirected_to(conn) == Routes.choose_session_path(conn, :new)
+    end
+  end
+
   describe "client_credentials grant" do
     setup %{conn: conn} do
       client = insert(:client)
@@ -108,7 +163,13 @@ defmodule BorutaWeb.OauthControllerTest do
     end
 
     # TODO test differents validation cases
-    test "validates request params", %{conn: conn} do
+    test "validates request params", %{
+      conn: conn,
+      resource_owner: resource_owner
+    } do
+      conn = conn
+             |> assign(:current_user, resource_owner)
+             |> init_test_session(session_chosen: true)
       conn = get(conn, "/oauth/authorize")
 
       assert response_content_type(conn, :html)
@@ -120,7 +181,9 @@ defmodule BorutaWeb.OauthControllerTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn = assign(conn, :current_user, resource_owner)
+      conn = conn
+             |> assign(:current_user, resource_owner)
+             |> init_test_session(session_chosen: true)
 
       conn = get(
         conn,
@@ -157,38 +220,15 @@ defmodule BorutaWeb.OauthControllerTest do
       assert redirected_to(conn) =~ "/session/new"
     end
 
-    test "stores oauth request params in session when current_user is not set", %{
-      conn: conn,
-      client: client,
-      redirect_uri: redirect_uri
-    } do
-      conn = get(
-        conn,
-        Routes.oauth_path(conn, :authorize, %{
-          response_type: "token",
-          client_id: client.id,
-          redirect_uri: redirect_uri,
-          state: "state",
-          scope: "scope"
-        })
-      )
-
-      assert get_session(conn, :oauth_request) == %{
-        "response_type" => "token",
-        "client_id" => client.id,
-        "redirect_uri" => redirect_uri,
-        "state" => "state",
-        "scope" => "scope"
-      }
-    end
-
     test "redirects to redirect_uri with token if current_user is set", %{
       conn: conn,
       client: client,
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn = assign(conn, :current_user, resource_owner)
+      conn = conn
+             |> assign(:current_user, resource_owner)
+             |> init_test_session(session_chosen: true)
 
       conn = get(
         conn,
@@ -213,7 +253,9 @@ defmodule BorutaWeb.OauthControllerTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn = assign(conn, :current_user, resource_owner)
+      conn = conn
+             |> assign(:current_user, resource_owner)
+             |> init_test_session(session_chosen: true)
       given_state = "state"
 
       conn = get(
@@ -277,8 +319,12 @@ defmodule BorutaWeb.OauthControllerTest do
 
     test "redirects to redirect_uri with errors in query if redirect_uri is invalid", %{
       conn: conn,
-      client: client
+      client: client,
+      resource_owner: resource_owner
     } do
+      conn = conn
+             |> assign(:current_user, resource_owner)
+             |> init_test_session(session_chosen: true)
       conn = get(
         conn,
         Routes.oauth_path(conn, :authorize, %{
@@ -302,7 +348,9 @@ defmodule BorutaWeb.OauthControllerTest do
       client: client,
       resource_owner: resource_owner
     } do
-      conn = assign(conn, :current_user, resource_owner)
+      conn = conn
+             |> assign(:current_user, resource_owner)
+             |> init_test_session(session_chosen: true)
       redirect_uri = List.first(client.redirect_uris)
 
       conn = get(
@@ -321,12 +369,14 @@ defmodule BorutaWeb.OauthControllerTest do
       assert code
     end
 
-    test "redirects to redirect_uri with state", %{
+    test "redirects to redirect_uri with state when session chosen", %{
       conn: conn,
       client: client,
       resource_owner: resource_owner
     } do
-      conn = assign(conn, :current_user, resource_owner)
+      conn = conn
+             |> assign(:current_user, resource_owner)
+             |> init_test_session(session_chosen: true)
       given_state = "state"
       redirect_uri = List.first(client.redirect_uris)
 

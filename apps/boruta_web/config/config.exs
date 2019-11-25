@@ -28,6 +28,7 @@ config :boruta_web, :pow,
   user: Boruta.Accounts.User,
   # extensions: [PowEmailConfirmation, PowResetPassword],
   extensions: [PowResetPassword],
-  controller_callbacks: Pow.Extension.Phoenix.ControllerCallbacks,
+  controller_callbacks: BorutaWeb.Pow.Phoenix.ControllerCallbacks,
   routes_backend: BorutaWeb.Pow.Routes,
-  mailer_backend: BorutaWeb.Pow.Mailer
+  mailer_backend: BorutaWeb.Pow.Mailer,
+  web_module: BorutaWeb

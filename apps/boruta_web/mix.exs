@@ -39,7 +39,6 @@ defmodule BorutaWeb.MixProject do
     [
       {:appsignal, "~> 1.0"},
       {:boruta, in_umbrella: true},
-      {:ex_json_schema, "~> 0.6.0-rc.1"},
       {:ex_machina, "~> 2.3", only: :test},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
