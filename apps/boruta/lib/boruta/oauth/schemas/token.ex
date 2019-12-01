@@ -16,7 +16,8 @@ defmodule Boruta.Oauth.Token do
     client: nil,
     resource_owner: nil,
     refresh_token: nil,
-    inserted_at: nil
+    inserted_at: nil,
+    revoked_at: nil
   ]
 
   @type t :: %__MODULE__{
@@ -29,7 +30,8 @@ defmodule Boruta.Oauth.Token do
     client: Boruta.Oauth.Client.t(),
     resource_owner: struct(),
     refresh_token: String.t(),
-    inserted_at: DateTime.t()
+    inserted_at: DateTime.t(),
+    revoked_at: DateTime.t()
   }
   @doc """
   Determines if a token is expired
@@ -42,11 +44,14 @@ defmodule Boruta.Oauth.Token do
       {:error, "Token expired."}
   """
   # TODO move this out of the schema
-  @spec expired?(%Token{expires_at: integer()}) :: :ok | {:error, any()}
+  @spec expired?(%Token{expires_at: integer()}) :: :ok | {:error, String.t()}
   def expired?(%Token{expires_at: expires_at}) do
     case :os.system_time(:seconds) <= expires_at do
       true -> :ok
       false -> {:error, "Token expired."}
     end
   end
+
+  def revoked?(%Token{revoked_at: nil}), do: :ok
+  def revoked?(%Token{revoked_at: _}), do: {:error, "Token revoked."}
 end

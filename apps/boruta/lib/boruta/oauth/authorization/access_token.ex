@@ -30,7 +30,8 @@ defmodule Boruta.Oauth.Authorization.AccessToken do
     | {:ok, %Token{}}
   def authorize(value: value) do
     with %Token{} = token <- access_tokens().get_by(value: value),
-      :ok <- Token.expired?(token) do
+      :ok <- Token.expired?(token),
+      :ok <- Token.revoked?(token) do
       {:ok, token}
     else
       {:error, error} ->

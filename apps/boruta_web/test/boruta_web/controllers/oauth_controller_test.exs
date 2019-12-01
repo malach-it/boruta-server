@@ -162,7 +162,7 @@ defmodule BorutaWeb.OauthControllerTest do
       {:ok, conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
     end
 
-    # TODO test differents validation cases
+    # TODO test different validation cases
     test "validates request params", %{
       conn: conn,
       resource_owner: resource_owner

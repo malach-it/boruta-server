@@ -17,4 +17,8 @@ defmodule Boruta.Oauth.AccessTokens do
   }, options :: [
     refresh_token: boolean()
   ]) :: token :: Boruta.Oauth.Token.t() | {:error, Ecto.Changeset.t()}
+
+  @callback revoke(
+    token :: Boruta.Oauth.Token.t()
+  ) :: {:ok, Boruta.Oauth.Token.t()} | {:error, Ecto.Changeset.t()}
 end

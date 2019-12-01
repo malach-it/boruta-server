@@ -85,6 +85,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:redirect_uri, :string)
         add(:state, :string)
         add(:scope, :string)
+        add(:scope, :utc_datetime)
 
         add(:client_id, references(:clients, type: :uuid, on_delete: :nilify_all))
         add(:resource_owner_id, :uuid)

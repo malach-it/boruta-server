@@ -132,6 +132,14 @@ defmodule BorutaWeb.OauthController do
     |> render("error." <> get_format(conn), error: error, error_description: error_description)
   end
 
+  def revoke(%Plug.Conn{} = conn, _params) do
+    conn |> Oauth.revoke(__MODULE__)
+  end
+
+  def revoke_success(%Plug.Conn{} = conn) do
+    send_resp(conn, 200, "")
+  end
+
   defp store_oauth_request(conn, params) do
     conn
     |> put_session(:oauth_request, %{
