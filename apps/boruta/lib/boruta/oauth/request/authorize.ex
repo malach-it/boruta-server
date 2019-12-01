@@ -5,8 +5,6 @@ defmodule Boruta.Oauth.Request.Authorize do
 
   alias Boruta.Oauth.CodeRequest
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.PasswordRequest
-  alias Boruta.Oauth.RefreshTokenRequest
   alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Validator
 

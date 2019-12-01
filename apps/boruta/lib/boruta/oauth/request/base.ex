@@ -10,13 +10,16 @@ defmodule Boruta.Oauth.Request.Base do
   alias Boruta.Oauth.RevokeRequest
   alias Boruta.Oauth.TokenRequest
 
-  @spec authorization_header(req_headers :: list()) :: header :: String.t() | nil
+  @spec authorization_header(req_headers :: list()) ::
+  {:ok, header :: String.t()} |
+  {:error, :no_authorization_header}
   def authorization_header(req_headers) do
-    with {"authorization", header} <- Enum.find(
+    case Enum.find(
       req_headers,
       fn (header) -> elem(header, 0) == "authorization" end
     ) do
-      header
+      {"authorization", header} -> {:ok, header}
+      _ -> {:error, :no_authorization_header}
     end
   end
 

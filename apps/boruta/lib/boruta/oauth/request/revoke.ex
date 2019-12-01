@@ -24,15 +24,15 @@ defmodule Boruta.Oauth.Request.Revoke do
   def request(%{
     req_headers: req_headers,
     body_params: %{} = body_params
-  } = conn) when is_list(req_headers) and length(req_headers) > 1 do
+  }) when is_list(req_headers) and length(req_headers) > 1 do
     case authorization_header(req_headers) do
-      nil ->
-        request(%{body_params: %{} = body_params})
-      authorization_header ->
+      {:ok, authorization_header} ->
         request(%{
           req_headers: [{"authorization", authorization_header}],
           body_params: %{} = body_params
         })
+      {:error, _reason} ->
+        request(%{body_params: %{} = body_params})
     end
   end
 
