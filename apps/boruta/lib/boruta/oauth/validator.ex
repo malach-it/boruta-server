@@ -77,6 +77,14 @@ defmodule Boruta.Oauth.Validator do
     end
   end
 
+  def validate(:revoke, params) do
+    case ExJsonSchema.Validator.validate(Schema.revoke, params, error_formatter: BorutaFormatter) do
+      :ok -> {:ok, params}
+      {:error, errors} ->
+        {:error, "Request validation failed. " <> Enum.join(errors, " ")}
+    end
+  end
+
   def validate(:token, _params) do
     {:error, "Request is not a valid OAuth request. Need a grant_type param."}
   end

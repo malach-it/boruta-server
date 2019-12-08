@@ -18,5 +18,11 @@ defmodule Boruta.Oauth.ApplicationMock do
   def introspect_error(_conn, error), do: {:introspect_error, error}
 
   @impl Boruta.Oauth.Application
-  def introspect_success(_conn, authorize), do: {:introspect_success, authorize}
+  def introspect_success(_conn, introspect), do: {:introspect_success, introspect}
+
+  @impl Boruta.Oauth.Application
+  def revoke_success(_conn), do: {:revoke_success}
+
+  @impl Boruta.Oauth.Application
+  def revoke_error(_conn, error), do: {:revoke_error, error}
 end

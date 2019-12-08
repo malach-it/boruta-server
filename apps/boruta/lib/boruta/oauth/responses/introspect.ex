@@ -3,6 +3,17 @@ defmodule Boruta.Oauth.IntrospectResponse do
   Introspect response
   """
 
+  @type t :: %__MODULE__{
+    active: boolean(),
+    client_id: String.t(),
+    username: String.t(),
+    scope: String.t(),
+    sub: String.t(),
+    iss: String.t(),
+    exp: integer(),
+    iat: integer()
+  }
+
   defstruct [
     active: nil,
     client_id: nil,

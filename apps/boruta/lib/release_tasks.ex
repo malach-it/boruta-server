@@ -1,4 +1,6 @@
 defmodule Boruta.ReleaseTasks do
+  @moduledoc false
+
   @start_apps [
     :crypto,
     :ssl,

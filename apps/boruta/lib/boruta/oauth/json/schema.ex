@@ -111,6 +111,19 @@ defmodule Boruta.Oauth.Json.Schema do
     } |> Schema.resolve
   end
 
+  def revoke do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "client_id" => %{"type" => "string"},
+        "client_secret" => %{"type" => "string"},
+        "token_type_hint" => %{"type" => "string", "pattern" => "^(access_token|refresh_token)$"},
+        "token" => %{"type" => "string"}
+      },
+      "required" => ["client_id", "client_secret", "token"]
+    } |> Schema.resolve
+  end
+
   def grant_type do
     %{
       "type" => "object",

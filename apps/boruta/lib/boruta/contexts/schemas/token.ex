@@ -21,7 +21,8 @@ defmodule Boruta.Token do
     redirect_uri: String.t(),
     expires_at: integer(),
     client: Client.t(),
-    resource_owner: struct()
+    resource_owner: struct(),
+    revoked_at: DateTime.t()
   }
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -35,6 +36,7 @@ defmodule Boruta.Token do
     field(:scope, :string)
     field(:redirect_uri, :string)
     field(:expires_at, :integer)
+    field(:revoked_at, :utc_datetime)
 
     belongs_to(:client, Client)
     belongs_to(:resource_owner, resource_owner_schema())

@@ -11,6 +11,7 @@ defmodule Boruta.Oauth do
   alias Boruta.Oauth.Introspect
   alias Boruta.Oauth.IntrospectResponse
   alias Boruta.Oauth.Request
+  alias Boruta.Oauth.Revoke
   alias Boruta.Oauth.TokenResponse
 
   @doc """
@@ -67,6 +68,17 @@ defmodule Boruta.Oauth do
         module.introspect_success(conn, IntrospectResponse.from_error(error))
       {:error, %Error{} = error} ->
         module.introspect_error(conn, error)
+    end
+  end
+
+  @spec revoke(conn :: Plug.Conn.t() | map(), module :: atom()) :: any()
+  def revoke(conn, module) do
+    with {:ok, request} <- Request.revoke_request(conn),
+         :ok <- Revoke.token(request) do
+      module.revoke_success(conn)
+    else
+      {:error, error} ->
+        module.revoke_error(conn, error)
     end
   end
 end
