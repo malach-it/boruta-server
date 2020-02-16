@@ -1,17 +1,19 @@
-defmodule Boruta.Token do
+defmodule Boruta.Ecto.Token do
   @moduledoc false
 
   use Ecto.Schema
 
   import Ecto.Changeset
-  import Boruta.Config, only: [
-    access_token_expires_in: 0,
-    authorization_code_expires_in: 0,
-    resource_owner_schema: 0,
-    token_generator: 0
-  ]
 
-  alias Boruta.Client
+  import Boruta.Config,
+    only: [
+      access_token_expires_in: 0,
+      authorization_code_expires_in: 0,
+      resource_owner_schema: 0,
+      token_generator: 0
+    ]
+
+  alias Boruta.Ecto.Client
 
   @type t :: %__MODULE__{
     type:  String.t(),
@@ -76,10 +78,18 @@ defmodule Boruta.Token do
   end
 
   defp put_value(%Ecto.Changeset{data: data, changes: changes} = changeset) do
-    put_change(changeset, :value, token_generator().generate(:access_token, struct(data, changes)))
+    put_change(
+      changeset,
+      :value,
+      token_generator().generate(:access_token, struct(data, changes))
+    )
   end
 
   defp put_refresh_token(%Ecto.Changeset{data: data, changes: changes} = changeset) do
-    put_change(changeset, :refresh_token, token_generator().generate(:refresh_token, struct(data, changes)))
+    put_change(
+      changeset,
+      :refresh_token,
+      token_generator().generate(:refresh_token, struct(data, changes))
+    )
   end
 end

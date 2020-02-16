@@ -70,7 +70,7 @@ defmodule Boruta.Oauth.Authorization.Scope do
     keep_if_authorized(scopes, :public)
   end
   defp keep_if_authorized(scopes, %Client{authorize_scope: true} = client) do
-    authorized_scopes = Enum.map(clients().authorized_scopes(client), fn (e) -> e.name end)
+    authorized_scopes = Enum.map(clients().authorized_scopes(client), fn (%Scope{name: name}) -> name end)
 
     Enum.filter(scopes, fn (scope) ->
       Enum.member?(authorized_scopes, scope)

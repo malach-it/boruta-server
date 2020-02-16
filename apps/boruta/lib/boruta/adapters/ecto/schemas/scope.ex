@@ -1,13 +1,13 @@
-defmodule Boruta.Scope do
+defmodule Boruta.Ecto.Scope do
   @moduledoc false
 
   use Ecto.Schema
   import Ecto.Changeset
 
   @type t :: %__MODULE__{
-    name: String.t(),
-    public: boolean()
-  }
+          name: String.t(),
+          public: boolean()
+        }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -46,6 +46,7 @@ defmodule Boruta.Scope do
 
   defp validate_no_whitespace(changeset, field) do
     value = get_field(changeset, field)
+
     if value && String.match?(value, ~r/\s/) do
       add_error(changeset, field, "must not contain whitespace")
     else

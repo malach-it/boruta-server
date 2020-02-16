@@ -16,13 +16,7 @@ defmodule Boruta.Config do
       schema: Boruta.Accounts.User,
       checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
     },
-    contexts: %{
-      client: Boruta.Clients,
-      scope: Boruta.Scopes,
-      access_token: Boruta.AccessTokens,
-      code: Boruta.Codes,
-      resource_owner: Boruta.ResourceOwners
-    }
+    adapter: Boruta.EctoAdapter
   ```
   """
 
@@ -36,13 +30,7 @@ defmodule Boruta.Config do
       schema: Boruta.Accounts.User,
       checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
     },
-    contexts: %{
-      client: Boruta.Clients,
-      scope: Boruta.Scopes,
-      access_token: Boruta.AccessTokens,
-      code: Boruta.Codes,
-      resource_owner: Boruta.ResourceOwners
-    }
+    adapter: Boruta.EctoAdapter
 
   @doc false
   def oauth_config do
@@ -85,28 +73,33 @@ defmodule Boruta.Config do
   end
 
   @doc false
+  defmacro adapter do
+    Keyword.fetch!(oauth_config(), :adapter)
+  end
+
+  @doc false
   defmacro clients do
-    Keyword.fetch!(oauth_config(), :contexts)[:client]
+    adapter().clients()
   end
 
   @doc false
   defmacro scopes do
-    Keyword.fetch!(oauth_config(), :contexts)[:scope]
+    adapter().scopes()
   end
 
   @doc false
   defmacro access_tokens do
-    Keyword.fetch!(oauth_config(), :contexts)[:access_token]
+    adapter().access_tokens()
   end
 
   @doc false
   defmacro codes do
-    Keyword.fetch!(oauth_config(), :contexts)[:code]
+    adapter().codes()
   end
 
   @doc false
   defmacro resource_owners do
-    Keyword.fetch!(oauth_config(), :contexts)[:resource_owner]
+    adapter().resource_owners()
   end
 
   @doc false

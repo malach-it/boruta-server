@@ -6,7 +6,6 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
 
   import Boruta.Factory
 
-  alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.AuthorizeResponse
@@ -26,8 +25,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         ]
       )
       {:ok,
-        client: Clients.to_oauth_schema(client),
-        client_with_scope: Clients.to_oauth_schema(client_with_scope),
+        client: client,
+        client_with_scope: client_with_scope,
         resource_owner: resource_owner
       }
     end
@@ -276,7 +275,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
         scope: "hello world"
       )
       {:ok,
-        client: Clients.to_oauth_schema(client),
+        client: client,
         resource_owner: resource_owner,
         code: code,
         bad_redirect_uri_code: bad_redirect_uri_code,

@@ -136,11 +136,11 @@ defmodule BorutaWeb.OauthController do
     conn |> Oauth.revoke(__MODULE__)
   end
 
-  @impl Boruta.OAuth.Application
+  @impl Boruta.Oauth.Application
   def revoke_success(%Plug.Conn{} = conn) do
     send_resp(conn, 200, "")
   end
-  @impl Boruta.OAuth.Application
+  @impl Boruta.Oauth.Application
   def revoke_error(conn, %Error{status: status, error: error, error_description: error_description}) do
     conn
     |> put_status(status)

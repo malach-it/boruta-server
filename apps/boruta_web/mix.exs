@@ -37,7 +37,6 @@ defmodule BorutaWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:appsignal, "~> 1.0"},
       {:boruta, in_umbrella: true},
       {:ex_machina, "~> 2.3", only: :test},
       {:gettext, "~> 0.11"},

@@ -1,6 +1,5 @@
 defmodule BorutaWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boruta_web
-  use Appsignal.Phoenix
 
   socket "/socket", BorutaWeb.UserSocket,
     websocket: true,

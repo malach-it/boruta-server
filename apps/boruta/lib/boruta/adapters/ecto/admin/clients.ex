@@ -1,4 +1,4 @@
-defmodule Boruta.Admin.Clients do
+defmodule Boruta.Ecto.Admin.Clients do
   @moduledoc """
   TODO Admin Clients documentation
   """
@@ -6,7 +6,7 @@ defmodule Boruta.Admin.Clients do
   import Ecto.Query, warn: false
   import Boruta.Config, only: [repo: 0]
 
-  alias Boruta.Client
+  alias Boruta.Ecto.Client
 
   @doc """
   Returns the list of clients.

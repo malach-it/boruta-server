@@ -1,8 +1,8 @@
 defmodule BorutaWeb.Admin.ClientController do
   use BorutaWeb, :controller
 
-  alias Boruta.Admin
-  alias Boruta.Client
+  alias Boruta.Ecto.Admin
+  alias Boruta.Ecto.Client
 
   plug BorutaWeb.AuthorizationPlug, ["clients:manage:all"]
 

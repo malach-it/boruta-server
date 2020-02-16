@@ -3,9 +3,10 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
   use Boruta.DataCase
 
   import Boruta.Factory
+  import Boruta.Ecto.OauthMapper, only: [
+    to_oauth_schema: 1
+  ]
 
-  alias Boruta.Clients
-  alias Boruta.Codes
   alias Boruta.Oauth.Authorization.Scope
 
   describe "with empty scope" do
@@ -33,12 +34,19 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       client = insert(:client)
       public_scope = insert(:scope, public: true)
       private_scope = insert(:scope, public: false)
-      client_with_scope = insert(:client, authorize_scope: true, authorized_scopes: [private_scope, public_scope])
+      client_with_scope = insert(
+        :client,
+        authorize_scope: true,
+        authorized_scopes: [
+          private_scope,
+          public_scope
+        ]
+      )
       {:ok,
-        client: Clients.to_oauth_schema(client),
-        private_scope: private_scope,
-        public_scope: public_scope,
-        client_with_scope: Clients.to_oauth_schema(client_with_scope)
+        client: to_oauth_schema(client),
+        private_scope: to_oauth_schema(private_scope),
+        public_scope: to_oauth_schema(public_scope),
+        client_with_scope: to_oauth_schema(client_with_scope)
       }
     end
 
@@ -241,13 +249,13 @@ defmodule Boruta.Oauth.Authorization.ScopeTest do
       token_with_scope = insert(:token, scope: Enum.join([token_private_scope.name, token_public_scope.name], " "))
       {:ok,
         token: token,
-        private_scope: private_scope,
-        public_scope: public_scope,
-        token_private_scope: token_private_scope,
-        token_public_scope: token_public_scope,
-        token_with_scope: Codes.to_oauth_schema(token_with_scope),
-        client_with_scope: Clients.to_oauth_schema(client_with_scope),
-        resource_owner_with_scope: resource_owner_with_scope
+        private_scope: to_oauth_schema(private_scope),
+        public_scope: to_oauth_schema(public_scope),
+        token_private_scope: to_oauth_schema(token_private_scope),
+        token_public_scope: to_oauth_schema(token_public_scope),
+        token_with_scope: to_oauth_schema(token_with_scope),
+        client_with_scope: to_oauth_schema(client_with_scope),
+        resource_owner_with_scope: to_oauth_schema(resource_owner_with_scope)
       }
     end
 

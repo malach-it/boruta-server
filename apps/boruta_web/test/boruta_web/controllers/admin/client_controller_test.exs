@@ -3,7 +3,7 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
 
   use BorutaWeb.ConnCase
 
-  alias Boruta.Client
+  alias Boruta.Ecto.Client
 
   @create_attrs %{
     redirect_uris: ["http://redirect.uri"]

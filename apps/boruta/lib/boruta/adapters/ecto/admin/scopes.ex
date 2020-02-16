@@ -1,4 +1,4 @@
-defmodule Boruta.Admin.Scopes do
+defmodule Boruta.Ecto.Admin.Scopes do
   @moduledoc """
   TODO Admin Scopes documentation
   """
@@ -6,7 +6,7 @@ defmodule Boruta.Admin.Scopes do
   import Ecto.Query, warn: false
   import Boruta.Config, only: [repo: 0]
 
-  alias Boruta.Scope
+  alias Boruta.Ecto.Scope
 
   @doc """
   Returns the list of scopes.

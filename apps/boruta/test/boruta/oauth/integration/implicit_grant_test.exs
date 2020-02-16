@@ -4,7 +4,6 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
 
   import Boruta.Factory
 
-  alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.AuthorizeResponse
@@ -20,8 +19,8 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
       )
       {:ok,
-        client: Clients.to_oauth_schema(client),
-        client_with_scope: Clients.to_oauth_schema(client_with_scope),
+        client: client,
+        client_with_scope: client_with_scope,
         resource_owner: resource_owner
       }
     end

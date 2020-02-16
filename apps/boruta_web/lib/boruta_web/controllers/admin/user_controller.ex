@@ -2,7 +2,7 @@ defmodule BorutaWeb.Admin.UserController do
   use BorutaWeb, :controller
 
   alias Boruta.Accounts.User
-  alias Boruta.Admin
+  alias Boruta.Ecto.Admin
   alias Boruta.Oauth.Token
 
   plug BorutaWeb.AuthorizationPlug, ["users:manage:all"]

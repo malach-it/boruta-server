@@ -4,7 +4,6 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
 
   import Boruta.Factory
 
-  alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
@@ -21,8 +20,8 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
         ]
       )
       {:ok,
-        client: Clients.to_oauth_schema(client),
-        client_with_scope: Clients.to_oauth_schema(client_with_scope)
+        client: client,
+        client_with_scope: client_with_scope
       }
     end
 

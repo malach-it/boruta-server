@@ -3,7 +3,7 @@ defmodule BorutaWeb.Admin.ScopeControllerTest do
 
   use BorutaWeb.ConnCase
 
-  alias Boruta.Scope
+  alias Boruta.Ecto.Scope
 
   @create_attrs %{
     name: "some:name",

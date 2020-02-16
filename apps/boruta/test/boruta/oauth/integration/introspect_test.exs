@@ -6,8 +6,6 @@ defmodule Boruta.OauthTest.IntrospectTest do
 
   import Boruta.Factory
 
-  alias Boruta.AccessTokens
-  alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
@@ -17,10 +15,16 @@ defmodule Boruta.OauthTest.IntrospectTest do
     setup do
       client = insert(:client)
       resource_owner = insert(:user)
-      token = insert(:token, type: "access_token", client_id: client.id, scope: "scope", resource_owner_id: resource_owner.id)
+      token = insert(
+        :token,
+        type: "access_token",
+        client: client,
+        scope: "scope",
+        resource_owner: resource_owner
+      )
       {:ok,
-        client: Clients.to_oauth_schema(client),
-        token: AccessTokens.to_oauth_schema(token)
+        client: client,
+        token: token
       }
     end
 

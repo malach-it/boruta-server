@@ -1,4 +1,4 @@
-defmodule Boruta.Admin.Users do
+defmodule Boruta.Ecto.Admin.Users do
   @moduledoc """
   TODO Admin Users documentation
   """

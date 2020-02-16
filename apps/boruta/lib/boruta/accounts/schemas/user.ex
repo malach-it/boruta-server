@@ -2,7 +2,7 @@ defmodule Boruta.Accounts.User do
   @moduledoc false
 
   alias Boruta.Accounts.HashSalt
-  alias Boruta.Scope
+  alias Boruta.Ecto.Scope
 
   use Ecto.Schema
   use Pow.Ecto.Schema,

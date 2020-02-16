@@ -1,4 +1,4 @@
-defmodule Boruta.ResourceOwners do
+defmodule Boruta.Ecto.ResourceOwners do
   @moduledoc false
 
   @behaviour Boruta.Oauth.ResourceOwners
@@ -9,7 +9,8 @@ defmodule Boruta.ResourceOwners do
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username, password: password) do
-    with %{__struct__: _} = resource_owner <- repo().get_by(resource_owner_schema(), email: username),
+    with %{__struct__: _} = resource_owner <-
+           repo().get_by(resource_owner_schema(), email: username),
          true <- apply(user_checkpw_method(), [password, resource_owner.password_hash]) do
       resource_owner
     else
@@ -20,8 +21,9 @@ defmodule Boruta.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def authorized_scopes(%_{} = resource_owner) do
     resource_owner = repo().preload(resource_owner, :authorized_scopes)
+
     resource_owner.authorized_scopes
-    |> Enum.map(fn (scope) -> struct(Oauth.Scope, Map.from_struct(scope)) end)
+    |> Enum.map(fn scope -> struct(Oauth.Scope, Map.from_struct(scope)) end)
   end
 
   @impl Boruta.Oauth.ResourceOwners

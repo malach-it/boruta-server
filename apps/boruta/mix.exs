@@ -40,17 +40,17 @@ defmodule Boruta.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:ecto_sql, "~> 3.0"},
-      {:postgrex, ">= 0.0.0"},
-      {:jason, "~> 1.0"},
-      {:ex_machina, "~> 2.3", only: :test},
-      {:ex_json_schema, "~> 0.7.2"},
-      {:secure_random, "~> 0.5"},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
+      {:ecto_sql, "~> 3.0"},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:ex_json_schema, "~> 0.6.1"},
+      {:ex_machina, "~> 2.3", only: :test},
+      {:jason, "~> 1.0"},
+      {:postgrex, ">= 0.0.0"},
+      {:pow, "~> 1.0.11"},
       {:puid, "~> 1.0"},
-      {:pow, "~> 1.0.11"}
+      {:secure_random, "~> 0.5"}
     ]
   end
 

@@ -6,11 +6,9 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
 
   import Boruta.Factory
 
-  alias Boruta.Clients
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.Scope
   alias Boruta.Oauth.TokenResponse
 
   describe "resource owner password credentials grant" do
@@ -22,8 +20,8 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
         authorized_scopes: [insert(:scope, name: "scope"), insert(:scope, name: "other")]
       )
       {:ok,
-        client: Clients.to_oauth_schema(client),
-        client_with_scope: Clients.to_oauth_schema(client_with_scope),
+        client: client,
+        client_with_scope: client_with_scope,
         resource_owner: resource_owner
       }
     end
@@ -130,7 +128,7 @@ defmodule Boruta.OauthTest.ResourceOwnerPasswordCredentialsGrantTest do
 
     test "returns a token if scope is authorized", %{client_with_scope: client, resource_owner: resource_owner} do
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
-      %Scope{name: given_scope} = List.first(client.authorized_scopes)
+      %{name: given_scope} = List.first(client.authorized_scopes)
       case Oauth.token(
         %{
           req_headers: [{"authorization", authorization_header}],

@@ -1,4 +1,4 @@
-defmodule Boruta.Client do
+defmodule Boruta.Ecto.Client do
   @moduledoc false
   use Ecto.Schema
 
@@ -6,14 +6,14 @@ defmodule Boruta.Client do
   import Ecto.Query, only: [from: 2]
   import Boruta.Config, only: [token_generator: 0, repo: 0]
 
-  alias Boruta.Scope
+  alias Boruta.Ecto.Scope
 
   @type t :: %__MODULE__{
-    secret: String.t(),
-    authorize_scope: boolean(),
-    authorized_scopes: list(String.t()),
-    redirect_uris: list(String.t())
-  }
+          secret: String.t(),
+          authorize_scope: boolean(),
+          authorized_scopes: list(Scope.t()),
+          redirect_uris: list(String.t())
+        }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -47,38 +47,45 @@ defmodule Boruta.Client do
   end
 
   defp validate_redirect_uris(changeset) do
-    validate_change(changeset, :redirect_uris, fn (field, values) ->
+    validate_change(changeset, :redirect_uris, fn field, values ->
       Enum.map(values, &validate_uri/1)
       |> Enum.reject(&is_nil/1)
-      |> Enum.map(fn (error) -> {field, error} end)
+      |> Enum.map(fn error -> {field, error} end)
     end)
   end
 
   defp validate_uri(nil), do: "empty values are not allowed"
+
   defp validate_uri("" <> uri) do
     case URI.parse(uri) do
       %URI{scheme: scheme, host: host}
-      when not is_nil(scheme) and not is_nil(host) -> nil
-      _ -> "`#{uri}` is invalid"
+      when not is_nil(scheme) and not is_nil(host) ->
+        nil
+
+      _ ->
+        "`#{uri}` is invalid"
     end
   end
 
   defp parse_authorized_scopes(attrs) do
-    authorized_scope_ids = Enum.map(
-      attrs["authorized_scopes"] || [],
-      fn (scope_attrs) ->
-        case apply_action(Scope.assoc_changeset(%Scope{}, scope_attrs), :replace) do
-          {:ok, %{id: id}} -> id
-          _ -> nil
+    authorized_scope_ids =
+      Enum.map(
+        attrs["authorized_scopes"] || [],
+        fn scope_attrs ->
+          case apply_action(Scope.assoc_changeset(%Scope{}, scope_attrs), :replace) do
+            {:ok, %{id: id}} -> id
+            _ -> nil
+          end
         end
-      end
-    )
-    authorized_scope_ids = authorized_scope_ids
-                           |> Enum.reject(&is_nil/1)
+      )
+
+    authorized_scope_ids =
+      authorized_scope_ids
+      |> Enum.reject(&is_nil/1)
 
     repo().all(
       from s in Scope,
-      where: s.id in ^authorized_scope_ids
+        where: s.id in ^authorized_scope_ids
     )
   end
 

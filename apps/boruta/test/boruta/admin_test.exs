@@ -1,12 +1,12 @@
-defmodule Boruta.AdminTest do
+defmodule Boruta.Ecto.AdminTest do
   use Boruta.DataCase
 
   import Boruta.Factory
 
   alias Boruta.Accounts.User
-  alias Boruta.Admin
-  alias Boruta.Client
-  alias Boruta.Scope
+  alias Boruta.Ecto.Admin
+  alias Boruta.Ecto.Client
+  alias Boruta.Ecto.Scope
 
   @client_valid_attrs %{
     redirect_uri: ["https://redirect.uri"]
@@ -22,7 +22,7 @@ defmodule Boruta.AdminTest do
       |> Enum.into(@client_valid_attrs)
       |> Admin.create_client()
 
-    Boruta.Repo.preload(client, :authorized_scopes)
+    client
   end
 
   describe "list_clients/0" do
@@ -58,7 +58,8 @@ defmodule Boruta.AdminTest do
     test "creates a client with authorized scopes" do
       scope = insert(:scope)
       assert {:ok,
-        %Client{authorized_scopes: authorized_scopes}} = Admin.create_client(%{"authorized_scopes" => [%{"id" => scope.id}]})
+        %Client{authorized_scopes: authorized_scopes}
+      } = Admin.create_client(%{"authorized_scopes" => [%{"id" => scope.id}]})
       assert authorized_scopes == [scope]
     end
   end
@@ -186,7 +187,7 @@ defmodule Boruta.AdminTest do
 
   # users
 
-  def user_fixture(attrs \\ %{}) do
+  def user_fixture(attrs \\ []) do
     user = insert(:user, attrs)
     user
     |> Repo.reload()

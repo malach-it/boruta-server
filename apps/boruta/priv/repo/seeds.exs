@@ -14,9 +14,9 @@ import Ecto.Changeset
 |> cast(%{
   id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e20",
   secret: "777",
-  redirect_uri: "https://boruta.herokuapp.com/admin/oauth-callback",
+  redirect_uris: ["https://boruta.herokuapp.com/admin/oauth-callback"],
   authorize_scope: false
-}, [:id, :secret, :redirect_uri, :authorize_scope])
+}, [:id, :secret, :redirect_uris, :authorize_scope])
 |> Boruta.Repo.insert()
 
 Boruta.Accounts.User.changeset(%Boruta.Accounts.User{}, %{
