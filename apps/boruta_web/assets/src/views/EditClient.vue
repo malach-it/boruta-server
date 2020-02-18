@@ -3,32 +3,47 @@
     <div class="ui container">
       <h1>Edit a client</h1>
       <div class="ui big segment">
-        <div v-if="errors" class="ui error message">
-          <ul>
-            <li v-for="key in Object.keys(errors)"><strong>{{ key }} :</strong> {{ errors[key][0] }}</li>
-          </ul>
+        <FormErrors v-if="errors" :errors="errors" />
+        <div class="ui big segment">
+          <p><strong>Client id:</strong> {{ client.id }}</p>
+          <p><strong>Client secret:</strong> {{ client.secret }}</p>
         </div>
-        <p><strong>Client id:</strong> {{ client.id }}</p>
-        <p><strong>Client secret:</strong> {{ client.secret }}</p>
         <form class="ui form" v-on:submit.prevent="updateClient()">
-          <div class="field">
-            <label>Redirect URI</label>
-            <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">
-              <div class="ui right icon input">
-                <input type="text" v-model="redirectUri.uri" placeholder="http://redirect.uri" />
-                <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
+          <div class="ui big segment">
+            <div class="field">
+              <label>Redirect URI</label>
+              <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">
+                <div class="ui right icon input">
+                  <input type="text" v-model="redirectUri.uri" placeholder="http://redirect.uri" />
+                  <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
+                </div>
+              </div>
+              <button v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</button>
+            </div>
+          </div>
+          <div class="ui segment">
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="client.authorize_scope">
+                <label>Authorize scopes</label>
               </div>
             </div>
-            <button v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</button>
+            <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </div>
-          <div class="field">
-            <div class="ui toggle checkbox">
-              <input type="checkbox" v-model="client.authorize_scope" placeholder="http://redirect.uri">
-              <label>Authorize scopes</label>
+          <div class="ui big segment">
+            <div class="field">
+              <label>Supported grant types</label>
+              <div class="ui segments">
+                <div class="ui big segment" v-for="grantType in client.grantTypes" :key="grantType.label">
+                  <div class="ui toggle checkbox">
+                    <input type="checkbox" v-model="grantType.value">
+                    <label>{{ grantType.label }}</label>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
-          <button class="ui violet button" type="submit">Update</button>
+          <button class="ui big violet button" type="submit">Update</button>
           <router-link :to="{ name: 'client-list' }" class="ui button">Back</router-link>
         </form>
       </div>
@@ -86,6 +101,7 @@ export default {
           this.$router.push({ name: 'client-list' })
         })
       }).catch((errors) => {
+        console.log(errors)
         this.errors = errors
       })
     },

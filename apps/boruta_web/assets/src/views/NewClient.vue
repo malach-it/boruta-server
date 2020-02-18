@@ -2,41 +2,44 @@
   <div class="new-client">
     <div class="ui container">
       <h1>New Client</h1>
-      <div class="ui big teal segment">
-        <div v-if="errors" class="ui error message">
-          <ul>
-            <li v-for="key in Object.keys(errors)"><strong>{{ key }} :</strong> {{ errors[key][0] }}</li>
-          </ul>
-        </div>
+      <div class="ui big segment">
+        <FormErrors v-if="errors" :errors="errors" />
         <form class="ui form" v-on:submit.prevent="createClient()">
-          <div class="field">
-            <label>Redirect URI</label>
-            <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">
-              <div class="ui right icon input">
-                <input type="text" v-model="redirectUri.uri" placeholder="http://redirect.uri" />
-                <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
+          <div class="ui big segment">
+            <div class="field">
+              <label>Redirect URI</label>
+              <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">
+                <div class="ui right icon input">
+                  <input type="text" v-model="redirectUri.uri" placeholder="http://redirect.uri" />
+                  <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
+                </div>
+              </div>
+              <button v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</button>
+            </div>
+          </div>
+          <div class="ui segment">
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="client.authorize_scope" placeholder="http://redirect.uri">
+                <label>Authorize scopes</label>
               </div>
             </div>
-            <button v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</button>
+            <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </div>
-          <div class="field">
-            <div class="ui toggle checkbox">
-              <input type="checkbox" v-model="client.authorize_scope" placeholder="http://redirect.uri">
-              <label>Authorize scopes</label>
-            </div>
-          </div>
-          <div v-if="client.authorize_scope" class="field">
-            <div v-for="(authorizedScope, index) in client.authorized_scopes" class="field" :key="index">
-              <div class="ui right icon input">
-                <select type="text" v-model="authorizedScope.model" class="authorized-scopes-select">
-                  <option :value="scope" v-for="scope in scopeModels(authorizedScope)">{{ scope.name }}</option>
-                </select>
-                <i v-on:click="deleteScope(authorizedScope)" class="close icon"></i>
+          <div class="ui big segment">
+            <div class="field">
+              <label>Supported grant types</label>
+              <div class="ui segments">
+              <div class="ui segment" v-for="grantType in client.grantTypes" :key="grantType.label">
+                <div class="ui toggle checkbox">
+                  <input type="checkbox" v-model="grantType.value">
+                  <label>{{ grantType.label }}</label>
+                </div>
+              </div>
               </div>
             </div>
-            <button v-on:click.prevent="addScope()" class="ui blue fluid button">Add a scope</button>
           </div>
-          <button class="ui violet button" type="submit">Create</button>
+          <button class="ui big violet button" type="submit">Create</button>
           <router-link :to="{ name: 'client-list' }" class="ui button">Back</router-link>
         </form>
       </div>
@@ -47,9 +50,15 @@
 <script>
 import Client from '@/models/client.model'
 import Scope from '@/models/scope.model'
+import ScopesField from '@/components/ScopesField.vue'
+import FormErrors from '@/components/FormErrors.vue'
 
 export default {
   name: 'clients',
+  components: {
+    ScopesField,
+    FormErrors
+  },
   mounted () {
     Scope.all().then((scopes) => {
       this.scopes = scopes

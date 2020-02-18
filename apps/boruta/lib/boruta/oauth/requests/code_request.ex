@@ -13,7 +13,8 @@ defmodule Boruta.Oauth.CodeRequest do
     redirect_uri: String.t(),
     state: String.t(),
     scope: String.t(),
-    resource_owner: struct()
+    resource_owner: struct(),
+    grant_type: String.t()
   }
-  defstruct client_id: "", redirect_uri: "", state: "", scope: "", resource_owner: nil
+  defstruct client_id: "", redirect_uri: "", state: "", scope: "", resource_owner: nil, grant_type: "authorization_code"
 end

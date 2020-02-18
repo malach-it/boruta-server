@@ -10,6 +10,7 @@ defmodule Boruta.Oauth.ClientCredentialsRequest do
     client_id: String.t(),
     client_secret: String.t(),
     scope: String.t(),
+    grant_type: String.t()
   }
-  defstruct client_id: "", client_secret: "", scope: ""
+  defstruct client_id: "", client_secret: "", scope: "", grant_type: "client_credentials"
 end

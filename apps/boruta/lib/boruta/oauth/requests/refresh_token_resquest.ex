@@ -10,7 +10,8 @@ defmodule Boruta.Oauth.RefreshTokenRequest do
     client_id: String.t(),
     client_secret: String.t(),
     refresh_token: String.t(),
-    scope: String.t()
+    scope: String.t(),
+    grant_type: String.t()
   }
-  defstruct client_id: "", client_secret: "", refresh_token: "", scope: ""
+  defstruct client_id: "", client_secret: "", refresh_token: "", scope: "", grant_type: "refresh_token"
 end

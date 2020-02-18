@@ -22,7 +22,8 @@ defmodule BorutaWeb.Admin.ClientView do
           name: scope.name,
           public: scope.public
         }
-      end)
+      end),
+      supported_grant_types: client.supported_grant_types
     }
   end
 end

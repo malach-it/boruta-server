@@ -11,7 +11,8 @@ defmodule Boruta.Oauth.PasswordRequest do
     client_secret: String.t(),
     username: String.t(),
     password: String.t(),
-    scope: String.t()
+    scope: String.t(),
+    grant_type: String.t()
   }
-  defstruct client_id: "", client_secret: "", username: "", password: "", scope: ""
+  defstruct client_id: "", client_secret: "", username: "", password: "", scope: "", grant_type: "password"
 end

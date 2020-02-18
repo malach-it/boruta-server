@@ -9,7 +9,8 @@ defmodule Boruta.Oauth.AuthorizationCodeRequest do
   @type t :: %__MODULE__{
     client_id: String.t(),
     redirect_uri: String.t(),
-    code: String.t()
+    code: String.t(),
+    grant_type: String.t()
   }
-  defstruct client_id: "", redirect_uri: "", code: ""
+  defstruct client_id: "", redirect_uri: "", code: "", grant_type: "authorization_code"
 end

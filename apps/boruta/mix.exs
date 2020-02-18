@@ -48,7 +48,7 @@ defmodule Boruta.MixProject do
       {:ex_machina, "~> 2.3", only: :test},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
-      {:pow, "~> 1.0.11"},
+      {:pow, "~> 1.0.18"},
       {:puid, "~> 1.0"},
       {:secure_random, "~> 0.5"}
     ]

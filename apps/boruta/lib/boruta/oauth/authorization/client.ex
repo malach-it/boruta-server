@@ -17,7 +17,8 @@ defmodule Boruta.Oauth.Authorization.Client do
   """
   @spec authorize(
     [id: String.t(), secret: String.t()] |
-    [id: String.t(), redirect_uri: String.t()]
+    [id: String.t(), secret: String.t(), grant_type: String.t()] |
+    [id: String.t(), redirect_uri: String.t(), grant_type: String.t()]
   ) ::
     {:ok, %Client{}}
     | {:error,
@@ -42,16 +43,49 @@ defmodule Boruta.Oauth.Authorization.Client do
         }
     end
   end
-  def authorize(id: id, redirect_uri: redirect_uri) do
-    case clients().get_by(id: id, redirect_uri: redirect_uri) do
-      %Client{} = client ->
+  def authorize(id: id, secret: secret, grant_type: grant_type) do
+    with %Client{supported_grant_types: supported_grant_types} = client <- clients().get_by(id: id, secret: secret),
+         true <- Enum.member?(supported_grant_types, grant_type) do
         {:ok, client}
+    else
+      nil ->
+        {:error,
+          %Error{
+            status: :unauthorized,
+            error: :invalid_client,
+            error_description: "Invalid client_id or client_secret."
+          }
+        }
+      false ->
+        {:error,
+          %Error{
+            status: :bad_request,
+            error: :unsupported_grant_type,
+            error_description: "Client do not support given grant type."
+          }
+        }
+    end
+  end
+
+  def authorize(id: id, redirect_uri: redirect_uri, grant_type: grant_type) do
+    with %Client{supported_grant_types: supported_grant_types} = client <- clients().get_by(id: id, redirect_uri: redirect_uri),
+         true <- Enum.member?(supported_grant_types, grant_type) do
+        {:ok, client}
+    else
       nil ->
         {:error,
           %Error{
             status: :unauthorized,
             error: :invalid_client,
             error_description: "Invalid client_id or redirect_uri."
+          }
+        }
+      false ->
+        {:error,
+          %Error{
+            status: :bad_request,
+            error: :unsupported_grant_type,
+            error_description: "Client do not support given grant type."
           }
         }
     end

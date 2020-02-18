@@ -1,10 +1,18 @@
 import axios from 'axios'
 import Scope from '@/models/scope.model'
 
+const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit']
+
 const defaults = {
   authorize_scopes: false,
   authorized_scopes: [],
-  redirect_uris: []
+  redirect_uris: [],
+  grantTypes: allGrantTypes.map((label) => {
+    return {
+      value: true,
+      label
+    }
+  })
 }
 
 const assign = {
@@ -20,6 +28,15 @@ const assign = {
     this.authorized_scopes = authorized_scopes.map((scope) => {
       return { model: new Scope(scope) }
     })
+  },
+  supported_grant_types: function ({ supported_grant_types }) {
+    this.supported_grant_types = supported_grant_types
+    this.grantTypes = allGrantTypes.map((label) => {
+      return {
+        value: this.supported_grant_types.includes(label),
+        label
+      }
+    })
   }
 }
 
@@ -31,6 +48,7 @@ class Client {
       this[key] = params[key]
       assign[key].bind(this)(params)
     })
+    console.log(this)
   }
 
   // TODO factorize with User#validate
@@ -72,14 +90,17 @@ class Client {
   }
 
   get serialized () {
-    const { id, secret, redirect_uris, authorize_scope, authorized_scopes } = this
+    const { id, secret, redirect_uris, authorize_scope, authorized_scopes, grantTypes } = this
 
     return {
       id,
       secret,
       redirect_uris: redirect_uris.map(({ uri }) => uri),
       authorize_scope,
-      authorized_scopes: authorized_scopes.map(({ model }) => model.serialized)
+      authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
+      supported_grant_types: grantTypes
+        .filter(({ value }) => value)
+        .map(({ label }) => label)
     }
   }
 }

@@ -13,6 +13,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
     setup do
       resource_owner = insert(:user)
       client = insert(:client, redirect_uris: ["https://redirect.uri"])
+      client_without_grant_type = insert(:client, supported_grant_types: [])
       client_with_scope = insert(:client,
         redirect_uris: ["https://redirect.uri"],
         authorize_scope: true,
@@ -21,6 +22,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
       {:ok,
         client: client,
         client_with_scope: client_with_scope,
+        client_without_grant_type: client_without_grant_type,
         resource_owner: resource_owner
       }
     end
@@ -177,6 +179,30 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
         error_description: "Given scopes are unknown or unauthorized.",
         format: :fragment,
         redirect_uri: "https://redirect.uri",
+        status: :bad_request
+      }}
+    end
+
+    test "returns an error if grant type is not allowed by the client", %{client_without_grant_type: client, resource_owner: resource_owner} do
+      redirect_uri = List.first(client.redirect_uris)
+      assert Oauth.authorize(
+        %{
+          query_params: %{
+            "response_type" => "token",
+            "client_id" => client.id,
+            "redirect_uri" => redirect_uri,
+            "scope" => ""
+          },
+          assigns: %{
+            current_user: resource_owner
+          }
+        },
+        ApplicationMock
+      ) == {:authorize_error, %Error{
+        error: :unsupported_grant_type,
+        error_description: "Client do not support given grant type.",
+        format: :fragment,
+        redirect_uri: redirect_uri,
         status: :bad_request
       }}
     end

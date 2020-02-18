@@ -12,6 +12,7 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
   describe "client credentials grant" do
     setup do
       client = insert(:client)
+      client_without_grant_type = insert(:client, supported_grant_types: [])
       client_with_scope = insert(:client,
         authorize_scope: true,
         authorized_scopes: [
@@ -21,7 +22,8 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
       )
       {:ok,
         client: client,
-        client_with_scope: client_with_scope
+        client_with_scope: client_with_scope,
+        client_without_grant_type: client_without_grant_type
       }
     end
 
@@ -176,6 +178,24 @@ defmodule Boruta.OauthTest.ClientCredentialsGrantTest do
       ) == {:token_error, %Error{
         error: :invalid_scope,
         error_description: "Given scopes are unknown or unauthorized.",
+        status: :bad_request
+      }}
+    end
+
+    test "returns an error if grant type is not allowed", %{client_without_grant_type: client} do
+      assert Oauth.token(
+        %{
+          body_params: %{
+            "grant_type" => "client_credentials",
+            "client_id" => client.id,
+            "client_secret" => client.secret,
+            "scope" => ""
+          }
+        },
+        ApplicationMock
+      ) == {:token_error, %Error{
+        error: :unsupported_grant_type,
+        error_description: "Client do not support given grant type.",
         status: :bad_request
       }}
     end

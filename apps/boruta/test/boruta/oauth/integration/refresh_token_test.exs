@@ -14,6 +14,7 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
   describe "refresh_token" do
     setup do
       client = insert(:client)
+      client_without_grant_type = insert(:client, supported_grant_types: [])
       expired_access_token = insert(
         :token,
         type: "access_token",
@@ -31,7 +32,12 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
         expires_at: :os.system_time(:seconds) + 10,
         scope: "scope"
       )
-      {:ok, client: client, expired_access_token: expired_access_token, access_token: access_token}
+      {:ok,
+        client: client,
+        client_without_grant_type: client_without_grant_type,
+        expired_access_token: expired_access_token,
+        access_token: access_token
+      }
     end
 
     test "returns an error if `grant_type` is 'refresh_token' and schema is invalid" do
@@ -86,6 +92,18 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
       }, ApplicationMock) == {:token_error, %Error{
         error: :invalid_scope,
         error_description: "Given scopes are unknown or unauthorized.",
+        status: :bad_request
+      }}
+    end
+
+    test "returns an error if grant type is not allowed by client", %{client_without_grant_type: client, access_token: token} do
+      %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
+      assert Oauth.token(%{
+        body_params: %{"grant_type" => "refresh_token", "refresh_token" => token.refresh_token, "scope" => "bad_scope"},
+        req_headers: [{"authorization", authorization_header}]
+      }, ApplicationMock) == {:token_error, %Error{
+        error: :unsupported_grant_type,
+        error_description: "Client do not support given grant type.",
         status: :bad_request
       }}
     end
