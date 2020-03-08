@@ -72,6 +72,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:redirect_uris, {:array, :string})
         add(:scope, :string)
         add(:authorize_scope, :boolean, default: false)
+        add(:supported_grant_types, {:array, :string})
 
         timestamps()
       end
@@ -85,7 +86,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:redirect_uri, :string)
         add(:state, :string)
         add(:scope, :string)
-        add(:scope, :utc_datetime)
+        add(:revoked_at, :utc_datetime)
 
         add(:client_id, references(:clients, type: :uuid, on_delete: :nilify_all))
         add(:resource_owner_id, :uuid)
@@ -140,7 +141,6 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
       create unique_index(:users, [:email])
       <% end %>
       create unique_index(:clients, [:id, :secret])
-      create unique_index(:clients, [:id, :redirect_uri])
       create index("tokens", [:value])
       create unique_index("tokens", [:client_id, :value])
       create unique_index("tokens", [:client_id, :refresh_token])
