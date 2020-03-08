@@ -5,7 +5,7 @@ defmodule Boruta.MixProject do
     [
       name: "Boruta core",
       app: :boruta,
-      version: "0.1.0-rc.5",
+      version: "0.2.0",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -75,6 +75,9 @@ defmodule Boruta.MixProject do
         "Introspection": [
           Boruta.Oauth.Introspect
         ],
+        "Revocation": [
+          Boruta.Oauth.Revoke
+        ],
         "Contexts": [
           Boruta.Oauth.AccessTokens,
           Boruta.Oauth.Clients,
@@ -95,13 +98,14 @@ defmodule Boruta.MixProject do
           Boruta.Oauth.CodeRequest,
           Boruta.Oauth.IntrospectRequest,
           Boruta.Oauth.RefreshTokenRequest,
+          Boruta.Oauth.RevokeRequest,
           Boruta.Oauth.Request
         ],
         "Admin": [
-          Boruta.Admin,
-          Boruta.Admin.Clients,
-          Boruta.Admin.Scopes,
-          Boruta.Admin.Users
+          Boruta.Ecto.Admin,
+          Boruta.Ecto.Admin.Clients,
+          Boruta.Ecto.Admin.Scopes,
+          Boruta.Ecto.Admin.Users
         ],
         "Utilities": [
           Boruta.BasicAuth,
