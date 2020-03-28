@@ -1,41 +1,10 @@
 <template>
-  <div id="app">
-    <Header />
-    <div id="main">
-      <div class="ui left internal rail">
-        <div class="ui big vertical fluid tabular menu">
-          <span class="item">&nbsp;</span>
-          <router-link v-if="isAuthenticated" :to="{ name: 'user-list' }" class="users item">
-            Users
-          </router-link>
-          <router-link v-if="isAuthenticated" :to="{ name: 'client-list' }" class="clients item">
-            Clients
-          </router-link>
-          <router-link v-if="isAuthenticated" :to="{ name: 'scope-list' }" class="scopes item">
-            Scopes
-          </router-link>
-        </div>
-      </div>
-      <router-view/>
-    </div>
-  </div>
+  <router-view/>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import Header from '@/components/Header.vue'
-
 export default {
-  name: 'App',
-  components: {
-    Header
-  },
-  computed: {
-    ...mapGetters(['isAuthenticated'])
-  },
-  mounted () {
-    this.$store.dispatch('getCurrentUser')
-  }
+  name: 'App'
 }
 </script>
 

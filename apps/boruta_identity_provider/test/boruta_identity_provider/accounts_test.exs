@@ -88,7 +88,7 @@ defmodule BorutaIdentityProvider.AccountsTest do
     end
   end
 
-  describe "#get_user_scopes/1" do
+  describe "get_user_scopes/1" do
     test "returns an empty array" do
       assert Accounts.get_user_scopes("f8eadd9e-7680-493e-800b-3f3604d7c5a0") == []
     end

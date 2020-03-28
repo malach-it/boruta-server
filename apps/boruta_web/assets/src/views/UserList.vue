@@ -12,10 +12,10 @@
           </div>
           <p>
             <strong>Email:</strong> {{ user.email }}
-            <span v-for="scope in user.authorized_scopes" class="ui olive label" :key="scope.model.id">
-              {{ scope.model.name }}
-            </span>
           </p>
+          <span v-for="scope in user.authorized_scopes" class="ui olive label" :key="scope.model.id">
+            {{ scope.model.name }}
+          </span>
         </div>
       </div>
     </div>

@@ -94,7 +94,6 @@ defmodule BorutaWeb.OauthController do
       "code" -> "#{redirect_uri}?#{query}"
     end
     conn
-    |> delete_session(:oauth_request)
     |> redirect(external: url)
   end
 

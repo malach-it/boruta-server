@@ -39,7 +39,7 @@ defmodule BorutaIdentityProvider.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:pow, "~> 1.0.18"},
-      {:ex_machina, "~> 2.4"},
+      {:ex_machina, "~> 2.4", only: :test},
       {:secure_random, "~> 0.5"},
       {:jason, "~> 1.0"}
     ]

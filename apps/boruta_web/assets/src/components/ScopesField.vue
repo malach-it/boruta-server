@@ -3,7 +3,7 @@
     <div v-for="(authorizedScope, index) in currentScopes" class="field" :key="index">
       <div class="ui right icon input">
         <select type="text" v-model="authorizedScope.model" class="authorized-scopes-select">
-          <option :value="scope" v-for="scope in scopeOptions(authorizedScope)" :key="scope.id">{{ scope.name }}</option>
+          <option :value="scope" v-for="scope in scopeOptions(authorizedScope.model)" :key="scope.id">{{ scope.name }}</option>
         </select>
         <i v-on:click="deleteScope(authorizedScope)" class="close icon"></i>
       </div>
@@ -28,24 +28,24 @@ export default {
       const vm = this
       return function (authorizedScope) {
         return vm.scopes.map((scope) => {
-          if (authorizedScope.model.name === scope.name) {
-            return authorizedScope.model
+          if (authorizedScope.name === scope.name) {
+            return authorizedScope
           }
           return scope
         })
       }
     }
   },
-  mounted() {
+  mounted () {
     Scope.all().then((scopes) => {
       this.scopes = scopes
     })
   },
   methods: {
-    deleteScope(scope) {
+    deleteScope (scope) {
       this.$emit('delete-scope', scope)
     },
-    addScope() {
+    addScope () {
       this.$emit('add-scope')
     }
   }

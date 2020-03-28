@@ -6,12 +6,14 @@ import Ecto.Changeset
 {:ok, clients_scope} = BorutaWeb.Repo.insert(%Boruta.Ecto.Scope{
   name: "clients:manage:all"
 })
+{:ok, upstreams_scope} = BorutaWeb.Repo.insert(%Boruta.Ecto.Scope{
+  name: "upstreams:manage:all"
+})
 {:ok, users_scope} = BorutaWeb.Repo.insert(%Boruta.Ecto.Scope{
   name: "users:manage:all"
 })
 
-%Boruta.Ecto.Client{}
-|> cast(%{
+%Boruta.Ecto.Client{} |> cast(%{
   id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e20",
   secret: "777",
   redirect_uris: ["https://boruta.herokuapp.com/admin/oauth-callback"],

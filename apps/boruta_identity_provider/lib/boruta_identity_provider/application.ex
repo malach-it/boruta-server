@@ -5,6 +5,8 @@ defmodule BorutaIdentityProvider.Application do
 
   use Application
 
+  alias Boruta.Gateway.Upstreams
+
   def start(_type, _args) do
     children = [
       BorutaIdentityProvider.Repo

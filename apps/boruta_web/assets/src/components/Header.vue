@@ -2,17 +2,14 @@
   <div class="header">
     <div class="ui secondary pointing menu">
       <router-link :to="{ name: 'home' }" exact class="item">
-        Home
+        Boruta
       </router-link>
       <div class="right menu">
-        <span v-if="isAuthenticated" class="ui item">
+        <span class="ui item">
           {{ currentUser.email }}
         </span>
-        <a v-if="isAuthenticated" v-on:click.prevent="logout()" class="ui item">
+        <a v-on:click.prevent="logout()" class="ui item">
           Logout
-        </a>
-        <a v-else v-on:click="login()" class="ui item">
-          Login
         </a>
       </div>
     </div>
@@ -20,7 +17,6 @@
 </template>
 
 <script>
-import oauth from '@/services/oauth.service'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -33,10 +29,8 @@ export default {
       this.$store.dispatch('login')
     },
     logout () {
-      this.$store.dispatch('logout').then(() => {
-        this.$router.push({ name: 'home' })
-      })
-    },
+      this.$store.dispatch('logout')
+    }
   }
 }
 </script>

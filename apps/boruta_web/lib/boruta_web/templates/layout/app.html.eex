@@ -5,15 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Boruta · Phoenix Framework</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
-    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha256-9mbkOfVho3ZPXfM7W8sV2SndrGDuh7wuyLjtsWeTI1Q=" crossorigin="anonymous" />
   </head>
   <body>
     <header>
       <%= if get_flash(@conn, :info) do %><p class="ui success center aligned large message segment" role="alert"><%= get_flash(@conn, :info) %></p><% end %>
       <%= if get_flash(@conn, :error) do %><p class="ui error large center aligned message segment" role="alert"><%= get_flash(@conn, :error) %></p><% end %>
     </header>
-    <main class="main" style="padding: 20px 0;height: 100%;display: flex;align-items: center;">
+    <main class="main" style="padding: 20px 0;height: 100%;display: flex;align-items: center;justify-content: center;">
       <%= render @view_module, @view_template, assigns %>
     </main>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/accounts/app.js") %>"></script>
