@@ -13,7 +13,7 @@ defmodule BorutaWeb.Endpoint do
     at: "/",
     from: :boruta_web,
     gzip: false,
-    only: ~w(admin css fonts images js favicon.ico robots.txt)
+    only: ~w(admin accounts css fonts images js favicon.ico robots.txt)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

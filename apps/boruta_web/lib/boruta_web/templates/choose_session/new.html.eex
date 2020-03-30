@@ -1,8 +1,14 @@
-<div class="choose-session">
-  <div class="ui massive center aligned segment">
-    <span><%= link "New login", to: Routes.pow_session_path(@conn, :delete), method: :delete %></span>
-  </div>
-  <div class="ui massive center aligned segment">
-    <span><%= link "Continue as #{current_user_email(@conn)}", to: authorize_url(@conn) %></span>
+<div class="ui container">
+  <div class="ui two column centered grid">
+    <div class="column">
+      <h1 class="ui right aligned header">Continue ?</h1>
+      <div class="ui segment">
+        <div class="choose-session">
+          <%= link "New login", to: Routes.pow_session_path(@conn, :delete), method: :delete, class: "ui massive fluid violet button" %>
+          <span class="ui horizontal divider">or</span>
+          <%= link "Continue as #{current_user_email(@conn)}", to: authorize_url(@conn), class: "ui massive fluid violet inverted button" %>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

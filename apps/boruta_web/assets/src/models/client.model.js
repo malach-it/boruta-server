@@ -109,7 +109,7 @@ Client.api = function () {
   const accessToken = localStorage.getItem('access_token')
 
   return axios.create({
-    baseURL: `${process.env.VUE_APP_BORUTA_BASE_URL}/api/clients`,
+    baseURL: `${process.env.VUE_APP_BORUTA_BASE_URL}/oauth/api/clients`,
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 }

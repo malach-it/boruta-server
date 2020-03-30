@@ -26,7 +26,7 @@ defmodule BorutaWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/" do
+  scope "/accounts" do
     pipe_through :browser
 
     get "/choose-session", BorutaWeb.ChooseSessionController, :new
@@ -46,25 +46,23 @@ defmodule BorutaWeb.Router do
     post "/revoke", OauthController, :revoke
     post "/token", OauthController, :token
     post "/introspect", OauthController, :introspect
+
+    scope "/api", Admin, as: :admin do
+      resources "/scopes", ScopeController, except: [:new, :edit]
+      resources "/clients", ClientController, except: [:new, :edit]
+      get "/users/current", UserController, :current
+      # TODO user scopes
+      # resources "/users/:user_id/scopes, only: [:create, :delete]
+
+      # TODO remove users resource
+      resources "/users", UserController, except: [:new, :edit, :create]
+    end
   end
 
   scope "/oauth", BorutaWeb do
     pipe_through :browser
 
     get "/authorize", OauthController, :authorize
-  end
-
-  scope "/api", BorutaWeb.Admin, as: :admin do
-    pipe_through :api
-
-    resources "/scopes", ScopeController, except: [:new, :edit]
-    resources "/clients", ClientController, except: [:new, :edit]
-    get "/users/current", UserController, :current
-    # TODO user scopes
-    # resources "/users/:user_id/scopes, only: [:create, :delete]
-
-    # TODO remove users resource
-    resources "/users", UserController, except: [:new, :edit, :create]
   end
 
   scope "/admin", BorutaWeb do
