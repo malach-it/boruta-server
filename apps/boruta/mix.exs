@@ -40,6 +40,7 @@ defmodule Boruta.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:boruta_identity_provider, in_umbrella: true},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
       {:ecto_sql, "~> 3.0"},
@@ -48,9 +49,9 @@ defmodule Boruta.MixProject do
       {:ex_machina, "~> 2.3", only: :test},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
-      {:pow, "~> 1.0.18"},
       {:puid, "~> 1.0"},
-      {:secure_random, "~> 0.5"}
+      {:secure_random, "~> 0.5"},
+      {:mox, "~> 0.5", only: :test}
     ]
   end
 

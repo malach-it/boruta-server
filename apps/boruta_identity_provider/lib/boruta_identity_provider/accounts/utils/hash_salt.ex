@@ -1,7 +1,7 @@
 defmodule Boruta.Accounts.HashSalt do
   @moduledoc false
 
-  import Boruta.Config, only: [secret_key_base: 0]
+  import BorutaIdentityProvider.Config, only: [secret_key_base: 0]
 
   def hashpwsalt(password) do
     hash(password)

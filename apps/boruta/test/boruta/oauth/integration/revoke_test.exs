@@ -6,19 +6,23 @@ defmodule Boruta.OauthTest.RevokeTest do
 
   import Boruta.Factory
   import Boruta.Config, only: [access_tokens: 0]
+  import Mox
 
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
+  alias Boruta.Support.ResourceOwners
+  alias Boruta.Support.User
 
   describe "revoke request" do
     setup do
       client = insert(:client)
-      resource_owner = insert(:user)
+      resource_owner = %User{}
       token = insert(:token, type: "access_token", client_id: client.id, scope: "scope", resource_owner_id: resource_owner.id)
       {:ok,
         client: client,
-        token: token
+        token: token,
+        resource_owner: resource_owner
       }
     end
 
@@ -51,7 +55,10 @@ defmodule Boruta.OauthTest.RevokeTest do
       }}
     end
 
-    test "revoke token if token is active", %{client: client, token: token} do
+    test "revoke token if token is active", %{client: client, token: token, resource_owner: resource_owner} do
+      ResourceOwners
+      |> stub(:get_by, fn(_params) -> resource_owner end)
+      |> stub(:persisted?, fn(_params) -> true end)
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       case Oauth.revoke(%{
         body_params: %{"token" => token.value},

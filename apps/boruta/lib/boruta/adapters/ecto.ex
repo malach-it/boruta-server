@@ -5,5 +5,4 @@ defmodule Boruta.EctoAdapter do
   def clients, do: Boruta.Ecto.Clients
   def codes, do: Boruta.Ecto.Codes
   def scopes, do: Boruta.Ecto.Scopes
-  def resource_owners, do: Boruta.Ecto.ResourceOwners
 end

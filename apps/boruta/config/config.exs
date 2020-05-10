@@ -4,15 +4,10 @@
 # the umbrella root.
 use Mix.Config
 
+# TODO remove BorutaIdentityProvider.Repo dependency
 config :boruta,
-  ecto_repos: [Boruta.Repo]
-
-import_config "#{Mix.env()}.exs"
-
-config :boruta, :pow,
-  repo: Boruta.Repo,
-  user: Boruta.Accounts.User,
-  # extensions: [PowEmailConfirmation, PowResetPassword]
-  extensions: [PowResetPassword]
+  ecto_repos: [Boruta.Repo, BorutaIdentityProvider.Repo]
 
 config :phoenix, :json_library, Jason
+
+import_config "#{Mix.env()}.exs"

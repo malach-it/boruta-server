@@ -15,7 +15,6 @@ defmodule Boruta.Ecto.AccessTokens do
     repo().one(
       from t in Ecto.Token,
         left_join: c in assoc(t, :client),
-        left_join: u in assoc(t, :resource_owner),
         where: t.type == "access_token" and t.value == ^value
     )
     |> to_oauth_schema()
@@ -25,7 +24,6 @@ defmodule Boruta.Ecto.AccessTokens do
     repo().one(
       from t in Ecto.Token,
         left_join: c in assoc(t, :client),
-        left_join: u in assoc(t, :resource_owner),
         where: t.type == "access_token" and t.refresh_token == ^refresh_token
     )
     |> to_oauth_schema()

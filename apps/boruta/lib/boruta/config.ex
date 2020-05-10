@@ -27,8 +27,7 @@ defmodule Boruta.Config do
     },
     token_generator: Boruta.TokenGenerator,
     resource_owner: %{
-      schema: Boruta.Accounts.User,
-      checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
+      adapter: Boruta.Accounts.ResourceOwner
     },
     adapter: Boruta.EctoAdapter
 
@@ -68,11 +67,6 @@ defmodule Boruta.Config do
   end
 
   @doc false
-  defmacro resource_owner_schema do
-    Keyword.fetch!(oauth_config(), :resource_owner)[:schema]
-  end
-
-  @doc false
   defmacro adapter do
     Keyword.fetch!(oauth_config(), :adapter)
   end
@@ -99,12 +93,13 @@ defmodule Boruta.Config do
 
   @doc false
   defmacro resource_owners do
-    adapter().resource_owners()
+    Keyword.fetch!(oauth_config(), :resource_owner)[:adapter]
   end
 
   @doc false
-  defmacro user_checkpw_method do
-    Keyword.fetch!(oauth_config(), :resource_owner)[:checkpw_method]
+  # TODO to remove
+  defmacro resource_owner_schema do
+    Boruta.Accounts.User
   end
 
   @doc false
