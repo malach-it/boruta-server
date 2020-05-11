@@ -6,4 +6,4 @@ config :boruta_identity_provider, BorutaIdentityProvider.Repo,
   password: "postgres",
   database: "boruta_identity_provider_dev",
   hostname: "localhost",
-  pool: 5
+  pool_size: 5

@@ -12,12 +12,5 @@ config :boruta, Boruta.Repo,
   hostname: "localhost",
   pool_size: 10
 
-config :boruta_identity_provider, BorutaIdentityProvider.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "boruta_identity_provider_dev",
-  hostname: "localhost",
-  pool: 5
-
 config :boruta, Boruta.Oauth,
   secret_key_base: "secret"

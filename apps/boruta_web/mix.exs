@@ -6,7 +6,6 @@ defmodule BorutaWeb.MixProject do
       app: :boruta_web,
       version: "0.1.0",
       build_path: "../../_build",
-      config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
       elixir: "~> 1.5",
@@ -37,8 +36,8 @@ defmodule BorutaWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:boruta_identity_provider, in_umbrella: true},
       {:boruta, in_umbrella: true},
-      {:ex_machina, "~> 2.3", only: :test},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.4.3"},

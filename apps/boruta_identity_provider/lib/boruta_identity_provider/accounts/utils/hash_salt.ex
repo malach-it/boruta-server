@@ -1,4 +1,5 @@
-defmodule Boruta.Accounts.HashSalt do
+defmodule BorutaIdentityProvider.Accounts.HashSalt do
+  # TODO test it !
   @moduledoc false
 
   import BorutaIdentityProvider.Config, only: [secret_key_base: 0]

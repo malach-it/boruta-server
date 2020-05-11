@@ -26,9 +26,7 @@ defmodule Boruta.Config do
       authorization_code: 60
     },
     token_generator: Boruta.TokenGenerator,
-    resource_owner: %{
-      adapter: Boruta.Accounts.ResourceOwner
-    },
+    resource_owner: nil,
     adapter: Boruta.EctoAdapter
 
   @doc false
@@ -92,7 +90,7 @@ defmodule Boruta.Config do
   end
 
   @doc false
-  defmacro resource_owners do
+  def resource_owners do
     Keyword.fetch!(oauth_config(), :resource_owner)[:adapter]
   end
 

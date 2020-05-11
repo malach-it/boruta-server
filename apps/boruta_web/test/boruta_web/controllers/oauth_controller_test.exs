@@ -11,7 +11,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
   describe "#authorize" do
     setup %{conn: conn} do
-      resource_owner = insert(:user)
+      resource_owner = BorutaIdentityProvider.Factory.insert(:user)
       redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
       {:ok, conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
@@ -158,7 +158,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
   describe "implicit grant" do
     setup %{conn: conn} do
-      resource_owner = insert(:user)
+      resource_owner = BorutaIdentityProvider.Factory.insert(:user)
       redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
       {:ok, conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
@@ -282,7 +282,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
   describe "password grant" do
     setup %{conn: conn} do
-      resource_owner = insert(:user)
+      resource_owner = BorutaIdentityProvider.Factory.insert(:user)
       client = insert(:client)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
@@ -314,7 +314,7 @@ defmodule BorutaWeb.OauthControllerTest do
   describe "authorization code grant" do
     # TODO est token delivrance with code
     setup %{conn: conn} do
-      resource_owner = insert(:user)
+      resource_owner = BorutaIdentityProvider.Factory.insert(:user)
       client = insert(:client)
       {:ok, conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"), client: client, resource_owner: resource_owner}
     end
@@ -405,7 +405,7 @@ defmodule BorutaWeb.OauthControllerTest do
     setup %{conn: conn} do
       client = insert(:client)
       client_token = insert(:token, type: "access_token", value: "777", client_id: client.id)
-      resource_owner = insert(:user)
+      resource_owner = BorutaIdentityProvider.Factory.insert(:user)
       resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, resource_owner_id: resource_owner.id)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
@@ -493,7 +493,7 @@ defmodule BorutaWeb.OauthControllerTest do
     setup %{conn: conn} do
       client = insert(:client)
       client_token = insert(:token, type: "access_token", value: "777", client_id: client.id)
-      resource_owner = insert(:user)
+      resource_owner = BorutaIdentityProvider.Factory.insert(:user)
       resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, resource_owner_id: resource_owner.id)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),

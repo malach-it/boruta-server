@@ -4,9 +4,8 @@
 # the umbrella root.
 use Mix.Config
 
-# TODO remove BorutaIdentityProvider.Repo dependency
 config :boruta,
-  ecto_repos: [Boruta.Repo, BorutaIdentityProvider.Repo]
+  ecto_repos: [Boruta.Repo]
 
 config :phoenix, :json_library, Jason
 

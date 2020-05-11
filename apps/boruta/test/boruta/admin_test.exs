@@ -1,5 +1,5 @@
 defmodule Boruta.Ecto.AdminTest do
-  use Boruta.DataCase
+  use Boruta.DataCase, async: true
 
   import Boruta.Factory
 

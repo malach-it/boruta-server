@@ -4,6 +4,9 @@ defmodule Boruta.MixProject do
   def project do
     [
       name: "Boruta core",
+      build_path: "../../_build",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
       app: :boruta,
       version: "0.2.0",
       elixir: "~> 1.5",
@@ -40,15 +43,16 @@ defmodule Boruta.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:boruta_identity_provider, in_umbrella: true},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
       {:ecto_sql, "~> 3.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:ex_json_schema, "~> 0.6.1"},
-      {:ex_machina, "~> 2.3", only: :test},
+      {:ex_machina, "~> 2.4", only: :test},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
+      # TODO remove phoenix dependency
+      {:phoenix, "~> 1.4.3"},
       {:puid, "~> 1.0"},
       {:secure_random, "~> 0.5"},
       {:mox, "~> 0.5", only: :test}

@@ -1,8 +1,8 @@
-defmodule Boruta.Accounts.User do
+defmodule BorutaIdentityProvider.Accounts.User do
   @moduledoc false
 
-  alias Boruta.Accounts.HashSalt
-  alias Boruta.Ecto.Scope
+  alias BorutaIdentityProvider.Accounts.HashSalt
+  alias BorutaIdentityProvider.Accounts.UserAuthorizedScope
 
   use Ecto.Schema
   use Pow.Ecto.Schema,
@@ -12,8 +12,8 @@ defmodule Boruta.Accounts.User do
     extensions: [PowEmailConfirmation, PowResetPassword]
 
   import Ecto.Changeset
-  import Ecto.Query, only: [from: 2]
-  import BorutaIdentityProvider.Config, only: [repo: 0]
+
+  alias BorutaIdentityProvider.Accounts.UserAuthorizedScope
 
   @type t :: [
     email: String.t()
@@ -24,6 +24,8 @@ defmodule Boruta.Accounts.User do
     field(:email, :string)
 
     pow_user_fields()
+
+    has_many(:authorized_scopes, UserAuthorizedScope)
 
     timestamps()
   end

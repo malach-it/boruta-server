@@ -1,4 +1,4 @@
-defmodule Boruta.Ecto.UserAuthorizedScope do
+defmodule Boruta.Ecto.ResourceOwnerAuthorizedScope do
   @moduledoc false
 
   use Ecto.Schema

@@ -18,14 +18,23 @@ config :boruta_web, BorutaWeb.Endpoint,
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env()}.exs"
 
 config :boruta_web, :pow,
-  repo: Boruta.Repo,
-  user: Boruta.Accounts.User,
+  repo: BorutaIdentityProvider.Repo,
+  user: BorutaIdentityProvider.Accounts.User,
   # extensions: [PowEmailConfirmation, PowResetPassword],
   extensions: [PowResetPassword],
   controller_callbacks: BorutaWeb.Pow.Phoenix.ControllerCallbacks,
   routes_backend: BorutaWeb.Pow.Routes,
   mailer_backend: BorutaWeb.Pow.Mailer,
   web_module: BorutaWeb
+
+config :boruta, Boruta.Oauth,
+  secret_key_base: "secret",
+  resource_owner: %{
+    adapter: BorutaIdentityProvider.ResourceOwners
+  }
+
+config :phoenix, :json_library, Jason
+
+import_config "#{Mix.env()}.exs"

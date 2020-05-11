@@ -1,11 +1,14 @@
-# Script for populating the database. You can run it as:
-#
-#     mix run priv/repo/seeds.exs
-#
-# Inside the script, you can read and write to any of your
-# repositories directly:
-#
-#     BorutaIdentityProvider.Repo.insert!(%BorutaIdentityProvider.SomeSchema{})
-#
-# We recommend using the bang functions (`insert!`, `update!`
-# and so on) as they will fail if something goes wrong.
+import Ecto.Changeset
+
+{:ok, user} = BorutaIdentityProvider.Accounts.User.changeset(%BorutaIdentityProvider.Accounts.User{}, %{
+  email: "test@test.test",
+  password: "passwordes",
+  confirm_password: "passwordes"
+})
+|> BorutaIdentityProvider.Repo.insert()
+
+Boruta.Repo.all(Boruta.Ecto.Scope)
+         |> Enum.map(fn (scope) ->
+           {:ok, scope} = BorutaIdentityProvider.Repo.insert(%BorutaIdentityProvider.Accounts.UserAuthorizedScope{user_id: user.id, scope_id: scope.id})
+           scope
+         end)

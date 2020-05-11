@@ -8,7 +8,8 @@ defmodule Boruta.Umbrella.MixProject do
       deps: deps(),
       dialyzer: [
         plt_add_apps: [:mix]
-      ]
+      ],
+      aliases: aliases()
     ]
   end
 
@@ -26,5 +27,11 @@ defmodule Boruta.Umbrella.MixProject do
   # and cannot be accessed from applications inside the apps folder
   defp deps do
     [{:distillery, "~> 2.1"}]
+  end
+
+  defp aliases do
+    [
+      test: "cmd mix test"
+    ]
   end
 end
