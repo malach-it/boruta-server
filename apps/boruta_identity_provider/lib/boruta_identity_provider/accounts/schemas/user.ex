@@ -1,6 +1,8 @@
 defmodule BorutaIdentityProvider.Accounts.User do
   @moduledoc false
 
+  import BorutaIdentityProvider.Config, only: [repo: 0]
+
   alias BorutaIdentityProvider.Accounts.HashSalt
   alias BorutaIdentityProvider.Accounts.UserAuthorizedScope
 
@@ -25,7 +27,7 @@ defmodule BorutaIdentityProvider.Accounts.User do
 
     pow_user_fields()
 
-    has_many(:authorized_scopes, UserAuthorizedScope)
+    has_many(:authorized_scopes, UserAuthorizedScope, on_replace: :delete)
 
     timestamps()
   end
@@ -44,7 +46,19 @@ defmodule BorutaIdentityProvider.Accounts.User do
 
   @spec update_changeset!(Ecto.Schema.t(), map()) :: Ecto.Changeset.t()
   def update_changeset!(model, attrs \\ %{}) do
+    attrs = add_authorized_scopes_params(attrs, model)
     model
-    |> cast(attrs, [])
+    |> repo().preload(:authorized_scopes)
+    |> cast(attrs, [:email])
+    |> cast_assoc(:authorized_scopes)
   end
+
+  defp add_authorized_scopes_params(%{"authorized_scopes" => authorized_scopes} = attrs, model) do
+    authorized_scopes = Enum.map(
+      authorized_scopes,
+      fn (%{"id" => id}) -> %{user_id: model.id, scope_id: id} end
+    )
+    %{attrs|"authorized_scopes" => authorized_scopes}
+  end
+  defp add_authorized_scopes_params(attrs, _model), do: attrs
 end

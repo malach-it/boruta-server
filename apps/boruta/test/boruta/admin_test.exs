@@ -121,6 +121,14 @@ defmodule Boruta.Ecto.AdminTest do
     end
   end
 
+  describe "get_scopes_by_ids/1" do
+    test "returns the scopes with given id" do
+      scopes = [scope_fixture(), scope_fixture()]
+      ids = Enum.map(scopes, fn (%Scope{id: id}) -> id end)
+      assert Admin.get_scopes_by_ids(ids) == scopes
+    end
+  end
+
   describe "create_scope/1" do
     test "returns error changeset with name missing" do
       assert {:error, %Ecto.Changeset{}} = Admin.create_scope(%{name: nil})

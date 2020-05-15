@@ -11,7 +11,7 @@ defmodule BorutaIdentityProvider.Accounts.UserAuthorizedScope do
           scope_id: String.t()
         }
 
-  @primary_key false
+  @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "scopes_users" do
     field :scope_id, :binary_id

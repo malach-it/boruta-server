@@ -12,6 +12,7 @@ defmodule Boruta.Ecto.Admin do
 
   defdelegate list_scopes, to: Boruta.Ecto.Admin.Scopes
   defdelegate get_scope!(id), to: Boruta.Ecto.Admin.Scopes
+  defdelegate get_scopes_by_ids(ids), to: Boruta.Ecto.Admin.Scopes
   defdelegate create_scope(attrs), to: Boruta.Ecto.Admin.Scopes
   defdelegate update_scope(scope, attrs), to: Boruta.Ecto.Admin.Scopes
   defdelegate delete_scope(scope), to: Boruta.Ecto.Admin.Scopes

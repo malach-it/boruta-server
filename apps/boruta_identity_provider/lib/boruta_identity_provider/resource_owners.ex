@@ -5,12 +5,13 @@ defmodule BorutaIdentityProvider.ResourceOwners do
 
   import BorutaIdentityProvider.Config, only: [repo: 0]
 
+  alias BorutaIdentityProvider.Accounts
   alias BorutaIdentityProvider.Accounts.HashSalt
   alias BorutaIdentityProvider.Accounts.User
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username, password: password) do
-    with %User{} = resource_owner <- repo().get_by(User, email: username),
+    with %User{} = resource_owner <- Accounts.get_user_by(email: username),
          true <- HashSalt.checkpw(password, resource_owner.password_hash) do
       resource_owner
     else
@@ -18,16 +19,15 @@ defmodule BorutaIdentityProvider.ResourceOwners do
     end
   end
   def get_by(id: id) do
-    repo().get(User, id)
+    Accounts.get_user_by(id: id)
   end
 
   @impl Boruta.Oauth.ResourceOwners
   def authorized_scopes(%User{} = user) do
     %User{authorized_scopes: scopes} = repo().preload(user, :authorized_scopes)
 
-    # TODO improve it !
-    scopes
-    |> Enum.map(fn (%{scope_id: id}) -> Boruta.Ecto.Admin.get_scope!(id) end)
+    scope_ids = Enum.map(scopes, fn (%{id: id}) -> id end)
+    Boruta.Ecto.Admin.get_scopes_by_ids(scope_ids)
     |> Enum.map(fn (scope) -> struct(Boruta.Oauth.Scope, Map.from_struct(scope)) end)
   end
 

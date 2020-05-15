@@ -83,6 +83,7 @@ defmodule Boruta.Oauth.Authorization.Scope do
     end)
   end
   defp keep_if_authorized(scopes, %_{} = resource_owner) do
+    # NOTE resource_owners().authorized_scopes is not a trusted source anymore
     authorized_scopes = Enum.map(resource_owners().authorized_scopes(resource_owner), fn (e) -> e.name end)
 
     Enum.filter(scopes, fn (scope) ->

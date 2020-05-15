@@ -13,7 +13,14 @@ defmodule BorutaWeb.Admin.UserView do
   def render("user.json", %{user: user}) do
     %{
       id: user.id,
-      email: user.email
+      email: user.email,
+      authorized_scopes: Enum.map(user.authorized_scopes, fn (scope) ->
+        %{
+          id: scope.id,
+          name: scope.name,
+          public: scope.public
+        }
+      end)
     }
   end
 end
