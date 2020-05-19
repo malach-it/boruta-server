@@ -32,7 +32,7 @@ defmodule Boruta.Config do
   def oauth_config do
       Keyword.merge(
         @defaults,
-        Application.get_env(:boruta, Boruta.Oauth),
+        Application.get_env(:boruta, Boruta.Oauth) || [],
         fn _, a, b ->
           if is_map(a) && is_map(b) do
             Map.merge(a, b)
