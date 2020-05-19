@@ -6,6 +6,7 @@ defmodule BorutaIdentityProvider.Accounts do
   import Ecto.Query, warn: false
   import BorutaIdentityProvider.Config, only: [repo: 0]
 
+  alias BorutaIdentityProvider.Accounts.HashSalt
   alias BorutaIdentityProvider.Accounts.User
   alias BorutaIdentityProvider.Accounts.UserAuthorizedScope
 
@@ -40,6 +41,22 @@ defmodule BorutaIdentityProvider.Accounts do
   def get_user!(id) do
     repo().get!(User, id)
     |> format_user()
+  end
+
+  @doc """
+  Checks user password
+
+  ## Examples
+
+      iex> check_password(%User{}, password)
+      :ok
+
+  """
+  def check_password(%User{password_hash: password_hash}, password) do
+    case HashSalt.checkpw(password, password_hash) do
+      true -> :ok
+      false -> {:error, "Invalid password"}
+    end
   end
 
   @doc """

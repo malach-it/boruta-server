@@ -1,5 +1,5 @@
 defmodule Boruta.Oauth.Authorization.ScopeTest do
-  use Boruta.DataCase, async: true
+  use Boruta.DataCase
 
   import Boruta.Factory
   import Boruta.Ecto.OauthMapper, only: [

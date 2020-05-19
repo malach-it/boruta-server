@@ -34,6 +34,20 @@ defmodule BorutaIdentityProvider.AccountsTest do
     end
   end
 
+  describe "check_password/2" do
+    test "returns ok if password is valid" do
+      %User{password: password} = user = insert(:user)
+
+      assert Accounts.check_password(user, password) == :ok
+    end
+
+    test "returns error if password is invalid" do
+      user = insert(:user)
+
+      assert Accounts.check_password(user, "invalid password") == {:error, "Invalid password"}
+    end
+  end
+
   describe "get_user_by/1" do
     test "returns nil" do
       assert Accounts.get_user_by(id: SecureRandom.uuid) == nil
