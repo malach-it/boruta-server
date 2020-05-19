@@ -29,12 +29,6 @@ config :boruta_web, :pow,
   mailer_backend: BorutaWeb.Pow.Mailer,
   web_module: BorutaWeb
 
-config :boruta, Boruta.Oauth,
-  secret_key_base: "secret",
-  resource_owner: %{
-    adapter: BorutaIdentityProvider.ResourceOwners
-  }
-
 config :phoenix, :json_library, Jason
 
 import_config "#{Mix.env()}.exs"

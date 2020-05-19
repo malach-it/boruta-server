@@ -14,7 +14,6 @@ config :boruta, Boruta.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :boruta, Boruta.Oauth,
-  secret_key_base: "secret",
   resource_owner: %{
     adapter: Boruta.Support.ResourceOwners
   }

@@ -11,6 +11,3 @@ config :boruta, Boruta.Repo,
   database: "boruta_dev",
   hostname: "localhost",
   pool_size: 10
-
-config :boruta, Boruta.Oauth,
-  secret_key_base: "secret"

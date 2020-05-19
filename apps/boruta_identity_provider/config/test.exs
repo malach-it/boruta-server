@@ -6,3 +6,6 @@ config :boruta_identity_provider, BorutaIdentityProvider.Repo,
   database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_provider_test",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :boruta_identity_provider, Boruta.Accounts,
+  secret_key_base: "secret"

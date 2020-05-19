@@ -9,4 +9,7 @@ config :boruta, :pow,
   # extensions: [PowEmailConfirmation, PowResetPassword]
   extensions: [PowResetPassword]
 
+config :boruta_identity_provider, Boruta.Accounts,
+  repo: BorutaIdentityProvider.Repo
+
 import_config "#{Mix.env()}.exs"

@@ -33,7 +33,6 @@ config :boruta, Boruta.Oauth,
     authorization_code: 60
   },
   token_generator: Boruta.TokenGenerator,
-  secret_key_base: System.get_env("SECRET_KEY_BASE"),
   resource_owner: %{
     schema: Boruta.Accounts.User,
     checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
