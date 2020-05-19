@@ -29,6 +29,7 @@ defmodule BorutaWeb.ConnCase do
 
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Boruta.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(BorutaIdentityProvider.Repo)
 
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Boruta.Repo, {:shared, self()})

@@ -6,7 +6,7 @@ use Mix.Config
 
 # General application configuration
 config :boruta_web,
-  ecto_repos: [Boruta.Repo],
+  ecto_repos: [Boruta.Repo, BorutaIdentityProvider.Repo],
   generators: [context_app: :boruta, binary_id: true]
 
 # Configures the endpoint
