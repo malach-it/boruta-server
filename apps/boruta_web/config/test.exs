@@ -25,4 +25,7 @@ config :boruta_identity_provider, BorutaIdentityProvider.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :boruta_identity_provider, Boruta.Accounts,
+  secret_key_base: "secret"
+
 config :logger, level: :warn
