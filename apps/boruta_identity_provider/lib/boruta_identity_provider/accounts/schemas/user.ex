@@ -33,7 +33,6 @@ defmodule BorutaIdentityProvider.Accounts.User do
   end
 
   @doc false
-  @spec changeset(Ecto.Schema.t(), map()) :: Ecto.Changeset.t()
   def changeset(model, attrs \\ %{}) do
     model
     |> cast(attrs, [:email])

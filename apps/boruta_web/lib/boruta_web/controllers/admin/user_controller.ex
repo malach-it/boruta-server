@@ -31,12 +31,4 @@ defmodule BorutaWeb.Admin.UserController do
       render(conn, "show.json", user: user)
     end
   end
-
-  def delete(conn, %{"id" => id}) do
-    user = Admin.get_user!(id)
-
-    with {:ok, %User{}} <- Admin.delete_user(user) do
-      send_resp(conn, :no_content, "")
-    end
-  end
 end

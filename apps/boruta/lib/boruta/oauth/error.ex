@@ -9,13 +9,13 @@ defmodule Boruta.Oauth.Error do
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.TokenRequest
 
-  @type t :: [
+  @type t :: %__MODULE__{
     status: :bad_request | :unauthorized,
     error: :invalid_request | :invalid_client | :invalid_scope | :invalid_code | :invalid_resource_owner,
     error_description: String.t(),
     format: :query | :fragment | nil,
     redirect_uri: String.t() | nil
-  ]
+  }
   defstruct status: :status, error: :error, error_description: "", format: nil, redirect_uri: nil
 
   @spec with_format(error :: %Error{}, request :: %CodeRequest{} | %TokenRequest{}) :: Error.t()

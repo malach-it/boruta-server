@@ -20,7 +20,7 @@ defmodule Boruta.Oauth.Request do
       })
       {:ok, %ClientCredentialsRequest{...}}
   """
-  @spec token_request(conn :: %{
+  @spec token_request(conn :: Plug.Conn.t() | %{
     optional(:req_headers) => list(),
     body_params: map()
   }) ::
@@ -55,7 +55,7 @@ defmodule Boruta.Oauth.Request do
       })
       {:ok, %TokenRequest{...}}
   """
-  @spec authorize_request(conn :: %{
+  @spec authorize_request(conn :: Plug.Conn.t() | %{
     body_params: map()
   }) ::
     {:error,
@@ -83,7 +83,7 @@ defmodule Boruta.Oauth.Request do
       })
       {:ok, %IntrospectRequest{...}}
   """
-  @spec introspect_request(conn :: %{
+  @spec introspect_request(conn :: Plug.Conn.t() | %{
     optional(:req_headers) => list(),
     body_params: map()
   }) ::
@@ -111,7 +111,7 @@ defmodule Boruta.Oauth.Request do
       })
       {:ok, %RevokeRequest{...}}
   """
-  @spec revoke_request(conn :: %{
+  @spec revoke_request(conn :: Plug.Conn.t() | %{
     optional(:req_headers) => list(),
     body_params: map()
   }) ::

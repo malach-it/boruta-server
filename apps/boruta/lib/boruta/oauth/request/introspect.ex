@@ -8,7 +8,7 @@ defmodule Boruta.Oauth.Request.Introspect do
   alias Boruta.Oauth.IntrospectRequest
   alias Boruta.Oauth.Validator
 
-  @spec request(conn :: map() | map()) ::
+  @spec request(conn :: map()) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_request,

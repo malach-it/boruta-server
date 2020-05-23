@@ -25,7 +25,6 @@ defmodule Boruta.Oauth.Request.Token do
       | %AuthorizationCodeRequest{}
       | %TokenRequest{}
       | %PasswordRequest{}}
-  # Handle Plug.Conn to extract header authorization (could not implement that as a guard)
   def request(%{
     req_headers: req_headers,
     body_params: %{} = body_params
