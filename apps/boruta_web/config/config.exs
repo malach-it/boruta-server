@@ -32,8 +32,8 @@ config :boruta_web, :pow,
 config :phoenix, :json_library, Jason
 
 config :boruta, Boruta.Oauth,
-  resource_owner: %{
-    adapter: BorutaIdentityProvider.ResourceOwners
-  }
+  contexts: [
+    resource_owners: BorutaIdentityProvider.ResourceOwners
+  ]
 
 import_config "#{Mix.env()}.exs"

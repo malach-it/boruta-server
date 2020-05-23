@@ -14,6 +14,6 @@ config :boruta, Boruta.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :boruta, Boruta.Oauth,
-  resource_owner: %{
-    adapter: Boruta.Support.ResourceOwners
-  }
+  contexts: [
+    resource_owners: Boruta.Support.ResourceOwners
+  ]

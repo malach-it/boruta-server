@@ -5,6 +5,7 @@ defmodule Boruta do
   It is intended to follow RFCs :
   - [RFC 6749 - The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
   - [RFC 7662 - OAuth 2.0 Token Introspection](https://tools.ietf.org/html/rfc7662)
+  - [RFC 7009 - OAuth 2.0 Token Revocation](https://tools.ietf.org/html/rfc7009)
 
   As it, it helps implement a provider for authorization code, implicit, client credentials and resource owner password credentials grants. Then it follows Introspection to check tokens.
 
@@ -24,15 +25,18 @@ defmodule Boruta do
   ```
   config :boruta, Boruta.Oauth,
     repo: Boruta.Repo,
-    expires_in: %{
-      access_token: 24 * 3600,
-      authorization_code: 60
-    },
-    token_generator: Boruta.TokenGenerator,
-    resource_owner: %{
-      schema: Boruta.Accounts.User,
-      checkpw_method: &Boruta.Accounts.HashSalt.checkpw/2
-    }
+    contexts: [
+      access_tokens: Boruta.Ecto.AccessTokens,
+      clients: Boruta.Ecto.Clients,
+      codes: Boruta.Ecto.Codes,
+      resource_owners: nil,
+      scopes: Boruta.Ecto.Scopes
+    ],
+    expires_in: [
+      authorization_code: 60,
+      access_token: 3600
+    ],
+    token_generator: Boruta.TokenGenerator
   ```
 
   ## Integration
