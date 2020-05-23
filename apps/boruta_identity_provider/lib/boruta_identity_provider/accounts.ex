@@ -8,7 +8,6 @@ defmodule BorutaIdentityProvider.Accounts do
 
   alias BorutaIdentityProvider.Accounts.HashSalt
   alias BorutaIdentityProvider.Accounts.User
-  alias BorutaIdentityProvider.Accounts.UserAuthorizedScope
 
   @doc """
   Returns the list of users.
@@ -21,7 +20,6 @@ defmodule BorutaIdentityProvider.Accounts do
   """
   def list_users do
     repo().all(User)
-    |> Enum.map(&format_user(&1))
   end
 
   @doc """
@@ -40,7 +38,6 @@ defmodule BorutaIdentityProvider.Accounts do
   """
   def get_user!(id) do
     repo().get!(User, id)
-    |> format_user()
   end
 
   @doc """
@@ -70,7 +67,6 @@ defmodule BorutaIdentityProvider.Accounts do
   """
   def get_user_by(params) do
     repo().get_by(User, params)
-    |> format_user()
   end
 
   @doc """
@@ -90,19 +86,7 @@ defmodule BorutaIdentityProvider.Accounts do
        {:ok, user} <- user
        |> User.update_changeset!(attrs)
        |> repo().update() do
-      {:ok, format_user(user)}
+      {:ok, user}
     end
-  end
-
-  defp format_user(nil), do: nil
-  defp format_user(user) do
-    %User{authorized_scopes: authorized_scopes} = repo().preload(user, :authorized_scopes)
-    authorized_scope_ids = Enum.map(authorized_scopes, fn (%UserAuthorizedScope{scope_id: id}) -> id end)
-    authorized_scopes = Boruta.Ecto.Admin.get_scopes_by_ids(authorized_scope_ids)
-    |> Enum.map(fn (scope) ->
-      struct(Boruta.Oauth.Scope, Map.from_struct(scope))
-    end)
-
-    %{user|authorized_scopes: authorized_scopes}
   end
 end

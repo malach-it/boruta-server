@@ -18,7 +18,7 @@ defmodule BorutaIdentityProvider.ResourceOwnersTest do
     test "returns an user by id" do
       %User{id: id} = user = insert(:user)
 
-      assert %{ResourceOwners.get_by(id: id)|password: user.password} == %{user|authorized_scopes: []}
+      assert %{ResourceOwners.get_by(id: id)|password: user.password} == user
     end
 
     test "returns nil if not exists" do
@@ -32,7 +32,7 @@ defmodule BorutaIdentityProvider.ResourceOwnersTest do
       password = "password"
       user = insert(:user, email: username, password_hash: HashSalt.hashpwsalt(password))
 
-      assert %{ResourceOwners.get_by(username: username, password: password)|password: user.password} == %{user|authorized_scopes: []}
+      assert %{ResourceOwners.get_by(username: username, password: password)|password: user.password} == user
     end
 
     test "returns nil when username do not exists" do
@@ -60,10 +60,9 @@ defmodule BorutaIdentityProvider.ResourceOwnersTest do
     end
 
     test "return user associated scopes" do
-      %{id: id} = insert(:user)
+      %{id: id} = user = insert(:user)
       scope = Boruta.Factory.insert(:scope)
       insert(:user_scope, user_id: id, scope_id: scope.id)
-      user = Accounts.get_user_by(id: id)
 
       assert ResourceOwners.authorized_scopes(user) == [%Boruta.Oauth.Scope{id: scope.id, name: scope.name, public: scope.public}]
     end

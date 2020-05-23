@@ -14,7 +14,7 @@ defmodule BorutaIdentityProvider.AccountsTest do
     test "returns database users" do
       user = %{insert(:user)|password: nil, authorized_scopes: []}
 
-      assert Accounts.list_users() == [user]
+      assert Accounts.list_users() |> Repo.preload(:authorized_scopes) == [user]
     end
    end
 
@@ -27,10 +27,10 @@ defmodule BorutaIdentityProvider.AccountsTest do
       end
     end
 
-    test "returns user given an id" do 
+    test "returns user given an id" do
       %User{id: id} = user = %{insert(:user)|password: nil, authorized_scopes: []}
 
-      assert Accounts.get_user!(id) == user
+      assert Accounts.get_user!(id) |> Repo.preload(:authorized_scopes) == user
     end
   end
 
@@ -53,10 +53,10 @@ defmodule BorutaIdentityProvider.AccountsTest do
       assert Accounts.get_user_by(id: SecureRandom.uuid) == nil
     end
 
-    test "returns user given an id" do 
+    test "returns user given an id" do
       %User{id: id} = user = %{insert(:user)|password: nil, authorized_scopes: []}
 
-      assert Accounts.get_user_by(id: id) == user
+      assert Accounts.get_user_by(id: id) |> Repo.preload(:authorized_scopes) == user
     end
   end
 
@@ -66,44 +66,31 @@ defmodule BorutaIdentityProvider.AccountsTest do
       updated_email = "updated@email"
 
       {:ok, updated_user} = Accounts.update_user(user, %{email: updated_email})
+      updated_user = updated_user
+      |> Repo.preload(:authorized_scopes)
 
       assert updated_user == %{user|email: updated_email}
     end
 
     test "updates a user scopes" do
-      scopes = [
-        Boruta.Factory.insert(:scope),
-        Boruta.Factory.insert(:scope)
-      ]
-      authorized_scopes = Enum.map(scopes, fn (%{id: id}) -> 
+      scope = Boruta.Factory.insert(:scope)
+
+      authorized_scopes = Enum.map([scope], fn (%{id: id}) ->
         %{"id" => id}
-      end)
-      oauth_scopes = Enum.map(scopes, fn (%{id: id, name: name, public: public}) -> 
-        %Boruta.Oauth.Scope{id: id, name: name, public: public}
       end)
       user = %{insert(:user)|password: nil, authorized_scopes: []}
 
       {:ok, updated_user} = Accounts.update_user(user, %{"authorized_scopes" => authorized_scopes})
+      updated_user = updated_user
+      |> Repo.preload(:authorized_scopes)
 
-      assert updated_user == %{user|authorized_scopes: oauth_scopes}
-    end
-
-    test "updates a user scopes without unexisting scopes" do
-      scopes = [
-        Boruta.Factory.insert(:scope)
-      ]
-      authorized_scopes = Enum.map(scopes, fn (%{id: id}) -> 
-        %{"id" => id}
-      end)
-      authorized_scopes = [%{"id" => SecureRandom.uuid}|authorized_scopes]
-      oauth_scopes = Enum.map(scopes, fn (%{id: id, name: name, public: public}) -> 
-        %Boruta.Oauth.Scope{id: id, name: name, public: public}
-      end)
-      user = %{insert(:user)|password: nil, authorized_scopes: []}
-
-      {:ok, updated_user} = Accounts.update_user(user, %{"authorized_scopes" => authorized_scopes})
-
-      assert updated_user == %{user|authorized_scopes: oauth_scopes}
+      scope_id = scope.id
+      case updated_user do
+        %{authorized_scopes: [
+          %{scope_id: ^scope_id}
+        ]} -> assert true
+        _ -> assert false
+      end
     end
   end
 end
