@@ -6,9 +6,8 @@ stages:
 services:
   - postgres:latest
 
-dialyzer:
-  stage: test
-  image: elixir:1.8.1-alpine
+.elixir-task:
+  image: elixir:1.10.3-alpine
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -18,21 +17,16 @@ dialyzer:
   - mix local.hex --force
   - mix local.rebar --force
   - mix deps.get
+
+dialyzer:
+  stage: test
+  extends: .elixir-task
   script:
   - mix dialyzer
 
 test:
   stage: test
-  image: elixir:1.8.1-alpine
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-    - _build/
-  before_script:
-  - apk --update add postgresql-client git make g++
-  - mix local.hex --force
-  - mix local.rebar --force
-  - mix deps.get
+  extends: .elixir-task
   script:
   - mix test --trace
   variables:
@@ -49,4 +43,3 @@ deploy:
   - dpl --provider=heroku --app=boruta --api-key=$HEROKU_API_KEY
   only:
   - master
-
