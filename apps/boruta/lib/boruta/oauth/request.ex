@@ -45,19 +45,22 @@ defmodule Boruta.Oauth.Request do
   Note : resource owner must be provided as current_user assigns.
 
   ## Examples
-      iex>authorize_request(%{
-        query_params: %{
-          "response_type" => "token",
-          "client_id" => "client_id",
-          "redirect_uri" => "redirect_uri"
+      iex>authorize_request(
+        %{
+          query_params: %{
+            "response_type" => "token",
+            "client_id" => "client_id",
+            "redirect_uri" => "redirect_uri"
+          },
         },
-        assigns: %{current_user: %User{...}}
-      })
+        %User{...}
+      )
       {:ok, %TokenRequest{...}}
   """
-  @spec authorize_request(conn :: Plug.Conn.t() | %{
-    body_params: map()
-  }) ::
+  @spec authorize_request(
+    conn :: Plug.Conn.t() | %{body_params: map()},
+    resource_owner :: struct
+  ) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_request,
@@ -68,7 +71,7 @@ defmodule Boruta.Oauth.Request do
      }}
     | {:ok, oauth_request :: %Boruta.Oauth.CodeRequest{}
       | %Boruta.Oauth.TokenRequest{}}
-  defdelegate authorize_request(conn), to: Request.Authorize, as: :request
+  defdelegate authorize_request(conn, resource_owner), to: Request.Authorize, as: :request
 
   @doc """
   Create request struct from an OAuth introspect request.

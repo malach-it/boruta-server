@@ -37,7 +37,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
     end
 
     test "returns an error if `response_type` is 'code' and schema is invalid" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "code"}, assigns: %{}}, ApplicationMock) == {:authorize_error, %Error{
+      assert Oauth.authorize(%{query_params: %{"response_type" => "code"}}, nil, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_request,
         error_description: "Query params validation failed. Required properties client_id, redirect_uri are missing at #.",
         status: :bad_request
@@ -50,9 +50,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
           "response_type" => "code",
           "client_id" => "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
           "redirect_uri" => "http://redirect.uri"
-        },
-        assigns: %{}
-      }, ApplicationMock) == {:authorize_error, %Error{
+        }
+      }, nil, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_client,
         error_description: "Invalid client_id or redirect_uri.",
         status: :unauthorized,
@@ -67,9 +66,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
           "response_type" => "code",
           "client_id" => client.id,
           "redirect_uri" => "http://bad.redirect.uri"
-        },
-        assigns: %{}
-      }, ApplicationMock) == {:authorize_error, %Error{
+        }
+      }, nil, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_client,
         error_description: "Invalid client_id or redirect_uri.",
         status: :unauthorized,
@@ -89,9 +87,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
           "response_type" => "code",
           "client_id" => client.id,
           "redirect_uri" => redirect_uri
-        },
-        assigns: %{}
-      }, ApplicationMock) == {:authorize_error, %Error{
+        }
+      }, nil, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_resource_owner,
         error_description: "Resource owner is invalid.",
         status: :unauthorized,
@@ -111,9 +108,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
             "response_type" => "code",
             "client_id" => client.id,
             "redirect_uri" => redirect_uri
-          },
-        assigns: %{current_user: resource_owner}
-      }, ApplicationMock) do
+          }
+      }, resource_owner, ApplicationMock) do
         {:authorize_success,
           %AuthorizeResponse{
             type: type,
@@ -143,8 +139,7 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
             "redirect_uri" => redirect_uri,
             "scope" =>  given_scope
           },
-        assigns: %{current_user: resource_owner}
-      }, ApplicationMock) do
+      }, resource_owner, ApplicationMock) do
         {:authorize_success,
           %AuthorizeResponse{
             type: type,
@@ -172,9 +167,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
           "client_id" => client.id,
           "redirect_uri" => redirect_uri,
           "scope" =>  given_scope
-        },
-        assigns: %{current_user: resource_owner}
-      }, ApplicationMock) == {:authorize_error, %Error{
+        }
+      }, resource_owner, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_scope,
         error_description: "Given scopes are unknown or unauthorized.",
         status: :bad_request,
@@ -196,9 +190,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
             "client_id" => client.id,
             "redirect_uri" => redirect_uri,
             "scope" =>  given_scope
-          },
-        assigns: %{current_user: resource_owner}
-      }, ApplicationMock) do
+          }
+      }, resource_owner, ApplicationMock) do
         {:authorize_success,
           %AuthorizeResponse{
             type: type,
@@ -226,9 +219,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
             "client_id" => client.id,
             "redirect_uri" => redirect_uri,
             "scope" =>  given_scope
-          },
-        assigns: %{current_user: resource_owner}
-      }, ApplicationMock) == {:authorize_error, %Error{
+          }
+      }, resource_owner, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_scope,
         error_description: "Given scopes are unknown or unauthorized.",
         format: :query,
@@ -245,9 +237,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
             "client_id" => client.id,
             "redirect_uri" => redirect_uri,
             "scope" =>  ""
-          },
-        assigns: %{current_user: resource_owner}
-      }, ApplicationMock) == {:authorize_error, %Error{
+          }
+      }, resource_owner, ApplicationMock) == {:authorize_error, %Error{
         error: :unsupported_grant_type,
         error_description: "Client do not support given grant type.",
         format: :query,
@@ -268,9 +259,8 @@ defmodule Boruta.OauthTest.AuthorizationCodeGrantTest do
             "client_id" => client.id,
             "redirect_uri" => redirect_uri,
             "state" => given_state
-          },
-        assigns: %{current_user: resource_owner}
-      }, ApplicationMock) do
+          }
+      }, resource_owner, ApplicationMock) do
         {:authorize_success,
           %AuthorizeResponse{
             type: type,

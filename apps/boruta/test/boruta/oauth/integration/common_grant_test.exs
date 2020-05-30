@@ -37,15 +37,15 @@ defmodule Boruta.OauthTest.CommonGrantTest do
 
   describe "authorize request" do
     test "returns an error without params" do
-      assert Oauth.authorize(%{}, ApplicationMock) == {:authorize_error, %Error{
+      assert Oauth.authorize(%{}, nil, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_request,
-        error_description: "Must provide query_params and assigns.",
+        error_description: "Must provide query_params.",
         status: :bad_request
       }}
     end
 
     test "returns an error with empty params" do
-      assert Oauth.authorize(%{query_params: %{}, assigns: %{}}, ApplicationMock) == {:authorize_error,
+      assert Oauth.authorize(%{query_params: %{}}, nil, ApplicationMock) == {:authorize_error,
         %Error{
           error: :invalid_request,
           error_description: "Request is not a valid OAuth request. Need a response_type param.",
@@ -55,7 +55,7 @@ defmodule Boruta.OauthTest.CommonGrantTest do
     end
 
     test "returns an error with invalid response_type" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "boom"}, assigns: %{}}, ApplicationMock) == {:authorize_error, %Error{
+      assert Oauth.authorize(%{query_params: %{"response_type" => "boom"}}, nil, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_request,
         error_description: "Query params validation failed. #/response_type do match required pattern /^(token|code)$/.",
         status: :bad_request

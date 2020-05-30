@@ -31,7 +31,7 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
     end
 
     test "returns an error if `response_type` is 'token' and schema is invalid" do
-      assert Oauth.authorize(%{query_params: %{"response_type" => "token"}, assigns: %{}}, ApplicationMock) == {:authorize_error, %Error{
+      assert Oauth.authorize(%{query_params: %{"response_type" => "token"}}, nil, ApplicationMock) == {:authorize_error, %Error{
         error: :invalid_request,
         error_description: "Query params validation failed. Required properties client_id, redirect_uri are missing at #.",
         status: :bad_request
@@ -45,9 +45,9 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
             "response_type" => "token",
             "client_id" => "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
             "redirect_uri" => "http://redirect.uri"
-          },
-          assigns: %{}
+          }
         },
+        nil,
         ApplicationMock
       ) == {:authorize_error, %Error{
         error: :invalid_client,
@@ -65,9 +65,9 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
             "response_type" => "token",
             "client_id" => client.id,
             "redirect_uri" => "http://bad.redirect.uri"
-          },
-          assigns: %{}
+          }
         },
+        nil,
         ApplicationMock
       ) == {:authorize_error, %Error{
         error: :invalid_client,
@@ -90,9 +90,9 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
             "response_type" => "token",
             "client_id" => client.id,
             "redirect_uri" => redirect_uri
-          },
-          assigns: %{}
+          }
         },
+        nil,
         ApplicationMock
       ) == {:authorize_error,  %Error{
         error: :invalid_resource_owner,
@@ -115,11 +115,9 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
             "response_type" => "token",
             "client_id" => client.id,
             "redirect_uri" => redirect_uri
-          },
-          assigns: %{
-            current_user: resource_owner
           }
         },
+        resource_owner,
         ApplicationMock
       ) do
         {:authorize_success,
@@ -152,11 +150,9 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
             "client_id" => client.id,
             "redirect_uri" => redirect_uri,
             "scope" => given_scope
-          },
-          assigns: %{
-            current_user: resource_owner
           }
         },
+        resource_owner,
         ApplicationMock
       ) do
         {:authorize_success,
@@ -189,11 +185,9 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
             "client_id" => client.id,
             "redirect_uri" => redirect_uri,
             "scope" => given_scope
-          },
-          assigns: %{
-            current_user: resource_owner
           }
         },
+        resource_owner,
         ApplicationMock
       ) == {:authorize_error, %Error{
         error: :invalid_scope,
@@ -217,11 +211,9 @@ defmodule Boruta.OauthTest.ImplicitGrantTest do
             "client_id" => client.id,
             "redirect_uri" => redirect_uri,
             "scope" => ""
-          },
-          assigns: %{
-            current_user: resource_owner
           }
         },
+        resource_owner,
         ApplicationMock
       ) == {:authorize_error, %Error{
         error: :unsupported_grant_type,

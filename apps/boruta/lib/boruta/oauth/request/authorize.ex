@@ -8,7 +8,7 @@ defmodule Boruta.Oauth.Request.Authorize do
   alias Boruta.Oauth.TokenRequest
   alias Boruta.Oauth.Validator
 
-  @spec request(conn :: map()) ::
+  @spec request(conn :: map(), resource_owner :: struct()) ::
     {:error,
      %Boruta.Oauth.Error{
        :error => :invalid_request,
@@ -19,16 +19,16 @@ defmodule Boruta.Oauth.Request.Authorize do
      }}
     | {:ok, oauth_request :: %CodeRequest{}
       | %TokenRequest{}}
-  def request(%{query_params: query_params, assigns: assigns}) do
+  def request(%{query_params: query_params}, resource_owner) do
     case Validator.validate(:authorize, query_params) do
       {:ok, params} ->
         # TODO have an explicit current_user param (request(conn :: Plug.Conn.t(), user :: any())
-        build_request(Enum.into(params, %{"resource_owner" => assigns[:current_user]}))
+        build_request(Enum.into(params, %{"resource_owner" => resource_owner}))
       {:error, error_description} ->
         {:error, %Error{status: :bad_request, error: :invalid_request, error_description: error_description}}
     end
   end
-  def request(%{}) do
-    {:error, %Error{status: :bad_request, error: :invalid_request, error_description: "Must provide query_params and assigns."}}
+  def request(%{}, _) do
+    {:error, %Error{status: :bad_request, error: :invalid_request, error_description: "Must provide query_params."}}
   end
 end
