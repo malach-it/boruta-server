@@ -39,7 +39,7 @@ defmodule Boruta.Oauth.Authorization.ResourceOwner do
       {:ok, resource_owner}
     end
   end
-  def authorize(resource_owner: resource_owner) do # resource_owner is persisted
+  def authorize(resource_owner: resource_owner) do
     case resource_owners().persisted?(resource_owner) do
       true -> {:ok, resource_owner}
       false ->

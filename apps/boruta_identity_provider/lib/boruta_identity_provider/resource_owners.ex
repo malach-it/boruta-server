@@ -26,6 +26,7 @@ defmodule BorutaIdentityProvider.ResourceOwners do
     %User{authorized_scopes: scopes} = repo().preload(user, :authorized_scopes)
 
     Enum.map(scopes, fn (%{scope_id: id}) -> id end)
+    # TODO cache scopes in user_authorized_scopes
     |> Boruta.Ecto.Admin.get_scopes_by_ids()
     |> Enum.map(fn (scope) -> struct(Boruta.Oauth.Scope, Map.from_struct(scope)) end)
   end

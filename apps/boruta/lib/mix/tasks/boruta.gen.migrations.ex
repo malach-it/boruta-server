@@ -27,8 +27,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
       path = Path.join(source_repo_priv(repo), "migrations")
       file = Path.join(path, "#{timestamp()}_create_boruta.exs")
       assigns = [
-        mod: Module.concat([repo, Migrations, "CreateBoruta"]),
-        accounts: Enum.member?(args, "--with-accounts")
+        mod: Module.concat([repo, Migrations, "CreateBoruta"])
       ]
 
       fuzzy_path = Path.join(path, "*_create_boruta.exs")
