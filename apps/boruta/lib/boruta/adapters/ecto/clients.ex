@@ -7,8 +7,8 @@ defmodule Boruta.Ecto.Clients do
   import Boruta.Config, only: [repo: 0]
   import Boruta.Ecto.OauthMapper, only: [to_oauth_schema: 1]
 
-  alias Boruta.Oauth
   alias Boruta.Ecto
+  alias Boruta.Oauth
 
   @impl Boruta.Oauth.Clients
   def get_by(id: id, secret: secret) do

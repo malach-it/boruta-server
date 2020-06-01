@@ -15,10 +15,10 @@ defmodule Boruta.Oauth.Authorization.Code do
       iex> authorize(value: "value", redirect_uri: "redirect_uri")
       {:ok, %Boruta.Oauth.Token{...}}
   """
-  @spec authorize(%{
+  @spec authorize(
     value: String.t(),
     redirect_uri: String.t()
-  }) ::
+  ) ::
     {:error,
      %Error{
        :error => :invalid_code,
@@ -28,7 +28,7 @@ defmodule Boruta.Oauth.Authorization.Code do
        :status => :bad_request
      }}
     | {:ok, %Token{}}
-  def authorize(%{value: value, redirect_uri: redirect_uri}) do
+  def authorize(value: value, redirect_uri: redirect_uri) do
     with %Token{} = token <- codes().get_by(value: value, redirect_uri: redirect_uri),
       :ok <- Token.expired?(token) do
       {:ok, token}

@@ -3,12 +3,12 @@ defmodule BorutaWeb.OauthController do
 
   use BorutaWeb, :controller
 
-  alias BorutaIdentityProvider.Accounts.User
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.IntrospectResponse
   alias Boruta.Oauth.TokenResponse
+  alias BorutaIdentityProvider.Accounts.User
   alias BorutaWeb.OauthView
 
   action_fallback BorutaWeb.FallbackController

@@ -24,6 +24,12 @@ dialyzer:
   script:
   - mix dialyzer
 
+credo:
+  stage: test
+  extends: .elixir-task
+  script:
+  - mix credo --strict
+
 test:
   stage: test
   extends: .elixir-task

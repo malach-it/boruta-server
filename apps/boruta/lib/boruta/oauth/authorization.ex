@@ -78,9 +78,17 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.AuthorizationCodeRequest d
     redirect_uri: redirect_uri,
     grant_type: grant_type
   }) do
-    with {:ok, client} <- Authorization.Client.authorize(id: client_id, redirect_uri: redirect_uri, grant_type: grant_type),
-         {:ok, code} <- Authorization.Code.authorize(%{value: code, redirect_uri: redirect_uri}),
-         {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(resource_owner: code.resource_owner) do
+    with {:ok, client} <- Authorization.Client.authorize(
+        id: client_id,
+        redirect_uri: redirect_uri,
+        grant_type: grant_type
+      ),
+      {:ok, code} <- Authorization.Code.authorize(
+        value: code, redirect_uri: redirect_uri
+      ),
+      {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(
+        resource_owner: code.resource_owner
+      ) do
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
@@ -108,12 +116,18 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.TokenRequest do
     grant_type: grant_type
   }) do
 
-    with {:ok, client} <- Authorization.Client.authorize(id: client_id, redirect_uri: redirect_uri, grant_type: grant_type),
-         {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(resource_owner: resource_owner),
-         {:ok, scope} <- Authorization.Scope.authorize(
-           scope: scope,
-           against: %{client: client, resource_owner: resource_owner}
-         ) do
+    with {:ok, client} <- Authorization.Client.authorize(
+        id: client_id,
+        redirect_uri: redirect_uri,
+        grant_type: grant_type
+      ),
+      {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(
+        resource_owner: resource_owner
+      ),
+      {:ok, scope} <- Authorization.Scope.authorize(
+        scope: scope,
+        against: %{client: client, resource_owner: resource_owner}
+      ) do
       # TODO rescue from creation errors
       access_tokens().create(%{
         client: client,
@@ -142,9 +156,18 @@ defimpl Boruta.Oauth.Authorization, for: Boruta.Oauth.CodeRequest do
     grant_type: grant_type
   }) do
 
-    with {:ok, client} <- Authorization.Client.authorize(id: client_id, redirect_uri: redirect_uri, grant_type: grant_type),
-         {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(resource_owner: resource_owner),
-         {:ok, scope} <- Authorization.Scope.authorize(scope: scope, against: %{client: client}) do
+    with {:ok, client} <- Authorization.Client.authorize(
+        id: client_id,
+        redirect_uri: redirect_uri,
+        grant_type: grant_type
+      ),
+      {:ok, resource_owner} <- Authorization.ResourceOwner.authorize(
+        resource_owner: resource_owner
+      ),
+      {:ok, scope} <- Authorization.Scope.authorize(
+        scope: scope,
+        against: %{client: client}
+      ) do
       # TODO rescue from creation errors
       codes().create(%{
         client: client,
