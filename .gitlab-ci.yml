@@ -6,9 +6,8 @@ stages:
 services:
   - postgres:latest
 
-test:
-  stage: test
-  image: elixir:1.8.1-alpine
+.elixir-task:
+  image: elixir:1.10.3-alpine
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -18,6 +17,22 @@ test:
   - mix local.hex --force
   - mix local.rebar --force
   - mix deps.get
+
+dialyzer:
+  stage: test
+  extends: .elixir-task
+  script:
+  - mix dialyzer
+
+credo:
+  stage: test
+  extends: .elixir-task
+  script:
+  - mix credo --strict
+
+test:
+  stage: test
+  extends: .elixir-task
   script:
   - mix test --trace
   variables:
@@ -34,4 +49,3 @@ deploy:
   - dpl --provider=heroku --app=boruta --api-key=$HEROKU_API_KEY
   only:
   - master
-

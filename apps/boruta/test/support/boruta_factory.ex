@@ -3,8 +3,6 @@ defmodule Boruta.Factory do
 
   use ExMachina.Ecto, repo: Boruta.Repo
 
-  alias Boruta.Accounts.HashSalt
-  alias Boruta.Accounts.User
   alias Boruta.Ecto
 
   def client_factory do
@@ -28,13 +26,4 @@ defmodule Boruta.Factory do
       expires_at: :os.system_time(:seconds) + 10
     }
   end
-
-  def user_factory do
-    %User{
-      email: sequence(:email, &"foo-#{&1}@example.com"),
-      password: "password",
-      password_hash: HashSalt.hashpwsalt("password")
-    }
-  end
 end
-

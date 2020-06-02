@@ -6,16 +6,15 @@ defmodule Boruta.Ecto.AccessTokens do
   import Boruta.Config, only: [repo: 0]
   import Boruta.Ecto.OauthMapper, only: [to_oauth_schema: 1]
 
-  alias Ecto.Changeset
-  alias Boruta.Ecto
+  alias Boruta.Ecto.Token
   alias Boruta.Oauth
+  alias Ecto.Changeset
 
   @impl Boruta.Oauth.AccessTokens
   def get_by(value: value) do
     repo().one(
-      from t in Ecto.Token,
+      from t in Token,
         left_join: c in assoc(t, :client),
-        left_join: u in assoc(t, :resource_owner),
         where: t.type == "access_token" and t.value == ^value
     )
     |> to_oauth_schema()
@@ -23,9 +22,8 @@ defmodule Boruta.Ecto.AccessTokens do
 
   def get_by(refresh_token: refresh_token) do
     repo().one(
-      from t in Ecto.Token,
+      from t in Token,
         left_join: c in assoc(t, :client),
-        left_join: u in assoc(t, :resource_owner),
         where: t.type == "access_token" and t.refresh_token == ^refresh_token
     )
     |> to_oauth_schema()
@@ -50,9 +48,9 @@ defmodule Boruta.Ecto.AccessTokens do
 
     changeset =
       apply(
-        Ecto.Token,
+        Token,
         changeset_method(options),
-        [%Ecto.Token{}, token_attributes]
+        [%Token{}, token_attributes]
       )
 
     with {:ok, token} <- repo().insert(changeset) do
@@ -67,7 +65,7 @@ defmodule Boruta.Ecto.AccessTokens do
   def revoke(%Oauth.Token{value: value}) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-    with {:ok, token} <- repo().get_by(Ecto.Token, value: value)
+    with {:ok, token} <- repo().get_by(Token, value: value)
     |> Changeset.change(revoked_at: now)
     |> repo().update() do
       {:ok, to_oauth_schema(token)}

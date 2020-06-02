@@ -15,6 +15,8 @@ defmodule BorutaWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  alias Ecto.Adapters.SQL.Sandbox
+
   using do
     quote do
       # Import conveniences for testing with connections
@@ -28,10 +30,11 @@ defmodule BorutaWeb.ConnCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Boruta.Repo)
+    :ok = Sandbox.checkout(Boruta.Repo)
+    :ok = Sandbox.checkout(BorutaIdentityProvider.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Boruta.Repo, {:shared, self()})
+      Sandbox.mode(Boruta.Repo, {:shared, self()})
     end
 
     {:ok, conn: Phoenix.ConnTest.build_conn()}

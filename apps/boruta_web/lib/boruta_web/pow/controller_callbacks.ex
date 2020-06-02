@@ -1,4 +1,5 @@
 defmodule BorutaWeb.Pow.Phoenix.ControllerCallbacks do
+  @moduledoc false
   use Pow.Extension.Phoenix.ControllerCallbacks.Base
 
   import Plug.Conn

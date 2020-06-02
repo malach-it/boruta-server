@@ -5,11 +5,13 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
   use Boruta.DataCase
 
   import Boruta.Factory
+  import Mox
 
   alias Boruta.Oauth
   alias Boruta.Oauth.ApplicationMock
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.TokenResponse
+  alias Boruta.Support.ResourceOwners
 
   describe "refresh_token" do
     setup do
@@ -85,6 +87,8 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
     end
 
     test "returns an error if scope is unknown or unauthorized", %{client: client, access_token: token} do
+      ResourceOwners
+      |> stub(:authorized_scopes, fn(_resource_owner) -> [] end)
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       assert Oauth.token(%{
         body_params: %{"grant_type" => "refresh_token", "refresh_token" => token.refresh_token, "scope" => "bad_scope"},
@@ -109,6 +113,8 @@ defmodule Boruta.OauthTest.RefreshTokenTest do
     end
 
     test "returns token", %{client: client, access_token: token} do
+      ResourceOwners
+      |> stub(:authorized_scopes, fn(_resource_owner) -> [] end)
       %{req_headers: [{"authorization", authorization_header}]} = build_conn() |> using_basic_auth(client.id, client.secret)
       case Oauth.token(
         %{

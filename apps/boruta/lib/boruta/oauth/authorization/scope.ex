@@ -3,7 +3,6 @@ defmodule Boruta.Oauth.Authorization.Scope do
   Scope authorization
   """
 
-  alias Boruta.Accounts.User
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Scope
@@ -22,7 +21,7 @@ defmodule Boruta.Oauth.Authorization.Scope do
     scope: String.t(),
     against: %{
       optional(:client) => %Client{},
-      optional(:resource_owner) => %User{},
+      optional(:resource_owner) => struct(),
       optional(:token) => %Token{}
     }
   ]) ::
@@ -76,15 +75,16 @@ defmodule Boruta.Oauth.Authorization.Scope do
       Enum.member?(authorized_scopes, scope)
     end)
   end
-  defp keep_if_authorized(scopes, %User{} = resource_owner) do
-    authorized_scopes = Enum.map(resource_owners().authorized_scopes(resource_owner), fn (e) -> e.name end)
+  defp keep_if_authorized(scopes, %Token{scope: authorized_scope}) do
+    authorized_scopes = Scope.split(authorized_scope || "")
 
     Enum.filter(scopes, fn (scope) ->
       Enum.member?(authorized_scopes, scope)
     end)
   end
-  defp keep_if_authorized(scopes, %Token{scope: "" <> authorized_scope}) do
-    authorized_scopes = Scope.split(authorized_scope)
+  defp keep_if_authorized(scopes, %_{} = resource_owner) do
+    # NOTE resource_owners().authorized_scopes is not a trusted source anymore
+    authorized_scopes = Enum.map(resource_owners().authorized_scopes(resource_owner), fn (e) -> e.name end)
 
     Enum.filter(scopes, fn (scope) ->
       Enum.member?(authorized_scopes, scope)

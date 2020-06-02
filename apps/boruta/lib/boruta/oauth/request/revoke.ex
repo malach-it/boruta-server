@@ -8,7 +8,7 @@ defmodule Boruta.Oauth.Request.Revoke do
   alias Boruta.Oauth.RevokeRequest
   alias Boruta.Oauth.Validator
 
-  @spec request(conn :: %{
+  @spec request(conn :: Plug.Conn.t() | %{
     optional(:req_headers) => list(),
     body_params: map()
   }) ::

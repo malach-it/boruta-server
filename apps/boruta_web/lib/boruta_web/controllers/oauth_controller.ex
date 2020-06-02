@@ -3,12 +3,12 @@ defmodule BorutaWeb.OauthController do
 
   use BorutaWeb, :controller
 
-  alias Boruta.Accounts.User
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.IntrospectResponse
   alias Boruta.Oauth.TokenResponse
+  alias BorutaIdentityProvider.Accounts.User
   alias BorutaWeb.OauthView
 
   action_fallback BorutaWeb.FallbackController
@@ -63,7 +63,7 @@ defmodule BorutaWeb.OauthController do
       {%User{}, true} ->
         conn
         |> delete_session(:session_chosen)
-        |> Oauth.authorize(__MODULE__)
+        |> Oauth.authorize(current_user, __MODULE__)
       {%User{}, _} ->
         redirect(conn, to: Routes.choose_session_path(conn, :new))
       {_, _} ->

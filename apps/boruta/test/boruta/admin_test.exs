@@ -1,9 +1,8 @@
 defmodule Boruta.Ecto.AdminTest do
-  use Boruta.DataCase
+  use Boruta.DataCase, async: true
 
   import Boruta.Factory
 
-  alias Boruta.Accounts.User
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Client
   alias Boruta.Ecto.Scope
@@ -122,6 +121,14 @@ defmodule Boruta.Ecto.AdminTest do
     end
   end
 
+  describe "get_scopes_by_ids/1" do
+    test "returns the scopes with given id" do
+      scopes = [scope_fixture(), scope_fixture()]
+      ids = Enum.map(scopes, fn (%Scope{id: id}) -> id end)
+      assert Admin.get_scopes_by_ids(ids) == scopes
+    end
+  end
+
   describe "create_scope/1" do
     test "returns error changeset with name missing" do
       assert {:error, %Ecto.Changeset{}} = Admin.create_scope(%{name: nil})
@@ -182,50 +189,6 @@ defmodule Boruta.Ecto.AdminTest do
       scope = scope_fixture()
       assert {:ok, %Scope{}} = Admin.delete_scope(scope)
       assert_raise Ecto.NoResultsError, fn -> Admin.get_scope!(scope.id) end
-    end
-  end
-
-  # users
-
-  def user_fixture(attrs \\ []) do
-    user = insert(:user, attrs)
-    user
-    |> Repo.reload()
-    |> Repo.preload(:authorized_scopes)
-  end
-
-  describe "list_users/0" do
-    test "returns all users" do
-      user = user_fixture()
-      assert Admin.list_users() == [user]
-    end
-  end
-
-  describe "get_user/1" do
-    test "returns the user with given id" do
-      user = user_fixture()
-      assert Admin.get_user!(user.id) == user
-    end
-  end
-
-  describe "update_user/2" do
-    test "updates the user with authorized scopes" do
-      scope = insert(:scope)
-      user = user_fixture()
-      assert {:ok,
-        %User{
-          authorized_scopes: authorized_scopes
-        }
-      } = Admin.update_user(user, %{"authorized_scopes" => [%{"id" => scope.id}]})
-      assert authorized_scopes == [scope]
-    end
-  end
-
-  describe "delete_user/1" do
-    test "deletes the user" do
-      user = user_fixture()
-      assert {:ok, %User{}} = Admin.delete_user(user)
-      assert_raise Ecto.NoResultsError, fn -> Admin.get_user!(user.id) end
     end
   end
 end

@@ -2,17 +2,12 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
   @moduledoc """
   Migration task for Boruta.
 
-  Creates `clients`, `tokens` tables. It can also create migration for boruta Accounts (users) with `--with-accounts` arg.
+  Creates `clients`, `scopes` and `tokens` tables.
 
   ## Examples
   ```
   mix boruta.gen.migration
-  mix boruta.gen.migration --with-accounts
   ```
-
-  ## Command line options
-  - `--with-accounts` - creates Boruta Accounts (users) migration
-
   """
 
   use Mix.Task
@@ -32,8 +27,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
       path = Path.join(source_repo_priv(repo), "migrations")
       file = Path.join(path, "#{timestamp()}_create_boruta.exs")
       assigns = [
-        mod: Module.concat([repo, Migrations, "CreateBoruta"]),
-        accounts: Enum.member?(args, "--with-accounts")
+        mod: Module.concat([repo, Migrations, "CreateBoruta"])
       ]
 
       fuzzy_path = Path.join(path, "*_create_boruta.exs")
@@ -89,7 +83,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:revoked_at, :utc_datetime)
 
         add(:client_id, references(:clients, type: :uuid, on_delete: :nilify_all))
-        add(:resource_owner_id, :uuid)
+        add(:resource_owner_id, :string)
 
         timestamps()
       end
@@ -106,40 +100,7 @@ defmodule Mix.Tasks.Boruta.Gen.Migration do
         add(:client_id, references(:clients, type: :uuid, on_delete: :delete_all))
         add(:scope_id, references(:scopes, type: :uuid, on_delete: :delete_all))
       end
-      <%= if @accounts do %>
-      create table(:users, primary_key: false) do
-        add :id, :uuid, primary_key: true
 
-        add :name, :string
-        add :email, :string
-
-        add :password_hash, :string
-        add :reset_password_token, :string
-        add :reset_password_sent_at, :utc_datetime
-        add :failed_attempts, :integer, default: 0
-        add :locked_at, :utc_datetime
-        add :sign_in_count, :integer, default: 0
-        add :current_sign_in_at, :utc_datetime
-        add :last_sign_in_at, :utc_datetime
-        add :current_sign_in_ip, :string
-        add :last_sign_in_ip, :string
-        add :unlock_token, :string
-
-        add :email_confirmation_token, :string
-        add :email_confirmed_at,       :utc_datetime
-        add :unconfirmed_email,        :string
-
-        timestamps()
-      end
-
-      create table(:scopes_users) do
-        add(:user_id, references(:users, type: :uuid, on_delete: :delete_all))
-        add(:scope_id, references(:scopes, type: :uuid, on_delete: :delete_all))
-      end
-
-      create unique_index(:users, :email_confirmation_token)
-      create unique_index(:users, [:email])
-      <% end %>
       create unique_index(:clients, [:id, :secret])
       create index("tokens", [:value])
       create unique_index("tokens", [:client_id, :value])

@@ -6,7 +6,6 @@ use Mix.Config
 
 config :logger, level: :error
 
-# Configure your database
 config :boruta, Boruta.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
@@ -15,4 +14,6 @@ config :boruta, Boruta.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :boruta, Boruta.Oauth,
-  secret_key_base: "secret"
+  contexts: [
+    resource_owners: Boruta.Support.ResourceOwners
+  ]

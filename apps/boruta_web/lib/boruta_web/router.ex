@@ -60,6 +60,10 @@ defmodule BorutaWeb.Router do
     resources "/scopes", ScopeController, except: [:new, :edit]
     resources "/clients", ClientController, except: [:new, :edit]
     get "/users/current", UserController, :current
+    # TODO user scopes
+    # resources "/users/:user_id/scopes, only: [:create, :delete]
+
+    # TODO remove users resource
     resources "/users", UserController, except: [:new, :edit, :create]
   end
 

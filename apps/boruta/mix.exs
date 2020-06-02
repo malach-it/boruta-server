@@ -4,6 +4,9 @@ defmodule Boruta.MixProject do
   def project do
     [
       name: "Boruta core",
+      build_path: "../../_build",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
       app: :boruta,
       version: "0.2.0",
       elixir: "~> 1.5",
@@ -45,12 +48,14 @@ defmodule Boruta.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:ex_json_schema, "~> 0.6.1"},
-      {:ex_machina, "~> 2.3", only: :test},
+      {:ex_machina, "~> 2.4", only: :test},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
-      {:pow, "~> 1.0.18"},
+      # TODO remove phoenix dependency
+      {:phoenix, "~> 1.4.3"},
       {:puid, "~> 1.0"},
-      {:secure_random, "~> 0.5"}
+      {:secure_random, "~> 0.5"},
+      {:mox, "~> 0.5", only: :test}
     ]
   end
 

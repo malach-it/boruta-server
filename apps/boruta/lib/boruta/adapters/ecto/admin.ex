@@ -1,4 +1,5 @@
 defmodule Boruta.Ecto.Admin do
+  # TODO move to Boruta.Oauth.Admin
   @moduledoc """
   The Ecto.Admin context.
   """
@@ -11,12 +12,8 @@ defmodule Boruta.Ecto.Admin do
 
   defdelegate list_scopes, to: Boruta.Ecto.Admin.Scopes
   defdelegate get_scope!(id), to: Boruta.Ecto.Admin.Scopes
+  defdelegate get_scopes_by_ids(ids), to: Boruta.Ecto.Admin.Scopes
   defdelegate create_scope(attrs), to: Boruta.Ecto.Admin.Scopes
   defdelegate update_scope(scope, attrs), to: Boruta.Ecto.Admin.Scopes
   defdelegate delete_scope(scope), to: Boruta.Ecto.Admin.Scopes
-
-  defdelegate list_users, to: Boruta.Ecto.Admin.Users
-  defdelegate get_user!(id), to: Boruta.Ecto.Admin.Users
-  defdelegate update_user(user, attrs), to: Boruta.Ecto.Admin.Users
-  defdelegate delete_user(user), to: Boruta.Ecto.Admin.Users
 end

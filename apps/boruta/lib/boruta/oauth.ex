@@ -33,12 +33,10 @@ defmodule Boruta.Oauth do
 
   @doc """
   Triggers `authorize_success` in case of success and `authorize_error` in case of failure from the given `module`. Those functions are described in `Boruta.Oauth.Application` behaviour.
-
-  Note : resource owner must be provided as current_user assigns.
   """
-  @spec authorize(conn :: Plug.Conn.t() | map(), module :: atom()) :: any()
-  def authorize(conn, module) do
-    with {:ok, request} <- Request.authorize_request(conn),
+  @spec authorize(conn :: Plug.Conn.t() | map(), resource_owner :: struct(), module :: atom()) :: any()
+  def authorize(conn, resource_owner, module) do
+    with {:ok, request} <- Request.authorize_request(conn, resource_owner),
          {:ok, token} <- Authorization.token(request) do
       module.authorize_success(
         conn,
@@ -46,7 +44,7 @@ defmodule Boruta.Oauth do
       )
     else
       {:error, %Error{} = error} ->
-        case Request.authorize_request(conn) do
+        case Request.authorize_request(conn, resource_owner) do
           {:ok, request} ->
             module.authorize_error(conn, Error.with_format(error, request))
           _ ->

@@ -68,7 +68,9 @@ defmodule Boruta.Oauth.Authorization.Client do
   end
 
   def authorize(id: id, redirect_uri: redirect_uri, grant_type: grant_type) do
-    with %Client{supported_grant_types: supported_grant_types} = client <- clients().get_by(id: id, redirect_uri: redirect_uri),
+    with %Client{
+      supported_grant_types: supported_grant_types
+      } = client <- clients().get_by(id: id, redirect_uri: redirect_uri),
          true <- Enum.member?(supported_grant_types, grant_type) do
         {:ok, client}
     else

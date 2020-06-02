@@ -3,7 +3,14 @@ defmodule Boruta.Oauth.Client do
   OAuth client schema
   """
 
-  defstruct id: nil, secret: nil, authorize_scope: nil, authorized_scopes: [], redirect_uris: [], supported_grant_types: []
+  defstruct [
+    id: nil,
+    secret: nil,
+    authorize_scope: nil,
+    authorized_scopes: [],
+    redirect_uris: [],
+    supported_grant_types: []
+  ]
 
   @type t :: %__MODULE__{
     id: any(),

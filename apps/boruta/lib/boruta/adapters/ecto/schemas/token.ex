@@ -9,7 +9,6 @@ defmodule Boruta.Ecto.Token do
     only: [
       access_token_expires_in: 0,
       authorization_code_expires_in: 0,
-      resource_owner_schema: 0,
       token_generator: 0
     ]
 
@@ -23,7 +22,7 @@ defmodule Boruta.Ecto.Token do
     redirect_uri: String.t(),
     expires_at: integer(),
     client: Client.t(),
-    resource_owner: struct(),
+    resource_owner_id: struct(),
     revoked_at: DateTime.t()
   }
 
@@ -41,7 +40,7 @@ defmodule Boruta.Ecto.Token do
     field(:revoked_at, :utc_datetime)
 
     belongs_to(:client, Client)
-    belongs_to(:resource_owner, resource_owner_schema())
+    field(:resource_owner_id, :string)
 
     timestamps()
   end
