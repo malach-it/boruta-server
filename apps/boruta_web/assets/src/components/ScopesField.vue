@@ -28,8 +28,8 @@ export default {
       const vm = this
       return function (authorizedScope) {
         return vm.scopes.map((scope) => {
-          if (authorizedScope.id === scope.id) {
-            return authorizedScope
+          if (authorizedScope.model.name === scope.name) {
+            return authorizedScope.model
           }
           return scope
         })

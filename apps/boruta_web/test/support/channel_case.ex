@@ -26,14 +26,4 @@ defmodule BorutaWeb.ChannelCase do
       @endpoint BorutaWeb.Endpoint
     end
   end
-
-  setup tags do
-    :ok = Sandbow.checkout(Boruta.Repo)
-
-    unless tags[:async] do
-      Sandbox.mode(Boruta.Repo, {:shared, self()})
-    end
-
-    :ok
-  end
 end

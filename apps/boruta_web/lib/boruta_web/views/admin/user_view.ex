@@ -1,7 +1,8 @@
 defmodule BorutaWeb.Admin.UserView do
   use BorutaWeb, :view
 
-  alias BorutaIdentityProvider.ResourceOwners
+  alias Boruta.Oauth.ResourceOwner
+  alias BorutaWeb.ResourceOwners
   alias BorutaWeb.Admin.UserView
 
   def render("index.json", %{users: users}) do
@@ -16,7 +17,7 @@ defmodule BorutaWeb.Admin.UserView do
     %{
       id: user.id,
       email: user.email,
-      authorized_scopes: ResourceOwners.authorized_scopes(user)
+      authorized_scopes: ResourceOwners.authorized_scopes(%ResourceOwner{sub: user.id})
     }
   end
 

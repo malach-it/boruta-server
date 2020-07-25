@@ -58,3 +58,20 @@ config :boruta_web, BorutaWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
+
+config :boruta_web, BorutaWeb.Repo,
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_web",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
+  pool_size: 10
+
+config :boruta_identity_provider, BorutaIdentityProvider.Repo,
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_provider_dev",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
+  pool_size: 10
+
+config :boruta_identity_provider, Boruta.Accounts,
+  secret_key_base: "secret"

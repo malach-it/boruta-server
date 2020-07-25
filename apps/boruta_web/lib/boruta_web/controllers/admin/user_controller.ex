@@ -2,6 +2,7 @@ defmodule BorutaWeb.Admin.UserController do
   use BorutaWeb, :controller
 
   alias Boruta.Oauth.Token
+  alias Boruta.Oauth.ResourceOwner
   alias BorutaIdentityProvider.Accounts
   alias BorutaIdentityProvider.Accounts.User
 
@@ -20,8 +21,9 @@ defmodule BorutaWeb.Admin.UserController do
   end
 
   def current(conn, _) do
-    %Token{resource_owner: resource_owner} = conn.assigns[:token]
-    render(conn, "show.json", user: resource_owner)
+    %Token{resource_owner: %ResourceOwner{sub: sub}} = conn.assigns[:token]
+    user = Accounts.get_user!(sub)
+    render(conn, "show.json", user: user)
   end
 
   def update(conn, %{"id" => id, "user" => user_params}) do

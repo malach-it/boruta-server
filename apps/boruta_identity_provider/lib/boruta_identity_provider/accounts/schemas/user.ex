@@ -45,19 +45,9 @@ defmodule BorutaIdentityProvider.Accounts.User do
 
   @spec update_changeset!(Ecto.Schema.t(), map()) :: Ecto.Changeset.t()
   def update_changeset!(model, attrs \\ %{}) do
-    attrs = add_authorized_scopes_params(attrs, model)
     model
     |> repo().preload(:authorized_scopes)
     |> cast(attrs, [:email])
-    |> cast_assoc(:authorized_scopes)
+    |> cast_assoc(:authorized_scopes, with: &UserAuthorizedScope.changeset/2)
   end
-
-  defp add_authorized_scopes_params(%{"authorized_scopes" => authorized_scopes} = attrs, model) do
-    authorized_scopes = Enum.map(
-      authorized_scopes,
-      fn (%{"id" => id}) -> %{user_id: model.id, scope_id: id} end
-    )
-    %{attrs|"authorized_scopes" => authorized_scopes}
-  end
-  defp add_authorized_scopes_params(attrs, _model), do: attrs
 end

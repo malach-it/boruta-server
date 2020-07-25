@@ -26,7 +26,10 @@ defmodule Boruta.Umbrella.MixProject do
   # Dependencies listed here are available only for this project
   # and cannot be accessed from applications inside the apps folder
   defp deps do
-    [{:distillery, "~> 2.1"}]
+    [
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:distillery, "~> 2.1"}
+    ]
   end
 
   defp aliases do

@@ -17,7 +17,7 @@ defmodule BorutaIdentityProvider.Factory do
 
   def user_scope_factory do
     %UserAuthorizedScope{
-      scope_id: SecureRandom.uuid
+      name: SecureRandom.hex
     }
   end
 end

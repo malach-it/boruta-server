@@ -7,6 +7,7 @@ defmodule BorutaWeb.OauthController do
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.IntrospectResponse
+  alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.TokenResponse
   alias BorutaIdentityProvider.Accounts.User
   alias BorutaWeb.OauthView
@@ -63,7 +64,7 @@ defmodule BorutaWeb.OauthController do
       {%User{}, true} ->
         conn
         |> delete_session(:session_chosen)
-        |> Oauth.authorize(current_user, __MODULE__)
+        |> Oauth.authorize(%ResourceOwner{sub: current_user.id, username: current_user.email}, __MODULE__)
       {%User{}, _} ->
         redirect(conn, to: Routes.choose_session_path(conn, :new))
       {_, _} ->
