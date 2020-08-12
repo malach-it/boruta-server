@@ -1,4 +1,4 @@
-defmodule BorutaIdentityProvider.DataCase do
+defmodule BorutaWeb.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -31,9 +31,11 @@ defmodule BorutaIdentityProvider.DataCase do
 
   setup tags do
     :ok = Sandbox.checkout(BorutaIdentityProvider.Repo)
+    :ok = Sandbox.checkout(BorutaWeb.Repo)
 
     unless tags[:async] do
       Sandbox.mode(BorutaIdentityProvider.Repo, {:shared, self()})
+      Sandbox.mode(BorutaWeb.Repo, {:shared, self()})
     end
 
     :ok

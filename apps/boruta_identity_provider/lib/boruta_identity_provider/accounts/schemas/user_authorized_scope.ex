@@ -8,13 +8,13 @@ defmodule BorutaIdentityProvider.Accounts.UserAuthorizedScope do
 
   @type t :: %__MODULE__{
           user_id: String.t(),
-          scope_id: String.t()
+          name: String.t()
         }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "scopes_users" do
-    field :scope_id, :binary_id
+    field :name, :string
     belongs_to(:user, User)
 
     timestamps()
@@ -23,7 +23,7 @@ defmodule BorutaIdentityProvider.Accounts.UserAuthorizedScope do
   @doc false
   def changeset(scope, attrs) do
     scope
-    |> cast(attrs, [:user_id, :scope_id])
-    |> validate_required([:user_id, :scope_id])
+    |> cast(attrs, [:name])
+    |> validate_required([:name])
   end
 end

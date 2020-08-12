@@ -6,7 +6,7 @@ use Mix.Config
 
 # General application configuration
 config :boruta_web,
-  ecto_repos: [Boruta.Repo, BorutaIdentityProvider.Repo],
+  ecto_repos: [BorutaIdentityProvider.Repo],
   generators: [context_app: :boruta, binary_id: true]
 
 # Configures the endpoint
@@ -31,9 +31,13 @@ config :boruta_web, :pow,
 
 config :phoenix, :json_library, Jason
 
+config :boruta_web,
+  ecto_repos: [BorutaWeb.Repo]
+
 config :boruta, Boruta.Oauth,
+  repo: BorutaWeb.Repo,
   contexts: [
-    resource_owners: BorutaIdentityProvider.ResourceOwners
+    resource_owners: BorutaWeb.ResourceOwners
   ]
 
 import_config "#{Mix.env()}.exs"

@@ -406,7 +406,7 @@ defmodule BorutaWeb.OauthControllerTest do
       client = insert(:client)
       client_token = insert(:token, type: "access_token", value: "777", client_id: client.id)
       resource_owner = BorutaIdentityProvider.Factory.insert(:user)
-      resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, resource_owner_id: resource_owner.id)
+      resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, sub: resource_owner.id)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
         client: client,
@@ -494,7 +494,7 @@ defmodule BorutaWeb.OauthControllerTest do
       client = insert(:client)
       client_token = insert(:token, type: "access_token", value: "777", client_id: client.id)
       resource_owner = BorutaIdentityProvider.Factory.insert(:user)
-      resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, resource_owner_id: resource_owner.id)
+      resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, sub: resource_owner.id)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
         client: client,
@@ -555,7 +555,7 @@ defmodule BorutaWeb.OauthControllerTest do
         "client_id=#{client.id}&client_secret=#{client.secret}&token=#{token.value}"
       )
 
-      assert Boruta.Repo.get_by(Token, value: token.value).revoked_at
+      assert BorutaWeb.Repo.get_by(Token, value: token.value).revoked_at
     end
   end
 end

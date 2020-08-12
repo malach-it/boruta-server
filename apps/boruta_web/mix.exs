@@ -36,8 +36,8 @@ defmodule BorutaWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", tag: "1.0.0-rc.3"},
       {:boruta_identity_provider, in_umbrella: true},
-      {:boruta, in_umbrella: true},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.4.3"},
@@ -54,6 +54,10 @@ defmodule BorutaWeb.MixProject do
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
-    [test: ["ecto.create --quiet", "ecto.migrate", "test"]]
+    [
+      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/boruta.seeds.exs"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
+    ]
   end
 end

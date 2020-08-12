@@ -44,7 +44,7 @@ defmodule BorutaIdentityProvider.AccountsTest do
     test "returns error if password is invalid" do
       user = insert(:user)
 
-      assert Accounts.check_password(user, "invalid password") == {:error, "Invalid password"}
+      assert Accounts.check_password(user, "wrong password") == {:error, "Invalid password."}
     end
   end
 
@@ -73,24 +73,31 @@ defmodule BorutaIdentityProvider.AccountsTest do
     end
 
     test "updates a user scopes" do
-      scope = Boruta.Factory.insert(:scope)
-
-      authorized_scopes = Enum.map([scope], fn (%{id: id}) ->
-        %{"id" => id}
-      end)
       user = %{insert(:user)|password: nil, authorized_scopes: []}
+      name = "scope"
+      scope_params = %{"name" => name}
 
-      {:ok, updated_user} = Accounts.update_user(user, %{"authorized_scopes" => authorized_scopes})
+      {:ok, updated_user} = Accounts.update_user(user, %{"authorized_scopes" => [scope_params]})
       updated_user = updated_user
       |> Repo.preload(:authorized_scopes)
 
-      scope_id = scope.id
       case updated_user do
-        %{authorized_scopes: [
-          %{scope_id: ^scope_id}
-        ]} -> assert true
-        _ -> assert false
+        %{authorized_scopes: [%{name: ^name}]} -> assert true
+        _error -> assert false
       end
+    end
+  end
+
+  describe "#get_user_scopes/1" do
+    test "returns an empty array" do
+      assert Accounts.get_user_scopes("f8eadd9e-7680-493e-800b-3f3604d7c5a0") == []
+    end
+
+    test "returns user scopes" do
+      user = insert(:user)
+      scope = insert(:user_scope, user_id: user.id)
+
+      assert Accounts.get_user_scopes("f8eadd9e-7680-493e-800b-3f3604d7c5a0") == [scope]
     end
   end
 end

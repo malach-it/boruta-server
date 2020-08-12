@@ -8,6 +8,7 @@ defmodule BorutaIdentityProvider.Accounts do
 
   alias BorutaIdentityProvider.Accounts.HashSalt
   alias BorutaIdentityProvider.Accounts.User
+  alias BorutaIdentityProvider.Accounts.UserAuthorizedScope
 
   @doc """
   Returns the list of users.
@@ -52,7 +53,7 @@ defmodule BorutaIdentityProvider.Accounts do
   def check_password(%User{password_hash: password_hash}, password) do
     case HashSalt.checkpw(password, password_hash) do
       true -> :ok
-      false -> {:error, "Invalid password"}
+      false -> {:error, "Invalid password."}
     end
   end
 
@@ -88,5 +89,18 @@ defmodule BorutaIdentityProvider.Accounts do
        |> repo().update() do
       {:ok, user}
     end
+  end
+
+  @doc """
+  Get user scopes.
+
+  ## Examples
+
+      iex> get_user_scopes("f8eadd9e-7680-493e-800b-3f3604d7c5a0")
+      []
+
+  """
+  def get_user_scopes(id) do
+    repo().all(UserAuthorizedScope, user_id: id)
   end
 end
