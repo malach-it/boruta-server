@@ -10,16 +10,16 @@ defmodule BorutaWeb.ResourceOwners do
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
-    with %User{id: id, email: email} <- Accounts.get_user_by(email: username) do
-      {:ok, %ResourceOwner{sub: id, username: email}}
-    else
+    case Accounts.get_user_by(email: username) do
+      %User{id: id, email: email} ->
+        {:ok, %ResourceOwner{sub: id, username: email}}
       _ -> {:error, "User not found."}
     end
   end
   def get_by(sub: sub) do
-    with %User{id: id, email: email} <- Accounts.get_user_by(id: sub) do
-      {:ok, %ResourceOwner{sub: id, username: email}}
-    else
+    case Accounts.get_user_by(id: sub) do
+      %User{id: id, email: email} ->
+        {:ok, %ResourceOwner{sub: id, username: email}}
       _ -> {:error, "User not found."}
     end
   end
@@ -29,7 +29,6 @@ defmodule BorutaWeb.ResourceOwners do
     user = Accounts.get_user_by(id: sub)
     Accounts.check_password(user, password)
   end
-
 
   @impl Boruta.Oauth.ResourceOwners
   def authorized_scopes(%ResourceOwner{sub: sub}) do

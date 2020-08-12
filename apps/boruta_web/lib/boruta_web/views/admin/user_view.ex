@@ -2,8 +2,8 @@ defmodule BorutaWeb.Admin.UserView do
   use BorutaWeb, :view
 
   alias Boruta.Oauth.ResourceOwner
-  alias BorutaWeb.ResourceOwners
   alias BorutaWeb.Admin.UserView
+  alias BorutaWeb.ResourceOwners
 
   def render("index.json", %{users: users}) do
     %{data: render_many(users, UserView, "user.json")}

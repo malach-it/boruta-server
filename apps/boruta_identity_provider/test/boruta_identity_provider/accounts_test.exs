@@ -83,7 +83,7 @@ defmodule BorutaIdentityProvider.AccountsTest do
 
       case updated_user do
         %{authorized_scopes: [%{name: ^name}]} -> assert true
-        error -> IO.inspect error
+        _error -> assert false
       end
     end
   end
