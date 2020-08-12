@@ -7,10 +7,6 @@ services:
 
 .elixir-task:
   image: elixir:1.10.3-alpine
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-    - _build/
   before_script:
   - apk --update add postgresql-client git make g++
   - mix local.hex --force
