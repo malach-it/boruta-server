@@ -1,5 +1,5 @@
 <div class="ui container">
-  <div class="ui two column centered grid">
+  <div class="ui two column stackable centered grid">
     <div class="column">
       <h1 class="ui right aligned header">Continue ?</h1>
       <div class="ui segment">

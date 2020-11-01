@@ -1,6 +1,6 @@
 <div class="ui container">
   <%= form_for @changeset, @action, [as: :user, class: "ui big warning form"], fn f -> %>
-    <div class="ui two column centered grid">
+    <div class="ui two column stackable centered grid">
       <div class="column">
         <div class="ui big segment">
           <h1 class="ui right aligned header">Sign in</h1>

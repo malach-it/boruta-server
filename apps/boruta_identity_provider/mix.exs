@@ -36,7 +36,7 @@ defmodule BorutaIdentityProvider.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:ecto_sql, "~> 3.1"},
+      {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:pow, "~> 1.0.18"},
       {:ex_machina, "~> 2.4"},

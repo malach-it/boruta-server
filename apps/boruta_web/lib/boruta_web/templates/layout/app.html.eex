@@ -10,10 +10,10 @@
   </head>
   <body>
     <header>
+      <%= if get_flash(@conn, :info) do %><p class="ui success center aligned large message segment" role="alert"><%= get_flash(@conn, :info) %></p><% end %>
+      <%= if get_flash(@conn, :error) do %><p class="ui error large center aligned message segment" role="alert"><%= get_flash(@conn, :error) %></p><% end %>
     </header>
     <main class="main" style="padding: 20px 0;height: 100%;display: flex;align-items: center;">
-      <%= if get_flash(@conn, :info) do %><p class="ui success center aligned large message segment" role="alert"><%= get_flash(@conn, :info) %></p><% end %>
-    <%= if get_flash(@conn, :error) do %><p class="ui error large center aligned message segment" role="alert"><%= get_flash(@conn, :error) %></p><% end %>
       <%= render @view_module, @view_template, assigns %>
     </main>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/accounts/app.js") %>"></script>
