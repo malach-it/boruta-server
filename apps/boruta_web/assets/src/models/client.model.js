@@ -17,6 +17,8 @@ const defaults = {
 
 const assign = {
   id: function ({ id }) { this.id = id },
+  authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
+  access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
   secret: function ({ secret }) { this.secret = secret },
   redirect_uris: function ({ redirect_uris }) {
     this.redirect_uris = redirect_uris.map((redirectUri) => {
@@ -90,13 +92,15 @@ class Client {
   }
 
   get serialized () {
-    const { id, secret, redirect_uris, authorize_scope, authorized_scopes, grantTypes } = this
+    const { id, secret, redirect_uris, authorize_scope, authorized_scopes, grantTypes, access_token_ttl, authorization_code_ttl } = this
 
     return {
       id,
       secret,
       redirect_uris: redirect_uris.map(({ uri }) => uri),
       authorize_scope,
+      access_token_ttl,
+      authorization_code_ttl,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
       supported_grant_types: grantTypes
         .filter(({ value }) => value)

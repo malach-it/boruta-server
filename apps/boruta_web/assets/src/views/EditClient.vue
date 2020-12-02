@@ -11,14 +11,22 @@
         <form class="ui form" v-on:submit.prevent="updateClient()">
           <div class="ui big segment">
             <div class="field">
-              <label>Redirect URI</label>
+              <label>Access token TTL (seconds)</label>
+              <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
+            </div>
+            <div class="field">
+              <label>Authorization code TTL (seconds)</label>
+              <input type="number" v-model="client.authorization_code_ttl" placeholder="60" />
+            </div>
+            <div class="field">
+              <label>Redirect URIs</label>
               <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">
                 <div class="ui right icon input">
                   <input type="text" v-model="redirectUri.uri" placeholder="http://redirect.uri" />
                   <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
                 </div>
               </div>
-              <button v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</button>
+              <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
             </div>
           </div>
           <div class="ui segment">
