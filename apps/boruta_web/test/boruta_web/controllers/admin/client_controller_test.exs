@@ -6,7 +6,9 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
   alias Boruta.Ecto.Client
 
   @create_attrs %{
-    redirect_uris: ["http://redirect.uri"]
+    redirect_uris: ["http://redirect.uri"],
+    access_token_ttl: 10,
+    authorization_code_ttl: 10
   }
   @update_attrs %{
     redirect_uris: ["http://updated.redirect.uri"]
