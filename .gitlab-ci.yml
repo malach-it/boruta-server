@@ -6,9 +6,9 @@ services:
   - postgres:latest
 
 .elixir-task:
-  image: elixir:1.10.3-alpine
+  image: elixir:1.10.3
   before_script:
-  - apk --update add postgresql-client git make g++
+  - apt-get install -y libcurl4-openssl-dev libssl-dev libevent-dev
   - mix local.hex --force
   - mix local.rebar --force
   - mix deps.get

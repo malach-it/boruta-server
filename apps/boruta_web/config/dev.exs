@@ -4,20 +4,14 @@
 # the umbrella root.
 use Mix.Config
 
-# For development, we disable any cache and enable
-# debugging and code reloading.
-#
-# The watchers configuration can be used to run external
-# watchers to your application. For example, we use it
-# with webpack to recompile .js and .css sources.
 config :boruta_web, BorutaWeb.Endpoint,
-  http: [port: 4000],
+  http: [port: 4001],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
   watchers: [
-    node: [
-      "node_modules/@vue/cli-service/bin/vue-cli-service.js",
+    npm: [
+      "run",
       "build",
       "--watch",
       cd: Path.expand("../assets", __DIR__)
@@ -72,6 +66,16 @@ config :boruta_identity_provider, BorutaIdentityProvider.Repo,
   database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_provider_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
+
+config :boruta_gateway, BorutaGateway.Repo,
+  username: "postgres",
+  password: "postgres",
+  database: "boruta_gateway_dev",
+  hostname: "localhost",
+  pool_size: 10
+
+config :boruta_gateway,
+  port: 4000
 
 config :boruta_identity_provider, Boruta.Accounts,
   secret_key_base: "secret"

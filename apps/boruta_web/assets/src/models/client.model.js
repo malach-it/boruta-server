@@ -21,9 +21,7 @@ const assign = {
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
   secret: function ({ secret }) { this.secret = secret },
   redirect_uris: function ({ redirect_uris }) {
-    this.redirect_uris = redirect_uris.map((redirectUri) => {
-      return { uri: redirectUri }
-    })
+    this.redirect_uris = redirect_uris.map((uri) => ({ uri }))
   },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
   authorized_scopes: function ({ authorized_scopes }) {
@@ -50,7 +48,6 @@ class Client {
       this[key] = params[key]
       assign[key].bind(this)(params)
     })
-    console.log(this)
   }
 
   // TODO factorize with User#validate
@@ -74,17 +71,25 @@ class Client {
     const { id, serialized } = this
     if (id) {
       response = this.constructor.api().patch(`/${id}`, { client: serialized })
-        .then(({ data }) => Object.assign(this, data.data))
     } else {
       response = this.constructor.api().post('/', { client: serialized })
-        .then(({ data }) => Object.assign(this, data.data))
     }
 
-    return response.catch((error) => {
-      const { errors } = error.response.data
-      this.errors = errors
-      throw errors
-    })
+    return response
+      .then(({ data }) => {
+        const params = data.data
+
+        Object.keys(params).forEach((key) => {
+          this[key] = params[key]
+          assign[key].bind(this)(params)
+        })
+        return this
+      })
+      .catch((error) => {
+        const { errors } = error.response.data
+        this.errors = errors
+        throw errors
+      })
   }
 
   destroy () {

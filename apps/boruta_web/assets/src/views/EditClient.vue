@@ -67,7 +67,6 @@ import FormErrors from '@/components/FormErrors.vue'
 
 export default {
   name: 'clients',
-  // TODO look for async components
   components: {
     ScopesField,
     FormErrors
@@ -88,19 +87,6 @@ export default {
       client: new Client()
     }
   },
-  computed: {
-    scopeModels () {
-      const vm = this
-      return function (authorizedScope) {
-        return vm.scopes.map((scope) => {
-          if (authorizedScope.id === scope.id) {
-            return authorizedScope
-          }
-          return scope
-        })
-      }
-    }
-  },
   methods: {
     updateClient () {
       this.errors = null
@@ -109,21 +95,20 @@ export default {
           this.$router.push({ name: 'client-list' })
         })
       }).catch((errors) => {
-        console.log(errors)
         this.errors = errors
       })
     },
     addRedirectUri () {
       this.client.redirect_uris.push({})
     },
-    addScope () {
-      this.client.authorized_scopes.push({ model: new Scope() })
-    },
     deleteRedirectUri (redirectUri) {
       this.client.redirect_uris.splice(
         this.client.redirect_uris.indexOf(redirectUri),
         1
       )
+    },
+    addScope () {
+      this.client.authorized_scopes.push({ model: new Scope() })
     },
     deleteScope (scope) {
       this.client.authorized_scopes.splice(

@@ -36,7 +36,7 @@ export default new Vuex.Store({
       oauth.login()
     },
     async getCurrentUser ({ commit }) {
-      if (oauth.isAuthenticated) {
+      try {
         const user = await User.current()
         commit('SET_CURRENT_USER', user)
         commit('SET_AUTHENTICATED', true)
@@ -45,12 +45,16 @@ export default new Vuex.Store({
           commit('SET_CURRENT_USER', User.default)
           commit('SET_AUTHENTICATED', false)
         }, oauth.expiresIn)
+      } catch (error) {
+        commit('SET_CURRENT_USER', User.default)
+        commit('SET_AUTHENTICATED', false)
       }
     },
     logout ({ commit }) {
       oauth.logout()
       commit('SET_CURRENT_USER', User.default)
       commit('SET_AUTHENTICATED', false)
+      return oauth.login()
     }
   }
 })

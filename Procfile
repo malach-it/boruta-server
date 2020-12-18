@@ -1,1 +1,1 @@
-web: mix phx.server
+web: mix boruta.server

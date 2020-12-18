@@ -56,6 +56,7 @@ defmodule BorutaWeb.Router do
 
       # TODO remove users resource
       resources "/users", UserController, except: [:new, :edit, :create]
+      resources "/upstreams", UpstreamController, except: [:new, :edit]
     end
   end
 

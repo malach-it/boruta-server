@@ -45,7 +45,6 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
     setup %{conn: conn} do
       token = insert(:token, type: "access_token", scope: "clients:manage:all")
       conn = conn
-        |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
       {:ok, conn: conn}
     end
@@ -60,7 +59,6 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
     setup %{conn: conn} do
       token = insert(:token, type: "access_token", scope: "clients:manage:all")
       conn = conn
-        |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
       {:ok, conn: conn}
     end
@@ -87,7 +85,6 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
       token = insert(:token, type: "access_token", scope: "clients:manage:all")
       client = insert(:client)
       conn = conn
-        |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
       {:ok, conn: conn, client: client}
     end
@@ -114,7 +111,6 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
       token = insert(:token, type: "access_token", scope: "clients:manage:all")
       client = insert(:client)
       conn = conn
-        |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
       {:ok, conn: conn, client: client}
     end

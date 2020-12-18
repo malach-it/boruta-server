@@ -1,4 +1,4 @@
-const OauthClient = require('client-oauth2')
+import OauthClient from 'client-oauth2'
 
 class Oauth {
   constructor () {
@@ -6,7 +6,7 @@ class Oauth {
       clientId: process.env.VUE_APP_ADMIN_CLIENT_ID,
       authorizationUri: `${process.env.VUE_APP_BORUTA_BASE_URL}/oauth/authorize`,
       redirectUri: `${process.env.VUE_APP_BORUTA_BASE_URL}/admin/oauth-callback`,
-      scopes: ['scopes:manage:all', 'clients:manage:all', 'users:manage:all']
+      scopes: ['scopes:manage:all', 'clients:manage:all', 'users:manage:all', 'upstreams:manage:all']
     })
   }
 

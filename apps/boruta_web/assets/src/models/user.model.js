@@ -43,13 +43,27 @@ class User {
   async save () {
     await this.validate()
     const { id, serialized } = this
+    let response
     if (id) {
-      return this.constructor.api().patch(`/${id}`, { user: serialized })
-        .then(({ data }) => Object.assign(this, data.data))
+      response = this.constructor.api().patch(`/${id}`, { user: serialized })
     } else {
-      return this.constructor.api().post('/', { user: serialized })
-        .then(({ data }) => Object.assign(this, data.data))
+      response = this.constructor.api().post('/', { user: serialized })
     }
+    return response
+      .then(({ data }) => {
+        const params = data.data
+
+        Object.keys(params).forEach((key) => {
+          this[key] = params[key]
+          assign[key].bind(this)(params)
+        })
+        return this
+      })
+      .catch((error) => {
+        const { errors } = error.response.data
+        this.errors = errors
+        throw errors
+      })
   }
 
   destroy () {

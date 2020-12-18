@@ -9,7 +9,8 @@ defmodule BorutaWeb.Pow.Routes do
   def after_sign_in_path(conn) do
     case get_session(conn, :oauth_request) do
       nil ->
-        "/"
+        # TODO default after_sign_in_path configuration
+        "/admin"
       params ->
         Routes.oauth_path(conn, :authorize, %{
           response_type: params["response_type"],

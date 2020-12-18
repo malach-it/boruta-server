@@ -9,7 +9,7 @@ import oauth from '@/services/oauth.service'
 
 export default {
   name: 'oauth-callback',
-  mounted() {
+  mounted () {
     oauth.callback().then(() => {
       this.$store.dispatch('getCurrentUser')
       this.$router.push({ name: 'home' })
