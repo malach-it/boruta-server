@@ -24,6 +24,8 @@ import EditUser from './views/EditUser.vue'
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/ScopeList.vue'
 
+import Dashboard from './views/Dashboard.vue'
+
 Vue.use(Router)
 
 const router = new Router({
@@ -36,7 +38,7 @@ const router = new Router({
       component: Main,
       children: [
         {
-          path: '/',
+          path: '',
           name: 'home',
           beforeEnter (to, from, next) {
             if (oauth.isAuthenticated) {
@@ -49,6 +51,16 @@ const router = new Router({
           path: '/oauth-callback',
           name: 'oauth-callback',
           component: OauthCallback
+        }, {
+          path: '/dashboard',
+          name: 'dashboard',
+          component: Dashboard,
+          beforeEnter (to, from, next) {
+            if (oauth.isAuthenticated) {
+              return next()
+            }
+            return oauth.login()
+          }
         }, {
           path: '/users',
           component: Users,

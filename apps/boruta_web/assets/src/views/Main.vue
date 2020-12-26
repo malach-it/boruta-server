@@ -5,6 +5,10 @@
       <div class="ui left internal rail">
         <div class="ui big vertical fluid tabular menu">
           <span class="item">&nbsp;</span>
+          <router-link :to="{ name: 'dashboard' }" class="dashboard item">
+            <i class="chart area icon"></i>
+            Dashboard
+          </router-link>
           <router-link :to="{ name: 'upstream-list' }" class="upstreams item">
             <i class="server icon"></i>
             Upstreams
@@ -87,6 +91,9 @@ export default {
         }
       }
     }
+  }
+  .rail {
+    z-index: 100;
   }
 }
 </style>

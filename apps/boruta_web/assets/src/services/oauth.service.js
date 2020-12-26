@@ -30,6 +30,10 @@ class Oauth {
     return Promise.resolve(true)
   }
 
+  get accessToken () {
+    return localStorage.getItem('access_token')
+  }
+
   get isAuthenticated () {
     const accessToken = localStorage.getItem('access_token')
     const expiresAt = localStorage.getItem('token_expires_at')

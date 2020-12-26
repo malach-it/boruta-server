@@ -25,6 +25,15 @@ export default {
       margin: 1em 0;
     }
   }
+  .ui.container {
+    width: auto;
+    margin-left: 18%!important;
+    margin-right: auto!important;
+    @media (max-width: 1780px) {
+      margin-left: auto!important;
+      margin-right: auto!important;
+    }
+  }
   .ui.input.error>input {
     background-color: #fff6f6;
     border-color: #e0b4b4;

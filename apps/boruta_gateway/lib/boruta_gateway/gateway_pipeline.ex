@@ -5,6 +5,7 @@ defmodule BorutaGateway.GatewayPipeline do
 
   plug BorutaGateway.Plug.AssignUpstream
   plug BorutaGateway.Plug.Authorize
+  plug BorutaGateway.Plug.Metrics
   plug Plug.Logger
 
   plug :match
