@@ -1,3 +1,0 @@
-# BorutaIdentityProvider
-
-**TODO: Add description**

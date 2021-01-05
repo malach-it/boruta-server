@@ -60,10 +60,10 @@ config :boruta_web, BorutaWeb.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
-config :boruta_identity_provider, BorutaIdentityProvider.Repo,
+config :boruta_identity, BorutaIdentity.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_provider_dev",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
@@ -77,5 +77,5 @@ config :boruta_gateway, BorutaGateway.Repo,
 config :boruta_gateway,
   port: 4000
 
-config :boruta_identity_provider, Boruta.Accounts,
+config :boruta_identity, Boruta.Accounts,
   secret_key_base: "secret"

@@ -1,7 +1,7 @@
 defmodule BorutaWeb.Admin.UserControllerTest do
   use BorutaWeb.ConnCase
 
-  alias BorutaIdentityProvider.Accounts.User
+  alias BorutaIdentity.Accounts.User
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -44,7 +44,7 @@ defmodule BorutaWeb.Admin.UserControllerTest do
 
   describe "current" do
     setup %{conn: conn} do
-      user = BorutaIdentityProvider.Factory.insert(:user)
+      user = BorutaIdentity.Factory.insert(:user)
       token = Boruta.Factory.insert(:token, type: "access_token", scope: "users:manage:all", sub: user.id)
       conn = conn
         |> put_req_header("accept", "application/json")
@@ -65,7 +65,7 @@ defmodule BorutaWeb.Admin.UserControllerTest do
   describe "update resource_owner" do
     setup %{conn: conn} do
       token = Boruta.Factory.insert(:token, type: "access_token", scope: "users:manage:all")
-      resource_owner = BorutaIdentityProvider.Factory.insert(:user)
+      resource_owner = BorutaIdentity.Factory.insert(:user)
       scope = Boruta.Factory.insert(:scope)
       conn = conn
         |> put_req_header("accept", "application/json")

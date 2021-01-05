@@ -5,10 +5,10 @@ config :boruta_web, BorutaWeb.Endpoint,
   server: false,
   secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
 
-config :boruta_identity_provider, BorutaIdentityProvider.Repo,
+config :boruta_identity, BorutaIdentity.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_provider_test",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_test",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
@@ -26,7 +26,7 @@ config :boruta_gateway, BorutaGateway.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :boruta_identity_provider, Boruta.Accounts,
+config :boruta_identity, Boruta.Accounts,
   secret_key_base: "secret"
 
 config :logger, level: :warn

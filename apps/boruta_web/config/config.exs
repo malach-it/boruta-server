@@ -1,7 +1,7 @@
 use Mix.Config
 
 config :boruta_web,
-  ecto_repos: [BorutaWeb.Repo, BorutaIdentityProvider.Repo, BorutaGateway.Repo],
+  ecto_repos: [BorutaWeb.Repo, BorutaIdentity.Repo, BorutaGateway.Repo],
   generators: [context_app: :boruta, binary_id: true]
 
 config :boruta_web, BorutaWeb.Endpoint,
@@ -11,8 +11,8 @@ config :boruta_web, BorutaWeb.Endpoint,
   pubsub: [name: BorutaWeb.PubSub, adapter: Phoenix.PubSub.PG2]
 
 config :boruta_web, :pow,
-  repo: BorutaIdentityProvider.Repo,
-  user: BorutaIdentityProvider.Accounts.User,
+  repo: BorutaIdentity.Repo,
+  user: BorutaIdentity.Accounts.User,
   # extensions: [PowEmailConfirmation, PowResetPassword],
   extensions: [PowResetPassword],
   controller_callbacks: BorutaWeb.Pow.Phoenix.ControllerCallbacks,

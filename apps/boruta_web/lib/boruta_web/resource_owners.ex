@@ -5,8 +5,8 @@ defmodule BorutaWeb.ResourceOwners do
 
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Scope
-  alias BorutaIdentityProvider.Accounts
-  alias BorutaIdentityProvider.Accounts.User
+  alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.User
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
