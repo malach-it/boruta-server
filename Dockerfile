@@ -1,31 +1,36 @@
-FROM elixir:1.8.1-alpine
+FROM node:14.5.0 AS assets
 
-ENV APP_VERSION 0.1.0-rc.1
+WORKDIR /app
 
-RUN apk add --no-cache bash build-base git nodejs nodejs-npm
+COPY ./apps/boruta_web/assets /app
+
+RUN npm ci
+RUN npm run build
+
+FROM elixir:1.11.2 AS builder
+
+RUN apt-get update
+RUN apt-get install -y npm libcurl4-openssl-dev libssl-dev libevent-dev
 
 RUN mix local.hex --force
 RUN mix local.rebar --force
 
-COPY . /tmp/boruta
+WORKDIR /app
+COPY . .
 
-WORKDIR /tmp/boruta/apps/boruta_web/assets
-RUN npm ci
-WORKDIR /tmp/boruta/apps/boruta_web
+COPY --from=assets /priv/* ./apps/boruta_web/priv/
+WORKDIR /app/apps/boruta_web
 RUN MIX_ENV=prod mix phx.digest
 
-WORKDIR /tmp/boruta
+WORKDIR /app
 RUN mix do clean, deps.get
-RUN MIX_ENV=prod mix distillery.release --env=prod
+RUN MIX_ENV=prod mix release --force --overwrite
 
-RUN mkdir /app
-RUN cp ./_build/prod/rel/boruta_umbrella/releases/$APP_VERSION/boruta_umbrella.tar.gz /app/boruta_umbrella.tar.gz
+FROM elixir:1.11.2-slim
 
 WORKDIR /app
-RUN rm -rf /tmp/boruta
 
-RUN tar -xzf boruta_umbrella.tar.gz
-RUN rm boruta_umbrella.tar.gz
+COPY --from=builder /app/_build/prod/rel/boruta ./
 
 EXPOSE 4000
-CMD ["/bin/sh", "-c", "/app/bin/boruta_umbrella foreground"]
+CMD ["/bin/sh", "-c", "/app/bin/boruta start"]

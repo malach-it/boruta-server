@@ -23,8 +23,10 @@ defmodule BorutaGateway.Application do
     children =
       case Application.get_env(:boruta_gateway, :server) do
         true ->
-          children ++
-            [{BorutaGateway.Server, [port: Application.fetch_env!(:boruta_gateway, :port)]}]
+          [
+            {BorutaGateway.Server, [port: Application.fetch_env!(:boruta_gateway, :port)]}
+            | children
+          ]
 
         _ ->
           children

@@ -1,7 +1,4 @@
-use Mix.Config
-
-# Do not print debug messages in production
-config :logger, level: :info
+import Config
 
 config :boruta_web, BorutaWeb.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",

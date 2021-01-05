@@ -68,10 +68,10 @@ config :boruta_identity_provider, BorutaIdentityProvider.Repo,
   pool_size: 10
 
 config :boruta_gateway, BorutaGateway.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "boruta_gateway_dev",
-  hostname: "localhost",
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway_dev",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
 config :boruta_gateway,
