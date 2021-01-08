@@ -148,6 +148,18 @@ defmodule BorutaWeb.OauthController do
     |> render("error.json", error: error, error_description: error_description)
   end
 
+  defp store_oauth_request(conn, %{"code_challenge_method" => code_challenge_method} = params) do
+    conn
+    |> put_session(:oauth_request, %{
+      "response_type" => params["response_type"],
+      "client_id" => params["client_id"],
+      "redirect_uri" => params["redirect_uri"],
+      "state" => params["state"],
+      "scope" => params["scope"],
+      "code_challenge" => params["code_challenge"],
+      "code_challenge_method" => code_challenge_method,
+    })
+  end
   defp store_oauth_request(conn, params) do
     conn
     |> put_session(:oauth_request, %{
@@ -155,7 +167,8 @@ defmodule BorutaWeb.OauthController do
       "client_id" => params["client_id"],
       "redirect_uri" => params["redirect_uri"],
       "state" => params["state"],
-      "scope" => params["scope"]
+      "scope" => params["scope"],
+      "code_challenge" => params["code_challenge"]
     })
   end
 end
