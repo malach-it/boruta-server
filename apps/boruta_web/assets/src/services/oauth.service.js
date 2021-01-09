@@ -1,44 +1,23 @@
 import OauthClient from 'client-oauth2'
 
 class Oauth {
-  get client () {
-    return new OauthClient({
+  constructor () {
+    this.client = new OauthClient({
       clientId: process.env.VUE_APP_ADMIN_CLIENT_ID,
       authorizationUri: `${process.env.VUE_APP_BORUTA_BASE_URL}/oauth/authorize`,
       redirectUri: `${process.env.VUE_APP_BORUTA_BASE_URL}/admin/oauth-callback`,
-      accessTokenUri: `${process.env.VUE_APP_BORUTA_BASE_URL}/oauth/token`,
       scopes: ['scopes:manage:all', 'clients:manage:all', 'users:manage:all', 'upstreams:manage:all']
     })
   }
 
-  get codeChallenge () {
-    let codeChallenge = localStorage.getItem('codeChallenge')
-    if (codeChallenge) return codeChallenge
-
-    codeChallenge = Math.random().toString(36).substring(8)
-    localStorage.setItem('codeChallenge', codeChallenge)
-    return codeChallenge
-  }
-
   login () {
-    window.location = this.client.code.getUri({
-      query: {
-        code_challenge: this.codeChallenge,
-        code_challenge_method: 'plain'
-      }
-    })
+    window.location = this.client.token.getUri()
   }
 
   async callback () {
-    return this.client.code.getToken(window.location.href, {
-      clientSecret: '777',
-      body: {
-        code_verifier: this.codeChallenge
-      }
-    }).then(user => {
-      localStorage.setItem('access_token', user.accessToken)
-      localStorage.setItem('token_expires_at', user.expires.getTime())
-    })
+    const token = await this.client.token.getToken(window.location)
+    localStorage.setItem('access_token', token.accessToken)
+    localStorage.setItem('token_expires_at', token.expires.getTime())
   }
 
   logout () {
