@@ -15,7 +15,11 @@ class Oauth {
   }
 
   async callback () {
-    const token = await this.client.token.getToken(window.location)
+    const token = await this.client.token.getToken(window.location).catch((error) => {
+      confirm(error.message)
+      this.login()
+      throw error
+    })
     localStorage.setItem('access_token', token.accessToken)
     localStorage.setItem('token_expires_at', token.expires.getTime())
   }

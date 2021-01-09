@@ -1,6 +1,9 @@
 <template>
   <div class="oauth-callback">
-    You are being redirected...
+    <div class="ui container">
+      <h1>Redirection...</h1>
+      <div class="ui loading placeholder segment"></div>
+    </div>
   </div>
 </template>
 
@@ -9,10 +12,12 @@ import oauth from '@/services/oauth.service'
 
 export default {
   name: 'oauth-callback',
-  mounted () {
-    oauth.callback().then(() => {
-      this.$store.dispatch('getCurrentUser')
-      this.$router.push({ name: 'home' })
+  beforeRouteEnter (from, to, next) {
+    oauth.callback().then(async () => {
+      next(async vm => {
+        await vm.$store.dispatch('getCurrentUser')
+        vm.$router.push({ name: 'home' })
+      })
     })
   }
 }
