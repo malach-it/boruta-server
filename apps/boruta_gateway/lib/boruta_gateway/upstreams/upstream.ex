@@ -23,7 +23,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:host, :string)
     field(:port, :integer)
     field(:uris, {:array, :string}, default: [])
-    field(:required_scopes, {:array, :string}, default: [])
+    field(:required_scopes, :map, default: %{})
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
 

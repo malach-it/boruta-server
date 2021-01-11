@@ -17,9 +17,9 @@ const assign = {
   },
   authorize: function ({ authorize }) { this.authorize = authorize },
   required_scopes: function ({ required_scopes }) {
-    this.required_scopes = required_scopes.map((name) => {
-      return { model: new Scope({ name }) }
-    })
+    this.required_scopes = Object.keys(required_scopes).flatMap((method) => {
+      return required_scopes[method].map(name => ({ model: new Scope({ name }), method: method }))
+    }, {})
   }
 }
 
@@ -73,7 +73,11 @@ class Upstream {
       host,
       port,
       uris: uris.map(({ uri }) => uri),
-      required_scopes: required_scopes.map(({ model: { name } }) => name),
+      required_scopes: required_scopes.reduce((acc, { model: { name }, method }) => {
+        acc[method] = acc[method] || []
+        acc[method].push(name)
+        return acc
+      }, {}),
       strip_uri,
       authorize
     }

@@ -11,7 +11,7 @@
             <a v-on:click="deleteUpstream(upstream)" class="ui tiny red button">delete</a>
           </div>
           <p><strong>Upstream ID :</strong> {{ upstream.id }}</p>
-          <p><strong>Host :</strong> {{ upstream.scheme }}://{{ upstream.host }}:{{ upstream.port }}</p>
+          <p><strong>Base URL :</strong> {{ upstream.scheme }}://{{ upstream.host }}:{{ upstream.port }}</p>
           <span v-for="path in upstream.uris" class="ui olive label" :key="path.uri">
             {{ path.uri }}
           </span>

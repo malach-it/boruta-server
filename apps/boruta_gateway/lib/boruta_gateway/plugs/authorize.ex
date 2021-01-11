@@ -13,12 +13,13 @@ defmodule BorutaGateway.Plug.Authorize do
   def init(options), do: options
 
   def call(%Plug.Conn{
+    method: method,
     assigns: %{upstream: upstream}
   } = conn, _options) do
     with %Upstream{authorize: true, required_scopes: required_scopes} <- upstream,
          ["Bearer " <> value] <- get_req_header(conn, "authorization"),
          {:ok, %Token{scope: scope} = token} <- Authorization.AccessToken.authorize(value: value),
-         {:ok, _} <- validate_scopes(scope, required_scopes)
+         {:ok, _} <- validate_scopes(scope, required_scopes, method)
     do
       assign(conn, :token, token)
     else
@@ -35,9 +36,12 @@ defmodule BorutaGateway.Plug.Authorize do
     end
   end
 
-  defp validate_scopes(scope, required_scopes) do
+  defp validate_scopes(_scope, required_scopes, _method) when required_scopes == %{}, do: {:ok, []}
+  defp validate_scopes(scope, required_scopes, method) do
     scopes = Scope.split(scope)
-    case Enum.empty?(required_scopes -- scopes) do
+    default_scopes = Map.get(required_scopes, "*", [:not_authorized])
+
+    case Enum.empty?(Map.get(required_scopes, method, default_scopes) -- scopes) do
       true -> {:ok, scopes}
       false -> {:error, "required scopes are not present."}
     end

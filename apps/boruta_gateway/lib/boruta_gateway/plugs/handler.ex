@@ -28,6 +28,14 @@ defmodule BorutaGateway.Plug.Handler do
         |> send_resp(status, body)
         |> halt()
 
+      # https://github.com/puzza007/katipo/blob/master/src/katipo.erl#L109
+      {:error, %{code: :bad_opts, message: "[{method," <> method_expr}} ->
+        method = Regex.run(~r/\w+/, method_expr) |> Enum.at(0)
+
+        conn
+        |> send_resp(500, "HTTP method '#{method}' is not supported.")
+        |> halt()
+
       {:error, e} ->
         conn
         |> send_resp(500, inspect(e))

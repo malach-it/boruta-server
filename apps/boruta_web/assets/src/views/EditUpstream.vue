@@ -43,9 +43,9 @@
                 <label>Authorize</label>
               </div>
             </div>
-            <div class="field">
-              <label>Required scopes <i>(leave empty to do not filter)</i></label>
-              <ScopesField v-if="upstream.authorize" :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+            <div class="field" v-if="upstream.authorize">
+              <label>Required scopes <i>(leave empty to not filter)</i></label>
+              <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
             </div>
           </div>
           <button class="ui big violet button" type="submit">Update</button>
@@ -59,14 +59,14 @@
 <script>
 import Upstream from '@/models/upstream.model'
 import Scope from '@/models/scope.model'
-import ScopesField from '@/components/ScopesField.vue'
+import GatewayScopesField from '@/components/GatewayScopesField.vue'
 import FormErrors from '@/components/FormErrors.vue'
 
 export default {
   name: 'upstreams',
   components: {
     FormErrors,
-    ScopesField
+    GatewayScopesField
   },
   mounted () {
     const { upstreamId } = this.$route.params

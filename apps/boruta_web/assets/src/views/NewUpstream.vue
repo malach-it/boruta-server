@@ -37,6 +37,16 @@
                 <label>Strip URI</label>
               </div>
             </div>
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="upstream.authorize">
+                <label>Authorize</label>
+              </div>
+            </div>
+            <div class="field" v-if="upstream.authorize">
+              <label>Required scopes <i>(leave empty to not filter)</i></label>
+              <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+            </div>
           </div>
           <button class="ui big violet button" type="submit">Create</button>
           <router-link :to="{ name: 'upstream-list' }" class="ui button">Back</router-link>
@@ -47,13 +57,16 @@
 </template>
 
 <script>
+import Scope from '@/models/scope.model'
 import Upstream from '@/models/upstream.model'
+import GatewayScopesField from '@/components/GatewayScopesField.vue'
 import FormErrors from '@/components/FormErrors.vue'
 
 export default {
   name: 'upstreams',
   components: {
-    FormErrors
+    FormErrors,
+    GatewayScopesField
   },
   data () {
     return {
@@ -76,6 +89,15 @@ export default {
     deleteUpstreamUri (uri) {
       this.upstream.uris.splice(
         this.upstream.uris.indexOf(uri),
+        1
+      )
+    },
+    addScope () {
+      this.upstream.required_scopes.push({ model: new Scope() })
+    },
+    deleteScope (scope) {
+      this.upstream.required_scopes.splice(
+        this.upstream.required_scopes.indexOf(scope),
         1
       )
     }
