@@ -38,6 +38,14 @@
             </div>
             <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </div>
+          <div class="ui segments">
+            <div class="ui big segment">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="client.pkce">
+                <label>PKCE enabled</label>
+              </div>
+            </div>
+          </div>
           <div class="ui big segment">
             <div class="field">
               <label>Supported grant types</label>

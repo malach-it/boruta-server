@@ -28,6 +28,7 @@ defmodule BorutaWeb.OauthControllerTest do
           response_type: "token",
           client_id: client.id,
           redirect_uri: redirect_uri,
+          code_challenge: "code challenge",
           state: "state",
           scope: "scope"
         })
@@ -37,6 +38,7 @@ defmodule BorutaWeb.OauthControllerTest do
         "response_type" => "token",
         "client_id" => client.id,
         "redirect_uri" => redirect_uri,
+        "code_challenge" => "code challenge",
         "state" => "state",
         "scope" => "scope"
       }
