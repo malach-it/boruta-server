@@ -9,7 +9,7 @@ defmodule BorutaWeb.OauthController do
   alias Boruta.Oauth.IntrospectResponse
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.TokenResponse
-  alias BorutaIdentityProvider.Accounts.User
+  alias BorutaIdentity.Accounts.User
   alias BorutaWeb.OauthView
 
   action_fallback BorutaWeb.FallbackController

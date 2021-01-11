@@ -7,6 +7,10 @@ services:
 
 .elixir-task:
   image: elixir:1.10.3
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - _build/
   before_script:
   - apt-get install -y libcurl4-openssl-dev libssl-dev libevent-dev
   - mix local.hex --force

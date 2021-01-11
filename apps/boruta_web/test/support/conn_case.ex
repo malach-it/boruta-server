@@ -30,12 +30,12 @@ defmodule BorutaWeb.ConnCase do
   end
 
   setup tags do
-    :ok = Sandbox.checkout(BorutaIdentityProvider.Repo)
+    :ok = Sandbox.checkout(BorutaIdentity.Repo)
     :ok = Sandbox.checkout(BorutaWeb.Repo)
     :ok = Sandbox.checkout(BorutaGateway.Repo)
 
     unless tags[:async] do
-      Sandbox.mode(BorutaIdentityProvider.Repo, {:shared, self()})
+      Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
       Sandbox.mode(BorutaWeb.Repo, {:shared, self()})
       Sandbox.mode(BorutaGateway.Repo, {:shared, self()})
     end

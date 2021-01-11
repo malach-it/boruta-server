@@ -3,8 +3,8 @@ defmodule BorutaWeb.Admin.UserController do
 
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Token
-  alias BorutaIdentityProvider.Accounts
-  alias BorutaIdentityProvider.Accounts.User
+  alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.User
 
   plug BorutaWeb.AuthorizationPlug, ["users:manage:all"]
 

@@ -1,7 +1,7 @@
 defmodule BorutaWeb.ChooseSessionController do
   use BorutaWeb, :controller
 
-  alias BorutaIdentityProvider.Accounts.User
+  alias BorutaIdentity.Accounts.User
 
   def new(%Plug.Conn{assigns: %{current_user: %User{}}} = conn, _params) do
     conn

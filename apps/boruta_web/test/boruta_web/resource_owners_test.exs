@@ -1,13 +1,13 @@
-defmodule BorutaIdentityProvider.ResourceOwnersTest do
+defmodule BorutaIdentity.ResourceOwnersTest do
   use BorutaWeb.DataCase
 
-  import BorutaIdentityProvider.Factory
+  import BorutaIdentity.Factory
 
   alias Boruta.Oauth.ResourceOwner
-  alias BorutaIdentityProvider.Accounts.HashSalt
+  alias BorutaIdentity.Accounts.HashSalt
   alias BorutaWeb.ResourceOwners
 
-  doctest BorutaIdentityProvider
+  doctest BorutaIdentity
 
   test "greets the world" do
     assert true
