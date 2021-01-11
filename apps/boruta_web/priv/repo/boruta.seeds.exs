@@ -31,12 +31,12 @@ BorutaGateway.Repo.insert(%BorutaGateway.Upstreams.Upstream{
 })
 
 {:ok, user} =
-  BorutaIdentityProvider.Accounts.User.changeset(%BorutaIdentityProvider.Accounts.User{}, %{
+  BorutaIdentity.Accounts.User.changeset(%BorutaIdentity.Accounts.User{}, %{
     email: "test@test.test",
     password: "passwordes",
     confirm_password: "passwordes"
   })
-  |> BorutaIdentityProvider.Repo.insert()
+  |> BorutaIdentity.Repo.insert()
 
 scopes = [
   %{name: "users:manage:all"},
@@ -47,6 +47,6 @@ scopes = [
 
 scopes
 |> Enum.map(fn (scope) ->
-  {:ok, scope} = BorutaIdentityProvider.Repo.insert(%BorutaIdentityProvider.Accounts.UserAuthorizedScope{user_id: user.id, name: scope.name})
+  {:ok, scope} = BorutaIdentity.Repo.insert(%BorutaIdentity.Accounts.UserAuthorizedScope{user_id: user.id, name: scope.name})
   scope
 end)
