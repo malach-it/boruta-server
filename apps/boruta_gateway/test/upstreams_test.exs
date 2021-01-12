@@ -7,9 +7,15 @@ defmodule BorutaGateway.UpstreamsTest do
   describe "upstreams" do
     alias BorutaGateway.Upstreams.Upstream
 
-    @valid_attrs %{scheme: "https", host: "test.host", port: 777, uris: ["/valid"]}
+    @valid_attrs %{
+      scheme: "https",
+      host: "test.host",
+      port: 777,
+      uris: ["/valid"],
+      required_scopes: %{"GET" => ["scope"]}
+    }
     @update_attrs %{host: "update.host"}
-    @invalid_attrs %{port: nil}
+    @invalid_attrs %{port: nil, required_scopes: %{"BAD" => "bad_format"}}
 
     def upstream_fixture(attrs \\ %{}) do
       {:ok, upstream} =
@@ -49,7 +55,15 @@ defmodule BorutaGateway.UpstreamsTest do
     end
 
     test "create_upstream/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Upstreams.create_upstream(@invalid_attrs)
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  required_scopes: {"Schema does not allow additional properties. at #/BAD", []},
+                  scheme: {"can't be blank", [validation: :required]},
+                  host: {"can't be blank", [validation: :required]},
+                  port: {"can't be blank", [validation: :required]}
+                ]
+              }} = Upstreams.create_upstream(@invalid_attrs)
     end
 
     test "update_upstream/2 with valid data updates the upstream" do

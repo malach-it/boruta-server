@@ -41,7 +41,8 @@ defmodule BorutaGateway.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:ex_json_schema, "~> 0.7.3"}
     ]
   end
 
