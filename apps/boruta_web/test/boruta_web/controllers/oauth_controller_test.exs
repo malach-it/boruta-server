@@ -463,6 +463,7 @@ defmodule BorutaWeb.OauthControllerTest do
         "active" => true,
         "client_id" => client.id,
         "exp" => token.expires_at,
+        # NOTE truncate in order to simulate ecto storage precision
         "iat" => DateTime.to_unix(token.inserted_at),
         "iss" => "boruta",
         "scope" => token.scope,
