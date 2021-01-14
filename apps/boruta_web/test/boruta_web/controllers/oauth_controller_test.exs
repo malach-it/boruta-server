@@ -406,9 +406,9 @@ defmodule BorutaWeb.OauthControllerTest do
   describe "introspect" do
     setup %{conn: conn} do
       client = insert(:client)
-      client_token = insert(:token, type: "access_token", value: "777", client_id: client.id)
+      client_token = insert(:token, type: "access_token", value: "777", client: client)
       resource_owner = BorutaIdentity.Factory.insert(:user)
-      resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, sub: resource_owner.id)
+      resource_owner_token = insert(:token, type: "access_token", value: "888", client: client, sub: resource_owner.id)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
         client: client,
@@ -494,9 +494,9 @@ defmodule BorutaWeb.OauthControllerTest do
   describe "revoke" do
     setup %{conn: conn} do
       client = insert(:client)
-      client_token = insert(:token, type: "access_token", value: "777", client_id: client.id)
+      client_token = insert(:token, type: "access_token", value: "777", client: client)
       resource_owner = BorutaIdentity.Factory.insert(:user)
-      resource_owner_token = insert(:token, type: "access_token", value: "888", client_id: client.id, sub: resource_owner.id)
+      resource_owner_token = insert(:token, type: "access_token", value: "888", client: client, sub: resource_owner.id)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
         client: client,

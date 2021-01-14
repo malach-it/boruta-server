@@ -51,7 +51,7 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
 
     test "lists all clients", %{conn: conn} do
       conn = get(conn, Routes.admin_client_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert length(json_response(conn, 200)["data"]) == 1
     end
   end
 

@@ -15,6 +15,7 @@ defmodule BorutaWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  alias Boruta.Ecto.Scopes
   alias Ecto.Adapters.SQL.Sandbox
 
   using do
@@ -33,6 +34,8 @@ defmodule BorutaWeb.ConnCase do
     :ok = Sandbox.checkout(BorutaIdentity.Repo)
     :ok = Sandbox.checkout(BorutaWeb.Repo)
     :ok = Sandbox.checkout(BorutaGateway.Repo)
+
+    :ok = Scopes.invalidate(:public)
 
     unless tags[:async] do
       Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
