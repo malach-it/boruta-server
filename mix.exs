@@ -38,8 +38,7 @@ defmodule Boruta.Umbrella.MixProject do
   defp deps do
     [
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:distillery, "~> 2.1"}
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 
