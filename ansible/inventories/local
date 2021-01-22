@@ -1,0 +1,5 @@
+[executor]
+localhost
+
+[executor:vars]
+ansible_connection=local

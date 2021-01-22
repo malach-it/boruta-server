@@ -1,6 +1,4 @@
-- hosts: localhost
-  vars:
-    postgresql_password: IEIsAxyDwVD+hR+se5aI60ZkFyKRvH61Gh59BR4zfJ46EtOw4iFIi5mH3EjgAL6K # TODO store password in ansible vault
+- hosts: executor
   tasks:
     - name: Add stable chart repo
       community.kubernetes.helm_repository:
@@ -97,7 +95,7 @@
             #   nginx.ingress.kubernetes.io/rewrite-target: /
           spec:
             rules:
-            - host: gate.boruta.local
+            - host: "{{ gateway_host }}"
               http:
                 paths:
                 - path: /
@@ -107,7 +105,7 @@
                       name: boruta-gateway
                       port:
                         number: 4000
-            - host: boruta.local
+            - host: "{{ boruta_host }}"
               http:
                 paths:
                 - path: /
