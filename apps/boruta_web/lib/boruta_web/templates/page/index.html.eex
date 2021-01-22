@@ -59,5 +59,3 @@
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/accounts/app.js") %>"></script>
   </body>
 </html>
-=======
->>>>>>> give a try to a gateway

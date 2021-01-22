@@ -1,5 +1,6 @@
 stages:
   - test
+  - build
   - deploy
 
 services:
@@ -41,10 +42,41 @@ test:
     POSTGRES_PASSWORD: postgres
     MIX_ENV: test
 
+build:
+  image: docker:19.03.12
+  stage: build
+  services:
+    - docker:19.03.12-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_REGISTRY/patatoid/boruta/app:latest .
+    - docker push $CI_REGISTRY/patatoid/boruta/app:latest
+  only:
+    - master
+
 deploy:
   stage: deploy
+  image: debian:latest
+  before_script:
+  - apt-get update
+  - apt-get install -y curl python3-pip apt-transport-https
+  - curl https://baltocdn.com/helm/signing.asc | apt-key add -
+  - echo "deb https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
+  - apt-get update
+  - apt-get install -y helm
+  - pip3 install --upgrade setuptools pip
+  - pip3 install ansible pyhelm grpcio requests openshift
+  - ansible-galaxy collection install community.general
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+  - echo "$(<kubectl.sha256) kubectl" | sha256sum --check
+  - mkdir -p ~/.local/bin/kubectl
+  - mv ./kubectl ~/.local/bin/kubectl
   script:
-  - gem install dpl
-  - dpl --provider=heroku --app=boruta --api-key=$HEROKU_API_KEY
+  - cd ansible
+  - echo $VAULT_PASSWORD > vault_pass.txt
+  - cat vault_pass.txt
+  - ansible-vault decrypt ./.kube/kubeconfig-k8s-boruta.yaml --vault-password-file vault_pass.txt
+  - KUBECONFIG=./.kube/kubeconfig-k8s-boruta.yaml ansible-playbook -i ./inventories/scaleway deploy.yml
   only:
-  - master
+    - master

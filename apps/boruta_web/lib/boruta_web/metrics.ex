@@ -191,7 +191,7 @@ defmodule BorutaWeb.Metrics do
       Stream.resource(
         fn -> start_link([]) end,
         fn pid ->
-          :timer.sleep(1000)
+          :timer.sleep(100)
           {demand(), pid}
         end,
         fn _pid -> nil end

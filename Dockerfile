@@ -2,8 +2,8 @@ FROM node:14.5.0 AS assets
 
 ENV VUE_APP_ADMIN_CLIENT_ID=6a2f41a3-c54c-fce8-32d2-0324e1c32e20
 # TODO build once run everywhere ? at least arg ?
-ENV VUE_APP_BORUTA_BASE_URL=http://boruta.local
-ENV VUE_APP_BORUTA_BASE_SOCKET_URL=ws://boruta.local
+ENV VUE_APP_BORUTA_BASE_URL=http://admin.boruta.patatoid.fr
+ENV VUE_APP_BORUTA_BASE_SOCKET_URL=ws://admin.boruta.patatoid.fr
 
 WORKDIR /app
 

@@ -1,5 +1,5 @@
-[local]
+[scaleway]
 localhost
 
-[local:vars]
+[scaleway:vars]
 ansible_connection=local

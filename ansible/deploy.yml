@@ -1,4 +1,4 @@
-- hosts: executor
+- hosts: localhost
   tasks:
     - name: Add stable chart repo
       community.kubernetes.helm_repository:
@@ -19,28 +19,6 @@
         release_namespace: boruta-staging
         values:
           postgresqlPassword: "{{ postgresql_password }}"
-
-    - name: Create Boruta pods
-      community.kubernetes.k8s:
-        state: absent
-        definition:
-          apiVersion: v1
-          kind: Pod
-          metadata:
-            name: boruta-app
-            namespace: boruta-staging
-            labels:
-              app: boruta
-          spec:
-            containers:
-              - image: gcr.io/boruta:latest
-                imagePullPolicy: Always
-                name: boruta
-                ports:
-                - containerPort: 4081
-                  protocol: TCP
-            imagePullSecrets:
-            - name: gcr-access-token
 
     - name: Create Admin Service
       community.kubernetes.k8s:
@@ -105,7 +83,17 @@
                       name: boruta-gateway
                       port:
                         number: 4000
-            - host: "{{ boruta_host }}"
+            - host: "{{ oauth_host }}"
+              http:
+                paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: boruta-admin
+                      port:
+                        number: 4001
+            - host: "{{ admin_host }}"
               http:
                 paths:
                 - path: /
