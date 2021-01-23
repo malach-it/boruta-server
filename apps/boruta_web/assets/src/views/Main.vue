@@ -2,9 +2,8 @@
   <div id="app">
     <Header />
     <div id="main">
-      <div class="ui left internal rail">
+      <div class="sidebar-menu">
         <div class="ui big vertical fluid tabular menu">
-          <span class="item">&nbsp;</span>
           <router-link :to="{ name: 'dashboard' }" class="dashboard item">
             <i class="chart area icon"></i>
             Dashboard
@@ -27,7 +26,9 @@
           </router-link>
         </div>
       </div>
-      <router-view/>
+      <div class="content">
+        <router-view/>
+      </div>
     </div>
   </div>
 </template>
@@ -47,8 +48,14 @@ export default {
 </script>
 
 <style lang="scss">
+#app {
+  height: 100%;
+  position: relative;
+}
 #main {
   position: relative;
+  display: flex;
+  height: calc(100% - 40px);
   h1 {
     text-align: center;
     padding: 1em 0;
@@ -69,15 +76,26 @@ export default {
     color: #9f3a38;
     box-shadow: none;
   }
-  @media screen and (max-width: 1780px) {
-    .rail {
-      position: relative;
-      width: 60%;
-      margin: auto;
-      padding: 0;
+  .sidebar-menu {
+    min-width: 200px;
+    border: 1px solid #d4d4d5;
+    height: 100%;
+    .menu {
+      border-right: none;
+    }
+  }
+  .content {
+    flex: 1;
+    .container {
+      padding: 0 20px;
+    }
+  }
+  @media screen and (max-width: 1127px) {
+    flex-direction: column;
+    .sidebar-menu {
+      height: auto;
     }
     .menu {
-      text-align: center;
       border-right: none;
       .item {
         border-right: 1px solid #d4d4d5;
@@ -86,14 +104,8 @@ export default {
         &.active {
           background: #d4d4d5;
         }
-        &:nth-child(1) {
-          display: none;
-        }
       }
     }
-  }
-  .rail {
-    z-index: 100;
   }
 }
 </style>

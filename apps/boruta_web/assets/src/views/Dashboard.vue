@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard">
-    <div class="ui container">
+    <div class="container">
       <h1>Dashboard</h1>
       <GatewayRequests />
     </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="header">
     <div class="ui secondary pointing menu">
-      <router-link :to="{ name: 'home' }" exact class="item">
+      <router-link :to="{ name: 'home' }" class="logo item active">
         Boruta
       </router-link>
       <div class="right menu">
@@ -36,11 +36,22 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.ui.secondary.pointing.menu .router-link-active.item {
-  background-color: transparent;
-  box-shadow: none;
-  border-color: #1b1c1d;
-  font-weight: 700;
-  color: rgba(0,0,0,.95);
+.header {
+  .logo {
+    min-width: 200px;
+  }
+  .ui.secondary.pointing.menu .router-link-active.item {
+    background-color: transparent;
+    box-shadow: none;
+    border-color: #1b1c1d;
+    font-weight: 700;
+    color: rgba(0,0,0,.95);
+  }
+
+  @media screen and (max-width: 1127px) {
+    .logo {
+      min-width: auto;
+    }
+  }
 }
 </style>
