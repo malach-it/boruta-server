@@ -6,6 +6,7 @@ defmodule BorutaGateway.Upstreams.ClientTest do
   alias BorutaGateway.Upstreams.Upstream
 
   test "should request an external url (httpbin.org/status) given a Plug.Conn" do
+    # TODO change for an internal server
     upstream = %Upstream{scheme: "http", host: "httpbin.org", port: 80}
     conn = conn("GET", "/status/418")
            |> put_req_header("authorization", "Bearer test")
@@ -19,6 +20,7 @@ defmodule BorutaGateway.Upstreams.ClientTest do
   end
 
   test "should request an external url (httpbin.org/headers) given a Plug.Conn" do
+    # TODO change for an internal server
     upstream = %Upstream{scheme: "http", host: "httpbin.org", port: 80}
     conn = conn("GET", "/headers")
            |> put_req_header("authorization", "Bearer test")

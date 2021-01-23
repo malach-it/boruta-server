@@ -16,7 +16,7 @@ defmodule BorutaGateway.Plug.Handler do
         _options
       ) do
     case Client.request(upstream, conn) do
-      {:ok, %{status: status, headers: headers, body: body}} ->
+      {:ok, %{status: status, headers: headers, body: body, metrics: metrics}} ->
         conn =
           Enum.reduce(headers, conn, fn
             {"Connection", _value}, conn -> conn
@@ -25,6 +25,7 @@ defmodule BorutaGateway.Plug.Handler do
           end)
 
         conn
+        |> assign(:upstream_time, metrics[:total_time] * 1000)
         |> send_resp(status, body)
         |> halt()
 

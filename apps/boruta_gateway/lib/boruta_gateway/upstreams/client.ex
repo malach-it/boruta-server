@@ -33,7 +33,7 @@ defmodule BorutaGateway.Upstreams.Client do
     })
   end
 
-  defp transform_method(%{method: method}) do
+  defp transform_method(%Plug.Conn{method: method}) do
     method |> String.downcase() |> String.to_atom()
   end
 

@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import { Socket } from 'phoenix'
 
 import oauth from '@/services/oauth.service'
 import User from '@/models/user.model'
@@ -9,7 +10,8 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     isAuthenticated: false,
-    currentUser: User.default
+    currentUser: User.default,
+    socket: null
   },
   getters: {
     isAuthenticated (state) {
@@ -17,6 +19,9 @@ export default new Vuex.Store({
     },
     currentUser (state) {
       return state.currentUser
+    },
+    socket (state) {
+      return state.socket
     }
   },
   mutations: {
@@ -29,11 +34,23 @@ export default new Vuex.Store({
     },
     SET_CURRENT_USER (state, user) {
       state.currentUser = user
+    },
+    SET_SOCKET (state, socket) {
+      state.socket = socket
     }
   },
   actions: {
     login () {
       oauth.login()
+    },
+    async socketConnection ({ commit, state }) {
+      if (state.socket) return state.socket
+
+      const socket = new Socket(`${process.env.VUE_APP_BORUTA_BASE_SOCKET_URL}/socket`, { params: { token: oauth.accessToken } })
+      commit('SET_SOCKET', socket)
+      await socket.connect()
+
+      return socket
     },
     async getCurrentUser ({ commit }) {
       try {

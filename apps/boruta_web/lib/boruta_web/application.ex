@@ -6,7 +6,8 @@ defmodule BorutaWeb.Application do
   def start(_type, _args) do
     children = [
       BorutaWeb.Endpoint,
-      BorutaWeb.Repo
+      BorutaWeb.Repo,
+      BorutaWeb.Metrics
     ]
 
     opts = [strategy: :one_for_one, name: BorutaWeb.Supervisor]
