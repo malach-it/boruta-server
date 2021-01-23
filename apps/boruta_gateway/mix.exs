@@ -23,7 +23,7 @@ defmodule BorutaGateway.MixProject do
   def application do
     [
       mod: {BorutaGateway.Application, []},
-      extra_applications: [:logger, :runtime_tools, :syntax_tools]
+      extra_applications: [:logger, :runtime_tools, :syntax_tools, :katipo]
     ]
   end
 

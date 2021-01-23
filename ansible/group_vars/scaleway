@@ -1,0 +1,6 @@
+---
+postgresql_password: IEIsAxyDwVD+hR+se5aI60ZkFyKRvH61Gh59BR4zfJ46EtOw4iFIi5mH3EjgAL6K # TODO store password in ansible vault
+
+admin_host: admin.boruta.patatoid.fr
+oauth_host: oauth.boruta.patatoid.fr
+gateway_host: gateway.boruta.patatoid.fr
