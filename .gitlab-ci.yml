@@ -49,7 +49,9 @@ build:
     - docker:19.03.12-dind
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $CI_REGISTRY/patatoid/boruta/app:latest .
+    - docker build -t $CI_REGISTRY/patatoid/boruta/app:$CI_COMMIT_SHORT_SHA .
+    - docker tag $CI_REGISTRY/patatoid/boruta/app:$CI_COMMIT_SHORT_SHA $CI_REGISTRY/patatoid/boruta/app:latest
+    - docker push $CI_REGISTRY/patatoid/boruta/app:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY/patatoid/boruta/app:latest
   only:
     - master
@@ -77,6 +79,6 @@ deploy:
   - echo $VAULT_PASSWORD > vault_pass.txt
   - cat vault_pass.txt
   - ansible-vault decrypt ./.kube/kubeconfig-k8s-boruta.yaml --vault-password-file vault_pass.txt
-  - KUBECONFIG=./.kube/kubeconfig-k8s-boruta.yaml ansible-playbook -i ./inventories/scaleway deploy.yml
+  - KUBECONFIG=./.kube/kubeconfig-k8s-boruta.yaml ansible-playbook -i ./inventories/scaleway deploy.yml -e release_tag=$CI_COMMIT_SHORT_SHA
   only:
     - master
