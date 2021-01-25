@@ -101,6 +101,6 @@ defmodule BorutaIdentity.Accounts do
 
   """
   def get_user_scopes(id) do
-    repo().all(UserAuthorizedScope, user_id: id)
+    repo().all(from s in UserAuthorizedScope, where: s.user_id == ^id)
   end
 end

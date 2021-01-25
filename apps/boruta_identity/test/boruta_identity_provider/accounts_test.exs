@@ -97,7 +97,7 @@ defmodule BorutaIdentity.AccountsTest do
       user = insert(:user)
       scope = insert(:user_scope, user_id: user.id)
 
-      assert Accounts.get_user_scopes("f8eadd9e-7680-493e-800b-3f3604d7c5a0") == [scope]
+      assert Accounts.get_user_scopes(user.id) == [scope]
     end
   end
 end
