@@ -105,6 +105,7 @@
                         number: 4001
 
     - name: Setup boruta database
+      register: database_setup
       community.kubernetes.k8s:
         state: present
         definition:
@@ -121,6 +122,42 @@
                   - image: registry.gitlab.com/patatoid/boruta/app:latest
                     command: ["/app/bin/boruta"]
                     args: ["eval", "Boruta.Release.setup"]
+                    env:
+                      # TODO store in configmap and secret
+                      - name: SECRET_KEY_BASE
+                        value: fm6UIOyjYUe51Xo7JDTurwSeyOoZ15Kmlbj4NUhU9951P8cEUZc3k8bsAeJJtCvg
+                      - name: POSTGRES_USER
+                        value: postgres
+                      - name: POSTGRES_PASSWORD
+                        value: "{{ postgresql_password }}"
+                      - name: POSTGRES_DATABASE
+                        value: boruta
+                      - name: POSTGRES_HOST
+                        value: postgres-postgresql
+                    imagePullPolicy: Always
+                    name: boruta
+                restartPolicy: OnFailure
+                imagePullSecrets:
+                - name: regcred
+
+    - name: Migrate boruta database
+      when: not database_setup.changed
+      community.kubernetes.k8s:
+        state: present
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: "boruta-migration-{{ release_tag }}"
+            namespace: boruta-staging
+          backoffLimit: 3
+          spec:
+            template:
+              spec:
+                containers:
+                  - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
+                    command: ["/app/bin/boruta"]
+                    args: ["eval", "Boruta.Release.migrate"]
                     env:
                       # TODO store in configmap and secret
                       - name: SECRET_KEY_BASE
@@ -160,7 +197,7 @@
                   app: boruta
               spec:
                 containers:
-                  - image: registry.gitlab.com/patatoid/boruta/app:latest
+                  - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
                     env:
                       # TODO store in configmap and secret
                       - name: SECRET_KEY_BASE
