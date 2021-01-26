@@ -5,6 +5,7 @@ class Oauth {
     this.client = new OauthClient({
       clientId: process.env.VUE_APP_ADMIN_CLIENT_ID,
       authorizationUri: `${process.env.VUE_APP_BORUTA_BASE_URL}/oauth/authorize`,
+      // TODO have a separate host for admin
       redirectUri: `${process.env.VUE_APP_BORUTA_BASE_URL}/admin/oauth-callback`,
       scopes: ['scopes:manage:all', 'clients:manage:all', 'users:manage:all', 'upstreams:manage:all']
     })
