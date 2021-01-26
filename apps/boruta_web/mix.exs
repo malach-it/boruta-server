@@ -48,6 +48,7 @@ defmodule BorutaWeb.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_pubsub, "~> 1.1"},
       {:flow, "~> 1.0.0"},
+      {:libcluster, "~> 3.2.1"},
       {:plug_cowboy, "~> 2.0"}
     ]
   end

@@ -16,7 +16,7 @@ defmodule BorutaGateway.Application do
       },
       %{
         id: Upstreams.Client,
-        start: {Upstreams.Client, :start_link, [[pool_size: 128]]}
+        start: {Upstreams.Client, :start_link, [[pool_size: 64]]}
       }
     ]
 

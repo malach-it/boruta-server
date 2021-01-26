@@ -33,3 +33,14 @@ config :boruta_gateway,
   server: true
 
 config :logger, level: :warn
+
+config :libcluster,
+  topologies: [
+    example: [
+      strategy: Cluster.Strategy.Epmd,
+      config: [hosts: []],
+      connect: {:net_kernel, :connect_node, []},
+      disconnect: {:erlang, :disconnect_node, []},
+      list_nodes: {:erlang, :nodes, [:connected]},
+    ]
+  ]

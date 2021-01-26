@@ -7,7 +7,9 @@ defmodule BorutaWeb.Application do
     children = [
       BorutaWeb.Endpoint,
       BorutaWeb.Repo,
-      BorutaWeb.Metrics
+      BorutaWeb.Metrics,
+      {Cluster.Supervisor,
+       [Application.get_env(:libcluster, :topologies), [name: BorutaWeb.ClusterSupervisor]]}
     ]
 
     opts = [strategy: :one_for_one, name: BorutaWeb.Supervisor]

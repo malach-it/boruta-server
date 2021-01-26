@@ -79,3 +79,14 @@ config :boruta_gateway,
 
 config :boruta_identity, Boruta.Accounts,
   secret_key_base: "secret"
+
+config :libcluster,
+  topologies: [
+    example: [
+      strategy: Cluster.Strategy.Epmd,
+      config: [hosts: []],
+      connect: {:net_kernel, :connect_node, []},
+      disconnect: {:erlang, :disconnect_node, []},
+      list_nodes: {:erlang, :nodes, [:connected]},
+    ]
+  ]

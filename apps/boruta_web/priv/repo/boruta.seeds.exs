@@ -33,14 +33,13 @@ import Ecto.Changeset
     on_conflict: :nothing
   )
 
-%Boruta.Ecto.Client{}
-|> cast(
+%Boruta.Ecto.Client{} |> cast(
   %{
     id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e20",
     secret: "777",
     redirect_uris: [
       "http://admin.boruta.patatoid.fr/admin/oauth-callback",
-      "http://boruta.local/admin/oauth-callback",
+      "http://admin.boruta.local/admin/oauth-callback",
       "http://localhost:4000/admin/oauth-callback",
       "http://localhost:4001/admin/oauth-callback",
       "https://boruta.herokuapp.com/admin/oauth-callback"
@@ -50,8 +49,7 @@ import Ecto.Changeset
     authorization_code_ttl: 60
   },
   [:id, :secret, :redirect_uris, :authorize_scope, :access_token_ttl, :authorization_code_ttl]
-)
-|> BorutaWeb.Repo.insert(on_conflict: :nothing)
+) |> BorutaWeb.Repo.insert(on_conflict: :nothing)
 
 BorutaGateway.Repo.insert(
   %BorutaGateway.Upstreams.Upstream{
