@@ -10,13 +10,11 @@ defmodule BorutaIdentity.DataCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use nil.DataCase, async: true`, although
-  this option is not recommendded for other databases.
+  by setting `use BorutaIdentity.DataCase, async: true`, although
+  this option is not recommended for other databases.
   """
 
   use ExUnit.CaseTemplate
-
-  alias Ecto.Adapters.SQL.Sandbox
 
   using do
     quote do
@@ -30,10 +28,10 @@ defmodule BorutaIdentity.DataCase do
   end
 
   setup tags do
-    :ok = Sandbox.checkout(BorutaIdentity.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(BorutaIdentity.Repo)
 
     unless tags[:async] do
-      Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
     end
 
     :ok
