@@ -63,7 +63,7 @@ defmodule BorutaWeb.Admin.UpstreamControllerTest do
       conn = get(conn, Routes.admin_upstream_path(conn, :show, id))
 
       assert %{
-        "id" => id
+        "id" => _id
       } = json_response(conn, 200)["data"]
     end
 
@@ -90,7 +90,7 @@ defmodule BorutaWeb.Admin.UpstreamControllerTest do
       conn = get(conn, Routes.admin_upstream_path(conn, :show, id))
 
       assert %{
-        "id" => id
+        "id" => _id
       } = json_response(conn, 200)["data"]
     end
 

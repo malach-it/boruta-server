@@ -34,6 +34,12 @@ config :boruta_web, BorutaWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
+config :boruta_identity, BorutaIdentityWeb.Endpoint,
+  server: false,
+  url: [host: "oauth.boruta.patatoid.fr", path: "/accounts"],
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
+
 config :libcluster,
   topologies: [
     k8s: [

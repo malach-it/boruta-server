@@ -25,11 +25,6 @@ defmodule BorutaIdentityWeb.UserAuthTest do
       assert Accounts.get_user_by_session_token(token)
     end
 
-    test "clears everything previously stored in the session", %{conn: conn, user: user} do
-      conn = conn |> put_session(:to_be_removed, "value") |> UserAuth.log_in_user(user)
-      refute get_session(conn, :to_be_removed)
-    end
-
     test "redirects to the configured path", %{conn: conn, user: user} do
       conn = conn |> put_session(:user_return_to, "/hello") |> UserAuth.log_in_user(user)
       assert redirected_to(conn) == "/hello"
@@ -46,23 +41,6 @@ defmodule BorutaIdentityWeb.UserAuthTest do
   end
 
   describe "logout_user/1" do
-    test "erases session and cookies", %{conn: conn, user: user} do
-      user_token = Accounts.generate_user_session_token(user)
-
-      conn =
-        conn
-        |> put_session(:user_token, user_token)
-        |> put_req_cookie(@remember_me_cookie, user_token)
-        |> fetch_cookies()
-        |> UserAuth.log_out_user()
-
-      refute get_session(conn, :user_token)
-      refute conn.cookies[@remember_me_cookie]
-      assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == "/"
-      refute Accounts.get_user_by_session_token(user_token)
-    end
-
     test "broadcasts to the given live_socket_id", %{conn: conn} do
       live_socket_id = "users_sessions:abcdef-token"
       BorutaIdentityWeb.Endpoint.subscribe(live_socket_id)
@@ -81,7 +59,7 @@ defmodule BorutaIdentityWeb.UserAuthTest do
       conn = conn |> fetch_cookies() |> UserAuth.log_out_user()
       refute get_session(conn, :user_token)
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
     end
   end
 

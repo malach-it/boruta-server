@@ -2,6 +2,8 @@ defmodule BorutaWeb.MetricsChannelTest do
   use BorutaWeb.ChannelCase
   use BorutaWeb.DataCase
 
+  import BorutaIdentity.AccountsFixtures
+
   alias BorutaGateway.Upstreams.Upstream
   alias BorutaWeb.UserSocket
   alias Ecto.Adapters.SQL.Sandbox
@@ -14,7 +16,7 @@ defmodule BorutaWeb.MetricsChannelTest do
   describe "user is connected" do
     setup do
       client = Boruta.Factory.insert(:client)
-      resource_owner = BorutaIdentity.Factory.insert(:user)
+      resource_owner = user_fixture()
 
       token =
         Boruta.Factory.insert(:token,

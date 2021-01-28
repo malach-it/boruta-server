@@ -1,11 +1,9 @@
-# Script for populating the database. You can run it as:
-#
-#     mix run priv/repo/seeds.exs
-#
-# Inside the script, you can read and write to any of your
-# repositories directly:
-#
-#     BorutaIdentity.Repo.insert!(%BorutaIdentity.SomeSchema{})
-#
-# We recommend using the bang functions (`insert!`, `update!`
-# and so on) as they will fail if something goes wrong.
+{:ok, user} = BorutaIdentity.Accounts.register_user(%{email: "test@test.test", password: "passwordesat"})
+scopes = [
+  "users:manage:all",
+  "clients:manage:all",
+  "scopes:manage:all",
+  "upstreams:manage:all"
+] |> Enum.map(fn scope_name ->
+  BorutaIdentity.Repo.insert(%BorutaIdentity.Accounts.UserAuthorizedScope{name: scope_name, user_id: user.id})
+end)

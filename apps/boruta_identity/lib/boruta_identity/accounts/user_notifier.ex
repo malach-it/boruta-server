@@ -1,10 +1,13 @@
 defmodule BorutaIdentity.Accounts.UserNotifier do
+  @moduledoc false
+
   # For simplicity, this module simply logs messages to the terminal.
   # You should replace it by a proper email or notification tool, such as:
   #
   #   * Swoosh - https://hexdocs.pm/swoosh
   #   * Bamboo - https://hexdocs.pm/bamboo
   #
+  # TODO send emails
   defp deliver(to, body) do
     require Logger
     Logger.debug(body)

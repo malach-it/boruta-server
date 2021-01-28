@@ -1,4 +1,6 @@
 defmodule BorutaIdentityWeb.UserAuth do
+  @moduledoc false
+
   import Plug.Conn
   import Phoenix.Controller
 
@@ -29,7 +31,6 @@ defmodule BorutaIdentityWeb.UserAuth do
     user_return_to = get_session(conn, :user_return_to)
 
     conn
-    |> renew_session()
     |> put_session(:user_token, token)
     |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
     |> maybe_write_remember_me_cookie(token, params)
@@ -79,9 +80,8 @@ defmodule BorutaIdentityWeb.UserAuth do
     end
 
     conn
-    |> renew_session()
     |> delete_resp_cookie(@remember_me_cookie)
-    |> redirect(to: "/")
+    |> redirect(to: Routes.user_session_path(conn, :new))
   end
 
   @doc """
@@ -145,5 +145,5 @@ defmodule BorutaIdentityWeb.UserAuth do
 
   defp maybe_store_return_to(conn), do: conn
 
-  defp signed_in_path(_conn), do: "/"
+  defp signed_in_path(conn), do: get_session(conn, :user_return_to) || "/"
 end

@@ -16,6 +16,8 @@ defmodule BorutaIdentity.DataCase do
 
   use ExUnit.CaseTemplate
 
+  alias Ecto.Adapters.SQL.Sandbox
+
   using do
     quote do
       alias BorutaIdentity.Repo
@@ -28,10 +30,10 @@ defmodule BorutaIdentity.DataCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(BorutaIdentity.Repo)
+    :ok = Sandbox.checkout(BorutaIdentity.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
+      Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
     end
 
     :ok

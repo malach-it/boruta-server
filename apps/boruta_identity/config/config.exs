@@ -13,6 +13,7 @@ config :boruta_identity,
 # Configures the endpoint
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   url: [host: "localhost"],
+  server: false,
   secret_key_base: "PiNxaP4F3pGwd3+oZDOqkE3RybRy90pfFiVc1why+rDqkNyhey/0dUBsts4PiDjJ",
   render_errors: [view: BorutaIdentityWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: BorutaIdentity.PubSub,

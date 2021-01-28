@@ -4,10 +4,15 @@ defmodule BorutaIdentity.Accounts do
   """
 
   import Ecto.Query, warn: false
+
+  alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserNotifier, UserToken}
   alias BorutaIdentity.Repo
-  alias BorutaIdentity.Accounts.{User, UserToken, UserNotifier}
 
   ## Database getters
+
+  def list_users do
+    Repo.all(User)
+  end
 
   @doc """
   Gets a user by email.
@@ -42,6 +47,28 @@ defmodule BorutaIdentity.Accounts do
     user = Repo.get_by(User, email: email)
     if User.valid_password?(user, password), do: user
   end
+
+  def check_password(user, password)
+      when is_binary(password) do
+    case User.valid_password?(user, password) do
+      true -> :ok
+      false -> {:error, "Invalid password."}
+    end
+  end
+
+  @doc """
+  Gets a single user.
+
+  ## Examples
+
+      iex> get_user(123)
+      %User{}
+
+      iex> get_user(456)
+      nil
+
+  """
+  def get_user(id), do: Repo.get(User, id)
 
   @doc """
   Gets a single user.
@@ -90,6 +117,10 @@ defmodule BorutaIdentity.Accounts do
   """
   def change_user_registration(%User{} = user, attrs \\ %{}) do
     User.registration_changeset(user, attrs, hash_password: false)
+  end
+
+  def delete_user(user_id) do
+    Repo.delete_all(from u in User, where: u.id == ^user_id)
   end
 
   ## Settings
@@ -208,6 +239,21 @@ defmodule BorutaIdentity.Accounts do
     |> case do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
+    end
+  end
+
+  @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::
+    {:ok, %User{}} | {:error, Ecto.Changeset.t()}
+  def update_user_authorized_scopes(%User{id: user_id} = user, scopes) do
+    with {:ok, _result} <- Enum.reduce(scopes, Ecto.Multi.new(), fn (attrs, multi) ->
+      changeset = UserAuthorizedScope.changeset(
+        %UserAuthorizedScope{},
+        Map.put(attrs, "user_id", user_id)
+      )
+      Ecto.Multi.insert(multi, "scope_#{Ecto.Changeset.get_field(changeset, :name)}", changeset)
+    end)
+    |> Repo.transaction() do
+      {:ok, Repo.preload(user, :authorized_scopes)}
     end
   end
 
@@ -345,5 +391,11 @@ defmodule BorutaIdentity.Accounts do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
     end
+  end
+
+  ## Scopes
+
+  def get_user_scopes(user_id) do
+    Repo.all(from u in UserAuthorizedScope, where: u.user_id == ^user_id)
   end
 end

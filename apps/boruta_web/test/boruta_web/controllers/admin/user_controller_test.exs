@@ -1,6 +1,8 @@
 defmodule BorutaWeb.Admin.UserControllerTest do
   use BorutaWeb.ConnCase
 
+  import BorutaIdentity.AccountsFixtures
+
   alias BorutaIdentity.Accounts.User
 
   setup %{conn: conn} do
@@ -44,7 +46,7 @@ defmodule BorutaWeb.Admin.UserControllerTest do
 
   describe "current" do
     setup %{conn: conn} do
-      user = BorutaIdentity.Factory.insert(:user)
+      user = user_fixture()
       token = Boruta.Factory.insert(:token, type: "access_token", scope: "users:manage:all", sub: user.id)
       conn = conn
         |> put_req_header("accept", "application/json")
@@ -65,7 +67,7 @@ defmodule BorutaWeb.Admin.UserControllerTest do
   describe "update resource_owner" do
     setup %{conn: conn} do
       token = Boruta.Factory.insert(:token, type: "access_token", scope: "users:manage:all")
-      resource_owner = BorutaIdentity.Factory.insert(:user)
+      resource_owner = user_fixture()
       scope = Boruta.Factory.insert(:scope)
       conn = conn
         |> put_req_header("accept", "application/json")
@@ -98,5 +100,9 @@ defmodule BorutaWeb.Admin.UserControllerTest do
           assert false
       end
     end
+  end
+
+  @tag :skip
+  describe "delete" do
   end
 end

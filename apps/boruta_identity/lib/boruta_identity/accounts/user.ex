@@ -1,6 +1,10 @@
 defmodule BorutaIdentity.Accounts.User do
+  @moduledoc false
+
   use Ecto.Schema
   import Ecto.Changeset
+
+  alias BorutaIdentity.Accounts.UserAuthorizedScope
 
   @derive {Inspect, except: [:password]}
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -10,6 +14,8 @@ defmodule BorutaIdentity.Accounts.User do
     field :password, :string, virtual: true
     field :hashed_password, :string
     field :confirmed_at, :naive_datetime
+
+    has_many(:authorized_scopes, UserAuthorizedScope)
 
     timestamps()
   end

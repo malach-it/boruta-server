@@ -3,19 +3,17 @@ defmodule BorutaWeb.ChooseSessionView do
 
   import Plug.Conn
 
+  alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
+
   def current_user_email(conn) do
     conn.assigns[:current_user].email
   end
 
+  def delete_user_session_path(_conn) do
+    IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete)
+  end
+
   def authorize_url(conn) do
-    with params <- get_session(conn, :oauth_request) do
-      Routes.oauth_path(conn, :authorize, %{
-        response_type: params["response_type"],
-        client_id: params["client_id"],
-        redirect_uri: params["redirect_uri"],
-        scope: params["scope"],
-        state: params["state"]
-      })
-    end
+    get_session(conn, :user_return_to)
   end
 end

@@ -1,6 +1,8 @@
 defmodule BorutaWeb.Router do
   use BorutaWeb, :router
 
+  import BorutaIdentityWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -22,9 +24,15 @@ defmodule BorutaWeb.Router do
   end
 
   scope "/accounts" do
-    pipe_through :browser
+    pipe_through [:browser, :fetch_current_user]
 
     get "/choose-session", BorutaWeb.ChooseSessionController, :new
+  end
+
+  scope "/accounts" do
+    pipe_through :browser
+
+    forward "/", BorutaIdentityWeb.Endpoint
   end
 
   scope "/", BorutaWeb do
@@ -54,7 +62,7 @@ defmodule BorutaWeb.Router do
   end
 
   scope "/oauth", BorutaWeb do
-    pipe_through :browser
+    pipe_through [:browser, :fetch_current_user]
 
     get "/authorize", OauthController, :authorize
   end
