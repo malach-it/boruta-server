@@ -8,7 +8,7 @@ config :boruta_web, BorutaWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "Caq0kwgjLGwxoEVPOxUhEiZ3AG2nADaNYi+ceWh2RuAgKF6vv/FfwqM/P7cDcNrR",
   render_errors: [view: BorutaWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: BorutaWeb.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub_server: BorutaWeb.PubSub
 
 config :boruta_web, :pow,
   repo: BorutaIdentity.Repo,

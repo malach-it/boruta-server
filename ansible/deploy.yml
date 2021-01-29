@@ -20,6 +20,38 @@
         values:
           postgresqlPassword: "{{ postgresql_password }}"
 
+    - name: Create libcluster role
+      community.kubernetes.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: Role
+          metadata:
+            name: libcluster-role
+            namespace: boruta-staging
+          rules:
+          - apiGroups: [""]
+            resources: ["pods"]
+            verbs: ["get", "list", "watch"]
+
+    - name: Create libcluster binding
+      community.kubernetes.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: libcluster-bindings
+            namespace: boruta-staging
+          subjects:
+          - kind: ServiceAccount
+            name: default
+            namespace: boruta-staging
+          roleRef:
+            kind: Role
+            name: libcluster-role
+            apiGroup: rbac.authorization.k8s.io
+
     - name: Create Admin Service
       community.kubernetes.k8s:
         state: present
@@ -186,7 +218,7 @@
             name: boruta
             namespace: boruta-staging
           spec:
-            replicas: 1
+            replicas: 3
             selector:
               matchLabels:
                 app: boruta
@@ -210,6 +242,10 @@
                         value: boruta
                       - name: POSTGRES_HOST
                         value: postgres-postgresql
+                      - name: K8S_NAMESPACE
+                        value: boruta-staging
+                      - name: BORUTA_ADMIN_HOST
+                        value: "{{ admin_host }}"
                     imagePullPolicy: Always
                     name: boruta
                     ports:

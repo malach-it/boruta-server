@@ -27,6 +27,8 @@ RUN mix do clean, deps.get
 COPY --from=assets /priv ./apps/boruta_web/priv/
 WORKDIR /app/apps/boruta_web
 RUN MIX_ENV=prod mix phx.digest
+WORKDIR /app/apps/boruta_identity
+RUN MIX_ENV=prod mix phx.digest
 
 WORKDIR /app
 RUN MIX_ENV=prod mix release --force --overwrite

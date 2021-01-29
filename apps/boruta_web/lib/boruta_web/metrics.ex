@@ -25,28 +25,43 @@ defmodule BorutaWeb.Metrics do
   alias BorutaWeb.Metrics.Producer
   alias BorutaWeb.MetricsChannel
 
+  @attach_polling_delay 1_000
+
   def start_link(_args) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   @impl GenServer
   def init(_args) do
-    # TODO kill producer on shutdown
+    # TODO shut down gracefully
     {:ok, _producer} = Producer.start_link([])
+    GenServer.cast(__MODULE__, :attach)
     GenServer.cast(__MODULE__, :subscribe)
 
     {:ok, []}
   end
 
   @impl GenServer
-  def handle_cast(:subscribe, state) do
+  def handle_cast(:attach, state) do
     :telemetry.attach(
-      'boruta_gateway:channel',
+      String.to_charlist("#{node()}-boruta_gateway:channel"),
       [:boruta_gateway, :request, :done],
-      &handle_event/4,
+      &BorutaWeb.Metrics.handle_event/4,
       nil
     )
+    {:noreply, state}
+  end
 
+  def handle_cast(:subscribe, state) do
+    spawn_link(fn ->
+      metrics_channel_flow()
+      |> Flow.run()
+    end)
+
+    {:noreply, state}
+  end
+
+  def metrics_channel_flow do
     Flow.from_enumerables([Producer.stream()],
       max_demand: 1,
       min_demand: 0,
@@ -88,9 +103,6 @@ defmodule BorutaWeb.Metrics do
 
         {[measurements], %{count: 0}}
     end)
-    |> Flow.run()
-
-    {:noreply, state}
   end
 
   @spec aggregate(
@@ -134,13 +146,16 @@ defmodule BorutaWeb.Metrics do
         %{start_time: start_time},
         _state
       ) do
-    Producer.increment(%Measurements{
-      start_time: start_time,
-      request_time: request_time,
-      gateway_time: gateway_time,
-      upstream_time: upstream_time,
-      status_code: status_code
-    })
+      Enum.map([node() | Node.list()], fn node ->
+        :rpc.call(node, Producer, :increment, [
+          %Measurements{
+            start_time: start_time,
+            request_time: request_time,
+            gateway_time: gateway_time,
+            upstream_time: upstream_time,
+            status_code: status_code
+          }])
+      end)
   end
 
   defmodule Producer do
