@@ -51,7 +51,7 @@ defmodule BorutaGateway.UpstreamsTest do
     end
 
     test "create_upstream/1 with valid data creates a upstream" do
-      assert {:ok, %Upstream{} = upstream} = Upstreams.create_upstream(@valid_attrs)
+      assert {:ok, %Upstream{}} = Upstreams.create_upstream(@valid_attrs)
     end
 
     test "create_upstream/1 with invalid data returns error changeset" do
@@ -68,7 +68,7 @@ defmodule BorutaGateway.UpstreamsTest do
 
     test "update_upstream/2 with valid data updates the upstream" do
       upstream = upstream_fixture()
-      assert {:ok, %Upstream{} = upstream} = Upstreams.update_upstream(upstream, @update_attrs)
+      assert {:ok, %Upstream{}} = Upstreams.update_upstream(upstream, @update_attrs)
     end
 
     test "update_upstream/2 with invalid data returns error changeset" do

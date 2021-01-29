@@ -9,7 +9,8 @@ defmodule BorutaWeb.Application do
       BorutaWeb.Repo,
       BorutaWeb.Metrics,
       {Cluster.Supervisor,
-       [Application.get_env(:libcluster, :topologies), [name: BorutaWeb.ClusterSupervisor]]}
+       [Application.get_env(:libcluster, :topologies), [name: BorutaWeb.ClusterSupervisor]]},
+      {Phoenix.PubSub, name: BorutaWeb.PubSub}
     ]
 
     opts = [strategy: :one_for_one, name: BorutaWeb.Supervisor]

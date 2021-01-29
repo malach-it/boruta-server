@@ -2,6 +2,7 @@ defmodule BorutaWeb.ChooseSessionController do
   use BorutaWeb, :controller
 
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
 
   def new(%Plug.Conn{assigns: %{current_user: %User{}}} = conn, _params) do
     conn
@@ -11,6 +12,6 @@ defmodule BorutaWeb.ChooseSessionController do
   end
   def new(%Plug.Conn{} = conn, _) do
     conn
-    |> redirect(to: Routes.pow_session_path(conn, :new))
+    |> redirect(to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
   end
 end

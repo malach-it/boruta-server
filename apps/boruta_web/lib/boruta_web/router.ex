@@ -1,8 +1,7 @@
 defmodule BorutaWeb.Router do
   use BorutaWeb, :router
 
-  use Pow.Phoenix.Router
-  use Pow.Extension.Phoenix.Router, otp_app: :boruta_web
+  import BorutaIdentityWeb.UserAuth
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -18,8 +17,6 @@ defmodule BorutaWeb.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug Pow.Plug.RequireAuthenticated,
-      error_handler: Pow.Phoenix.PlugErrorHandler
   end
 
   pipeline :api do
@@ -27,11 +24,15 @@ defmodule BorutaWeb.Router do
   end
 
   scope "/accounts" do
-    pipe_through :browser
+    pipe_through [:browser, :fetch_current_user]
 
     get "/choose-session", BorutaWeb.ChooseSessionController, :new
-    pow_routes()
-    pow_extension_routes()
+  end
+
+  scope "/accounts" do
+    pipe_through :browser
+
+    forward "/", BorutaIdentityWeb.Endpoint
   end
 
   scope "/", BorutaWeb do
@@ -61,7 +62,7 @@ defmodule BorutaWeb.Router do
   end
 
   scope "/oauth", BorutaWeb do
-    pipe_through :browser
+    pipe_through [:browser, :fetch_current_user]
 
     get "/authorize", OauthController, :authorize
   end

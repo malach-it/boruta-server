@@ -70,7 +70,7 @@ defmodule BorutaWeb.Admin.ScopeControllerTest do
       conn = get(conn, Routes.admin_scope_path(conn, :show, id))
 
       assert %{
-               "id" => id,
+               "id" => _id,
                "name" => "some:name",
                "public" => true
              } = json_response(conn, 200)["data"]
@@ -99,7 +99,7 @@ defmodule BorutaWeb.Admin.ScopeControllerTest do
       conn = get(conn, Routes.admin_scope_path(conn, :show, id))
 
       assert %{
-               "id" => id,
+               "id" => _id,
                "name" => "some:updated:name",
                "public" => false
              } = json_response(conn, 200)["data"]

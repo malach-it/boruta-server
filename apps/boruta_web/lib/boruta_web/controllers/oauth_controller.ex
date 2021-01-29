@@ -10,6 +10,7 @@ defmodule BorutaWeb.OauthController do
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.TokenResponse
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaWeb.OauthView
 
   action_fallback BorutaWeb.FallbackController
@@ -56,8 +57,7 @@ defmodule BorutaWeb.OauthController do
     current_user = conn.assigns[:current_user]
     session_chosen = get_session(conn, :session_chosen)
 
-    conn = conn
-    |> store_oauth_request(query_params)
+    conn = store_user_return_to(conn, query_params)
 
     # TODO use a preAuthorize to see if the request is valid
     case {current_user, session_chosen} do
@@ -68,7 +68,7 @@ defmodule BorutaWeb.OauthController do
       {%User{}, _} ->
         redirect(conn, to: Routes.choose_session_path(conn, :new))
       {_, _} ->
-        redirect(conn, to: Routes.pow_session_path(conn, :new))
+        redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
     end
   end
 
@@ -103,7 +103,7 @@ defmodule BorutaWeb.OauthController do
     %Error{status: :unauthorized, error: :invalid_resource_owner}
   ) do
     conn
-    |> redirect(to: Routes.pow_session_path(conn, :new))
+    |> redirect(to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
   end
   def authorize_error(
     conn,
@@ -148,27 +148,27 @@ defmodule BorutaWeb.OauthController do
     |> render("error.json", error: error, error_description: error_description)
   end
 
-  defp store_oauth_request(conn, %{"code_challenge_method" => code_challenge_method} = params) do
+  defp store_user_return_to(conn, %{"code_challenge_method" => code_challenge_method} = params) do
     conn
-    |> put_session(:oauth_request, %{
-      "response_type" => params["response_type"],
-      "client_id" => params["client_id"],
-      "redirect_uri" => params["redirect_uri"],
-      "state" => params["state"],
-      "scope" => params["scope"],
-      "code_challenge" => params["code_challenge"],
-      "code_challenge_method" => code_challenge_method,
-    })
+    |> put_session(:user_return_to, Routes.oauth_path(conn, :authorize, [
+      client_id: params["client_id"],
+      code_challenge: params["code_challenge"],
+      code_challenge_method: code_challenge_method,
+      redirect_uri: params["redirect_uri"],
+      response_type: params["response_type"],
+      scope: params["scope"],
+      state: params["state"]
+    ]))
   end
-  defp store_oauth_request(conn, params) do
+  defp store_user_return_to(conn, params) do
     conn
-    |> put_session(:oauth_request, %{
-      "response_type" => params["response_type"],
-      "client_id" => params["client_id"],
-      "redirect_uri" => params["redirect_uri"],
-      "state" => params["state"],
-      "scope" => params["scope"],
-      "code_challenge" => params["code_challenge"]
-    })
+    |> put_session(:user_return_to, Routes.oauth_path(conn, :authorize, [
+      client_id: params["client_id"],
+      code_challenge: params["code_challenge"],
+      redirect_uri: params["redirect_uri"],
+      response_type: params["response_type"],
+      scope: params["scope"],
+      state: params["state"]
+    ]))
   end
 end

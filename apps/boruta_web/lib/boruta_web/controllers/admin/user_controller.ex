@@ -26,11 +26,17 @@ defmodule BorutaWeb.Admin.UserController do
     render(conn, "show.json", user: user)
   end
 
-  def update(conn, %{"id" => id, "user" => user_params}) do
+  def update(conn, %{"id" => id, "user" => %{"authorized_scopes" => scopes}}) do
     user = Accounts.get_user!(id)
 
-    with {:ok, %User{} = user} <- Accounts.update_user(user, user_params) do
+    with {:ok, %User{} = user} <- Accounts.update_user_authorized_scopes(user, scopes) do
       render(conn, "show.json", user: user)
+    end
+  end
+
+  def delete(conn, %{"id" => id}) do
+    with {1, _result} <- Accounts.delete_user(id) do
+      send_resp(conn, 204, "")
     end
   end
 end

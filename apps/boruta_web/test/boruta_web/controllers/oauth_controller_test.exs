@@ -2,6 +2,7 @@ defmodule BorutaWeb.OauthControllerTest do
   use BorutaWeb.ConnCase, async: true
 
   import Boruta.Factory
+  import BorutaIdentity.AccountsFixtures
 
   alias Boruta.Ecto.Token
 
@@ -11,7 +12,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
   describe "#authorize" do
     setup %{conn: conn} do
-      resource_owner = BorutaIdentity.Factory.insert(:user)
+      resource_owner = user_fixture()
       redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
       {:ok, conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
@@ -22,26 +23,17 @@ defmodule BorutaWeb.OauthControllerTest do
       client: client,
       redirect_uri: redirect_uri
     } do
-      conn = get(
-        conn,
-        Routes.oauth_path(conn, :authorize, %{
-          response_type: "token",
-          client_id: client.id,
-          redirect_uri: redirect_uri,
-          code_challenge: "code challenge",
-          state: "state",
-          scope: "scope"
-        })
-      )
+      oauth_url = Routes.oauth_path(conn, :authorize, %{
+        response_type: "token",
+        client_id: client.id,
+        redirect_uri: redirect_uri,
+        code_challenge: "code challenge",
+        state: "state",
+        scope: "scope"
+      })
+      conn = get(conn, oauth_url)
 
-      assert get_session(conn, :oauth_request) == %{
-        "response_type" => "token",
-        "client_id" => client.id,
-        "redirect_uri" => redirect_uri,
-        "code_challenge" => "code challenge",
-        "state" => "state",
-        "scope" => "scope"
-      }
+      assert get_session(conn, :user_return_to) |> URI.parse() == URI.parse(oauth_url)
     end
 
     test "redirects to choose session if session not chosen", %{
@@ -50,7 +42,7 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = conn
-             |> assign(:current_user, resource_owner)
+             |> log_in_user(resource_owner)
 
       conn = get(
         conn,
@@ -160,7 +152,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
   describe "implicit grant" do
     setup %{conn: conn} do
-      resource_owner = BorutaIdentity.Factory.insert(:user)
+      resource_owner = user_fixture()
       redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
       {:ok, conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
@@ -172,7 +164,7 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = conn
-             |> assign(:current_user, resource_owner)
+             |> log_in_user(resource_owner)
              |> init_test_session(session_chosen: true)
       conn = get(conn, "/oauth/authorize")
 
@@ -186,7 +178,7 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = conn
-             |> assign(:current_user, resource_owner)
+             |> log_in_user(resource_owner)
              |> init_test_session(session_chosen: true)
 
       conn = get(
@@ -221,7 +213,8 @@ defmodule BorutaWeb.OauthControllerTest do
         })
       )
 
-      assert redirected_to(conn) =~ "/session/new"
+      # NOTE Path will be scoped in production with configuration and be forwarded to
+      assert redirected_to(conn) =~ "/users/log_in"
     end
 
     test "redirects to redirect_uri with token if current_user is set", %{
@@ -231,7 +224,7 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = conn
-             |> assign(:current_user, resource_owner)
+             |> log_in_user(resource_owner)
              |> init_test_session(session_chosen: true)
 
       conn = get(
@@ -258,7 +251,7 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = conn
-             |> assign(:current_user, resource_owner)
+             |> log_in_user(resource_owner)
              |> init_test_session(session_chosen: true)
       given_state = "state"
 
@@ -284,20 +277,22 @@ defmodule BorutaWeb.OauthControllerTest do
 
   describe "password grant" do
     setup %{conn: conn} do
-      resource_owner = BorutaIdentity.Factory.insert(:user)
+      password = "passwordesat"
+      resource_owner = user_fixture(password: password)
       client = insert(:client)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
         client: client,
-        resource_owner: resource_owner
+        resource_owner: resource_owner,
+        password: password
       }
     end
 
-    test "returns a token response with valid client_id/client_secret", %{conn: conn, client: client, resource_owner: resource_owner} do
+    test "returns a token response with valid client_id/client_secret", %{conn: conn, client: client, resource_owner: resource_owner, password: password} do
       conn = post(
         conn,
         "/oauth/token",
-        "grant_type=password&username=#{resource_owner.email}&password=#{resource_owner.password}&client_id=#{client.id}&client_secret=#{client.secret}"
+        "grant_type=password&username=#{resource_owner.email}&password=#{password}&client_id=#{client.id}&client_secret=#{client.secret}"
       )
 
       %{
@@ -316,7 +311,7 @@ defmodule BorutaWeb.OauthControllerTest do
   describe "authorization code grant" do
     # TODO est token delivrance with code
     setup %{conn: conn} do
-      resource_owner = BorutaIdentity.Factory.insert(:user)
+      resource_owner = user_fixture()
       client = insert(:client)
       {:ok, conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"), client: client, resource_owner: resource_owner}
     end
@@ -327,7 +322,7 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = conn
-             |> assign(:current_user, resource_owner)
+             |> log_in_user(resource_owner)
              |> init_test_session(session_chosen: true)
       conn = get(
         conn,
@@ -353,7 +348,7 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = conn
-             |> assign(:current_user, resource_owner)
+             |> log_in_user(resource_owner)
              |> init_test_session(session_chosen: true)
       redirect_uri = List.first(client.redirect_uris)
 
@@ -379,7 +374,7 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner: resource_owner
     } do
       conn = conn
-             |> assign(:current_user, resource_owner)
+             |> log_in_user(resource_owner)
              |> init_test_session(session_chosen: true)
       given_state = "state"
       redirect_uri = List.first(client.redirect_uris)
@@ -407,7 +402,7 @@ defmodule BorutaWeb.OauthControllerTest do
     setup %{conn: conn} do
       client = insert(:client)
       client_token = insert(:token, type: "access_token", value: "777", client: client)
-      resource_owner = BorutaIdentity.Factory.insert(:user)
+      resource_owner = user_fixture()
       resource_owner_token = insert(:token, type: "access_token", value: "888", client: client, sub: resource_owner.id)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
@@ -496,7 +491,7 @@ defmodule BorutaWeb.OauthControllerTest do
     setup %{conn: conn} do
       client = insert(:client)
       client_token = insert(:token, type: "access_token", value: "777", client: client)
-      resource_owner = BorutaIdentity.Factory.insert(:user)
+      resource_owner = user_fixture()
       resource_owner_token = insert(:token, type: "access_token", value: "888", client: client, sub: resource_owner.id)
       {:ok,
         conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
