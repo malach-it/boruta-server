@@ -14,7 +14,7 @@ RUN npm run build
 
 FROM elixir:1.10.4-alpine AS builder
 
-RUN apk add curl-dev openssl-dev libevent-dev git make build-base erlang-erl-interface
+RUN apk add curl-dev openssl-dev libevent-dev git make build-base
 
 RUN mix local.hex --force
 RUN mix local.rebar --force
