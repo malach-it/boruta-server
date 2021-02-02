@@ -21,7 +21,6 @@ defmodule BorutaWeb.MetricsChannelTest do
       token =
         Boruta.Factory.insert(:token,
           type: "access_token",
-          value: "888",
           client: client,
           sub: resource_owner.id
         )

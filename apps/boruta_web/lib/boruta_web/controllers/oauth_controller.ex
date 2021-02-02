@@ -23,7 +23,7 @@ defmodule BorutaWeb.OauthController do
   def introspect_success(conn, %IntrospectResponse{} = response) do
     conn
     |> put_view(OauthView)
-    |> render("introspect.json", response: response)
+    |> render("introspect.#{get_format(conn)}", response: response)
   end
 
   @impl Boruta.Oauth.Application
