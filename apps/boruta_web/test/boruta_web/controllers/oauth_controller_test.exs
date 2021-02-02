@@ -470,7 +470,7 @@ defmodule BorutaWeb.OauthControllerTest do
   describe "introspect" do
     setup %{conn: conn} do
       client = insert(:client)
-      client_token = insert(:token, type: "access_token", value: "777", client: client)
+      client_token = insert(:token, type: "access_token", client: client)
       resource_owner = user_fixture()
 
       resource_owner_token =
@@ -539,7 +539,6 @@ defmodule BorutaWeb.OauthControllerTest do
                "active" => true,
                "client_id" => client.id,
                "exp" => token.expires_at,
-               # NOTE truncate in order to simulate ecto storage precision
                "iat" => DateTime.to_unix(token.inserted_at),
                "iss" => "boruta",
                "scope" => token.scope,
@@ -594,7 +593,6 @@ defmodule BorutaWeb.OauthControllerTest do
                    "active" => true,
                    "client_id" => client.id,
                    "exp" => token.expires_at,
-                   # NOTE truncate in order to simulate ecto storage precision
                    "iat" => DateTime.to_unix(token.inserted_at),
                    "iss" => "boruta",
                    "scope" => token.scope,
