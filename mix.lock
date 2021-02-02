@@ -1,6 +1,6 @@
 %{
   "bcrypt_elixir": {:hex, :bcrypt_elixir, "2.3.0", "6cb662d5c1b0a8858801cf20997bd006e7016aa8c52959c9ef80e0f34fb60b7a", [:make, :mix], [{:comeonin, "~> 5.3", [hex: :comeonin, repo: "hexpm", optional: false]}, {:elixir_make, "~> 0.6", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm", "2c81d61d4f6ed0e5cf7bf27a9109b791ff216a1034b3d541327484f46dd43769"},
-  "boruta": {:git, "https://gitlab.com/patatoid/boruta_auth.git", "b6f60cfd9c3dcbf7f3824987cc2b433887fbe37e", [branch: "clients-key-pair"]},
+  "boruta": {:git, "https://gitlab.com/patatoid/boruta_auth.git", "46e025544bf66d5eb3ab8f3926b16e9c037457ff", []},
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm", "7af5c7e09fe1d40f76c8e4f9dd2be7cebd83909f31fee7cd0e9eadc567da8353"},
   "comeonin": {:hex, :comeonin, "5.3.2", "5c2f893d05c56ae3f5e24c1b983c2d5dfb88c6d979c9287a76a7feb1e1d8d646", [:mix], [], "hexpm", "d0993402844c49539aeadb3fe46a3c9bd190f1ecf86b6f9ebd71957534c95f04"},
   "connection": {:hex, :connection, "1.1.0", "ff2a49c4b75b6fb3e674bfc5536451607270aac754ffd1bdfe175abe4a6d7a68", [:mix], [], "hexpm", "722c1eb0a418fbe91ba7bd59a47e28008a189d47e37e0e7bb85585a016b2869c"},
