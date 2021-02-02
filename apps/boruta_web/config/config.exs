@@ -10,6 +10,10 @@ config :boruta_web, BorutaWeb.Endpoint,
   render_errors: [view: BorutaWeb.ErrorView, accepts: ~w(html json)],
   pubsub_server: BorutaWeb.PubSub
 
+config :mime, :types, %{
+  "application/jwt" => ["jwt"]
+}
+
 config :boruta_web, :pow,
   repo: BorutaIdentity.Repo,
   user: BorutaIdentity.Accounts.User,

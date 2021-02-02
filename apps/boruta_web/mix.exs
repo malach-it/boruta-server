@@ -36,13 +36,14 @@ defmodule BorutaWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", branch: "clients-key-pair"},
       {:boruta_identity, in_umbrella: true},
       {:boruta_gateway, in_umbrella: true},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.5.3"},
       {:phoenix_ecto, "~> 4.1"},
+      {:joken, "~> 2.0"},
       {:phoenix_html, "~> 2.11"},
       {:ex_machina, "~> 2.4", only: :test},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

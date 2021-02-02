@@ -1,6 +1,6 @@
 %{
   "bcrypt_elixir": {:hex, :bcrypt_elixir, "2.3.0", "6cb662d5c1b0a8858801cf20997bd006e7016aa8c52959c9ef80e0f34fb60b7a", [:make, :mix], [{:comeonin, "~> 5.3", [hex: :comeonin, repo: "hexpm", optional: false]}, {:elixir_make, "~> 0.6", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm", "2c81d61d4f6ed0e5cf7bf27a9109b791ff216a1034b3d541327484f46dd43769"},
-  "boruta": {:git, "https://gitlab.com/patatoid/boruta_auth.git", "bed21af67b0f77c43c816305ff7664a0786f3f18", []},
+  "boruta": {:git, "https://gitlab.com/patatoid/boruta_auth.git", "b6f60cfd9c3dcbf7f3824987cc2b433887fbe37e", [branch: "clients-key-pair"]},
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm", "7af5c7e09fe1d40f76c8e4f9dd2be7cebd83909f31fee7cd0e9eadc567da8353"},
   "comeonin": {:hex, :comeonin, "5.3.2", "5c2f893d05c56ae3f5e24c1b983c2d5dfb88c6d979c9287a76a7feb1e1d8d646", [:mix], [], "hexpm", "d0993402844c49539aeadb3fe46a3c9bd190f1ecf86b6f9ebd71957534c95f04"},
   "connection": {:hex, :connection, "1.1.0", "ff2a49c4b75b6fb3e674bfc5536451607270aac754ffd1bdfe175abe4a6d7a68", [:mix], [], "hexpm", "722c1eb0a418fbe91ba7bd59a47e28008a189d47e37e0e7bb85585a016b2869c"},
@@ -23,6 +23,8 @@
   "gen_stage": {:hex, :gen_stage, "1.0.0", "51c8ae56ff54f9a2a604ca583798c210ad245f415115453b773b621c49776df5", [:mix], [], "hexpm", "1d9fc978db5305ac54e6f5fec7adf80cd893b1000cf78271564c516aa2af7706"},
   "gettext": {:hex, :gettext, "0.18.2", "7df3ea191bb56c0309c00a783334b288d08a879f53a7014341284635850a6e55", [:mix], [], "hexpm", "f9f537b13d4fdd30f3039d33cb80144c3aa1f8d9698e47d7bcbcc8df93b1f5c5"},
   "jason": {:hex, :jason, "1.2.2", "ba43e3f2709fd1aa1dce90aaabfd039d000469c05c56f0b8e31978e03fa39052", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "18a228f5f0058ee183f29f9eae0805c6e59d61c3b006760668d8d18ff0d12179"},
+  "joken": {:hex, :joken, "2.3.0", "62a979c46f2c81dcb8ddc9150453b60d3757d1ac393c72bb20fc50a7b0827dc6", [:mix], [{:jose, "~> 1.10", [hex: :jose, repo: "hexpm", optional: false]}], "hexpm", "57b263a79c0ec5d536ac02d569c01e6b4de91bd1cb825625fe90eab4feb7bc1e"},
+  "jose": {:hex, :jose, "1.11.1", "59da64010c69aad6cde2f5b9248b896b84472e99bd18f246085b7b9fe435dcdb", [:mix, :rebar3], [], "hexpm", "078f6c9fb3cd2f4cfafc972c814261a7d1e8d2b3685c0a76eb87e158efff1ac5"},
   "katipo": {:hex, :katipo, "0.8.1", "1012776f0d25a60a3c78c5e951063058694663a0491dc6c8a23ca9526e426968", [:rebar3], [{:metrics, "2.5.0", [hex: :metrics, repo: "hexpm", optional: false]}, {:worker_pool, "3.1.1", [hex: :worker_pool, repo: "hexpm", optional: false]}], "hexpm", "2399281ce72eca98746db277a29cd6007b858ce157b504152a451571a71ffdf0"},
   "libcluster": {:hex, :libcluster, "3.2.1", "b2cd5b447cde25d5897749bee6f7aaeb6c96ac379481024e9b6ba495dabeb97d", [:mix], [{:jason, "~> 1.1", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm", "89f225612d135edce9def56f43bf18d575d88ac4680e3f6161283f2e55cadca4"},
   "metrics": {:hex, :metrics, "2.5.0", "268d218d56529cb5f070d74bbfc3af64c668379b5b18fafda88959442f790c57", [:rebar3], [], "hexpm", "ae061938c8c3bde97d17be9a792b63e15c1e1effe16598ab87a62384f5f3714b"},
