@@ -77,7 +77,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
       # When logged in
       conn =
         build_conn()
-        |> log_in_user(user)
+        |> log_in(user)
         |> get(Routes.user_confirmation_path(conn, :confirm, token))
 
       assert redirected_to(conn) == "/"

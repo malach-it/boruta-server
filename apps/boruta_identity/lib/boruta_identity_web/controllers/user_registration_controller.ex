@@ -1,6 +1,8 @@
 defmodule BorutaIdentityWeb.UserRegistrationController do
   use BorutaIdentityWeb, :controller
 
+  import BorutaIdentityWeb.Authenticable, only: [log_in: 2]
+
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentityWeb.UserAuth
@@ -21,7 +23,7 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
 
         conn
         |> put_flash(:info, "User created successfully.")
-        |> UserAuth.log_in_user(user)
+        |> log_in(user)
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)

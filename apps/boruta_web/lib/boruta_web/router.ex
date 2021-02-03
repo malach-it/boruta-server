@@ -1,7 +1,9 @@
 defmodule BorutaWeb.Router do
   use BorutaWeb, :router
 
-  import BorutaIdentityWeb.UserAuth
+  import BorutaIdentityWeb.Sessions, only: [
+    fetch_current_user: 2
+  ]
 
   pipeline :browser do
     plug :accepts, ["html"]
