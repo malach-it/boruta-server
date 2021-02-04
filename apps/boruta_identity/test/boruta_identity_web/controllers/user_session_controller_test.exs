@@ -17,7 +17,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
     end
 
     test "redirects if already logged in", %{conn: conn, user: user} do
-      conn = conn |> log_in_user(user) |> get(Routes.user_session_path(conn, :new))
+      conn = conn |> log_in(user) |> get(Routes.user_session_path(conn, :new))
       assert redirected_to(conn) == "/"
     end
   end
@@ -82,7 +82,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
 
   describe "DELETE /users/log_out" do
     test "logs the user out", %{conn: conn, user: user} do
-      conn = conn |> log_in_user(user) |> delete(Routes.user_session_path(conn, :delete))
+      conn = conn |> log_in(user) |> delete(Routes.user_session_path(conn, :delete))
       assert redirected_to(conn) == Routes.user_session_path(conn, :new)
       assert get_flash(conn, :info) =~ "Logged out successfully"
     end

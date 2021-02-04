@@ -1,6 +1,8 @@
 defmodule BorutaIdentityWeb.UserSettingsController do
   use BorutaIdentityWeb, :controller
 
+  import BorutaIdentityWeb.Authenticable, only: [log_in: 2]
+
   alias BorutaIdentity.Accounts
   alias BorutaIdentityWeb.UserAuth
 
@@ -43,7 +45,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
         conn
         |> put_flash(:info, "Password updated successfully.")
         |> put_session(:user_return_to, Routes.user_settings_path(conn, :edit))
-        |> UserAuth.log_in_user(user)
+        |> log_in(user)
 
       {:error, changeset} ->
         render(conn, "edit.html", password_changeset: changeset)

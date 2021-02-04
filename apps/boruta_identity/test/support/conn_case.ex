@@ -46,14 +46,15 @@ defmodule BorutaIdentityWeb.ConnCase do
   @doc """
   Setup helper that registers and logs in users.
 
-      setup :register_and_log_in_user
+      setup :register_and_log_in
 
   It stores an updated connection and a registered user in the
   test context.
   """
-  def register_and_log_in_user(%{conn: conn}) do
+  # TODO typespec
+  def register_and_log_in(%{conn: conn}) do
     user = BorutaIdentity.AccountsFixtures.user_fixture()
-    %{conn: log_in_user(conn, user), user: user}
+    %{conn: log_in(conn, user), user: user}
   end
 
   @doc """
@@ -61,7 +62,8 @@ defmodule BorutaIdentityWeb.ConnCase do
 
   It returns an updated `conn`.
   """
-  def log_in_user(conn, user) do
+  # TODO typespec
+  def log_in(conn, user) do
     token = BorutaIdentity.Accounts.generate_user_session_token(user)
 
     conn

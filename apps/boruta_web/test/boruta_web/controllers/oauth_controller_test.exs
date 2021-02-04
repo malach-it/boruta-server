@@ -45,20 +45,18 @@ defmodule BorutaWeb.OauthControllerTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn =
-        conn
-        |> log_in_user(resource_owner)
+      conn = conn
+             |> log_in(resource_owner)
 
-      conn =
-        get(
-          conn,
-          Routes.oauth_path(conn, :authorize, %{
-            response_type: "token",
-            client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
-            redirect_uri: redirect_uri,
-            state: "state"
-          })
-        )
+      conn = get(
+        conn,
+        Routes.oauth_path(conn, :authorize, %{
+          response_type: "token",
+          client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
+          redirect_uri: redirect_uri,
+          state: "state"
+        })
+      )
 
       assert redirected_to(conn) == Routes.choose_session_path(conn, :new)
     end
@@ -186,11 +184,9 @@ defmodule BorutaWeb.OauthControllerTest do
       conn: conn,
       resource_owner: resource_owner
     } do
-      conn =
-        conn
-        |> log_in_user(resource_owner)
-        |> init_test_session(session_chosen: true)
-
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
       conn = get(conn, "/oauth/authorize")
 
       assert response_content_type(conn, :html)
@@ -204,10 +200,9 @@ defmodule BorutaWeb.OauthControllerTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn =
-        conn
-        |> log_in_user(resource_owner)
-        |> init_test_session(session_chosen: true)
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
 
       conn =
         get(
@@ -255,10 +250,9 @@ defmodule BorutaWeb.OauthControllerTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn =
-        conn
-        |> log_in_user(resource_owner)
-        |> init_test_session(session_chosen: true)
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
 
       conn =
         get(
@@ -286,11 +280,9 @@ defmodule BorutaWeb.OauthControllerTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn =
-        conn
-        |> log_in_user(resource_owner)
-        |> init_test_session(session_chosen: true)
-
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
       given_state = "state"
 
       conn =
@@ -377,7 +369,7 @@ defmodule BorutaWeb.OauthControllerTest do
     } do
       conn =
         conn
-        |> log_in_user(resource_owner)
+        |> log_in(resource_owner)
         |> init_test_session(session_chosen: true)
 
       conn =
@@ -406,11 +398,9 @@ defmodule BorutaWeb.OauthControllerTest do
       client: client,
       resource_owner: resource_owner
     } do
-      conn =
-        conn
-        |> log_in_user(resource_owner)
-        |> init_test_session(session_chosen: true)
-
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
       redirect_uri = List.first(client.redirect_uris)
 
       conn =
@@ -437,11 +427,9 @@ defmodule BorutaWeb.OauthControllerTest do
       client: client,
       resource_owner: resource_owner
     } do
-      conn =
-        conn
-        |> log_in_user(resource_owner)
-        |> init_test_session(session_chosen: true)
-
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
       given_state = "state"
       redirect_uri = List.first(client.redirect_uris)
 

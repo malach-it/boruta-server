@@ -4,7 +4,7 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
   alias BorutaIdentity.Accounts
   import BorutaIdentity.AccountsFixtures
 
-  setup :register_and_log_in_user
+  setup :register_and_log_in
 
   describe "GET /users/settings" do
     test "renders settings page", %{conn: conn} do
