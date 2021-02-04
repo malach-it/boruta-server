@@ -8,6 +8,7 @@ defmodule BorutaIdentity.AccountsFixtures do
   def valid_user_password, do: "hello world!"
 
   def user_fixture(attrs \\ %{}) do
+    # TODO user with static password to speed up tests
     {:ok, user} =
       attrs
       |> Enum.into(%{

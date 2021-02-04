@@ -4,11 +4,13 @@
       <div class="fields">
         <div class="four wide field">
           <label>Method</label>
-          <input type="text" placeholder="GET" v-model="authorizedScope.method" />
+          <select type="text" v-model="authorizedScope.method">
+            <option :value="method" v-for="method in methods" :key="method">{{ method }}</option>
+          </select>
         </div>
         <div class="twelve wide field">
           <label>Scope</label>
-          <div class="ui right icon input">
+          <div class="ui scope right icon input">
             <select type="text" v-model="authorizedScope.model" class="authorized-scopes-select">
               <option :value="scope" v-for="scope in scopeOptions(authorizedScope.model)" :key="scope.id">{{ scope.name }}</option>
             </select>
@@ -35,7 +37,8 @@ export default {
   },
   data () {
     return {
-      scopes: []
+      scopes: [],
+      methods: ['*', 'GET', 'POST', 'PUT', 'HEAD', 'OPTIONS', 'PATCH', 'DELETE']
     }
   },
   computed: {
@@ -68,4 +71,16 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.edit-scopes {
+  .scope.input {
+    select {
+      margin-right: 3em;
+    }
+  }
+  .ui.icon.input>i.icon.close {
+    cursor: pointer;
+    pointer-events: all;
+    position: absolute;
+  }
+}
 </style>

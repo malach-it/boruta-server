@@ -21,7 +21,7 @@
               <label>Port</label>
               <input type="text" v-model="upstream.port" placeholder="443">
             </div>
-            <div class="field">
+            <div class="upstreams field">
               <label>URIs</label>
               <div v-for="(upstreamUri, index) in upstream.uris" class="field" :key="index">
                 <div class="ui right icon input">
@@ -100,7 +100,7 @@ export default {
       )
     },
     addScope () {
-      this.upstream.required_scopes.push({ model: new Scope() })
+      this.upstream.required_scopes.push({ model: new Scope(), method: 'GET' })
     },
     deleteScope (scope) {
       this.upstream.required_scopes.splice(
@@ -116,6 +116,9 @@ export default {
 .edit-upstream {
   .field {
     position: relative;
+    &.upstreams input {
+      margin-right: 3em;
+    }
   }
   .ui.icon.input>i.icon.close {
     cursor: pointer;
