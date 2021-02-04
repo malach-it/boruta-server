@@ -4,11 +4,13 @@ defmodule BorutaGateway.Upstreams.Upstream do
   @required_scopes_schema %{
     "type" => "object",
     "patternProperties" => %{
-      "(GET|POST|PUT|HEAD|OPTIONS|PATCH|DELETE)" => %{
+      "(GET|POST|PUT|HEAD|OPTIONS|PATCH|DELETE|\\*)" => %{
         "type" => "array",
         "items" => %{
-          "type" => "string"
-        }
+          "type" => "string",
+          "pattern" => ".+"
+        },
+        "minItems" => 1
       }
     },
     "additionalProperties" => false

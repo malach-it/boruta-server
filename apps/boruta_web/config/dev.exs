@@ -12,8 +12,7 @@ config :boruta_web, BorutaWeb.Endpoint,
   watchers: [
     npm: [
       "run",
-      "build",
-      "--watch",
+      "build:watch",
       cd: Path.expand("../assets", __DIR__)
     ]
   ],
