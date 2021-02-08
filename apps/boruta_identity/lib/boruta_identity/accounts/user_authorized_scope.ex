@@ -25,6 +25,7 @@ defmodule BorutaIdentity.Accounts.UserAuthorizedScope do
     scope
     |> cast(attrs, [:name, :user_id])
     |> validate_required([:name, :user_id])
+    |> unique_constraint([:name, :user_id])
     |> foreign_key_constraint(:user_id)
   end
 end

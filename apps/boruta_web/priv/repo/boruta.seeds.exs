@@ -34,6 +34,14 @@ import Ecto.Query
     on_conflict: :nothing
   )
 
+{:ok, instance_scope} =
+  BorutaWeb.Repo.insert(
+    %Boruta.Ecto.Scope{
+      name: "instances:manage:user"
+    },
+    on_conflict: :nothing
+  )
+
 with {:ok, client} <- %Boruta.Ecto.Client{}
 |> Boruta.Ecto.Client.create_changeset(%{
   redirect_uris: [
@@ -74,7 +82,8 @@ scopes =
     "users:manage:all",
     "clients:manage:all",
     "scopes:manage:all",
-    "upstreams:manage:all"
+    "upstreams:manage:all",
+    "instances:manage:user"
   ]
   |> Enum.map(fn scope_name ->
     BorutaIdentity.Repo.insert(%BorutaIdentity.Accounts.UserAuthorizedScope{

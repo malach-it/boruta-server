@@ -3,7 +3,7 @@ defmodule BorutaIdentity.AccountsTest do
 
   alias BorutaIdentity.Accounts
   import BorutaIdentity.AccountsFixtures
-  alias BorutaIdentity.Accounts.{User, UserToken}
+  alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
 
   @tag :skip
   describe "list_users/0" do
@@ -514,8 +514,31 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  @tag :skip
   describe "update_user_authorized_scopes/2" do
+    test "returns an error on duplicates" do
+      user = user_fixture()
+
+      {:error, %Ecto.Changeset{} = changeset} =
+        Accounts.update_user_authorized_scopes(user, [%{"name" => "test"}, %{"name" => "test"}])
+
+      assert changeset
+    end
+
+    test "stores user scopes" do
+      user = user_fixture()
+
+      {:ok,
+       %User{
+         authorized_scopes:
+           [
+             %UserAuthorizedScope{
+               name: "test"
+             }
+           ] = authorized_scopes
+       }} = Accounts.update_user_authorized_scopes(user, [%{"name" => "test"}])
+
+      assert Repo.all(UserAuthorizedScope) == authorized_scopes
+    end
   end
 
   @tag :skip

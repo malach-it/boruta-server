@@ -245,15 +245,20 @@ defmodule BorutaIdentity.Accounts do
   @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::
     {:ok, %User{}} | {:error, Ecto.Changeset.t()}
   def update_user_authorized_scopes(%User{id: user_id} = user, scopes) do
-    with {:ok, _result} <- Enum.reduce(scopes, Ecto.Multi.new(), fn (attrs, multi) ->
+    Repo.delete_all(from s in UserAuthorizedScope, where: s.user_id == ^user_id)
+
+    case Enum.reduce(scopes, Ecto.Multi.new(), fn (attrs, multi) ->
       changeset = UserAuthorizedScope.changeset(
         %UserAuthorizedScope{},
         Map.put(attrs, "user_id", user_id)
       )
-      Ecto.Multi.insert(multi, "scope_#{Ecto.Changeset.get_field(changeset, :name)}", changeset)
+      Ecto.Multi.insert(multi, "scope_-#{SecureRandom.uuid}", changeset)
     end)
     |> Repo.transaction() do
+      {:ok, _result} ->
       {:ok, Repo.preload(user, :authorized_scopes)}
+      {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
+        {:error, changeset}
     end
   end
 
