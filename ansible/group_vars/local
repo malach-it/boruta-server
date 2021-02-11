@@ -5,6 +5,7 @@ oauth_host: oauth.boruta.local
 admin_host: admin.boruta.local
 gateway_host: gate.boruta.local
 
-vue_app_admin_client_id: 6a2f41a3-c54c-fce8-32d2-0324e1c32e20
-vue_app_boruta_base_url: http://admin.boruta.local
+admin_client_id: 6a2f41a3-c54c-fce8-32d2-0324e1c32e20
+admin_client_secret: "777"
+boruta_base_url: http://admin.boruta.local
 vue_app_boruta_base_socket_url: ws://admin.boruta.local

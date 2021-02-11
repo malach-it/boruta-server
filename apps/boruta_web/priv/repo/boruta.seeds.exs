@@ -42,26 +42,18 @@ import Ecto.Query
     on_conflict: :nothing
   )
 
-with {:ok, client} <- %Boruta.Ecto.Client{}
-|> Boruta.Ecto.Client.create_changeset(%{
+with {:ok, client} <- %Boruta.Ecto.Client{} |> Boruta.Ecto.Client.create_changeset(%{
   redirect_uris: [
-    "http://admin.boruta.patatoid.fr/admin/oauth-callback",
-    "http://admin.boruta.local/admin/oauth-callback",
-    "http://localhost:4000/admin/oauth-callback",
-    "http://localhost:4001/admin/oauth-callback",
-    "https://boruta.herokuapp.com/admin/oauth-callback"
+    "#{System.get_env("VUE_APP_BORUTA_BASE_URL", "https://noadmin.host")}/admin/oauth-callback"
   ],
   authorize_scope: false,
   access_token_ttl: 3600,
   authorization_code_ttl: 60
-})
-|> BorutaWeb.Repo.insert() do
-  client
-  |> change(%{
-    secret: "777",
-    id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"
-  })
-  |> BorutaWeb.Repo.update()
+}) |> BorutaWeb.Repo.insert() do
+  client |> change(%{
+    secret: System.get_env("BORUTA_ADMIN_CLIENT_SECRET", "777"),
+    id: System.get_env("BORUTA_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
+  }) |> BorutaWeb.Repo.update()
 end
 
 BorutaGateway.Repo.insert(
