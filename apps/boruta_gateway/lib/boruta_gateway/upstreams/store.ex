@@ -1,17 +1,36 @@
 defmodule BorutaGateway.Upstreams.Store do
   @moduledoc false
 
+  require Logger
+
   use GenServer
 
   alias BorutaGateway.Repo
   alias BorutaGateway.Upstreams.Upstream
 
   def start_link do
-    upstreams = Repo.all(Upstream)
-
-    with {:ok, _listener} <- GenServer.start_link(__MODULE__, []) do
-      Agent.start_link(fn -> structure(upstreams) end, name: __MODULE__)
+    with {:ok, listener} <- GenServer.start_link(__MODULE__, []),
+         {:ok, store} <- Agent.start_link(fn -> [] end, name: __MODULE__) do
+      {:ok, listener, store}
     end
+  end
+
+  @impl GenServer
+  def init(_args) do
+    hydrate(self())
+    subscribe(self())
+    {:ok, [hydrated: false]}
+  end
+
+  def hydrate(store_server) do
+    # NOTE wait for genserver startup in order to gracefully shutdown
+    # and not to reach supervisor max restarts
+    :timer.sleep(2000)
+    GenServer.cast(store_server, :hydrate)
+  end
+
+  def subscribe(store_server) do
+    GenServer.cast(store_server, :subscribe)
   end
 
   @spec match(path_info :: list(String.t())) :: upstream :: Upstream.t() | nil
@@ -28,10 +47,20 @@ defmodule BorutaGateway.Upstreams.Store do
   end
 
   @impl GenServer
-  def init(opts) do
+  def handle_cast(:hydrate, state) do
+    upstreams = Repo.all(Upstream)
+
+    |>  structure()
+    Agent.update(__MODULE__, fn (existant) -> existant ++ upstreams end)
+
+    {:noreply, [hydrated: true]}
+  end
+
+  @impl GenServer
+  def handle_cast(:subscribe, state) do
     case Repo.listen("upstreams_changed") do
-      {:ok, _pid, _ref} -> {:ok, opts}
-      error -> {:stop, error}
+      {:ok, _pid, _ref} -> {:noreply, state}
+      error -> {:stop, error, state}
     end
   end
 
