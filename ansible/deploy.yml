@@ -135,6 +135,26 @@
                       name: boruta-admin
                       port:
                         number: 4001
+    - name: Setup boruta database
+      community.kubernetes.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: boruta-env
+            namespace: boruta-staging
+          data:
+            SECRET_KEY_BASE: fm6UIOyjYUe51Xo7JDTurwSeyOoZ15Kmlbj4NUhU9951P8cEUZc3k8bsAeJJtCvg
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: "{{ postgresql_password }}"
+            POSTGRES_DATABASE: boruta
+            POSTGRES_HOST: postgres-postgresql
+            K8S_NAMESPACE: boruta-staging
+            BORUTA_ADMIN_HOST: "{{ admin_host }}"
+            VUE_APP_ADMIN_CLIENT_ID: "{{ vue_app_admin_client_id }}"
+            VUE_APP_BORUTA_BASE_URL: "{{ vue_app_boruta_base_url }}"
+            VUE_APP_BORUTA_BASE_SOCKET_URL: "{{ vue_app_boruta_base_socket_url }}"
 
     - name: Setup boruta database
       register: database_setup
@@ -154,18 +174,9 @@
                   - image: registry.gitlab.com/patatoid/boruta/app:latest
                     command: ["/app/bin/boruta"]
                     args: ["eval", "Boruta.Release.setup"]
-                    env:
-                      # TODO store in configmap and secret
-                      - name: SECRET_KEY_BASE
-                        value: fm6UIOyjYUe51Xo7JDTurwSeyOoZ15Kmlbj4NUhU9951P8cEUZc3k8bsAeJJtCvg
-                      - name: POSTGRES_USER
-                        value: postgres
-                      - name: POSTGRES_PASSWORD
-                        value: "{{ postgresql_password }}"
-                      - name: POSTGRES_DATABASE
-                        value: boruta
-                      - name: POSTGRES_HOST
-                        value: postgres-postgresql
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
                     imagePullPolicy: Always
                     name: boruta
                 restartPolicy: OnFailure
@@ -190,18 +201,9 @@
                   - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
                     command: ["/app/bin/boruta"]
                     args: ["eval", "Boruta.Release.migrate"]
-                    env:
-                      # TODO store in configmap and secret
-                      - name: SECRET_KEY_BASE
-                        value: fm6UIOyjYUe51Xo7JDTurwSeyOoZ15Kmlbj4NUhU9951P8cEUZc3k8bsAeJJtCvg
-                      - name: POSTGRES_USER
-                        value: postgres
-                      - name: POSTGRES_PASSWORD
-                        value: "{{ postgresql_password }}"
-                      - name: POSTGRES_DATABASE
-                        value: boruta
-                      - name: POSTGRES_HOST
-                        value: postgres-postgresql
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
                     imagePullPolicy: Always
                     name: boruta
                 restartPolicy: OnFailure
@@ -230,26 +232,14 @@
               spec:
                 containers:
                   - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
-                    env:
-                      # TODO store in configmap and secret
-                      - name: SECRET_KEY_BASE
-                        value: fm6UIOyjYUe51Xo7JDTurwSeyOoZ15Kmlbj4NUhU9951P8cEUZc3k8bsAeJJtCvg
-                      - name: POSTGRES_USER
-                        value: postgres
-                      - name: POSTGRES_PASSWORD
-                        value: "{{ postgresql_password }}"
-                      - name: POSTGRES_DATABASE
-                        value: boruta
-                      - name: POSTGRES_HOST
-                        value: postgres-postgresql
-                      - name: K8S_NAMESPACE
-                        value: boruta-staging
-                      - name: BORUTA_ADMIN_HOST
-                        value: "{{ admin_host }}"
+                    readinessProbe:
+                      httpGet:
+                        path: /admin
+                        port: 4001
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
                     imagePullPolicy: Always
                     name: boruta
-                    ports:
-                    - containerPort: 4081
-                      protocol: TCP
                 imagePullSecrets:
                 - name: regcred

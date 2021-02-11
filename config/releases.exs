@@ -49,7 +49,7 @@ config :libcluster,
         kubernetes_ip_lookup_mode: :pods,
         kubernetes_node_basename: "boruta",
         kubernetes_selector: "app=boruta",
-        kubernetes_namespace: "boruta-staging",
+        kubernetes_namespace: System.get_env("K8S_NAMESPACE"),
         polling_interval: 10_000
       ]
     ]
