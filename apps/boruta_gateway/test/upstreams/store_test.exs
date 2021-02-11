@@ -13,7 +13,7 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         {:ok, b} = Repo.insert(%Upstream{host: "test2.host", port: 2222, uris: ["/path2"]})
         :timer.sleep(100)
 
-        upstreams = Agent.get(Store, fn (upstreams) -> upstreams end)
+        upstreams = Store.all()
         assert Enum.any?(upstreams, fn
           ({["path1"], %{id: id}}) -> id == a.id
           (_) -> false
@@ -37,7 +37,7 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         {:ok, _a} = Repo.update(a)
         :timer.sleep(100)
 
-        upstreams = Agent.get(Store, fn (upstreams) -> upstreams end)
+        upstreams = Store.all()
         assert Enum.any?(upstreams, fn
           ({["path"], %{host: host}}) -> host == "updated.host"
           (_) -> false
@@ -53,7 +53,7 @@ defmodule BorutaGateway.Upstreams.StoreTest do
       try do
         {:ok, a} = Repo.insert(%Upstream{host: "test1.host", port: 1111, uris: ["/path"]})
         :timer.sleep(100)
-        upstreams = Agent.get(Store, fn (upstreams) -> upstreams end)
+        upstreams = Store.all()
         assert Enum.any?(upstreams, fn
           ({["path"], %{id: id}}) -> id == a.id
           (_) -> false
@@ -62,7 +62,7 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         Repo.delete(a)
         :timer.sleep(100)
 
-        upstreams = Agent.get(Store, fn (upstreams) -> upstreams end)
+        upstreams = Store.all()
         assert Enum.all?(upstreams, fn
           ({["path"], %{id: id}}) -> id != a.id
           (_) -> false
