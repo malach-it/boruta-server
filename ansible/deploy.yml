@@ -236,7 +236,7 @@
                   - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
                     readinessProbe:
                       httpGet:
-                        path: /admin
+                        path: /healthcheck
                         port: 4001
                     envFrom:
                     - configMapRef:

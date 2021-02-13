@@ -25,6 +25,8 @@ defmodule BorutaWeb.Router do
     plug :accepts, ["json", "jwt"]
   end
 
+  get "/healthcheck", BorutaWeb.MonitoringController, :healthcheck
+
   scope "/accounts" do
     pipe_through [:browser, :fetch_current_user]
 
