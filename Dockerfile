@@ -17,6 +17,7 @@ RUN mix local.rebar --force
 WORKDIR /app
 COPY . .
 COPY --from=assets /priv ./apps/boruta_web/priv/
+RUN rm -rf deps
 RUN mix do clean, deps.get
 
 WORKDIR /app/apps/boruta_web

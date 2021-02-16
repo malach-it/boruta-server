@@ -9,6 +9,7 @@
     <script>
       window.env = {
         VUE_APP_ADMIN_CLIENT_ID: '<%= System.get_env("VUE_APP_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20") %>',
+        VUE_APP_OAUTH_BASE_URL: '<%= System.get_env("VUE_APP_OAUTH_BASE_URL", "http://localhost:4001") %>',
         VUE_APP_BORUTA_BASE_URL: '<%= System.get_env("VUE_APP_BORUTA_BASE_URL", "http://localhost:4001") %>',
         VUE_APP_BORUTA_BASE_SOCKET_URL: '<%= System.get_env("VUE_APP_BORUTA_BASE_SOCKET_URL", "http://localhost:4001") %>'
       }

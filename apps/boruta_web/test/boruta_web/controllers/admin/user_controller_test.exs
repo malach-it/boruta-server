@@ -20,8 +20,9 @@ defmodule BorutaWeb.Admin.UserControllerTest do
       conn = conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn}
+      {:ok, conn: conn, scope: "bad:scope"}
     end
+    setup :with_authenticated_user
 
     test "returns a 403", %{conn: conn} do
       conn = get(conn, Routes.admin_scope_path(conn, :index))
@@ -35,8 +36,9 @@ defmodule BorutaWeb.Admin.UserControllerTest do
       conn = conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn}
+      {:ok, conn: conn, scope: "users:manage:all"}
     end
+    setup :with_authenticated_user
 
     test "lists all users", %{conn: conn} do
       conn = get(conn, Routes.admin_user_path(conn, :index))
@@ -46,20 +48,18 @@ defmodule BorutaWeb.Admin.UserControllerTest do
 
   describe "current" do
     setup %{conn: conn} do
-      user = user_fixture()
-      token = Boruta.Factory.insert(:token, type: "access_token", scope: "users:manage:all", sub: user.id)
       conn = conn
         |> put_req_header("accept", "application/json")
-        |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn, user: user}
+        |> put_req_header("authorization", "Bearer token_authorized_by_with_authenticated_user")
+      {:ok, conn: conn, scope: "users:manage:all"}
     end
+    setup :with_authenticated_user
 
-    test "get current user", %{conn: conn, user: user} do
+    test "get current user", %{conn: conn, introspected_token: introspected_token} do
       conn = get(conn, Routes.admin_user_path(conn, :current))
       assert json_response(conn, 200)["data"] == %{
-        "id" => user.id,
-        "email" => user.email,
-        "authorized_scopes" => []
+        "id" => introspected_token["sub"],
+        "email" => introspected_token["username"]
       }
     end
   end
@@ -72,33 +72,19 @@ defmodule BorutaWeb.Admin.UserControllerTest do
       conn = conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn, resource_owner: resource_owner, scope: scope}
+      {:ok, conn: conn, resource_owner: resource_owner, existing_scope: scope, scope: "users:manage:all"}
     end
+    setup :with_authenticated_user
 
     test "renders resource_owner when data is valid", %{
       conn: conn,
       resource_owner: %User{id: id} = resource_owner,
-      scope: scope
+      existing_scope: scope
     } do
       conn = put(conn, Routes.admin_user_path(conn, :update, resource_owner), user: %{
         "authorized_scopes" => [%{"name" => scope.name}]
       })
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
-
-      conn = get(conn, Routes.admin_user_path(conn, :show, id))
-
-      case json_response(conn, 200)["data"] do
-        %{
-          "id" => user_id,
-          "authorized_scopes" => [
-            %{"name" => scope_name}
-          ]
-        } ->
-          assert user_id == id
-          assert scope_name == scope.name
-        _ ->
-          assert false
-      end
     end
   end
 

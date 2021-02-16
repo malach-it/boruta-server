@@ -40,6 +40,13 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
+config :boruta_web, BorutaWeb.Authorization,
+  oauth2: [
+    client_id: System.get_env("ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
+    client_secret: System.get_env("ADMIN_OAUTH_CLIENT_SECRET", "777"),
+    site: System.get_env("ADMIN_OAUTH_BASE_URL", "http://oauth.boruta.patatoid.fr")
+  ]
+
 config :libcluster,
   topologies: [
     k8s: [

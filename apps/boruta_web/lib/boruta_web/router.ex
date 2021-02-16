@@ -4,6 +4,9 @@ defmodule BorutaWeb.Router do
   import BorutaIdentityWeb.Sessions, only: [
     fetch_current_user: 2
   ]
+  import BorutaWeb.Authorization, only: [
+    require_authenticated: 2
+  ]
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -23,6 +26,10 @@ defmodule BorutaWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json", "jwt"]
+  end
+
+  pipeline :authenticated_api do
+    plug :require_authenticated
   end
 
   get "/healthcheck", BorutaWeb.MonitoringController, :healthcheck
@@ -53,6 +60,8 @@ defmodule BorutaWeb.Router do
     post "/introspect", OauthController, :introspect
 
     scope "/api", Admin, as: :admin do
+      pipe_through :authenticated_api
+
       resources "/scopes", ScopeController, except: [:new, :edit]
       resources "/clients", ClientController, except: [:new, :edit]
       get "/users/current", UserController, :current

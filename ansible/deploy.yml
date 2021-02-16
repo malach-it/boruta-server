@@ -151,11 +151,15 @@
             POSTGRES_DATABASE: boruta
             POSTGRES_HOST: postgres-postgresql
             K8S_NAMESPACE: boruta-staging
+            ADMIN_OAUTH_CLIENT_ID: "{{ admin_client_id }}"
+            ADMIN_OAUTH_CLIENT_SECRET: "{{ admin_client_secret }}"
+            ADMIN_OAUTH_BASE_URL: "{{ boruta_base_url }}"
             BORUTA_ADMIN_HOST: "{{ admin_host }}"
             BORUTA_ADMIN_CLIENT_ID: "{{ admin_client_id }}"
             BORUTA_ADMIN_CLIENT_SECRET: "{{ admin_client_secret }}"
             VUE_APP_ADMIN_CLIENT_ID: "{{ admin_client_id }}"
             VUE_APP_BORUTA_BASE_URL: "{{ boruta_base_url }}"
+            VUE_APP_OAUTH_BASE_URL: "{{ boruta_base_url }}"
             VUE_APP_BORUTA_BASE_SOCKET_URL: "{{ vue_app_boruta_base_socket_url }}"
 
     - name: Setup boruta database

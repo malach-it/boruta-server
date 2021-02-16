@@ -4,19 +4,21 @@ defmodule BorutaIdentity.AccountsFixtures do
   entities via the `BorutaIdentity.Accounts` context.
   """
 
+  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Repo
+
+  @password "hello world!"
+  @hashed_password Argon2.hash_pwd_salt(@password)
+
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
-  def valid_user_password, do: "hello world!"
+  def valid_user_password, do: @password
 
   def user_fixture(attrs \\ %{}) do
     # TODO user with static password to speed up tests
-    {:ok, user} =
-      attrs
-      |> Enum.into(%{
-        email: unique_user_email(),
-        password: valid_user_password()
-      })
-      |> BorutaIdentity.Accounts.register_user()
-
+    {:ok, user} = Repo.insert(%User{
+      email: unique_user_email(),
+      hashed_password: @hashed_password
+    } |> Ecto.Changeset.change(attrs))
     user
   end
 

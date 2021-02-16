@@ -5,7 +5,6 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentityWeb.UserAuth
 
   def new(conn, _params) do
     changeset = Accounts.change_user_registration(%User{})

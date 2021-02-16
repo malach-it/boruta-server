@@ -21,6 +21,15 @@ defmodule BorutaWeb.Admin.UserView do
     }
   end
 
+  def render("current.json", %{user: user}) do
+    %{
+      data: %{
+        id: user.id,
+        email: user.email
+      }
+    }
+  end
+
   defimpl Jason.Encoder, for: Boruta.Oauth.Scope do
     def encode(scope, opts) do
       Jason.Encode.map(Map.take(scope, [:id, :name, :public]), opts)

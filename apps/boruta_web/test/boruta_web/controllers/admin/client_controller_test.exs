@@ -32,8 +32,9 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
       conn = conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn}
+      {:ok, conn: conn, scope: "bad:scope"}
     end
+    setup :with_authenticated_user
 
     test "returns a 403", %{conn: conn} do
       conn = get(conn, Routes.admin_scope_path(conn, :index))
@@ -46,8 +47,9 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
       token = insert(:token, type: "access_token", scope: "clients:manage:all")
       conn = conn
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn}
+      {:ok, conn: conn, scope: "clients:manage:all"}
     end
+    setup :with_authenticated_user
 
     test "lists all clients", %{conn: conn} do
       conn = get(conn, Routes.admin_client_path(conn, :index))
@@ -60,18 +62,13 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
       token = insert(:token, type: "access_token", scope: "clients:manage:all")
       conn = conn
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn}
+      {:ok, conn: conn, scope: "clients:manage:all"}
     end
+    setup :with_authenticated_user
 
     test "renders client when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.admin_client_path(conn, :create), client: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
-
-      conn = get(conn, Routes.admin_client_path(conn, :show, id))
-
-      assert %{
-               "id" => _id
-             } = json_response(conn, 200)["data"]
+      create = post(conn, Routes.admin_client_path(conn, :create), client: @create_attrs)
+      assert %{"id" => id} = json_response(create, 201)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
@@ -86,18 +83,13 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
       client = insert(:client)
       conn = conn
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn, client: client}
+      {:ok, conn: conn, client: client, scope: "clients:manage:all"}
     end
+    setup :with_authenticated_user
 
     test "renders client when data is valid", %{conn: conn, client: %Client{id: id} = client} do
       conn = put(conn, Routes.admin_client_path(conn, :update, client), client: @update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
-
-      conn = get(conn, Routes.admin_client_path(conn, :show, id))
-
-      assert %{
-               "id" => _id
-             } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn, client: client} do
@@ -112,8 +104,9 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
       client = insert(:client)
       conn = conn
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn, client: client}
+      {:ok, conn: conn, client: client, scope: "clients:manage:all"}
     end
+    setup :with_authenticated_user
 
     test "deletes chosen client", %{conn: conn, client: client} do
       conn = delete(conn, Routes.admin_client_path(conn, :delete, client))

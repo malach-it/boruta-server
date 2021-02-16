@@ -310,7 +310,7 @@ defmodule BorutaWeb.OauthControllerTest do
 
   describe "password grant" do
     setup %{conn: conn} do
-      password = "passwordesat"
+      password = valid_user_password()
       resource_owner = user_fixture(password: password)
       client = insert(:client)
 

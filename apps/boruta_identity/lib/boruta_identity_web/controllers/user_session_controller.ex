@@ -4,7 +4,6 @@ defmodule BorutaIdentityWeb.UserSessionController do
   import BorutaIdentityWeb.Authenticable, only: [log_in: 3, log_out_user: 1]
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentityWeb.UserAuth
 
   def new(conn, _params) do
     render(conn, "new.html", error_message: nil)

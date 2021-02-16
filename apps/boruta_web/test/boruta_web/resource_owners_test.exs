@@ -8,8 +8,8 @@ defmodule BorutaIdentity.ResourceOwnersTest do
 
   doctest BorutaIdentity
 
-  @valid_username "email@test.test"
-  @valid_password "passwordesat"
+  @valid_username unique_user_email()
+  @valid_password valid_user_password()
 
   describe "get_by/1" do
     test "returns an user by username" do

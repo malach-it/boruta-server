@@ -1,10 +1,14 @@
 defmodule BorutaWeb.Admin.ClientController do
   use BorutaWeb, :controller
 
+  import BorutaWeb.Authorization, only: [
+    authorize: 2
+  ]
+
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Client
 
-  plug BorutaWeb.AuthorizationPlug, ["clients:manage:all"]
+  plug :authorize, ["clients:manage:all"]
 
   action_fallback BorutaWeb.FallbackController
 

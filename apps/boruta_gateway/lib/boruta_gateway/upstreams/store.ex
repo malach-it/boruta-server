@@ -51,6 +51,7 @@ defmodule BorutaGateway.Upstreams.Store do
     GenServer.call(__MODULE__, :all)
   end
 
+  @impl GenServer
   def handle_call(:all, _from, %{upstreams: upstreams} = state) do
     {:reply, upstreams, state}
   end

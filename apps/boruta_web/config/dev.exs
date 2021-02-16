@@ -9,6 +9,13 @@ config :boruta_web, BorutaWeb.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
+  watchers: [
+    npm: [
+      "run",
+      "build:watch",
+      cd: Path.expand("../assets", __DIR__)
+    ]
+  ],
   live_reload: [
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
@@ -81,4 +88,11 @@ config :libcluster,
       disconnect: {:erlang, :disconnect_node, []},
       list_nodes: {:erlang, :nodes, [:connected]},
     ]
+  ]
+
+config :boruta_web, BorutaWeb.Authorization,
+  oauth2: [
+    client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e20",
+    client_secret: "777",
+    site: "http://oauth.boruta.local"
   ]

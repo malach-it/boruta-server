@@ -3,14 +3,15 @@ defmodule BorutaWeb.UserSocket do
 
   alias Boruta.Oauth.Authorization
   alias Boruta.Oauth.Token
+  alias BorutaWeb.Authorization
 
   ## Channels
   channel "metrics:*", BorutaWeb.MetricsChannel
 
   @dialyzer {:no_match, connect: 3}
   def connect(%{"token" => token}, socket, _connect_info) do
-    case Authorization.AccessToken.authorize(value: token) do
-      {:ok, %Token{sub: sub}} ->
+    case Authorization.introspect(token) do
+      {:ok, %SimpleMint.Response{body: %{"active" => true, "sub" => sub} = body} = _response} ->
         {:ok, assign(socket, :user_id, sub)}
       {:error, _reason} -> :error
     end
