@@ -1,40 +1,73 @@
-defmodule BorutaWeb.AuthorizationPlug do
-  @moduledoc """
-  TODO AuthorizationPlug documentation
-  TODO unit test
-  TODO typespec
-  """
-  import Plug.Conn
+defmodule BorutaWeb.Authorization do
+  @moduledoc false
 
-  alias Boruta.Oauth.Authorization
-  alias Boruta.Oauth.Scope
-  alias Boruta.Oauth.Token
+  require Logger
 
-  def init(required_scopes), do: required_scopes || []
+  use BorutaWeb, :controller
 
-  def call(conn, required_scopes) do
-    with ["Bearer " <> value] <- get_req_header(conn, "authorization"),
-         {:ok, %Token{scope: scope} = token} <- Authorization.AccessToken.authorize(value: value),
-         {:ok, _} <- validate_scopes(scope, required_scopes)
-    do
-      assign(conn, :token, token)
+  alias BorutaWeb.ErrorView
+
+  def require_authenticated(conn, _opts \\ []) do
+    with [authorization_header] <- get_req_header(conn, "authorization"),
+         [_authorization_header, token] <- Regex.run(~r/Bearer (.+)/, authorization_header),
+         {:ok, %SimpleMint.Response{body: %{"active" => true} = body} = _response} <-
+           introspect(token) do
+      conn
+      |> assign(:token, token)
+      |> assign(:introspected_token, body)
     else
-      {:error, "required scopes are not present."} ->
+      e ->
+        Logger.info("User unauthorized : #{inspect(e)}")
         conn
-        |> send_resp(:forbidden, "")
-        |> halt()
-      _error ->
-        conn
-        |> send_resp(:unauthorized, "")
+        |> put_status(:unauthorized)
+        |> put_view(ErrorView)
+        |> render("401.json")
         |> halt()
     end
   end
 
-  defp validate_scopes(scope, required_scopes) do
-    scopes = Scope.split(scope)
-    case Enum.empty?(required_scopes -- scopes) do
-      true -> {:ok, scopes}
-      false -> {:error, "required scopes are not present."}
+  def authorize(conn, [_h | _t] = scopes) do
+    current_scopes = String.split(conn.assigns[:introspected_token]["scope"], " ")
+
+    case Enum.empty?(scopes -- current_scopes) do
+      true ->
+        conn
+
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> put_view(ErrorView)
+        |> render("403.json")
+        |> halt()
     end
+  end
+
+  def authorize(conn, _opts) do
+    conn
+    |> put_status(:forbidden)
+    |> put_view(ErrorView)
+    |> render("403.json")
+    |> halt()
+  end
+
+  # TODO cache token introspection
+  def introspect(token) do
+    oauth2_config =
+      Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2]
+    client_id = oauth2_config[:client_id]
+    client_secret = oauth2_config[:client_secret]
+    site = oauth2_config[:site]
+
+    SimpleMint.post(
+      "#{site}/oauth/introspect",
+      %{token: token},
+      [
+        headers: [
+          {"accept", "application/json"},
+          {"content-type", "application/json"},
+          {"authorization", "Basic " <> Base.encode64("#{client_id}:#{client_secret}")}
+        ]
+      ]
+    )
   end
 end

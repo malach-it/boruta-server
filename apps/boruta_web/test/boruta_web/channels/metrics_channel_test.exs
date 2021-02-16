@@ -2,8 +2,6 @@ defmodule BorutaWeb.MetricsChannelTest do
   use BorutaWeb.ChannelCase
   use BorutaWeb.DataCase
 
-  import BorutaIdentity.AccountsFixtures
-
   alias BorutaGateway.Upstreams.Upstream
   alias BorutaWeb.UserSocket
   alias Ecto.Adapters.SQL.Sandbox
@@ -15,15 +13,7 @@ defmodule BorutaWeb.MetricsChannelTest do
 
   describe "user is connected" do
     setup do
-      client = Boruta.Factory.insert(:client)
-      resource_owner = user_fixture()
-
-      token =
-        Boruta.Factory.insert(:token,
-          type: "access_token",
-          client: client,
-          sub: resource_owner.id
-        )
+      token = "token_authorized_by_bypass"
 
       {:ok, _, socket} =
         socket(BorutaWeb.UserSocket, "user_id", %{token: token})
@@ -31,9 +21,10 @@ defmodule BorutaWeb.MetricsChannelTest do
 
       {:ok, socket: socket, token: token}
     end
+    setup :with_authenticated_user
 
     test "connects", %{token: token} do
-      case connect(UserSocket, %{"token" => token.value}, %{}) do
+      case connect(UserSocket, %{"token" => token}, %{}) do
         {:ok, _socket} -> assert true
         _ -> assert false
       end

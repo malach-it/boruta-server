@@ -4,7 +4,6 @@ defmodule BorutaIdentityWeb.UserSettingsController do
   import BorutaIdentityWeb.Authenticable, only: [log_in: 2]
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentityWeb.UserAuth
 
   plug :assign_email_and_password_changesets
 

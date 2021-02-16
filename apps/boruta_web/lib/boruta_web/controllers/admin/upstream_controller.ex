@@ -1,10 +1,14 @@
 defmodule BorutaWeb.Admin.UpstreamController do
   use BorutaWeb, :controller
 
+  import BorutaWeb.Authorization, only: [
+    authorize: 2
+  ]
+
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
-  plug BorutaWeb.AuthorizationPlug, ["upstreams:manage:all"]
+  plug :authorize, ["upstreams:manage:all"]
 
   action_fallback BorutaWeb.FallbackController
 

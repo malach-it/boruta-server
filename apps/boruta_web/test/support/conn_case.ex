@@ -24,6 +24,7 @@ defmodule BorutaWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import BorutaIdentityWeb.ConnCase
+      import BorutaWeb.ConnCase
 
       alias BorutaWeb.Router.Helpers, as: Routes
 
@@ -46,5 +47,28 @@ defmodule BorutaWeb.ConnCase do
     end
 
     {:ok, conn: Phoenix.ConnTest.build_conn()}
+  end
+
+  def with_authenticated_user(context) do
+    %URI{port: port} =
+      URI.parse(
+        Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2][
+          :site
+        ]
+      )
+    bypass = Bypass.open(port: port)
+    Bypass.up(bypass)
+
+    introspected_token = %{
+      "active" => true,
+      "sub" => "sub",
+      "scope" => context[:scope] || "",
+      "username" => "username@test.test"
+    }
+
+    Bypass.stub(bypass, "POST", "/oauth/introspect", fn conn ->
+      Plug.Conn.resp(conn, 200, Jason.encode!(introspected_token))
+    end)
+    [bypass: bypass, introspected_token: introspected_token]
   end
 end

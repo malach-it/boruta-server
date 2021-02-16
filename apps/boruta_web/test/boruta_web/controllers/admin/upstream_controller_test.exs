@@ -12,7 +12,7 @@ defmodule BorutaWeb.Admin.UpstreamControllerTest do
     port: 7777
   }
   @update_attrs %{
-    host: "host.update",
+    host: "host.update"
   }
   @invalid_attrs %{
     host: nil
@@ -36,10 +36,15 @@ defmodule BorutaWeb.Admin.UpstreamControllerTest do
     setup %{conn: conn} do
       token = insert(:token, type: "access_token", scope: "upstreams:manage:all")
       client = insert(:client)
-      conn = conn
+
+      conn =
+        conn
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn, client: client}
+
+      {:ok, conn: conn, client: client, scope: "upstreams:manage:all"}
     end
+
+    setup :with_authenticated_user
 
     test "lists all upstreams", %{conn: conn} do
       conn = get(conn, Routes.admin_upstream_path(conn, :index))
@@ -51,20 +56,19 @@ defmodule BorutaWeb.Admin.UpstreamControllerTest do
     setup %{conn: conn} do
       token = insert(:token, type: "access_token", scope: "upstreams:manage:all")
       client = insert(:client)
-      conn = conn
+
+      conn =
+        conn
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn, client: client}
+
+      {:ok, conn: conn, client: client, scope: "upstreams:manage:all"}
     end
+
+    setup :with_authenticated_user
 
     test "renders upstream when data is valid", %{conn: conn} do
       conn = post(conn, Routes.admin_upstream_path(conn, :create), upstream: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
-
-      conn = get(conn, Routes.admin_upstream_path(conn, :show, id))
-
-      assert %{
-        "id" => _id
-      } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
@@ -78,24 +82,30 @@ defmodule BorutaWeb.Admin.UpstreamControllerTest do
       upstream = fixture(:upstream)
       token = insert(:token, type: "access_token", scope: "upstreams:manage:all")
       client = insert(:client)
-      conn = conn
+
+      conn =
+        conn
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn, client: client, upstream: upstream}
+
+      {:ok, conn: conn, client: client, upstream: upstream, scope: "upstreams:manage:all"}
     end
 
-    test "renders upstream when data is valid", %{conn: conn, upstream: %Upstream{id: id} = upstream} do
-      conn = put(conn, Routes.admin_upstream_path(conn, :update, upstream), upstream: @update_attrs)
+    setup :with_authenticated_user
+
+    test "renders upstream when data is valid", %{
+      conn: conn,
+      upstream: %Upstream{id: id} = upstream
+    } do
+      conn =
+        put(conn, Routes.admin_upstream_path(conn, :update, upstream), upstream: @update_attrs)
+
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
-
-      conn = get(conn, Routes.admin_upstream_path(conn, :show, id))
-
-      assert %{
-        "id" => _id
-      } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn, upstream: upstream} do
-      conn = put(conn, Routes.admin_upstream_path(conn, :update, upstream), upstream: @invalid_attrs)
+      conn =
+        put(conn, Routes.admin_upstream_path(conn, :update, upstream), upstream: @invalid_attrs)
+
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -105,18 +115,23 @@ defmodule BorutaWeb.Admin.UpstreamControllerTest do
       upstream = fixture(:upstream)
       token = insert(:token, type: "access_token", scope: "upstreams:manage:all")
       client = insert(:client)
-      conn = conn
+
+      conn =
+        conn
         |> put_req_header("authorization", "Bearer #{token.value}")
-      {:ok, conn: conn, client: client, upstream: upstream}
+
+      {:ok, conn: conn, client: client, upstream: upstream, scope: "upstreams:manage:all"}
     end
+
+    setup :with_authenticated_user
 
     test "deletes chosen upstream", %{conn: conn, upstream: upstream} do
       conn = delete(conn, Routes.admin_upstream_path(conn, :delete, upstream))
       assert response(conn, 204)
 
-      assert_error_sent 404, fn ->
+      assert_error_sent(404, fn ->
         get(conn, Routes.admin_upstream_path(conn, :show, upstream))
-      end
+      end)
     end
   end
 end

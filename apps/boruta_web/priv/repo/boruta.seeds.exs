@@ -44,7 +44,7 @@ import Ecto.Query
 
 with {:ok, client} <- %Boruta.Ecto.Client{} |> Boruta.Ecto.Client.create_changeset(%{
   redirect_uris: [
-    "#{System.get_env("VUE_APP_BORUTA_BASE_URL", "https://noadmin.host")}/admin/oauth-callback"
+    "#{System.get_env("VUE_APP_BORUTA_BASE_URL", "http://localhost:4001")}/admin/oauth-callback"
   ],
   authorize_scope: false,
   access_token_ttl: 3600,

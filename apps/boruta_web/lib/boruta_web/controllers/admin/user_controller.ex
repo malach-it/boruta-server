@@ -1,12 +1,14 @@
 defmodule BorutaWeb.Admin.UserController do
   use BorutaWeb, :controller
 
-  alias Boruta.Oauth.ResourceOwner
-  alias Boruta.Oauth.Token
+  import BorutaWeb.Authorization, only: [
+    authorize: 2
+  ]
+
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
 
-  plug BorutaWeb.AuthorizationPlug, ["users:manage:all"]
+  plug :authorize, ["users:manage:all"]
 
   action_fallback BorutaWeb.FallbackController
 
@@ -21,9 +23,9 @@ defmodule BorutaWeb.Admin.UserController do
   end
 
   def current(conn, _) do
-    %Token{resource_owner: %ResourceOwner{sub: sub}} = conn.assigns[:token]
-    user = Accounts.get_user!(sub)
-    render(conn, "show.json", user: user)
+    %{"sub" => sub, "username" => username} = conn.assigns[:introspected_token]
+    user = %Accounts.User{id: sub, email: username}
+    render(conn, "current.json", user: user)
   end
 
   def update(conn, %{"id" => id, "user" => %{"authorized_scopes" => scopes}}) do

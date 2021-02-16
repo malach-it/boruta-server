@@ -1,10 +1,14 @@
 defmodule BorutaWeb.Admin.ScopeController do
   use BorutaWeb, :controller
 
+  import BorutaWeb.Authorization, only: [
+    authorize: 2
+  ]
+
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Scope
 
-  plug BorutaWeb.AuthorizationPlug, ["scopes:manage:all"]
+  plug :authorize, ["scopes:manage:all"]
 
   action_fallback BorutaWeb.FallbackController
 
