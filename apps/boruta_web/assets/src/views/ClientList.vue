@@ -12,6 +12,8 @@
           </div>
           <p><strong>Client ID:</strong> {{ client.id }}</p>
           <p><strong>Client secret:</strong> {{ client.secret }}</p>
+          <p><strong>Public key:</strong> </p>
+          <pre>{{ client.public_key }}</pre>
           <p><strong>Client redirect URIs:</strong> {{ client.redirect_uris.map(({ uri }) => uri).join(', ') }}</p>
           <p v-if="client.authorize_scope">
             <span v-for="scope in client.authorized_scopes" class="ui olive label" :key="scope.model.id">

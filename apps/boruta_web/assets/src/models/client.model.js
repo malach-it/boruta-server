@@ -18,6 +18,7 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   pkce: function ({ pkce }) { this.pkce = pkce },
+  public_key: function ({ public_key }) { this.public_key = public_key },
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
   secret: function ({ secret }) { this.secret = secret },
