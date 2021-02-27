@@ -66,7 +66,8 @@ deploy:
   - apt-get update
   - apt-get install -y helm
   - pip3 install --upgrade setuptools pip
-  - pip3 install ansible pyhelm grpcio requests openshift
+  # NOTE fix openshift and kubernetes versions (https://github.com/ansible-collections/community.kubernetes/issues/273)
+  - pip3 install ansible pyhelm grpcio requests openshift~=0.11.0 kubernetes~=11.0.0
   - ansible-galaxy collection install community.general
   - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
   - curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
