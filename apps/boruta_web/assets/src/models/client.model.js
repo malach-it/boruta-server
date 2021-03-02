@@ -17,6 +17,7 @@ const defaults = {
 
 const assign = {
   id: function ({ id }) { this.id = id },
+  name: function ({ name }) { this.name = name },
   pkce: function ({ pkce }) { this.pkce = pkce },
   public_key: function ({ public_key }) { this.public_key = public_key },
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
@@ -99,10 +100,11 @@ class Client {
   }
 
   get serialized () {
-    const { id, secret, redirect_uris, authorize_scope, authorized_scopes, grantTypes, access_token_ttl, authorization_code_ttl, pkce } = this
+    const { id, name, secret, redirect_uris, authorize_scope, authorized_scopes, grantTypes, access_token_ttl, authorization_code_ttl, pkce } = this
 
     return {
       id,
+      name,
       secret,
       redirect_uris: redirect_uris.map(({ uri }) => uri),
       authorize_scope,

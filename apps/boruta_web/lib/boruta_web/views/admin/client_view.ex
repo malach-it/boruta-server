@@ -13,6 +13,7 @@ defmodule BorutaWeb.Admin.ClientView do
   def render("client.json", %{client: client}) do
     %{
       id: client.id,
+      name: client.name,
       secret: client.secret,
       redirect_uris: client.redirect_uris,
       authorize_scope: client.authorize_scope,
