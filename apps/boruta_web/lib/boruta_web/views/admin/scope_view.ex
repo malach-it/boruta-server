@@ -13,6 +13,7 @@ defmodule BorutaWeb.Admin.ScopeView do
   def render("scope.json", %{scope: scope}) do
     %{id: scope.id,
       name: scope.name,
+      label: scope.label,
       public: scope.public}
   end
 end

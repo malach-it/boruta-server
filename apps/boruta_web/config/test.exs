@@ -5,6 +5,11 @@ config :boruta_web, BorutaWeb.Endpoint,
   server: false,
   secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
 
+config :boruta_identity, BorutaIdentityWeb.Endpoint,
+  http: [port: 4003],
+  server: false,
+  secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
+
 config :boruta_identity, BorutaIdentity.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",

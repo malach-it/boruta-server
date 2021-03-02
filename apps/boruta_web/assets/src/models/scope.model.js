@@ -9,6 +9,7 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
+  label: function ({ label }) { this.label = label },
   edit: function ({ edit }) { this.edit = edit },
   public: function ({ public: e }) { this.public = e }
 }
@@ -58,10 +59,11 @@ class Scope {
   }
 
   get serialized () {
-    const { id, name, public: p } = this
+    const { id, label, name, public: p } = this
 
     return {
       id,
+      label,
       name,
       public: p
     }
