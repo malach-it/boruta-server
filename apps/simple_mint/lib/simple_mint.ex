@@ -26,7 +26,7 @@ defmodule SimpleMint do
   def post(uri, data, opts) do
     %URI{scheme: scheme, host: host, port: port, path: path} = URI.parse(uri)
     with {:ok, conn} <- Mint.HTTP.connect(String.to_atom(scheme), host, port),
-         {:ok, conn, request_ref} <- Mint.HTTP.request(conn, "POST", path, opts[:headers] || [], Jason.encode!(data)) do
+         {:ok, conn, _request_ref} <- Mint.HTTP.request(conn, "POST", path, opts[:headers] || [], Jason.encode!(data)) do
       receive do
         message ->
           case Mint.HTTP.stream(conn, message) do

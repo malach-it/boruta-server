@@ -5,6 +5,41 @@ defmodule BorutaIdentityWeb.ErrorHelpers do
 
   use Phoenix.HTML
 
+  def errors_tag(errors) do
+    content_tag(
+      :ul,
+      Enum.map(errors, &error_tag/1)
+    )
+  end
+
+  def error_tag({field, ["" <> _first | _rest] = messages}) do
+    content_tag(
+      :li,
+      [
+        content_tag(
+          :strong,
+          Atom.to_string(field)
+        ),
+        content_tag(:span, " "),
+        content_tag(:span, Enum.join(messages, ", "))
+      ]
+    )
+  end
+
+  def error_tag({field, errors}) when is_list(errors) do
+    Enum.map(errors, fn
+      %{} = errors ->
+        [
+          content_tag(
+            :strong,
+            Atom.to_string(field)
+          ),
+          content_tag(:span, " "),
+          Enum.map(errors, fn error -> error_tag(error) end)
+        ]
+    end)
+  end
+
   @doc """
   Generates tag for inlined form input errors.
   """

@@ -25,8 +25,6 @@ defmodule BorutaWeb.Metrics do
   alias BorutaWeb.Metrics.Producer
   alias BorutaWeb.MetricsChannel
 
-  @attach_polling_delay 1_000
-
   def start_link(_args) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end

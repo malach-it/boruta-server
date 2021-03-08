@@ -68,7 +68,7 @@ defmodule BorutaWeb.Admin.ClientControllerTest do
 
     test "renders client when data is valid", %{conn: conn} do
       create = post(conn, Routes.admin_client_path(conn, :create), client: @create_attrs)
-      assert %{"id" => id} = json_response(create, 201)["data"]
+      assert %{"id" => _id} = json_response(create, 201)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do

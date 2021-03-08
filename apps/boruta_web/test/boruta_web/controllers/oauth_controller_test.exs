@@ -5,6 +5,7 @@ defmodule BorutaWeb.OauthControllerTest do
   import BorutaIdentity.AccountsFixtures
 
   alias Boruta.Ecto.Token
+  alias BorutaIdentity.Accounts
 
   setup %{conn: conn} do
     {:ok, conn: conn}
@@ -174,9 +175,10 @@ defmodule BorutaWeb.OauthControllerTest do
       resource_owner = user_fixture()
       redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
+      scope = insert(:scope, public: true)
 
       {:ok,
-       conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
+        conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner, scope: scope}
     end
 
     # TODO test different validation cases
@@ -306,6 +308,65 @@ defmodule BorutaWeb.OauthControllerTest do
       assert expires_in
       assert state == given_state
     end
+
+    test "renders preauthorize with scope", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri,
+      resource_owner: resource_owner,
+      scope: scope
+    } do
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
+
+      conn =
+        get(
+          conn,
+          Routes.oauth_path(conn, :authorize, %{
+            response_type: "token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: scope.name
+          })
+        )
+
+      assert html_response(conn, 200) =~ ~r/#{scope.name}/
+      assert html_response(conn, 200) =~ ~r/Consent/
+    end
+
+    test "redirects to redirect_uri with consented scope", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri,
+      resource_owner: resource_owner,
+      scope: scope
+    } do
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
+      Accounts.consent(resource_owner, %{client_id: client.id, scopes: [scope.name]})
+
+      conn =
+        get(
+          conn,
+          Routes.oauth_path(conn, :authorize, %{
+            response_type: "token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: scope.name
+          })
+        )
+
+      [_, access_token, expires_in] =
+        Regex.run(
+          ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)/,
+          redirected_to(conn)
+        )
+
+      assert access_token
+      assert expires_in
+    end
   end
 
   describe "password grant" do
@@ -355,11 +416,14 @@ defmodule BorutaWeb.OauthControllerTest do
     setup %{conn: conn} do
       resource_owner = user_fixture()
       client = insert(:client)
+      scope = insert(:scope, public: true)
 
       {:ok,
        conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded"),
        client: client,
-       resource_owner: resource_owner}
+        resource_owner: resource_owner,
+        scope: scope
+      }
     end
 
     test "redirects to redirect_uri with errors in query if redirect_uri is invalid", %{
@@ -452,6 +516,64 @@ defmodule BorutaWeb.OauthControllerTest do
 
       assert code
       assert state == given_state
+    end
+
+    test "renders preauthorize with scope", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner,
+      scope: scope
+    } do
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
+      redirect_uri = List.first(client.redirect_uris)
+
+      conn =
+        get(
+          conn,
+          Routes.oauth_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: scope.name
+          })
+        )
+
+      assert html_response(conn, 200) =~ ~r/#{scope.name}/
+      assert html_response(conn, 200) =~ ~r/Consent/
+    end
+
+    test "redirects to redirect_uri with consented scope", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner,
+      scope: scope
+    } do
+      conn = conn
+             |> log_in(resource_owner)
+             |> init_test_session(session_chosen: true)
+      redirect_uri = List.first(client.redirect_uris)
+      Accounts.consent(resource_owner, %{client_id: client.id, scopes: [scope.name]})
+
+      conn =
+        get(
+          conn,
+          Routes.oauth_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: scope.name
+          })
+        )
+
+      [_, code] =
+        Regex.run(
+          ~r/#{redirect_uri}\?code=(.+)/,
+          redirected_to(conn)
+        )
+
+      assert code
     end
   end
 
