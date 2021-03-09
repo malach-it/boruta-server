@@ -1,8 +1,9 @@
 defmodule BorutaIdentity.AccountsTest do
   use BorutaIdentity.DataCase
 
-  alias BorutaIdentity.Accounts
   import BorutaIdentity.AccountsFixtures
+
+  alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
 
   @tag :skip
@@ -543,5 +544,87 @@ defmodule BorutaIdentity.AccountsTest do
 
   @tag :skip
   describe "get_user_scopes/1" do
+  end
+
+  describe "consent/2" do
+    setup do
+      user = user_fixture()
+
+      {:ok, user: user}
+    end
+
+    test "returns an error with invalid params", %{user: user} do
+      scopes = []
+      client_id = nil
+
+      case Accounts.consent(user, %{"client_id" => client_id, "scopes" => scopes}) do
+        %Ecto.Changeset{} -> assert true
+      end
+    end
+
+    test "adds user consent for a given client_id", %{user: user} do
+      scopes = ["scope:a", "scope:b"]
+      client_id = "client_id"
+
+      {:ok, %User{consents: [consent]}} =
+        Accounts.consent(user, %{"client_id" => client_id, "scopes" => scopes})
+
+      assert consent.client_id == client_id
+      assert consent.scopes == scopes
+
+      %User{consents: [consent]} = Repo.one(User) |> Repo.preload(:consents)
+
+      assert consent.client_id == client_id
+      assert consent.scopes == scopes
+    end
+  end
+
+  describe "consented?/2" do
+    setup do
+      user = user_fixture()
+      client_id = SecureRandom.uuid()
+      redirect_uri = "http://test.host"
+
+      oauth_request = %{
+        query_params: %{
+          "scope" => "",
+          "response_type" => "token",
+          "client_id" => client_id,
+          "redirect_uri" => redirect_uri
+        }
+      }
+
+      oauth_request_with_scope = %{
+        query_params: %{
+          "scope" => "scope:a scope:b",
+          "response_type" => "token",
+          "client_id" => client_id,
+          "redirect_uri" => redirect_uri
+        }
+      }
+
+      {:ok, user: user, oauth_request: oauth_request, oauth_request_with_scope: oauth_request_with_scope}
+    end
+
+    test "returns true with empty scope", %{user: user, oauth_request: oauth_request} do
+      assert Accounts.consented?(user, oauth_request) == true
+    end
+
+    test "returns false when scopes are not consented", %{
+      user: user,
+      oauth_request_with_scope: oauth_request
+    } do
+      assert Accounts.consented?(user, oauth_request) == false
+    end
+
+    test "returns true when scopes are consented", %{user: user, oauth_request_with_scope: oauth_request} do
+      scopes = String.split(oauth_request[:query_params]["scope"], " ")
+      client_id = oauth_request[:query_params]["client_id"]
+
+      {:ok, %User{consents: [_consent]}} =
+        Accounts.consent(user, %{client_id: client_id, scopes: scopes})
+
+      assert Accounts.consented?(user, oauth_request) == true
+    end
   end
 end

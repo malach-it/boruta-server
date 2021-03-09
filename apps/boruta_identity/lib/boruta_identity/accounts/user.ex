@@ -2,20 +2,35 @@ defmodule BorutaIdentity.Accounts.User do
   @moduledoc false
 
   use Ecto.Schema
+
   import Ecto.Changeset
 
+  alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.Repo
+
+  @type t :: %__MODULE__{
+          email: String.t(),
+          password: String.t(),
+          hashed_password: String.t(),
+          confirmed_at: NaiveDateTime.t(),
+          authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
+          consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
+          inserted_at: DateTime.t(),
+          updated_at: DateTime.t()
+        }
 
   @derive {Inspect, except: [:password]}
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "users" do
-    field :email, :string
-    field :password, :string, virtual: true
-    field :hashed_password, :string
-    field :confirmed_at, :naive_datetime
+    field(:email, :string)
+    field(:password, :string, virtual: true)
+    field(:hashed_password, :string)
+    field(:confirmed_at, :naive_datetime)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
+    has_many(:consents, Consent, on_replace: :delete)
 
     timestamps()
   end
@@ -116,6 +131,13 @@ defmodule BorutaIdentity.Accounts.User do
   def confirm_changeset(user) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     change(user, confirmed_at: now)
+  end
+
+  def consent_changeset(user, attrs) do
+    user
+    |> Repo.preload(:consents)
+    |> cast(attrs, [])
+    |> cast_assoc(:consents, with: &Consent.changeset/2)
   end
 
   @doc """

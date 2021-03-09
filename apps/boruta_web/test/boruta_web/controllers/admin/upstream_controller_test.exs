@@ -68,7 +68,7 @@ defmodule BorutaWeb.Admin.UpstreamControllerTest do
 
     test "renders upstream when data is valid", %{conn: conn} do
       conn = post(conn, Routes.admin_upstream_path(conn, :create), upstream: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+      assert %{"id" => _id} = json_response(conn, 201)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do

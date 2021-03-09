@@ -38,20 +38,21 @@ defmodule BorutaIdentity.MixProject do
   defp deps do
     [
       {:argon2_elixir, "~> 2.0"},
-      {:phoenix, "~> 1.5.3"},
-      {:phoenix_pubsub, "~> 2.0"},
-      {:phoenix_ecto, "~> 4.1"},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
       {:ecto_sql, "~> 3.4"},
-      {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:telemetry_metrics, "~> 0.4"},
-      {:telemetry_poller, "~> 0.4"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
+      {:phoenix, "~> 1.5.3"},
+      {:phoenix_ecto, "~> 4.1"},
+      {:phoenix_html, "~> 2.11"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:phoenix_pubsub, "~> 2.0"},
+      {:phx_gen_auth, "~> 0.6", only: [:dev], runtime: false},
       {:plug_cowboy, "~> 2.0"},
+      {:postgrex, ">= 0.0.0"},
       {:secure_random, "~> 0.5"},
-      {:phx_gen_auth, "~> 0.6", only: [:dev], runtime: false}
+      {:telemetry_metrics, "~> 0.4"},
+      {:telemetry_poller, "~> 0.4"}
     ]
   end
 

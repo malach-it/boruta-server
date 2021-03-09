@@ -9,8 +9,8 @@
   </head>
   <body>
     <header>
-      <%= if get_flash(@conn, :info) do %><p class="ui success center aligned large message segment" role="alert"><%= get_flash(@conn, :info) %></p><% end %>
-      <%= if get_flash(@conn, :error) do %><p class="ui error large center aligned message segment" role="alert"><%= get_flash(@conn, :error) %></p><% end %>
+      <%= if get_flash(@conn, :info) do %><div class="ui success center aligned large message segment" role="alert"><%= get_flash(@conn, :info) %></div><% end %>
+      <%= if get_flash(@conn, :error) do %><div class="ui error large center aligned message segment" role="alert"><%= get_flash(@conn, :error) %></div><% end %>
     </header>
     <main class="main" style="padding: 20px 0;height: 100%;display: flex;align-items: center;justify-content: center;">
       <%= @inner_content %>

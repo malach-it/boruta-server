@@ -7,7 +7,13 @@
           <div v-if="scope.edit">
             <form v-on:submit.prevent="saveScope(scope)" class="ui form">
               <div class="ui stackable grid">
-                <div class="eight wide column">
+                <div class="four wide column">
+                  <div class="ui mini input" :class="{ 'error': scope.errors && scope.errors.label }">
+                    <input type="text" v-model="scope.label" placeholder="I am a scope label">
+                    <em v-if="scope.errors && scope.errors.label" class="error-message">{{ scope.errors.label[0] }}</em>
+                  </div>
+                </div>
+                <div class="four wide column">
                   <div class="ui mini input" :class="{ 'error': scope.errors && scope.errors.name }">
                     <input type="text" v-model="scope.name" placeholder="iam:a:scope">
                     <em v-if="scope.errors && scope.errors.name" class="error-message">{{ scope.errors.name[0] }}</em>
@@ -28,7 +34,10 @@
           </div>
           <div v-else>
             <div class="ui stackable grid">
-              <div class="eight wide column">
+              <div class="four wide column">
+                <strong>{{ scope.label }}</strong>
+              </div>
+              <div class="four wide column">
                 <span class="ui basic olive label">{{ scope.name }}</span>
               </div>
               <div class="five wide column">

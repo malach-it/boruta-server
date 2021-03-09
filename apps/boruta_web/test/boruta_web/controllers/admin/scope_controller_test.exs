@@ -81,7 +81,7 @@ defmodule BorutaWeb.Admin.ScopeControllerTest do
     test "renders scope when data is valid", %{conn: conn} do
       conn = post(conn, Routes.admin_scope_path(conn, :create), scope: @create_attrs)
 
-      assert %{"id" => id, "name" => "some:name", "public" => true} =
+      assert %{"id" => _id, "name" => "some:name", "public" => true} =
                json_response(conn, 201)["data"]
     end
 

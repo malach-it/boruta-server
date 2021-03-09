@@ -5,7 +5,9 @@ defmodule BorutaIdentity.Accounts do
 
   import Ecto.Query, warn: false
 
-  alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserNotifier, UserToken}
+  alias Boruta.Oauth.Request
+  alias Boruta.Oauth.Scope
+  alias BorutaIdentity.Accounts.{Consent, User, UserAuthorizedScope, UserNotifier, UserToken}
   alias BorutaIdentity.Repo
 
   ## Database getters
@@ -120,7 +122,7 @@ defmodule BorutaIdentity.Accounts do
   end
 
   def delete_user(user_id) do
-    Repo.delete_all(from u in User, where: u.id == ^user_id)
+    Repo.delete_all(from(u in User, where: u.id == ^user_id))
   end
 
   ## Settings
@@ -243,20 +245,23 @@ defmodule BorutaIdentity.Accounts do
   end
 
   @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::
-    {:ok, %User{}} | {:error, Ecto.Changeset.t()}
+          {:ok, %User{}} | {:error, Ecto.Changeset.t()}
   def update_user_authorized_scopes(%User{id: user_id} = user, scopes) do
-    Repo.delete_all(from s in UserAuthorizedScope, where: s.user_id == ^user_id)
+    Repo.delete_all(from(s in UserAuthorizedScope, where: s.user_id == ^user_id))
 
-    case Enum.reduce(scopes, Ecto.Multi.new(), fn (attrs, multi) ->
-      changeset = UserAuthorizedScope.changeset(
-        %UserAuthorizedScope{},
-        Map.put(attrs, "user_id", user_id)
-      )
-      Ecto.Multi.insert(multi, "scope_-#{SecureRandom.uuid}", changeset)
-    end)
-    |> Repo.transaction() do
+    case Enum.reduce(scopes, Ecto.Multi.new(), fn attrs, multi ->
+           changeset =
+             UserAuthorizedScope.changeset(
+               %UserAuthorizedScope{},
+               Map.put(attrs, "user_id", user_id)
+             )
+
+           Ecto.Multi.insert(multi, "scope_-#{SecureRandom.uuid()}", changeset)
+         end)
+         |> Repo.transaction() do
       {:ok, _result} ->
-      {:ok, Repo.preload(user, :authorized_scopes)}
+        {:ok, Repo.preload(user, :authorized_scopes)}
+
       {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
         {:error, changeset}
     end
@@ -401,6 +406,39 @@ defmodule BorutaIdentity.Accounts do
   ## Scopes
 
   def get_user_scopes(user_id) do
-    Repo.all(from u in UserAuthorizedScope, where: u.user_id == ^user_id)
+    Repo.all(from(u in UserAuthorizedScope, where: u.user_id == ^user_id))
   end
+
+  ## Consent
+
+  @spec consent(user :: User.t(), attrs :: map()) ::
+          {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}
+  def consent(user, attrs) do
+    user
+    |> User.consent_changeset(%{"consents" => [attrs]})
+    |> Repo.update()
+  end
+
+  def consented?(user, conn) do
+    with {:ok, %{client_id: client_id, scope: scope}} <-
+           Request.authorize_request(conn, user),
+         true <- consented?(user, client_id, Scope.split(scope)) do
+      true
+    else
+      _ -> false
+    end
+  end
+
+  def consented?(%User{}, _client_id, []), do: true
+
+  def consented?(%User{} = user, client_id, scopes) do
+    %User{consents: consents} = Repo.preload(user, :consents)
+
+    Enum.any?(consents, fn %Consent{client_id: consent_client_id, scopes: consent_scopes} ->
+      consent_client_id == client_id &&
+        Enum.empty?(scopes -- consent_scopes)
+    end)
+  end
+
+  def consented?(_, _, _), do: false
 end

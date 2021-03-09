@@ -11,6 +11,10 @@
         <form class="ui form" v-on:submit.prevent="updateClient()">
           <div class="ui big segment">
             <div class="field">
+              <label>Name</label>
+              <input v-model="client.name" placeholder="Super client" />
+            </div>
+            <div class="field">
               <label>Access token TTL (seconds)</label>
               <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
             </div>

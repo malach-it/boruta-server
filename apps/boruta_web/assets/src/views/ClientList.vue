@@ -10,6 +10,7 @@
               class="ui tiny blue button">edit</router-link>
             <a v-on:click="deleteClient(client)" class="ui tiny red button">delete</a>
           </div>
+          <p><strong>Name:</strong> {{ client.name }}</p>
           <p><strong>Client ID:</strong> {{ client.id }}</p>
           <p><strong>Client secret:</strong> {{ client.secret }}</p>
           <p><strong>Public key:</strong> </p>
