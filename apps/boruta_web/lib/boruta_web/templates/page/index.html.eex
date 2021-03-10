@@ -21,9 +21,10 @@
           <li><a href="https://tools.ietf.org/html/rfc6749">RFC 6749 - The OAuth 2.0 Authorization Framework</a></li>
           <li><a href="https://tools.ietf.org/html/rfc7662">RFC 7662 - OAuth 2.0 Token Introspection</a></li>
           <li><a href="https://tools.ietf.org/html/rfc7009">RFC 7009 - OAuth 2.0 Token Revocation</a></li>
+          <li><a href="https://tools.ietf.org/html/rfc7636">RFC 7636 - Proof Key for Code Exchange by OAuth Public Clients</a></li>
         </ul>
         </p>
-        <p>The core of this project is open source, the code is available <a href="https://github.com/patatoid/boruta-core">here</a>
+        <p>The core of this project is open source, the code is available <a href="https://gitlab.com/patatoid/boruta_auth">here</a>
 
         <hr />
         <div class="ui message">
@@ -48,10 +49,10 @@
         <div class="ui message">
           <div class="header">A cURL example</div>
           <pre>
-  curl -X POST \
-    https://boruta.herokuapp.com/oauth/token \
-    -H 'Content-Type: application/x-www-form-urlencoded' \
-    -d 'client_id=6a2f41a3-c54c-fce8-32d2-0324e1c32e20&client_secret=777&grant_type=client_credentials'
+curl -X POST \
+  http://oauth.boruta.patatoid.fr/oauth/token \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'client_id=6a2f41a3-c54c-fce8-32d2-0324e1c32e20&client_secret=777&grant_type=client_credentials'
           </pre>
         </div>
       </div>
