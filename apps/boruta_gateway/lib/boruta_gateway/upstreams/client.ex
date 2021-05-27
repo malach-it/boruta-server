@@ -74,7 +74,7 @@ defmodule BorutaGateway.Upstreams.Client do
     conn = fetch_query_params(conn)
     query = URI.encode_query(conn.query_params)
 
-    uri = %URI{host: host, path: path, port: port, query: query, scheme: scheme}
+    uri = %URI{authority: host, host: host, path: path, port: port, query: query, scheme: scheme}
     URI.to_string(uri)
   end
 end
