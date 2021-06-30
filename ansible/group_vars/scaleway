@@ -7,5 +7,7 @@ gateway_host: gateway.boruta.patatoid.fr
 
 admin_client_id: 6a2f41a3-c54c-fce8-32d2-0324e1c32e20
 admin_client_secret: "777"
+admin_oauth_host: http://oauth.boruta.patatoid.fr
+
 boruta_base_url: http://admin.boruta.patatoid.fr
 vue_app_boruta_base_socket_url: ws://admin.boruta.patatoid.fr
