@@ -7,9 +7,11 @@ COPY ./apps/boruta_web/assets /app
 RUN npm ci
 RUN npm run build
 
-FROM elixir:1.10.4-alpine AS builder
+FROM elixir:1.10.4 AS builder
 
-RUN apk add curl-dev openssl-dev libevent-dev git make build-base
+ENV MIX_ENV=prod
+
+RUN apt-get install -y libcurl4-openssl-dev libssl-dev libevent-dev
 
 RUN mix local.hex --force
 RUN mix local.rebar --force
@@ -19,18 +21,19 @@ COPY . .
 COPY --from=assets /priv ./apps/boruta_web/priv/
 RUN rm -rf deps
 RUN mix do clean, deps.get
+RUN mix compile
 
 WORKDIR /app/apps/boruta_web
-RUN MIX_ENV=prod mix phx.digest
+RUN mix phx.digest
 WORKDIR /app/apps/boruta_identity
-RUN MIX_ENV=prod mix phx.digest
+RUN mix phx.digest
 
 WORKDIR /app
-RUN MIX_ENV=prod mix release --force --overwrite
+RUN mix release --force --overwrite
 
-FROM elixir:1.10.4-alpine
+FROM elixir:1.10.4
 
-RUN apk add curl-dev openssl-dev libevent-dev
+RUN apt-get install -y libcurl4-openssl-dev libssl-dev libevent-dev
 
 WORKDIR /app
 
