@@ -42,10 +42,10 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
-  def render("jwks.json", %{client: %Boruta.Ecto.Client{public_key: public_key}}) do
+  def render("jwks.json", %{client: %Boruta.Ecto.Client{id: client_id, public_key: public_key}}) do
     {_type, jwk} = public_key |> :jose_jwk.from_pem() |> :jose_jwk.to_map()
     %{
-      keys: [jwk]
+      keys: [Map.put(jwk, :kid, client_id)]
     }
   end
 
