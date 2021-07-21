@@ -71,30 +71,32 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %AuthorizeResponse{
           type: type,
           redirect_uri: redirect_uri,
-          value: value,
+          access_token: access_token,
+          code: code,
+          id_token: id_token,
           expires_in: expires_in,
           state: state
         }
       ) do
     query =
-      case {type, state} do
-        {"access_token", nil} ->
-          URI.encode_query(%{access_token: value, expires_in: expires_in})
-
-        {"access_token", state} ->
-          URI.encode_query(%{access_token: value, expires_in: expires_in, state: state})
-
-        {"code", nil} ->
-          URI.encode_query(%{code: value})
-
-        {"code", state} ->
-          URI.encode_query(%{code: value, state: state})
-      end
+      %{
+        code: code,
+        id_token: id_token,
+        access_token: access_token,
+        expires_in: expires_in,
+        state: state
+      }
+      |> Enum.map(fn {param_type, value} ->
+        value && {param_type, value}
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> URI.encode_query()
 
     url =
       case type do
-        "access_token" -> "#{redirect_uri}##{query}"
-        "code" -> "#{redirect_uri}?#{query}"
+        :token -> "#{redirect_uri}##{query}"
+        :hybrid -> "#{redirect_uri}##{query}"
+        :code -> "#{redirect_uri}?#{query}"
       end
 
     conn

@@ -36,14 +36,12 @@ defmodule BorutaWeb.ConnCase do
   setup tags do
     :ok = Sandbox.checkout(BorutaIdentity.Repo)
     :ok = Sandbox.checkout(BorutaWeb.Repo)
-    :ok = Sandbox.checkout(BorutaGateway.Repo)
 
     :ok = Scopes.invalidate(:public)
 
     unless tags[:async] do
       Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
       Sandbox.mode(BorutaWeb.Repo, {:shared, self()})
-      Sandbox.mode(BorutaGateway.Repo, {:shared, self()})
     end
 
     {:ok, conn: Phoenix.ConnTest.build_conn()}

@@ -36,4 +36,11 @@ defmodule BorutaWeb.ResourceOwners do
 
     Enum.map(scopes, fn (%{id: id, name: name}) -> %Scope{id: id, name: name} end)
   end
+
+  @impl Boruta.Oauth.ResourceOwners
+  def claims(sub, _scope) do
+    with %User{email: email} <- Accounts.get_user(sub) do
+      %{"email" => email}
+    end
+  end
 end

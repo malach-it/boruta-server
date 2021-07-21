@@ -1,7 +1,6 @@
 defmodule BorutaIdentityWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boruta_identity
 
-  # Note Shall be same config as BorutaWeb.Endpoint
   @session_options [
     store: :cookie,
     key: "_boruta_web_key",
