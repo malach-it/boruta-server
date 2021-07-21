@@ -42,6 +42,7 @@ defmodule BorutaWeb.Router do
 
   get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck)
 
+
   scope "/accounts" do
     pipe_through([:browser, :fetch_current_user])
 
@@ -56,6 +57,10 @@ defmodule BorutaWeb.Router do
     post("/token", TokenController, :token)
     post("/revoke", RevokeController, :revoke)
     post("/introspect", IntrospectController, :introspect)
+  end
+
+  scope "/oauth", BorutaWeb do
+    get "/jwks/:client_id", OpenidController, :jwks
   end
 
   scope "/oauth", BorutaWeb.Oauth do
