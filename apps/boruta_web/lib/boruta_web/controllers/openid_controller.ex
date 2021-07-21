@@ -4,12 +4,13 @@ defmodule BorutaWeb.OpenidController do
   alias BorutaWeb.OauthView
 
   def userinfo(conn, _params) do
-    %{sub: sub} = conn.assigns[:introspected_token]
-    userinfo = ResourceOwner.claims(sub, "")
+    %{"sub" => sub} = conn.assigns[:introspected_token]
 
-    conn
-    |> put_view(OauthView)
-    |> render("userinfo.json", userinfo: %{userinfo|sub: sub})
+    userinfo =
+      BorutaWeb.ResourceOwners.claims(sub)
+      |> Map.put(:sub, sub)
+
+    render(conn, "userinfo.json", userinfo: userinfo)
   end
 
   def jwks(conn, %{"client_id" => client_id}) do
