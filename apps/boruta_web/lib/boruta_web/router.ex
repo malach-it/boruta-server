@@ -60,7 +60,12 @@ defmodule BorutaWeb.Router do
   end
 
   scope "/oauth", BorutaWeb do
+    pipe_through(:api)
+
     get "/jwks/:client_id", OpenidController, :jwks
+
+    get "/userinfo", OpenidController, :userinfo
+    post "/userinfo", OpenidController, :userinfo
   end
 
   scope "/oauth", BorutaWeb.Oauth do
