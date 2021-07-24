@@ -75,8 +75,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           code: code,
           id_token: id_token,
           expires_in: expires_in,
-          state: state
-        }
+          state: state,
+          token_type: token_type
+        } = response
       ) do
     query =
       %{
@@ -84,7 +85,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         id_token: id_token,
         access_token: access_token,
         expires_in: expires_in,
-        state: state
+        state: state,
+        token_type: token_type
       }
       |> Enum.map(fn {param_type, value} ->
         value && {param_type, value}
