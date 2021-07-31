@@ -133,7 +133,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
 
       [_, access_token, expires_in, state] =
         Regex.run(
-          ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)&state=(.+)/,
+          ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)&state=(.+)&token_type=bearer/,
           redirected_to(conn)
         )
 

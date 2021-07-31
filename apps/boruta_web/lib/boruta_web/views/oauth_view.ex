@@ -1,6 +1,7 @@
 defmodule BorutaWeb.OauthView do
   use BorutaWeb, :view
 
+  alias Boruta.Ecto
   alias BorutaWeb.Token
 
   def render("token.json", %{response: %Boruta.Oauth.TokenResponse{} = response}) do
@@ -51,7 +52,19 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
-  def render("jwks.json", %{client: %Boruta.Ecto.Client{id: client_id, public_key: public_key}}) do
+  def render("jwks.json", %{clients: clients}) do
+    keys = Enum.map(clients, fn (%Ecto.Client{id: client_id, public_key: public_key}) ->
+      {_type, jwk} = public_key |> :jose_jwk.from_pem() |> :jose_jwk.to_map()
+
+      Map.put(jwk, :kid, client_id)
+    end)
+
+    %{
+      keys: keys
+    }
+  end
+
+  def render("jwk.json", %{client: %Ecto.Client{id: client_id, public_key: public_key}}) do
     {_type, jwk} = public_key |> :jose_jwk.from_pem() |> :jose_jwk.to_map()
 
     %{

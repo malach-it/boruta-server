@@ -77,7 +77,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           expires_in: expires_in,
           state: state,
           token_type: token_type
-        } = response
+        }
       ) do
     query =
       %{

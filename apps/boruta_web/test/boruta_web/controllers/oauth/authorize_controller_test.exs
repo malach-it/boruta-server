@@ -29,6 +29,7 @@ defmodule BorutaWeb.AuthorizeControllerTest do
           client_id: client.id,
           redirect_uri: redirect_uri,
           code_challenge: "code challenge",
+          nonce: "",
           state: "state",
           scope: "scope"
         })
