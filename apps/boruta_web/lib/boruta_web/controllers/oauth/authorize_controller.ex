@@ -24,11 +24,24 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       conn,
       current_user,
       session_chosen,
-      Accounts.consented?(current_user, conn)
+      Accounts.consented?(current_user, conn),
+      query_params["prompt"]
     )
   end
 
-  defp authorize_response(conn, %User{} = current_user, true, false) do
+  defp authorize_response(conn, current_user, _, _, "none") do
+    resource_owner =
+      current_user && %ResourceOwner{sub: current_user.id, username: current_user.email}
+
+    conn
+    |> delete_session(:session_chosen)
+    |> Oauth.authorize(
+      resource_owner,
+      __MODULE__
+    )
+  end
+
+  defp authorize_response(conn, %User{} = current_user, true, false, _) do
     conn
     |> Oauth.preauthorize(
       %ResourceOwner{sub: current_user.id, username: current_user.email},
@@ -36,7 +49,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, %User{} = current_user, true, true) do
+  defp authorize_response(conn, %User{} = current_user, true, true, _) do
     conn
     |> delete_session(:session_chosen)
     |> Oauth.authorize(
@@ -45,12 +58,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, %User{}, _, _) do
+  defp authorize_response(conn, %User{}, _, _, _) do
     # TODO a render can be a better choice
     redirect(conn, to: Routes.choose_session_path(conn, :new))
   end
 
-  defp authorize_response(conn, _, _, _) do
+  defp authorize_response(conn, _, _, _, _) do
     redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
   end
 
@@ -107,11 +120,22 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   @impl Boruta.Oauth.AuthorizeApplication
   def authorize_error(
-        %Plug.Conn{} = conn,
-        %Error{status: :unauthorized, error: :invalid_resource_owner}
+        %Plug.Conn{query_params: query_params} = conn,
+        %Error{status: :unauthorized, error: :invalid_resource_owner} = error
       ) do
-    conn
-    |> redirect(to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
+    case query_params["prompt"] do
+      "none" ->
+        authorize_error(conn, %{
+          error
+          | error: :login_required,
+            format: :fragment,
+            redirect_uri: query_params["redirect_uri"]
+        })
+
+      _ ->
+        conn
+        |> redirect(to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
+    end
   end
 
   def authorize_error(

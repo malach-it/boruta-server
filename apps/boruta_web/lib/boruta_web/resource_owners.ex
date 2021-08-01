@@ -16,13 +16,15 @@ defmodule BorutaWeb.ResourceOwners do
       _ -> {:error, "User not found."}
     end
   end
-  def get_by(sub: sub) do
+  def get_by(sub: sub) when not is_nil(sub) do
     case Accounts.get_user(sub) do
       %User{id: id, email: email} ->
         {:ok, %ResourceOwner{sub: id, username: email}}
       nil -> {:error, "User not found."}
     end
   end
+  # TODO investigate nil values
+  def get_by(_), do: {:error, "User not found."}
 
   @impl Boruta.Oauth.ResourceOwners
   def check_password(%ResourceOwner{sub: sub}, password) do
@@ -31,11 +33,13 @@ defmodule BorutaWeb.ResourceOwners do
   end
 
   @impl Boruta.Oauth.ResourceOwners
-  def authorized_scopes(%ResourceOwner{sub: sub}) do
+  def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do
     scopes = Accounts.get_user_scopes(sub)
 
     Enum.map(scopes, fn (%{id: id, name: name}) -> %Scope{id: id, name: name} end)
   end
+  # TODO investigate nil values
+  def authorized_scopes(_), do: []
 
   @impl Boruta.Oauth.ResourceOwners
   def claims(sub, scope) do
