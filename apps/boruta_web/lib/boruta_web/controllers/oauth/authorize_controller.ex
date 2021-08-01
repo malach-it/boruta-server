@@ -138,26 +138,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
-  def authorize_error(
-        conn,
-        %Error{
-          error: error,
-          error_description: error_description,
-          format: format,
-          redirect_uri: redirect_uri
-        }
-      )
+  def authorize_error(conn, %Error{format: format} = error)
       when not is_nil(format) do
-    query = URI.encode_query(%{error: error, error_description: error_description})
-
-    url =
-      case format do
-        :query -> "#{redirect_uri}?#{query}"
-        :fragment -> "#{redirect_uri}##{query}"
-      end
-
     conn
-    |> redirect(external: url)
+    |> redirect(external: Error.redirect_to_url(error))
   end
 
   def authorize_error(
