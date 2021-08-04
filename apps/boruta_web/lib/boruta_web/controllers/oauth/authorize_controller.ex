@@ -25,11 +25,25 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       current_user,
       session_chosen,
       Accounts.consented?(current_user, conn),
-      query_params["prompt"]
+      query_params["prompt"],
+      query_params["request"]
     )
   end
 
-  defp authorize_response(conn, current_user, _, _, "none") do
+  defp authorize_response(%Plug.Conn{query_params: query_params} = conn, _, _, _, _, request) when is_binary(request)do
+    authorize_error(
+        conn,
+        %Error{
+          error: :unsupported_grant_type,
+          error_description: "This server does not support OpenID Connect request objects.",
+          format: :fragment,
+          redirect_uri: query_params["redirect_uri"],
+          state: query_params["state"]
+        }
+      )
+  end
+
+  defp authorize_response(conn, current_user, _, _, "none", _) do
     resource_owner =
       current_user && %ResourceOwner{sub: current_user.id, username: current_user.email}
 
@@ -41,7 +55,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, %User{} = current_user, true, false, _) do
+  defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
     conn
     |> Oauth.preauthorize(
       %ResourceOwner{sub: current_user.id, username: current_user.email},
@@ -49,7 +63,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, %User{} = current_user, true, true, _) do
+  defp authorize_response(conn, %User{} = current_user, true, true, _, _) do
     conn
     |> delete_session(:session_chosen)
     |> Oauth.authorize(
@@ -58,12 +72,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, %User{}, _, _, _) do
+  defp authorize_response(conn, %User{}, _, _, _, _) do
     # TODO a render can be a better choice
     redirect(conn, to: Routes.choose_session_path(conn, :new))
   end
 
-  defp authorize_response(conn, _, _, _, _) do
+  defp authorize_response(conn, _, _, _, _, _) do
     redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
   end
 
