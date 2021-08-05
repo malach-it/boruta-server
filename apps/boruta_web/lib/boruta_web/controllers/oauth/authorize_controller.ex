@@ -1,5 +1,5 @@
-defmodule BorutaWeb.OauthController do
-  @behaviour Boruta.Oauth.Application
+defmodule BorutaWeb.Oauth.AuthorizeController do
+  @behaviour Boruta.Oauth.AuthorizeApplication
 
   use BorutaWeb, :controller
 
@@ -7,57 +7,11 @@ defmodule BorutaWeb.OauthController do
   alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
-  alias Boruta.Oauth.IntrospectResponse
   alias Boruta.Oauth.ResourceOwner
-  alias Boruta.Oauth.TokenResponse
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaWeb.OauthView
-
-  action_fallback(BorutaWeb.FallbackController)
-
-  def introspect(%Plug.Conn{} = conn, _params) do
-    conn |> Oauth.introspect(__MODULE__)
-  end
-
-  @impl Boruta.Oauth.Application
-  def introspect_success(conn, %IntrospectResponse{} = response) do
-    conn
-    |> put_view(OauthView)
-    |> render("introspect.#{get_format(conn)}", response: response)
-  end
-
-  @impl Boruta.Oauth.Application
-  def introspect_error(conn, %Error{
-        status: status,
-        error: error,
-        error_description: error_description
-      }) do
-    conn
-    |> put_status(status)
-    |> put_view(OauthView)
-    |> render("error.json", error: error, error_description: error_description)
-  end
-
-  def token(%Plug.Conn{} = conn, _params) do
-    conn |> Oauth.token(__MODULE__)
-  end
-
-  @impl Boruta.Oauth.Application
-  def token_success(conn, %TokenResponse{} = response) do
-    conn
-    |> put_view(OauthView)
-    |> render("token.json", response: response)
-  end
-
-  @impl Boruta.Oauth.Application
-  def token_error(conn, %Error{status: status, error: error, error_description: error_description}) do
-    conn
-    |> put_status(status)
-    |> put_view(OauthView)
-    |> render("error.json", error: error, error_description: error_description)
-  end
 
   def authorize(%Plug.Conn{query_params: query_params} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -100,16 +54,18 @@ defmodule BorutaWeb.OauthController do
     redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
   end
 
-  @impl Boruta.Oauth.Application
+  @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, %AuthorizationSuccess{client: client, scope: scope}) do
     scopes = String.split(scope, " ")
-    render(conn, "preauthorize.html", client: client, scopes: scopes)
+    conn
+    |> put_view(OauthView)
+    |> render("preauthorize.html", client: client, scopes: scopes)
   end
 
-  @impl Boruta.Oauth.Application
+  @impl Boruta.Oauth.AuthorizeApplication
   defdelegate preauthorize_error(conn, error), to: __MODULE__, as: :authorize_error
 
-  @impl Boruta.Oauth.Application
+  @impl Boruta.Oauth.AuthorizeApplication
   def authorize_success(
         conn,
         %AuthorizeResponse{
@@ -145,7 +101,7 @@ defmodule BorutaWeb.OauthController do
     |> redirect(external: url)
   end
 
-  @impl Boruta.Oauth.Application
+  @impl Boruta.Oauth.AuthorizeApplication
   def authorize_error(
         %Plug.Conn{} = conn,
         %Error{status: :unauthorized, error: :invalid_resource_owner}
@@ -186,32 +142,11 @@ defmodule BorutaWeb.OauthController do
     |> render("error." <> get_format(conn), error: error, error_description: error_description)
   end
 
-  def revoke(%Plug.Conn{} = conn, _params) do
-    conn |> Oauth.revoke(__MODULE__)
-  end
-
-  @impl Boruta.Oauth.Application
-  def revoke_success(%Plug.Conn{} = conn) do
-    send_resp(conn, 200, "")
-  end
-
-  @impl Boruta.Oauth.Application
-  def revoke_error(conn, %Error{
-        status: status,
-        error: error,
-        error_description: error_description
-      }) do
-    conn
-    |> put_status(status)
-    |> put_view(OauthView)
-    |> render("error.json", error: error, error_description: error_description)
-  end
-
   defp store_user_return_to(conn, %{"code_challenge_method" => code_challenge_method} = params) do
     conn
     |> put_session(
       :user_return_to,
-      Routes.oauth_path(conn, :authorize,
+      Routes.authorize_path(conn, :authorize,
         client_id: params["client_id"],
         code_challenge: params["code_challenge"],
         code_challenge_method: code_challenge_method,
@@ -227,7 +162,7 @@ defmodule BorutaWeb.OauthController do
     conn
     |> put_session(
       :user_return_to,
-      Routes.oauth_path(conn, :authorize,
+      Routes.authorize_path(conn, :authorize,
         client_id: params["client_id"],
         code_challenge: params["code_challenge"],
         redirect_uri: params["redirect_uri"],

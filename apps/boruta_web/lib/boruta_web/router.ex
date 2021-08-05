@@ -52,12 +52,16 @@ defmodule BorutaWeb.Router do
     get "/", PageController, :index
   end
 
-  scope "/oauth", BorutaWeb do
+  scope "/oauth", BorutaWeb.Oauth do
     pipe_through :api
 
-    post "/revoke", OauthController, :revoke
-    post "/token", OauthController, :token
-    post "/introspect", OauthController, :introspect
+    post "/token", TokenController, :token
+    post "/revoke", RevokeController, :revoke
+    post "/introspect", IntrospectController, :introspect
+  end
+
+  scope "/oauth", BorutaWeb do
+    pipe_through :api
 
     scope "/api", Admin, as: :admin do
       pipe_through :authenticated_api
@@ -74,10 +78,10 @@ defmodule BorutaWeb.Router do
     end
   end
 
-  scope "/oauth", BorutaWeb do
+  scope "/oauth", BorutaWeb.Oauth do
     pipe_through [:browser, :fetch_current_user]
 
-    get "/authorize", OauthController, :authorize
+    get "/authorize", AuthorizeController, :authorize
   end
 
   scope "/admin", BorutaWeb do
