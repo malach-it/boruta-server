@@ -37,7 +37,7 @@ defmodule BorutaGateway.MixProject do
   defp deps do
     [
       {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
-      {:katipo, "~> 0.8.1"},
+      {:katipo, "~> 0.9"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.0"},

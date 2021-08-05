@@ -7,7 +7,7 @@ COPY ./apps/boruta_web/assets /app
 RUN npm ci
 RUN npm run build
 
-FROM elixir:1.10.4 AS builder
+FROM elixir:1.12.2 AS builder
 
 ENV MIX_ENV=prod
 
@@ -31,7 +31,7 @@ RUN mix phx.digest
 WORKDIR /app
 RUN mix release --force --overwrite
 
-FROM elixir:1.10.4
+FROM elixir:1.12.2
 
 RUN apt-get install -y libcurl4-openssl-dev libssl-dev libevent-dev
 
