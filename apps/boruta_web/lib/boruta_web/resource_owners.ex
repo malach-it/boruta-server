@@ -11,16 +11,16 @@ defmodule BorutaWeb.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
     case Accounts.get_user_by_email(username) do
-      %User{id: id, email: email} ->
-        {:ok, %ResourceOwner{sub: id, username: email}}
+      %User{id: id, email: email, last_login_at: last_login_at} ->
+        {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
       _ -> {:error, "User not found."}
     end
   end
   def get_by(sub: sub) when not is_nil(sub) do
     case Accounts.get_user(sub) do
-      %User{id: id, email: email} ->
-        {:ok, %ResourceOwner{sub: id, username: email}}
-      nil -> {:error, "User not found."}
+      %User{id: id, email: email, last_login_at: last_login_at} ->
+        {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
+      _ -> {:error, "User not found."}
     end
   end
   # TODO investigate nil values

@@ -26,26 +26,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       session_chosen,
       Accounts.consented?(current_user, conn),
       query_params["prompt"],
-      query_params["request"]
+      query_params["max_age"]
     )
-  end
-
-  defp authorize_response(%Plug.Conn{query_params: query_params} = conn, _, _, _, _, request) when is_binary(request)do
-    authorize_error(
-        conn,
-        %Error{
-          error: :unsupported_grant_type,
-          error_description: "This server does not support OpenID Connect request objects.",
-          format: :fragment,
-          redirect_uri: query_params["redirect_uri"],
-          state: query_params["state"]
-        }
-      )
   end
 
   defp authorize_response(conn, current_user, _, _, "none", _) do
     resource_owner =
-      current_user && %ResourceOwner{sub: current_user.id, username: current_user.email}
+      current_user && %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at}
 
     conn
     |> delete_session(:session_chosen)
@@ -58,7 +45,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
     conn
     |> Oauth.preauthorize(
-      %ResourceOwner{sub: current_user.id, username: current_user.email},
+      %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at},
       __MODULE__
     )
   end
@@ -67,14 +54,23 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     conn
     |> delete_session(:session_chosen)
     |> Oauth.authorize(
-      %ResourceOwner{sub: current_user.id, username: current_user.email},
+      %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at},
       __MODULE__
     )
   end
 
-  defp authorize_response(conn, %User{}, _, _, _, _) do
+  defp authorize_response(conn, %User{} = current_user, _, _, _, max_age) do
     # TODO a render can be a better choice
-    redirect(conn, to: Routes.choose_session_path(conn, :new))
+    now = (DateTime.utc_now() |> DateTime.to_unix())
+
+    with "" <> max_age <- max_age,
+         {max_age, _} <- Integer.parse(max_age),
+         true <- now - DateTime.to_unix(current_user.last_login_at) >= max_age do
+           IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete)
+    else
+      _ ->
+        redirect(conn, to: Routes.choose_session_path(conn, :new))
+    end
   end
 
   defp authorize_response(conn, _, _, _, _, _) do

@@ -10,6 +10,8 @@ defmodule BorutaIdentity.Accounts.Sessions do
   """
   @spec generate_user_session_token(user :: User.t()) :: token :: String.t()
   def generate_user_session_token(user) do
+    User.login_changeset(user) |> Repo.update()
+
     {token, user_token} = UserToken.build_session_token(user)
     Repo.insert!(user_token)
     token
