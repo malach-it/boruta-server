@@ -65,7 +65,7 @@ defmodule BorutaIdentityWeb.Authenticable do
     conn
     |> delete_resp_cookie(@remember_me_cookie)
     # TODO renew session
-    |> redirect(to: Routes.user_session_path(conn, :new))
+    |> redirect(to: Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
   end
 
   # TODO test it

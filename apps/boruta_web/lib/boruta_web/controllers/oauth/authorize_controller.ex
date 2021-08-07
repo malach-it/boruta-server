@@ -4,6 +4,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   use BorutaWeb, :controller
 
+  import BorutaIdentityWeb.Authenticable, only: [log_out_user: 1]
+
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.AuthorizeResponse
@@ -75,7 +77,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     with "" <> max_age <- max_age,
          {max_age, _} <- Integer.parse(max_age),
          true <- now - DateTime.to_unix(current_user.last_login_at) >= max_age do
-           IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete)
+      log_out_user(conn)
     else
       _ ->
         redirect(conn, to: Routes.choose_session_path(conn, :new))
