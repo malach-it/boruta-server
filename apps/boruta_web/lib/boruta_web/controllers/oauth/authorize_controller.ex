@@ -20,8 +20,17 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = store_user_return_to(conn, query_params)
 
+    unsigned_request = with request <- Map.get(query_params, "request", ""),
+         {:ok, params} <- Joken.peek_claims(request) do
+      params
+    else
+      _ -> %{}
+    end
+
+    query_params = Map.merge(query_params, unsigned_request)
+
     authorize_response(
-      conn,
+      %{conn|query_params: query_params},
       current_user,
       session_chosen,
       Accounts.consented?(current_user, conn),
@@ -174,6 +183,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         nonce: params["nonce"],
         code_challenge_method: code_challenge_method,
         redirect_uri: params["redirect_uri"],
+        request: params["request"],
         response_type: params["response_type"],
         scope: params["scope"],
         state: params["state"]
@@ -190,6 +200,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         code_challenge: params["code_challenge"],
         nonce: params["nonce"],
         redirect_uri: params["redirect_uri"],
+        request: params["request"],
         response_type: params["response_type"],
         scope: params["scope"],
         state: params["state"]

@@ -43,7 +43,7 @@ defmodule BorutaWeb.MixProject do
       {:finch, "~> 0.8"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:joken, "~> 2.0"},
+      {:joken, "~> 2.3"},
       {:libcluster, "~> 3.2.1"},
       {:phoenix, "~> 1.5.9"},
       {:phoenix_ecto, "~> 4.1"},
