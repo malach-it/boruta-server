@@ -46,7 +46,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       current_user && %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at}
 
     conn
-    |> delete_session(:session_chosen)
     |> Oauth.authorize(
       resource_owner,
       __MODULE__
@@ -63,7 +62,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp authorize_response(conn, %User{} = current_user, true, true, _, _) do
     conn
-    |> delete_session(:session_chosen)
     |> Oauth.authorize(
       %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at},
       __MODULE__
@@ -136,6 +134,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       end
 
     conn
+    |> delete_session(:session_chosen)
     |> redirect(external: url)
   end
 
@@ -155,6 +154,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
       _ ->
         conn
+        |> delete_session(:session_chosen)
         |> redirect(to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
     end
   end
@@ -162,6 +162,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   def authorize_error(conn, %Error{format: format} = error)
       when not is_nil(format) do
     conn
+    |> delete_session(:session_chosen)
     |> redirect(external: Error.redirect_to_url(error))
   end
 
@@ -170,6 +171,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %Error{status: status, error: error, error_description: error_description}
       ) do
     conn
+    |> delete_session(:session_chosen)
     |> put_status(status)
     |> put_view(BorutaWeb.OauthView)
     |> render("error." <> get_format(conn), error: error, error_description: error_description)
