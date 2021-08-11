@@ -5,8 +5,8 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
-  alias BorutaWeb.OauthView
   alias Boruta.Oauth.TokenResponse
+  alias BorutaWeb.OauthView
 
   action_fallback(BorutaWeb.FallbackController)
 

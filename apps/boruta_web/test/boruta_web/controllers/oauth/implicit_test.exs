@@ -209,4 +209,3 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
     end
   end
 end
-
