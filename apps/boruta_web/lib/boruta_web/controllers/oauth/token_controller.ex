@@ -8,8 +8,6 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Oauth.TokenResponse
   alias BorutaWeb.OauthView
 
-  action_fallback(BorutaWeb.FallbackController)
-
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
   end
@@ -18,6 +16,8 @@ defmodule BorutaWeb.Oauth.TokenController do
   def token_success(conn, %TokenResponse{} = response) do
     conn
     |> put_view(OauthView)
+    |> put_resp_header("pragma", "no-cache")
+    |> put_resp_header("cache-control", "no-store")
     |> render("token.json", response: response)
   end
 
