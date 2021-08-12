@@ -4,6 +4,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
   import BorutaIdentityWeb.Authenticable, only: [log_in: 2]
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.User
 
   plug :assign_email_and_password_changesets
 
@@ -13,7 +14,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
 
   def update(conn, %{"action" => "update_email"} = params) do
     %{"current_password" => password, "user" => user_params} = params
-    user = conn.assigns.current_user
+    %User{} = user = conn.assigns.current_user
 
     case Accounts.apply_user_email(user, password, user_params) do
       {:ok, applied_user} ->
