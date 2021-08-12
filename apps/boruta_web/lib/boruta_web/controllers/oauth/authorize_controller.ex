@@ -41,7 +41,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, current_user, _, _, "none", _) do
+  defp authorize_response(conn, %User{} = current_user, _, _, "none", _) do
     resource_owner =
       current_user && %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at}
 
@@ -50,6 +50,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       resource_owner,
       __MODULE__
     )
+  end
+
+  defp authorize_response(conn, _, _, _, "login", _) do
+    log_out_user(conn)
   end
 
   defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
@@ -177,38 +181,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     |> render("error." <> get_format(conn), error: error, error_description: error_description)
   end
 
-  defp store_user_return_to(conn, %{"code_challenge_method" => code_challenge_method} = params) do
-    conn
-    |> put_session(
-      :user_return_to,
-      Routes.authorize_path(conn, :authorize,
-        client_id: params["client_id"],
-        code_challenge: params["code_challenge"],
-        nonce: params["nonce"],
-        code_challenge_method: code_challenge_method,
-        redirect_uri: params["redirect_uri"],
-        request: params["request"],
-        response_type: params["response_type"],
-        scope: params["scope"],
-        state: params["state"]
-      )
-    )
-  end
-
   defp store_user_return_to(conn, params) do
     conn
     |> put_session(
       :user_return_to,
-      Routes.authorize_path(conn, :authorize,
-        client_id: params["client_id"],
-        code_challenge: params["code_challenge"],
-        nonce: params["nonce"],
-        redirect_uri: params["redirect_uri"],
-        request: params["request"],
-        response_type: params["response_type"],
-        scope: params["scope"],
-        state: params["state"]
-      )
+      current_path(conn)
+      |> String.replace(~r/prompt=(login|none)/, "")
     )
   end
 end
