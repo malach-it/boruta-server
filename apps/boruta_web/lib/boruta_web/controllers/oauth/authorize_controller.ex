@@ -20,19 +20,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     current_user = conn.assigns[:current_user]
     session_chosen = get_session(conn, :session_chosen) || false
 
-    conn = store_user_return_to(conn, query_params)
-
-    unsigned_request = with request <- Map.get(query_params, "request", ""),
-         {:ok, params} <- Joken.peek_claims(request) do
-      params
-    else
-      _ -> %{}
-    end
-
-    query_params = Map.merge(query_params, unsigned_request)
-
-    authorize_response(
-      %{conn|query_params: query_params},
+    conn
+    |> store_user_return_to()
+    |> put_unsigned_request()
+    |> authorize_response(
       current_user,
       session_chosen,
       Accounts.consented?(current_user, conn),
@@ -41,9 +32,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, %User{} = current_user, _, _, "none", _) do
+  defp authorize_response(conn, current_user, _, _, "none", _) do
+    current_user = current_user || %User{}
     resource_owner =
-      current_user && %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at}
+        %ResourceOwner{
+          sub: current_user.id,
+          username: current_user.email,
+          last_login_at: current_user.last_login_at
+        }
 
     conn
     |> Oauth.authorize(
@@ -52,9 +48,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, _, _, _, "login", _) do
-    log_out_user(conn)
-  end
+  defp authorize_response(conn, _, _, _, "login", _), do: log_out_user(conn)
 
   defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
     conn
@@ -74,14 +68,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp authorize_response(conn, %User{} = current_user, _, _, _, max_age) do
     # TODO a render can be a better choice
-    now = (DateTime.utc_now() |> DateTime.to_unix())
-
-    with "" <> max_age <- max_age,
-         {max_age, _} <- Integer.parse(max_age),
-         true <- now - DateTime.to_unix(current_user.last_login_at) >= max_age do
-      log_out_user(conn)
-    else
-      _ ->
+    case login_expired?(current_user, max_age) do
+      true -> log_out_user(conn)
+      false ->
         redirect(conn, to: Routes.choose_session_path(conn, :new))
     end
   end
@@ -149,6 +138,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       ) do
     case query_params["prompt"] do
       "none" ->
+        # TODO move this to boruta_auth
         authorize_error(conn, %{
           error
           | error: :login_required,
@@ -181,12 +171,37 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     |> render("error." <> get_format(conn), error: error, error_description: error_description)
   end
 
-  defp store_user_return_to(conn, params) do
+  defp login_expired?(current_user, max_age) do
+    now = DateTime.utc_now() |> DateTime.to_unix()
+
+    with "" <> max_age <- max_age,
+         {max_age, _} <- Integer.parse(max_age),
+         true <- now - DateTime.to_unix(current_user.last_login_at) >= max_age do
+      true
+    else
+      _ -> false
+    end
+  end
+
+  defp put_unsigned_request(%Plug.Conn{query_params: query_params} = conn) do
+    unsigned_request =
+      with request <- Map.get(query_params, "request", ""),
+           {:ok, params} <- Joken.peek_claims(request) do
+        params
+      else
+        _ -> %{}
+      end
+
+    query_params = Map.merge(query_params, unsigned_request)
+
+    %{conn | query_params: query_params}
+  end
+
+  defp store_user_return_to(conn) do
     conn
     |> put_session(
       :user_return_to,
       current_path(conn)
-      |> String.replace(~r/prompt=(login|none)/, "")
     )
   end
 end

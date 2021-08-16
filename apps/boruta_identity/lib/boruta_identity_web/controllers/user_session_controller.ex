@@ -13,7 +13,9 @@ defmodule BorutaIdentityWeb.UserSessionController do
   def create(conn, %{"user" => %{"email" => email, "password" => password} = user_params}) do
     with %User{} = user <- Accounts.get_user_by_email(email),
          :ok <- Accounts.check_user_password(user, password) do
-        log_in(conn, user, user_params)
+      conn
+      |> delete_session(:session_chosen)
+      |> log_in(user, user_params)
     else
       _ ->
         render(conn, "new.html", error_message: "Invalid email or password")
