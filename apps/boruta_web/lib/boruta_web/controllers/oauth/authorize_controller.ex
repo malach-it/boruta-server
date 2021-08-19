@@ -202,6 +202,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     |> put_session(
       :user_return_to,
       current_path(conn)
+      |> String.replace(~r/prompt=(login|none)/, "")
     )
   end
 end
