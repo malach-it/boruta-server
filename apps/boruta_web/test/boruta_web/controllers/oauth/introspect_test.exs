@@ -17,7 +17,6 @@ defmodule BorutaWeb.Oauth.IntrospectTest do
       resource_owner_token =
         insert(:token,
           type: "access_token",
-          value: "888",
           client: client,
           sub: resource_owner.id,
           scope: ""

@@ -1,4 +1,4 @@
-defmodule BorutaWeb.Integration.OauthTest do
+defmodule BorutaWeb.Integration.OpenidConnectTest do
   use BorutaWeb.ConnCase, async: true
 
   import Boruta.Factory
