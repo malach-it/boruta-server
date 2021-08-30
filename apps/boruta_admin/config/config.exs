@@ -12,8 +12,9 @@ config :boruta_admin,
 
 # Configures the endpoint
 config :boruta_admin, BorutaAdminWeb.Endpoint,
-  url: [host: "localhost"],
-  secret_key_base: "q4ceJF0AgNn2ayjJHAQRcmznUL4+BwS+8DnxhRVx5wRtinpN/nbCJa3HY4XT9L+l",
+  server: false,
+  url: [host: "localhost", path: "/admin"],
+  secret_key_base: "Caq0kwgjLGwxoEVPOxUhEiZ3AG2nADaNYi+ceWh2RuAgKF6vv/FfwqM/P7cDcNrR",
   render_errors: [view: BorutaAdminWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: BorutaAdmin.PubSub,
   live_view: [signing_salt: "mtlt3we/"]

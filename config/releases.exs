@@ -21,6 +21,13 @@ config :boruta_gateway, BorutaGateway.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: String.to_integer(System.get_env("POOL_SIZE", "5"))
 
+config :boruta_admin, BorutaAdmin.Repo,
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_admin_dev",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
+  pool_size: 10
+
 config :boruta_identity, Boruta.Accounts, secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_gateway,
@@ -37,6 +44,12 @@ config :boruta_web, BorutaWeb.Endpoint,
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   server: false,
   url: [host: "oauth.boruta.patatoid.fr", path: "/accounts"],
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
+
+config :boruta_admin, BorutaAdminWeb.Endpoint,
+  server: false,
+  url: [host: "oauth.boruta.patatoid.fr", path: "/admin"],
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 

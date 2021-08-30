@@ -84,9 +84,5 @@ defmodule BorutaWeb.Router do
     get "/authorize", AuthorizeController, :authorize
   end
 
-  scope "/admin", BorutaWeb do
-    pipe_through :browser
-
-    match :get, "/*path", PageController, :admin
-  end
+  forward "/admin", BorutaAdminWeb.Endpoint
 end

@@ -1,20 +1,12 @@
 defmodule BorutaAdminWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boruta_admin
 
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
+  # sets the same session as :boruta_web
   @session_options [
     store: :cookie,
-    key: "_boruta_admin_key",
-    signing_salt: "YyGBUO07"
+    key: "_boruta_web_key",
+    signing_salt: "OCKBuS86"
   ]
-
-  socket "/socket", BorutaAdminWeb.UserSocket,
-    websocket: true,
-    longpoll: false
-
-  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -24,7 +16,7 @@ defmodule BorutaAdminWeb.Endpoint do
     at: "/",
     from: :boruta_admin,
     gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt)
+    only: ~w(admin)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

@@ -37,6 +37,7 @@ defmodule BorutaWeb.MixProject do
   defp deps do
     [
       {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
+      {:boruta_admin, in_umbrella: true},
       {:boruta_gateway, in_umbrella: true},
       {:boruta_identity, in_umbrella: true},
       {:bypass, "~> 2.1.0"},
@@ -46,7 +47,7 @@ defmodule BorutaWeb.MixProject do
       {:jason, "~> 1.0"},
       {:joken, "~> 2.0"},
       {:libcluster, "~> 3.2.1"},
-      {:phoenix, "~> 1.5.3"},
+      {:phoenix, "~> 1.5.9"},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
