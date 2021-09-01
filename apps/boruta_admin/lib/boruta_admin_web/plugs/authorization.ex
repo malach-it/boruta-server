@@ -1,11 +1,11 @@
-defmodule BorutaWeb.Authorization do
+defmodule BorutaAdminWeb.Authorization do
   @moduledoc false
 
   require Logger
 
-  use BorutaWeb, :controller
+  use BorutaAdminWeb, :controller
 
-  alias BorutaWeb.ErrorView
+  alias BorutaAdminWeb.ErrorView
 
   def require_authenticated(conn, _opts \\ []) do
     with [authorization_header] <- get_req_header(conn, "authorization"),

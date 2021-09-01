@@ -13,7 +13,12 @@ defmodule BorutaIdentity.Accounts do
   ## Database getters
 
   def list_users do
-    Repo.all(User)
+    Repo.all(
+      from(u in User,
+        left_join: as in assoc(u, :authorized_scopes),
+        preload: [authorized_scopes: as]
+      )
+    )
   end
 
   @doc """
@@ -70,7 +75,15 @@ defmodule BorutaIdentity.Accounts do
       nil
 
   """
-  def get_user(id), do: Repo.get(User, id)
+  def get_user(id),
+    do:
+      Repo.one(
+        from(u in User,
+          left_join: as in assoc(u, :authorized_scopes),
+          preload: [authorized_scopes: as],
+          where: u.id == ^id
+        )
+      )
 
   @doc """
   Gets a single user.
@@ -86,7 +99,15 @@ defmodule BorutaIdentity.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id), do:
+      Repo.one(
+        from(u in User,
+          left_join: as in assoc(u, :authorized_scopes),
+          preload: [authorized_scopes: as],
+          where: u.id == ^id
+        )
+      )
+
 
   ## User registration
 

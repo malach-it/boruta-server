@@ -1,5 +1,5 @@
-defmodule BorutaWeb.Admin.UpstreamControllerTest do
-  use BorutaWeb.ConnCase, async: false
+defmodule BorutaAdminWeb.UpstreamControllerTest do
+  use BorutaAdminWeb.ConnCase, async: false
 
   import Boruta.Factory
 

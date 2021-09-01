@@ -1,5 +1,5 @@
 defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
-  use BorutaWeb.ConnCase, async: true
+  use BorutaWeb.ConnCase
 
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
@@ -99,14 +99,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
           })
         )
 
-      [_, error, error_description] =
-        Regex.run(
-          ~r/error=(.+)&error_description=(.+)/,
-          redirected_to(conn)
-        )
-
-      assert error
-      assert error_description
+      assert html_response(conn, 401) =~ "Invalid client"
     end
 
     test "redirects to redirect_uri with token if current_user is set", %{

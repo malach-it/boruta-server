@@ -1,7 +1,7 @@
-defmodule BorutaWeb.Admin.ScopeController do
-  use BorutaWeb, :controller
+defmodule BorutaAdminWeb.ScopeController do
+  use BorutaAdminWeb, :controller
 
-  import BorutaWeb.Authorization, only: [
+  import BorutaAdminWeb.Authorization, only: [
     authorize: 2
   ]
 
@@ -10,7 +10,7 @@ defmodule BorutaWeb.Admin.ScopeController do
 
   plug :authorize, ["scopes:manage:all"]
 
-  action_fallback BorutaWeb.FallbackController
+  action_fallback BorutaAdminWeb.FallbackController
 
   def index(conn, _params) do
     scopes = Admin.list_scopes()

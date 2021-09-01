@@ -1,6 +1,6 @@
-defmodule BorutaWeb.Admin.ClientView do
-  use BorutaWeb, :view
-  alias BorutaWeb.Admin.ClientView
+defmodule BorutaAdminWeb.ClientView do
+  use BorutaAdminWeb, :view
+  alias BorutaAdminWeb.ClientView
 
   def render("index.json", %{clients: clients}) do
     %{data: render_many(clients, ClientView, "client.json")}

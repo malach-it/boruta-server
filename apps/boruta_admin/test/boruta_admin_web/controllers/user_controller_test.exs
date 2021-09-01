@@ -1,5 +1,5 @@
-defmodule BorutaWeb.Admin.UserControllerTest do
-  use BorutaWeb.ConnCase
+defmodule BorutaAdminWeb.UserControllerTest do
+  use BorutaAdminWeb.ConnCase
 
   import BorutaIdentity.AccountsFixtures
 
@@ -55,6 +55,7 @@ defmodule BorutaWeb.Admin.UserControllerTest do
     end
     setup :with_authenticated_user
 
+    @tag :skip
     test "get current user", %{conn: conn, introspected_token: introspected_token} do
       conn = get(conn, Routes.admin_user_path(conn, :current))
       assert json_response(conn, 200)["data"] == %{

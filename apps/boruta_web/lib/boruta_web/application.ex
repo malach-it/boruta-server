@@ -8,6 +8,7 @@ defmodule BorutaWeb.Application do
       BorutaWeb.Endpoint,
       BorutaWeb.Repo,
       BorutaWeb.Metrics,
+      {Finch, name: FinchHttp},
       {Cluster.Supervisor,
        [Application.get_env(:libcluster, :topologies), [name: BorutaWeb.ClusterSupervisor]]},
       {Phoenix.PubSub, name: BorutaWeb.PubSub}

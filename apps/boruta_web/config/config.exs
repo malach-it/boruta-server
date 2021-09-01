@@ -14,16 +14,6 @@ config :mime, :types, %{
   "application/jwt" => ["jwt"]
 }
 
-config :boruta_web, :pow,
-  repo: BorutaIdentity.Repo,
-  user: BorutaIdentity.Accounts.User,
-  # extensions: [PowEmailConfirmation, PowResetPassword],
-  extensions: [PowResetPassword],
-  controller_callbacks: BorutaWeb.Pow.Phoenix.ControllerCallbacks,
-  routes_backend: BorutaWeb.Pow.Routes,
-  mailer_backend: BorutaWeb.Pow.Mailer,
-  web_module: BorutaWeb
-
 config :phoenix, :json_library, Jason
 
 config :boruta, Boruta.Oauth,

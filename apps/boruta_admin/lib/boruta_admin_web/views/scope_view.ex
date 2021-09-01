@@ -1,6 +1,6 @@
-defmodule BorutaWeb.Admin.ScopeView do
-  use BorutaWeb, :view
-  alias BorutaWeb.Admin.ScopeView
+defmodule BorutaAdminWeb.ScopeView do
+  use BorutaAdminWeb, :view
+  alias BorutaAdminWeb.ScopeView
 
   def render("index.json", %{scopes: scopes}) do
     %{data: render_many(scopes, ScopeView, "scope.json")}

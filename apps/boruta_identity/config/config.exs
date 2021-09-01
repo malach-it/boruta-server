@@ -4,7 +4,7 @@ config :boruta_identity,
   ecto_repos: [BorutaIdentity.Repo]
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  url: [host: "localhost", path: "/accounts"],
+  url: [host: "localhost"],
   server: false,
   secret_key_base: "Caq0kwgjLGwxoEVPOxUhEiZ3AG2nADaNYi+ceWh2RuAgKF6vv/FfwqM/P7cDcNrR",
   render_errors: [view: BorutaIdentityWeb.ErrorView, accepts: ~w(html json), layout: false],

@@ -37,18 +37,25 @@ defmodule BorutaAdmin.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.5.9"},
-      {:phoenix_ecto, "~> 4.1"},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
+      {:boruta_gateway, in_umbrella: true},
+      {:boruta_web, in_umbrella: true},
+      {:boruta_identity, in_umbrella: true},
+      {:bypass, "~> 2.1.0"},
       {:ecto_sql, "~> 3.4"},
-      {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_dashboard, "~> 0.4"},
-      {:telemetry_metrics, "~> 0.4"},
-      {:telemetry_poller, "~> 0.4"},
+      {:ex_machina, "~> 2.4", only: :test},
+      {:finch, "~> 0.8"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:phoenix, "~> 1.5.9"},
+      {:phoenix_ecto, "~> 4.1"},
+      {:phoenix_html, "~> 2.11"},
+      {:phoenix_live_dashboard, "~> 0.4"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:plug_cowboy, "~> 2.0"},
+      {:postgrex, ">= 0.0.0"},
+      {:telemetry_metrics, "~> 0.4"},
+      {:telemetry_poller, "~> 0.4"}
     ]
   end
 

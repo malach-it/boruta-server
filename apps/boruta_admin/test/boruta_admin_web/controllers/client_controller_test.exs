@@ -1,7 +1,7 @@
-defmodule BorutaWeb.Admin.ClientControllerTest do
+defmodule BorutaAdminWeb.ClientControllerTest do
   import Boruta.Factory
 
-  use BorutaWeb.ConnCase
+  use BorutaAdminWeb.ConnCase
 
   alias Boruta.Ecto.Client
 

@@ -1,5 +1,5 @@
 defmodule BorutaWeb.Oauth.ImplicitTest do
-  use BorutaWeb.ConnCase, async: true
+  use BorutaWeb.ConnCase
 
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
@@ -57,14 +57,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
           })
         )
 
-      [_, error, error_description] =
-        Regex.run(
-          ~r/error=(.+)&error_description=(.+)/,
-          redirected_to(conn)
-        )
-
-      assert error
-      assert error_description
+      assert html_response(conn, 401) =~ "Invalid client"
     end
 
     test "redirect to user authentication page", %{

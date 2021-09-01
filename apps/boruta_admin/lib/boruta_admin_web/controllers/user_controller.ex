@@ -1,7 +1,7 @@
-defmodule BorutaWeb.Admin.UserController do
-  use BorutaWeb, :controller
+defmodule BorutaAdminWeb.UserController do
+  use BorutaAdminWeb, :controller
 
-  import BorutaWeb.Authorization, only: [
+  import BorutaAdminWeb.Authorization, only: [
     authorize: 2
   ]
 
@@ -10,7 +10,7 @@ defmodule BorutaWeb.Admin.UserController do
 
   plug :authorize, ["users:manage:all"]
 
-  action_fallback BorutaWeb.FallbackController
+  action_fallback BorutaAdminWeb.FallbackController
 
   def index(conn, _params) do
     users = Accounts.list_users()
@@ -20,12 +20,6 @@ defmodule BorutaWeb.Admin.UserController do
   def show(conn, %{"id" => id}) do
     user = Accounts.get_user!(id)
     render(conn, "show.json", user: user)
-  end
-
-  def current(conn, _) do
-    %{"sub" => sub, "username" => username} = conn.assigns[:introspected_token]
-    user = %Accounts.User{id: sub, email: username}
-    render(conn, "current.json", user: user)
   end
 
   def update(conn, %{"id" => id, "user" => %{"authorized_scopes" => scopes}}) do

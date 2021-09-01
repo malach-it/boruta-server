@@ -8,12 +8,11 @@
 use Mix.Config
 
 config :boruta_admin,
-  ecto_repos: [BorutaAdmin.Repo]
+  ecto_repos: [BorutaAdmin.Repo, BorutaIdentity.Repo, BorutaGateway.Repo, BorutaWeb.Repo]
 
 # Configures the endpoint
 config :boruta_admin, BorutaAdminWeb.Endpoint,
-  server: false,
-  url: [host: "localhost", path: "/admin"],
+  url: [host: "localhost"],
   secret_key_base: "Caq0kwgjLGwxoEVPOxUhEiZ3AG2nADaNYi+ceWh2RuAgKF6vv/FfwqM/P7cDcNrR",
   render_errors: [view: BorutaAdminWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: BorutaAdmin.PubSub,

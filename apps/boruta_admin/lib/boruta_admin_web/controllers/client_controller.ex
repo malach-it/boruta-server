@@ -1,7 +1,7 @@
-defmodule BorutaWeb.Admin.ClientController do
-  use BorutaWeb, :controller
+defmodule BorutaAdminWeb.ClientController do
+  use BorutaAdminWeb, :controller
 
-  import BorutaWeb.Authorization, only: [
+  import BorutaAdminWeb.Authorization, only: [
     authorize: 2
   ]
 
@@ -10,7 +10,7 @@ defmodule BorutaWeb.Admin.ClientController do
 
   plug :authorize, ["clients:manage:all"]
 
-  action_fallback BorutaWeb.FallbackController
+  action_fallback BorutaAdminWeb.FallbackController
 
   def index(conn, _params) do
     clients = Admin.list_clients()

@@ -9,7 +9,7 @@ config :boruta_admin, BorutaAdmin.Repo,
   pool_size: 10
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
-  http: [port: 4000],
+  http: [port: 4002],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,

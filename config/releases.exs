@@ -48,8 +48,9 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
-  server: false,
+  http: [port: 4002],
   url: [host: "oauth.boruta.patatoid.fr", path: "/admin"],
+  server: true,
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 

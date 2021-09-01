@@ -10,8 +10,9 @@ defmodule BorutaWeb.UserSocket do
   @dialyzer {:no_match, connect: 3}
   def connect(%{"token" => token}, socket, _connect_info) do
     case Authorization.introspect(token) do
-      {:ok, %SimpleMint.Response{body: %{"active" => true, "sub" => sub}} = _response} ->
+      {:ok, %{"active" => true, "sub" => sub}} ->
         {:ok, assign(socket, :user_id, sub)}
+      {:ok, %{"active" => false}} -> :error
       {:error, _reason} -> :error
     end
   end

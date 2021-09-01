@@ -1,22 +1,31 @@
 defmodule BorutaAdminWeb.Router do
   use BorutaAdminWeb, :router
 
+  import BorutaAdminWeb.Authorization, only: [
+    require_authenticated: 2
+  ]
+
+  pipeline :authenticated_api do
+    plug :require_authenticated
+  end
+
+
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_flash
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_flash)
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/", BorutaAdminWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
-    get "/", PageController, :index
+    get("/", PageController, :index)
   end
 
   # Other scopes may use custom stacks.
@@ -32,9 +41,22 @@ defmodule BorutaAdminWeb.Router do
   # you can use Plug.BasicAuth to set up some basic authentication
   # as long as you are also using SSL (which you should anyway).
 
-  scope "/", BorutaAdminWeb do
-    pipe_through :browser
+  scope "/api", BorutaAdminWeb, as: :admin do
+    pipe_through(:authenticated_api)
 
-    match :get, "/*path", PageController, :index
+    resources("/scopes", ScopeController, except: [:new, :edit])
+    resources("/clients", ClientController, except: [:new, :edit])
+    # TODO user scopes
+    # resources "/users/:user_id/scopes, only: [:create, :delete]
+
+    # TODO remove users resource
+    resources("/users", UserController, except: [:new, :edit, :create])
+    resources("/upstreams", UpstreamController, except: [:new, :edit])
+  end
+
+  scope "/", BorutaAdminWeb do
+    pipe_through(:browser)
+
+    match(:get, "/*path", PageController, :index)
   end
 end

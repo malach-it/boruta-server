@@ -1,6 +1,6 @@
-defmodule BorutaWeb.Admin.UpstreamView do
-  use BorutaWeb, :view
-  alias BorutaWeb.Admin.UpstreamView
+defmodule BorutaAdminWeb.UpstreamView do
+  use BorutaAdminWeb, :view
+  alias BorutaAdminWeb.UpstreamView
 
   def render("index.json", %{upstreams: upstreams}) do
     %{data: render_many(upstreams, UpstreamView, "upstream.json")}

@@ -1,7 +1,7 @@
-defmodule BorutaWeb.Admin.ScopeControllerTest do
+defmodule BorutaAdminWeb.ScopeControllerTest do
   import Boruta.Factory
 
-  use BorutaWeb.ConnCase
+  use BorutaAdminWeb.ConnCase
 
   alias Boruta.Ecto.Scope
 

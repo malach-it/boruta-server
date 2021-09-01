@@ -1,7 +1,7 @@
-defmodule BorutaWeb.Admin.UpstreamController do
-  use BorutaWeb, :controller
+defmodule BorutaAdminWeb.UpstreamController do
+  use BorutaAdminWeb, :controller
 
-  import BorutaWeb.Authorization, only: [
+  import BorutaAdminWeb.Authorization, only: [
     authorize: 2
   ]
 
@@ -10,7 +10,7 @@ defmodule BorutaWeb.Admin.UpstreamController do
 
   plug :authorize, ["upstreams:manage:all"]
 
-  action_fallback BorutaWeb.FallbackController
+  action_fallback BorutaAdminWeb.FallbackController
 
   def index(conn, _params) do
     upstreams = Upstreams.list_upstreams()
