@@ -2,7 +2,7 @@ FROM node:14.5.0 AS assets
 
 WORKDIR /app
 
-COPY ./apps/boruta_web/assets /app
+COPY ./apps/boruta_admin/assets /app
 
 RUN npm ci
 RUN npm run build
@@ -18,12 +18,12 @@ RUN mix local.rebar --force
 
 WORKDIR /app
 COPY . .
-COPY --from=assets /priv ./apps/boruta_web/priv/
+COPY --from=assets /priv ./apps/boruta_admin/priv/
 RUN rm -rf deps
 RUN mix do clean, deps.get
 RUN mix compile
 
-WORKDIR /app/apps/boruta_web
+WORKDIR /app/apps/boruta_admin
 RUN mix phx.digest
 WORKDIR /app/apps/boruta_identity
 RUN mix phx.digest

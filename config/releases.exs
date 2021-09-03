@@ -49,7 +49,7 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [port: 4002],
-  url: [host: "oauth.boruta.patatoid.fr", path: "/admin"],
+  url: [host: "admin.boruta.patatoid.fr"],
   server: true,
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
