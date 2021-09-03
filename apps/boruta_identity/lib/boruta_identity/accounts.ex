@@ -108,7 +108,6 @@ defmodule BorutaIdentity.Accounts do
         )
       )
 
-
   ## User registration
 
   @doc """

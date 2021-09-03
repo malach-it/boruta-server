@@ -52,6 +52,26 @@
             name: libcluster-role
             apiGroup: rbac.authorization.k8s.io
 
+    - name: Create OAuth Service
+      community.kubernetes.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: boruta-oauth
+            namespace: boruta-staging
+            labels:
+              app: boruta
+          spec:
+            selector:
+              app: boruta
+            ports:
+            - protocol: TCP
+              targetPort: 4001
+              name: admin-tcp
+              port: 4001
+
     - name: Create Admin Service
       community.kubernetes.k8s:
         state: present
@@ -68,9 +88,9 @@
               app: boruta
             ports:
             - protocol: TCP
-              targetPort: 4001
+              targetPort: 4002
               name: admin-tcp
-              port: 4001
+              port: 4002
 
     - name: Create Gateway Service
       community.kubernetes.k8s:
@@ -134,7 +154,7 @@
                     service:
                       name: boruta-admin
                       port:
-                        number: 4001
+                        number: 4002
     - name: Setup boruta database
       community.kubernetes.k8s:
         state: present

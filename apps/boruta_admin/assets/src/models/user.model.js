@@ -84,7 +84,7 @@ User.api = function () {
   const accessToken = localStorage.getItem('access_token')
 
   return axios.create({
-    baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/admin/api/users`,
+    baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/users`,
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 }
@@ -104,11 +104,7 @@ User.get = function (id) {
 User.default = defaults
 
 User.current = function () {
-  const accessToken = localStorage.getItem('access_token')
-
-  return this.api().get(`${window.env.VUE_APP_BORUTA_BASE_URL}/users/current`, {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  }).then(({ data }) => {
+  return this.api().get(`/current`).then(({ data }) => {
     return new User(data.data)
   })
 }

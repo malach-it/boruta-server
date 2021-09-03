@@ -63,12 +63,4 @@ defmodule BorutaWeb.Router do
 
     get("/authorize", AuthorizeController, :authorize)
   end
-
-  scope "/users", BorutaWeb do
-    pipe_through(:authenticated_api)
-
-    get("/current", UserController, :current)
-  end
-
-  forward("/admin", BorutaAdminWeb.Endpoint)
 end

@@ -17,6 +17,8 @@ defmodule BorutaAdminWeb.ChannelCase do
 
   use ExUnit.CaseTemplate
 
+  alias Ecto.Adapters.SQL.Sandbox
+
   using do
     quote do
       # Import conveniences for testing with channels
@@ -29,10 +31,16 @@ defmodule BorutaAdminWeb.ChannelCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(BorutaAdmin.Repo)
+    :ok = Sandbox.checkout(BorutaAdmin.Repo)
+    :ok = Sandbox.checkout(BorutaGateway.Repo)
+    :ok = Sandbox.checkout(BorutaIdentity.Repo)
+    :ok = Sandbox.checkout(BorutaWeb.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(BorutaAdmin.Repo, {:shared, self()})
+      Sandbox.mode(BorutaAdmin.Repo, {:shared, self()})
+      Sandbox.mode(BorutaGateway.Repo, {:shared, self()})
+      Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
+      Sandbox.mode(BorutaWeb.Repo, {:shared, self()})
     end
 
     :ok

@@ -10,7 +10,7 @@
       window.env = {
         VUE_APP_ADMIN_CLIENT_ID: '<%= System.get_env("VUE_APP_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20") %>',
         VUE_APP_OAUTH_BASE_URL: '<%= System.get_env("VUE_APP_OAUTH_BASE_URL", "http://localhost:4001") %>',
-        VUE_APP_BORUTA_BASE_URL: '<%= System.get_env("VUE_APP_BORUTA_BASE_URL", "http://localhost:4001") %>',
+        VUE_APP_BORUTA_BASE_URL: '<%= System.get_env("VUE_APP_BORUTA_BASE_URL", "http://localhost:4002") %>',
         VUE_APP_BORUTA_BASE_SOCKET_URL: '<%= System.get_env("VUE_APP_BORUTA_BASE_SOCKET_URL", "ws://localhost:4001") %>'
       }
     </script>
@@ -21,5 +21,5 @@
     </noscript>
     <div id="app"></div>
     <!-- built files will be auto injected -->
-  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/admin/app.js") %>"></script></body>
+  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/app.js") %>"></script></body>
 </html>

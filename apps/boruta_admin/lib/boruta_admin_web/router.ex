@@ -9,7 +9,6 @@ defmodule BorutaAdminWeb.Router do
     plug :require_authenticated
   end
 
-
   pipeline :browser do
     plug(:accepts, ["html"])
     plug(:fetch_session)
@@ -48,8 +47,7 @@ defmodule BorutaAdminWeb.Router do
     resources("/clients", ClientController, except: [:new, :edit])
     # TODO user scopes
     # resources "/users/:user_id/scopes, only: [:create, :delete]
-
-    # TODO remove users resource
+    get("/users/current", UserController, :current)
     resources("/users", UserController, except: [:new, :edit, :create])
     resources("/upstreams", UpstreamController, except: [:new, :edit])
   end

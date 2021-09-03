@@ -35,4 +35,10 @@ defmodule BorutaAdminWeb.UserController do
       send_resp(conn, 204, "")
     end
   end
+
+  def current(conn, _) do
+    %{"sub" => sub, "username" => username} = conn.assigns[:introspected_token]
+    user = %Accounts.User{id: sub, email: username}
+    render(conn, "current.json", user: user)
+  end
 end
