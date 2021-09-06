@@ -30,6 +30,7 @@ Vue.use(Router)
 
 const router = new Router({
   mode: 'history',
+  base: '/app',
   linkActiveClass: 'active',
   routes: [
     {
