@@ -36,20 +36,20 @@ config :boruta_gateway,
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: 4001],
-  url: [host: System.get_env("BORUTA_ADMIN_HOST")],
+  url: [host: System.get_env("BORUTA_OAUTH_HOST")],
   server: true,
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   server: false,
-  url: [host: "oauth.boruta.patatoid.fr", path: "/accounts"],
+  url: [host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts"],
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [port: 4002],
-  url: [host: "admin.boruta.patatoid.fr"],
+  url: [host: System.get_env("BORUTA_ADMIN_HOST")],
   server: true,
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")

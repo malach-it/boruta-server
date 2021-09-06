@@ -175,6 +175,7 @@
             ADMIN_OAUTH_CLIENT_SECRET: "{{ admin_client_secret }}"
             ADMIN_OAUTH_BASE_URL: "{{ admin_oauth_host }}"
             BORUTA_ADMIN_HOST: "{{ admin_host }}"
+            BORUTA_OAUTH_HOST: "{{ oauth_host }}"
             BORUTA_ADMIN_CLIENT_ID: "{{ admin_client_id }}"
             BORUTA_ADMIN_CLIENT_SECRET: "{{ admin_client_secret }}"
             VUE_APP_ADMIN_CLIENT_ID: "{{ admin_client_id }}"

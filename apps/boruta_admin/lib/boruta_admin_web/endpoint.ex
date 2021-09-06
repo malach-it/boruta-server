@@ -16,7 +16,7 @@ defmodule BorutaAdminWeb.Endpoint do
     at: "/",
     from: :boruta_admin,
     gzip: false,
-    only: ~w(app.js)
+    only: ~w(js)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
