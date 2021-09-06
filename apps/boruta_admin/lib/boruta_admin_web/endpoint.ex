@@ -18,6 +18,10 @@ defmodule BorutaAdminWeb.Endpoint do
     gzip: false,
     only: ~w(js)
 
+  socket "/socket", BorutaAdminWeb.UserSocket,
+    websocket: true,
+    longpoll: false
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

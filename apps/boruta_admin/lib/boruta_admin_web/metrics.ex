@@ -1,4 +1,4 @@
-defmodule BorutaWeb.Metrics do
+defmodule BorutaAdminWeb.Metrics do
   @moduledoc false
 
   defmodule Measurements do
@@ -21,9 +21,9 @@ defmodule BorutaWeb.Metrics do
 
   use GenServer
 
-  alias BorutaWeb.Metrics.Measurements
-  alias BorutaWeb.Metrics.Producer
-  alias BorutaWeb.MetricsChannel
+  alias BorutaAdminWeb.Metrics.Measurements
+  alias BorutaAdminWeb.Metrics.Producer
+  alias BorutaAdminWeb.MetricsChannel
 
   def start_link(_args) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -44,7 +44,7 @@ defmodule BorutaWeb.Metrics do
     :telemetry.attach(
       String.to_charlist("#{node()}-boruta_gateway:channel"),
       [:boruta_gateway, :request, :done],
-      &BorutaWeb.Metrics.handle_event/4,
+      &BorutaAdminWeb.Metrics.handle_event/4,
       nil
     )
     {:noreply, state}

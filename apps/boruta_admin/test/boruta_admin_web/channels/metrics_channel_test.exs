@@ -1,10 +1,8 @@
-defmodule BorutaWeb.MetricsChannelTest do
-  use BorutaWeb.ChannelCase
-  use BorutaWeb.DataCase
+defmodule BorutaAdminWeb.MetricsChannelTest do
+  use BorutaAdminWeb.ChannelCase
 
+  alias BorutaAdminWeb.UserSocket
   alias BorutaGateway.Upstreams.Upstream
-  alias BorutaWeb.UserSocket
-  alias Ecto.Adapters.SQL.Sandbox
   alias Ecto.Adapters.SQL.Sandbox
 
   test "fails when user is not connected" do
@@ -16,8 +14,8 @@ defmodule BorutaWeb.MetricsChannelTest do
       token = "token_authorized_by_bypass"
 
       {:ok, _, socket} =
-        socket(BorutaWeb.UserSocket, "user_id", %{token: token})
-        |> subscribe_and_join(BorutaWeb.MetricsChannel, "metrics:lobby")
+        socket(BorutaAdminWeb.UserSocket, "user_id", %{token: token})
+        |> subscribe_and_join(BorutaAdminWeb.MetricsChannel, "metrics:lobby")
 
       {:ok, socket: socket, token: token}
     end

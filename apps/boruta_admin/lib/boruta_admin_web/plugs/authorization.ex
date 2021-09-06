@@ -70,7 +70,7 @@ defmodule BorutaAdminWeb.Authorization do
              URI.encode_query(%{token: token})
            )
            |> Finch.request(FinchHttp) do
-         Jason.decode(body)
+      Jason.decode(body)
     end
   end
 end
