@@ -52,7 +52,7 @@ defmodule BorutaAdminWeb.Router do
     resources("/upstreams", UpstreamController, except: [:new, :edit])
   end
 
-  scope "/app", BorutaAdminWeb do
+  scope "/", BorutaAdminWeb do
     pipe_through(:browser)
 
     match(:get, "/*path", PageController, :index)

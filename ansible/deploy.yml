@@ -155,7 +155,8 @@
                       name: boruta-admin
                       port:
                         number: 4002
-    - name: Setup boruta database
+
+    - name: create boruta app ConfigMap
       community.kubernetes.k8s:
         state: present
         definition:
