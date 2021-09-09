@@ -142,7 +142,7 @@
                   pathType: Prefix
                   backend:
                     service:
-                      name: boruta-admin
+                      name: boruta-oauth
                       port:
                         number: 4001
             - host: "{{ admin_host }}"
