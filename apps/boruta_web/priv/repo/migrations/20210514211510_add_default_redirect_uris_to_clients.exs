@@ -7,11 +7,8 @@ defmodule BorutaWeb.Repo.Migrations.AddDefaultRedirectUrisToClients do
   alias BorutaWeb.Repo
 
   def change do
-    from(c in Client, where: is_nil(c.redirect_uris))
-    |> Repo.update_all(set: [redirect_uris: []])
-
     alter table(:clients) do
-      modify :redirect_uris, {:array, :string}, null: false, default: []
+      modify :redirect_uris, {:array, :string}, null: false, default: [], using: "array[redirect_uri]"
     end
   end
 end
