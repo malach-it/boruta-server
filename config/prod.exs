@@ -6,7 +6,7 @@ config :logger, level: :info
 config :boruta_web, BorutaWeb.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DATABASE") || "boruta_web",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_web_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
@@ -24,6 +24,13 @@ config :boruta_gateway, BorutaGateway.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
+config :boruta_admin, BorutaAdmin.Repo,
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway_dev",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
+  pool_size: 10
+
 config :boruta_identity, Boruta.Accounts,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
@@ -33,6 +40,12 @@ config :boruta_gateway,
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: 4001],
+  server: true,
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
+
+config :boruta_admin, BorutaAdminWeb.Endpoint,
+  http: [port: 4002],
   server: true,
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")

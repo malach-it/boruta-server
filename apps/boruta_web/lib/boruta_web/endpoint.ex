@@ -1,9 +1,11 @@
 defmodule BorutaWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boruta_web
 
-  socket "/socket", BorutaWeb.UserSocket,
-    websocket: true,
-    longpoll: false
+  @session_options [
+    store: :cookie,
+    key: "_boruta_web_key",
+    signing_salt: "OCKBuS86"
+  ]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -42,10 +44,7 @@ defmodule BorutaWeb.Endpoint do
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
-  plug Plug.Session,
-    store: :cookie,
-    key: "_boruta_web_key",
-    signing_salt: "OCKBuS86"
+  plug Plug.Session, @session_options
 
   plug BorutaWeb.Router
 end

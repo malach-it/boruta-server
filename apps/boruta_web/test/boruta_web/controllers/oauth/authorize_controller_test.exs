@@ -1,5 +1,5 @@
 defmodule BorutaWeb.AuthorizeControllerTest do
-  use BorutaWeb.ConnCase, async: true
+  use BorutaWeb.ConnCase
 
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures

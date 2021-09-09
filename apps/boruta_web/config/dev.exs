@@ -8,23 +8,7 @@ config :boruta_web, BorutaWeb.Endpoint,
   http: [port: 4001],
   debug_errors: true,
   code_reloader: true,
-  check_origin: false,
-  watchers: [
-    npm: [
-      "run",
-      "build:watch",
-      cd: Path.expand("../assets", __DIR__)
-    ]
-  ],
-  live_reload: [
-    patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
-      ~r"priv/gettext/.*(po)$",
-      ~r"lib/boruta_web/{live,views}/.*(ex)$",
-      ~r"lib/boruta_web/templates/.*(eex)$"
-    ]
-  ],
-  secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
+  check_origin: false
 
 # ## SSL Support
 #
@@ -70,6 +54,13 @@ config :boruta_gateway, BorutaGateway.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway_dev",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
+  pool_size: 10
+
+config :boruta_admin, BorutaAdmin.Repo,
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_admin_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 

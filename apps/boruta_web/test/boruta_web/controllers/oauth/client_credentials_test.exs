@@ -1,5 +1,5 @@
 defmodule BorutaWeb.Oauth.ClientCredentialsTest do
-  use BorutaWeb.ConnCase, async: true
+  use BorutaWeb.ConnCase
 
   import Boruta.Factory
 

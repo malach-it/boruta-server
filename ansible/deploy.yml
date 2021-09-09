@@ -52,6 +52,26 @@
             name: libcluster-role
             apiGroup: rbac.authorization.k8s.io
 
+    - name: Create OAuth Service
+      community.kubernetes.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: boruta-oauth
+            namespace: boruta-staging
+            labels:
+              app: boruta
+          spec:
+            selector:
+              app: boruta
+            ports:
+            - protocol: TCP
+              targetPort: 4001
+              name: admin-tcp
+              port: 4001
+
     - name: Create Admin Service
       community.kubernetes.k8s:
         state: present
@@ -68,9 +88,9 @@
               app: boruta
             ports:
             - protocol: TCP
-              targetPort: 4001
+              targetPort: 4002
               name: admin-tcp
-              port: 4001
+              port: 4002
 
     - name: Create Gateway Service
       community.kubernetes.k8s:
@@ -122,7 +142,7 @@
                   pathType: Prefix
                   backend:
                     service:
-                      name: boruta-admin
+                      name: boruta-oauth
                       port:
                         number: 4001
             - host: "{{ admin_host }}"
@@ -134,8 +154,9 @@
                     service:
                       name: boruta-admin
                       port:
-                        number: 4001
-    - name: Setup boruta database
+                        number: 4002
+
+    - name: create boruta app ConfigMap
       community.kubernetes.k8s:
         state: present
         definition:
@@ -155,6 +176,7 @@
             ADMIN_OAUTH_CLIENT_SECRET: "{{ admin_client_secret }}"
             ADMIN_OAUTH_BASE_URL: "{{ admin_oauth_host }}"
             BORUTA_ADMIN_HOST: "{{ admin_host }}"
+            BORUTA_OAUTH_HOST: "{{ oauth_host }}"
             BORUTA_ADMIN_CLIENT_ID: "{{ admin_client_id }}"
             BORUTA_ADMIN_CLIENT_SECRET: "{{ admin_client_secret }}"
             VUE_APP_ADMIN_CLIENT_ID: "{{ admin_client_id }}"

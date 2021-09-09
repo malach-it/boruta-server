@@ -41,18 +41,18 @@ defmodule BorutaWeb.MixProject do
       {:boruta_identity, in_umbrella: true},
       {:bypass, "~> 2.1.0"},
       {:ex_machina, "~> 2.4", only: :test},
+      {:finch, "~> 0.8"},
       {:flow, "~> 1.0.0"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:joken, "~> 2.0"},
       {:libcluster, "~> 3.2.1"},
-      {:phoenix, "~> 1.5.3"},
+      {:phoenix, "~> 1.5.9"},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_pubsub, "~> 2.0"},
-      {:plug_cowboy, "~> 2.0"},
-      {:simple_mint, in_umbrella: true}
+      {:plug_cowboy, "~> 2.0"}
     ]
   end
 

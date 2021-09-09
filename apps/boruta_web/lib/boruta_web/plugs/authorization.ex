@@ -10,14 +10,15 @@ defmodule BorutaWeb.Authorization do
   def require_authenticated(conn, _opts \\ []) do
     with [authorization_header] <- get_req_header(conn, "authorization"),
          [_authorization_header, token] <- Regex.run(~r/Bearer (.+)/, authorization_header),
-         {:ok, %SimpleMint.Response{body: %{"active" => true} = body} = _response} <-
+         {:ok, %{"active" => true} = payload} <-
            introspect(token) do
       conn
       |> assign(:token, token)
-      |> assign(:introspected_token, body)
+      |> assign(:introspected_token, payload)
     else
       e ->
         Logger.info("User unauthorized : #{inspect(e)}")
+
         conn
         |> put_status(:unauthorized)
         |> put_view(ErrorView)
@@ -52,22 +53,24 @@ defmodule BorutaWeb.Authorization do
 
   # TODO cache token introspection
   def introspect(token) do
-    oauth2_config =
-      Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2]
+    oauth2_config = Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2]
     client_id = oauth2_config[:client_id]
     client_secret = oauth2_config[:client_secret]
     site = oauth2_config[:site]
 
-    SimpleMint.post(
-      "#{site}/oauth/introspect",
-      %{token: token},
-      [
-        headers: [
-          {"accept", "application/json"},
-          {"content-type", "application/json"},
-          {"authorization", "Basic " <> Base.encode64("#{client_id}:#{client_secret}")}
-        ]
-      ]
-    )
+    with {:ok, %Finch.Response{body: body}} <-
+           Finch.build(
+             :post,
+             "#{site}/oauth/introspect",
+             [
+               {"accept", "application/json"},
+               {"content-type", "application/x-www-form-urlencoded"},
+               {"authorization", "Basic " <> Base.encode64("#{client_id}:#{client_secret}")}
+             ],
+             URI.encode_query(%{token: token})
+           )
+           |> Finch.request(FinchHttp) do
+         Jason.decode(body)
+    end
   end
 end

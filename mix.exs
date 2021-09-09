@@ -16,6 +16,7 @@ defmodule Boruta.Umbrella.MixProject do
           include_executables_for: [:unix],
           applications: [
             boruta_web: :permanent,
+            boruta_admin: :permanent,
             boruta_gateway: :permanent
           ]
         ]
