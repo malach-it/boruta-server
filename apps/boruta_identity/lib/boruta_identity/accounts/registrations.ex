@@ -1,10 +1,14 @@
 defmodule BorutaIdentity.Accounts.Registrations do
+  @moduledoc false
+
   import Ecto.Query
 
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
+
+  @type user_registration_attrs :: map()
 
   @doc """
   Registers a user.
@@ -18,6 +22,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec register_user(attrs :: user_registration_attrs()) :: {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
   def register_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
@@ -85,7 +90,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
          end)
          |> Repo.transaction() do
       {:ok, _result} ->
-        {:ok, Repo.preload(user, :authorized_scopes)}
+        {:ok, user |> Repo.reload() |> Repo.preload(:authorized_scopes)}
 
       {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
         {:error, changeset}

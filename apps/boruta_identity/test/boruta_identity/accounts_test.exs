@@ -6,8 +6,26 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
 
-  @tag :skip
   describe "list_users/0" do
+    test "returns an empty list" do
+      assert Accounts.list_users() == []
+    end
+
+    test "returns users" do
+      user = user_fixture()
+      assert Accounts.list_users() == [user]
+    end
+  end
+
+  describe "get_user/1" do
+    test "returns nil" do
+      assert Accounts.get_user(Ecto.UUID.generate()) == nil
+    end
+
+    test "returns an user" do
+      user = user_fixture()
+      assert Accounts.get_user(user.id) == user
+    end
   end
 
   describe "get_user_by_email/1" do
@@ -21,42 +39,15 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "get_user_by_email_and_password/2" do
-    test "does not return the user if the email does not exist" do
-      refute Accounts.get_user_by_email_and_password("unknown@example.com", "hello world!")
-    end
-
-    test "does not return the user if the password is not valid" do
+  describe "check_user_password/2" do
+    test "returns an error" do
       user = user_fixture()
-      refute Accounts.get_user_by_email_and_password(user.email, "invalid")
+      assert Accounts.check_user_password(user, "bad password") == {:error, "Invalid password."}
     end
 
-    test "returns the user if the email and password are valid" do
-      %{id: id} = user = user_fixture()
-
-      assert %User{id: ^id} =
-               Accounts.get_user_by_email_and_password(user.email, valid_user_password())
-    end
-  end
-
-  @tag :skip
-  describe "check_password/2" do
-  end
-
-  @tag :skip
-  describe "get_user/1" do
-  end
-
-  describe "get_user!/1" do
-    test "raises if id is invalid" do
-      assert_raise Ecto.NoResultsError, fn ->
-        Accounts.get_user!("6bc0d6a2-603a-4ed5-a649-737f0d937ed5")
-      end
-    end
-
-    test "returns the user with the given id" do
-      %{id: id} = user = user_fixture()
-      assert %User{id: ^id} = Accounts.get_user!(user.id)
+    test "returns :ok" do
+      user = user_fixture()
+      assert Accounts.check_user_password(user, valid_user_password()) == :ok
     end
   end
 
@@ -126,13 +117,6 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "change_user_email/2" do
-    test "returns a user changeset" do
-      assert %Ecto.Changeset{} = changeset = Accounts.change_user_email(%User{})
-      assert changeset.required == [:email]
-    end
-  end
-
   describe "apply_user_email/3" do
     setup do
       %{user: user_fixture()}
@@ -179,7 +163,7 @@ defmodule BorutaIdentity.AccountsTest do
       email = unique_user_email()
       {:ok, user} = Accounts.apply_user_email(user, valid_user_password(), %{email: email})
       assert user.email == email
-      assert Accounts.get_user!(user.id).email != email
+      assert Accounts.get_user(user.id).email != email
     end
   end
 
@@ -304,7 +288,8 @@ defmodule BorutaIdentity.AccountsTest do
         })
 
       assert is_nil(user.password)
-      assert Accounts.get_user_by_email_and_password(user.email, "new valid password")
+      assert user = Accounts.get_user_by_email(user.email)
+      assert :ok = Accounts.check_user_password(user, "new valid password")
     end
 
     test "deletes all tokens for the given user", %{user: user} do
@@ -499,7 +484,8 @@ defmodule BorutaIdentity.AccountsTest do
     test "updates the password", %{user: user} do
       {:ok, updated_user} = Accounts.reset_user_password(user, %{password: "new valid password"})
       assert is_nil(updated_user.password)
-      assert Accounts.get_user_by_email_and_password(user.email, "new valid password")
+      assert user = Accounts.get_user_by_email(user.email)
+      assert :ok = Accounts.check_user_password(user, "new valid password")
     end
 
     test "deletes all tokens for the given user", %{user: user} do
@@ -542,8 +528,19 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  @tag :skip
   describe "get_user_scopes/1" do
+    test "returns an empty list" do
+      user = user_fixture()
+
+      assert Accounts.get_user_scopes(user.id) == []
+    end
+
+    test "returns authorized scopes" do
+      user = user_fixture()
+      scope = user_scopes_fixture(user)
+
+      assert Accounts.get_user_scopes(user.id) == [scope]
+    end
   end
 
   describe "consent/2" do
@@ -557,9 +554,8 @@ defmodule BorutaIdentity.AccountsTest do
       scopes = []
       client_id = nil
 
-      case Accounts.consent(user, %{"client_id" => client_id, "scopes" => scopes}) do
-        %Ecto.Changeset{} -> assert true
-      end
+      assert {:error, %Ecto.Changeset{}} =
+               Accounts.consent(user, %{"client_id" => client_id, "scopes" => scopes})
     end
 
     test "adds user consent for a given client_id", %{user: user} do
@@ -603,7 +599,10 @@ defmodule BorutaIdentity.AccountsTest do
         }
       }
 
-      {:ok, user: user, oauth_request: oauth_request, oauth_request_with_scope: oauth_request_with_scope}
+      {:ok,
+       user: user,
+       oauth_request: oauth_request,
+       oauth_request_with_scope: oauth_request_with_scope}
     end
 
     test "returns true with empty scope", %{user: user, oauth_request: oauth_request} do
@@ -617,7 +616,10 @@ defmodule BorutaIdentity.AccountsTest do
       assert Accounts.consented?(user, oauth_request) == false
     end
 
-    test "returns true when scopes are consented", %{user: user, oauth_request_with_scope: oauth_request} do
+    test "returns true when scopes are consented", %{
+      user: user,
+      oauth_request_with_scope: oauth_request
+    } do
       scopes = String.split(oauth_request[:query_params]["scope"], " ")
       client_id = oauth_request[:query_params]["client_id"]
 

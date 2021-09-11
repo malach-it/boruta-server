@@ -20,14 +20,14 @@ defmodule BorutaWeb.ResourceOwners do
     case Accounts.get_user(sub) do
       %User{id: id, email: email} ->
         {:ok, %ResourceOwner{sub: id, username: email}}
-      _ -> {:error, "User not found."}
+      nil -> {:error, "User not found."}
     end
   end
 
   @impl Boruta.Oauth.ResourceOwners
   def check_password(%ResourceOwner{sub: sub}, password) do
     user = Accounts.get_user(sub)
-    Accounts.check_password(user, password)
+    Accounts.check_user_password(user, password)
   end
 
   @impl Boruta.Oauth.ResourceOwners

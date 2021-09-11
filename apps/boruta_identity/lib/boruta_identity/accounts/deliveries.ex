@@ -1,4 +1,6 @@
 defmodule BorutaIdentity.Accounts.Deliveries do
+  @moduledoc false
+
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserNotifier
   alias BorutaIdentity.Accounts.UserToken

@@ -10,13 +10,12 @@ defmodule BorutaIdentityWeb.UserSessionController do
     render(conn, "new.html", error_message: nil)
   end
 
-  def create(conn, %{"user" => user_params}) do
-    %{"email" => email, "password" => password} = user_params
-
-    case Accounts.get_user_by_email_and_password(email, password) do
-      %User{} = user ->
+  def create(conn, %{"user" => %{"email" => email, "password" => password} = user_params}) do
+    with %User{} = user <- Accounts.get_user_by_email(email),
+         :ok <- Accounts.check_user_password(user, password) do
         log_in(conn, user, user_params)
-      nil ->
+    else
+      _ ->
         render(conn, "new.html", error_message: "Invalid email or password")
     end
   end

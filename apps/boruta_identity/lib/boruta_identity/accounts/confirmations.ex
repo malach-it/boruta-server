@@ -1,4 +1,6 @@
 defmodule BorutaIdentity.Accounts.Confirmations do
+  @moduledoc false
+
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo

@@ -1,4 +1,6 @@
 defmodule BorutaIdentity.Accounts.Consents do
+  @moduledoc false
+
   alias Boruta.Oauth.Request
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.Consent
@@ -7,14 +9,15 @@ defmodule BorutaIdentity.Accounts.Consents do
 
   @spec consent(user :: User.t(), attrs :: map()) ::
           {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}
-  def consent(user, attrs) do
+  def consent(%User{} = user, attrs) do
     user
     |> User.consent_changeset(%{"consents" => [attrs]})
     |> Repo.update()
   end
 
+  @spec consented?(user :: User.t(), conn :: Plug.Conn.t()) :: boolean()
   def consented?(user, conn) do
-    with {:ok, %{client_id: client_id, scope: scope}} <-
+    with {:ok, %_request_type{client_id: client_id, scope: scope}} <-
            Request.authorize_request(conn, user),
          true <- scopes_consented?(user, client_id, Scope.split(scope)) do
       true

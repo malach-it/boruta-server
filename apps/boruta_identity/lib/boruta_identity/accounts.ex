@@ -3,21 +3,19 @@ defmodule BorutaIdentity.Accounts do
   The Accounts context.
   """
 
-  alias BorutaIdentity.Accounts.Users
-  alias BorutaIdentity.Accounts.Registrations
-  alias BorutaIdentity.Accounts.Deliveries
-  alias BorutaIdentity.Accounts.Sessions
-  alias BorutaIdentity.Accounts.Consents
   alias BorutaIdentity.Accounts.Confirmations
+  alias BorutaIdentity.Accounts.Consents
+  alias BorutaIdentity.Accounts.Deliveries
+  alias BorutaIdentity.Accounts.Registrations
+  alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.Accounts.Users
 
   ## Database getters
 
-  defdelegate list_users(), to: Users
-  defdelegate get_user_by_email(email), to: Users
-  defdelegate get_user_by_email_and_password(email, password), to: Users
-  defdelegate check_password(user, password), to: Users
+  defdelegate list_users, to: Users
   defdelegate get_user(id), to: Users
-  defdelegate get_user!(id), to: Users
+  defdelegate get_user_by_email(email), to: Users
+  defdelegate check_user_password(user, password), to: Users
   defdelegate get_user_by_session_token(token), to: Users
   defdelegate get_user_by_reset_password_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users

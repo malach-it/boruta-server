@@ -1,4 +1,6 @@
 defmodule BorutaIdentity.Accounts.Sessions do
+  @moduledoc false
+
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
 
