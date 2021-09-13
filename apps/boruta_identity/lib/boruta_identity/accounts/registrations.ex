@@ -5,6 +5,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
 
@@ -22,7 +23,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec register_user(attrs :: user_registration_attrs()) :: {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
+  @spec register_user(attrs :: user_registration_attrs()) ::
+          {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
   def register_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
@@ -38,12 +40,12 @@ defmodule BorutaIdentity.Accounts.Registrations do
       %Ecto.Changeset{data: %User{}}
 
   """
+  @spec change_user_registration(user :: %User{}) ::
+          Ecto.Changeset.t()
+  @spec change_user_registration(user :: %User{}, attrs :: user_registration_attrs()) ::
+          Ecto.Changeset.t()
   def change_user_registration(%User{} = user, attrs \\ %{}) do
     User.registration_changeset(user, attrs, hash_password: false)
-  end
-
-  def delete_user(user_id) do
-    Repo.delete_all(from(u in User, where: u.id == ^user_id))
   end
 
   @doc """
@@ -106,6 +108,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
       %Ecto.Changeset{data: %User{}}
 
   """
+  @spec change_user_email(user :: %User{}) :: Ecto.Changeset.t()
+  @spec change_user_email(user :: %User{}, attrs :: map()) :: Ecto.Changeset.t()
   def change_user_email(user, attrs \\ %{}) do
     User.email_changeset(user, attrs)
   end
@@ -123,6 +127,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec apply_user_email(user :: User.t(), password :: String.t(), attrs :: map()) ::
+          {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}
   def apply_user_email(user, password, attrs) do
     user
     |> User.email_changeset(attrs)
@@ -136,6 +142,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
   If the token matches, the user email is updated and the token is deleted.
   The confirmed_at date is also updated to the current time.
   """
+  @spec update_user_email(user :: User.t(), token :: String.t()) :: :ok | :error
   def update_user_email(user, token) do
     context = "change:#{user.email}"
 
@@ -165,6 +172,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
       %Ecto.Changeset{data: %User{}}
 
   """
+  @spec change_user_password(user :: %User{}) :: changeset :: Ecto.Changeset.t()
   def change_user_password(user, attrs \\ %{}) do
     User.password_changeset(user, attrs, hash_password: false)
   end
@@ -181,6 +189,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec reset_user_password(user :: User.t(), attrs :: map()) ::
+          {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}
   def reset_user_password(user, attrs) do
     Ecto.Multi.new()
     |> Ecto.Multi.update(:user, User.password_changeset(user, attrs))
@@ -189,6 +199,18 @@ defmodule BorutaIdentity.Accounts.Registrations do
     |> case do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
+    end
+  end
+
+  @spec delete_user(user_id :: Ecto.UUID.t()) ::
+          {:ok, user :: User.t()} | {:error, String.t()} | {:error, Ecto.Changeset.t()}
+  def delete_user(user_id) when is_binary(user_id) do
+    case Users.get_user(user_id) do
+      nil ->
+        {:error, "User not found."}
+
+      user ->
+        Repo.delete(user)
     end
   end
 end

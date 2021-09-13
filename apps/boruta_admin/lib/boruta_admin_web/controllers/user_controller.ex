@@ -37,7 +37,7 @@ defmodule BorutaAdminWeb.UserController do
   end
 
   def delete(conn, %{"id" => id}) do
-    with {1, _result} <- Accounts.delete_user(id) do
+    with {:ok, _user} <- Accounts.delete_user(id) do
       send_resp(conn, 204, "")
     end
   end

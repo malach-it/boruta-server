@@ -25,7 +25,6 @@ defmodule BorutaIdentity.Accounts do
   defdelegate register_user(attrs), to: Registrations
   defdelegate change_user_registration(user), to: Registrations
   defdelegate change_user_registration(user, attrs), to: Registrations
-  defdelegate delete_user(id), to: Registrations
   defdelegate update_user_password(user, password, attrs), to: Registrations
   defdelegate change_user_password(user), to: Registrations
   defdelegate change_user_password(user, attrs), to: Registrations
@@ -35,6 +34,7 @@ defmodule BorutaIdentity.Accounts do
   defdelegate change_user_email(user, attrs), to: Registrations
   defdelegate apply_user_email(user, password, attrs), to: Registrations
   defdelegate update_user_email(user, token), to: Registrations
+  defdelegate delete_user(id), to: Registrations
 
   ## Delivery
 
@@ -53,7 +53,6 @@ defmodule BorutaIdentity.Accounts do
   defdelegate confirm_user(token), to: Confirmations
 
   ## Consent
-  # Change conn to OAuth request
   defdelegate consent(user, attrs), to: Consents
   defdelegate consented?(user, conn), to: Consents
 end

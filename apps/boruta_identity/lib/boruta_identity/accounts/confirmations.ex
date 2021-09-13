@@ -11,6 +11,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   If the token matches, the user account is marked as confirmed
   and the token is deleted.
   """
+  @spec confirm_user(token :: String.t()) :: {:ok, user :: User.t()} | :error
   def confirm_user(token) do
     with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
          %User{} = user <- Repo.one(query),

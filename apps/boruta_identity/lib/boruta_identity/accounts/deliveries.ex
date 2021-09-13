@@ -6,6 +6,8 @@ defmodule BorutaIdentity.Accounts.Deliveries do
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
 
+  @type callback_function :: (token :: String.t() -> any())
+
   @doc """
   Delivers the update email instructions to the given user.
 
@@ -15,6 +17,11 @@ defmodule BorutaIdentity.Accounts.Deliveries do
       {:ok, %{to: ..., body: ...}}
 
   """
+  @spec deliver_update_email_instructions(
+          user :: User.t(),
+          current_email :: String.t(),
+          update_email_url_fun :: callback_function()
+        ) :: any()
   def deliver_update_email_instructions(%User{} = user, current_email, update_email_url_fun)
       when is_function(update_email_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "change:#{current_email}")
@@ -35,6 +42,10 @@ defmodule BorutaIdentity.Accounts.Deliveries do
       {:error, :already_confirmed}
 
   """
+  @spec deliver_user_confirmation_instructions(
+          user :: User.t(),
+          confirmation_url_fun :: callback_function()
+        ) :: any()
   def deliver_user_confirmation_instructions(%User{} = user, confirmation_url_fun)
       when is_function(confirmation_url_fun, 1) do
     if user.confirmed_at do
@@ -55,6 +66,10 @@ defmodule BorutaIdentity.Accounts.Deliveries do
       {:ok, %{to: ..., body: ...}}
 
   """
+  @spec deliver_user_reset_password_instructions(
+          user :: User.t(),
+          reset_password_url_fun :: callback_function()
+        ) :: any()
   def deliver_user_reset_password_instructions(%User{} = user, reset_password_url_fun)
       when is_function(reset_password_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")

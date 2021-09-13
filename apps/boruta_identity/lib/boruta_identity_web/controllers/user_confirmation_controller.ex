@@ -2,13 +2,14 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   use BorutaIdentityWeb, :controller
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.User
 
   def new(conn, _params) do
     render(conn, "new.html")
   end
 
   def create(conn, %{"user" => %{"email" => email}}) do
-    if user = Accounts.get_user_by_email(email) do
+    with %User{} = user <- Accounts.get_user_by_email(email) do
       Accounts.deliver_user_confirmation_instructions(
         user,
         &Routes.user_confirmation_url(conn, :confirm, &1)
@@ -28,26 +29,23 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   # Do not log in the user after confirmation to avoid a
   # leaked token giving the user access to the account.
   def confirm(conn, %{"token" => token}) do
-    case Accounts.confirm_user(token) do
-      {:ok, _} ->
+    case {conn.assigns[:current_user], Accounts.confirm_user(token)} do
+      {_assigns, {:ok, _user}} ->
         conn
         |> put_flash(:info, "Account confirmed successfully.")
         |> redirect(to: "/")
 
-      :error ->
-        # If there is a current user and the account was already confirmed,
-        # then odds are that the confirmation link was already visited, either
-        # by some automation or by the user themselves, so we redirect without
-        # a warning message.
-        case conn.assigns do
-          %{current_user: %{confirmed_at: confirmed_at}} when not is_nil(confirmed_at) ->
-            redirect(conn, to: "/")
+      # If there is a current user and the account was already confirmed,
+      # then odds are that the confirmation link was already visited, either
+      # by some automation or by the user themselves, so we redirect without
+      # a warning message.
+      {%{confirmed_at: confirmed_at}, :error} when not is_nil(confirmed_at) ->
+        redirect(conn, to: "/")
 
-          %{} ->
-            conn
-            |> put_flash(:error, "Account confirmation link is invalid or it has expired.")
-            |> redirect(to: "/")
-        end
+      {_, :error} ->
+        conn
+        |> put_flash(:error, "Account confirmation link is invalid or it has expired.")
+        |> redirect(to: "/")
     end
   end
 end

@@ -5,6 +5,7 @@ defmodule BorutaIdentity.AccountsTest do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
+  alias BorutaIdentity.Repo
 
   describe "list_users/0" do
     test "returns an empty list" do
@@ -301,6 +302,18 @@ defmodule BorutaIdentity.AccountsTest do
         })
 
       refute Repo.get_by(UserToken, user_id: user.id)
+    end
+  end
+
+  describe "delete_user/1" do
+    test "returns an error" do
+      assert Accounts.delete_user(Ecto.UUID.generate()) == {:error, "User not found."}
+    end
+
+    test "returns deleted user" do
+      %User{id: user_id} = user_fixture()
+      assert {:ok, %User{id: ^user_id}} = Accounts.delete_user(user_id)
+      assert Repo.get(User, user_id) == nil
     end
   end
 
