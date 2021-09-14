@@ -35,7 +35,8 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
       assert redirected_to(new_password_conn) == Routes.user_settings_path(conn, :edit)
       assert get_session(new_password_conn, :user_token) != get_session(conn, :user_token)
       assert get_flash(new_password_conn, :info) =~ "Password updated successfully"
-      assert Accounts.get_user_by_email_and_password(user.email, "new valid password")
+      assert user = Accounts.get_user_by_email(user.email)
+      assert :ok = Accounts.check_user_password(user, "new valid password")
     end
 
     test "does not update password on invalid data", %{conn: conn} do

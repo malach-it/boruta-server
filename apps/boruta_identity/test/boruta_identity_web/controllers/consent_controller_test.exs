@@ -18,7 +18,7 @@ defmodule BorutaIdentityWeb.ConsentControllerTest do
       conn = conn
              |> log_in(user_fixture())
              |> init_test_session(%{user_return_to: after_sign_in_path})
-             |> post(Routes.consent_path(conn, :consent), %{client_id: "client_id", scopes: []})
+             |> post(Routes.consent_path(conn, :consent), %{client_id: "client_id", scopes: ["test"]})
 
       assert redirected_to(conn) == after_sign_in_path
     end

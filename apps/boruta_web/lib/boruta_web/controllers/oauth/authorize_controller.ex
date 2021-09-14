@@ -1,4 +1,5 @@
 defmodule BorutaWeb.Oauth.AuthorizeController do
+  @dialyzer :no_match
   @behaviour Boruta.Oauth.AuthorizeApplication
 
   use BorutaWeb, :controller
@@ -19,7 +20,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = store_user_return_to(conn, query_params)
 
-    # TODO use a preAuthorize to see if the request is valid
     authorize_response(
       conn,
       current_user,
