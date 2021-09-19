@@ -61,6 +61,13 @@ config :boruta_web, BorutaWeb.Authorization,
     site: System.get_env("ADMIN_OAUTH_BASE_URL", "http://oauth.boruta.patatoid.fr")
   ]
 
+config :boruta, Boruta.Oauth,
+  repo: BorutaWeb.Repo,
+  contexts: [
+    resource_owners: BorutaWeb.ResourceOwners
+  ],
+  issuer: "https://oauth.boruta.patatoid.fr"
+
 config :libcluster,
   topologies: [
     k8s: [

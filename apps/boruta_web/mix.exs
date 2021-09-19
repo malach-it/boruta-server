@@ -23,7 +23,7 @@ defmodule BorutaWeb.MixProject do
   def application do
     [
       mod: {BorutaWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools, :boruta_gateway]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -36,16 +36,14 @@ defmodule BorutaWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
-      {:boruta_gateway, in_umbrella: true},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", branch: "openid-connect"},
       {:boruta_identity, in_umbrella: true},
       {:bypass, "~> 2.1.0"},
       {:ex_machina, "~> 2.4", only: :test},
       {:finch, "~> 0.8"},
-      {:flow, "~> 1.0.0"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:joken, "~> 2.0"},
+      {:joken, "~> 2.3"},
       {:libcluster, "~> 3.2.1"},
       {:phoenix, "~> 1.5.9"},
       {:phoenix_ecto, "~> 4.1"},

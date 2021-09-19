@@ -4,6 +4,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   use BorutaWeb, :controller
 
+  import BorutaIdentityWeb.Authenticable, only: [log_out_user: 1]
+
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.AuthorizeResponse
@@ -18,39 +20,62 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     current_user = conn.assigns[:current_user]
     session_chosen = get_session(conn, :session_chosen) || false
 
-    conn = store_user_return_to(conn, query_params)
-
-    authorize_response(
-      conn,
+    conn
+    |> store_user_return_to()
+    |> put_unsigned_request()
+    |> authorize_response(
       current_user,
       session_chosen,
-      Accounts.consented?(current_user, conn)
+      Accounts.consented?(current_user, conn),
+      query_params["prompt"],
+      query_params["max_age"]
     )
   end
 
-  defp authorize_response(conn, %User{} = current_user, true, false) do
+  defp authorize_response(conn, current_user, _, _, "none", _) do
+    current_user = current_user || %User{}
+    resource_owner =
+        %ResourceOwner{
+          sub: current_user.id,
+          username: current_user.email,
+          last_login_at: current_user.last_login_at
+        }
+
+    conn
+    |> Oauth.authorize(
+      resource_owner,
+      __MODULE__
+    )
+  end
+
+  defp authorize_response(conn, _, _, _, "login", _), do: log_out_user(conn)
+
+  defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
     conn
     |> Oauth.preauthorize(
-      %ResourceOwner{sub: current_user.id, username: current_user.email},
+      %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at},
       __MODULE__
     )
   end
 
-  defp authorize_response(conn, %User{} = current_user, true, true) do
+  defp authorize_response(conn, %User{} = current_user, true, true, _, _) do
     conn
-    |> delete_session(:session_chosen)
     |> Oauth.authorize(
-      %ResourceOwner{sub: current_user.id, username: current_user.email},
+      %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at},
       __MODULE__
     )
   end
 
-  defp authorize_response(conn, %User{}, _, _) do
+  defp authorize_response(conn, %User{} = current_user, _, _, _, max_age) do
     # TODO a render can be a better choice
-    redirect(conn, to: Routes.choose_session_path(conn, :new))
+    case login_expired?(current_user, max_age) do
+      true -> log_out_user(conn)
+      false ->
+        redirect(conn, to: Routes.choose_session_path(conn, :new))
+    end
   end
 
-  defp authorize_response(conn, _, _, _) do
+  defp authorize_response(conn, _, _, _, _, _) do
     redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
   end
 
@@ -71,65 +96,68 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %AuthorizeResponse{
           type: type,
           redirect_uri: redirect_uri,
-          value: value,
+          access_token: access_token,
+          code: code,
+          id_token: id_token,
           expires_in: expires_in,
-          state: state
+          state: state,
+          token_type: token_type
         }
       ) do
     query =
-      case {type, state} do
-        {"access_token", nil} ->
-          URI.encode_query(%{access_token: value, expires_in: expires_in})
-
-        {"access_token", state} ->
-          URI.encode_query(%{access_token: value, expires_in: expires_in, state: state})
-
-        {"code", nil} ->
-          URI.encode_query(%{code: value})
-
-        {"code", state} ->
-          URI.encode_query(%{code: value, state: state})
-      end
+      %{
+        code: code,
+        id_token: id_token,
+        access_token: access_token,
+        expires_in: expires_in,
+        state: state,
+        token_type: token_type
+      }
+      |> Enum.map(fn {param_type, value} ->
+        value && {param_type, value}
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> URI.encode_query()
 
     url =
       case type do
-        "access_token" -> "#{redirect_uri}##{query}"
-        "code" -> "#{redirect_uri}?#{query}"
+        :token -> "#{redirect_uri}##{query}"
+        :hybrid -> "#{redirect_uri}##{query}"
+        :code -> "#{redirect_uri}?#{query}"
       end
 
     conn
+    |> delete_session(:session_chosen)
     |> redirect(external: url)
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
   def authorize_error(
-        %Plug.Conn{} = conn,
-        %Error{status: :unauthorized, error: :invalid_resource_owner}
+        %Plug.Conn{query_params: query_params} = conn,
+        %Error{status: :unauthorized, error: :invalid_resource_owner} = error
       ) do
-    conn
-    |> redirect(to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
+    case query_params["prompt"] do
+      "none" ->
+        # TODO move this to boruta_auth
+        authorize_error(conn, %{
+          error
+          | error: :login_required,
+            format: :fragment,
+            redirect_uri: query_params["redirect_uri"]
+        })
+
+      _ ->
+        conn
+        |> delete_session(:session_chosen)
+        |> redirect(to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
+    end
   end
 
-  def authorize_error(
-        conn,
-        %Error{
-          error: error,
-          error_description: error_description,
-          format: format,
-          redirect_uri: redirect_uri
-        }
-      )
+  def authorize_error(conn, %Error{format: format} = error)
       when not is_nil(format) do
-    query = URI.encode_query(%{error: error, error_description: error_description})
-
-    url =
-      case format do
-        :query -> "#{redirect_uri}?#{query}"
-        :fragment -> "#{redirect_uri}##{query}"
-      end
-
     conn
-    |> redirect(external: url)
+    |> delete_session(:session_chosen)
+    |> redirect(external: Error.redirect_to_url(error))
   end
 
   def authorize_error(
@@ -137,39 +165,45 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %Error{status: status, error: error, error_description: error_description}
       ) do
     conn
+    |> delete_session(:session_chosen)
     |> put_status(status)
     |> put_view(BorutaWeb.OauthView)
     |> render("error." <> get_format(conn), error: error, error_description: error_description)
   end
 
-  defp store_user_return_to(conn, %{"code_challenge_method" => code_challenge_method} = params) do
-    conn
-    |> put_session(
-      :user_return_to,
-      Routes.authorize_path(conn, :authorize,
-        client_id: params["client_id"],
-        code_challenge: params["code_challenge"],
-        code_challenge_method: code_challenge_method,
-        redirect_uri: params["redirect_uri"],
-        response_type: params["response_type"],
-        scope: params["scope"],
-        state: params["state"]
-      )
-    )
+  defp login_expired?(current_user, max_age) do
+    now = DateTime.utc_now() |> DateTime.to_unix()
+
+    with "" <> max_age <- max_age,
+         {max_age, _} <- Integer.parse(max_age),
+         true <- now - DateTime.to_unix(current_user.last_login_at) >= max_age do
+      true
+    else
+      _ -> false
+    end
   end
 
-  defp store_user_return_to(conn, params) do
+  defp put_unsigned_request(%Plug.Conn{query_params: query_params} = conn) do
+    unsigned_request =
+      with request <- Map.get(query_params, "request", ""),
+           {:ok, params} <- Joken.peek_claims(request) do
+        params
+      else
+        _ -> %{}
+      end
+
+    query_params = Map.merge(query_params, unsigned_request)
+
+    %{conn | query_params: query_params}
+  end
+
+  defp store_user_return_to(conn) do
     conn
     |> put_session(
       :user_return_to,
-      Routes.authorize_path(conn, :authorize,
-        client_id: params["client_id"],
-        code_challenge: params["code_challenge"],
-        redirect_uri: params["redirect_uri"],
-        response_type: params["response_type"],
-        scope: params["scope"],
-        state: params["state"]
-      )
+      current_path(conn)
+      |> String.replace(~r/prompt=(login|none)/, "")
+      |> String.replace(~r/max_age=(\d+)/, "")
     )
   end
 end

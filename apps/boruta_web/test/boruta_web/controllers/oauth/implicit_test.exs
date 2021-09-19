@@ -18,7 +18,11 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       scope = insert(:scope, public: true)
 
       {:ok,
-        conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner, scope: scope}
+       conn: conn,
+       client: client,
+       redirect_uri: redirect_uri,
+       resource_owner: resource_owner,
+       scope: scope}
     end
 
     # TODO test different validation cases
@@ -26,9 +30,11 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       conn: conn,
       resource_owner: resource_owner
     } do
-      conn = conn
-             |> log_in(resource_owner)
-             |> init_test_session(session_chosen: true)
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
+
       conn = get(conn, "/oauth/authorize")
 
       assert response_content_type(conn, :html)
@@ -42,9 +48,10 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn = conn
-             |> log_in(resource_owner)
-             |> init_test_session(session_chosen: true)
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
 
       conn =
         get(
@@ -57,7 +64,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
           })
         )
 
-      assert html_response(conn, 401) =~ "Invalid client"
+      assert html_response(conn, 401) =~ ~r/Invalid client_id or redirect_uri./
     end
 
     test "redirect to user authentication page", %{
@@ -85,9 +92,10 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn = conn
-             |> log_in(resource_owner)
-             |> init_test_session(session_chosen: true)
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
 
       conn =
         get(
@@ -115,9 +123,11 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      conn = conn
-             |> log_in(resource_owner)
-             |> init_test_session(session_chosen: true)
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
+
       given_state = "state"
 
       conn =
@@ -133,7 +143,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
 
       [_, access_token, expires_in, state] =
         Regex.run(
-          ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)&state=(.+)/,
+          ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)&state=(.+)&token_type=bearer/,
           redirected_to(conn)
         )
 
@@ -149,9 +159,10 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       resource_owner: resource_owner,
       scope: scope
     } do
-      conn = conn
-             |> log_in(resource_owner)
-             |> init_test_session(session_chosen: true)
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
 
       conn =
         get(
@@ -175,9 +186,11 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       resource_owner: resource_owner,
       scope: scope
     } do
-      conn = conn
-             |> log_in(resource_owner)
-             |> init_test_session(session_chosen: true)
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
+
       Accounts.consent(resource_owner, %{client_id: client.id, scopes: [scope.name]})
 
       conn =

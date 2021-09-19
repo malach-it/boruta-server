@@ -6,12 +6,15 @@ defmodule BorutaWeb.Router do
       fetch_current_user: 2
     ]
 
-  import BorutaWeb.Authorization, only: [
-    require_authenticated: 2
-  ]
+  import BorutaWeb.Authorization,
+    only: [
+      require_authenticated: 2
+    ]
 
-  pipeline :authenticated_api do
-    plug :require_authenticated
+  pipeline :protected_api do
+    plug(:accepts, ["json"])
+
+    plug(:require_authenticated)
   end
 
   pipeline :browser do
@@ -34,12 +37,6 @@ defmodule BorutaWeb.Router do
     plug(:accepts, ["json", "jwt"])
   end
 
-  scope "/", BorutaWeb do
-    pipe_through(:browser)
-
-    get("/", PageController, :index)
-  end
-
   get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck)
 
   scope "/accounts" do
@@ -50,12 +47,26 @@ defmodule BorutaWeb.Router do
 
   forward("/accounts", BorutaIdentityWeb.Endpoint)
 
+  scope "/oauth", BorutaWeb do
+    pipe_through(:api)
+
+    get("/jwks", OpenidController, :jwks_index)
+    get("/jwks/:client_id", OpenidController, :jwks_show)
+  end
+
   scope "/oauth", BorutaWeb.Oauth do
     pipe_through(:api)
 
     post("/token", TokenController, :token)
-    post("/revoke", RevokeController, :revoke)
     post("/introspect", IntrospectController, :introspect)
+    post("/revoke", RevokeController, :revoke)
+  end
+
+  scope "/oauth", BorutaWeb do
+    pipe_through(:protected_api)
+
+    get("/userinfo", OpenidController, :userinfo)
+    post("/userinfo", OpenidController, :userinfo)
   end
 
   scope "/oauth", BorutaWeb.Oauth do

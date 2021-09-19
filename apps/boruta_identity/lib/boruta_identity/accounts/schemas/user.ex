@@ -16,6 +16,7 @@ defmodule BorutaIdentity.Accounts.User do
           confirmed_at: NaiveDateTime.t(),
           authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
           consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
+          last_login_at: DateTime.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -28,6 +29,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:password, :string, virtual: true)
     field(:hashed_password, :string)
     field(:confirmed_at, :naive_datetime)
+    field(:last_login_at, :utc_datetime_usec)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:consents, Consent, on_replace: :delete)
@@ -57,6 +59,10 @@ defmodule BorutaIdentity.Accounts.User do
     |> cast(attrs, [:email, :password])
     |> validate_email()
     |> validate_password(opts)
+  end
+
+  def login_changeset(user) do
+    change(user, last_login_at: DateTime.utc_now())
   end
 
   defp validate_email(changeset) do

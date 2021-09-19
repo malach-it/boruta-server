@@ -38,7 +38,7 @@ defmodule BorutaIdentity.MixProject do
   defp deps do
     [
       {:argon2_elixir, "~> 2.0"},
-      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", branch: "openid-connect"},
       {:ecto_sql, "~> 3.4"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
