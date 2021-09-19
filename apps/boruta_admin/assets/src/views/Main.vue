@@ -48,6 +48,23 @@ export default {
 </script>
 
 <style lang="scss">
+pre {
+  margin: 0;
+}
+.attribute.list {
+  margin: 0;
+  .item {
+    list-style-type: none;
+    margin-bottom: 15px;
+    .header {
+      color: #999;
+    }
+    .description {
+      padding-left: 15px;
+      color: inherit;
+    }
+  }
+}
 #app {
   height: 100%;
   position: relative;
@@ -57,7 +74,6 @@ export default {
   display: flex;
   height: calc(100% - 40px);
   h1 {
-    text-align: center;
     padding: 1em 0;
     margin: 0;
   }
@@ -85,6 +101,7 @@ export default {
     }
   }
   .content {
+    padding: 15px 0;
     flex: 1;
     .container {
       padding: 0 20px;

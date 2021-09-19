@@ -10,8 +10,16 @@
               class="ui tiny blue button">edit</router-link>
             <a v-on:click="deleteUpstream(upstream)" class="ui tiny red button">delete</a>
           </div>
-          <p><strong>Upstream ID :</strong> {{ upstream.id }}</p>
-          <p><strong>Base URL :</strong> {{ upstream.scheme }}://{{ upstream.host }}:{{ upstream.port }}</p>
+          <div class="ui attribute list">
+            <div class="item">
+              <span class="header">Upstream ID</span>
+              <span class="description">{{ upstream.id }}</span>
+            </div>
+            <div class="item">
+              <span class="header">Base URL</span>
+              <span class="description">{{ upstream.baseUrl }}</span>
+            </div>
+          </div>
           <span v-for="path in upstream.uris" class="ui olive label" :key="path.uri">
             {{ path.uri }}
           </span>

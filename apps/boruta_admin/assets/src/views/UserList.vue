@@ -10,9 +10,12 @@
               class="ui tiny blue button">edit</router-link>
             <a v-on:click="deleteUser(user)" class="ui tiny red button">delete</a>
           </div>
-          <p>
-            <strong>Email:</strong> {{ user.email }}
-          </p>
+          <div class="ui attribute list">
+            <div class="item">
+              <span class="header">Email</span>
+              <span class="description">{{ user.email }}</span>
+            </div>
+          </div>
           <span v-for="scope in user.authorized_scopes" class="ui olive label" :key="scope.model.id">
             {{ scope.model.name }}
           </span>
