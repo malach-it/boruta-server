@@ -1,11 +1,11 @@
 <template>
   <div class="new-client">
+    <h1>New Client</h1>
     <div class="ui container">
-      <h1>New Client</h1>
-      <div class="ui big segment">
+      <div class="ui large segment">
         <FormErrors v-if="errors" :errors="errors" />
         <form class="ui form" v-on:submit.prevent="createClient()">
-          <div class="ui big segment">
+          <div class="ui large segment">
             <div class="field">
               <label>Access token TTL (seconds)</label>
               <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
@@ -34,7 +34,7 @@
             </div>
             <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </div>
-          <div class="ui big segment">
+          <div class="ui large segment">
             <div class="field">
               <label>Supported grant types</label>
               <div class="ui segments">

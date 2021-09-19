@@ -1,8 +1,8 @@
 <template>
   <div class="header">
-    <div class="ui secondary pointing menu">
-      <router-link :to="{ name: 'home' }" class="logo item active">
-        Boruta
+    <div class="ui main inverted menu">
+      <router-link :to="{ name: 'home' }" class="logo item">
+        BorutaAuth
       </router-link>
       <div class="right menu">
         <span class="ui item">
@@ -37,15 +37,14 @@ export default {
 
 <style scoped lang="scss">
 .header {
-  .logo {
+  background: #1b1c1d;
+  .item.logo {
     min-width: 200px;
+    background: inherit!important;
   }
-  .ui.secondary.pointing.menu .router-link-active.item {
-    background-color: transparent;
-    box-shadow: none;
-    border-color: #1b1c1d;
-    font-weight: 700;
-    color: rgba(0,0,0,.95);
+  .main.menu {
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255,255,255,.08);
   }
 
   @media screen and (max-width: 1127px) {

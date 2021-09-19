@@ -1,15 +1,23 @@
 <template>
   <div class="edit-client">
+    <h1>Edit a client</h1>
     <div class="ui container">
-      <h1>Edit a client</h1>
-      <div class="ui big segment">
+      <div class="ui large segment">
         <FormErrors v-if="errors" :errors="errors" />
-        <div class="ui big segment">
-          <p><strong>Client id:</strong> {{ client.id }}</p>
-          <p><strong>Client secret:</strong> {{ client.secret }}</p>
+        <div class="ui large segment">
+          <div class="ui attribute list">
+            <div class="item">
+              <span class="header">Client ID</span>
+              <span class="description">{{ client.id }}</span>
+            </div>
+            <div class="item">
+              <span class="header">Client secret</span>
+              <span class="description">{{ client.secret }}</span>
+            </div>
+          </div>
         </div>
         <form class="ui form" v-on:submit.prevent="updateClient()">
-          <div class="ui big segment">
+          <div class="ui large segment">
             <div class="field">
               <label>Name</label>
               <input v-model="client.name" placeholder="Super client" />
@@ -43,18 +51,18 @@
             <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </div>
           <div class="ui segments">
-            <div class="ui big segment">
+            <div class="ui large segment">
               <div class="ui toggle checkbox">
                 <input type="checkbox" v-model="client.pkce">
                 <label>PKCE enabled</label>
               </div>
             </div>
           </div>
-          <div class="ui big segment">
+          <div class="ui large segment">
             <div class="field">
               <label>Supported grant types</label>
               <div class="ui segments">
-                <div class="ui big segment" v-for="grantType in client.grantTypes" :key="grantType.label">
+                <div class="ui large segment" v-for="grantType in client.grantTypes" :key="grantType.label">
                   <div class="ui toggle checkbox">
                     <input type="checkbox" v-model="grantType.value">
                     <label>{{ grantType.label }}</label>

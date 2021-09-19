@@ -1,9 +1,10 @@
 <template>
   <div class="upstream-list">
-    <div class="ui container">
-      <h1>Upstreams</h1>
-      <div v-for="upstream in upstreams" class="ui big upstream segments" :key="upstream.id">
-        <div class="ui segment">
+    <h1>Upstream management</h1>
+    <div class="container">
+      <div class="ui three column upstreams stackable grid">
+        <div v-for="upstream in upstreams" :key="upstream.id" class="column">
+        <div class="ui large upstream segment">
           <div class="actions">
             <router-link
               :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"
@@ -19,15 +20,19 @@
               <span class="header">Base URL</span>
               <span class="description">{{ upstream.baseUrl }}</span>
             </div>
+            <div class="item">
+              <span class="header">Paths</span>
+              <div class="description">
+                <span v-for="path in upstream.uris" class="ui olive label" :key="path.uri">
+                  {{ path.uri }}
+                </span>
+              </div>
+            </div>
           </div>
-          <span v-for="path in upstream.uris" class="ui olive label" :key="path.uri">
-            {{ path.uri }}
-          </span>
+        </div>
         </div>
       </div>
-      <div class="main actions">
-        <router-link :to="{ name: 'new-upstream' }" class="ui teal big button">Add an upstream</router-link>
-      </div>
+      <router-link :to="{ name: 'new-upstream' }" class="ui teal big button">Add an upstream</router-link>
     </div>
   </div>
 </template>

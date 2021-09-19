@@ -1,11 +1,11 @@
 <template>
   <div class="new-upstream">
+    <h1>New Upstream</h1>
     <div class="ui container">
-      <h1>New Upstream</h1>
-      <div class="ui big segment">
+      <div class="ui large segment">
         <FormErrors v-if="errors" :errors="errors" />
         <form class="ui form" v-on:submit.prevent="createUpstream()">
-          <div class="ui big segment">
+          <div class="ui large segment">
             <div class="field">
               <label>Scheme</label>
               <select v-model="upstream.scheme" placeholder="https">

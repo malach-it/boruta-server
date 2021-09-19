@@ -1,26 +1,26 @@
 <template>
   <div id="scope-list">
-    <div class="ui container">
-      <h1>Scopes</h1>
+    <h1>Scope management</h1>
+    <div class="container">
       <div class="ui segments">
         <div v-for="(scope, index) in scopes" class="ui mini segment" :key="index">
           <div v-if="scope.edit">
             <form v-on:submit.prevent="saveScope(scope)" class="ui form">
               <div class="ui stackable grid">
                 <div class="four wide column">
-                  <div class="ui mini input" :class="{ 'error': scope.errors && scope.errors.label }">
-                    <input type="text" v-model="scope.label" placeholder="I am a scope label">
-                    <em v-if="scope.errors && scope.errors.label" class="error-message">{{ scope.errors.label[0] }}</em>
-                  </div>
-                </div>
-                <div class="four wide column">
                   <div class="ui mini input" :class="{ 'error': scope.errors && scope.errors.name }">
                     <input type="text" v-model="scope.name" placeholder="iam:a:scope">
                     <em v-if="scope.errors && scope.errors.name" class="error-message">{{ scope.errors.name[0] }}</em>
                   </div>
                 </div>
+                <div class="four wide column">
+                  <div class="ui mini input" :class="{ 'error': scope.errors && scope.errors.label }">
+                    <input type="text" v-model="scope.label" placeholder="I am a scope label">
+                    <em v-if="scope.errors && scope.errors.label" class="error-message">{{ scope.errors.label[0] }}</em>
+                  </div>
+                </div>
                 <div class="five wide column">
-                  <div class="ui toggle checkbox">
+                  <div class="ui checkbox">
                     <input type="checkbox" v-model="scope.public" placeholder="http://redirect.uri">
                     <label>Public</label>
                   </div>
@@ -35,13 +35,13 @@
           <div v-else>
             <div class="ui stackable grid">
               <div class="four wide column">
-                <strong>{{ scope.label }}</strong>
+                <span class="ui olive label">{{ scope.name }}</span>
               </div>
               <div class="four wide column">
-                <span class="ui basic olive label">{{ scope.name }}</span>
+                <strong>{{ scope.label }}</strong>
               </div>
               <div class="five wide column">
-                <div class="ui toggle checkbox">
+                <div class="ui checkbox">
                   <input disabled type="checkbox" v-model="scope.public" placeholder="http://redirect.uri">
                   <label>Public</label>
                 </div>
@@ -54,9 +54,7 @@
           </div>
         </div>
       </div>
-      <div class="actions">
-        <button @click="addScope()" class="ui big teal button">Add a scope</button>
-      </div>
+      <button @click="addScope()" class="ui big teal button">Add a scope</button>
     </div>
   </div>
 </template>
@@ -137,6 +135,9 @@ export default {
         color: #9f3a38;
       }
     }
+  }
+  .ui.grid {
+    margin: -1rem;
   }
 }
 </style>

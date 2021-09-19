@@ -1,8 +1,8 @@
 <template>
   <div class="edit-user">
+    <h1>Edit a user</h1>
     <div class="ui container">
-      <h1>Edit a user</h1>
-      <div class="ui big violet segment">
+      <div class="ui large segment">
         <h2>{{ user.email }}</h2>
         <FormErrors :errors="errors" v-if="errors" />
         <p><strong>id:</strong> {{ user.id }}</p>
