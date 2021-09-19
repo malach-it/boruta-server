@@ -37,6 +37,12 @@ defmodule BorutaWeb.Router do
     plug(:accepts, ["json", "jwt"])
   end
 
+  scope "/", BorutaWeb do
+    pipe_through(:browser)
+
+    get("/", PageController, :index)
+  end
+
   get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck)
 
   scope "/accounts" do
