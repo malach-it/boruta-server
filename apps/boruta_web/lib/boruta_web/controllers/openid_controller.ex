@@ -10,7 +10,7 @@ defmodule BorutaWeb.OpenidController do
          |> Map.put(:sub, sub) do
       conn
       |> put_view(OauthView)
-      render("userinfo.json", userinfo: userinfo)
+      |> render("userinfo.json", userinfo: userinfo)
     else
       _ -> {:error, :not_found}
     end
