@@ -14,14 +14,14 @@ services:
   - mix local.rebar --force
   - mix deps.get
 
-    # dialyzer:
-    #   cache:
-    #     paths:
-    #       - _build/
-    #   stage: test
-    #   extends: .elixir-task
-    #   script:
-    #   - mix dialyzer
+dialyzer:
+  stage: test
+  extends: .elixir-task
+  cache:
+    paths:
+      - _build/
+  script:
+  - mix dialyzer
 
 credo:
   stage: test
@@ -49,7 +49,7 @@ build:
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_REGISTRY/patatoid/boruta/app:$CI_COMMIT_SHORT_SHA .
-    - docker tag $CI_REGISTRY/patatoid/boruta/app:$CI_COMMIT_SHORT_SHA $CI_REGISTRY/patatoid/boruta/app:openid
+    - docker tag $CI_REGISTRY/patatoid/boruta/app:$CI_COMMIT_SHORT_SHA $CI_REGISTRY/patatoid/boruta/app:latest
     - docker push $CI_REGISTRY/patatoid/boruta/app:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY/patatoid/boruta/app:latest
   only:
