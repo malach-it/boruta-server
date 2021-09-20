@@ -4,7 +4,7 @@
     <div class="container">
       <div class="ui three column stackable grid">
         <div v-for="user in users" class="column" :key="user.id">
-          <div class="ui large user segment">
+          <div class="ui large user highlightable segment">
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-user', params: { userId: user.id } }"
