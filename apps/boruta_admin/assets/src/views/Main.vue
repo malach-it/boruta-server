@@ -134,6 +134,7 @@ export default {
     margin: 0;
     color: white;
     background: rgba(255,255,255,.05);
+    border-bottom: 1px solid rgba(255,255,255,.05);
     margin-bottom: 1rem;
   }
   a {
