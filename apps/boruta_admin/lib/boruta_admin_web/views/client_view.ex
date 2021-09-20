@@ -19,6 +19,8 @@ defmodule BorutaAdminWeb.ClientView do
       authorize_scope: client.authorize_scope,
       access_token_ttl: client.access_token_ttl,
       authorization_code_ttl: client.authorization_code_ttl,
+      refresh_token_ttl: client.refresh_token_ttl,
+      id_token_ttl: client.id_token_ttl,
       pkce: client.pkce,
       public_key: client.public_key,
       authorized_scopes: Enum.map(client.authorized_scopes, fn (scope) ->

@@ -3,7 +3,7 @@
     <Header />
     <div id="main">
       <div class="sidebar-menu">
-        <div class="ui big vertical fluid tabular menu">
+        <div class="ui big vertical inverted fluid tabular menu">
           <router-link :to="{ name: 'dashboard' }" class="dashboard item">
             <i class="chart area icon"></i>
             Dashboard
@@ -51,43 +51,144 @@ export default {
 #app {
   height: 100%;
   position: relative;
+  .ui.label {
+    margin: 5px;
+  }
+  pre {
+    margin: 0;
+  }
+  .attribute.list {
+    margin: 0;
+    .item {
+      list-style-type: none;
+      margin-bottom: 1rem;
+      .header {
+        color: #999;
+      }
+      .description {
+        padding-left: 1rem;
+        color: inherit;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+  }
+  .ui.menu>.item {
+    border-radius: 0!important;
+  }
+  .ui.form {
+    .ui.input.error>input {
+      background-color: #fff6f6;
+      border-color: #e0b4b4;
+      color: #9f3a38;
+      box-shadow: none;
+    }
+    .ui.input, select, input {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #393939;
+      color: white;
+    }
+  }
+  .label {
+    cursor: default;
+  }
+  .olive {
+    background: rgba(71, 71, 135,1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(71, 71, 135,0.7)!important;
+    }
+  }
+  .violet {
+    background: rgba(205, 97, 51,1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(205, 97, 51,0.7)!important;
+    }
+  }
+  .blue {
+    background: rgba(34, 112, 147,1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(34, 112, 147,0.7)!important;
+    }
+  }
+  .red {
+    background: rgba(179, 57, 57,1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(179, 57, 57,0.7)!important;
+    }
+  }
+  .teal {
+    background: rgba(33, 140, 116,1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(33, 140, 116,0.7)!important;
+    }
+  }
 }
 #main {
   position: relative;
   display: flex;
-  height: calc(100% - 40px);
+  min-height: calc(100% - 41px);
+  background: #1b1c1d;
   h1 {
-    text-align: center;
-    padding: 1em 0;
+    text-align: left;
+    padding: 1em;
     margin: 0;
+    color: white;
+    background: rgba(255,255,255,.05);
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    margin-bottom: 1rem;
   }
   a {
     cursor: pointer;
+  }
+  label {
+    color: white!important;
   }
   .actions {
     float: right;
     &.main {
       margin: 1em 0;
     }
-  }
-  .ui.input.error>input {
-    background-color: #fff6f6;
-    border-color: #e0b4b4;
-    color: #9f3a38;
-    box-shadow: none;
+    .button {
+      margin: 5px;
+    }
   }
   .sidebar-menu {
     min-width: 200px;
-    border: 1px solid #d4d4d5;
-    height: 100%;
+    color: white;
+    border-right: 1px solid rgba(255,255,255,.05);
     .menu {
-      border-right: none;
+      border: none;
+      .active.item {
+        background: rgba(255,255,255,.05);
+        border: none;
+        &:hover {
+          background: rgba(255,255,255,.08);
+        }
+      }
+    }
+  }
+  .ui.grid {
+    margin-bottom: 0;
+    .column>.segment {
+      height: 100%;
+    }
+  }
+  .ui.segments {
+    margin-bottom: 0;
+  }
+  .ui.segment {
+    background: rgba(255,255,255,.05);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+    &.highlightable:hover {
+      background: rgba(255,255,255,.08);
     }
   }
   .content {
     flex: 1;
     .container {
-      padding: 0 20px;
+      padding: 0 1rem;
     }
   }
   @media screen and (max-width: 1127px) {

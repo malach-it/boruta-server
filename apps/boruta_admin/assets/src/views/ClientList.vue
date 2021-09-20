@@ -1,31 +1,52 @@
 <template>
   <div class="client-list">
-    <div class="ui container">
-      <h1>Clients</h1>
-      <div v-for="client in clients" class="ui big client segments" :key="client.id">
-        <div class="ui segment">
-          <div class="actions">
-            <router-link
-              :to="{ name: 'edit-client', params: { clientId: client.id } }"
-              class="ui tiny blue button">edit</router-link>
-            <a v-on:click="deleteClient(client)" class="ui tiny red button">delete</a>
+    <h1>Client management</h1>
+    <div class="container">
+      <div class="ui two column clients stackable grid">
+        <div v-for="client in clients" class="ui column" :key="client.id">
+          <div class="ui large client highlightable segment">
+            <div class="actions">
+              <router-link
+                :to="{ name: 'edit-client', params: { clientId: client.id } }"
+                class="ui tiny blue button">edit</router-link>
+              <a v-on:click="deleteClient(client)" class="ui tiny red button">delete</a>
+            </div>
+            <div class="ui attribute list">
+              <div class="item" v-if="client.name">
+                <span class="header">Name</span>
+                <span class="description">{{ client.name }}</span>
+              </div>
+              <div class="item">
+                <span class="header">Client ID</span>
+                <span class="description">{{ client.id }}</span>
+              </div>
+              <div class="item">
+                <span class="header">Client secret</span>
+                <span class="description">{{ client.secret }}</span>
+              </div>
+              <div class="item">
+                <span class="header">Public key</span>
+                <pre class="description">{{ client.public_key }}</pre>
+              </div>
+              <div class="item" v-if="client.redirect_uris.length">
+                <span class="header">Client redirect URIs</span>
+                <span class="description" v-for="uri in client.redirect_uris" :key="uri.uri">
+                  {{ uri.uri }}
+                </span>
+              </div>
+              <div class="item" v-if="client.authorize_scope">
+                <span class="header">Authorized scopes</span>
+                <span class="description">
+                  <span v-for="scope in client.authorized_scopes" class="ui olive label" :key="scope.model.id">
+                    {{ scope.model.name }}
+                  </span>
+                </span>
+              </div>
+            </div>
           </div>
-          <p><strong>Name:</strong> {{ client.name }}</p>
-          <p><strong>Client ID:</strong> {{ client.id }}</p>
-          <p><strong>Client secret:</strong> {{ client.secret }}</p>
-          <p><strong>Public key:</strong> </p>
-          <pre>{{ client.public_key }}</pre>
-          <p><strong>Client redirect URIs:</strong> {{ client.redirect_uris.map(({ uri }) => uri).join(', ') }}</p>
-          <p v-if="client.authorize_scope">
-            <span v-for="scope in client.authorized_scopes" class="ui olive label" :key="scope.model.id">
-              {{ scope.model.name }}
-            </span>
-          </p>
         </div>
       </div>
-      <div class="main actions">
-        <router-link :to="{ name: 'new-client' }" class="ui teal big button">Add a client</router-link>
-      </div>
+      <router-link :to="{ name: 'new-client' }" class="ui teal big button">Add a client</router-link>
     </div>
   </div>
 </template>

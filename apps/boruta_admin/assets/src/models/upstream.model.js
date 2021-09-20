@@ -33,6 +33,12 @@ class Upstream {
     })
   }
 
+  get baseUrl () {
+    const { scheme, host, port } = this
+
+    return `${scheme}://${host}:${port}`
+  }
+
   save () {
     // TODO trigger validate
     let response

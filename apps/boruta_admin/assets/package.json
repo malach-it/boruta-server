@@ -19,6 +19,7 @@
     "lodash": "^4.17.21",
     "phoenix": "^1.5.7",
     "phoenix-socket": "^1.2.3",
+    "semantic-ui-css": "^2.4.1",
     "socket.io-client": "^4.2.0",
     "vue": "^2.6.10",
     "vue-chartjs": "^3.5.1",

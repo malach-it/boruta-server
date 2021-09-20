@@ -20,8 +20,10 @@ const assign = {
   name: function ({ name }) { this.name = name },
   pkce: function ({ pkce }) { this.pkce = pkce },
   public_key: function ({ public_key }) { this.public_key = public_key },
-  authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
+  authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
+  refresh_token_ttl: function ({ refresh_token_ttl }) { this.refresh_token_ttl = refresh_token_ttl },
+  id_token_ttl: function ({ id_token_ttl }) { this.id_token_ttl = id_token_ttl },
   secret: function ({ secret }) { this.secret = secret },
   redirect_uris: function ({ redirect_uris }) {
     this.redirect_uris = redirect_uris.map((uri) => ({ uri }))
@@ -100,7 +102,20 @@ class Client {
   }
 
   get serialized () {
-    const { id, name, secret, redirect_uris, authorize_scope, authorized_scopes, grantTypes, access_token_ttl, authorization_code_ttl, pkce } = this
+    const {
+      id,
+      name,
+      secret,
+      redirect_uris,
+      authorize_scope,
+      authorized_scopes,
+      grantTypes,
+      access_token_ttl,
+      authorization_code_ttl,
+      refresh_token_ttl,
+      id_token_ttl,
+      pkce
+    } = this
 
     return {
       id,
@@ -110,6 +125,8 @@ class Client {
       authorize_scope,
       access_token_ttl,
       authorization_code_ttl,
+      refresh_token_ttl,
+      id_token_ttl,
       pkce,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
       supported_grant_types: grantTypes

@@ -1,25 +1,38 @@
 <template>
   <div class="upstream-list">
-    <div class="ui container">
-      <h1>Upstreams</h1>
-      <div v-for="upstream in upstreams" class="ui big upstream segments" :key="upstream.id">
-        <div class="ui segment">
+    <h1>Upstream management</h1>
+    <div class="container">
+      <div class="ui three column upstreams stackable grid">
+        <div v-for="upstream in upstreams" :key="upstream.id" class="column">
+        <div class="ui large upstream highlightable segment">
           <div class="actions">
             <router-link
               :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"
               class="ui tiny blue button">edit</router-link>
             <a v-on:click="deleteUpstream(upstream)" class="ui tiny red button">delete</a>
           </div>
-          <p><strong>Upstream ID :</strong> {{ upstream.id }}</p>
-          <p><strong>Base URL :</strong> {{ upstream.scheme }}://{{ upstream.host }}:{{ upstream.port }}</p>
-          <span v-for="path in upstream.uris" class="ui olive label" :key="path.uri">
-            {{ path.uri }}
-          </span>
+          <div class="ui attribute list">
+            <div class="item">
+              <span class="header">Upstream ID</span>
+              <span class="description">{{ upstream.id }}</span>
+            </div>
+            <div class="item">
+              <span class="header">Base URL</span>
+              <span class="description">{{ upstream.baseUrl }}</span>
+            </div>
+            <div class="item">
+              <span class="header">Paths</span>
+              <div class="description">
+                <span v-for="path in upstream.uris" class="ui olive label" :key="path.uri">
+                  {{ path.uri }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
-      <div class="main actions">
-        <router-link :to="{ name: 'new-upstream' }" class="ui teal big button">Add an upstream</router-link>
-      </div>
+      <router-link :to="{ name: 'new-upstream' }" class="ui teal big button">Add an upstream</router-link>
     </div>
   </div>
 </template>

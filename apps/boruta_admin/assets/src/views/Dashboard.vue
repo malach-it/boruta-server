@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
+    <h1>Dashboard</h1>
     <div class="container">
-      <h1>Dashboard</h1>
       <GatewayRequests />
     </div>
   </div>
