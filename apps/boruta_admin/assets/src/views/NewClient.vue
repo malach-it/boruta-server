@@ -15,6 +15,14 @@
               <input type="number" v-model="client.authorization_code_ttl" placeholder="60" />
             </div>
             <div class="field">
+              <label>Refresh token TTL (seconds)</label>
+              <input type="number" v-model="client.refresh_token_ttl" placeholder="2592000" />
+            </div>
+            <div class="field">
+              <label>ID token TTL (seconds)</label>
+              <input type="number" v-model="client.id_token_ttl" placeholder="3600" />
+            </div>
+            <div class="field">
               <label>Redirect URI</label>
               <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">
                 <div class="ui right icon input">
