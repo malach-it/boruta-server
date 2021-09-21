@@ -199,11 +199,11 @@ export default {
     .menu {
       border-right: none;
       .item {
-        border-right: 1px solid #d4d4d5;
-        border-left: 1px solid #d4d4d5;
-        border-bottom: 1px solid #d4d4d5;
+        border-right: 1px solid rgba(255,255,255,.05);
+        border-left: 1px solid rgba(255,255,255,.05);
+        border-bottom: 1px solid rgba(255,255,255,.05);
         &.active {
-          background: #d4d4d5;
+          background: rgba(255,255,255,.05);
         }
       }
     }
