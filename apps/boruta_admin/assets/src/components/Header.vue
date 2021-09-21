@@ -48,7 +48,7 @@ export default {
   }
 
   @media screen and (max-width: 1127px) {
-    .logo {
+    .item.logo {
       min-width: auto;
     }
   }
