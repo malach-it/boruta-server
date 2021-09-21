@@ -2,7 +2,7 @@
   <div class="user-list">
     <h1>User management</h1>
     <div class="container">
-      <div class="ui three column stackable grid">
+      <div class="ui three column stackable grid" v-if="users.length">
         <div v-for="user in users" class="column" :key="user.id">
           <div class="ui large user highlightable segment">
             <div class="actions">

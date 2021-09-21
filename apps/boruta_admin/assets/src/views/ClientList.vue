@@ -2,7 +2,7 @@
   <div class="client-list">
     <h1>Client management</h1>
     <div class="container">
-      <div class="ui two column clients stackable grid">
+      <div class="ui two column clients stackable grid" v-if="clients.length">
         <div v-for="client in clients" class="ui column" :key="client.id">
           <div class="ui large client highlightable segment">
             <div class="actions">

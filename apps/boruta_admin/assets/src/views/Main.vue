@@ -132,10 +132,10 @@ export default {
     text-align: left;
     padding: 1em;
     margin: 0;
+    margin-bottom: 1rem;
     color: white;
     background: rgba(255,255,255,.05);
     border-bottom: 1px solid rgba(255,255,255,.05);
-    margin-bottom: 1rem;
   }
   a {
     cursor: pointer;
@@ -146,7 +146,7 @@ export default {
   .actions {
     float: right;
     &.main {
-      margin: 1em 0;
+      margin: 1rem 0;
     }
     .button {
       margin: 5px;
@@ -168,14 +168,13 @@ export default {
     }
   }
   .ui.grid {
-    margin-top: 0;
     margin-bottom: 0;
     .column>.segment {
       height: 100%;
     }
   }
   .ui.segments {
-    margin-bottom: 0;
+    margin: 0;
   }
   .ui.segment {
     background: rgba(255,255,255,.05);

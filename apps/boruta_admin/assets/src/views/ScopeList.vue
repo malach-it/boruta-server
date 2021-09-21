@@ -2,7 +2,7 @@
   <div id="scope-list">
     <h1>Scope management</h1>
     <div class="container">
-      <div class="ui segments">
+      <div class="ui segments" v-if="scopes.length">
         <div v-for="(scope, index) in scopes" class="ui mini highlightable segment" :key="index">
           <div v-if="scope.edit">
             <form v-on:submit.prevent="saveScope(scope)" class="ui form">
@@ -118,6 +118,9 @@ export default {
 
 <style scoped lang="scss">
 #scope-list {
+  .segments {
+    border: none;
+  }
   .column {
     display: flex;
     align-items: center;
