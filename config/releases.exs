@@ -30,6 +30,11 @@ config :boruta_admin, BorutaAdmin.Repo,
 
 config :boruta_identity, Boruta.Accounts, secret_key_base: System.get_env("SECRET_KEY_BASE")
 
+config :boruta_identity, BorutaIdentity.Mailer,
+  adapter: Swoosh.Adapters.Mailjet,
+  secret: System.get_env("MAILJET_SECRET"),
+  api_key: System.get_env("MAILJET_API_KEY")
+
 config :boruta_gateway,
   port: String.to_integer(System.get_env("PORT") || "4000"),
   server: true

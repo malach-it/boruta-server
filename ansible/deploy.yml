@@ -183,6 +183,8 @@
             VUE_APP_BORUTA_BASE_URL: "{{ boruta_base_url }}"
             VUE_APP_OAUTH_BASE_URL: "{{ admin_oauth_host }}"
             VUE_APP_BORUTA_BASE_SOCKET_URL: "{{ vue_app_boruta_base_socket_url }}"
+            MAILJET_API_KEY: "{{ mailjet_api_key }}"
+            MAILJET_SECRET: "{{ mailjet_secret }}"
 
     - name: Setup boruta database
       register: database_setup

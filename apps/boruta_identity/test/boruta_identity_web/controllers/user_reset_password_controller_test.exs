@@ -1,9 +1,13 @@
 defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
-  use BorutaIdentityWeb.ConnCase, async: true
+  use BorutaIdentityWeb.ConnCase, async: false
+
+  import BorutaIdentity.AccountsFixtures
+  import Swoosh.TestAssertions
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Repo
-  import BorutaIdentity.AccountsFixtures
+
+  setup :set_swoosh_global
 
   setup do
     %{user: user_fixture()}
@@ -27,7 +31,10 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
       assert redirected_to(conn) == "/"
       assert get_flash(conn, :info) =~ "If your email is in our system"
-      assert Repo.get_by!(Accounts.UserToken, user_id: user.id).context == "reset_password"
+
+      user_token = Repo.get_by!(Accounts.UserToken, user_id: user.id)
+      assert user_token.context == "reset_password"
+      assert_email_sent([text_body: ~r/reset your password/])
     end
 
     test "does not send reset password token if email is invalid", %{conn: conn} do
@@ -39,15 +46,15 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       assert redirected_to(conn) == "/"
       assert get_flash(conn, :info) =~ "If your email is in our system"
       assert Repo.all(Accounts.UserToken) == []
+
+      refute_email_sent()
     end
   end
 
   describe "GET /users/reset_password/:token" do
     setup %{user: user} do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_user_reset_password_instructions(user, url)
-        end)
+      reset_password_url_fun = fn _ -> "http://test.host" end
+      {:ok, token} = Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       %{token: token}
     end
@@ -66,10 +73,8 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
   describe "PUT /users/reset_password/:token" do
     setup %{user: user} do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_user_reset_password_instructions(user, url)
-        end)
+      reset_password_url_fun = fn _ -> "http://test.host" end
+      {:ok, token} = Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       %{token: token}
     end
