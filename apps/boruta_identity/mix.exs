@@ -40,6 +40,7 @@ defmodule BorutaIdentity.MixProject do
       {:argon2_elixir, "~> 2.0"},
       {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", branch: "openid-connect"},
       {:ecto_sql, "~> 3.4"},
+      {:finch, "~> 0.8"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.5.3"},
@@ -51,6 +52,7 @@ defmodule BorutaIdentity.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
       {:secure_random, "~> 0.5"},
+      {:swoosh, "~> 1.5"},
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"}
     ]

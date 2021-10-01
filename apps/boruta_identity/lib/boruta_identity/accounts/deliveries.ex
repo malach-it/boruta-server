@@ -69,11 +69,19 @@ defmodule BorutaIdentity.Accounts.Deliveries do
   @spec deliver_user_reset_password_instructions(
           user :: User.t(),
           reset_password_url_fun :: callback_function()
-        ) :: any()
+        ) :: {:ok, %UserToken{}} | {:error, reason :: any()}
   def deliver_user_reset_password_instructions(%User{} = user, reset_password_url_fun)
       when is_function(reset_password_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
-    Repo.insert!(user_token)
-    UserNotifier.deliver_reset_password_instructions(user, reset_password_url_fun.(encoded_token))
+
+    with {:ok, _user_token} <- Repo.insert(user_token),
+         {:ok, _email} <-
+           UserNotifier.deliver_reset_password_instructions(
+             user,
+             reset_password_url_fun.(encoded_token)
+           )
+           |> UserNotifier.deliver() do
+      {:ok, encoded_token}
+    end
   end
 end

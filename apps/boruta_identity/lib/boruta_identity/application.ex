@@ -7,20 +7,13 @@ defmodule BorutaIdentity.Application do
 
   def start(_type, _args) do
     children = [
-      # Start the Ecto repository
       BorutaIdentity.Repo,
-      # Start the Telemetry supervisor
       BorutaIdentityWeb.Telemetry,
-      # Start the PubSub system
       {Phoenix.PubSub, name: BorutaIdentity.PubSub},
-      # Start the Endpoint (http/https)
-      BorutaIdentityWeb.Endpoint
-      # Start a worker by calling: BorutaIdentity.Worker.start_link(arg)
-      # {BorutaIdentity.Worker, arg}
+      BorutaIdentityWeb.Endpoint,
+      {Finch, name: Swoosh.Finch}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: BorutaIdentity.Supervisor]
     Supervisor.start_link(children, opts)
   end

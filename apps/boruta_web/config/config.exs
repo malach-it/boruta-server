@@ -16,6 +16,8 @@ config :mime, :types, %{
 
 config :phoenix, :json_library, Jason
 
+config :swoosh, :api_client, Swoosh.ApiClient.Finch
+
 config :boruta, Boruta.Oauth,
   repo: BorutaWeb.Repo,
   contexts: [

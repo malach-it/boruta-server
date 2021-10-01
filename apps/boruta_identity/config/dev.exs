@@ -9,7 +9,8 @@ config :boruta_identity, BorutaIdentity.Repo,
   pool_size: 10
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  http: [port: 4000, path: "/accounts"],
+  http: [port: 4001, path: "/accounts"],
+  url: [host: "localhost"],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -33,6 +34,11 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
       ~r"lib/boruta_identity_web/templates/.*(eex)$"
     ]
   ]
+
+config :boruta_identity, BorutaIdentity.Mailer,
+  adapter: Swoosh.Adapters.Mailjet,
+  secret: System.get_env("MAILJET_SECRET"),
+  api_key: System.get_env("MAILJET_API_KEY")
 
 config :logger, :console, format: "[$level] $message\n"
 

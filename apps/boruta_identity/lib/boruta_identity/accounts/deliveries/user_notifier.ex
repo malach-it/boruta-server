@@ -1,24 +1,23 @@
 defmodule BorutaIdentity.Accounts.UserNotifier do
   @moduledoc false
 
-  # For simplicity, this module simply logs messages to the terminal.
-  # You should replace it by a proper email or notification tool, such as:
-  #
-  #   * Swoosh - https://hexdocs.pm/swoosh
-  #   * Bamboo - https://hexdocs.pm/bamboo
-  #
-  # TODO send emails
-  defp deliver(to, body) do
-    require Logger
-    Logger.debug(body)
-    {:ok, %{to: to, body: body}}
+  require Logger
+
+  import Swoosh.Email
+
+  alias BorutaIdentity.Mailer
+
+  def deliver(email) do
+    with {:ok, _} <- Mailer.deliver(email) do
+      {:ok, email}
+    end
   end
 
   @doc """
   Deliver instructions to confirm account.
   """
   def deliver_confirmation_instructions(user, url) do
-    deliver(user.email, """
+    body = """
 
     ==============================
 
@@ -31,14 +30,17 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     If you didn't create an account with us, please ignore this.
 
     ==============================
-    """)
+    """
+
+    Logger.debug(body)
+    {:ok, %{to: user.email, body: body}}
   end
 
   @doc """
   Deliver instructions to reset a user password.
   """
   def deliver_reset_password_instructions(user, url) do
-    deliver(user.email, """
+    body = """
 
     ==============================
 
@@ -51,14 +53,20 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     If you didn't request this change, please ignore this.
 
     ==============================
-    """)
+    """
+
+    new()
+    |> to(user.email)
+    |> from("io.pascal.knoth@gmail.com")
+    |> subject("Reset your password.")
+    |> text_body(body)
   end
 
   @doc """
   Deliver instructions to update a user email.
   """
   def deliver_update_email_instructions(user, url) do
-    deliver(user.email, """
+    body = """
 
     ==============================
 
@@ -71,6 +79,9 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     If you didn't request this change, please ignore this.
 
     ==============================
-    """)
+    """
+
+    Logger.debug(body)
+    {:ok, %{to: user.email, body: body}}
   end
 end
