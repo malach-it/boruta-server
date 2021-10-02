@@ -28,7 +28,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:email, :string)
     field(:password, :string, virtual: true)
     field(:hashed_password, :string)
-    field(:confirmed_at, :naive_datetime)
+    field(:confirmed_at, :utc_datetime_usec)
     field(:last_login_at, :utc_datetime_usec)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
@@ -135,7 +135,7 @@ defmodule BorutaIdentity.Accounts.User do
   Confirms the account by setting `confirmed_at`.
   """
   def confirm_changeset(user) do
-    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    now = DateTime.utc_now()
     change(user, confirmed_at: now)
   end
 

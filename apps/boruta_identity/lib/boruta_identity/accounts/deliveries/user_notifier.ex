@@ -32,8 +32,11 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     ==============================
     """
 
-    Logger.debug(body)
-    {:ok, %{to: user.email, body: body}}
+    new()
+    |> to(user.email)
+    |> from("io.pascal.knoth@gmail.com")
+    |> subject("Confirm your account.")
+    |> text_body(body)
   end
 
   @doc """

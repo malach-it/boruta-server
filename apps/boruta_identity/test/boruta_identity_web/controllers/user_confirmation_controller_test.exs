@@ -57,10 +57,8 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
 
   describe "GET /users/confirm/:token" do
     test "confirms the given token once", %{conn: conn, user: user} do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_user_confirmation_instructions(user, url)
-        end)
+      confirmation_url_fun = fn _ -> "http://test.host" end
+      {:ok, token} = Accounts.deliver_user_confirmation_instructions(user, confirmation_url_fun)
 
       conn = get(conn, Routes.user_confirmation_path(conn, :confirm, token))
       assert redirected_to(conn) == "/"
