@@ -52,8 +52,15 @@ defmodule BorutaIdentity.Accounts.Deliveries do
       {:error, :already_confirmed}
     else
       {encoded_token, user_token} = UserToken.build_email_token(user, "confirm")
-      Repo.insert!(user_token)
-      UserNotifier.deliver_confirmation_instructions(user, confirmation_url_fun.(encoded_token))
+
+      with {:ok, _user_token} <- Repo.insert(user_token),
+           {:ok, _email} <-
+             UserNotifier.deliver_confirmation_instructions(
+               user,
+               confirmation_url_fun.(encoded_token)
+             ) |> UserNotifier.deliver() do
+        {:ok, encoded_token}
+      end
     end
   end
 

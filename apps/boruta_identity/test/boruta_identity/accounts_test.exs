@@ -375,10 +375,8 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "sends token through notification", %{user: user} do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_user_confirmation_instructions(user, url)
-        end)
+      confirmation_url_fun = fn _ -> "http://test.host" end
+      {:ok, token} = Accounts.deliver_user_confirmation_instructions(user, confirmation_url_fun)
 
       {:ok, token} = Base.url_decode64(token, padding: false)
       assert user_token = Repo.get_by(UserToken, token: :crypto.hash(:sha256, token))
@@ -392,10 +390,8 @@ defmodule BorutaIdentity.AccountsTest do
     setup do
       user = user_fixture()
 
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_user_confirmation_instructions(user, url)
-        end)
+      confirmation_url_fun = fn _ -> "http://test.host" end
+      {:ok, token} = Accounts.deliver_user_confirmation_instructions(user, confirmation_url_fun)
 
       %{user: user, token: token}
     end
