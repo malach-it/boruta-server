@@ -14,7 +14,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
     with %User{} = user <- Accounts.get_user_by_email(email),
          :ok <- Accounts.check_user_password(user, password) do
       conn
-      |> delete_session(:session_chosen)
+      |> put_session(:session_chosen, true)
       |> log_in(user, user_params)
     else
       _ ->

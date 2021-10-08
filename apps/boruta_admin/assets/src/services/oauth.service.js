@@ -12,7 +12,7 @@ class Oauth {
   }
 
   login () {
-    window.location = this.client.token.getUri({ query: { prompt: 'login' } })
+    window.location = this.client.token.getUri()
   }
 
   async callback () {

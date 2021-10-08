@@ -19,6 +19,7 @@
         release_namespace: boruta-staging
         values:
           postgresqlPassword: "{{ postgresql_password }}"
+          postgresqlMaxConnections: "150"
 
     - name: Create libcluster role
       community.kubernetes.k8s:
@@ -185,6 +186,7 @@
             VUE_APP_BORUTA_BASE_SOCKET_URL: "{{ vue_app_boruta_base_socket_url }}"
             MAILJET_API_KEY: "{{ mailjet_api_key }}"
             MAILJET_SECRET: "{{ mailjet_secret }}"
+            POOL_SIZE: "20"
 
     - name: Setup boruta database
       register: database_setup
