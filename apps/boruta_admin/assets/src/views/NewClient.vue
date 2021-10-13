@@ -42,6 +42,26 @@
             </div>
             <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </div>
+          <div class="ui segments">
+            <div class="ui large segment">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="client.pkce">
+                <label>PKCE enabled</label>
+              </div>
+            </div>
+            <div class="ui large segment">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="client.public_refresh_token">
+                <label>Public refresh token</label>
+              </div>
+            </div>
+            <div class="ui large segment">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="client.public_revoke">
+                <label>Public revoke</label>
+              </div>
+            </div>
+          </div>
           <div class="ui large segment">
             <div class="field">
               <label>Supported grant types</label>

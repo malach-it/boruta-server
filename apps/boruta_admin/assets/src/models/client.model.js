@@ -28,6 +28,8 @@ const assign = {
   redirect_uris: function ({ redirect_uris }) {
     this.redirect_uris = redirect_uris.map((uri) => ({ uri }))
   },
+  public_refresh_token: function ({ public_refresh_token }) { this.public_refresh_token = public_refresh_token },
+  public_revoke: function ({ public_revoke }) { this.public_revoke = public_revoke },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
@@ -107,6 +109,8 @@ class Client {
       name,
       secret,
       redirect_uris,
+      public_refresh_token,
+      public_revoke,
       authorize_scope,
       authorized_scopes,
       grantTypes,
@@ -128,6 +132,8 @@ class Client {
       refresh_token_ttl,
       id_token_ttl,
       pkce,
+      public_refresh_token,
+      public_revoke,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
       supported_grant_types: grantTypes
         .filter(({ value }) => value)
