@@ -37,7 +37,7 @@ defmodule BorutaAdmin.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", branch: "openid-connect"},
+      {:boruta, "2.0.0-rc.0"},
       {:boruta_gateway, in_umbrella: true},
       {:boruta_web, in_umbrella: true},
       {:boruta_identity, in_umbrella: true},
