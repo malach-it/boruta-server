@@ -1,7 +1,7 @@
 import axios from 'axios'
 import Scope from '@/models/scope.model'
 
-const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit']
+const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit', 'revoke', 'introspect']
 
 const defaults = {
   authorize_scopes: false,
