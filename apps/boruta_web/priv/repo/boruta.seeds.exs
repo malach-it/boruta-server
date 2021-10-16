@@ -2,7 +2,6 @@
 import Ecto.Changeset
 import Ecto.Query
 
-{:ok, scopes_scope} =
   BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "scopes:manage:all"
@@ -10,7 +9,6 @@ import Ecto.Query
     on_conflict: :nothing
   )
 
-{:ok, clients_scope} =
   BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "clients:manage:all"
@@ -18,7 +16,6 @@ import Ecto.Query
     on_conflict: :nothing
   )
 
-{:ok, upstreams_scope} =
   BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "upstreams:manage:all"
@@ -26,7 +23,6 @@ import Ecto.Query
     on_conflict: :nothing
   )
 
-{:ok, users_scope} =
   BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "users:manage:all"
@@ -66,8 +62,10 @@ BorutaGateway.Repo.insert(
   on_conflict: :nothing
 )
 
-{:ok, user} =
-  BorutaIdentity.Accounts.register_user(%{email: "test@test.test", password: "passwordesat"})
+BorutaIdentity.Accounts.register_user(%{
+  email: System.get_env("ADMIN_EMAIL", "test@test.test"),
+  password: System.get_env("ADMIN_PASSWORD", "passwordesat")
+})
 
 scopes =
   [

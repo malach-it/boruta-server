@@ -176,6 +176,8 @@
             ADMIN_OAUTH_CLIENT_ID: "{{ admin_client_id }}"
             ADMIN_OAUTH_CLIENT_SECRET: "{{ admin_client_secret }}"
             ADMIN_OAUTH_BASE_URL: "{{ admin_oauth_host }}"
+            ADMIN_EMAIL: "{{ admin_email }}"
+            ADMIN_PASSWORD: "{{ admin_password }}"
             BORUTA_ADMIN_HOST: "{{ admin_host }}"
             BORUTA_OAUTH_HOST: "{{ oauth_host }}"
             BORUTA_ADMIN_CLIENT_ID: "{{ admin_client_id }}"
@@ -186,7 +188,7 @@
             VUE_APP_BORUTA_BASE_SOCKET_URL: "{{ vue_app_boruta_base_socket_url }}"
             MAILJET_API_KEY: "{{ mailjet_api_key }}"
             MAILJET_SECRET: "{{ mailjet_secret }}"
-            POOL_SIZE: "20"
+            POOL_SIZE: "10"
 
     - name: Setup boruta database
       register: database_setup
