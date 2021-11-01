@@ -43,7 +43,7 @@ defmodule BorutaWeb.Router do
     get("/", PageController, :index)
   end
 
-  get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck)
+  get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck, log: false)
 
   scope "/accounts" do
     pipe_through([:browser, :fetch_current_user])
