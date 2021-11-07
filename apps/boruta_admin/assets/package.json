@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
+    "boruta-client": "gitlab:patatoid/boruta-client",
     "chart.js": "^2.9.4",
     "client-oauth2": "^4.2.5",
     "core-js": "^2.6.5",

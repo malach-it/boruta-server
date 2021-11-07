@@ -2,8 +2,8 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import { Socket } from 'phoenix'
 
-import oauth from '@/services/oauth.service'
-import User from '@/models/user.model'
+import oauth from './services/oauth.service'
+import User from './models/user.model'
 
 Vue.use(Vuex)
 
@@ -40,9 +40,6 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    login () {
-      oauth.login()
-    },
     async socketConnection ({ commit, state }) {
       if (state.socket) return state.socket
 
@@ -57,11 +54,6 @@ export default new Vuex.Store({
         const user = await User.current()
         commit('SET_CURRENT_USER', user)
         commit('SET_AUTHENTICATED', true)
-
-        setTimeout(() => {
-          commit('SET_CURRENT_USER', User.default)
-          commit('SET_AUTHENTICATED', false)
-        }, oauth.expiresIn)
       } catch (error) {
         commit('SET_CURRENT_USER', User.default)
         commit('SET_AUTHENTICATED', false)

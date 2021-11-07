@@ -1,34 +1,60 @@
-import OauthClient from 'client-oauth2'
+import { BorutaOauth } from 'boruta-client'
+import store from '../store'
 
 class Oauth {
   constructor () {
-    this.client = new OauthClient({
-      clientId: window.env.VUE_APP_ADMIN_CLIENT_ID,
-      authorizationUri: `${window.env.VUE_APP_OAUTH_BASE_URL}/oauth/authorize`,
-      // TODO have a separate host for admin
-      redirectUri: `${window.env.VUE_APP_BORUTA_BASE_URL}/oauth-callback`,
-      scopes: ['scopes:manage:all', 'clients:manage:all', 'users:manage:all', 'upstreams:manage:all']
+    const Boruta = new BorutaOauth({
+      window: window,
+      host: window.env.VUE_APP_OAUTH_BASE_URL,
+      authorizePath: '/oauth/authorize'
     })
+
+    this.client = new Boruta.Implicit({
+      clientId: window.env.VUE_APP_ADMIN_CLIENT_ID,
+      redirectUri: `${window.env.VUE_APP_BORUTA_BASE_URL}/oauth-callback`,
+      scope: 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all',
+      silentRefresh: true,
+      silentRefreshCallback: this.authenticate.bind(this)
+    })
+  }
+
+  authenticate (response) {
+    if (response.error) {
+      alert(response.error_description)
+      this.login()
+    }
+
+    const { access_token, expires_in } = response
+    const expires_at = new Date().getTime() + expires_in * 1000
+
+    localStorage.setItem('access_token', access_token)
+    localStorage.setItem('token_expires_at', expires_at)
+    store.dispatch('getCurrentUser')
   }
 
   login () {
-    window.location = this.client.token.getUri()
+    window.location = this.client.loginUrl
   }
 
   async callback () {
-    const token = await this.client.token.getToken(window.location).catch((error) => {
-      confirm(error.message)
-      this.login()
-      throw error
+    return this.client.callback().then(response => {
+      this.authenticate(response)
     })
-    localStorage.setItem('access_token', token.accessToken)
-    localStorage.setItem('token_expires_at', token.expires.getTime())
   }
 
   logout () {
     localStorage.removeItem('access_token')
     localStorage.removeItem('token_expires_at')
     return Promise.resolve(true)
+  }
+
+  storeLocationName (name) {
+    localStorage.setItem('stored_location', name)
+  }
+
+  get storedLocation () {
+    const name = localStorage.getItem('stored_location') || 'home'
+    return name
   }
 
   get accessToken () {
