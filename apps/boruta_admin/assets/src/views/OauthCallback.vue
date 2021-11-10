@@ -8,16 +8,13 @@
 </template>
 
 <script>
-import oauth from '@/services/oauth.service'
+import oauth from '../services/oauth.service'
 
 export default {
   name: 'oauth-callback',
   beforeRouteEnter (from, to, next) {
-    oauth.callback().then(async () => {
-      next(async vm => {
-        await vm.$store.dispatch('getCurrentUser')
-        vm.$router.push({ name: 'home' })
-      })
+    oauth.callback().then(() => {
+      next({ name: oauth.storedLocation })
     })
   }
 }

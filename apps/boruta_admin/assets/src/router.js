@@ -150,4 +150,10 @@ const router = new Router({
   ]
 })
 
+router.beforeEach((to, from, next) => {
+  if (to.name && to.name !== 'oauth-callback') oauth.storeLocationName(to.name)
+
+  next()
+})
+
 export default router
