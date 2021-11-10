@@ -3,13 +3,13 @@ import store from '../store'
 
 class Oauth {
   constructor () {
-    const Boruta = new BorutaOauth({
+    const oauth = new BorutaOauth({
       window: window,
       host: window.env.VUE_APP_OAUTH_BASE_URL,
       authorizePath: '/oauth/authorize'
     })
 
-    this.client = new Boruta.Implicit({
+    this.client = new oauth.Implicit({
       clientId: window.env.VUE_APP_ADMIN_CLIENT_ID,
       redirectUri: `${window.env.VUE_APP_BORUTA_BASE_URL}/oauth-callback`,
       scope: 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all',

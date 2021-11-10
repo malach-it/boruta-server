@@ -1,4 +1,4 @@
-FROM node:14.5.0 AS assets
+FROM node:16.5.0 AS assets
 
 WORKDIR /app
 
