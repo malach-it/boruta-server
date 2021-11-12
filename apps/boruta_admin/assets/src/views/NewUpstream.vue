@@ -1,6 +1,8 @@
 <template>
   <div class="new-upstream">
-    <h1>New Upstream</h1>
+    <div class="main header">
+      <h1>New Upstream</h1>
+    </div>
     <div class="ui container">
       <div class="ui large segment">
         <FormErrors v-if="errors" :errors="errors" />

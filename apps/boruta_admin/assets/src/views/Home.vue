@@ -1,6 +1,8 @@
 <template>
   <div class="home">
-    <h1>Admin</h1>
+    <div class="main header">
+      <h1>Admin</h1>
+    </div>
     <div class="ui container">
       <div class="ui placeholder segment">
         <div class="ui icon header">

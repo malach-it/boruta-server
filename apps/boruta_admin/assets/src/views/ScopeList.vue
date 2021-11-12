@@ -1,6 +1,8 @@
 <template>
   <div id="scope-list">
-    <h1>Scope management</h1>
+    <div class="main header">
+      <h1>Scope management</h1>
+    </div>
     <div class="container">
       <div class="ui segments" v-if="scopes.length">
         <div v-for="(scope, index) in scopes" class="ui mini highlightable segment" :key="index">
@@ -53,8 +55,8 @@
             </div>
           </div>
         </div>
+        <button @click="addScope()" class="ui big teal add button">Add a scope</button>
       </div>
-      <button @click="addScope()" class="ui big teal button">Add a scope</button>
     </div>
   </div>
 </template>
@@ -120,6 +122,9 @@ export default {
 #scope-list {
   .segments {
     border: none;
+    @media screen and (max-width: 768px) {
+      padding: 0 1rem;
+    }
   }
   .column {
     display: flex;
@@ -139,8 +144,8 @@ export default {
       }
     }
   }
-  .ui.grid {
-    margin: -1rem;
+  .add.button {
+    margin-bottom: 1rem;
   }
 }
 </style>

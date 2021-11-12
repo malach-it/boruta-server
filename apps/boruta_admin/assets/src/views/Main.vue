@@ -125,14 +125,28 @@ export default {
   display: flex;
   min-height: calc(100% - 41px);
   background: #1b1c1d;
-  h1 {
-    text-align: left;
+  .main.header {
+    position: relative;
     padding: 1em;
-    margin: 0;
-    margin-bottom: 1rem;
-    color: white;
     background: rgba(255,255,255,.05);
     border-bottom: 1px solid rgba(255,255,255,.05);
+    margin-bottom: 1rem;
+    h1 {
+      margin: 0;
+      color: white;
+      line-height: 1.7em;
+    }
+    .button {
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+    }
+    @media screen and (max-width: 753px) {
+      text-align: center;
+      .button {
+        position: relative;
+      }
+    }
   }
   a {
     cursor: pointer;
@@ -170,6 +184,9 @@ export default {
       height: 100%;
     }
   }
+  .ui.header {
+    color: white;
+  }
   .ui.segments {
     margin: 0;
   }
@@ -186,6 +203,9 @@ export default {
     flex: 1;
     .container {
       padding: 0 1rem;
+      @media screen and (max-width: 768px) {
+        padding: 0;
+      }
     }
   }
   @media screen and (max-width: 1127px) {

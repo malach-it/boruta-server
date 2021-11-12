@@ -1,6 +1,8 @@
 <template>
   <div class="edit-user">
-    <h1>Edit a user</h1>
+    <div class="main header">
+      <h1>Edit a user</h1>
+    </div>
     <div class="ui container">
       <div class="ui large segment">
         <h2>{{ user.email }}</h2>

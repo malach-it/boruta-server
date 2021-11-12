@@ -1,6 +1,9 @@
 <template>
   <div class="client-list">
-    <h1>Client management</h1>
+    <div class="main header">
+      <h1>Client management</h1>
+      <router-link :to="{ name: 'new-client' }" class="ui teal big button">Add a client</router-link>
+    </div>
     <div class="container">
       <div class="ui two column clients stackable grid" v-if="clients.length">
         <div v-for="client in clients" class="ui column" :key="client.id">
@@ -46,7 +49,6 @@
           </div>
         </div>
       </div>
-      <router-link :to="{ name: 'new-client' }" class="ui teal big button">Add a client</router-link>
     </div>
   </div>
 </template>

@@ -1,6 +1,8 @@
 <template>
   <div class="new-client">
-    <h1>New Client</h1>
+    <div class="main header">
+      <h1>New Client</h1>
+    </div>
     <div class="ui container">
       <div class="ui large segment">
         <FormErrors v-if="errors" :errors="errors" />

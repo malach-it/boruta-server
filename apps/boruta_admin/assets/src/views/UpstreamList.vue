@@ -1,6 +1,9 @@
 <template>
   <div class="upstream-list">
-    <h1>Upstream management</h1>
+    <div class="main header">
+      <h1>Upstream management</h1>
+      <router-link :to="{ name: 'new-upstream' }" class="ui teal big button">Add an upstream</router-link>
+    </div>
     <div class="container">
       <div class="ui three column upstreams stackable grid" v-if="upstreams.length">
         <div v-for="upstream in upstreams" :key="upstream.id" class="column">
@@ -32,7 +35,6 @@
         </div>
         </div>
       </div>
-      <router-link :to="{ name: 'new-upstream' }" class="ui teal big button">Add an upstream</router-link>
     </div>
   </div>
 </template>
