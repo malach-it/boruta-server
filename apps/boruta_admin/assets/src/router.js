@@ -39,12 +39,6 @@ const router = new Router({
         {
           path: '',
           name: 'home',
-          beforeEnter (to, from, next) {
-            if (oauth.isAuthenticated) {
-              return next()
-            }
-            return oauth.login()
-          },
           component: Home
         }, {
           path: '/oauth-callback',
@@ -53,22 +47,10 @@ const router = new Router({
         }, {
           path: '/dashboard',
           name: 'dashboard',
-          component: Dashboard,
-          beforeEnter (to, from, next) {
-            if (oauth.isAuthenticated) {
-              return next()
-            }
-            return oauth.login()
-          }
+          component: Dashboard
         }, {
           path: '/users',
           component: Users,
-          beforeEnter (to, from, next) {
-            if (oauth.isAuthenticated) {
-              return next()
-            }
-            return oauth.login()
-          },
           children: [
             {
               path: 'list',
@@ -83,12 +65,6 @@ const router = new Router({
         }, {
           path: '/clients',
           component: Clients,
-          beforeEnter (to, from, next) {
-            if (oauth.isAuthenticated) {
-              return next()
-            }
-            return oauth.login()
-          },
           children: [
             {
               path: '',
@@ -107,12 +83,6 @@ const router = new Router({
         }, {
           path: '/upstreams',
           component: Upstreams,
-          beforeEnter (to, from, next) {
-            if (oauth.isAuthenticated) {
-              return next()
-            }
-            return oauth.login()
-          },
           children: [
             {
               path: '',
@@ -131,12 +101,6 @@ const router = new Router({
         }, {
           path: '/scopes',
           component: Scopes,
-          beforeEnter (to, from, next) {
-            if (oauth.isAuthenticated) {
-              return next()
-            }
-            return oauth.login()
-          },
           children: [
             {
               path: '',
