@@ -4,6 +4,7 @@
       <FormErrors v-if="client.errors" :errors="client.errors" />
       <form class="ui form" v-on:submit.prevent="submit()">
         <div class="ui large segment">
+          <h3>General configuration</h3>
           <div class="field">
             <label>Name</label>
             <input v-model="client.name" placeholder="Super client" />
@@ -36,6 +37,7 @@
           </div>
         </div>
         <div class="ui segment">
+          <h3>Authorization</h3>
           <div class="field">
             <div class="ui toggle checkbox">
               <input type="checkbox" v-model="client.authorize_scope">
@@ -44,7 +46,8 @@
           </div>
           <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         </div>
-        <div class="ui segments">
+        <div class="ui large segment">
+          <h3>PKCE configuration</h3>
           <div class="ui large segment">
             <div class="ui toggle checkbox">
               <input type="checkbox" v-model="client.pkce">
@@ -66,7 +69,7 @@
         </div>
         <div class="ui large segment">
           <div class="field">
-            <label>Supported grant types</label>
+            <h3>Supported grant types</h3>
             <div class="ui segments">
               <div class="ui large segment" v-for="grantType in client.grantTypes" :key="grantType.label">
                 <div class="ui toggle checkbox">

@@ -1,55 +1,59 @@
 <template>
   <div class="upstream-form">
-   <div class="ui large segment">
-     <FormErrors v-if="upstream.errors" :errors="upstream.errors" />
-     <form class="ui form" v-on:submit.prevent="submit()">
-       <div class="ui large segment">
-         <div class="field">
-           <label>Scheme</label>
-           <select v-model="upstream.scheme" placeholder="https">
-             <option value="https">https</option>
-             <option value="http">http</option>
-           </select>
-         </div>
-         <div class="field">
-           <label>Host</label>
-           <input type="text" v-model="upstream.host" placeholder="host.test">
-         </div>
-         <div class="field">
-           <label>Port</label>
-           <input type="text" v-model="upstream.port" placeholder="443">
-         </div>
-         <div class="upstreams field">
-           <label>URIs</label>
-           <div v-for="(upstreamUri, index) in upstream.uris" class="field" :key="index">
-             <div class="ui right icon input">
-               <input type="text" v-model="upstreamUri.uri" placeholder="/matching" />
-               <i v-on:click="deleteUpstreamUri(upstreamUri)" class="close icon"></i>
-             </div>
-           </div>
-           <button v-on:click.prevent="addUpstreamUri()" class="ui blue fluid button">Add a redirect uri</button>
-         </div>
-         <div class="field">
-           <div class="ui toggle checkbox">
-             <input type="checkbox" v-model="upstream.strip_uri">
-             <label>Strip URI</label>
-           </div>
-         </div>
-         <div class="field">
-           <div class="ui toggle checkbox">
-             <input type="checkbox" v-model="upstream.authorize">
-             <label>Authorize</label>
-           </div>
-         </div>
-         <div class="field" v-if="upstream.authorize">
-           <label>Required scopes <i>(leave empty to not filter)</i></label>
-           <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
-         </div>
-       </div>
-       <button class="ui big violet button" type="submit">{{ action }}</button>
-       <a class="ui button" v-on:click="back()">Back</a>
-     </form>
-   </div>
+    <div class="ui large segment">
+      <FormErrors v-if="upstream.errors" :errors="upstream.errors" />
+      <form class="ui form" v-on:submit.prevent="submit()">
+        <div class="ui large segment">
+          <h3>General configuration</h3>
+          <div class="field">
+            <label>Scheme</label>
+            <select v-model="upstream.scheme" placeholder="https">
+              <option value="https">https</option>
+              <option value="http">http</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Host</label>
+            <input type="text" v-model="upstream.host" placeholder="host.test">
+          </div>
+          <div class="field">
+            <label>Port</label>
+            <input type="text" v-model="upstream.port" placeholder="443">
+          </div>
+          <div class="upstreams field">
+            <label>URIs</label>
+            <div v-for="(upstreamUri, index) in upstream.uris" class="field" :key="index">
+              <div class="ui right icon input">
+                <input type="text" v-model="upstreamUri.uri" placeholder="/matching" />
+                <i v-on:click="deleteUpstreamUri(upstreamUri)" class="close icon"></i>
+              </div>
+            </div>
+            <button v-on:click.prevent="addUpstreamUri()" class="ui blue fluid button">Add an upstream uri</button>
+          </div>
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.strip_uri">
+              <label>Strip URI</label>
+            </div>
+          </div>
+        </div>
+        <div class="ui large segment">
+          <h3>Authorization</h3>
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.authorize">
+              <label>Authorize</label>
+            </div>
+          </div>
+          <div class="field" v-if="upstream.authorize">
+            <label>Required scopes <i>(leave empty to not filter)</i></label>
+            <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+          </div>
+        </div>
+        <button class="ui big violet button" type="submit">{{ action }}</button>
+        <a class="ui button" v-on:click="back()">Back</a>
+      </form>
+    </div>
   </div>
 </template>
 
