@@ -8,9 +8,9 @@ import Home from './views/Home.vue'
 import OauthCallback from './views/OauthCallback.vue'
 
 import Clients from './views/Clients.vue'
-import ClientList from './views/ClientList.vue'
-import NewClient from './views/NewClient.vue'
-import EditClient from './views/EditClient.vue'
+import ClientList from './views/Clients/ClientList.vue'
+import NewClient from './views/Clients/NewClient.vue'
+import EditClient from './views/Clients/EditClient.vue'
 
 import Upstreams from './views/Upstreams.vue'
 import UpstreamList from './views/UpstreamList.vue'
