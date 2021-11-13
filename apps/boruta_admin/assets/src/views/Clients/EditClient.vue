@@ -16,7 +16,7 @@
           </div>
         </div>
       </div>
-      <ClientForm :client="client" @submit="updateClient(client)" @back="back()" action="Update" />
+      <ClientForm :client="client" @submit="updateClient()" @back="back()" action="Update" />
     </div>
   </div>
 </template>

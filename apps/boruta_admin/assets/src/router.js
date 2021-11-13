@@ -13,9 +13,9 @@ import NewClient from './views/Clients/NewClient.vue'
 import EditClient from './views/Clients/EditClient.vue'
 
 import Upstreams from './views/Upstreams.vue'
-import UpstreamList from './views/UpstreamList.vue'
-import NewUpstream from './views/NewUpstream.vue'
-import EditUpstream from './views/EditUpstream.vue'
+import UpstreamList from './views/Upstreams/UpstreamList.vue'
+import NewUpstream from './views/Upstreams/NewUpstream.vue'
+import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
 import Users from './views/Users.vue'
 import UserList from './views/UserList.vue'
