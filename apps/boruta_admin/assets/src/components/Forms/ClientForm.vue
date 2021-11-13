@@ -86,8 +86,8 @@
 
 <script>
 import Scope from '@/models/scope.model'
-import ScopesField from '@/components/ScopesField.vue'
-import FormErrors from '@/components/FormErrors.vue'
+import ScopesField from '@/components/Forms/ScopesField.vue'
+import FormErrors from '@/components/Forms/FormErrors.vue'
 
 export default {
   name: 'client-form',

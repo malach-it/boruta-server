@@ -11,7 +11,7 @@
 
 <script>
 import Client from '@/models/client.model'
-import ClientForm from '@/components/ClientForm.vue'
+import ClientForm from '@/components/Forms/ClientForm.vue'
 
 export default {
   name: 'clients',
