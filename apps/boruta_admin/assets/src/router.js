@@ -2,7 +2,8 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import oauth from '@/services/oauth.service'
 
-import Main from './views/Main.vue'
+import Main from './views/Layouts/Main.vue'
+
 import Home from './views/Home.vue'
 
 import OauthCallback from './views/OauthCallback.vue'
@@ -18,11 +19,11 @@ import NewUpstream from './views/Upstreams/NewUpstream.vue'
 import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
 import Users from './views/Users.vue'
-import UserList from './views/UserList.vue'
-import EditUser from './views/EditUser.vue'
+import UserList from './views/Users/UserList.vue'
+import EditUser from './views/Users/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
-import ScopeList from './views/ScopeList.vue'
+import ScopeList from './views/Scopes/ScopeList.vue'
 
 import Dashboard from './views/Dashboard.vue'
 
