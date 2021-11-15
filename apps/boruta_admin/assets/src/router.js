@@ -2,27 +2,28 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import oauth from '@/services/oauth.service'
 
-import Main from './views/Main.vue'
+import Main from './views/Layouts/Main.vue'
+
 import Home from './views/Home.vue'
 
 import OauthCallback from './views/OauthCallback.vue'
 
 import Clients from './views/Clients.vue'
-import ClientList from './views/ClientList.vue'
-import NewClient from './views/NewClient.vue'
-import EditClient from './views/EditClient.vue'
+import ClientList from './views/Clients/ClientList.vue'
+import NewClient from './views/Clients/NewClient.vue'
+import EditClient from './views/Clients/EditClient.vue'
 
 import Upstreams from './views/Upstreams.vue'
-import UpstreamList from './views/UpstreamList.vue'
-import NewUpstream from './views/NewUpstream.vue'
-import EditUpstream from './views/EditUpstream.vue'
+import UpstreamList from './views/Upstreams/UpstreamList.vue'
+import NewUpstream from './views/Upstreams/NewUpstream.vue'
+import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
 import Users from './views/Users.vue'
-import UserList from './views/UserList.vue'
-import EditUser from './views/EditUser.vue'
+import UserList from './views/Users/UserList.vue'
+import EditUser from './views/Users/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
-import ScopeList from './views/ScopeList.vue'
+import ScopeList from './views/Scopes/ScopeList.vue'
 
 import Dashboard from './views/Dashboard.vue'
 
@@ -114,10 +115,21 @@ const router = new Router({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  if (to.name && to.name !== 'oauth-callback') oauth.storeLocationName(to.name)
+router.beforeEach(authGuard)
+
+function authGuard (to, from, next) {
+  if (to.name === 'oauth-callback') return next()
+
+  if (to.name) oauth.storeLocationName(to.name)
+
+  if (!oauth.isAuthenticated) {
+    // TODO find a way to remove event listener once triggered
+    window.addEventListener('logged_in', () => { next() })
+
+    return oauth.silentRefresh()
+  }
 
   next()
-})
+}
 
 export default router

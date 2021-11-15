@@ -51,8 +51,22 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> cast(attrs, [:scheme, :host, :port, :uris, :strip_uri, :authorize, :required_scopes])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
+    |> validate_uris()
     |> validate_required_scopes_format()
   end
+
+  defp validate_uris(
+         %Ecto.Changeset{
+           changes: %{uris: uris}
+         } = changeset
+       ) do
+    case Enum.any?(uris, fn uri -> is_nil(uri) || uri == "" end) do
+      true -> add_error(changeset, :uris, "may not be blank")
+      false -> changeset
+    end
+  end
+
+  defp validate_uris(changeset), do: changeset
 
   defp validate_required_scopes_format(
          %Ecto.Changeset{

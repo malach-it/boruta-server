@@ -2,6 +2,7 @@ import axios from 'axios'
 import Scope from '@/models/scope.model'
 
 const defaults = {
+  errors: null,
   authorize_scopes: false,
   authorized_scopes: []
 }
@@ -31,15 +32,20 @@ class User {
     return new Promise((resolve, reject) => {
       this.authorized_scopes.forEach(({ model: scope }) => {
         if (!scope.persisted) {
-          return reject({ authorized_scopes: [ 'cannot be empty' ] })
+          const errors = { authorized_scopes: [ 'cannot be empty' ] }
+          this.errors = errors
+          return reject(errors)
         }
         if (this.authorized_scopes.filter(({ model: e }) => e.id === scope.id).length > 1) {
-          reject({ authorized_scopes: [ 'must be unique' ] })
+          const errors = { authorized_scopes: [ 'must be unique' ] }
+          this.errors = errors
+          return reject(errors)
         }
       })
       resolve()
     })
   }
+
   async save () {
     await this.validate()
     const { id, serialized } = this

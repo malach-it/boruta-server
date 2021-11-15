@@ -2,6 +2,7 @@ import axios from 'axios'
 import Scope from '@/models/scope.model'
 
 const defaults = {
+  errors: null,
   uris: [],
   required_scopes: []
 }

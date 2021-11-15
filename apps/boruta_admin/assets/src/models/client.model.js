@@ -4,6 +4,7 @@ import Scope from '@/models/scope.model'
 const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit', 'revoke', 'introspect']
 
 const defaults = {
+  errors: null,
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
@@ -62,17 +63,25 @@ class Client {
     return new Promise((resolve, reject) => {
       this.authorized_scopes.forEach(({ model: scope }) => {
         if (!scope.persisted) {
-          return reject({ authorized_scopes: [ 'cannot be empty' ] })
+          const errors = { authorized_scopes: [ 'cannot be empty' ] }
+          this.errors = errors
+          return reject(errors)
         }
         if (this.authorized_scopes.filter(({ model: e }) => e.id === scope.id).length > 1) {
-          reject({ authorized_scopes: [ 'must be unique' ] })
+          const errors = { authorized_scopes: [ 'must be unique' ] }
+          this.errors = errors
+          return reject(errors)
         }
       })
       resolve()
     })
   }
 
-  save () {
+  async save () {
+    this.errors = null
+
+    await this.validate()
+
     // TODO trigger validate
     let response
     const { id, serialized } = this
