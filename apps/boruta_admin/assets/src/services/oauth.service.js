@@ -24,6 +24,11 @@ class Oauth {
       this.login()
     }
 
+    if (window.frameElement) return
+
+    const loggedIn = new Event('logged_in')
+    window.dispatchEvent(loggedIn)
+
     const { access_token, expires_in } = response
     const expires_at = new Date().getTime() + expires_in * 1000
 
@@ -34,6 +39,10 @@ class Oauth {
 
   login () {
     window.location = this.client.loginUrl
+  }
+
+  silentRefresh () {
+    this.client.silentRefresh()
   }
 
   async callback () {

@@ -115,10 +115,21 @@ const router = new Router({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  if (to.name && to.name !== 'oauth-callback') oauth.storeLocationName(to.name)
+router.beforeEach(authGuard)
+
+function authGuard (to, from, next) {
+  if (to.name === 'oauth-callback') return next()
+
+  if (to.name) oauth.storeLocationName(to.name)
+
+  if (!oauth.isAuthenticated) {
+    // TODO find a way to remove event listener once triggered
+    window.addEventListener('logged_in', () => { next() })
+
+    return oauth.silentRefresh()
+  }
 
   next()
-})
+}
 
 export default router

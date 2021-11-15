@@ -14,6 +14,8 @@ export default {
   name: 'oauth-callback',
   beforeRouteEnter (from, to, next) {
     oauth.callback().then(() => {
+      if (window.frameElement) return
+
       next({ name: oauth.storedLocation })
     })
   }
