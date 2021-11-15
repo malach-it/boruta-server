@@ -36,7 +36,7 @@ export default {
     updateUser () {
       return this.user.save().then(() => {
         this.$router.push({ name: 'user-list' })
-      }).catch(console.debug)
+      }).catch()
     }
   }
 }

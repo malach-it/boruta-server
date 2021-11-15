@@ -30,7 +30,7 @@ export default {
     createUpstream () {
       return this.upstream.save().then(() => {
         this.$router.push({ name: 'upstream-list' })
-      }).catch(console.debug)
+      }).catch()
     }
   }
 }

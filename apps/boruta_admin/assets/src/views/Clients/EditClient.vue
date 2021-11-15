@@ -50,7 +50,7 @@ export default {
     updateClient () {
       return this.client.save().then(() => {
         this.$router.push({ name: 'client-list' })
-      }).catch(console.debug)
+      }).catch()
     }
   }
 }
