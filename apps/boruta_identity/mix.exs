@@ -37,7 +37,7 @@ defmodule BorutaIdentity.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
+      {:boruta, "2.0.0-rc.1"},
       {:argon2_elixir, "~> 2.0"},
       {:ecto_sql, "~> 3.4"},
       {:finch, "~> 0.8"},
