@@ -38,6 +38,8 @@ export default {
 <style scoped lang="scss">
 .header {
   background: #1b1c1d;
+  max-width: 100%;
+  overflow: hidden;
   .item.logo {
     min-width: 200px;
     background: inherit!important;
@@ -49,7 +51,7 @@ export default {
 
   @media screen and (max-width: 1127px) {
     .item.logo {
-      min-width: auto;
+      display: none;
     }
   }
 }

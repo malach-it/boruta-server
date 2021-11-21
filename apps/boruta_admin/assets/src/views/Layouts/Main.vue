@@ -6,23 +6,23 @@
         <div class="ui big vertical inverted fluid tabular menu">
           <router-link :to="{ name: 'dashboard' }" class="dashboard item">
             <i class="chart area icon"></i>
-            Dashboard
+            <span>Dashboard</span>
           </router-link>
           <router-link :to="{ name: 'upstream-list' }" class="upstreams item">
             <i class="server icon"></i>
-            Upstreams
+            <span>Upstreams</span>
           </router-link>
           <router-link :to="{ name: 'user-list' }" class="users item">
             <i class="users icon"></i>
-            Users
+            <span>Users</span>
           </router-link>
           <router-link :to="{ name: 'client-list' }" class="clients item">
             <i class="certificate icon"></i>
-            Clients
+            <span>Clients</span>
           </router-link>
           <router-link :to="{ name: 'scope-list' }" class="scopes item">
             <i class="cogs icon"></i>
-            Scopes
+            <span>Scopes</span>
           </router-link>
         </div>
       </div>
@@ -126,10 +126,10 @@ export default {
   min-height: calc(100% - 41px);
   background: #1b1c1d;
   .main.header {
+    text-align: center;
     position: relative;
-    padding: 1em;
+    padding: .6rem;
     background: rgba(255,255,255,.05);
-    border-bottom: 1px solid rgba(255,255,255,.05);
     margin-bottom: 1rem;
     h1 {
       margin: 0;
@@ -138,11 +138,10 @@ export default {
     }
     .button {
       position: absolute;
-      right: 1rem;
-      top: 1rem;
+      right: .6rem;
+      top: .6rem;
     }
     @media screen and (max-width: 753px) {
-      text-align: center;
       .button {
         position: relative;
       }
@@ -164,6 +163,7 @@ export default {
     }
   }
   .sidebar-menu {
+    background: #1b1c1d;
     min-width: 200px;
     color: white;
     border-right: 1px solid rgba(255,255,255,.05);
@@ -221,6 +221,45 @@ export default {
         border-bottom: 1px solid rgba(255,255,255,.05);
         &.active {
           background: rgba(255,255,255,.05);
+        }
+      }
+    }
+  }
+  @media screen and (min-width: 1127px) {
+    padding-left: 4.7em;
+    .sidebar-menu {
+      position: absolute;
+      left: 0;
+      z-index: 100;
+      height: 100%;
+      width: 4.7em;
+      min-width: 0;
+      overflow: hidden;
+      transition: width .2s ease-in-out;
+      .menu {
+        .item {
+          position: relative;
+          padding: 0;
+          min-width: 4em;
+          height: 4em;
+          span {
+            margin-left: 1.5em;
+            margin-right: 4em;
+            line-height: 4em;
+            opacity: 0;
+            transition: opacity .2s ease-in-out;
+          }
+          i {
+            position: absolute;
+            top: 1.5em;
+            right: 1.5em;
+          }
+        }
+      }
+      &:hover {
+        width: 200px;
+        .item span {
+          opacity: 1;
         }
       }
     }
