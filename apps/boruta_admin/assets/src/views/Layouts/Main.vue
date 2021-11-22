@@ -179,9 +179,29 @@ export default {
     }
   }
   .ui.grid {
-    margin-bottom: 0;
+    margin: 0;
+    margin: -1rem 0;
+    .column {
+      padding: 0;
+      padding-top: 1rem;
+      padding-right: 1rem;
+    }
     .column>.segment {
       height: 100%;
+    }
+    &.two.column {
+      .column {
+        &:nth-child(2n) {
+          padding-right: 0;
+        }
+      }
+    }
+    &.three.column {
+      .column {
+        &:nth-child(3n) {
+          padding-right: 0;
+        }
+      }
     }
   }
   .ui.header {

@@ -2,7 +2,7 @@
   <div class="header">
     <div class="ui main inverted menu">
       <router-link :to="{ name: 'home' }" class="logo item">
-        BorutaAuth
+        Boruta
       </router-link>
       <div class="right menu">
         <span class="ui item">

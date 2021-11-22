@@ -127,6 +127,7 @@ export default {
     }
   }
   .column {
+    padding: 1rem!important;
     display: flex;
     align-items: center;
     &.actions {
