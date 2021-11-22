@@ -74,16 +74,16 @@ export default {
     border-radius: 0!important;
   }
   .ui.form {
-    .ui.input.error>input {
-      background-color: #fff6f6;
-      border-color: #e0b4b4;
-      color: #9f3a38;
-      box-shadow: none;
-    }
-    .ui.input, select, input {
+    position: relative;
+    select, input {
       border: 1px solid rgba(255, 255, 255, 0.15);
       background: #393939;
       color: white;
+    }
+    .error-message {
+      position: absolute;
+      bottom: -1em;
+      left: 1em;
     }
   }
   .label {
