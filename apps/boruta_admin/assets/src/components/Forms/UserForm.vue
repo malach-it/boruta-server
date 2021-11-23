@@ -6,8 +6,8 @@
       <form class="ui form" v-on:submit.prevent="submit()">
         <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         <hr />
-        <button class="ui big violet button" type="submit">{{ action }}</button>
-        <a v-on:click="back()" class="ui button">Back</a>
+        <button class="ui large right floated violet button" type="submit">{{ action }}</button>
+        <a v-on:click="back()" class="ui large button">Back</a>
       </form>
     </div>
   </div>

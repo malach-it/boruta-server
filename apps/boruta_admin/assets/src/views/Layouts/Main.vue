@@ -110,15 +110,15 @@ export default {
     cursor: default;
   }
   .olive {
-    background: rgba(71, 71, 135,1.0)!important;
+    background: rgba(61, 61, 61, 1.0)!important;
     &.button:hover, &.label:hover {
-      background: rgba(71, 71, 135,0.7)!important;
+      background: rgba(61, 61, 61, 0.7)!important;
     }
   }
   .violet {
-    background: rgba(205, 97, 51,1.0)!important;
+    background: rgba(131, 52, 113, 1.0)!important;
     &.button:hover, &.label:hover {
-      background: rgba(205, 97, 51,0.7)!important;
+      background: rgba(131, 52, 113, 0.7)!important;
     }
   }
   .blue {
