@@ -55,4 +55,5 @@ defmodule BorutaIdentity.Accounts do
   ## Consent
   defdelegate consent(user, attrs), to: Consents
   defdelegate consented?(user, conn), to: Consents
+  defdelegate consented_scopes(user, conn), to: Consents
 end

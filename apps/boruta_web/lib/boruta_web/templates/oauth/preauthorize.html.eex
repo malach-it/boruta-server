@@ -1,10 +1,14 @@
 <div class="ui massive segment" style="max-width: 600px;">
-  <p>Client <strong><%= @client.id %></strong> require access to your data</p>
+  <p><strong><%= @client.name || "Client #{@client.id}" %></strong> require access to your data</p>
   <form action="/accounts/consent" method="POST">
     <div class="ui massive divided list">
       <%= Enum.map(@scopes, fn scope ->%>
         <div class="ui checkbox item">
+          <%= if Enum.member?(@consented_scopes, scope) do %>
           <input type="checkbox" name="scopes[]" id="<%= scope %>" checked="checked" value="<%= scope %>">
+          <% else %>
+          <input type="checkbox" name="scopes[]" id="<%= scope %>" value="<%= scope %>">
+          <% end %>
           <label style="font-size: 1.8em; cursor: pointer" class="content" for="<%= scope %>"><%= scope %></label>
         </div>
       <% end) %>

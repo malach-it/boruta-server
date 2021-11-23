@@ -11,6 +11,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
+  alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
@@ -81,10 +82,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, %AuthorizationSuccess{client: client, scope: scope}) do
-    scopes = String.split(scope, " ")
+    current_user = conn.assigns[:current_user]
+
+    scopes = Scope.split(scope)
+    consented_scopes = Accounts.consented_scopes(current_user, conn)
+
     conn
     |> put_view(OauthView)
-    |> render("preauthorize.html", client: client, scopes: scopes)
+    |> render("preauthorize.html", client: client, scopes: scopes, consented_scopes: consented_scopes)
   end
 
   @impl Boruta.Oauth.AuthorizeApplication

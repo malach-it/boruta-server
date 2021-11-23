@@ -15,6 +15,17 @@ defmodule BorutaIdentity.Accounts.Consents do
     |> Repo.update()
   end
 
+  @spec consented_scopes(user :: User.t(), conn :: Plug.Conn.t()) :: scopes :: list(String.t())
+  def consented_scopes(%User{id: user_id} = user, conn) do
+    with {:ok, %_request_type{client_id: client_id}} <-
+           Request.authorize_request(conn, user),
+         %Consent{scopes: scopes} <- Repo.get_by(Consent, user_id: user_id, client_id: client_id) do
+      scopes
+    else
+      _ -> []
+    end
+  end
+
   @spec consented?(user :: User.t(), conn :: Plug.Conn.t()) :: boolean()
   def consented?(user, conn) do
     with {:ok, %_request_type{client_id: client_id, scope: scope}} <-
