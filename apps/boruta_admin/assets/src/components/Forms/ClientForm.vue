@@ -72,6 +72,7 @@
             </div>
           </div>
         </div>
+        <hr />
         <button class="ui big violet button" type="submit">{{ action }}</button>
         <a v-on:click="back()" class="ui button">Back</a>
       </form>

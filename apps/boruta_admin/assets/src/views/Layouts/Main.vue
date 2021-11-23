@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <Header />
+    <Header ref="header" />
     <div id="main">
-      <div class="sidebar-menu">
+      <div class="sidebar-menu" ref="sidebar">
         <div class="ui big vertical inverted fluid tabular menu">
           <router-link :to="{ name: 'dashboard' }" class="dashboard item">
             <i class="chart area icon"></i>
@@ -40,6 +40,19 @@ export default {
   name: 'Main',
   components: {
     Header
+  },
+  mounted () {
+    const sidebarOffset = this.$refs.header.$el.offsetHeight
+
+    document.addEventListener('scroll', () => {
+      const nav = this.$refs.sidebar
+
+      if (window.scrollY < sidebarOffset) {
+        nav.classList.remove('fixed')
+      } else {
+        nav.classList.add('fixed')
+      }
+    })
   }
 }
 </script>
@@ -53,6 +66,10 @@ export default {
   }
   pre {
     margin: 0;
+  }
+  hr {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    margin: 1rem 0;
   }
   .attribute.list {
     margin: 0;
@@ -78,6 +95,9 @@ export default {
     select, input {
       border: 1px solid rgba(255, 255, 255, 0.15);
       background: #393939;
+      color: white;
+    }
+    .ui.input {
       color: white;
     }
     .error-message {
@@ -177,6 +197,13 @@ export default {
         }
       }
     }
+    @media (min-width: 1127px) {
+      &.fixed {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+      }
+    }
   }
   .ui.grid {
     margin: 0;
@@ -209,6 +236,9 @@ export default {
   }
   .ui.segments {
     margin: 0;
+    .segment:last-child {
+      margin: 0;
+    }
   }
   .ui.segment {
     background: rgba(255,255,255,.05);

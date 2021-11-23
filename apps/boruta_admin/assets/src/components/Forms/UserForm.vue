@@ -1,13 +1,12 @@
 <template>
   <div class="user-form">
     <div class="ui large segment">
-      <h2>{{ user.email }}</h2>
       <FormErrors :errors="user.errors" v-if="user.errors" />
-      <p><strong>id:</strong> {{ user.id }}</p>
       <h3>Accessible scopes</h3>
       <form class="ui form" v-on:submit.prevent="submit()">
         <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
-        <button class="ui violet button" type="submit">{{ action }}</button>
+        <hr />
+        <button class="ui big violet button" type="submit">{{ action }}</button>
         <a v-on:click="back()" class="ui button">Back</a>
       </form>
     </div>

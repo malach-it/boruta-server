@@ -4,6 +4,18 @@
       <h1>Edit a user</h1>
     </div>
     <div class="ui container">
+      <div class="ui large segment">
+        <div class="ui attribute list">
+          <div class="item">
+            <span class="header">User ID</span>
+            <span class="description">{{ user.id }}</span>
+          </div>
+          <div class="item">
+            <span class="header">Email</span>
+            <span class="description">{{ user.email }}</span>
+          </div>
+        </div>
+      </div>
       <UserForm :user="user" @submit="updateUser()" @back="back()" action="Update" />
     </div>
   </div>

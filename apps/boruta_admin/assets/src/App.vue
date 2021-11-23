@@ -10,6 +10,6 @@ export default {
 
 <style lang="scss">
 body {
-  background: black;
+  background: #1b1c1d;
 }
 </style>
