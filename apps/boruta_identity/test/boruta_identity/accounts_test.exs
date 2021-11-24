@@ -2,6 +2,7 @@ defmodule BorutaIdentity.AccountsTest do
   use BorutaIdentity.DataCase
 
   import BorutaIdentity.AccountsFixtures
+  import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
@@ -585,8 +586,9 @@ defmodule BorutaIdentity.AccountsTest do
       user = user_fixture()
       client_id = SecureRandom.uuid()
       redirect_uri = "http://test.host"
+      consent = insert(:consent, user: user, scopes: ["consented", "scope"])
 
-      oauth_request = %{
+      oauth_request = %Plug.Conn{
         query_params: %{
           "scope" => "",
           "response_type" => "token",
@@ -595,7 +597,7 @@ defmodule BorutaIdentity.AccountsTest do
         }
       }
 
-      oauth_request_with_scope = %{
+      oauth_request_with_scope = %Plug.Conn{
         query_params: %{
           "scope" => "scope:a scope:b",
           "response_type" => "token",
@@ -604,10 +606,24 @@ defmodule BorutaIdentity.AccountsTest do
         }
       }
 
+      oauth_request_with_consented_scope = %Plug.Conn{
+        query_params: %{
+          "scope" => "consented scope",
+          "response_type" => "token",
+          "client_id" => consent.client_id,
+          "redirect_uri" => redirect_uri
+        }
+      }
+
       {:ok,
        user: user,
        oauth_request: oauth_request,
-       oauth_request_with_scope: oauth_request_with_scope}
+       oauth_request_with_scope: oauth_request_with_scope,
+       oauth_request_with_consented_scope: oauth_request_with_consented_scope}
+    end
+
+    test "returns false with not an oauth request", %{user: user} do
+      assert Accounts.consented?(user, %Plug.Conn{}) == false
     end
 
     test "returns true with empty scope", %{user: user, oauth_request: oauth_request} do
@@ -623,15 +639,55 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "returns true when scopes are consented", %{
       user: user,
-      oauth_request_with_scope: oauth_request
+      oauth_request_with_consented_scope: oauth_request
     } do
-      scopes = String.split(oauth_request[:query_params]["scope"], " ")
-      client_id = oauth_request[:query_params]["client_id"]
-
-      {:ok, %User{consents: [_consent]}} =
-        Accounts.consent(user, %{client_id: client_id, scopes: scopes})
-
       assert Accounts.consented?(user, oauth_request) == true
+    end
+  end
+
+  describe "consented_scopes/2" do
+    setup do
+      user = user_fixture()
+      client_id = SecureRandom.uuid()
+      consent = insert(:consent, user: user, scopes: ["consented:scope"])
+
+      redirect_uri = "http://test.host"
+
+      oauth_request = %Plug.Conn{
+        query_params: %{
+          "scope" => "",
+          "response_type" => "token",
+          "client_id" => client_id,
+          "redirect_uri" => redirect_uri
+        }
+      }
+
+      oauth_request_with_consented_scopes = %Plug.Conn{
+        query_params: %{
+          "scope" => "scope:a scope:b",
+          "response_type" => "token",
+          "client_id" => consent.client_id,
+          "redirect_uri" => redirect_uri
+        }
+      }
+
+      {:ok,
+       user: user,
+       consent: consent,
+       oauth_request: oauth_request,
+       oauth_request_with_consented_scopes: oauth_request_with_consented_scopes}
+    end
+
+    test "returns an empty array", %{user: user} do
+      assert Accounts.consented_scopes(user, %Plug.Conn{}) == []
+    end
+
+    test "returns an empty array with a valid oauth request", %{user: user, oauth_request: oauth_request} do
+      assert Accounts.consented_scopes(user, oauth_request) == []
+    end
+
+    test "returns existing consented scopes", %{user: user, oauth_request_with_consented_scopes: oauth_request} do
+      assert Accounts.consented_scopes(user, oauth_request) == ["consented:scope"]
     end
   end
 end

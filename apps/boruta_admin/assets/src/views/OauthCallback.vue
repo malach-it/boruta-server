@@ -16,7 +16,7 @@ export default {
     oauth.callback().then(() => {
       if (window.frameElement) return
 
-      next({ name: oauth.storedLocation })
+      next(oauth.storedLocation)
     })
   }
 }

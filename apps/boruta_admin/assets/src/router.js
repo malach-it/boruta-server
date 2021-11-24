@@ -120,7 +120,7 @@ router.beforeEach(authGuard)
 function authGuard (to, from, next) {
   if (to.name === 'oauth-callback') return next()
 
-  if (to.name) oauth.storeLocationName(to.name)
+  if (to.name) oauth.storeLocationName(to.name, to.params)
 
   if (!oauth.isAuthenticated) {
     // TODO find a way to remove event listener once triggered

@@ -1,16 +1,26 @@
-<div class="ui massive segment" style="max-width: 600px;">
-  <p>Client <strong><%= @client.id %></strong> require access to your data</p>
-  <form action="/accounts/consent" method="POST">
-    <div class="ui massive divided list">
-      <%= Enum.map(@scopes, fn scope ->%>
-        <div class="ui checkbox item">
-          <input type="checkbox" name="scopes[]" id="<%= scope %>" checked="checked" value="<%= scope %>">
-          <label style="font-size: 1.8em; cursor: pointer" class="content" for="<%= scope %>"><%= scope %></label>
+<div class="ui segment" style="max-width: 400px;">
+  <h1 style="padding: 0 30px 30px 30px;" class="ui center aligned icon header">
+    <i class="circular address card icon"></i>
+    <strong><%= @client.name || "Client #{@client.id}" %></strong> require access to your data
+  </h1>
+  <div class="ui massive form">
+    <form action="/accounts/consent" method="POST">
+      <%= Enum.map(@scopes, fn scope -> %>
+        <div class="field">
+          <div class="ui checkbox">
+            <%= if Enum.member?(@consented_scopes, scope.name) do %>
+            <input type="checkbox" name="scopes[]" id="<%= scope.name %>" checked="checked" value="<%= scope.name %>">
+            <% else %>
+            <input type="checkbox" name="scopes[]" id="<%= scope.name %>" value="<%= scope.name %>">
+            <% end %>
+            <label style="font-size: 1.5rem; cursor: pointer" class="content" for="<%= scope.name %>"><%= scope.label || scope.name %></label>
+          </div>
         </div>
       <% end) %>
-    </div>
-    <input type="hidden" name="_csrf_token" value="<%= Plug.CSRFProtection.get_csrf_token() %>">
-    <input type="hidden" name="client_id" value="<%= @client.id %>">
-    <button type="submit" class="ui massive violet fluid button">Consent</button>
-  </form>
+      <hr />
+      <input type="hidden" name="_csrf_token" value="<%= Plug.CSRFProtection.get_csrf_token() %>">
+      <input type="hidden" name="client_id" value="<%= @client.id %>">
+      <button type="submit" class="ui massive violet fluid button">Consent</button>
+    </form>
+  </div>
 </div>

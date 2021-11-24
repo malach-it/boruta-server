@@ -58,7 +58,7 @@ defmodule BorutaWeb.AuthorizeControllerTest do
         })
       )
 
-      assert redirected_to(conn) == Routes.choose_session_path(conn, :new)
+      assert html_response(conn, 200) =~ ~r/choose-session/
     end
   end
 end

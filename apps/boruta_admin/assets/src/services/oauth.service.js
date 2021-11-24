@@ -57,13 +57,15 @@ class Oauth {
     return Promise.resolve(true)
   }
 
-  storeLocationName (name) {
-    localStorage.setItem('stored_location', name)
+  storeLocationName (name, params) {
+    localStorage.setItem('stored_location_name', name)
+    localStorage.setItem('stored_location_params', JSON.stringify(params))
   }
 
   get storedLocation () {
-    const name = localStorage.getItem('stored_location') || 'home'
-    return name
+    const name = localStorage.getItem('stored_location_name') || 'home'
+    const params = JSON.parse(localStorage.getItem('stored_location_params') || {})
+    return { name, params }
   }
 
   get accessToken () {

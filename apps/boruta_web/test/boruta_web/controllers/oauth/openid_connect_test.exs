@@ -135,7 +135,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
           })
         )
 
-      assert redirected_to(conn) =~ ~r/choose/
+      assert html_response(conn, 200) =~ ~r/choose-session/
     end
   end
 end
