@@ -6,6 +6,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   import BorutaIdentityWeb.Authenticable, only: [log_out_user: 1]
 
+  alias Boruta.Ecto.Admin
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.AuthorizeResponse
@@ -84,7 +85,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   def preauthorize_success(conn, %AuthorizationSuccess{client: client, scope: scope}) do
     current_user = conn.assigns[:current_user]
 
-    scopes = Scope.split(scope)
+    scopes = Scope.split(scope) |> Admin.get_scopes_by_names()
     consented_scopes = Accounts.consented_scopes(current_user, conn)
 
     conn
