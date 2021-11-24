@@ -1,4 +1,4 @@
-<div class="ui container">
+<div class="ui choose-session container">
   <div class="ui two column stackable centered grid">
     <div class="column">
       <h1 class="ui right aligned header">Continue ?</h1>

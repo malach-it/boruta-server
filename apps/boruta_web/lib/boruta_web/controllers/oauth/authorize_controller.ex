@@ -36,12 +36,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp authorize_response(conn, current_user, _, _, "none", _) do
     current_user = current_user || %User{}
-    resource_owner =
-        %ResourceOwner{
-          sub: current_user.id,
-          username: current_user.email,
-          last_login_at: current_user.last_login_at
-        }
+
+    resource_owner = %ResourceOwner{
+      sub: current_user.id,
+      username: current_user.email,
+      last_login_at: current_user.last_login_at
+    }
 
     conn
     |> Oauth.authorize(
@@ -55,7 +55,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
     conn
     |> Oauth.preauthorize(
-      %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at},
+      %ResourceOwner{
+        sub: current_user.id,
+        username: current_user.email,
+        last_login_at: current_user.last_login_at
+      },
       __MODULE__
     )
   end
@@ -63,7 +67,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp authorize_response(conn, %User{} = current_user, true, true, _, _) do
     conn
     |> Oauth.authorize(
-      %ResourceOwner{sub: current_user.id, username: current_user.email, last_login_at: current_user.last_login_at},
+      %ResourceOwner{
+        sub: current_user.id,
+        username: current_user.email,
+        last_login_at: current_user.last_login_at
+      },
       __MODULE__
     )
   end
@@ -71,9 +79,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp authorize_response(conn, %User{} = current_user, _, _, _, max_age) do
     # TODO a render can be a better choice
     case login_expired?(current_user, max_age) do
-      true -> log_out_user(conn)
+      true ->
+        log_out_user(conn)
+
       false ->
-        redirect(conn, to: Routes.choose_session_path(conn, :new))
+        conn
+        |> put_session(:session_chosen, true)
+        |> put_view(BorutaWeb.ChooseSessionView)
+        |> render("new.html")
     end
   end
 
@@ -90,7 +103,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn
     |> put_view(OauthView)
-    |> render("preauthorize.html", client: client, scopes: scopes, consented_scopes: consented_scopes)
+    |> render("preauthorize.html",
+      client: client,
+      scopes: scopes,
+      consented_scopes: consented_scopes
+    )
   end
 
   @impl Boruta.Oauth.AuthorizeApplication

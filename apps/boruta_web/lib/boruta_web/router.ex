@@ -45,12 +45,6 @@ defmodule BorutaWeb.Router do
 
   get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck, log: false)
 
-  scope "/accounts" do
-    pipe_through([:browser, :fetch_current_user])
-
-    get("/choose-session", BorutaWeb.ChooseSessionController, :new)
-  end
-
   forward("/accounts", BorutaIdentityWeb.Endpoint)
 
   scope "/oauth", BorutaWeb do

@@ -7,7 +7,7 @@
     <title>Boruta · Phoenix Framework</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha256-9mbkOfVho3ZPXfM7W8sV2SndrGDuh7wuyLjtsWeTI1Q=" crossorigin="anonymous" />
   </head>
-  <body>
+  <body style="background: #eee;">
     <header>
       <%= if get_flash(@conn, :info) do %><div class="ui success center aligned large message segment" role="alert"><%= get_flash(@conn, :info) %></div><% end %>
       <%= if get_flash(@conn, :error) do %><div class="ui error large center aligned message segment" role="alert"><%= get_flash(@conn, :error) %></div><% end %>
