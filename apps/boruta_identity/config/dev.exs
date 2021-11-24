@@ -6,7 +6,7 @@ config :boruta_identity, BorutaIdentity.Repo,
   database: "boruta_identity_dev",
   hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: 5
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   http: [port: 4001, path: "/accounts"],

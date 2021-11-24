@@ -5,7 +5,7 @@ config :boruta_gateway, BorutaGateway.Repo,
   password: "postgres",
   database: "boruta_gateway_dev",
   hostname: "localhost",
-  pool_size: 10
+  pool_size: 5
 
 config :boruta_gateway,
   port: 4000

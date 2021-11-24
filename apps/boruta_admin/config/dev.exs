@@ -5,7 +5,7 @@ config :boruta_admin, BorutaAdmin.Repo,
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
-  pool_size: 10
+  pool_size: 1
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [port: 4002],

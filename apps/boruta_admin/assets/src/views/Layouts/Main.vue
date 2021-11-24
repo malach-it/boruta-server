@@ -4,18 +4,26 @@
     <div id="main">
       <div class="sidebar-menu" ref="sidebar">
         <div class="ui big vertical inverted fluid tabular menu">
-          <div class="dashboard item">
-            <router-link :to="{ name: 'dashboard' }">
-              <i class="chart area icon"></i>
-              <span>Dashboard</span>
-            </router-link>
-          </div>
-          <div class="upstreams item">
-            <router-link :to="{ name: 'upstream-list' }">
-              <i class="server icon"></i>
-              <span>Upstreams</span>
-            </router-link>
-          </div>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'dashboard' }">
+            <div class="dashboard item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="chart area icon"></i>
+                <span>Dashboard</span>
+              </a>
+            </div>
+          </router-link>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'upstreams' }">
+            <div class="upstreams item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="server icon"></i>
+                <span>Upstreams</span>
+              </a>
+            </div>
+          </router-link>
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'users' }">
@@ -38,18 +46,26 @@
               </div>
             </div>
           </router-link>
-          <div class="clients item">
-            <router-link :to="{ name: 'client-list' }">
-              <i class="certificate icon"></i>
-              <span>Clients</span>
-            </router-link>
-          </div>
-          <div class="scopes item">
-            <router-link :to="{ name: 'scope-list' }">
-              <i class="cogs icon"></i>
-              <span>Scopes</span>
-            </router-link>
-          </div>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'clients' }">
+            <div class="clients item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="certificate icon"></i>
+                <span>Clients</span>
+              </a>
+            </div>
+          </router-link>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'scopes' }">
+            <div class="scopes item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="cogs icon"></i>
+                <span>Scopes</span>
+              </a>
+            </div>
+          </router-link>
         </div>
       </div>
       <div class="content">
@@ -263,8 +279,8 @@ export default {
       }
       .dropdown {
         display: none;
+        background: #1b1c1d;
         .subitem {
-          background: #1b1c1d;
           position: relative;
           font-size: .85em;
           height: 3rem;

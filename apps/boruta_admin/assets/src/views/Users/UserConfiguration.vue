@@ -28,7 +28,7 @@
               <p>Soon authorization server will have a configuration that would restrict access to confirmed accounts.</p>
             </div>
             <div class="ui toggle checkbox">
-              <input type="checkbox" v-model="configuration.registrable">
+              <input type="checkbox" v-model="configuration.confirmable">
               <label>Confirmable</label>
             </div>
           </div>

@@ -73,6 +73,8 @@ const router = new Router({
         }, {
           path: '/clients',
           component: Clients,
+          name: 'clients',
+          redirect: '/clients/',
           children: [
             {
               path: '',
@@ -91,6 +93,8 @@ const router = new Router({
         }, {
           path: '/upstreams',
           component: Upstreams,
+          name: 'upstreams',
+          redirect: '/upstreams/',
           children: [
             {
               path: '',
@@ -109,10 +113,12 @@ const router = new Router({
         }, {
           path: '/scopes',
           component: Scopes,
+          name: 'scopes',
+          redirect: '/scopes/',
           children: [
             {
               path: '',
-              name: 'scope-list',
+              name: '',
               component: ScopeList
             }
           ]
