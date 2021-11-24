@@ -4,26 +4,52 @@
     <div id="main">
       <div class="sidebar-menu" ref="sidebar">
         <div class="ui big vertical inverted fluid tabular menu">
-          <router-link :to="{ name: 'dashboard' }" class="dashboard item">
-            <i class="chart area icon"></i>
-            <span>Dashboard</span>
+          <div class="dashboard item">
+            <router-link :to="{ name: 'dashboard' }">
+              <i class="chart area icon"></i>
+              <span>Dashboard</span>
+            </router-link>
+          </div>
+          <div class="upstreams item">
+            <router-link :to="{ name: 'upstream-list' }">
+              <i class="server icon"></i>
+              <span>Upstreams</span>
+            </router-link>
+          </div>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'users' }">
+            <div class="users item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="users icon"></i>
+                <span>Users</span>
+              </a>
+              <div class="dropdown">
+                <div class="subitem">
+                  <router-link :to="{ name: 'user-list' }">
+                    <span>list</span>
+                  </router-link>
+                </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'user-configuration' }">
+                    <span>configuration</span>
+                  </router-link>
+                </div>
+              </div>
+            </div>
           </router-link>
-          <router-link :to="{ name: 'upstream-list' }" class="upstreams item">
-            <i class="server icon"></i>
-            <span>Upstreams</span>
-          </router-link>
-          <router-link :to="{ name: 'user-list' }" class="users item">
-            <i class="users icon"></i>
-            <span>Users</span>
-          </router-link>
-          <router-link :to="{ name: 'client-list' }" class="clients item">
-            <i class="certificate icon"></i>
-            <span>Clients</span>
-          </router-link>
-          <router-link :to="{ name: 'scope-list' }" class="scopes item">
-            <i class="cogs icon"></i>
-            <span>Scopes</span>
-          </router-link>
+          <div class="clients item">
+            <router-link :to="{ name: 'client-list' }">
+              <i class="certificate icon"></i>
+              <span>Clients</span>
+            </router-link>
+          </div>
+          <div class="scopes item">
+            <router-link :to="{ name: 'scope-list' }">
+              <i class="cogs icon"></i>
+              <span>Scopes</span>
+            </router-link>
+          </div>
         </div>
       </div>
       <div class="content">
@@ -189,11 +215,85 @@ export default {
     border-right: 1px solid rgba(255,255,255,.05);
     .menu {
       border: none;
-      .active.item {
-        background: rgba(255,255,255,.05);
-        border: none;
+      .item {
+        position: relative;
+        padding: 0;
+        min-width: 4em;
+        min-height: 4em;
+        span {
+          margin-left: 1.5em;
+          margin-right: 4em;
+          line-height: 4em;
+        }
+        i {
+          position: absolute;
+          top: 1.5em;
+          right: 1.5em;
+        }
+        &.active {
+          background: rgba(255,255,255,.05);
+          border: none;
+          .dropdown {
+            display: block;
+          }
+          &:hover {
+            background: rgba(255,255,255,.08);
+          }
+        }
+        &:not(.active):hover {
+          .dropdown {
+            display: block;
+            position: absolute;
+            left: 100%;
+            top: -2px;
+            width: 200px;
+            z-index: 1000;
+            border: 1px solid rgba(255,255,255,.03);
+            .subitem {
+            }
+          }
+        }
         &:hover {
           background: rgba(255,255,255,.08);
+        }
+      }
+      a {
+        display: block;
+        height: 100%;
+      }
+      .dropdown {
+        display: none;
+        .subitem {
+          background: #1b1c1d;
+          position: relative;
+          font-size: .85em;
+          height: 3rem;
+          span {
+            padding-left: 2rem;
+            margin: 1em;
+          }
+          a {
+            color: white;
+            &.active {
+              background: inherit;
+              &:hover {
+                background: rgba(255,255,255,.08);
+              }
+            }
+            &.router-link-exact-active {
+              background: rgba(255,255,255,.05);
+              border: none;
+              &:hover {
+                background: rgba(255,255,255,.08);
+              }
+            }
+            &:hover {
+              background: rgba(255,255,255,.08);
+            }
+          }
+          span {
+            line-height: 3rem;
+          }
         }
       }
     }
@@ -276,42 +376,8 @@ export default {
     }
   }
   @media screen and (min-width: 1127px) {
-    padding-left: 4.7em;
     .sidebar-menu {
-      position: absolute;
-      left: 0;
-      z-index: 100;
       height: 100%;
-      width: 4.7em;
-      min-width: 0;
-      overflow: hidden;
-      transition: width .2s ease-in-out;
-      .menu {
-        .item {
-          position: relative;
-          padding: 0;
-          min-width: 4em;
-          height: 4em;
-          span {
-            margin-left: 1.5em;
-            margin-right: 4em;
-            line-height: 4em;
-            opacity: 0;
-            transition: opacity .2s ease-in-out;
-          }
-          i {
-            position: absolute;
-            top: 1.5em;
-            right: 1.5em;
-          }
-        }
-      }
-      &:hover {
-        width: 200px;
-        .item span {
-          opacity: 1;
-        }
-      }
     }
   }
 }

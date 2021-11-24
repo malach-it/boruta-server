@@ -20,6 +20,7 @@ import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
 import Users from './views/Users.vue'
 import UserList from './views/Users/UserList.vue'
+import UserConfiguration from './views/Users/UserConfiguration.vue'
 import EditUser from './views/Users/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
@@ -52,11 +53,17 @@ const router = new Router({
         }, {
           path: '/users',
           component: Users,
+          name: 'users',
+          redirect: '/users/',
           children: [
             {
-              path: 'list',
+              path: '',
               name: 'user-list',
               component: UserList
+            }, {
+              path: 'configuration',
+              name: 'user-configuration',
+              component: UserConfiguration
             }, {
               path: '/users/:userId/edit',
               name: 'edit-user',
