@@ -1,8 +1,8 @@
 <template>
   <div id="app">
     <Header ref="header" />
-    <div id="main">
-      <div class="sidebar-menu" ref="sidebar">
+    <div id="main" ref="main">
+      <div class="sidebar-menu">
         <div class="ui big vertical inverted fluid tabular menu">
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
@@ -87,12 +87,12 @@ export default {
     const sidebarOffset = this.$refs.header.$el.offsetHeight
 
     document.addEventListener('scroll', () => {
-      const nav = this.$refs.sidebar
+      const main = this.$refs.main
 
       if (window.scrollY < sidebarOffset) {
-        nav.classList.remove('fixed')
+        main.classList.remove('fixed-sidebar')
       } else {
-        nav.classList.add('fixed')
+        main.classList.add('fixed-sidebar')
       }
     })
   }
@@ -313,13 +313,6 @@ export default {
         }
       }
     }
-    @media (min-width: 1127px) {
-      &.fixed {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-      }
-    }
   }
   .ui.grid {
     margin: 0;
@@ -394,6 +387,15 @@ export default {
   @media screen and (min-width: 1127px) {
     .sidebar-menu {
       height: 100%;
+    }
+    &.fixed-sidebar {
+      padding-left: 200px;
+      .sidebar-menu {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+      }
     }
   }
 }
