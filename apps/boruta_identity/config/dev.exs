@@ -25,16 +25,6 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
     ]
   ]
 
-config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  live_reload: [
-    patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
-      ~r"priv/gettext/.*(po)$",
-      ~r"lib/boruta_identity_web/(live|views)/.*(ex)$",
-      ~r"lib/boruta_identity_web/templates/.*(eex)$"
-    ]
-  ]
-
 config :boruta_identity, BorutaIdentity.Mailer,
   adapter: Swoosh.Adapters.Mailjet,
   secret: System.get_env("MAILJET_SECRET"),
