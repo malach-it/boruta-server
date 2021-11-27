@@ -24,10 +24,10 @@ export default {
   computed: {
     ...mapGetters(['currentUser', 'isAuthenticated'])
   },
+  mounted () {
+    this.$store.dispatch('getCurrentUser')
+  },
   methods: {
-    login () {
-      this.$store.dispatch('login')
-    },
     logout () {
       this.$store.dispatch('logout')
     }
