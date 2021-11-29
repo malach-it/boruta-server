@@ -12,10 +12,20 @@ defmodule BorutaIdentityWeb.FallbackController do
   alias BorutaIdentityWeb.ErrorView
 
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
-    errors_message = changeset |> ChangesetView.translate_errors() |> errors_tag()
-    conn
-    |> put_flash(:error, errors_message)
-    |> redirect(to: Routes.user_session_path(conn, :new))
+    case get_format(conn) do
+      "html" ->
+        errors_message = changeset |> ChangesetView.translate_errors() |> errors_tag()
+
+        conn
+        |> put_flash(:error, errors_message)
+        |> redirect(to: Routes.user_session_path(conn, :new))
+
+      "json" ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(ChangesetView)
+        |> render("error.json", changeset: changeset)
+    end
   end
 
   def call(conn, {:error, :not_found}) do
