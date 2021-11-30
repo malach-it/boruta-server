@@ -18,10 +18,11 @@ import UpstreamList from './views/Upstreams/UpstreamList.vue'
 import NewUpstream from './views/Upstreams/NewUpstream.vue'
 import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
-import Users from './views/Users.vue'
-import UserList from './views/Users/UserList.vue'
-import UserConfiguration from './views/Users/UserConfiguration.vue'
-import EditUser from './views/Users/EditUser.vue'
+import RelyingParties from './views/RelyingParties.vue'
+import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
+import UserList from './views/RelyingParties/UserList.vue'
+import UserConfiguration from './views/RelyingParties/UserConfiguration.vue'
+import EditUser from './views/RelyingParties/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/Scopes/ScopeList.vue'
@@ -51,13 +52,17 @@ const router = new Router({
           name: 'dashboard',
           component: Dashboard
         }, {
-          path: '/users',
-          component: Users,
-          name: 'users',
-          redirect: '/users/',
+          path: '/relying-parties',
+          component: RelyingParties,
+          name: 'relying-parties',
+          redirect: '/relying-parties/',
           children: [
             {
               path: '',
+              name: 'relying-party-list',
+              component: RelyingPartyList
+            }, {
+              path: 'users',
               name: 'user-list',
               component: UserList
             }, {

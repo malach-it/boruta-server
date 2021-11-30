@@ -26,16 +26,21 @@
           </router-link>
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
-            :to="{ name: 'users' }">
+            :to="{ name: 'relying-parties' }">
             <div class="users item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="users icon"></i>
-                <span>Users</span>
+                <span>Relying parties</span>
               </a>
               <div class="dropdown">
                 <div class="subitem">
-                  <router-link :to="{ name: 'user-list' }">
+                  <router-link :to="{ name: 'relying-party-list' }">
                     <span>list</span>
+                  </router-link>
+                </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'user-list' }">
+                    <span>users</span>
                   </router-link>
                 </div>
                 <div class="subitem">
