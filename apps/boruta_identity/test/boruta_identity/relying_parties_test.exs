@@ -6,9 +6,9 @@ defmodule BorutaIdentity.RelyingPartiesTest do
   describe "relying_parties" do
     alias BorutaIdentity.RelyingParties.RelyingParty
 
-    @valid_attrs %{name: "some name", type: "some type"}
-    @update_attrs %{name: "some updated name", type: "some updated type"}
-    @invalid_attrs %{name: nil, type: nil}
+    @valid_attrs %{name: "some name", type: "internal"}
+    @update_attrs %{name: "some updated name"}
+    @invalid_attrs %{name: nil, type: "other"}
 
     def relying_party_fixture(attrs \\ %{}) do
       {:ok, relying_party} =
@@ -30,32 +30,48 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     end
 
     test "create_relying_party/1 with valid data creates a relying_party" do
-      assert {:ok, %RelyingParty{} = relying_party} = RelyingParties.create_relying_party(@valid_attrs)
+      assert {:ok, %RelyingParty{} = relying_party} =
+               RelyingParties.create_relying_party(@valid_attrs)
+
       assert relying_party.name == "some name"
-      assert relying_party.type == "some type"
+      assert relying_party.type == "internal"
     end
 
     test "create_relying_party/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = RelyingParties.create_relying_party(@invalid_attrs)
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  type: {"is invalid", [validation: :inclusion, enum: ["internal"]]},
+                  name: {"can't be blank", [validation: :required]}
+                ]
+              }} = RelyingParties.create_relying_party(@invalid_attrs)
     end
 
     test "update_relying_party/2 with valid data updates the relying_party" do
       relying_party = relying_party_fixture()
-      assert {:ok, %RelyingParty{} = relying_party} = RelyingParties.update_relying_party(relying_party, @update_attrs)
+
+      assert {:ok, %RelyingParty{} = relying_party} =
+               RelyingParties.update_relying_party(relying_party, @update_attrs)
+
       assert relying_party.name == "some updated name"
-      assert relying_party.type == "some updated type"
     end
 
     test "update_relying_party/2 with invalid data returns error changeset" do
       relying_party = relying_party_fixture()
-      assert {:error, %Ecto.Changeset{}} = RelyingParties.update_relying_party(relying_party, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               RelyingParties.update_relying_party(relying_party, @invalid_attrs)
+
       assert relying_party == RelyingParties.get_relying_party!(relying_party.id)
     end
 
     test "delete_relying_party/1 deletes the relying_party" do
       relying_party = relying_party_fixture()
       assert {:ok, %RelyingParty{}} = RelyingParties.delete_relying_party(relying_party)
-      assert_raise Ecto.NoResultsError, fn -> RelyingParties.get_relying_party!(relying_party.id) end
+
+      assert_raise Ecto.NoResultsError, fn ->
+        RelyingParties.get_relying_party!(relying_party.id)
+      end
     end
 
     test "change_relying_party/1 returns a relying_party changeset" do

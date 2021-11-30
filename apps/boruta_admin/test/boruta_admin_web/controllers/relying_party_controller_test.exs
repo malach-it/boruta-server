@@ -6,13 +6,12 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
 
   @create_attrs %{
     name: "some name",
-    type: "some type"
+    type: "internal"
   }
   @update_attrs %{
-    name: "some updated name",
-    type: "some updated type"
+    name: "some updated name"
   }
-  @invalid_attrs %{name: nil, type: nil}
+  @invalid_attrs %{name: nil, type: "other"}
 
   def fixture(:relying_party) do
     {:ok, relying_party} = RelyingParties.create_relying_party(@create_attrs)
@@ -55,7 +54,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
       assert %{
                "id" => ^id,
                "name" => "some name",
-               "type" => "some type"
+               "type" => "internal"
              } = json_response(conn, 200)["data"]
     end
 
@@ -79,7 +78,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
       assert %{
                "id" => ^id,
                "name" => "some updated name",
-               "type" => "some updated type"
+               "type" => "internal"
              } = json_response(conn, 200)["data"]
     end
 

@@ -8,6 +8,12 @@
           <label>Name</label>
           <input type="text" v-model="relyingParty.name" placeholder="Super relying party">
         </div>
+        <div class="field">
+          <label>Type</label>
+          <select v-model="relyingParty.type">
+            <option value="internal">internal</option>
+          </select>
+        </div>
         <hr />
         <button class="ui large right floated violet button" type="submit">{{ action }}</button>
         <a class="ui large button" v-on:click="back()">Back</a>

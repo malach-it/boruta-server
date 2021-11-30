@@ -2,6 +2,7 @@ import axios from 'axios'
 
 const defaults = {
   name: null,
+  type: 'internal',
   errors: null
 }
 
@@ -59,11 +60,12 @@ class RelyingParty {
   }
 
   get serialized () {
-    const { id, name } = this
+    const { id, name, type } = this
 
     return {
       id,
-      name
+      name,
+      type
     }
   }
 

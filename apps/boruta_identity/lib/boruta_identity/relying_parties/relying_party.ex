@@ -4,6 +4,10 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @types [
+    "internal"
+  ]
+
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "relying_parties" do
     field :name, :string
@@ -16,6 +20,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   def changeset(relying_party, attrs) do
     relying_party
     |> cast(attrs, [:name, :type])
-    |> validate_required([:name])
+    |> validate_required([:name, :type])
+    |> validate_inclusion(:type, @types)
   end
 end

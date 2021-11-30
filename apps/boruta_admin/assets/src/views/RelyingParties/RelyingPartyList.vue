@@ -20,6 +20,10 @@
               <span class="description">{{ relyingParty.name }}</span>
             </div>
             <div class="item">
+              <span class="header">Type</span>
+              <span class="description">{{ relyingParty.type }}</span>
+            </div>
+            <div class="item">
               <span class="header">RelyingParty ID</span>
               <span class="description">{{ relyingParty.id }}</span>
             </div>
