@@ -1,12 +1,14 @@
 import axios from 'axios'
 
 const defaults = {
-  name: null
+  name: null,
+  errors: null
 }
 
 const assign = {
   id: function ({ id }) { this.id = id },
-  name: function ({ name }) { this.name = name }
+  name: function ({ name }) { this.name = name },
+  type: function ({ type }) { this.type = type }
 }
 
 class RelyingParty {
@@ -30,9 +32,9 @@ class RelyingParty {
     let response
     const { id, serialized } = this
     if (id) {
-      response = this.constructor.api().patch(`/${id}`, { relyingParty: serialized })
+      response = this.constructor.api().patch(`/${id}`, { relying_party: serialized })
     } else {
-      response = this.constructor.api().post('/', { relyingParty: serialized })
+      response = this.constructor.api().post('/', { relying_party: serialized })
     }
 
     return response

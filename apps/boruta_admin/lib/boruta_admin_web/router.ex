@@ -6,6 +6,7 @@ defmodule BorutaAdminWeb.Router do
   ]
 
   pipeline :authenticated_api do
+    plug(:accepts, ["json"])
     plug :require_authenticated
   end
 

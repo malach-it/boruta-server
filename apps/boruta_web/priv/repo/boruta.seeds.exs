@@ -30,6 +30,13 @@ import Ecto.Query
     on_conflict: :nothing
   )
 
+  BorutaWeb.Repo.insert(
+    %Boruta.Ecto.Scope{
+      name: "relying-parties:manage:all"
+    },
+    on_conflict: :nothing
+  )
+
 {:ok, instance_scope} =
   BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
@@ -73,6 +80,7 @@ scopes =
     "clients:manage:all",
     "scopes:manage:all",
     "upstreams:manage:all",
+    "relying-parties:manage:all",
     "instances:manage:user"
   ]
   |> Enum.map(fn scope_name ->

@@ -26,7 +26,7 @@ import User from '@/models/user.model'
 import UserForm from '@/components/Forms/UserForm.vue'
 
 export default {
-  name: 'users',
+  name: 'edit-user',
   components: {
     UserForm
   },

@@ -20,6 +20,8 @@ import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
 import RelyingParties from './views/RelyingParties.vue'
 import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
+import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
+import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
 import UserList from './views/RelyingParties/UserList.vue'
 import UserConfiguration from './views/RelyingParties/UserConfiguration.vue'
 import EditUser from './views/RelyingParties/EditUser.vue'
@@ -61,6 +63,14 @@ const router = new Router({
               path: '',
               name: 'relying-party-list',
               component: RelyingPartyList
+            }, {
+              path: 'new',
+              name: 'new-relying-party',
+              component: NewRelyingParty
+            }, {
+              path: '/relying-parties/:relyingPartyId/edit',
+              name: 'edit-relying-party',
+              component: EditRelyingParty
             }, {
               path: 'users',
               name: 'user-list',
