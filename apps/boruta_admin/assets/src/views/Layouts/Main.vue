@@ -266,6 +266,7 @@ export default {
             z-index: 1000;
             border: 1px solid rgba(255,255,255,.03);
             .subitem {
+              text-align: left;
             }
           }
         }
@@ -281,6 +282,7 @@ export default {
         display: none;
         background: #1b1c1d;
         .subitem {
+          text-align: right;
           position: relative;
           font-size: .85em;
           height: 3rem;
