@@ -17,6 +17,7 @@ defmodule BorutaAdminWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  alias Boruta.Oauth.IntrospectResponse
   alias Ecto.Adapters.SQL.Sandbox
 
   using do
@@ -46,29 +47,38 @@ defmodule BorutaAdminWeb.ConnCase do
       Sandbox.mode(BorutaWeb.Repo, {:shared, self()})
     end
 
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    conn = Phoenix.ConnTest.build_conn()
+
+    conn =
+      case tags[:authorized] do
+        nil -> conn
+        scopes -> authorized(conn, scopes)
+      end
+
+    {:ok, conn: conn}
   end
 
-  def with_authenticated_user(context) do
+  def authorized(conn, scopes) do
+    token = Boruta.Factory.insert(:token, type: "access_token", scope: Enum.join(scopes, " "))
+
+    conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{token.value}")
+
     %URI{port: port} =
       URI.parse(
         Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2][
           :site
         ]
       )
+
     bypass = Bypass.open(port: port)
     Bypass.up(bypass)
 
-    introspected_token = %{
-      "active" => true,
-      "sub" => "sub",
-      "scope" => context[:scope] || "",
-      "username" => "username@test.test"
-    }
+    introspected_token = token |> Boruta.Ecto.OauthMapper.to_oauth_schema() |> IntrospectResponse.from_token()
 
     Bypass.stub(bypass, "POST", "/oauth/introspect", fn conn ->
       Plug.Conn.resp(conn, 200, Jason.encode!(introspected_token))
     end)
-    [bypass: bypass, introspected_token: introspected_token]
+
+    conn
   end
 end

@@ -12,7 +12,7 @@ class Oauth {
     this.client = new oauth.Implicit({
       clientId: window.env.VUE_APP_ADMIN_CLIENT_ID,
       redirectUri: `${window.env.VUE_APP_BORUTA_BASE_URL}/oauth-callback`,
-      scope: 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all',
+      scope: 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all relying-parties:manage:all',
       silentRefresh: true,
       silentRefreshCallback: this.authenticate.bind(this)
     })

@@ -18,9 +18,12 @@ import UpstreamList from './views/Upstreams/UpstreamList.vue'
 import NewUpstream from './views/Upstreams/NewUpstream.vue'
 import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
-import Users from './views/Users.vue'
-import UserList from './views/Users/UserList.vue'
-import EditUser from './views/Users/EditUser.vue'
+import RelyingParties from './views/RelyingParties.vue'
+import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
+import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
+import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
+import UserList from './views/RelyingParties/UserList.vue'
+import EditUser from './views/RelyingParties/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/Scopes/ScopeList.vue'
@@ -50,11 +53,25 @@ const router = new Router({
           name: 'dashboard',
           component: Dashboard
         }, {
-          path: '/users',
-          component: Users,
+          path: '/relying-parties',
+          component: RelyingParties,
+          name: 'relying-parties',
+          redirect: '/relying-parties/',
           children: [
             {
-              path: 'list',
+              path: '',
+              name: 'relying-party-list',
+              component: RelyingPartyList
+            }, {
+              path: 'new',
+              name: 'new-relying-party',
+              component: NewRelyingParty
+            }, {
+              path: '/relying-parties/:relyingPartyId/edit',
+              name: 'edit-relying-party',
+              component: EditRelyingParty
+            }, {
+              path: 'users',
               name: 'user-list',
               component: UserList
             }, {
@@ -66,6 +83,8 @@ const router = new Router({
         }, {
           path: '/clients',
           component: Clients,
+          name: 'clients',
+          redirect: '/clients/',
           children: [
             {
               path: '',
@@ -84,6 +103,8 @@ const router = new Router({
         }, {
           path: '/upstreams',
           component: Upstreams,
+          name: 'upstreams',
+          redirect: '/upstreams/',
           children: [
             {
               path: '',
@@ -102,10 +123,12 @@ const router = new Router({
         }, {
           path: '/scopes',
           component: Scopes,
+          name: 'scopes',
+          redirect: '/scopes/',
           children: [
             {
               path: '',
-              name: 'scope-list',
+              name: '',
               component: ScopeList
             }
           ]

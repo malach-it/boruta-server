@@ -13,6 +13,7 @@ defmodule BorutaIdentityWeb.FallbackController do
 
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     errors_message = changeset |> ChangesetView.translate_errors() |> errors_tag()
+
     conn
     |> put_flash(:error, errors_message)
     |> redirect(to: Routes.user_session_path(conn, :new))

@@ -1,8 +1,6 @@
 defmodule BorutaAdminWeb.UpstreamControllerTest do
   use BorutaAdminWeb.ConnCase, async: false
 
-  import Boruta.Factory
-
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -32,20 +30,16 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
     assert response(conn, 401)
   end
 
-  describe "index" do
-    setup %{conn: conn} do
-      token = insert(:token, type: "access_token", scope: "upstreams:manage:all")
-      client = insert(:client)
-
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, client: client, scope: "upstreams:manage:all"}
+  describe "with a bad scope" do
+    @tag authorized: ["bad:scope"]
+    test "returns a 403", %{conn: conn} do
+      conn = get(conn, Routes.admin_client_path(conn, :index))
+      assert response(conn, 403)
     end
+  end
 
-    setup :with_authenticated_user
-
+  describe "index" do
+    @tag authorized: ["upstreams:manage:all"]
     test "lists all upstreams", %{conn: conn} do
       conn = get(conn, Routes.admin_upstream_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
@@ -53,24 +47,13 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
   end
 
   describe "create upstream" do
-    setup %{conn: conn} do
-      token = insert(:token, type: "access_token", scope: "upstreams:manage:all")
-      client = insert(:client)
-
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, client: client, scope: "upstreams:manage:all"}
-    end
-
-    setup :with_authenticated_user
-
+    @tag authorized: ["upstreams:manage:all"]
     test "renders upstream when data is valid", %{conn: conn} do
       conn = post(conn, Routes.admin_upstream_path(conn, :create), upstream: @create_attrs)
       assert %{"id" => _id} = json_response(conn, 201)["data"]
     end
 
+    @tag authorized: ["upstreams:manage:all"]
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post(conn, Routes.admin_upstream_path(conn, :create), upstream: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
@@ -80,18 +63,11 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
   describe "update upstream" do
     setup %{conn: conn} do
       upstream = fixture(:upstream)
-      token = insert(:token, type: "access_token", scope: "upstreams:manage:all")
-      client = insert(:client)
 
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, client: client, upstream: upstream, scope: "upstreams:manage:all"}
+      {:ok, conn: conn, upstream: upstream}
     end
 
-    setup :with_authenticated_user
-
+    @tag authorized: ["upstreams:manage:all"]
     test "renders upstream when data is valid", %{
       conn: conn,
       upstream: %Upstream{id: id} = upstream
@@ -102,6 +78,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
     end
 
+    @tag authorized: ["upstreams:manage:all"]
     test "renders errors when data is invalid", %{conn: conn, upstream: upstream} do
       conn =
         put(conn, Routes.admin_upstream_path(conn, :update, upstream), upstream: @invalid_attrs)
@@ -113,18 +90,11 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
   describe "delete upstream" do
     setup %{conn: conn} do
       upstream = fixture(:upstream)
-      token = insert(:token, type: "access_token", scope: "upstreams:manage:all")
-      client = insert(:client)
 
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, client: client, upstream: upstream, scope: "upstreams:manage:all"}
+      {:ok, conn: conn, upstream: upstream}
     end
 
-    setup :with_authenticated_user
-
+    @tag authorized: ["upstreams:manage:all"]
     test "deletes chosen upstream", %{conn: conn, upstream: upstream} do
       conn = delete(conn, Routes.admin_upstream_path(conn, :delete, upstream))
       assert response(conn, 204)

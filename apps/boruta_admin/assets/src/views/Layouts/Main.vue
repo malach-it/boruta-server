@@ -1,28 +1,70 @@
 <template>
   <div id="app">
     <Header ref="header" />
-    <div id="main">
-      <div class="sidebar-menu" ref="sidebar">
+    <div id="main" ref="main">
+      <div class="sidebar-menu">
         <div class="ui big vertical inverted fluid tabular menu">
-          <router-link :to="{ name: 'dashboard' }" class="dashboard item">
-            <i class="chart area icon"></i>
-            <span>Dashboard</span>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'dashboard' }">
+            <div class="dashboard item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="chart area icon"></i>
+                <span>Dashboard</span>
+              </a>
+            </div>
           </router-link>
-          <router-link :to="{ name: 'upstream-list' }" class="upstreams item">
-            <i class="server icon"></i>
-            <span>Upstreams</span>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'upstreams' }">
+            <div class="upstreams item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="server icon"></i>
+                <span>Upstreams</span>
+              </a>
+            </div>
           </router-link>
-          <router-link :to="{ name: 'user-list' }" class="users item">
-            <i class="users icon"></i>
-            <span>Users</span>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'relying-parties' }">
+            <div class="users item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="users icon"></i>
+                <span>Relying parties</span>
+              </a>
+              <div class="dropdown">
+                <div class="subitem">
+                  <router-link :to="{ name: 'relying-party-list' }">
+                    <span>relying party list</span>
+                  </router-link>
+                </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'user-list' }">
+                    <span>user list</span>
+                  </router-link>
+                </div>
+              </div>
+            </div>
           </router-link>
-          <router-link :to="{ name: 'client-list' }" class="clients item">
-            <i class="certificate icon"></i>
-            <span>Clients</span>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'clients' }">
+            <div class="clients item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="certificate icon"></i>
+                <span>Clients</span>
+              </a>
+            </div>
           </router-link>
-          <router-link :to="{ name: 'scope-list' }" class="scopes item">
-            <i class="cogs icon"></i>
-            <span>Scopes</span>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'scopes' }">
+            <div class="scopes item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="cogs icon"></i>
+                <span>Scopes</span>
+              </a>
+            </div>
           </router-link>
         </div>
       </div>
@@ -45,12 +87,12 @@ export default {
     const sidebarOffset = this.$refs.header.$el.offsetHeight
 
     document.addEventListener('scroll', () => {
-      const nav = this.$refs.sidebar
+      const main = this.$refs.main
 
       if (window.scrollY < sidebarOffset) {
-        nav.classList.remove('fixed')
+        main.classList.remove('fixed-sidebar')
       } else {
-        nav.classList.add('fixed')
+        main.classList.add('fixed-sidebar')
       }
     })
   }
@@ -189,19 +231,88 @@ export default {
     border-right: 1px solid rgba(255,255,255,.05);
     .menu {
       border: none;
-      .active.item {
-        background: rgba(255,255,255,.05);
-        border: none;
+      .item {
+        position: relative;
+        padding: 0;
+        min-width: 4em;
+        min-height: 4em;
+        span {
+          margin-left: 1.5em;
+          margin-right: 4em;
+          line-height: 4em;
+        }
+        i {
+          position: absolute;
+          top: 1.5em;
+          right: 1.5em;
+        }
+        &.active {
+          background: rgba(255,255,255,.05);
+          border: none;
+          .dropdown {
+            display: block;
+          }
+          &:hover {
+            background: rgba(255,255,255,.08);
+          }
+        }
+        &:not(.active):hover {
+          .dropdown {
+            display: block;
+            position: absolute;
+            left: 100%;
+            top: -2px;
+            width: 200px;
+            z-index: 1000;
+            border: 1px solid rgba(255,255,255,.03);
+            .subitem {
+              text-align: left;
+            }
+          }
+        }
         &:hover {
           background: rgba(255,255,255,.08);
         }
       }
-    }
-    @media (min-width: 1127px) {
-      &.fixed {
-        position: fixed;
-        top: 0;
-        bottom: 0;
+      a {
+        display: block;
+        height: 100%;
+      }
+      .dropdown {
+        display: none;
+        background: #1b1c1d;
+        .subitem {
+          text-align: right;
+          position: relative;
+          font-size: .85em;
+          height: 3rem;
+          span {
+            padding-left: 2rem;
+            margin: 1em;
+          }
+          a {
+            color: white;
+            &.active {
+              background: inherit;
+              &:hover {
+                background: rgba(255,255,255,.08);
+              }
+            }
+            &.router-link-exact-active {
+              background: rgba(255,255,255,.05);
+              border: none;
+              &:hover {
+                background: rgba(255,255,255,.08);
+              }
+            }
+            &:hover {
+              background: rgba(255,255,255,.08);
+            }
+          }
+          span {
+            line-height: 3rem;
+          }
+        }
       }
     }
   }
@@ -276,41 +387,16 @@ export default {
     }
   }
   @media screen and (min-width: 1127px) {
-    padding-left: 4.7em;
     .sidebar-menu {
-      position: absolute;
-      left: 0;
-      z-index: 100;
       height: 100%;
-      width: 4.7em;
-      min-width: 0;
-      overflow: hidden;
-      transition: width .2s ease-in-out;
-      .menu {
-        .item {
-          position: relative;
-          padding: 0;
-          min-width: 4em;
-          height: 4em;
-          span {
-            margin-left: 1.5em;
-            margin-right: 4em;
-            line-height: 4em;
-            opacity: 0;
-            transition: opacity .2s ease-in-out;
-          }
-          i {
-            position: absolute;
-            top: 1.5em;
-            right: 1.5em;
-          }
-        }
-      }
-      &:hover {
-        width: 200px;
-        .item span {
-          opacity: 1;
-        }
+    }
+    &.fixed-sidebar {
+      padding-left: 200px;
+      .sidebar-menu {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
       }
     }
   }
