@@ -1,6 +1,6 @@
-defmodule BorutaIdentityWeb.RelyingPartyView do
-  use BorutaIdentityWeb, :view
-  alias BorutaIdentityWeb.RelyingPartyView
+defmodule BorutaAdminWeb.RelyingPartyView do
+  use BorutaAdminWeb, :view
+  alias BorutaAdminWeb.RelyingPartyView
 
   def render("index.json", %{relying_parties: relying_parties}) do
     %{data: render_many(relying_parties, RelyingPartyView, "relying_party.json")}

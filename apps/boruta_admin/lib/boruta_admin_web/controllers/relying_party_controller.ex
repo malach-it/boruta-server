@@ -1,10 +1,16 @@
-defmodule BorutaIdentityWeb.RelyingPartyController do
-  use BorutaIdentityWeb, :controller
+defmodule BorutaAdminWeb.RelyingPartyController do
+  use BorutaAdminWeb, :controller
+
+  import BorutaAdminWeb.Authorization, only: [
+    authorize: 2
+  ]
 
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
-  action_fallback BorutaIdentityWeb.FallbackController
+  action_fallback BorutaAdminWeb.FallbackController
+
+  plug :authorize, ["relying-parties:manage:all"]
 
   def index(conn, _params) do
     relying_parties = RelyingParties.list_relying_parties()
@@ -15,7 +21,7 @@ defmodule BorutaIdentityWeb.RelyingPartyController do
     with {:ok, %RelyingParty{} = relying_party} <- RelyingParties.create_relying_party(relying_party_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.relying_party_path(conn, :show, relying_party))
+      |> put_resp_header("location", Routes.admin_relying_party_path(conn, :show, relying_party))
       |> render("show.json", relying_party: relying_party)
     end
   end

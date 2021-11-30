@@ -25,19 +25,7 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
   end
 
   describe "with bad scope" do
-    setup %{conn: conn} do
-      token = insert(:token, type: "access_token")
-
-      conn =
-        conn
-        |> put_req_header("accept", "application/json")
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, scope: "bad:scope"}
-    end
-
-    setup :with_authenticated_user
-
+    @tag authorized: ["bad:scope"]
     test "returns a 403", %{conn: conn} do
       conn = get(conn, Routes.admin_scope_path(conn, :index))
       assert response(conn, 403)
@@ -45,19 +33,7 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
   end
 
   describe "index" do
-    setup %{conn: conn} do
-      token = insert(:token, type: "access_token", scope: "scopes:manage:all")
-
-      conn =
-        conn
-        |> put_req_header("accept", "application/json")
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, scope: "scopes:manage:all"}
-    end
-
-    setup :with_authenticated_user
-
+    @tag authorized: ["scopes:manage:all"]
     test "lists all scopes", %{conn: conn} do
       conn = get(conn, Routes.admin_scope_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
@@ -65,19 +41,7 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
   end
 
   describe "create scope" do
-    setup %{conn: conn} do
-      token = insert(:token, type: "access_token", scope: "scopes:manage:all")
-
-      conn =
-        conn
-        |> put_req_header("accept", "application/json")
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, scope: "scopes:manage:all"}
-    end
-
-    setup :with_authenticated_user
-
+    @tag authorized: ["scopes:manage:all"]
     test "renders scope when data is valid", %{conn: conn} do
       conn = post(conn, Routes.admin_scope_path(conn, :create), scope: @create_attrs)
 
@@ -85,6 +49,7 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
                json_response(conn, 201)["data"]
     end
 
+    @tag authorized: ["scopes:manage:all"]
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post(conn, Routes.admin_scope_path(conn, :create), scope: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
@@ -94,23 +59,17 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
   describe "update scope" do
     setup %{conn: conn} do
       scope = insert(:scope)
-      token = insert(:token, type: "access_token", scope: "scopes:manage:all")
 
-      conn =
-        conn
-        |> put_req_header("accept", "application/json")
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, existing_scope: scope, scope: "scopes:manage:all"}
+      {:ok, conn: conn, existing_scope: scope}
     end
 
-    setup :with_authenticated_user
-
+    @tag authorized: ["scopes:manage:all"]
     test "renders scope when data is valid", %{conn: conn, existing_scope: %Scope{id: id} = scope} do
       conn = put(conn, Routes.admin_scope_path(conn, :update, scope), scope: @update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
     end
 
+    @tag authorized: ["scopes:manage:all"]
     test "renders errors when data is invalid", %{conn: conn, existing_scope: scope} do
       conn = put(conn, Routes.admin_scope_path(conn, :update, scope), scope: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
@@ -120,18 +79,11 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
   describe "delete scope" do
     setup %{conn: conn} do
       scope = insert(:scope)
-      token = insert(:token, type: "access_token", scope: "scopes:manage:all")
 
-      conn =
-        conn
-        |> put_req_header("accept", "application/json")
-        |> put_req_header("authorization", "Bearer #{token.value}")
-
-      {:ok, conn: conn, existing_scope: scope, scope: "scopes:manage:all"}
+      {:ok, conn: conn, existing_scope: scope}
     end
 
-    setup :with_authenticated_user
-
+    @tag authorized: ["scopes:manage:all"]
     test "deletes chosen scope", %{conn: conn, existing_scope: scope} do
       conn = delete(conn, Routes.admin_scope_path(conn, :delete, scope))
       assert response(conn, 204)

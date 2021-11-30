@@ -43,13 +43,14 @@ defmodule BorutaAdminWeb.Router do
   scope "/api", BorutaAdminWeb, as: :admin do
     pipe_through(:authenticated_api)
 
+    get("/users/current", UserController, :current)
     resources("/scopes", ScopeController, except: [:new, :edit])
     resources("/clients", ClientController, except: [:new, :edit])
     # TODO user scopes
     # resources "/users/:user_id/scopes, only: [:create, :delete]
-    get("/users/current", UserController, :current)
     resources("/users", UserController, except: [:new, :edit, :create])
     resources("/upstreams", UpstreamController, except: [:new, :edit])
+    resources "/relying-parties", RelyingPartyController, except: [:new, :edit]
   end
 
   scope "/", BorutaAdminWeb do

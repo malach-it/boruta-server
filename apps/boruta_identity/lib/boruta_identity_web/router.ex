@@ -58,10 +58,4 @@ defmodule BorutaIdentityWeb.Router do
     post "/users/confirm", UserConfirmationController, :create
     get "/users/confirm/:token", UserConfirmationController, :confirm
   end
-
-  scope "/api", BorutaIdentityWeb do
-    pipe_through [:api]
-
-    resources "/relying_parties", RelyingPartyController, except: [:new, :edit]
-  end
 end
