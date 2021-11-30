@@ -23,7 +23,6 @@ import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
 import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
 import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
 import UserList from './views/RelyingParties/UserList.vue'
-import UserConfiguration from './views/RelyingParties/UserConfiguration.vue'
 import EditUser from './views/RelyingParties/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
@@ -75,10 +74,6 @@ const router = new Router({
               path: 'users',
               name: 'user-list',
               component: UserList
-            }, {
-              path: 'configuration',
-              name: 'user-configuration',
-              component: UserConfiguration
             }, {
               path: '/users/:userId/edit',
               name: 'edit-user',

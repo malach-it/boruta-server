@@ -35,17 +35,12 @@
               <div class="dropdown">
                 <div class="subitem">
                   <router-link :to="{ name: 'relying-party-list' }">
-                    <span>list</span>
+                    <span>relying party list</span>
                   </router-link>
                 </div>
                 <div class="subitem">
                   <router-link :to="{ name: 'user-list' }">
-                    <span>users</span>
-                  </router-link>
-                </div>
-                <div class="subitem">
-                  <router-link :to="{ name: 'user-configuration' }">
-                    <span>configuration</span>
+                    <span>user list</span>
                   </router-link>
                 </div>
               </div>
