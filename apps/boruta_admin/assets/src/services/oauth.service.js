@@ -48,6 +48,9 @@ class Oauth {
   async callback () {
     return this.client.callback().then(response => {
       this.authenticate(response)
+    }).catch((error) => {
+      alert(error.message)
+      this.login()
     })
   }
 
