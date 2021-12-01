@@ -67,7 +67,7 @@ deploy:
   - apt-get install -y helm
   - pip3 install --upgrade setuptools pip
   - pip3 install ansible pyhelm grpcio requests openshift kubernetes
-  - ansible-galaxy collection install community.general
+  - ansible-galaxy collection install kubernetes.core
   - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
   - curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
   - echo "$(<kubectl.sha256) kubectl" | sha256sum --check

@@ -1,19 +1,19 @@
 - hosts: localhost
   tasks:
     - name: Add stable chart repo
-      community.kubernetes.helm_repository:
+      kubernetes.core.helm_repository:
         name: bitnami
         repo_url: https://charts.bitnami.com/bitnami
 
     - name: Create a k8s namespace
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         api_version: v1
         name: boruta-staging
         kind: Namespace
         state: present
 
     - name: Install postgres helm package
-      community.kubernetes.helm:
+      kubernetes.core.helm:
         name: postgres
         chart_ref: bitnami/postgresql
         release_namespace: boruta-staging
@@ -22,7 +22,7 @@
           postgresqlMaxConnections: "150"
 
     - name: Create libcluster role
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: rbac.authorization.k8s.io/v1
@@ -36,7 +36,7 @@
             verbs: ["get", "list", "watch"]
 
     - name: Create libcluster binding
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: rbac.authorization.k8s.io/v1
@@ -54,7 +54,7 @@
             apiGroup: rbac.authorization.k8s.io
 
     - name: Create OAuth Service
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: v1
@@ -74,7 +74,7 @@
               port: 4001
 
     - name: Create Admin Service
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: v1
@@ -94,7 +94,7 @@
               port: 4002
 
     - name: Create Gateway Service
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: v1
@@ -114,7 +114,7 @@
               port: 4000
 
     - name: Create Boruta Ingress
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: networking.k8s.io/v1
@@ -158,7 +158,7 @@
                         number: 4002
 
     - name: create boruta app ConfigMap
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: v1
@@ -192,7 +192,7 @@
 
     - name: Setup boruta database
       register: database_setup
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: batch/v1
@@ -219,7 +219,7 @@
 
     - name: Migrate boruta database
       when: not database_setup.changed
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: batch/v1
@@ -245,7 +245,7 @@
                 - name: regcred
 
     - name: Create Boruta deployment
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: apps/v1
