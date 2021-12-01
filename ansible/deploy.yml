@@ -16,6 +16,7 @@
       kubernetes.core.helm:
         name: postgres
         chart_ref: bitnami/postgresql
+        chart_version: 10.13.1
         release_namespace: boruta-staging
         values:
           postgresqlPassword: "{{ postgresql_password }}"
