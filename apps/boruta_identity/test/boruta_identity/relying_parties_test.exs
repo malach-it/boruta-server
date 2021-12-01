@@ -2,10 +2,10 @@ defmodule BorutaIdentity.RelyingPartiesTest do
   use BorutaIdentity.DataCase
 
   alias BorutaIdentity.RelyingParties
+  alias BorutaIdentity.RelyingParties.ClientRelyingParty
+  alias BorutaIdentity.RelyingParties.RelyingParty
 
   describe "relying_parties" do
-    alias BorutaIdentity.RelyingParties.RelyingParty
-
     @valid_attrs %{name: "some name", type: "internal"}
     @update_attrs %{name: "some updated name"}
     @invalid_attrs %{name: nil, type: "other"}
@@ -77,6 +77,48 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     test "change_relying_party/1 returns a relying_party changeset" do
       relying_party = relying_party_fixture()
       assert %Ecto.Changeset{} = RelyingParties.change_relying_party(relying_party)
+    end
+  end
+
+  describe "upsert_client_relying_party/2" do
+    test "inserts client relying party" do
+      %RelyingParty{id: relying_party_id} = insert(:relying_party)
+      client_id = SecureRandom.uuid()
+
+      assert {:ok,
+              %ClientRelyingParty{
+                client_id: ^client_id,
+                relying_party_id: ^relying_party_id
+              }} = RelyingParties.upsert_client_relying_party(client_id, relying_party_id)
+    end
+
+    test "updates client relying party" do
+      %ClientRelyingParty{client_id: client_id} =
+        insert(:client_relying_party)
+
+      %RelyingParty{id: new_relying_party_id} = insert(:relying_party)
+
+      assert {:ok,
+              %ClientRelyingParty{
+                client_id: ^client_id,
+                relying_party_id: ^new_relying_party_id
+              }} = RelyingParties.upsert_client_relying_party(client_id, new_relying_party_id)
+    end
+  end
+
+  describe "get_client_relying_party/1" do
+    test "returns nil with a raw string" do
+      assert RelyingParties.get_client_relying_party("bad_id") == nil
+    end
+
+    test "returns nil with a random uuid" do
+      assert RelyingParties.get_client_relying_party(SecureRandom.uuid()) == nil
+    end
+
+    test "returns client's relying party" do
+      %ClientRelyingParty{client_id: client_id, relying_party: relying_party} = insert(:client_relying_party)
+
+      assert RelyingParties.get_client_relying_party(client_id) == relying_party
     end
   end
 end
