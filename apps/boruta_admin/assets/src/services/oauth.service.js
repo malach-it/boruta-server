@@ -67,7 +67,7 @@ class Oauth {
 
   get storedLocation () {
     const name = localStorage.getItem('stored_location_name') || 'home'
-    const params = JSON.parse(localStorage.getItem('stored_location_params') || {})
+    const params = JSON.parse(localStorage.getItem('stored_location_params') || '{}')
     return { name, params }
   }
 
