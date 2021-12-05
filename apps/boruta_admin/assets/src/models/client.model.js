@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Scope from '@/models/scope.model'
+import RelyingParty from '@/models/relying-party.model'
 
 const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit', 'revoke', 'introspect']
 
@@ -8,6 +9,7 @@ const defaults = {
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
+  relying_party: { model: new RelyingParty() },
   grantTypes: allGrantTypes.map((label) => {
     return {
       value: true,
@@ -31,6 +33,9 @@ const assign = {
   },
   public_refresh_token: function ({ public_refresh_token }) { this.public_refresh_token = public_refresh_token },
   public_revoke: function ({ public_revoke }) { this.public_revoke = public_revoke },
+  relying_party: function ({ relying_party }) {
+    this.relying_party = { model: new RelyingParty(relying_party) }
+  },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
@@ -114,36 +119,38 @@ class Client {
 
   get serialized () {
     const {
-      id,
-      name,
-      secret,
-      redirect_uris,
-      public_refresh_token,
-      public_revoke,
+      access_token_ttl,
+      authorization_code_ttl,
       authorize_scope,
       authorized_scopes,
       grantTypes,
-      access_token_ttl,
-      authorization_code_ttl,
-      refresh_token_ttl,
-      id_token_ttl,
-      pkce
-    } = this
-
-    return {
       id,
-      name,
-      secret,
-      redirect_uris: redirect_uris.map(({ uri }) => uri),
-      authorize_scope,
-      access_token_ttl,
-      authorization_code_ttl,
-      refresh_token_ttl,
       id_token_ttl,
+      name,
       pkce,
       public_refresh_token,
       public_revoke,
+      redirect_uris,
+      refresh_token_ttl,
+      relying_party,
+      secret
+    } = this
+
+    return {
+      access_token_ttl,
+      authorization_code_ttl,
+      authorize_scope,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
+      id,
+      id_token_ttl,
+      name,
+      pkce,
+      public_refresh_token,
+      public_revoke,
+      redirect_uris: redirect_uris.map(({ uri }) => uri),
+      refresh_token_ttl,
+      relying_party: relying_party.model,
+      secret,
       supported_grant_types: grantTypes
         .filter(({ value }) => value)
         .map(({ label }) => label)

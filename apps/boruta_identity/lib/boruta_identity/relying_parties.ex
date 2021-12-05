@@ -6,6 +6,7 @@ defmodule BorutaIdentity.RelyingParties do
   import Ecto.Query, warn: false
   alias BorutaIdentity.Repo
 
+  alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.RelyingParties.RelyingParty
 
   @doc """
@@ -100,5 +101,29 @@ defmodule BorutaIdentity.RelyingParties do
   """
   def change_relying_party(%RelyingParty{} = relying_party, attrs \\ %{}) do
     RelyingParty.changeset(relying_party, attrs)
+  end
+
+  def upsert_client_relying_party(client_id, relying_party_id) do
+    %ClientRelyingParty{}
+    |> ClientRelyingParty.changeset(%{client_id: client_id, relying_party_id: relying_party_id})
+    |> Repo.insert(
+      on_conflict: [set: [relying_party_id: relying_party_id]],
+      conflict_target: :client_id
+    )
+  end
+
+  def get_client_relying_party(client_id) do
+    case Ecto.UUID.cast(client_id) do
+      {:ok, client_id} ->
+        Repo.one(
+          from(r in RelyingParty,
+            join: crp in assoc(r, :client_relying_parties),
+            where: crp.client_id == ^client_id
+          )
+        )
+
+      :error ->
+        nil
+    end
   end
 end

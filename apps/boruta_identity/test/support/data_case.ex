@@ -26,6 +26,7 @@ defmodule BorutaIdentity.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import BorutaIdentity.DataCase
+      import BorutaIdentity.Factory
     end
   end
 

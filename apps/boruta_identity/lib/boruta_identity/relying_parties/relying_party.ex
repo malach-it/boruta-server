@@ -4,6 +4,8 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias BorutaIdentity.RelyingParties.ClientRelyingParty
+
   @types [
     "internal"
   ]
@@ -12,6 +14,8 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   schema "relying_parties" do
     field :name, :string
     field :type, :string
+
+    has_many :client_relying_parties, ClientRelyingParty
 
     timestamps()
   end
