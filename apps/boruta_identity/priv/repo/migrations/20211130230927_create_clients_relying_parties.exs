@@ -11,7 +11,6 @@ defmodule BorutaIdentity.Repo.Migrations.CreateClientsRelyingParties do
       timestamps()
     end
 
-    create index("clients_relying_parties", [:client_id, :relying_party_id], unique: true)
     create index("clients_relying_parties", [:client_id], unique: true)
   end
 end

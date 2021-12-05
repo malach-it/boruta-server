@@ -107,6 +107,10 @@ defmodule BorutaIdentity.RelyingPartiesTest do
   end
 
   describe "get_client_relying_party/1" do
+    test "returns nil with nil" do
+      assert RelyingParties.get_client_relying_party(nil) == nil
+    end
+
     test "returns nil with a raw string" do
       assert RelyingParties.get_client_relying_party("bad_id") == nil
     end

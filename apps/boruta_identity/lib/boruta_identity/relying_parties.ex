@@ -104,8 +104,9 @@ defmodule BorutaIdentity.RelyingParties do
   end
 
   def upsert_client_relying_party(client_id, relying_party_id) do
-    Repo.insert(
-      %ClientRelyingParty{client_id: client_id, relying_party_id: relying_party_id},
+    %ClientRelyingParty{}
+    |> ClientRelyingParty.changeset(%{client_id: client_id, relying_party_id: relying_party_id})
+    |> Repo.insert(
       on_conflict: [set: [relying_party_id: relying_party_id]],
       conflict_target: :client_id
     )
@@ -115,9 +116,10 @@ defmodule BorutaIdentity.RelyingParties do
     case Ecto.UUID.cast(client_id) do
       {:ok, client_id} ->
         Repo.one(
-          from r in RelyingParty,
+          from(r in RelyingParty,
             join: crp in assoc(r, :client_relying_parties),
             where: crp.client_id == ^client_id
+          )
         )
 
       :error ->

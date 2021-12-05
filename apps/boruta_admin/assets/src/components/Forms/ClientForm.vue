@@ -34,6 +34,8 @@
           </div>
           <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
         </div>
+        <h3>Authentication</h3>
+        <RelyingPartyField :relyingParty="client.relying_party.model" @relyingPartyChange="setRelyingParty"/>
         <h3>Authorization</h3>
         <div class="field">
           <div class="ui toggle checkbox">
@@ -83,6 +85,7 @@
 <script>
 import Scope from '@/models/scope.model'
 import ScopesField from '@/components/Forms/ScopesField.vue'
+import RelyingPartyField from '@/components/Forms/RelyingPartyField.vue'
 import FormErrors from '@/components/Forms/FormErrors.vue'
 
 export default {
@@ -90,17 +93,8 @@ export default {
   props: ['client', 'action'],
   components: {
     ScopesField,
+    RelyingPartyField,
     FormErrors
-  },
-  mounted () {
-    Scope.all().then((scopes) => {
-      this.scopes = scopes
-    })
-  },
-  data () {
-    return {
-      scopes: []
-    }
   },
   methods: {
     submit () {
@@ -117,6 +111,9 @@ export default {
         this.client.redirect_uris.indexOf(redirectUri),
         1
       )
+    },
+    setRelyingParty (relyingParty) {
+      this.client.relying_party = { model: relyingParty }
     },
     addScope () {
       this.client.authorized_scopes.push({ model: new Scope() })
