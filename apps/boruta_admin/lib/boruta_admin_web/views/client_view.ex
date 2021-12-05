@@ -14,7 +14,7 @@ defmodule BorutaAdminWeb.ClientView do
   end
 
   def render("client.json", %{client: client}) do
-    relying_party = RelyingParties.get_client_relying_party(client.id) || %RelyingParty{}
+    relying_party = RelyingParties.get_relying_party_by_client_id(client.id) || %RelyingParty{}
 
     %{
       id: client.id,

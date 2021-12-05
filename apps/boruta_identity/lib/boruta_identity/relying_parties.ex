@@ -112,7 +112,7 @@ defmodule BorutaIdentity.RelyingParties do
     )
   end
 
-  def get_client_relying_party(client_id) do
+  def get_relying_party_by_client_id(client_id) do
     case Ecto.UUID.cast(client_id) do
       {:ok, client_id} ->
         Repo.one(

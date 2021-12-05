@@ -106,23 +106,23 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     end
   end
 
-  describe "get_client_relying_party/1" do
+  describe "get_relying_party_by_client_id/1" do
     test "returns nil with nil" do
-      assert RelyingParties.get_client_relying_party(nil) == nil
+      assert RelyingParties.get_relying_party_by_client_id(nil) == nil
     end
 
     test "returns nil with a raw string" do
-      assert RelyingParties.get_client_relying_party("bad_id") == nil
+      assert RelyingParties.get_relying_party_by_client_id("bad_id") == nil
     end
 
     test "returns nil with a random uuid" do
-      assert RelyingParties.get_client_relying_party(SecureRandom.uuid()) == nil
+      assert RelyingParties.get_relying_party_by_client_id(SecureRandom.uuid()) == nil
     end
 
     test "returns client's relying party" do
       %ClientRelyingParty{client_id: client_id, relying_party: relying_party} = insert(:client_relying_party)
 
-      assert RelyingParties.get_client_relying_party(client_id) == relying_party
+      assert RelyingParties.get_relying_party_by_client_id(client_id) == relying_party
     end
   end
 end
