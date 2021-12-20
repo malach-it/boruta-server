@@ -48,7 +48,7 @@
         <hr />
         <div class="ui message">
           <div class="header">A cURL example</div>
-          <pre>
+          <pre style="overflow-y: scroll;">
 curl -X POST \
   http://oauth.boruta.patatoid.fr/oauth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
