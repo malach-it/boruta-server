@@ -24,6 +24,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn
     |> store_user_return_to()
+    |> store_client_id()
     |> put_unsigned_request()
     |> authorize_response(
       current_user,
@@ -220,13 +221,23 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     %{conn | query_params: query_params}
   end
 
+  # TODO move oauth request params to query_params
   defp store_user_return_to(conn) do
-    conn
-    |> put_session(
+    put_session(
+      conn,
       :user_return_to,
       current_path(conn)
       |> String.replace(~r/prompt=(login|none)/, "")
       |> String.replace(~r/max_age=(\d+)/, "")
+    )
+  end
+
+  # TODO move client_id to query_params
+  defp store_client_id(%Plug.Conn{query_params: query_params} = conn) do
+    put_session(
+      conn,
+      :current_client_id,
+      query_params["client_id"]
     )
   end
 end

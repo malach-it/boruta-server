@@ -6,7 +6,36 @@ defmodule BorutaIdentity.AccountsTest do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
+  alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.Repo
+
+  describe "client_implementation/1" do
+    test "returns an error when client_id is nil" do
+      client_id = nil
+
+      assert Accounts.client_implementation(client_id) ==
+               {:error, "Cannot register without specifying a client."}
+    end
+
+    test "returns an error when client_id is unknown" do
+      client_id = SecureRandom.uuid()
+
+      assert Accounts.client_implementation(client_id) ==
+               {:error,
+                "Relying Party not configured for given OAuth client. " <>
+                  "Please contact your administrator."}
+    end
+
+    test "returns client relying party implementation" do
+      relying_party = BorutaIdentity.Factory.insert(:relying_party, type: "internal")
+
+      %ClientRelyingParty{client_id: client_id} =
+        BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
+
+      assert Accounts.client_implementation(client_id) ==
+               {:ok, BorutaIdentity.Accounts.Internal}
+    end
+  end
 
   describe "list_users/0" do
     test "returns an empty list" do
@@ -53,9 +82,15 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "register_user/1" do
-    test "requires email and password to be set" do
-      {:error, changeset} = Accounts.register_user(%{})
+  describe "register/2" do
+    setup do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      {:ok, client_id: client_relying_party.client_id}
+    end
+
+    test "requires email and password to be set", %{client_id: client_id} do
+      {:error, changeset} = Accounts.register(client_id, %{})
 
       assert %{
                password: ["can't be blank"],
@@ -63,8 +98,9 @@ defmodule BorutaIdentity.AccountsTest do
              } = errors_on(changeset)
     end
 
-    test "validates email and password when given" do
-      {:error, changeset} = Accounts.register_user(%{email: "not valid", password: "not valid"})
+    test "validates email and password when given", %{client_id: client_id} do
+      {:error, changeset} =
+        Accounts.register(client_id, %{email: "not valid", password: "not valid"})
 
       assert %{
                email: ["must have the @ sign and no spaces"],
@@ -72,26 +108,26 @@ defmodule BorutaIdentity.AccountsTest do
              } = errors_on(changeset)
     end
 
-    test "validates maximum values for email and password for security" do
+    test "validates maximum values for email and password for security", %{client_id: client_id} do
       too_long = String.duplicate("db", 100)
-      {:error, changeset} = Accounts.register_user(%{email: too_long, password: too_long})
+      {:error, changeset} = Accounts.register(client_id, %{email: too_long, password: too_long})
       assert "should be at most 160 character(s)" in errors_on(changeset).email
       assert "should be at most 80 character(s)" in errors_on(changeset).password
     end
 
-    test "validates email uniqueness" do
+    test "validates email uniqueness", %{client_id: client_id} do
       %{email: email} = user_fixture()
-      {:error, changeset} = Accounts.register_user(%{email: email})
+      {:error, changeset} = Accounts.register(client_id, %{email: email})
       assert "has already been taken" in errors_on(changeset).email
 
       # Now try with the upper cased email too, to check that email case is ignored.
-      {:error, changeset} = Accounts.register_user(%{email: String.upcase(email)})
+      {:error, changeset} = Accounts.register(client_id, %{email: String.upcase(email)})
       assert "has already been taken" in errors_on(changeset).email
     end
 
-    test "registers users with a hashed password" do
+    test "registers users with a hashed password", %{client_id: client_id} do
       email = unique_user_email()
-      {:ok, user} = Accounts.register_user(%{email: email, password: valid_user_password()})
+      {:ok, user} = Accounts.register(client_id, %{email: email, password: valid_user_password()})
       assert user.email == email
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
@@ -426,7 +462,9 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "sends token through notification", %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
-      {:ok, token} = Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+
+      {:ok, token} =
+        Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       {:ok, token} = Base.url_decode64(token, padding: false)
       assert user_token = Repo.get_by(UserToken, token: :crypto.hash(:sha256, token))
@@ -441,7 +479,9 @@ defmodule BorutaIdentity.AccountsTest do
       user = user_fixture()
 
       reset_password_url_fun = fn _ -> "http://test.host" end
-      {:ok, token} = Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+
+      {:ok, token} =
+        Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       %{user: user, token: token}
     end
@@ -682,11 +722,17 @@ defmodule BorutaIdentity.AccountsTest do
       assert Accounts.consented_scopes(user, %Plug.Conn{}) == []
     end
 
-    test "returns an empty array with a valid oauth request", %{user: user, oauth_request: oauth_request} do
+    test "returns an empty array with a valid oauth request", %{
+      user: user,
+      oauth_request: oauth_request
+    } do
       assert Accounts.consented_scopes(user, oauth_request) == []
     end
 
-    test "returns existing consented scopes", %{user: user, oauth_request_with_consented_scopes: oauth_request} do
+    test "returns existing consented scopes", %{
+      user: user,
+      oauth_request_with_consented_scopes: oauth_request
+    } do
       assert Accounts.consented_scopes(user, oauth_request) == ["consented:scope"]
     end
   end

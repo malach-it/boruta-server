@@ -19,6 +19,14 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
   end
 
   describe "POST /users/register" do
+    setup %{conn: conn} do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
+
+      {:ok, conn: conn}
+    end
+
     @tag :capture_log
     test "creates account and logs the user in", %{conn: conn} do
       email = unique_user_email()
