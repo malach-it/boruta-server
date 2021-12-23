@@ -1,15 +1,6 @@
-defmodule BorutaIdentity.Accounts do
-  @moduledoc """
-  The Accounts context.
-  """
+defmodule BorutaIdentity.Accounts.Utils do
+  @moduledoc false
 
-  alias BorutaIdentity.Accounts.Confirmations
-  alias BorutaIdentity.Accounts.Consents
-  alias BorutaIdentity.Accounts.Deliveries
-  alias BorutaIdentity.Accounts.Registrations
-  alias BorutaIdentity.Accounts.Sessions
-  alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
@@ -28,23 +19,54 @@ defmodule BorutaIdentity.Accounts do
     end
   end
 
-  ## Registrations
-  # TODO a macro defclientimpl register(client_id, conn, module) or so
-  @spec register(client_id :: String.t(), user_params :: map()) ::
+  defmacro defdelegatetoclientimpl(fun) do
+    fun = Macro.escape(fun, unquote: true)
+
+    quote bind_quoted: [fun: fun] do
+      {name, params} = Macro.decompose_call(fun)
+      client_id_param = Enum.find(params, fn {var, _, _} -> var == :client_id end)
+      other_params = List.delete(params, client_id_param)
+
+      import BorutaIdentity.Accounts.Utils, only: [client_implementation: 1]
+
+      def unquote({name, [line: __ENV__.line], params}) do
+        with {:ok, implementation} <- client_implementation(unquote(client_id_param)) do
+          apply(
+            implementation,
+            unquote(name),
+            unquote(other_params)
+          )
+        end
+      end
+    end
+  end
+end
+
+defmodule BorutaIdentity.Accounts do
+  @moduledoc """
+  The Accounts context.
+  """
+
+  alias BorutaIdentity.Accounts.Confirmations
+  alias BorutaIdentity.Accounts.Consents
+  alias BorutaIdentity.Accounts.Deliveries
+  alias BorutaIdentity.Accounts.Registrations
+  alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.Users
+
+  import BorutaIdentity.Accounts.Utils, only: [
+    defdelegatetoclientimpl: 1
+  ]
+
+  ## WIP Registrations
+
+  defdelegatetoclientimpl register(client_id, user_params)
+
+  @callback register(user_params :: map()) ::
           {:ok, user :: User.t()}
           | {:error, reason :: String.t()}
           | {:error, changeset :: Ecto.Changeset.t()}
-  def register(client_id, user_params) do
-    with {:ok, implementation} <- client_implementation(client_id) do
-      apply(
-        implementation,
-        :register,
-        [user_params]
-      )
-    end
-  end
-
-  @callback register(user_params :: map()) :: any()
 
   ## Database getters
 

@@ -9,18 +9,18 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.Repo
 
-  describe "client_implementation/1" do
+  describe "Utils.client_implementation/1" do
     test "returns an error when client_id is nil" do
       client_id = nil
 
-      assert Accounts.client_implementation(client_id) ==
+      assert Accounts.Utils.client_implementation(client_id) ==
                {:error, "Cannot register without specifying a client."}
     end
 
     test "returns an error when client_id is unknown" do
       client_id = SecureRandom.uuid()
 
-      assert Accounts.client_implementation(client_id) ==
+      assert Accounts.Utils.client_implementation(client_id) ==
                {:error,
                 "Relying Party not configured for given OAuth client. " <>
                   "Please contact your administrator."}
@@ -32,7 +32,7 @@ defmodule BorutaIdentity.AccountsTest do
       %ClientRelyingParty{client_id: client_id} =
         BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
 
-      assert Accounts.client_implementation(client_id) ==
+      assert Accounts.Utils.client_implementation(client_id) ==
                {:ok, BorutaIdentity.Accounts.Internal}
     end
   end
