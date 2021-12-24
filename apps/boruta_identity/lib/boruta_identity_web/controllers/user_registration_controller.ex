@@ -14,21 +14,19 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   def create(conn, %{"user" => user_params}) do
     client_id = get_session(conn, :current_client_id)
 
-    case Accounts.register(client_id, user_params) do
+    case Accounts.register(
+           client_id,
+           user_params,
+           &Routes.user_confirmation_url(conn, :confirm, &1)
+         ) do
       {:ok, user} ->
-        # TODO manage errors and move to domain
-        # {:ok, _} =
-        #   Accounts.deliver_user_confirmation_instructions(
-        #     user,
-        #     &Routes.user_confirmation_url(conn, :confirm, &1)
-        #   )
-
         conn
         |> put_flash(:info, "User created successfully.")
         |> log_in(user)
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
+
       {:error, reason} ->
         user_return_to = get_session(conn, :user_return_to)
 

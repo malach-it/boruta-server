@@ -55,18 +55,22 @@ defmodule BorutaIdentity.Accounts do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
 
-  import BorutaIdentity.Accounts.Utils, only: [
-    defdelegatetoclientimpl: 1
-  ]
+  import BorutaIdentity.Accounts.Utils,
+    only: [
+      defdelegatetoclientimpl: 1
+    ]
 
   ## WIP Registrations
 
-  defdelegatetoclientimpl register(client_id, user_params)
+  defdelegatetoclientimpl register(client_id, user_params, confirmation_url_fun)
 
-  @callback register(user_params :: map()) ::
-          {:ok, user :: User.t()}
-          | {:error, reason :: String.t()}
-          | {:error, changeset :: Ecto.Changeset.t()}
+  @callback register(
+              user_params :: map(),
+              confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
+            ) ::
+              {:ok, user :: User.t()}
+              | {:error, reason :: String.t()}
+              | {:error, changeset :: Ecto.Changeset.t()}
 
   ## Database getters
 
@@ -100,7 +104,6 @@ defmodule BorutaIdentity.Accounts do
     to: Deliveries
 
   defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
-
   defdelegate deliver_user_reset_password_instructions(user, reset_password_url_fun),
     to: Deliveries
 

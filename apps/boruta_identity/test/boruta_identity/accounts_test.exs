@@ -82,7 +82,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "register/2" do
+  describe "register/3" do
     setup do
       client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
 
@@ -90,7 +90,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "requires email and password to be set", %{client_id: client_id} do
-      {:error, changeset} = Accounts.register(client_id, %{})
+      {:error, changeset} = Accounts.register(client_id, %{}, &(&1))
 
       assert %{
                password: ["can't be blank"],
@@ -100,7 +100,7 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "validates email and password when given", %{client_id: client_id} do
       {:error, changeset} =
-        Accounts.register(client_id, %{email: "not valid", password: "not valid"})
+        Accounts.register(client_id, %{email: "not valid", password: "not valid"}, &(&1))
 
       assert %{
                email: ["must have the @ sign and no spaces"],
@@ -110,29 +110,32 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "validates maximum values for email and password for security", %{client_id: client_id} do
       too_long = String.duplicate("db", 100)
-      {:error, changeset} = Accounts.register(client_id, %{email: too_long, password: too_long})
+      {:error, changeset} = Accounts.register(client_id, %{email: too_long, password: too_long}, &(&1))
       assert "should be at most 160 character(s)" in errors_on(changeset).email
       assert "should be at most 80 character(s)" in errors_on(changeset).password
     end
 
     test "validates email uniqueness", %{client_id: client_id} do
       %{email: email} = user_fixture()
-      {:error, changeset} = Accounts.register(client_id, %{email: email})
+      {:error, changeset} = Accounts.register(client_id, %{email: email}, &(&1))
       assert "has already been taken" in errors_on(changeset).email
 
       # Now try with the upper cased email too, to check that email case is ignored.
-      {:error, changeset} = Accounts.register(client_id, %{email: String.upcase(email)})
+      {:error, changeset} = Accounts.register(client_id, %{email: String.upcase(email)}, &(&1))
       assert "has already been taken" in errors_on(changeset).email
     end
 
     test "registers users with a hashed password", %{client_id: client_id} do
       email = unique_user_email()
-      {:ok, user} = Accounts.register(client_id, %{email: email, password: valid_user_password()})
+      {:ok, user} = Accounts.register(client_id, %{email: email, password: valid_user_password()}, &(&1))
       assert user.email == email
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
     end
+
+    @tag :skip
+    test "delivers a confirmation mail"
   end
 
   describe "change_user_registration/2" do

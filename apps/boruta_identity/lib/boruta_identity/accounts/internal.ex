@@ -7,5 +7,5 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Accounts.Internal
 
   @impl BorutaIdentity.Accounts
-  defdelegate register(user_params), to: Internal.Registrations
+  defdelegate register(user_params, confirmation_url_fun), to: Internal.Registrations
 end
