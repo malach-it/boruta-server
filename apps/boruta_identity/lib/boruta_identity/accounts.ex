@@ -66,7 +66,7 @@ defmodule BorutaIdentity.Accounts do
 
   use BorutaIdentity.Accounts.Utils
 
-  ## WIP Registrations
+  ## Registrations
 
   defmodule RegistrationError do
     @enforce_keys [:message]
