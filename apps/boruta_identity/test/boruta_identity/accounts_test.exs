@@ -17,6 +17,10 @@ defmodule BorutaIdentity.AccountsTest do
       {:user_initialized, context, changeset}
     end
 
+    def user_registered(context, user) do
+      {:user_registered, context, user}
+    end
+
     def registration_failure(context, error) do
       {:registration_failure, context, error}
     end
@@ -102,8 +106,56 @@ defmodule BorutaIdentity.AccountsTest do
       {:ok, client_id: client_relying_party.client_id}
     end
 
+    test "returns an error with nil client_id" do
+      context = :context
+      client_id = nil
+      user_params = %{}
+      confirmation_callback_fun = & &1
+
+      assert {:registration_failure, ^context, %RegistrationError{} = error} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
+      assert error.message == "Cannot register without specifying a client."
+    end
+
+    test "returns an error with unknown client_id" do
+      context = :context
+      client_id = SecureRandom.uuid()
+      user_params = %{}
+      confirmation_callback_fun = & &1
+
+      assert {:registration_failure, ^context, %RegistrationError{} = error} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
+      assert error.message ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
     test "requires email and password to be set", %{client_id: client_id} do
-      {:error, changeset} = Accounts.register(client_id, %{}, & &1)
+      context = :context
+      user_params = %{}
+      confirmation_callback_fun = & &1
+
+      assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
 
       assert %{
                password: ["can't be blank"],
@@ -112,8 +164,18 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "validates email and password when given", %{client_id: client_id} do
-      {:error, changeset} =
-        Accounts.register(client_id, %{email: "not valid", password: "not valid"}, & &1)
+      context = :context
+      user_params = %{email: "not valid", password: "not valid"}
+      confirmation_callback_fun = & &1
+
+      assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
 
       assert %{
                email: ["must have the @ sign and no spaces"],
@@ -122,10 +184,19 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "validates maximum values for email and password for security", %{client_id: client_id} do
-      too_long = String.duplicate("db", 100)
+      too_long = String.duplicate("too_long", 100)
+      context = :context
+      user_params = %{email: too_long, password: too_long}
+      confirmation_callback_fun = & &1
 
-      {:error, changeset} =
-        Accounts.register(client_id, %{email: too_long, password: too_long}, & &1)
+      assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
 
       assert "should be at most 160 character(s)" in errors_on(changeset).email
       assert "should be at most 80 character(s)" in errors_on(changeset).password
@@ -133,19 +204,51 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "validates email uniqueness", %{client_id: client_id} do
       %{email: email} = user_fixture()
-      {:error, changeset} = Accounts.register(client_id, %{email: email}, & &1)
+      context = :context
+      user_params = %{email: email}
+      confirmation_callback_fun = & &1
+
+      assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
       assert "has already been taken" in errors_on(changeset).email
 
       # Now try with the upper cased email too, to check that email case is ignored.
-      {:error, changeset} = Accounts.register(client_id, %{email: String.upcase(email)}, & &1)
+      user_params = %{email: String.upcase(email)}
+      confirmation_callback_fun = & &1
+
+      assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
       assert "has already been taken" in errors_on(changeset).email
     end
 
     test "registers users with a hashed password", %{client_id: client_id} do
       email = unique_user_email()
+      context = :context
+      user_params = %{email: email, password: valid_user_password()}
+      confirmation_callback_fun = & &1
 
-      {:ok, user} =
-        Accounts.register(client_id, %{email: email, password: valid_user_password()}, & &1)
+      assert {:user_registered, ^context, user} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
 
       assert user.email == email
       assert is_binary(user.hashed_password)
@@ -170,6 +273,7 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert {:registration_failure, ^context, %RegistrationError{} = error} =
                Accounts.initialize_registration(context, client_id, DummyRegistration)
+
       assert error.message == "Cannot register without specifying a client."
     end
 
@@ -179,7 +283,9 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert {:registration_failure, ^context, %RegistrationError{} = error} =
                Accounts.initialize_registration(context, client_id, DummyRegistration)
-      assert error.message == "Relying Party not configured for given OAuth client. Please contact your administrator."
+
+      assert error.message ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
     end
 
     test "returns a changeset", %{client_id: client_id} do

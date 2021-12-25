@@ -70,13 +70,12 @@ defmodule BorutaIdentity.Accounts do
 
   defmodule RegistrationError do
     @enforce_keys [:message]
-    defexception [:user, :message, :changeset]
+    defexception [:message, :changeset]
 
     @type t :: %__MODULE__{
-      message: String.t(),
-      user: BorutaIdentity.Accounts.User.t() | nil,
-      changeset: Ecto.Changeset.t() | nil
-    }
+            message: String.t(),
+            changeset: Ecto.Changeset.t() | nil
+          }
 
     def exception(message) when is_binary(message) do
       %__MODULE__{message: message}
@@ -94,10 +93,9 @@ defmodule BorutaIdentity.Accounts do
 
     @callback user_initialized(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
 
-    @callback registration_failure(context :: any(), error :: RegistrationError.t()) :: any()
+    @callback user_registered(context :: any(), user :: User.t()) :: any()
 
-    # TODO implement
-    # @callback user_registered(context :: any(), user :: User.t()) :: any()
+    @callback registration_failure(context :: any(), error :: RegistrationError.t()) :: any()
   end
 
   @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
@@ -108,6 +106,7 @@ defmodule BorutaIdentity.Accounts do
         changeset = apply(implementation, :registration_changeset, [%User{}])
 
         module.user_initialized(context, changeset)
+
       {:error, reason} ->
         module.registration_failure(context, %RegistrationError{message: reason})
     end
@@ -115,7 +114,28 @@ defmodule BorutaIdentity.Accounts do
 
   @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
 
-  defdelegatetoclientimpl(register(client_id, user_params, confirmation_url_fun))
+  @spec register(
+          context :: any(),
+          client_id :: String.t(),
+          user_params :: map(),
+          confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
+          module :: atom()
+        ) :: calback_result :: any()
+  def register(context, client_id, user_params, confirmation_url_fun, module) do
+    with {:ok, implementation} <- client_implementation(client_id),
+         {:ok, user} <- apply(implementation, :register, [user_params, confirmation_url_fun]) do
+      module.user_registered(context, user)
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        module.registration_failure(context, %RegistrationError{
+          changeset: changeset,
+          message: "Could not create user with given params."
+        })
+
+      {:error, reason} ->
+        module.registration_failure(context, %RegistrationError{message: reason})
+    end
+  end
 
   @callback register(
               user_params :: map(),
