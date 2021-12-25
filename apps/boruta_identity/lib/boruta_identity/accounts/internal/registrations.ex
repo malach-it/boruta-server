@@ -20,7 +20,7 @@ defmodule BorutaIdentity.Accounts.Internal.Registrations do
           |> Ecto.Changeset.change()
           |> Ecto.Changeset.add_error(:confirmation_email, reason)
 
-        {:error, changeset}
+        {:error, %{changeset|action: :insert}}
     end
   end
 
