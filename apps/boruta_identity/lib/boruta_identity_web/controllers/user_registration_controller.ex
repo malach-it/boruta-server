@@ -1,16 +1,31 @@
 defmodule BorutaIdentityWeb.UserRegistrationController do
+  @behaviour BorutaIdentity.Accounts.RegistrationApplication
+
   use BorutaIdentityWeb, :controller
 
   import BorutaIdentityWeb.Authenticable, only: [log_in: 2]
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.RegistrationError
 
   def new(conn, _params) do
     client_id = get_session(conn, :current_client_id)
 
-    changeset = Accounts.registration_changeset(client_id, %User{})
+    Accounts.initialize_registration(conn, client_id, __MODULE__)
+  end
+
+  @impl BorutaIdentity.Accounts.RegistrationApplication
+  def user_initialized(conn, changeset) do
     render(conn, "new.html", changeset: changeset)
+  end
+
+  @impl BorutaIdentity.Accounts.RegistrationApplication
+  def registration_failure(conn, %RegistrationError{message: message}) do
+    user_return_to = get_session(conn, :user_return_to)
+
+    conn
+    |> put_flash(:error, message)
+    |> redirect(to: user_return_to || "/")
   end
 
   def create(conn, %{"user" => user_params}) do
