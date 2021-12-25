@@ -6,10 +6,11 @@ defmodule BorutaIdentity.Accounts.Utils do
 
   defmacro __using__(_opts) do
     quote do
-      import BorutaIdentity.Accounts.Utils, only: [
-        client_implementation: 1,
-        defdelegatetoclientimpl: 1
-      ]
+      import BorutaIdentity.Accounts.Utils,
+        only: [
+          client_implementation: 1,
+          defdelegatetoclientimpl: 1
+        ]
     end
   end
 
@@ -67,11 +68,74 @@ defmodule BorutaIdentity.Accounts do
 
   ## WIP Registrations
 
-  defdelegatetoclientimpl registration_changeset(client_id, user)
+  defmodule RegistrationError do
+    @enforce_keys [:message]
+    defexception [:message, :changeset]
+
+    @type t :: %__MODULE__{
+            message: String.t(),
+            changeset: Ecto.Changeset.t() | nil
+          }
+
+    def exception(message) when is_binary(message) do
+      %__MODULE__{message: message}
+    end
+
+    def message(exception) do
+      exception.message
+    end
+  end
+
+  defmodule RegistrationApplication do
+    @moduledoc """
+    TODO RegistrationApplication documentation
+    """
+
+    @callback user_initialized(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
+
+    @callback user_registered(context :: any(), user :: User.t()) :: any()
+
+    @callback registration_failure(context :: any(), error :: RegistrationError.t()) :: any()
+  end
+
+  @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
+          callback_result :: any()
+  def initialize_registration(context, client_id, module) do
+    case client_implementation(client_id) do
+      {:ok, implementation} ->
+        changeset = apply(implementation, :registration_changeset, [%User{}])
+
+        module.user_initialized(context, changeset)
+
+      {:error, reason} ->
+        module.registration_failure(context, %RegistrationError{message: reason})
+    end
+  end
 
   @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
 
-  defdelegatetoclientimpl register(client_id, user_params, confirmation_url_fun)
+  @spec register(
+          context :: any(),
+          client_id :: String.t(),
+          user_params :: map(),
+          confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
+          module :: atom()
+        ) :: calback_result :: any()
+  def register(context, client_id, user_params, confirmation_url_fun, module) do
+    with {:ok, implementation} <- client_implementation(client_id),
+         {:ok, user} <- apply(implementation, :register, [user_params, confirmation_url_fun]) do
+      module.user_registered(context, user)
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        module.registration_failure(context, %RegistrationError{
+          changeset: changeset,
+          message: "Could not create user with given params."
+        })
+
+      {:error, reason} ->
+        module.registration_failure(context, %RegistrationError{message: reason})
+    end
+  end
 
   @callback register(
               user_params :: map(),
@@ -91,7 +155,7 @@ defmodule BorutaIdentity.Accounts do
   defdelegate get_user_by_reset_password_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
 
-  ## User registration
+  ## User settings
 
   defdelegate update_user_password(user, password, attrs), to: Registrations
   defdelegate change_user_password(user), to: Registrations
@@ -110,6 +174,7 @@ defmodule BorutaIdentity.Accounts do
     to: Deliveries
 
   defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
+
   defdelegate deliver_user_reset_password_instructions(user, reset_password_url_fun),
     to: Deliveries
 

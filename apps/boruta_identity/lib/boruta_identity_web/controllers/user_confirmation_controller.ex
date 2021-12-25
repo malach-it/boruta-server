@@ -39,7 +39,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
       # then odds are that the confirmation link was already visited, either
       # by some automation or by the user themselves, so we redirect without
       # a warning message.
-      {%{confirmed_at: confirmed_at}, :error} when not is_nil(confirmed_at) ->
+      {%User{confirmed_at: confirmed_at}, :error} when not is_nil(confirmed_at) ->
         redirect(conn, to: Routes.user_session_path(conn, :new))
 
       {_, :error} ->

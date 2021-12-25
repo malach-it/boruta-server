@@ -3,6 +3,40 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
 
   import BorutaIdentity.AccountsFixtures
 
+  describe "whithout client set" do
+    test "new registration redirects to home", %{conn: conn} do
+      conn = get(conn, Routes.user_registration_path(conn, :new))
+      assert get_flash(conn, :error) == "Cannot register without specifying a client."
+      assert redirected_to(conn) == "/"
+    end
+
+    test "create registration redirects to home", %{conn: conn} do
+      conn = post(conn, Routes.user_registration_path(conn, :create), %{"user" => %{}})
+      assert get_flash(conn, :error) == "Cannot register without specifying a client."
+      assert redirected_to(conn) == "/"
+    end
+  end
+
+  describe "whithout client relying party" do
+    setup %{conn: conn} do
+      conn = init_test_session(conn, %{current_client_id: SecureRandom.uuid()})
+
+      {:ok, conn: conn}
+    end
+
+    test "new registration redirects to home", %{conn: conn} do
+      conn = get(conn, Routes.user_registration_path(conn, :new))
+      assert get_flash(conn, :error) == "Relying Party not configured for given OAuth client. Please contact your administrator."
+      assert redirected_to(conn) == "/"
+    end
+
+    test "create registration redirects to home", %{conn: conn} do
+      conn = post(conn, Routes.user_registration_path(conn, :create), %{"user" => %{}})
+      assert get_flash(conn, :error) == "Relying Party not configured for given OAuth client. Please contact your administrator."
+      assert redirected_to(conn) == "/"
+    end
+  end
+
   describe "GET /users/register" do
     setup %{conn: conn} do
       client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
