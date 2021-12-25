@@ -24,9 +24,15 @@ defmodule BorutaIdentity.Accounts.Internal.Registrations do
     end
   end
 
+  def registration_changeset(user) do
+    User.registration_changeset(user, %{})
+  end
+
   defp create_user(user_params, confirmation_url_fun) do
     Ecto.Multi.new()
-    |> Ecto.Multi.insert(:create_user, user_changeset(user_params))
+    |> Ecto.Multi.insert(:create_user, fn _changes ->
+      User.registration_changeset(%User{}, user_params)
+    end)
     |> Ecto.Multi.run(:deliver_confirmation_mail, fn _repo, %{create_user: user} ->
       Deliveries.deliver_user_confirmation_instructions(
         user,
@@ -34,10 +40,5 @@ defmodule BorutaIdentity.Accounts.Internal.Registrations do
       )
     end)
     |> Repo.transaction()
-  end
-
-  defp user_changeset(user_params) do
-    %User{}
-    |> User.registration_changeset(user_params)
   end
 end

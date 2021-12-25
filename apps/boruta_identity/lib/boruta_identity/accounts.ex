@@ -4,6 +4,15 @@ defmodule BorutaIdentity.Accounts.Utils do
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
+  defmacro __using__(_opts) do
+    quote do
+      import BorutaIdentity.Accounts.Utils, only: [
+        client_implementation: 1,
+        defdelegatetoclientimpl: 1
+      ]
+    end
+  end
+
   @spec client_implementation(client_id :: String.t() | nil) ::
           {:ok, implementation :: atom()} | {:error, reason :: String.t()}
   def client_implementation(nil), do: {:error, "Cannot register without specifying a client."}
@@ -19,6 +28,7 @@ defmodule BorutaIdentity.Accounts.Utils do
     end
   end
 
+  # TODO find a better way to delegate to the given client implementation
   defmacro defdelegatetoclientimpl(fun) do
     fun = Macro.escape(fun, unquote: true)
 
@@ -26,8 +36,6 @@ defmodule BorutaIdentity.Accounts.Utils do
       {name, params} = Macro.decompose_call(fun)
       client_id_param = Enum.find(params, fn {var, _, _} -> var == :client_id end)
       other_params = List.delete(params, client_id_param)
-
-      import BorutaIdentity.Accounts.Utils, only: [client_implementation: 1]
 
       def unquote({name, [line: __ENV__.line], params}) do
         with {:ok, implementation} <- client_implementation(unquote(client_id_param)) do
@@ -55,12 +63,13 @@ defmodule BorutaIdentity.Accounts do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
 
-  import BorutaIdentity.Accounts.Utils,
-    only: [
-      defdelegatetoclientimpl: 1
-    ]
+  use BorutaIdentity.Accounts.Utils
 
   ## WIP Registrations
+
+  defdelegatetoclientimpl registration_changeset(client_id, user)
+
+  @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
 
   defdelegatetoclientimpl register(client_id, user_params, confirmation_url_fun)
 
@@ -84,9 +93,6 @@ defmodule BorutaIdentity.Accounts do
 
   ## User registration
 
-  # defdelegate register_user(attrs), to: Registrations
-  defdelegate change_user_registration(user), to: Registrations
-  defdelegate change_user_registration(user, attrs), to: Registrations
   defdelegate update_user_password(user, password, attrs), to: Registrations
   defdelegate change_user_password(user), to: Registrations
   defdelegate change_user_password(user, attrs), to: Registrations

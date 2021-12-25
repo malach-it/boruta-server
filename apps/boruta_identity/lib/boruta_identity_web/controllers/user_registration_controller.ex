@@ -7,7 +7,9 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   alias BorutaIdentity.Accounts.User
 
   def new(conn, _params) do
-    changeset = Accounts.change_user_registration(%User{})
+    client_id = get_session(conn, :current_client_id)
+
+    changeset = Accounts.registration_changeset(client_id, %User{})
     render(conn, "new.html", changeset: changeset)
   end
 

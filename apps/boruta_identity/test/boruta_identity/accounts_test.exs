@@ -138,23 +138,16 @@ defmodule BorutaIdentity.AccountsTest do
     test "delivers a confirmation mail"
   end
 
-  describe "change_user_registration/2" do
-    test "returns a changeset" do
-      assert %Ecto.Changeset{} = changeset = Accounts.change_user_registration(%User{})
-      assert changeset.required == [:password, :email]
+  describe "registration_changeset/2" do
+    setup do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      {:ok, client_id: client_relying_party.client_id}
     end
 
-    test "allows fields to be set" do
-      email = unique_user_email()
-      password = valid_user_password()
-
-      changeset =
-        Accounts.change_user_registration(%User{}, %{"email" => email, "password" => password})
-
-      assert changeset.valid?
-      assert get_change(changeset, :email) == email
-      assert get_change(changeset, :password) == password
-      assert is_nil(get_change(changeset, :hashed_password))
+    test "returns a changeset", %{client_id: client_id} do
+      assert %Ecto.Changeset{} = changeset = Accounts.registration_changeset(client_id, %User{})
+      assert changeset.required == [:password, :email]
     end
   end
 
