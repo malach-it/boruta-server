@@ -6,7 +6,7 @@ defmodule BorutaIdentity.Accounts.Deliveries do
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
 
-  @type callback_function :: (token :: String.t() -> any())
+  @type callback_function :: (token :: String.t() -> String.t())
 
   @doc """
   Delivers the update email instructions to the given user.

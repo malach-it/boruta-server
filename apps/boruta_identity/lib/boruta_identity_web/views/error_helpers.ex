@@ -12,6 +12,20 @@ defmodule BorutaIdentityWeb.ErrorHelpers do
     )
   end
 
+  def error_tag({field, {_msg, _opts} = error}) do
+    content_tag(
+      :li,
+      [
+        content_tag(
+          :strong,
+          Phoenix.Naming.humanize(field) <> ":"
+        ),
+        content_tag(:span, " "),
+        content_tag(:span, translate_error(error))
+      ]
+    )
+  end
+
   def error_tag({field, ["" <> _first | _rest] = messages}) do
     content_tag(
       :li,
@@ -45,10 +59,7 @@ defmodule BorutaIdentityWeb.ErrorHelpers do
   """
   def error_tag(form, field) do
     Enum.map(Keyword.get_values(form.errors, field), fn error ->
-      content_tag(:span, translate_error(error),
-        class: "invalid-feedback",
-        phx_feedback_for: input_id(form, field)
-      )
+      content_tag(:span, translate_error(error))
     end)
   end
 

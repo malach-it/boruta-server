@@ -1,3 +1,55 @@
+defmodule BorutaIdentity.Accounts.Utils do
+  @moduledoc false
+
+  alias BorutaIdentity.RelyingParties
+  alias BorutaIdentity.RelyingParties.RelyingParty
+
+  defmacro __using__(_opts) do
+    quote do
+      import BorutaIdentity.Accounts.Utils, only: [
+        client_implementation: 1,
+        defdelegatetoclientimpl: 1
+      ]
+    end
+  end
+
+  @spec client_implementation(client_id :: String.t() | nil) ::
+          {:ok, implementation :: atom()} | {:error, reason :: String.t()}
+  def client_implementation(nil), do: {:error, "Cannot register without specifying a client."}
+
+  def client_implementation(client_id) do
+    case RelyingParties.get_relying_party_by_client_id(client_id) do
+      %RelyingParty{} = relying_party ->
+        {:ok, RelyingParty.implementation(relying_party)}
+
+      nil ->
+        {:error,
+         "Relying Party not configured for given OAuth client. Please contact your administrator."}
+    end
+  end
+
+  # TODO find a better way to delegate to the given client implementation
+  defmacro defdelegatetoclientimpl(fun) do
+    fun = Macro.escape(fun, unquote: true)
+
+    quote bind_quoted: [fun: fun] do
+      {name, params} = Macro.decompose_call(fun)
+      client_id_param = Enum.find(params, fn {var, _, _} -> var == :client_id end)
+      other_params = List.delete(params, client_id_param)
+
+      def unquote({name, [line: __ENV__.line], params}) do
+        with {:ok, implementation} <- client_implementation(unquote(client_id_param)) do
+          apply(
+            implementation,
+            unquote(name),
+            unquote(other_params)
+          )
+        end
+      end
+    end
+  end
+end
+
 defmodule BorutaIdentity.Accounts do
   @moduledoc """
   The Accounts context.
@@ -8,7 +60,26 @@ defmodule BorutaIdentity.Accounts do
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.Registrations
   alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
+
+  use BorutaIdentity.Accounts.Utils
+
+  ## WIP Registrations
+
+  defdelegatetoclientimpl registration_changeset(client_id, user)
+
+  @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
+
+  defdelegatetoclientimpl register(client_id, user_params, confirmation_url_fun)
+
+  @callback register(
+              user_params :: map(),
+              confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
+            ) ::
+              {:ok, user :: User.t()}
+              | {:error, reason :: String.t()}
+              | {:error, changeset :: Ecto.Changeset.t()}
 
   ## Database getters
 
@@ -22,9 +93,6 @@ defmodule BorutaIdentity.Accounts do
 
   ## User registration
 
-  defdelegate register_user(attrs), to: Registrations
-  defdelegate change_user_registration(user), to: Registrations
-  defdelegate change_user_registration(user, attrs), to: Registrations
   defdelegate update_user_password(user, password, attrs), to: Registrations
   defdelegate change_user_password(user), to: Registrations
   defdelegate change_user_password(user, attrs), to: Registrations
@@ -40,8 +108,10 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
     to: Deliveries
+
   defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
-  defdelegate deliver_user_reset_password_instructions(user, reset_password_url_fun), to: Deliveries
+  defdelegate deliver_user_reset_password_instructions(user, reset_password_url_fun),
+    to: Deliveries
 
   ## Session
 

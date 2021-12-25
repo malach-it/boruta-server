@@ -10,6 +10,10 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     "internal"
   ]
 
+  @implementations %{
+    "internal" => BorutaIdentity.Accounts.Internal
+  }
+
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "relying_parties" do
     field :name, :string
@@ -18,6 +22,11 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     has_many :client_relying_parties, ClientRelyingParty
 
     timestamps()
+  end
+
+  @spec implementation(client_relying_party :: %__MODULE__{}) :: implementation :: atom()
+  def implementation(%__MODULE__{type: type}) do
+    Map.fetch!(@implementations, type)
   end
 
   @doc false

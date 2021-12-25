@@ -26,6 +26,10 @@
 .alert p {
   margin-bottom: 0;
 }
+.alert ul, li {
+  list-style-type: none;
+  margin-bottom: 0;
+}
 .alert:empty {
   display: none;
 }

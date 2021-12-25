@@ -40,12 +40,12 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
       # by some automation or by the user themselves, so we redirect without
       # a warning message.
       {%{confirmed_at: confirmed_at}, :error} when not is_nil(confirmed_at) ->
-        redirect(conn, to: "/")
+        redirect(conn, to: Routes.user_session_path(conn, :new))
 
       {_, :error} ->
         conn
         |> put_flash(:error, "Account confirmation link is invalid or it has expired.")
-        |> redirect(to: "/")
+        |> redirect(to: Routes.user_session_path(conn, :new))
     end
   end
 end

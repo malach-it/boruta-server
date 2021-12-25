@@ -1,4 +1,5 @@
 defmodule BorutaIdentity.Accounts.UserNotifier do
+  # TODO replace from attribute in all mails
   @moduledoc false
 
   require Logger
@@ -7,9 +8,24 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
 
   alias BorutaIdentity.Mailer
 
+  # TODO hide Swoosh from the rest of the world
+  @spec deliver(email :: %Swoosh.Email{}) ::
+          {:ok, email :: %Swoosh.Email{}} | {:error, reason :: String.t()}
   def deliver(email) do
-    with {:ok, _} <- Mailer.deliver(email) do
-      {:ok, email}
+    case Mailer.deliver(email) do
+      {:ok, _} ->
+        {:ok, email}
+
+      {:error, {_status, %{"Errors" => errors}}} ->
+        reason =
+          errors
+          |> Enum.map(fn %{"ErrorMessage" => message} -> message end)
+          |> Enum.join(", ")
+
+        {:error, reason}
+
+      {:error, reason} ->
+        {:error, inspect(reason)}
     end
   end
 
