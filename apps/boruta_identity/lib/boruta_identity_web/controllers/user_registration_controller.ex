@@ -4,7 +4,7 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   use BorutaIdentityWeb, :controller
 
   import BorutaIdentityWeb.Authenticable,
-    only: [store_session: 2, after_registration_path: 1]
+    only: [store_user_session: 2, after_registration_path: 1]
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RegistrationError
@@ -48,7 +48,7 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   @impl BorutaIdentity.Accounts.RegistrationApplication
   def user_registered(conn, _user, session_token) do
     conn
-    |> store_session(session_token)
+    |> store_user_session(session_token)
     |> redirect(to: after_registration_path(conn))
   end
 end

@@ -4,7 +4,13 @@ defmodule BorutaIdentityWeb.UserSessionController do
   use BorutaIdentityWeb, :controller
 
   import BorutaIdentityWeb.Authenticable,
-    only: [store_session: 2, after_sign_in_path: 1, log_out_user: 1]
+    only: [
+      store_user_session: 2,
+      get_user_session: 1,
+      remove_user_session: 1,
+      after_sign_in_path: 1,
+      after_sign_out_path: 1
+    ]
 
   alias BorutaIdentity.Accounts
 
@@ -23,21 +29,30 @@ defmodule BorutaIdentityWeb.UserSessionController do
     Accounts.create_session(conn, client_id, authentication_params, __MODULE__)
   end
 
+  def delete(conn, _params) do
+    client_id = get_session(conn, :current_client_id)
+    session_token = get_user_session(conn)
+
+    Accounts.delete_session(conn, client_id, session_token, __MODULE__)
+  end
+
   @impl BorutaIdentity.Accounts.SessionApplication
   def user_authenticated(conn, _user, session_token) do
     conn
-    |> store_session(session_token)
+    |> store_user_session(session_token)
     |> redirect(to: after_sign_in_path(conn))
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
-  def authentication_failure(conn, _authentication_error) do
+  def authentication_failure(conn, _session_error) do
     render(conn, "new.html", error_message: "Invalid email or password")
   end
 
-  def delete(conn, _params) do
+  @impl BorutaIdentity.Accounts.SessionApplication
+  def session_deleted(conn) do
     conn
-    |> log_out_user()
+    |> remove_user_session()
     |> put_flash(:info, "Logged out successfully.")
+    |> redirect(to: after_sign_out_path(conn))
   end
 end

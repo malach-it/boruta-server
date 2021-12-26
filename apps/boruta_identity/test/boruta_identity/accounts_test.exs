@@ -5,8 +5,8 @@ defmodule BorutaIdentity.AccountsTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.AuthenticationError
   alias BorutaIdentity.Accounts.RegistrationError
+  alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.Repo
@@ -41,6 +41,11 @@ defmodule BorutaIdentity.AccountsTest do
     @impl Accounts.SessionApplication
     def authentication_failure(context, error) do
       {:authentication_failure, context, error}
+    end
+
+    @impl Accounts.SessionApplication
+    def session_deleted(context) do
+      {:session_deleted, context}
     end
   end
 
@@ -218,7 +223,7 @@ defmodule BorutaIdentity.AccountsTest do
       client_id = nil
       authentication_params = %{}
 
-      assert {:authentication_failure, ^context, %AuthenticationError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -234,7 +239,7 @@ defmodule BorutaIdentity.AccountsTest do
       client_id = SecureRandom.uuid()
       authentication_params = %{}
 
-      assert {:authentication_failure, ^context, %AuthenticationError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -250,7 +255,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{}
 
-      assert {:authentication_failure, ^context, %AuthenticationError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -266,7 +271,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: "does_not_exist"}
 
-      assert {:authentication_failure, ^context, %AuthenticationError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -283,7 +288,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: email}
 
-      assert {:authentication_failure, ^context, %AuthenticationError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -300,7 +305,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: email, password: "wrong password"}
 
-      assert {:authentication_failure, ^context, %AuthenticationError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -330,6 +335,86 @@ defmodule BorutaIdentity.AccountsTest do
 
     @tag :skip
     test "returns a valid session token"
+  end
+
+  describe "delete_session/4" do
+    setup do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      {:ok, client_id: client_relying_party.client_id}
+    end
+
+    test "returns an error with nil client_id" do
+      context = :context
+      client_id = nil
+      session_token = ""
+
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
+               Accounts.delete_session(
+                 context,
+                 client_id,
+                 session_token,
+                 DummySession
+               )
+
+      assert error.message == "Client identifier not provided."
+    end
+
+    test "returns an error with unknown client_id" do
+      context = :context
+      client_id = SecureRandom.uuid()
+      session_token = ""
+
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
+               Accounts.delete_session(
+                 context,
+                 client_id,
+                 session_token,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
+    test "return a success when session does not exist", %{client_id: client_id} do
+      context = :context
+      session_token = "unexisting sessino"
+
+      assert {:session_deleted, ^context} =
+               Accounts.delete_session(
+                 context,
+                 client_id,
+                 session_token,
+                 DummySession
+               )
+    end
+
+    test "deletes session", %{client_id: client_id} do
+      context = :context
+      %User{email: email} = user = user_fixture()
+      authentication_params = %{email: email, password: valid_user_password()}
+
+      assert {:user_authenticated, ^context, ^user, session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+      assert session_token
+      assert Repo.get_by(UserToken, token: session_token)
+
+      assert {:session_deleted, ^context} =
+               Accounts.delete_session(
+                 context,
+                 client_id,
+                 session_token,
+                 DummySession
+               )
+
+      refute Repo.get_by(UserToken, token: session_token)
+    end
   end
 
   describe "Utils.client_implementation/1" do
@@ -681,15 +766,6 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "does not return user for expired token", %{token: token} do
       {1, nil} = Repo.update_all(UserToken, set: [inserted_at: ~N[2020-01-01 00:00:00]])
-      refute Accounts.get_user_by_session_token(token)
-    end
-  end
-
-  describe "delete_session_token/1" do
-    test "deletes the token" do
-      user = user_fixture()
-      token = Accounts.generate_user_session_token(user)
-      assert Accounts.delete_session_token(token) == :ok
       refute Accounts.get_user_by_session_token(token)
     end
   end

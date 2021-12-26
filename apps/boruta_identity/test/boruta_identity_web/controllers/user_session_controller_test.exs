@@ -89,6 +89,14 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   end
 
   describe "DELETE /users/log_out" do
+    setup %{conn: conn} do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
+
+      {:ok, conn: conn}
+    end
+
     test "logs the user out", %{conn: conn, user: user} do
       conn = conn |> log_in(user) |> delete(Routes.user_session_path(conn, :delete))
       assert redirected_to(conn) == Routes.user_session_path(conn, :new)

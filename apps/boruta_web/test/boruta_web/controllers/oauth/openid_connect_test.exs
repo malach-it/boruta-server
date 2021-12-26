@@ -28,7 +28,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
           })
         )
 
-      assert redirected_to(conn) =~ "/users/log_in"
+      assert redirected_to(conn) =~ "/users/log_out"
     end
 
     test "redirects to login with prompt='none' without any current_user", %{
@@ -109,7 +109,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
           })
         )
 
-      assert redirected_to(conn) =~ ~r/log_in/
+      assert redirected_to(conn) =~ "/users/log_out"
     end
 
     test "redirects to choose session with a non expired max_age and current_user", %{

@@ -53,4 +53,13 @@ defmodule BorutaIdentity.Accounts.Internal do
       {:ok, session_token.token}
     end
   end
+
+  @impl BorutaIdentity.Accounts
+  def delete_session(nil), do: {:error, "Session not found."}
+  def delete_session(session_token) do
+    case Repo.delete_all(UserToken.token_and_context_query(session_token, "session")) do
+      {1, _} -> :ok
+      {_, _} -> {:error, "Session not found."}
+    end
+  end
 end

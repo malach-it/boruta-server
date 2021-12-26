@@ -93,7 +93,8 @@ defmodule BorutaIdentity.Accounts do
 
     @callback user_initialized(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
 
-    @callback user_registered(context :: any(), user :: User.t(), session_token :: String.t()) :: any()
+    @callback user_registered(context :: any(), user :: User.t(), session_token :: String.t()) ::
+                any()
 
     @callback registration_failure(context :: any(), error :: RegistrationError.t()) :: any()
   end
@@ -148,7 +149,7 @@ defmodule BorutaIdentity.Accounts do
 
   ## WIP Sessions
 
-  defmodule AuthenticationError do
+  defmodule SessionError do
     @enforce_keys [:message]
     defexception [:message, :changeset]
 
@@ -174,8 +175,10 @@ defmodule BorutaIdentity.Accounts do
     @callback user_authenticated(context :: any(), user :: User.t(), session_token :: String.t()) ::
                 any()
 
-    @callback authentication_failure(context :: any(), error :: AuthenticationError.t()) ::
+    @callback authentication_failure(context :: any(), error :: SessionError.t()) ::
                 any()
+
+    @callback session_deleted(context :: any()) :: any()
   end
 
   @type authentication_params :: %{
@@ -197,13 +200,13 @@ defmodule BorutaIdentity.Accounts do
       module.user_authenticated(context, user, session_token)
     else
       {:error, %Ecto.Changeset{} = changeset} ->
-        module.authentication_failure(context, %AuthenticationError{
+        module.authentication_failure(context, %SessionError{
           changeset: changeset,
           message: "Could not authenticate user with given params."
         })
 
       {:error, reason} ->
-        module.authentication_failure(context, %AuthenticationError{message: reason})
+        module.authentication_failure(context, %SessionError{message: reason})
     end
   end
 
@@ -213,15 +216,36 @@ defmodule BorutaIdentity.Accounts do
   @callback check_user_against(user :: User.t(), authentication_params :: authentication_params()) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
-  # TODO move that function out of secondary port (bor-156)
+  # TODO move that function out of internal secondary port (bor-156)
   @callback create_session(user :: User.t()) ::
-              {:ok, session_token :: String.t()} | {:error, reason :: String.t()}
+              {:ok, session_token :: String.t()} | {:error, changeset :: Ecto.Changeset.t()}
+
+  @spec delete_session(
+          context :: any(),
+          client_id :: String.t(),
+          session_token :: String.t(),
+          module :: atom()
+        ) ::
+          callback_result :: any()
+  def delete_session(context, client_id, session_token, module) do
+    with {:ok, implementation} <- client_implementation(client_id),
+         :ok <- apply(implementation, :delete_session, [session_token]) do
+      module.session_deleted(context)
+    else
+      {:error, "Session not found."} ->
+        module.session_deleted(context)
+      {:error, reason} ->
+        module.authentication_failure(context, %SessionError{message: reason})
+    end
+  end
+
+  # TODO move that function out of internal secondary port (bor-156)
+  @callback(delete_session(session_token :: String.t()) :: :ok, {:error, String.t()})
 
   ## Session
 
-  @deprecated "prefer `create_session/4`"
+  @deprecated "prefer using `Accounts` use cases"
   defdelegate generate_user_session_token(user), to: Sessions
-  defdelegate delete_session_token(token), to: Sessions
 
   ## Database getters
 
