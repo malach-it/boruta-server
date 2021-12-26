@@ -12,43 +12,6 @@ defmodule BorutaIdentity.Accounts.Registrations do
   @type user_registration_attrs :: map()
 
   @doc """
-  Registers a user.
-
-  ## Examples
-
-      iex> register_user(%{field: value})
-      {:ok, %User{}}
-
-      iex> register_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  @spec register_user(attrs :: user_registration_attrs()) ::
-          {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
-  def register_user(attrs) do
-    %User{}
-    |> User.registration_changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user changes.
-
-  ## Examples
-
-      iex> change_user_registration(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
-  @spec change_user_registration(user :: %User{}) ::
-          Ecto.Changeset.t()
-  @spec change_user_registration(user :: %User{}, attrs :: user_registration_attrs()) ::
-          Ecto.Changeset.t()
-  def change_user_registration(%User{} = user, attrs \\ %{}) do
-    User.registration_changeset(user, attrs, hash_password: false)
-  end
-
-  @doc """
   Updates the user password.
 
   ## Examples

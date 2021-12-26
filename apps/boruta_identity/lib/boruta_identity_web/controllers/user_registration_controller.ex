@@ -3,10 +3,12 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
 
   use BorutaIdentityWeb, :controller
 
-  import BorutaIdentityWeb.Authenticable, only: [log_in: 2]
+  import BorutaIdentityWeb.Authenticable,
+    only: [store_user_session: 2, after_registration_path: 1]
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RegistrationError
+  alias BorutaIdentity.Accounts.RelyingPartyError
 
   def new(conn, _params) do
     client_id = get_session(conn, :current_client_id)
@@ -36,18 +38,17 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
     render(conn, "new.html", changeset: changeset)
   end
 
-  def registration_failure(conn, %RegistrationError{message: message}) do
-    user_return_to = get_session(conn, :user_return_to)
-
+  @impl BorutaIdentity.Accounts.RegistrationApplication
+  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
     conn
     |> put_flash(:error, message)
-    |> redirect(to: user_return_to || "/")
+    |> redirect(to: after_registration_path(conn))
   end
 
   @impl BorutaIdentity.Accounts.RegistrationApplication
-  def user_registered(conn, user) do
+  def user_registered(conn, _user, session_token) do
     conn
-    |> put_flash(:info, "User created successfully.")
-    |> log_in(user)
+    |> store_user_session(session_token)
+    |> redirect(to: after_registration_path(conn))
   end
 end

@@ -4,8 +4,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   use BorutaWeb, :controller
 
-  import BorutaIdentityWeb.Authenticable, only: [log_out_user: 1]
-
   alias Boruta.Ecto.Admin
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizationSuccess
@@ -51,7 +49,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, _, _, _, "login", _), do: log_out_user(conn)
+  defp authorize_response(conn, _, _, _, "login", _) do
+    redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete))
+  end
 
   defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
     conn
@@ -81,7 +81,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     # TODO a render can be a better choice
     case login_expired?(current_user, max_age) do
       true ->
-        log_out_user(conn)
+        redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete))
 
       false ->
         conn

@@ -6,13 +6,13 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
   describe "whithout client set" do
     test "new registration redirects to home", %{conn: conn} do
       conn = get(conn, Routes.user_registration_path(conn, :new))
-      assert get_flash(conn, :error) == "Cannot register without specifying a client."
+      assert get_flash(conn, :error) == "Client identifier not provided."
       assert redirected_to(conn) == "/"
     end
 
     test "create registration redirects to home", %{conn: conn} do
       conn = post(conn, Routes.user_registration_path(conn, :create), %{"user" => %{}})
-      assert get_flash(conn, :error) == "Cannot register without specifying a client."
+      assert get_flash(conn, :error) == "Client identifier not provided."
       assert redirected_to(conn) == "/"
     end
   end

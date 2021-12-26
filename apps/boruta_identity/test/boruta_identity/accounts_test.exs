@@ -6,6 +6,8 @@ defmodule BorutaIdentity.AccountsTest do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RegistrationError
+  alias BorutaIdentity.Accounts.RelyingPartyError
+  alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.Repo
@@ -13,89 +15,86 @@ defmodule BorutaIdentity.AccountsTest do
   defmodule DummyRegistration do
     @behaviour Accounts.RegistrationApplication
 
+    @impl Accounts.RegistrationApplication
     def user_initialized(context, changeset) do
       {:user_initialized, context, changeset}
     end
 
-    def user_registered(context, user) do
-      {:user_registered, context, user}
+    @impl Accounts.RegistrationApplication
+    def user_registered(context, user, session_token) do
+      {:user_registered, context, user, session_token}
     end
 
+    @impl Accounts.RegistrationApplication
     def registration_failure(context, error) do
       {:registration_failure, context, error}
     end
+
+    @impl Accounts.RegistrationApplication
+    def invalid_relying_party(context, error) do
+      {:invalid_relying_party, context, error}
+    end
   end
 
-  describe "Utils.client_implementation/1" do
-    test "returns an error when client_id is nil" do
+  defmodule DummySession do
+    @behaviour Accounts.SessionApplication
+
+    @impl Accounts.SessionApplication
+    def user_authenticated(context, user, session_token) do
+      {:user_authenticated, context, user, session_token}
+    end
+
+    @impl Accounts.SessionApplication
+    def authentication_failure(context, error) do
+      {:authentication_failure, context, error}
+    end
+
+    @impl Accounts.SessionApplication
+    def session_deleted(context) do
+      {:session_deleted, context}
+    end
+
+    @impl Accounts.SessionApplication
+    def invalid_relying_party(context, error) do
+      {:invalid_relying_party, context, error}
+    end
+  end
+
+  describe "initialize_registration/3" do
+    setup do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      {:ok, client_id: client_relying_party.client_id}
+    end
+
+    test "returns an error with nil client_id" do
       client_id = nil
+      context = :context
 
-      assert Accounts.Utils.client_implementation(client_id) ==
-               {:error, "Cannot register without specifying a client."}
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.initialize_registration(context, client_id, DummyRegistration)
+
+      assert error.message == "Client identifier not provided."
     end
 
-    test "returns an error when client_id is unknown" do
+    test "returns an error with unknown client_id" do
       client_id = SecureRandom.uuid()
+      context = :context
 
-      assert Accounts.Utils.client_implementation(client_id) ==
-               {:error,
-                "Relying Party not configured for given OAuth client. " <>
-                  "Please contact your administrator."}
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.initialize_registration(context, client_id, DummyRegistration)
+
+      assert error.message ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
     end
 
-    test "returns client relying party implementation" do
-      relying_party = BorutaIdentity.Factory.insert(:relying_party, type: "internal")
+    test "returns a changeset", %{client_id: client_id} do
+      context = :context
 
-      %ClientRelyingParty{client_id: client_id} =
-        BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
+      assert {:user_initialized, ^context, %Ecto.Changeset{} = changeset} =
+               Accounts.initialize_registration(context, client_id, DummyRegistration)
 
-      assert Accounts.Utils.client_implementation(client_id) ==
-               {:ok, BorutaIdentity.Accounts.Internal}
-    end
-  end
-
-  describe "list_users/0" do
-    test "returns an empty list" do
-      assert Accounts.list_users() == []
-    end
-
-    test "returns users" do
-      user = user_fixture()
-      assert Accounts.list_users() == [user]
-    end
-  end
-
-  describe "get_user/1" do
-    test "returns nil" do
-      assert Accounts.get_user(Ecto.UUID.generate()) == nil
-    end
-
-    test "returns an user" do
-      user = user_fixture()
-      assert Accounts.get_user(user.id) == user
-    end
-  end
-
-  describe "get_user_by_email/1" do
-    test "does not return the user if the email does not exist" do
-      refute Accounts.get_user_by_email("unknown@example.com")
-    end
-
-    test "returns the user if the email exists" do
-      %{id: id} = user = user_fixture()
-      assert %User{id: ^id} = Accounts.get_user_by_email(user.email)
-    end
-  end
-
-  describe "check_user_password/2" do
-    test "returns an error" do
-      user = user_fixture()
-      assert Accounts.check_user_password(user, "bad password") == {:error, "Invalid password."}
-    end
-
-    test "returns :ok" do
-      user = user_fixture()
-      assert Accounts.check_user_password(user, valid_user_password()) == :ok
+      assert changeset.required == [:password, :email]
     end
   end
 
@@ -112,7 +111,7 @@ defmodule BorutaIdentity.AccountsTest do
       user_params = %{}
       confirmation_callback_fun = & &1
 
-      assert {:registration_failure, ^context, %RegistrationError{} = error} =
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
                Accounts.register(
                  context,
                  client_id,
@@ -121,7 +120,7 @@ defmodule BorutaIdentity.AccountsTest do
                  DummyRegistration
                )
 
-      assert error.message == "Cannot register without specifying a client."
+      assert error.message == "Client identifier not provided."
     end
 
     test "returns an error with unknown client_id" do
@@ -130,7 +129,7 @@ defmodule BorutaIdentity.AccountsTest do
       user_params = %{}
       confirmation_callback_fun = & &1
 
-      assert {:registration_failure, ^context, %RegistrationError{} = error} =
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
                Accounts.register(
                  context,
                  client_id,
@@ -241,7 +240,7 @@ defmodule BorutaIdentity.AccountsTest do
       user_params = %{email: email, password: valid_user_password()}
       confirmation_callback_fun = & &1
 
-      assert {:user_registered, ^context, user} =
+      assert {:user_registered, ^context, user, session_token} =
                Accounts.register(
                  context,
                  client_id,
@@ -250,6 +249,7 @@ defmodule BorutaIdentity.AccountsTest do
                  DummyRegistration
                )
 
+      assert session_token
       assert user.email == email
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
@@ -260,7 +260,7 @@ defmodule BorutaIdentity.AccountsTest do
     test "delivers a confirmation mail"
   end
 
-  describe "initialize_registration/3" do
+  describe "create_session/4" do
     setup do
       client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
 
@@ -268,33 +268,274 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "returns an error with nil client_id" do
-      client_id = nil
       context = :context
+      client_id = nil
+      authentication_params = %{}
 
-      assert {:registration_failure, ^context, %RegistrationError{} = error} =
-               Accounts.initialize_registration(context, client_id, DummyRegistration)
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
 
-      assert error.message == "Cannot register without specifying a client."
+      assert error.message == "Client identifier not provided."
     end
 
     test "returns an error with unknown client_id" do
-      client_id = SecureRandom.uuid()
       context = :context
+      client_id = SecureRandom.uuid()
+      authentication_params = %{}
 
-      assert {:registration_failure, ^context, %RegistrationError{} = error} =
-               Accounts.initialize_registration(context, client_id, DummyRegistration)
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
 
       assert error.message ==
                "Relying Party not configured for given OAuth client. Please contact your administrator."
     end
 
-    test "returns a changeset", %{client_id: client_id} do
+    test "returns an error with empty authentication params", %{client_id: client_id} do
       context = :context
+      authentication_params = %{}
 
-      assert {:user_initialized, ^context, %Ecto.Changeset{} = changeset} =
-               Accounts.initialize_registration(context, client_id, DummyRegistration)
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
 
-      assert changeset.required == [:password, :email]
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error with a wrong email", %{client_id: client_id} do
+      context = :context
+      authentication_params = %{email: "does_not_exist"}
+
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error without password", %{client_id: client_id} do
+      %User{email: email} = user_fixture()
+      context = :context
+      authentication_params = %{email: email}
+
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error with a wrong password", %{client_id: client_id} do
+      %User{email: email} = user_fixture()
+      context = :context
+      authentication_params = %{email: email, password: "wrong password"}
+
+      assert {:authentication_failure, ^context, %SessionError{} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "authenticates the user", %{client_id: client_id} do
+      %User{email: email} = user = user_fixture()
+      context = :context
+      authentication_params = %{email: email, password: valid_user_password()}
+
+      assert {:user_authenticated, ^context, ^user, session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert session_token
+    end
+
+    @tag :skip
+    test "returns a valid session token"
+  end
+
+  describe "delete_session/4" do
+    setup do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      {:ok, client_id: client_relying_party.client_id}
+    end
+
+    test "returns an error with nil client_id" do
+      context = :context
+      client_id = nil
+      session_token = ""
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.delete_session(
+                 context,
+                 client_id,
+                 session_token,
+                 DummySession
+               )
+
+      assert error.message == "Client identifier not provided."
+    end
+
+    test "returns an error with unknown client_id" do
+      context = :context
+      client_id = SecureRandom.uuid()
+      session_token = ""
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.delete_session(
+                 context,
+                 client_id,
+                 session_token,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
+    test "return a success when session does not exist", %{client_id: client_id} do
+      context = :context
+      session_token = "unexisting sessino"
+
+      assert {:session_deleted, ^context} =
+               Accounts.delete_session(
+                 context,
+                 client_id,
+                 session_token,
+                 DummySession
+               )
+    end
+
+    test "deletes session", %{client_id: client_id} do
+      context = :context
+      %User{email: email} = user = user_fixture()
+      authentication_params = %{email: email, password: valid_user_password()}
+
+      assert {:user_authenticated, ^context, ^user, session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+      assert session_token
+      assert Repo.get_by(UserToken, token: session_token)
+
+      assert {:session_deleted, ^context} =
+               Accounts.delete_session(
+                 context,
+                 client_id,
+                 session_token,
+                 DummySession
+               )
+
+      refute Repo.get_by(UserToken, token: session_token)
+    end
+  end
+
+  describe "Utils.client_implementation/1" do
+    test "returns an error when client_id is nil" do
+      client_id = nil
+
+      assert Accounts.Utils.client_implementation(client_id) ==
+               {:error, "Client identifier not provided."}
+    end
+
+    test "returns an error when client_id is unknown" do
+      client_id = SecureRandom.uuid()
+
+      assert Accounts.Utils.client_implementation(client_id) ==
+               {:error,
+                "Relying Party not configured for given OAuth client. " <>
+                  "Please contact your administrator."}
+    end
+
+    test "returns client relying party implementation" do
+      relying_party = BorutaIdentity.Factory.insert(:relying_party, type: "internal")
+
+      %ClientRelyingParty{client_id: client_id} =
+        BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
+
+      assert Accounts.Utils.client_implementation(client_id) ==
+               {:ok, BorutaIdentity.Accounts.Internal}
+    end
+  end
+
+  describe "list_users/0" do
+    test "returns an empty list" do
+      assert Accounts.list_users() == []
+    end
+
+    test "returns users" do
+      user = user_fixture()
+      assert Accounts.list_users() == [user]
+    end
+  end
+
+  describe "get_user/1" do
+    test "returns nil" do
+      assert Accounts.get_user(Ecto.UUID.generate()) == nil
+    end
+
+    test "returns an user" do
+      user = user_fixture()
+      assert Accounts.get_user(user.id) == user
+    end
+  end
+
+  describe "get_user_by_email/1" do
+    test "does not return the user if the email does not exist" do
+      refute Accounts.get_user_by_email("unknown@example.com")
+    end
+
+    test "returns the user if the email exists" do
+      %{id: id} = user = user_fixture()
+      assert %User{id: ^id} = Accounts.get_user_by_email(user.email)
+    end
+  end
+
+  describe "check_user_password/2" do
+    test "returns an error" do
+      user = user_fixture()
+      assert Accounts.check_user_password(user, "bad password") == {:error, "Invalid password."}
+    end
+
+    test "returns :ok" do
+      user = user_fixture()
+      assert Accounts.check_user_password(user, valid_user_password()) == :ok
     end
   end
 
@@ -536,15 +777,6 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "does not return user for expired token", %{token: token} do
       {1, nil} = Repo.update_all(UserToken, set: [inserted_at: ~N[2020-01-01 00:00:00]])
-      refute Accounts.get_user_by_session_token(token)
-    end
-  end
-
-  describe "delete_session_token/1" do
-    test "deletes the token" do
-      user = user_fixture()
-      token = Accounts.generate_user_session_token(user)
-      assert Accounts.delete_session_token(token) == :ok
       refute Accounts.get_user_by_session_token(token)
     end
   end

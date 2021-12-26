@@ -41,29 +41,6 @@ defmodule BorutaIdentityWeb.AuthenticableTest do
     end
   end
 
-  describe "logout_user/1" do
-    test "broadcasts to the given live_socket_id", %{conn: conn} do
-      live_socket_id = "users_sessions:abcdef-token"
-      BorutaIdentityWeb.Endpoint.subscribe(live_socket_id)
-
-      conn
-      |> put_session(:live_socket_id, live_socket_id)
-      |> Authenticable.log_out_user()
-
-      assert_receive %Phoenix.Socket.Broadcast{
-        event: "disconnect",
-        topic: "users_sessions:abcdef-token"
-      }
-    end
-
-    test "works even if user is already logged out", %{conn: conn} do
-      conn = conn |> fetch_cookies() |> Authenticable.log_out_user()
-      refute get_session(conn, :user_token)
-      assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
-    end
-  end
-
   describe "after_sign_in_path" do
     test "returns root path", %{conn: conn} do
       assert Authenticable.after_sign_in_path(conn) == "/"
