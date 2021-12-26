@@ -29,15 +29,22 @@ defmodule BorutaIdentityWeb.Authenticable do
   """
   @spec log_in(conn :: Plug.Conn.t(), %Accounts.User{}) :: conn :: Plug.Conn.t()
   @spec log_in(conn :: Plug.Conn.t(), %Accounts.User{}, map()) :: conn :: Plug.Conn.t()
+  @deprecated "prefer using `Accounts.create_session/4`"
   def log_in(conn, user, params \\ %{}) do
     token = Accounts.generate_user_session_token(user)
-    user_return_to = get_session(conn, :user_return_to)
 
     conn
     |> put_session(:user_token, token)
     |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
     |> maybe_write_remember_me_cookie(token, params)
-    |> redirect(to: user_return_to || after_sign_in_path(conn))
+    |> redirect(to: after_sign_in_path(conn))
+  end
+
+  def store_session(%Plug.Conn{body_params: params} = conn, session_token) do
+    conn
+    |> put_session(:user_token, session_token)
+    |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(session_token)}")
+    |> maybe_write_remember_me_cookie(session_token, params["user"])
   end
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}) do
@@ -71,4 +78,8 @@ defmodule BorutaIdentityWeb.Authenticable do
   # TODO test it
   @spec after_sign_in_path(conn :: Plug.Conn.t()) :: String.t()
   def after_sign_in_path(conn), do: get_session(conn, :user_return_to) || "/"
+
+  # TODO test it
+  @spec after_registration_path(conn :: Plug.Conn.t()) :: String.t()
+  def after_registration_path(conn), do: get_session(conn, :user_return_to) || "/"
 end

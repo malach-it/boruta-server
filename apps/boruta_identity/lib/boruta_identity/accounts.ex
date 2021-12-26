@@ -16,7 +16,7 @@ defmodule BorutaIdentity.Accounts.Utils do
 
   @spec client_implementation(client_id :: String.t() | nil) ::
           {:ok, implementation :: atom()} | {:error, reason :: String.t()}
-  def client_implementation(nil), do: {:error, "Cannot register without specifying a client."}
+  def client_implementation(nil), do: {:error, "Client identifier not provided."}
 
   def client_implementation(client_id) do
     case RelyingParties.get_relying_party_by_client_id(client_id) do
@@ -93,7 +93,7 @@ defmodule BorutaIdentity.Accounts do
 
     @callback user_initialized(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
 
-    @callback user_registered(context :: any(), user :: User.t()) :: any()
+    @callback user_registered(context :: any(), user :: User.t(), session_token :: String.t()) :: any()
 
     @callback registration_failure(context :: any(), error :: RegistrationError.t()) :: any()
   end
@@ -123,8 +123,9 @@ defmodule BorutaIdentity.Accounts do
         ) :: calback_result :: any()
   def register(context, client_id, user_params, confirmation_url_fun, module) do
     with {:ok, implementation} <- client_implementation(client_id),
-         {:ok, user} <- apply(implementation, :register, [user_params, confirmation_url_fun]) do
-      module.user_registered(context, user)
+         {:ok, user} <- apply(implementation, :register, [user_params, confirmation_url_fun]),
+         {:ok, session_token} <- apply(implementation, :create_session, [user]) do
+      module.user_registered(context, user, session_token)
     else
       {:error, %Ecto.Changeset{} = changeset} ->
         module.registration_failure(context, %RegistrationError{
@@ -144,6 +145,83 @@ defmodule BorutaIdentity.Accounts do
               {:ok, user :: User.t()}
               | {:error, reason :: String.t()}
               | {:error, changeset :: Ecto.Changeset.t()}
+
+  ## WIP Sessions
+
+  defmodule AuthenticationError do
+    @enforce_keys [:message]
+    defexception [:message, :changeset]
+
+    @type t :: %__MODULE__{
+            message: String.t(),
+            changeset: Ecto.Changeset.t() | nil
+          }
+
+    def exception(message) when is_binary(message) do
+      %__MODULE__{message: message}
+    end
+
+    def message(exception) do
+      exception.message
+    end
+  end
+
+  defmodule SessionApplication do
+    @moduledoc """
+    TODO SessionApplication documentation
+    """
+
+    @callback user_authenticated(context :: any(), user :: User.t(), session_token :: String.t()) ::
+                any()
+
+    @callback authentication_failure(context :: any(), error :: AuthenticationError.t()) ::
+                any()
+  end
+
+  @type authentication_params :: %{
+          email: String.t(),
+          password: String.t()
+        }
+
+  @spec create_session(
+          context :: any(),
+          client_id :: String.t(),
+          authentication_params :: authentication_params(),
+          module :: atom()
+        ) :: callback_result :: any()
+  def create_session(context, client_id, authentication_params, module) do
+    with {:ok, implementation} <- client_implementation(client_id),
+         {:ok, user} <- apply(implementation, :get_user, [authentication_params]),
+         {:ok, user} <- apply(implementation, :check_user_against, [user, authentication_params]),
+         {:ok, session_token} <- apply(implementation, :create_session, [user]) do
+      module.user_authenticated(context, user, session_token)
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        module.authentication_failure(context, %AuthenticationError{
+          changeset: changeset,
+          message: "Could not authenticate user with given params."
+        })
+
+      {:error, reason} ->
+        module.authentication_failure(context, %AuthenticationError{message: reason})
+    end
+  end
+
+  @callback get_user(authentication_params :: authentication_params()) ::
+              {:ok, user :: User.t()} | {:error, reason :: String.t()}
+
+  @callback check_user_against(user :: User.t(), authentication_params :: authentication_params()) ::
+              {:ok, user :: User.t()} | {:error, reason :: String.t()}
+
+  # TODO move that function out of secondary port (bor-156)
+  @callback create_session(user :: User.t()) ::
+              {:ok, session_token :: String.t()} | {:error, reason :: String.t()}
+
+  ## Session
+
+  @deprecated "prefer `create_session/4`"
+  defdelegate generate_user_session_token(user), to: Sessions
+  defdelegate delete_session_token(token), to: Sessions
 
   ## Database getters
 
@@ -177,11 +255,6 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate deliver_user_reset_password_instructions(user, reset_password_url_fun),
     to: Deliveries
-
-  ## Session
-
-  defdelegate generate_user_session_token(user), to: Sessions
-  defdelegate delete_session_token(token), to: Sessions
 
   ## Confirmation
 
