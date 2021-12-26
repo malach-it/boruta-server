@@ -149,10 +149,11 @@ function authGuard (to, from, next) {
     // TODO find a way to remove event listener once triggered
     window.addEventListener('logged_in', () => { next() })
 
-    return oauth.silentRefresh()
+    oauth.silentRefresh()
+    return next(false)
   }
 
-  next()
+  return next()
 }
 
 export default router

@@ -19,12 +19,11 @@ class Oauth {
   }
 
   authenticate (response) {
+    if (window.frameElement) return
+
     if (response.error) {
-      alert(response.error_description)
       this.login()
     }
-
-    if (window.frameElement) return
 
     const loggedIn = new Event('logged_in')
     window.dispatchEvent(loggedIn)
