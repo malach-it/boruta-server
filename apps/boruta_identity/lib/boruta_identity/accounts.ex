@@ -66,6 +66,23 @@ defmodule BorutaIdentity.Accounts do
 
   use BorutaIdentity.Accounts.Utils
 
+  defmodule RelyingPartyError do
+    @enforce_keys [:message]
+    defexception [:message]
+
+    @type t :: %__MODULE__{
+            message: String.t()
+          }
+
+    def exception(message) when is_binary(message) do
+      %__MODULE__{message: message}
+    end
+
+    def message(exception) do
+      exception.message
+    end
+  end
+
   ## Registrations
 
   defmodule RegistrationError do
@@ -96,7 +113,15 @@ defmodule BorutaIdentity.Accounts do
     @callback user_registered(context :: any(), user :: User.t(), session_token :: String.t()) ::
                 any()
 
-    @callback registration_failure(context :: any(), error :: RegistrationError.t()) :: any()
+    @callback registration_failure(
+                context :: any(),
+                error :: RegistrationError.t()
+              ) :: any()
+
+    @callback invalid_relying_party(
+                context :: any(),
+                error :: RelyingPartyError.t()
+              ) :: any()
   end
 
   @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
@@ -109,7 +134,7 @@ defmodule BorutaIdentity.Accounts do
         module.user_initialized(context, changeset)
 
       {:error, reason} ->
-        module.registration_failure(context, %RegistrationError{message: reason})
+        module.invalid_relying_party(context, %RelyingPartyError{message: reason})
     end
   end
 
@@ -123,19 +148,24 @@ defmodule BorutaIdentity.Accounts do
           module :: atom()
         ) :: calback_result :: any()
   def register(context, client_id, user_params, confirmation_url_fun, module) do
-    with {:ok, implementation} <- client_implementation(client_id),
-         {:ok, user} <- apply(implementation, :register, [user_params, confirmation_url_fun]),
-         {:ok, session_token} <- apply(implementation, :create_session, [user]) do
-      module.user_registered(context, user, session_token)
-    else
-      {:error, %Ecto.Changeset{} = changeset} ->
-        module.registration_failure(context, %RegistrationError{
-          changeset: changeset,
-          message: "Could not create user with given params."
-        })
+    case client_implementation(client_id) do
+      {:ok, implementation} ->
+        with {:ok, user} <- apply(implementation, :register, [user_params, confirmation_url_fun]),
+             {:ok, session_token} <- apply(implementation, :create_session, [user]) do
+          module.user_registered(context, user, session_token)
+        else
+          {:error, %Ecto.Changeset{} = changeset} ->
+            module.registration_failure(context, %RegistrationError{
+              changeset: changeset,
+              message: "Could not create user with given params."
+            })
+
+          {:error, reason} ->
+            module.registration_failure(context, %RegistrationError{message: reason})
+        end
 
       {:error, reason} ->
-        module.registration_failure(context, %RegistrationError{message: reason})
+        module.invalid_relying_party(context, %RelyingPartyError{message: reason})
     end
   end
 
@@ -147,7 +177,7 @@ defmodule BorutaIdentity.Accounts do
               | {:error, reason :: String.t()}
               | {:error, changeset :: Ecto.Changeset.t()}
 
-  ## WIP Sessions
+  ## Sessions
 
   defmodule SessionError do
     @enforce_keys [:message]
@@ -179,6 +209,11 @@ defmodule BorutaIdentity.Accounts do
                 any()
 
     @callback session_deleted(context :: any()) :: any()
+
+    @callback invalid_relying_party(
+                context :: any(),
+                error :: RelyingPartyError.t()
+              ) :: any()
   end
 
   @type authentication_params :: %{
@@ -193,20 +228,22 @@ defmodule BorutaIdentity.Accounts do
           module :: atom()
         ) :: callback_result :: any()
   def create_session(context, client_id, authentication_params, module) do
-    with {:ok, implementation} <- client_implementation(client_id),
-         {:ok, user} <- apply(implementation, :get_user, [authentication_params]),
-         {:ok, user} <- apply(implementation, :check_user_against, [user, authentication_params]),
-         {:ok, session_token} <- apply(implementation, :create_session, [user]) do
-      module.user_authenticated(context, user, session_token)
-    else
-      {:error, %Ecto.Changeset{} = changeset} ->
-        module.authentication_failure(context, %SessionError{
-          changeset: changeset,
-          message: "Could not authenticate user with given params."
-        })
+    case client_implementation(client_id) do
+      {:ok, implementation} ->
+        with {:ok, user} <- apply(implementation, :get_user, [authentication_params]),
+             {:ok, user} <-
+               apply(implementation, :check_user_against, [user, authentication_params]),
+             {:ok, session_token} <- apply(implementation, :create_session, [user]) do
+          module.user_authenticated(context, user, session_token)
+        else
+          {:error, _reason} ->
+            module.authentication_failure(context, %SessionError{
+              message: "Invalid email or password."
+            })
+        end
 
       {:error, reason} ->
-        module.authentication_failure(context, %SessionError{message: reason})
+        module.invalid_relying_party(context, %RelyingPartyError{message: reason})
     end
   end
 
@@ -228,21 +265,25 @@ defmodule BorutaIdentity.Accounts do
         ) ::
           callback_result :: any()
   def delete_session(context, client_id, session_token, module) do
-    with {:ok, implementation} <- client_implementation(client_id),
-         :ok <- apply(implementation, :delete_session, [session_token]) do
-      module.session_deleted(context)
-    else
-      {:error, "Session not found."} ->
-        module.session_deleted(context)
+    case client_implementation(client_id) do
+      {:ok, implementation} ->
+        case apply(implementation, :delete_session, [session_token]) do
+          :ok ->
+            module.session_deleted(context)
+
+          {:error, "Session not found."} ->
+            module.session_deleted(context)
+        end
+
       {:error, reason} ->
-        module.authentication_failure(context, %SessionError{message: reason})
+        module.invalid_relying_party(context, %RelyingPartyError{message: reason})
     end
   end
 
   # TODO move that function out of internal secondary port (bor-156)
   @callback(delete_session(session_token :: String.t()) :: :ok, {:error, String.t()})
 
-  ## Session
+  ## Deprecated Sessions
 
   @deprecated "prefer using `Accounts` use cases"
   defdelegate generate_user_session_token(user), to: Sessions

@@ -7,6 +7,28 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
     %{user: user_fixture()}
   end
 
+  describe "whithout client set" do
+    test "create session redirects to home", %{conn: conn} do
+      conn = post(conn, Routes.user_session_path(conn, :create), %{"user" => %{}})
+      assert get_flash(conn, :error) == "Client identifier not provided."
+      assert redirected_to(conn) == "/"
+    end
+  end
+
+  describe "whithout client relying party" do
+    setup %{conn: conn} do
+      conn = init_test_session(conn, %{current_client_id: SecureRandom.uuid()})
+
+      {:ok, conn: conn}
+    end
+
+    test "create session redirects to home", %{conn: conn} do
+      conn = post(conn, Routes.user_session_path(conn, :create), %{"user" => %{}})
+      assert get_flash(conn, :error) == "Relying Party not configured for given OAuth client. Please contact your administrator."
+      assert redirected_to(conn) == "/"
+    end
+  end
+
   describe "GET /users/log_in" do
     test "renders log in page", %{conn: conn} do
       conn = get(conn, Routes.user_session_path(conn, :new))

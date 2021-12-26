@@ -13,6 +13,8 @@ defmodule BorutaIdentityWeb.UserSessionController do
     ]
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.RelyingPartyError
+  alias BorutaIdentity.Accounts.SessionError
 
   def new(conn, _params) do
     render(conn, "new.html", error_message: nil)
@@ -44,8 +46,17 @@ defmodule BorutaIdentityWeb.UserSessionController do
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
-  def authentication_failure(conn, _session_error) do
-    render(conn, "new.html", error_message: "Invalid email or password")
+  def authentication_failure(conn, %SessionError{message: message}) do
+    conn
+    |> put_flash(:error, message)
+    |> render("new.html")
+  end
+
+  @impl BorutaIdentity.Accounts.SessionApplication
+  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
+    conn
+    |> put_flash(:error, message)
+    |> redirect(to: after_sign_in_path(conn))
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
