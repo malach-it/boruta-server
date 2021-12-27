@@ -5,6 +5,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   import Swoosh.TestAssertions
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Repo
 
   setup :set_swoosh_global
@@ -62,7 +63,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   describe "GET /users/reset_password/:token" do
     setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
-      {:ok, token} = Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+      {:ok, token} = Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       %{token: token}
     end
@@ -82,7 +83,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   describe "PUT /users/reset_password/:token" do
     setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
-      {:ok, token} = Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+      {:ok, token} = Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       %{token: token}
     end

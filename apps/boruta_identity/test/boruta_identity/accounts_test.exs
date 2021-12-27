@@ -5,6 +5,7 @@ defmodule BorutaIdentity.AccountsTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
@@ -833,25 +834,6 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "deliver_user_reset_password_instructions/2" do
-    setup do
-      %{user: user_fixture()}
-    end
-
-    test "sends token through notification", %{user: user} do
-      reset_password_url_fun = fn _ -> "http://test.host" end
-
-      {:ok, token} =
-        Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
-
-      {:ok, token} = Base.url_decode64(token, padding: false)
-      assert user_token = Repo.get_by(UserToken, token: :crypto.hash(:sha256, token))
-      assert user_token.user_id == user.id
-      assert user_token.sent_to == user.email
-      assert user_token.context == "reset_password"
-    end
-  end
-
   describe "get_user_by_reset_password_token/1" do
     setup do
       user = user_fixture()
@@ -859,7 +841,7 @@ defmodule BorutaIdentity.AccountsTest do
       reset_password_url_fun = fn _ -> "http://test.host" end
 
       {:ok, token} =
-        Accounts.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+        Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       %{user: user, token: token}
     end

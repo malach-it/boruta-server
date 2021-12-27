@@ -374,10 +374,6 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
 
-  @deprecated "prefer using `Accounts` use cases"
-  defdelegate deliver_user_reset_password_instructions(user, reset_password_url_fun),
-    to: Deliveries
-
   ## Confirmation
 
   defdelegate confirm_user(token), to: Confirmations
