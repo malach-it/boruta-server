@@ -60,6 +60,34 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
+  describe "Utils.client_implementation/1" do
+    test "returns an error when client_id is nil" do
+      client_id = nil
+
+      assert Accounts.Utils.client_implementation(client_id) ==
+               {:error, "Client identifier not provided."}
+    end
+
+    test "returns an error when client_id is unknown" do
+      client_id = SecureRandom.uuid()
+
+      assert Accounts.Utils.client_implementation(client_id) ==
+               {:error,
+                "Relying Party not configured for given OAuth client. " <>
+                  "Please contact your administrator."}
+    end
+
+    test "returns client relying party implementation" do
+      relying_party = BorutaIdentity.Factory.insert(:relying_party, type: "internal")
+
+      %ClientRelyingParty{client_id: client_id} =
+        BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
+
+      assert Accounts.Utils.client_implementation(client_id) ==
+               {:ok, BorutaIdentity.Accounts.Internal}
+    end
+  end
+
   describe "initialize_registration/3" do
     setup do
       client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
@@ -466,33 +494,8 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "Utils.client_implementation/1" do
-    test "returns an error when client_id is nil" do
-      client_id = nil
-
-      assert Accounts.Utils.client_implementation(client_id) ==
-               {:error, "Client identifier not provided."}
-    end
-
-    test "returns an error when client_id is unknown" do
-      client_id = SecureRandom.uuid()
-
-      assert Accounts.Utils.client_implementation(client_id) ==
-               {:error,
-                "Relying Party not configured for given OAuth client. " <>
-                  "Please contact your administrator."}
-    end
-
-    test "returns client relying party implementation" do
-      relying_party = BorutaIdentity.Factory.insert(:relying_party, type: "internal")
-
-      %ClientRelyingParty{client_id: client_id} =
-        BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
-
-      assert Accounts.Utils.client_implementation(client_id) ==
-               {:ok, BorutaIdentity.Accounts.Internal}
-    end
-  end
+  @tag :skip
+  test "send_reset_password_instructions/5"
 
   describe "list_users/0" do
     test "returns an empty list" do

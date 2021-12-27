@@ -22,6 +22,14 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "POST /users/reset_password" do
+    setup %{conn: conn} do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
+
+      {:ok, conn: conn}
+    end
+
     @tag :capture_log
     test "sends a new reset password token", %{conn: conn, user: user} do
       conn =
@@ -29,7 +37,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
           "user" => %{"email" => user.email}
         })
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
       assert get_flash(conn, :info) =~ "If your email is in our system"
 
       user_token = Repo.get_by!(Accounts.UserToken, user_id: user.id)
@@ -43,7 +51,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
           "user" => %{"email" => "unknown@example.com"}
         })
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
       assert get_flash(conn, :info) =~ "If your email is in our system"
       assert Repo.all(Accounts.UserToken) == []
 

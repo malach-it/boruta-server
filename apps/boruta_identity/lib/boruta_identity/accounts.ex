@@ -4,16 +4,6 @@ defmodule BorutaIdentity.Accounts.Utils do
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
-  defmacro __using__(_opts) do
-    quote do
-      import BorutaIdentity.Accounts.Utils,
-        only: [
-          client_implementation: 1,
-          defdelegatetoclientimpl: 1
-        ]
-    end
-  end
-
   @spec client_implementation(client_id :: String.t() | nil) ::
           {:ok, implementation :: atom()} | {:error, reason :: String.t()}
   def client_implementation(nil), do: {:error, "Client identifier not provided."}
@@ -29,22 +19,38 @@ defmodule BorutaIdentity.Accounts.Utils do
     end
   end
 
-  # TODO find a better way to delegate to the given client implementation
-  defmacro defdelegatetoclientimpl(fun) do
+  @doc """
+  Adds `client_impl` variable in function body context. The function definition must have
+  `context`, `client_id` and `module' as parameters.
+  """
+  # TODO find a better way to delegate to the given client impl
+  defmacro defwithclientimpl(fun, do: block) do
     fun = Macro.escape(fun, unquote: true)
+    block = Macro.escape(block, unquote: true)
 
-    quote bind_quoted: [fun: fun] do
+    quote bind_quoted: [fun: fun, block: block] do
       {name, params} = Macro.decompose_call(fun)
-      client_id_param = Enum.find(params, fn {var, _, _} -> var == :client_id end)
-      other_params = List.delete(params, client_id_param)
+      context_param = Enum.find(params, fn {var, _, _} -> var == :context end) ||
+        raise "`context` must be part of function parameters"
+
+      client_id_param = Enum.find(params, fn {var, _, _} -> var == :client_id end) ||
+        raise "`client_id` must be part of function parameters"
+
+      module_param = Enum.find(params, fn {var, _, _} -> var == :module end) ||
+        raise "`module` must be part of function parameters"
 
       def unquote({name, [line: __ENV__.line], params}) do
-        with {:ok, implementation} <- client_implementation(unquote(client_id_param)) do
-          apply(
-            implementation,
-            unquote(name),
-            unquote(other_params)
-          )
+        case BorutaIdentity.Accounts.Utils.client_implementation(unquote(client_id_param)) do
+          {:ok, var!(client_impl)} ->
+            unquote(block)
+
+          {:error, reason} ->
+            unquote(module_param).invalid_relying_party(
+              unquote(context_param),
+              %BorutaIdentity.Accounts.RelyingPartyError{
+                message: reason
+              }
+            )
         end
       end
     end
@@ -64,7 +70,7 @@ defmodule BorutaIdentity.Accounts do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
 
-  use BorutaIdentity.Accounts.Utils
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientimpl: 2]
 
   defmodule RelyingPartyError do
     @enforce_keys [:message]
@@ -126,16 +132,10 @@ defmodule BorutaIdentity.Accounts do
 
   @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
           callback_result :: any()
-  def initialize_registration(context, client_id, module) do
-    case client_implementation(client_id) do
-      {:ok, implementation} ->
-        changeset = apply(implementation, :registration_changeset, [%User{}])
+  defwithclientimpl initialize_registration(context, client_id, module) do
+    changeset = apply(client_impl, :registration_changeset, [%User{}])
 
-        module.user_initialized(context, changeset)
-
-      {:error, reason} ->
-        module.invalid_relying_party(context, %RelyingPartyError{message: reason})
-    end
+    module.user_initialized(context, changeset)
   end
 
   @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
@@ -143,29 +143,29 @@ defmodule BorutaIdentity.Accounts do
   @spec register(
           context :: any(),
           client_id :: String.t(),
-          user_params :: map(),
+          registration_params :: map(),
           confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
           module :: atom()
         ) :: calback_result :: any()
-  def register(context, client_id, user_params, confirmation_url_fun, module) do
-    case client_implementation(client_id) do
-      {:ok, implementation} ->
-        with {:ok, user} <- apply(implementation, :register, [user_params, confirmation_url_fun]),
-             {:ok, session_token} <- apply(implementation, :create_session, [user]) do
-          module.user_registered(context, user, session_token)
-        else
-          {:error, %Ecto.Changeset{} = changeset} ->
-            module.registration_failure(context, %RegistrationError{
-              changeset: changeset,
-              message: "Could not create user with given params."
-            })
-
-          {:error, reason} ->
-            module.registration_failure(context, %RegistrationError{message: reason})
-        end
+  defwithclientimpl register(
+                      context,
+                      client_id,
+                      registration_params,
+                      confirmation_url_fun,
+                      module
+                    ) do
+    with {:ok, user} <- apply(client_impl, :register, [registration_params, confirmation_url_fun]),
+         {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
+      module.user_registered(context, user, session_token)
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        module.registration_failure(context, %RegistrationError{
+          changeset: changeset,
+          message: "Could not create user with given params."
+        })
 
       {:error, reason} ->
-        module.invalid_relying_party(context, %RelyingPartyError{message: reason})
+        module.registration_failure(context, %RegistrationError{message: reason})
     end
   end
 
@@ -227,27 +227,25 @@ defmodule BorutaIdentity.Accounts do
           authentication_params :: authentication_params(),
           module :: atom()
         ) :: callback_result :: any()
-  def create_session(context, client_id, authentication_params, module) do
-    case client_implementation(client_id) do
-      {:ok, implementation} ->
-        with {:ok, user} <- apply(implementation, :get_user, [authentication_params]),
-             {:ok, user} <-
-               apply(implementation, :check_user_against, [user, authentication_params]),
-             {:ok, session_token} <- apply(implementation, :create_session, [user]) do
-          module.user_authenticated(context, user, session_token)
-        else
-          {:error, _reason} ->
-            module.authentication_failure(context, %SessionError{
-              message: "Invalid email or password."
-            })
-        end
-
-      {:error, reason} ->
-        module.invalid_relying_party(context, %RelyingPartyError{message: reason})
+  defwithclientimpl create_session(context, client_id, authentication_params, module) do
+    with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
+         {:ok, user} <-
+           apply(client_impl, :check_user_against, [user, authentication_params]),
+         {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
+      module.user_authenticated(context, user, session_token)
+    else
+      {:error, _reason} ->
+        module.authentication_failure(context, %SessionError{
+          message: "Invalid email or password."
+        })
     end
   end
 
-  @callback get_user(authentication_params :: authentication_params()) ::
+  @type user_params :: %{
+          email: String.t()
+        }
+
+  @callback get_user(user_params :: user_params()) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
   @callback check_user_against(user :: User.t(), authentication_params :: authentication_params()) ::
@@ -264,24 +262,82 @@ defmodule BorutaIdentity.Accounts do
           module :: atom()
         ) ::
           callback_result :: any()
-  def delete_session(context, client_id, session_token, module) do
-    case client_implementation(client_id) do
-      {:ok, implementation} ->
-        case apply(implementation, :delete_session, [session_token]) do
-          :ok ->
-            module.session_deleted(context)
+  defwithclientimpl delete_session(context, client_id, session_token, module) do
+    case apply(client_impl, :delete_session, [session_token]) do
+      :ok ->
+        module.session_deleted(context)
 
-          {:error, "Session not found."} ->
-            module.session_deleted(context)
-        end
-
-      {:error, reason} ->
-        module.invalid_relying_party(context, %RelyingPartyError{message: reason})
+      {:error, "Session not found."} ->
+        module.session_deleted(context)
     end
   end
 
   # TODO move that function out of internal secondary port (bor-156)
   @callback(delete_session(session_token :: String.t()) :: :ok, {:error, String.t()})
+
+  ## WIP Reset password
+
+  defmodule ResetPasswordError do
+    @enforce_keys [:message]
+    defexception [:message, :changeset]
+
+    @type t :: %__MODULE__{
+            message: String.t(),
+            changeset: Ecto.Changeset.t() | nil
+          }
+
+    def exception(message) when is_binary(message) do
+      %__MODULE__{message: message}
+    end
+
+    def message(exception) do
+      exception.message
+    end
+  end
+
+  defmodule ResetPasswordApplication do
+    @moduledoc """
+    TODO SessionApplication documentation
+    """
+
+    @callback reset_password_instructions_delivered(context :: any()) ::
+                any()
+
+    @callback invalid_relying_party(
+                context :: any(),
+                error :: RelyingPartyError.t()
+              ) :: any()
+  end
+
+  @type reset_password_url_fun :: (token :: String.t() -> reset_password_url :: String.t())
+
+  @spec send_reset_password_instructions(
+          context :: any(),
+          client_id :: String.t(),
+          user_params :: user_params(),
+          reset_password_url_fun :: reset_password_url_fun(),
+          module :: atom()
+        ) :: callback_result :: any()
+  defwithclientimpl send_reset_password_instructions(
+                      context,
+                      client_id,
+                      user_params,
+                      reset_password_url_fun,
+                      module
+                    ) do
+    with {:ok, user} <- apply(client_impl, :get_user, [user_params]) do
+      apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
+    end
+
+    # NOTE return a success either reset passowrd instructions email sent or not
+    module.reset_password_instructions_delivered(context)
+  end
+
+  @callback send_reset_password_instructions(
+              user :: User.t(),
+              reset_password_url_fun :: reset_password_url_fun()
+            ) ::
+              :ok | {:error, reason :: String.t()}
 
   ## Deprecated Sessions
 
@@ -318,6 +374,7 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
 
+  @deprecated "prefer using `Accounts` use cases"
   defdelegate deliver_user_reset_password_instructions(user, reset_password_url_fun),
     to: Deliveries
 

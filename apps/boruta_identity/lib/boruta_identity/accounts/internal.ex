@@ -15,6 +15,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   @impl BorutaIdentity.Accounts
   defdelegate register(user_params, confirmation_url_fun), to: Internal.Registrations
 
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
@@ -56,10 +57,22 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Accounts
   def delete_session(nil), do: {:error, "Session not found."}
+
   def delete_session(session_token) do
     case Repo.delete_all(UserToken.token_and_context_query(session_token, "session")) do
       {1, _} -> :ok
       {_, _} -> {:error, "Session not found."}
+    end
+  end
+
+  @impl BorutaIdentity.Accounts
+  def send_reset_password_instructions(user, reset_password_url_fun) do
+    with {:ok, _email} <-
+           Deliveries.deliver_user_reset_password_instructions(
+             user,
+             reset_password_url_fun
+           ) do
+      :ok
     end
   end
 end
