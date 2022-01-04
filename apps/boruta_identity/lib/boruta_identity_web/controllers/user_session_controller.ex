@@ -42,6 +42,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
   def user_authenticated(conn, _user, session_token) do
     conn
     |> store_user_session(session_token)
+    |> put_session(:session_chosen, true)
     |> redirect(to: after_sign_in_path(conn))
   end
 
