@@ -30,14 +30,18 @@ defmodule BorutaIdentity.Accounts.Utils do
 
     quote bind_quoted: [fun: fun, block: block] do
       {name, params} = Macro.decompose_call(fun)
-      context_param = Enum.find(params, fn {var, _, _} -> var == :context end) ||
-        raise "`context` must be part of function parameters"
 
-      client_id_param = Enum.find(params, fn {var, _, _} -> var == :client_id end) ||
-        raise "`client_id` must be part of function parameters"
+      context_param =
+        Enum.find(params, fn {var, _, _} -> var == :context end) ||
+          raise "`context` must be part of function parameters"
 
-      module_param = Enum.find(params, fn {var, _, _} -> var == :module end) ||
-        raise "`module` must be part of function parameters"
+      client_id_param =
+        Enum.find(params, fn {var, _, _} -> var == :client_id end) ||
+          raise "`client_id` must be part of function parameters"
+
+      module_param =
+        Enum.find(params, fn {var, _, _} -> var == :module end) ||
+          raise "`module` must be part of function parameters"
 
       def unquote({name, [line: __ENV__.line], params}) do
         case BorutaIdentity.Accounts.Utils.client_implementation(unquote(client_id_param)) do
@@ -67,6 +71,7 @@ defmodule BorutaIdentity.Accounts do
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.Registrations
   alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.Accounts.Settings
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
 
@@ -90,92 +95,10 @@ defmodule BorutaIdentity.Accounts do
   end
 
   ## Registrations
+  defdelegate initialize_registration(context, client_id, module), to: Registrations
 
-  defmodule RegistrationError do
-    @enforce_keys [:message]
-    defexception [:message, :changeset]
-
-    @type t :: %__MODULE__{
-            message: String.t(),
-            changeset: Ecto.Changeset.t() | nil
-          }
-
-    def exception(message) when is_binary(message) do
-      %__MODULE__{message: message}
-    end
-
-    def message(exception) do
-      exception.message
-    end
-  end
-
-  defmodule RegistrationApplication do
-    @moduledoc """
-    TODO RegistrationApplication documentation
-    """
-
-    @callback user_initialized(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
-
-    @callback user_registered(context :: any(), user :: User.t(), session_token :: String.t()) ::
-                any()
-
-    @callback registration_failure(
-                context :: any(),
-                error :: RegistrationError.t()
-              ) :: any()
-
-    @callback invalid_relying_party(
-                context :: any(),
-                error :: RelyingPartyError.t()
-              ) :: any()
-  end
-
-  @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
-          callback_result :: any()
-  defwithclientimpl initialize_registration(context, client_id, module) do
-    changeset = apply(client_impl, :registration_changeset, [%User{}])
-
-    module.user_initialized(context, changeset)
-  end
-
-  @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
-
-  @spec register(
-          context :: any(),
-          client_id :: String.t(),
-          registration_params :: map(),
-          confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
-          module :: atom()
-        ) :: calback_result :: any()
-  defwithclientimpl register(
-                      context,
-                      client_id,
-                      registration_params,
-                      confirmation_url_fun,
-                      module
-                    ) do
-    with {:ok, user} <- apply(client_impl, :register, [registration_params, confirmation_url_fun]),
-         {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
-      module.user_registered(context, user, session_token)
-    else
-      {:error, %Ecto.Changeset{} = changeset} ->
-        module.registration_failure(context, %RegistrationError{
-          changeset: changeset,
-          message: "Could not create user with given params."
-        })
-
-      {:error, reason} ->
-        module.registration_failure(context, %RegistrationError{message: reason})
-    end
-  end
-
-  @callback register(
-              user_params :: map(),
-              confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
-            ) ::
-              {:ok, user :: User.t()}
-              | {:error, reason :: String.t()}
-              | {:error, changeset :: Ecto.Changeset.t()}
+  defdelegate register(context, client_id, registration_params, confirmation_url_fun, module),
+    to: Registrations
 
   ## Sessions
 
@@ -356,16 +279,16 @@ defmodule BorutaIdentity.Accounts do
 
   ## User settings
 
-  defdelegate update_user_password(user, password, attrs), to: Registrations
-  defdelegate change_user_password(user), to: Registrations
-  defdelegate change_user_password(user, attrs), to: Registrations
-  defdelegate reset_user_password(user, attrs), to: Registrations
-  defdelegate update_user_authorized_scopes(user, scopes), to: Registrations
-  defdelegate change_user_email(user), to: Registrations
-  defdelegate change_user_email(user, attrs), to: Registrations
-  defdelegate apply_user_email(user, password, attrs), to: Registrations
-  defdelegate update_user_email(user, token), to: Registrations
-  defdelegate delete_user(id), to: Registrations
+  defdelegate update_user_password(user, password, attrs), to: Settings
+  defdelegate change_user_password(user), to: Settings
+  defdelegate change_user_password(user, attrs), to: Settings
+  defdelegate reset_user_password(user, attrs), to: Settings
+  defdelegate update_user_authorized_scopes(user, scopes), to: Settings
+  defdelegate change_user_email(user), to: Settings
+  defdelegate change_user_email(user, attrs), to: Settings
+  defdelegate apply_user_email(user, password, attrs), to: Settings
+  defdelegate update_user_email(user, token), to: Settings
+  defdelegate delete_user(id), to: Settings
 
   ## Delivery
 

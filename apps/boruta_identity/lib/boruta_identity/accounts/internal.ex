@@ -3,22 +3,39 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
-  @behaviour BorutaIdentity.Accounts
+  @behaviour BorutaIdentity.Accounts.Registrations
 
   import Ecto.Query, only: [from: 2]
-
-  alias BorutaIdentity.Accounts.Internal
-
-  @impl BorutaIdentity.Accounts
-  defdelegate registration_changeset(user), to: Internal.Registrations
-
-  @impl BorutaIdentity.Accounts
-  defdelegate register(user_params, confirmation_url_fun), to: Internal.Registrations
 
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
+
+  @impl BorutaIdentity.Accounts.Registrations
+  def registration_changeset(user) do
+    User.registration_changeset(user, %{})
+  end
+
+  @impl BorutaIdentity.Accounts.Registrations
+  def register(user_params, confirmation_url_fun) do
+    case create_user(user_params, confirmation_url_fun) do
+      {:ok, %{create_user: user}} ->
+        {:ok, user}
+
+      {:error, :create_user, changeset, _changes} ->
+        {:error, changeset}
+
+      {:error, :deliver_confirmation_mail, reason, %{create_user: user}} ->
+        changeset =
+          user
+          |> Map.delete(:__meta__)
+          |> Ecto.Changeset.change()
+          |> Ecto.Changeset.add_error(:confirmation_email, reason)
+
+        {:error, %{changeset|action: :insert}}
+    end
+  end
 
   @impl BorutaIdentity.Accounts
   def get_user(%{email: email}) when is_binary(email) do
@@ -74,5 +91,19 @@ defmodule BorutaIdentity.Accounts.Internal do
            ) do
       :ok
     end
+  end
+
+  defp create_user(user_params, confirmation_url_fun) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:create_user, fn _changes ->
+      User.registration_changeset(%User{}, user_params)
+    end)
+    |> Ecto.Multi.run(:deliver_confirmation_mail, fn _repo, %{create_user: user} ->
+      Deliveries.deliver_user_confirmation_instructions(
+        user,
+        confirmation_url_fun
+      )
+    end)
+    |> Repo.transaction()
   end
 end
