@@ -42,14 +42,15 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientimpl: 2]
 
-  alias BorutaIdentity.Accounts.RegistrationApplication
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.User
+
+  @type registration_params :: map()
 
   @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
 
   @callback register(
-              user_params :: map(),
+              registration_params :: registration_params(),
               confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
             ) ::
               {:ok, user :: User.t()}
@@ -67,7 +68,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
   @spec register(
           context :: any(),
           client_id :: String.t(),
-          registration_params :: map(),
+          registration_params :: registration_params(),
           confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
           module :: atom()
         ) :: calback_result :: any()

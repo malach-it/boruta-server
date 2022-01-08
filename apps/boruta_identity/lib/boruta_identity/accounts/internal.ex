@@ -3,7 +3,9 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
+  @behaviour BorutaIdentity.Accounts
   @behaviour BorutaIdentity.Accounts.Registrations
+  @behaviour BorutaIdentity.Accounts.Sessions
 
   import Ecto.Query, only: [from: 2]
 
@@ -37,7 +39,7 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  @impl BorutaIdentity.Accounts
+  @impl BorutaIdentity.Accounts.Sessions
   def get_user(%{email: email}) when is_binary(email) do
     user =
       Repo.one!(
@@ -55,7 +57,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   def get_user(_authentication_params), do: {:error, "Cannot find an user without an email."}
 
-  @impl BorutaIdentity.Accounts
+  @impl BorutaIdentity.Accounts.Sessions
   def check_user_against(user, authentication_params) do
     case User.valid_password?(user, authentication_params[:password]) do
       true -> {:ok, user}
@@ -63,7 +65,7 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  @impl BorutaIdentity.Accounts
+  @impl BorutaIdentity.Accounts.Sessions
   def create_session(user) do
     with {:ok, user} <- User.login_changeset(user) |> Repo.update(),
          {_token, user_token} = UserToken.build_session_token(user),
@@ -72,7 +74,7 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  @impl BorutaIdentity.Accounts
+  @impl BorutaIdentity.Accounts.Sessions
   def delete_session(nil), do: {:error, "Session not found."}
 
   def delete_session(session_token) do
