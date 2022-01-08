@@ -61,6 +61,23 @@ defmodule BorutaIdentity.Accounts.Utils do
   end
 end
 
+defmodule BorutaIdentity.Accounts.RelyingPartyError do
+  @enforce_keys [:message]
+  defexception [:message]
+
+  @type t :: %__MODULE__{
+          message: String.t()
+        }
+
+  def exception(message) when is_binary(message) do
+    %__MODULE__{message: message}
+  end
+
+  def message(exception) do
+    exception.message
+  end
+end
+
 defmodule BorutaIdentity.Accounts do
   @moduledoc """
   The Accounts context.
@@ -70,29 +87,10 @@ defmodule BorutaIdentity.Accounts do
   alias BorutaIdentity.Accounts.Consents
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.Registrations
+  alias BorutaIdentity.Accounts.ResetPasswords
   alias BorutaIdentity.Accounts.Sessions
   alias BorutaIdentity.Accounts.Settings
-  alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
-
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientimpl: 2]
-
-  defmodule RelyingPartyError do
-    @enforce_keys [:message]
-    defexception [:message]
-
-    @type t :: %__MODULE__{
-            message: String.t()
-          }
-
-    def exception(message) when is_binary(message) do
-      %__MODULE__{message: message}
-    end
-
-    def message(exception) do
-      exception.message
-    end
-  end
 
   ## Registrations
   defdelegate initialize_registration(context, client_id, module), to: Registrations
@@ -106,73 +104,16 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate delete_session(context, client_id, session_token, module), to: Sessions
 
-  ## WIP Reset password
+  ## Reset passwords
 
-  defmodule ResetPasswordError do
-    @enforce_keys [:message]
-    defexception [:message, :changeset]
-
-    @type t :: %__MODULE__{
-            message: String.t(),
-            changeset: Ecto.Changeset.t() | nil
-          }
-
-    def exception(message) when is_binary(message) do
-      %__MODULE__{message: message}
-    end
-
-    def message(exception) do
-      exception.message
-    end
-  end
-
-  defmodule ResetPasswordApplication do
-    @moduledoc """
-    TODO SessionApplication documentation
-    """
-
-    @callback reset_password_instructions_delivered(context :: any()) ::
-                any()
-
-    @callback invalid_relying_party(
-                context :: any(),
-                error :: RelyingPartyError.t()
-              ) :: any()
-  end
-
-  @type reset_password_url_fun :: (token :: String.t() -> reset_password_url :: String.t())
-
-  @type user_params :: %{
-          email: String.t()
-        }
-
-  @spec send_reset_password_instructions(
-          context :: any(),
-          client_id :: String.t(),
-          user_params :: user_params(),
-          reset_password_url_fun :: reset_password_url_fun(),
-          module :: atom()
-        ) :: callback_result :: any()
-  defwithclientimpl send_reset_password_instructions(
-                      context,
-                      client_id,
-                      user_params,
-                      reset_password_url_fun,
-                      module
-                    ) do
-    with {:ok, user} <- apply(client_impl, :get_user, [user_params]) do
-      apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
-    end
-
-    # NOTE return a success either reset passowrd instructions email sent or not
-    module.reset_password_instructions_delivered(context)
-  end
-
-  @callback send_reset_password_instructions(
-              user :: User.t(),
-              reset_password_url_fun :: reset_password_url_fun()
-            ) ::
-              :ok | {:error, reason :: String.t()}
+  defdelegate send_reset_password_instructions(
+                context,
+                client_id,
+                reset_password_params,
+                reset_password_url_fun,
+                module
+              ),
+              to: ResetPasswords
 
   ## Deprecated Sessions
 

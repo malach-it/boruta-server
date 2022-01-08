@@ -3,8 +3,8 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
-  @behaviour BorutaIdentity.Accounts
   @behaviour BorutaIdentity.Accounts.Registrations
+  @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
 
   import Ecto.Query, only: [from: 2]
@@ -84,7 +84,7 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  @impl BorutaIdentity.Accounts
+  @impl BorutaIdentity.Accounts.ResetPasswords
   def send_reset_password_instructions(user, reset_password_url_fun) do
     with {:ok, _email} <-
            Deliveries.deliver_user_reset_password_instructions(
