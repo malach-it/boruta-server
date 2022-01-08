@@ -1,7 +1,10 @@
 defmodule BorutaIdentityWeb.UserResetPasswordController do
+  @behaviour BorutaIdentity.Accounts.ResetPasswordApplication
+
   use BorutaIdentityWeb, :controller
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.RelyingPartyError
 
   plug :get_user_by_reset_password_token when action in [:edit, :update]
 
@@ -10,20 +13,36 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
   end
 
   def create(conn, %{"user" => %{"email" => email}}) do
-    if user = Accounts.get_user_by_email(email) do
-      Accounts.deliver_user_reset_password_instructions(
-        user,
-        &Routes.user_reset_password_url(conn, :edit, &1)
-      )
-    end
+    client_id = get_session(conn, :current_client_id)
 
-    # Regardless of the outcome, show an impartial success/error message.
+    user_params = %{
+      email: email
+    }
+
+    Accounts.send_reset_password_instructions(
+      conn,
+      client_id,
+      user_params,
+      &Routes.user_reset_password_url(conn, :edit, &1),
+      __MODULE__
+    )
+  end
+
+  @impl BorutaIdentity.Accounts.ResetPasswordApplication
+  def reset_password_instructions_delivered(conn) do
     conn
     |> put_flash(
       :info,
       "If your email is in our system, you will receive instructions to reset your password shortly."
     )
-    |> redirect(to: "/")
+    |> redirect(to: Routes.user_session_path(conn, :new))
+  end
+
+  @impl BorutaIdentity.Accounts.ResetPasswordApplication
+  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
+    conn
+    |> put_flash(:error, message)
+    |> redirect(to: Routes.user_session_path(conn, :new))
   end
 
   def edit(conn, _params) do
