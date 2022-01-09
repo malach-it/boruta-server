@@ -52,6 +52,15 @@ defmodule BorutaIdentity.Accounts.Sessions do
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
 
+  @type user_params :: %{
+          email: String.t()
+        }
+
+  @type authentication_params :: %{
+          email: String.t(),
+          password: String.t()
+        }
+
   @callback get_user(user_params :: user_params()) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
@@ -64,11 +73,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
   # TODO move that function out of internal secondary port (bor-156)
   @callback delete_session(session_token :: String.t()) :: :ok | {:error, String.t()}
-
-  @type authentication_params :: %{
-          email: String.t(),
-          password: String.t()
-        }
 
   @spec create_session(
           context :: any(),
@@ -89,10 +93,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
         })
     end
   end
-
-  @type user_params :: %{
-          email: String.t()
-        }
 
   @spec delete_session(
           context :: any(),

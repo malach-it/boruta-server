@@ -29,7 +29,10 @@ defmodule BorutaWeb.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def check_password(%ResourceOwner{sub: sub}, password) do
     user = Accounts.get_user(sub)
-    Accounts.check_user_password(user, password)
+    case User.valid_password?(user, password) do
+      true -> :ok
+      false -> {:error, "Invalid password."}
+    end
   end
 
   @impl Boruta.Oauth.ResourceOwners

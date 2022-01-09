@@ -140,31 +140,6 @@ defmodule BorutaIdentity.Accounts.Settings do
     User.password_changeset(user, attrs, hash_password: false)
   end
 
-  @doc """
-  Resets the user password.
-
-  ## Examples
-
-      iex> reset_user_password(user, %{password: "new long password", password_confirmation: "new long password"})
-      {:ok, %User{}}
-
-      iex> reset_user_password(user, %{password: "valid", password_confirmation: "not the same"})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  @spec reset_user_password(user :: User.t(), attrs :: map()) ::
-          {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}
-  def reset_user_password(user, attrs) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, User.password_changeset(user, attrs))
-    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
-    |> Repo.transaction()
-    |> case do
-      {:ok, %{user: user}} -> {:ok, user}
-      {:error, :user, changeset, _} -> {:error, changeset}
-    end
-  end
-
   @spec delete_user(user_id :: Ecto.UUID.t()) ::
           {:ok, user :: User.t()} | {:error, String.t()} | {:error, Ecto.Changeset.t()}
   def delete_user(user_id) when is_binary(user_id) do
