@@ -5,8 +5,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RelyingPartyError
-
-  plug :get_user_by_reset_password_token when action in [:edit, :update]
+  alias BorutaIdentity.Accounts.ResetPasswordError
 
   def new(conn, _params) do
     render(conn, "new.html")
@@ -28,6 +27,26 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
     )
   end
 
+  def edit(conn, params) do
+    client_id = get_session(conn, :current_client_id)
+
+    Accounts.initialize_password_reset(conn, client_id, params["token"], __MODULE__)
+  end
+
+  def update(conn, params) do
+    client_id = get_session(conn, :current_client_id)
+
+    user_params = Map.get(params, "user", %{})
+
+    reset_password_params = %{
+      reset_password_token: params["token"],
+      password: user_params["password"],
+      password_confirmation: user_params["password_confirmation"]
+    }
+
+    Accounts.reset_password(conn, client_id, reset_password_params, __MODULE__)
+  end
+
   @impl BorutaIdentity.Accounts.ResetPasswordApplication
   def reset_password_instructions_delivered(conn) do
     conn
@@ -45,34 +64,37 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
     |> redirect(to: Routes.user_session_path(conn, :new))
   end
 
-  def edit(conn, _params) do
-    render(conn, "edit.html", changeset: Accounts.change_user_password(conn.assigns.user))
+  @impl BorutaIdentity.Accounts.ResetPasswordApplication
+  def password_reset_initialized(conn, token, changeset) do
+    render(conn, "edit.html", changeset: changeset, token: token)
   end
 
-  # Do not log in the user after reset password to avoid a
-  # leaked token giving the user access to the account.
-  def update(conn, %{"user" => user_params}) do
-    case Accounts.reset_user_password(conn.assigns.user, user_params) do
-      {:ok, _} ->
-        conn
-        |> put_flash(:info, "Password reset successfully.")
-        |> redirect(to: Routes.user_session_path(conn, :new))
-
-      {:error, changeset} ->
-        render(conn, "edit.html", changeset: changeset)
-    end
+  @impl BorutaIdentity.Accounts.ResetPasswordApplication
+  def password_reseted(conn, _user) do
+    # Do not log in the user after reset password to avoid a
+    # leaked token giving the user access to the account.
+    conn
+    |> put_flash(:info, "Password reset successfully.")
+    |> redirect(to: Routes.user_session_path(conn, :new))
   end
 
-  defp get_user_by_reset_password_token(conn, _opts) do
-    %{"token" => token} = conn.params
+  @impl BorutaIdentity.Accounts.ResetPasswordApplication
+  def password_reset_failure(conn, %ResetPasswordError{
+        changeset: %Ecto.Changeset{} = changeset,
+        message: message,
+        token: token
+      }) do
+    conn
+    |> put_flash(:error, message)
+    |> render("edit.html", changeset: changeset, token: token)
+  end
 
-    if user = Accounts.get_user_by_reset_password_token(token) do
-      conn |> assign(:user, user) |> assign(:token, token)
-    else
-      conn
-      |> put_flash(:error, "Reset password link is invalid or it has expired.")
-      |> redirect(to: "/")
-      |> halt()
-    end
+  @impl BorutaIdentity.Accounts.ResetPasswordApplication
+  def password_reset_failure(conn, %ResetPasswordError{
+        message: message
+      }) do
+    conn
+    |> put_flash(:error, message)
+    |> redirect(to: Routes.user_session_path(conn, :new))
   end
 end

@@ -36,7 +36,7 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
       assert get_session(new_password_conn, :user_token) != get_session(conn, :user_token)
       assert get_flash(new_password_conn, :info) =~ "Password updated successfully"
       assert user = Accounts.get_user_by_email(user.email)
-      assert :ok = Accounts.check_user_password(user, "new valid password")
+      assert {:ok, _user} = Accounts.Internal.check_user_against(user, %{password: "new valid password"})
     end
 
     test "does not update password on invalid data", %{conn: conn} do

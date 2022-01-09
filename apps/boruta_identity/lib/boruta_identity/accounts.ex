@@ -115,6 +115,10 @@ defmodule BorutaIdentity.Accounts do
               ),
               to: ResetPasswords
 
+  defdelegate initialize_password_reset(context, client_id, token, module), to: ResetPasswords
+
+  defdelegate reset_password(context, client_id, reset_password_params, module), to: ResetPasswords
+
   ## Deprecated Sessions
 
   @deprecated "prefer using `Accounts` use cases"
@@ -123,9 +127,11 @@ defmodule BorutaIdentity.Accounts do
   ## Database getters
 
   defdelegate list_users, to: Users
+  @deprecated "Prefer using Accounts use cases."
   defdelegate get_user(id), to: Users
+  @deprecated "TODO remove while confirmations will be inverted (bor-150)"
   defdelegate get_user_by_email(email), to: Users
-  defdelegate check_user_password(user, password), to: Users
+  @deprecated "TODO make sessions backend agnostic (bor-157)"
   defdelegate get_user_by_session_token(token), to: Users
   defdelegate get_user_by_reset_password_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
@@ -135,7 +141,6 @@ defmodule BorutaIdentity.Accounts do
   defdelegate update_user_password(user, password, attrs), to: Settings
   defdelegate change_user_password(user), to: Settings
   defdelegate change_user_password(user, attrs), to: Settings
-  defdelegate reset_user_password(user, attrs), to: Settings
   defdelegate update_user_authorized_scopes(user, scopes), to: Settings
   defdelegate change_user_email(user), to: Settings
   defdelegate change_user_email(user, attrs), to: Settings

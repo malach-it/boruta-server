@@ -35,7 +35,7 @@ defmodule BorutaIdentity.Accounts.Internal do
           |> Ecto.Changeset.change()
           |> Ecto.Changeset.add_error(:confirmation_email, reason)
 
-        {:error, %{changeset|action: :insert}}
+        {:error, %{changeset | action: :insert}}
     end
   end
 
@@ -95,6 +95,26 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
+  @impl BorutaIdentity.Accounts.ResetPasswords
+  def reset_password_changeset(token) do
+    with {:ok, user} <-
+           get_user_by_reset_password_token(token) do
+      {:ok, User.password_changeset(user, %{})}
+    end
+  end
+
+  @impl BorutaIdentity.Accounts.ResetPasswords
+  def reset_password(reset_password_params) do
+    with {:ok, user} <-
+           get_user_by_reset_password_token(reset_password_params.reset_password_token),
+         {:ok, %{user: user}} <- reset_user_password(user, reset_password_params) do
+      {:ok, user}
+    else
+      {:error, :user, changeset, _} -> {:error, changeset}
+      {:error, _reason} = error -> error
+    end
+  end
+
   defp create_user(user_params, confirmation_url_fun) do
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:create_user, fn _changes ->
@@ -106,6 +126,22 @@ defmodule BorutaIdentity.Accounts.Internal do
         confirmation_url_fun
       )
     end)
+    |> Repo.transaction()
+  end
+
+  defp get_user_by_reset_password_token(token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "reset_password"),
+         %User{} = user <- Repo.one(query) do
+      {:ok, user}
+    else
+      _ -> {:error, "Given reset password token is invalid."}
+    end
+  end
+
+  defp reset_user_password(user, reset_password_params) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, User.password_changeset(user, reset_password_params))
+    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
     |> Repo.transaction()
   end
 end
