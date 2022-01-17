@@ -9,7 +9,7 @@ defmodule BorutaIdentity.RelyingParties.ClientRelyingParty do
 
   @type t :: %__MODULE__{
     client_id: String.t(),
-    relying_party: RelyingParty.t(),
+    relying_party: RelyingParty.t() | Ecto.Association.NotLoaded.t(),
     inserted_at: DateTime.t(),
     updated_at: DateTime.t()
   }

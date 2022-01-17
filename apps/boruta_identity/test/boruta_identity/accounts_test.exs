@@ -10,6 +10,7 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
+  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   defmodule DummyRegistration do
@@ -38,6 +39,11 @@ defmodule BorutaIdentity.AccountsTest do
 
   defmodule DummySession do
     @behaviour Accounts.SessionApplication
+
+    @impl Accounts.SessionApplication
+    def session_initialized(context, relying_party) do
+      {:session_initialized, context, relying_party}
+    end
 
     @impl Accounts.SessionApplication
     def user_authenticated(context, user, session_token) do
@@ -322,6 +328,54 @@ defmodule BorutaIdentity.AccountsTest do
 
     @tag :skip
     test "delivers a confirmation mail"
+  end
+
+  describe "initialize_session/3" do
+    setup do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      {:ok, client_id: client_relying_party.client_id}
+    end
+
+    test "returns an error with nil client_id" do
+      context = :context
+      client_id = nil
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.initialize_session(
+                 context,
+                 client_id,
+                 DummySession
+               )
+
+      assert error.message == "Client identifier not provided."
+    end
+
+    test "returns an error with unknown client_id" do
+      context = :context
+      client_id = SecureRandom.uuid()
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.initialize_session(
+                 context,
+                 client_id,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
+    test "returns relying party", %{client_id: client_id} do
+      context = :context
+
+      assert {:session_initialized, ^context, %RelyingParty{}} =
+               Accounts.initialize_session(
+                 context,
+                 client_id,
+                 DummySession
+               )
+    end
   end
 
   describe "create_session/4" do

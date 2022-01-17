@@ -1,10 +1,11 @@
 defmodule BorutaIdentity.Accounts.SessionError do
   @enforce_keys [:message]
-  defexception [:message, :changeset]
+  defexception [:message, :changeset, :relying_party]
 
   @type t :: %__MODULE__{
           message: String.t(),
-          changeset: Ecto.Changeset.t() | nil
+          changeset: Ecto.Changeset.t() | nil,
+          relying_party: BorutaIdentity.RelyingParties.RelyingParty.t() | nil
         }
 
   def exception(message) when is_binary(message) do
@@ -20,6 +21,11 @@ defmodule BorutaIdentity.Accounts.SessionApplication do
   @moduledoc """
   TODO SessionApplication documentation
   """
+
+  @callback session_initialized(
+              context :: any(),
+              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t()
+            ) :: any()
 
   @callback user_authenticated(
               context :: any(),
@@ -75,6 +81,15 @@ defmodule BorutaIdentity.Accounts.Sessions do
   # TODO move that function out of internal secondary port (bor-156)
   @callback delete_session(session_token :: String.t()) :: :ok | {:error, String.t()}
 
+  @spec initialize_session(
+          context :: any(),
+          client_id :: String.t(),
+          module :: atom()
+        ) :: callback_result :: any()
+  defwithclientrp initialize_session(context, client_id, module) do
+    module.session_initialized(context, client_rp)
+  end
+
   @spec create_session(
           context :: any(),
           client_id :: String.t(),
@@ -92,7 +107,8 @@ defmodule BorutaIdentity.Accounts.Sessions do
     else
       {:error, _reason} ->
         module.authentication_failure(context, %SessionError{
-          message: "Invalid email or password."
+          message: "Invalid email or password.",
+          relying_party: client_rp
         })
     end
   end

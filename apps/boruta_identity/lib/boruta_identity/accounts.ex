@@ -102,6 +102,8 @@ defmodule BorutaIdentity.Accounts do
 
   ## Sessions
 
+  defdelegate initialize_session(context, client_id, module), to: Sessions
+
   defdelegate create_session(context, client_id, authentication_params, module), to: Sessions
 
   defdelegate delete_session(context, client_id, session_token, module), to: Sessions

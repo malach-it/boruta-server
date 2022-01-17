@@ -9,7 +9,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   @type t :: %__MODULE__{
           name: String.t(),
           type: String.t(),
-          client_relying_parties: list(ClientRelyingParty.t()) | Ecto.AssociationNotLoaded.t(),
+          client_relying_parties: list(ClientRelyingParty.t()) | Ecto.Association.NotLoaded.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -30,6 +30,8 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       :register
     ],
     authenticable: [
+      # BorutaIdentity.Accounts.Sessions
+      :initialize_session,
       # BorutaIdentity.Accounts.Sessions
       :create_session,
       # BorutaIdentity.Accounts.Sessions

@@ -17,7 +17,9 @@ defmodule BorutaIdentityWeb.UserSessionController do
   alias BorutaIdentity.Accounts.SessionError
 
   def new(conn, _params) do
-    render(conn, "new.html", error_message: nil)
+    client_id = get_session(conn, :current_client_id)
+
+    Accounts.initialize_session(conn, client_id, __MODULE__)
   end
 
   def create(conn, %{"user" => user_params}) do
@@ -39,6 +41,11 @@ defmodule BorutaIdentityWeb.UserSessionController do
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
+  def session_initialized(conn, relying_party) do
+    render(conn, "new.html", error_message: nil, relying_party: relying_party)
+  end
+
+  @impl BorutaIdentity.Accounts.SessionApplication
   def user_authenticated(conn, _user, session_token) do
     conn
     |> store_user_session(session_token)
@@ -47,17 +54,17 @@ defmodule BorutaIdentityWeb.UserSessionController do
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
-  def authentication_failure(conn, %SessionError{message: message}) do
+  def authentication_failure(conn, %SessionError{message: message, relying_party: relying_party}) do
     conn
     |> put_flash(:error, message)
-    |> render("new.html")
+    |> render("new.html", relying_party: relying_party)
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
   def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
     conn
     |> put_flash(:error, message)
-    |> redirect(to: after_sign_in_path(conn))
+    |> redirect(to: "/")
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
