@@ -7,6 +7,13 @@ defmodule BorutaIdentity.RelyingParties.ClientRelyingParty do
 
   alias BorutaIdentity.RelyingParties.RelyingParty
 
+  @type t :: %__MODULE__{
+    client_id: String.t(),
+    relying_party: RelyingParty.t(),
+    inserted_at: DateTime.t(),
+    updated_at: DateTime.t()
+  }
+
   @foreign_key_type :binary_id
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "clients_relying_parties" do

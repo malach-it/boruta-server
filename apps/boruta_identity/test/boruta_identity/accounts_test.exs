@@ -60,31 +60,30 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "Utils.client_implementation/1" do
+  describe "Utils.client_relying_party/1" do
     test "returns an error when client_id is nil" do
       client_id = nil
 
-      assert Accounts.Utils.client_implementation(client_id) ==
+      assert Accounts.Utils.client_relying_party(client_id) ==
                {:error, "Client identifier not provided."}
     end
 
     test "returns an error when client_id is unknown" do
       client_id = SecureRandom.uuid()
 
-      assert Accounts.Utils.client_implementation(client_id) ==
+      assert Accounts.Utils.client_relying_party(client_id) ==
                {:error,
                 "Relying Party not configured for given OAuth client. " <>
                   "Please contact your administrator."}
     end
 
-    test "returns client relying party implementation" do
+    test "returns client relying_party" do
       relying_party = BorutaIdentity.Factory.insert(:relying_party, type: "internal")
 
       %ClientRelyingParty{client_id: client_id} =
         BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
 
-      assert Accounts.Utils.client_implementation(client_id) ==
-               {:ok, BorutaIdentity.Accounts.Internal}
+      assert Accounts.Utils.client_relying_party(client_id) == {:ok, relying_party}
     end
   end
 
@@ -479,6 +478,7 @@ defmodule BorutaIdentity.AccountsTest do
                  authentication_params,
                  DummySession
                )
+
       assert session_token
       assert Repo.get_by(UserToken, token: session_token)
 

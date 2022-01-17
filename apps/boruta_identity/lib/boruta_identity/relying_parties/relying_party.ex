@@ -6,6 +6,14 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
 
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
 
+  @type t :: %__MODULE__{
+    name: String.t(),
+    type: String.t(),
+    client_relying_parties: list(ClientRelyingParty.t()) | Ecto.AssociationNotLoaded.t(),
+    inserted_at: DateTime.t(),
+    updated_at: DateTime.t()
+  }
+
   @types [
     "internal"
   ]

@@ -4,14 +4,14 @@ defmodule BorutaIdentity.Accounts.Utils do
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
-  @spec client_implementation(client_id :: String.t() | nil) ::
-          {:ok, implementation :: atom()} | {:error, reason :: String.t()}
-  def client_implementation(nil), do: {:error, "Client identifier not provided."}
+  @spec client_relying_party(client_id :: String.t() | nil) ::
+          {:ok, relying_party :: RelyingParty.t()} | {:error, reason :: String.t()}
+  def client_relying_party(nil), do: {:error, "Client identifier not provided."}
 
-  def client_implementation(client_id) do
+  def client_relying_party(client_id) do
     case RelyingParties.get_relying_party_by_client_id(client_id) do
       %RelyingParty{} = relying_party ->
-        {:ok, RelyingParty.implementation(relying_party)}
+        {:ok, relying_party}
 
       nil ->
         {:error,
@@ -24,7 +24,7 @@ defmodule BorutaIdentity.Accounts.Utils do
   `context`, `client_id` and `module' as parameters.
   """
   # TODO find a better way to delegate to the given client impl
-  defmacro defwithclientimpl(fun, do: block) do
+  defmacro defwithclientrp(fun, do: block) do
     fun = Macro.escape(fun, unquote: true)
     block = Macro.escape(block, unquote: true)
 
@@ -44,8 +44,10 @@ defmodule BorutaIdentity.Accounts.Utils do
           raise "`module` must be part of function parameters"
 
       def unquote({name, [line: __ENV__.line], params}) do
-        case BorutaIdentity.Accounts.Utils.client_implementation(unquote(client_id_param)) do
-          {:ok, var!(client_impl)} ->
+        case BorutaIdentity.Accounts.Utils.client_relying_party(unquote(client_id_param)) do
+          {:ok, relying_party} ->
+            var!(client_rp) = relying_party
+
             unquote(block)
 
           {:error, reason} ->

@@ -45,11 +45,12 @@ end
 defmodule BorutaIdentity.Accounts.Sessions do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientimpl: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   @type user_params :: %{
@@ -80,7 +81,9 @@ defmodule BorutaIdentity.Accounts.Sessions do
           authentication_params :: authentication_params(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientimpl create_session(context, client_id, authentication_params, module) do
+  defwithclientrp create_session(context, client_id, authentication_params, module) do
+    client_impl = RelyingParty.implementation(client_rp)
+
     with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
          {:ok, user} <-
            apply(client_impl, :check_user_against, [user, authentication_params]),
@@ -101,7 +104,9 @@ defmodule BorutaIdentity.Accounts.Sessions do
           module :: atom()
         ) ::
           callback_result :: any()
-  defwithclientimpl delete_session(context, client_id, session_token, module) do
+  defwithclientrp delete_session(context, client_id, session_token, module) do
+    client_impl = RelyingParty.implementation(client_rp)
+
     case apply(client_impl, :delete_session, [session_token]) do
       :ok ->
         module.session_deleted(context)

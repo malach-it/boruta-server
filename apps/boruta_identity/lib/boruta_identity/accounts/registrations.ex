@@ -40,10 +40,11 @@ end
 defmodule BorutaIdentity.Accounts.Registrations do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientimpl: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.RelyingParties.RelyingParty
 
   @type registration_params :: map()
 
@@ -59,7 +60,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
           callback_result :: any()
-  defwithclientimpl initialize_registration(context, client_id, module) do
+  defwithclientrp initialize_registration(context, client_id, module) do
+    client_impl = RelyingParty.implementation(client_rp)
     changeset = apply(client_impl, :registration_changeset, [%User{}])
 
     module.user_initialized(context, changeset)
@@ -72,13 +74,15 @@ defmodule BorutaIdentity.Accounts.Registrations do
           confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
           module :: atom()
         ) :: calback_result :: any()
-  defwithclientimpl register(
+  defwithclientrp register(
                       context,
                       client_id,
                       registration_params,
                       confirmation_url_fun,
                       module
                     ) do
+    client_impl = RelyingParty.implementation(client_rp)
+
     with {:ok, user} <- apply(client_impl, :register, [registration_params, confirmation_url_fun]),
          {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
       module.user_registered(context, user, session_token)
