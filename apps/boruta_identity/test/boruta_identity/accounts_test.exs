@@ -89,7 +89,10 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "initialize_registration/3" do
     setup do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_relying_party =
+        BorutaIdentity.Factory.insert(:client_relying_party,
+          relying_party: build(:relying_party, registrable: true)
+        )
 
       {:ok, client_id: client_relying_party.client_id}
     end
@@ -113,6 +116,18 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert error.message ==
                "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
+    test "returns an error if registration is not enabled for client relying party" do
+      %ClientRelyingParty{client_id: client_id} = insert(:client_relying_party)
+
+      context = :context
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.initialize_registration(context, client_id, DummyRegistration)
+
+      assert error.message ==
+               "Feature is not enabled for client relying party."
     end
 
     test "returns a changeset", %{client_id: client_id} do
@@ -127,7 +142,10 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "register/3" do
     setup do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_relying_party =
+        BorutaIdentity.Factory.insert(:client_relying_party,
+          relying_party: build(:relying_party, registrable: true)
+        )
 
       {:ok, client_id: client_relying_party.client_id}
     end
@@ -167,6 +185,25 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert error.message ==
                "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
+    test "returns an error if registrations is disabled for client relying party" do
+      %ClientRelyingParty{client_id: client_id} = insert(:client_relying_party)
+      context = :context
+      user_params = %{}
+      confirmation_callback_fun = & &1
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
+      assert error.message ==
+               "Feature is not enabled for client relying party."
     end
 
     test "requires email and password to be set", %{client_id: client_id} do

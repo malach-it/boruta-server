@@ -2,6 +2,7 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
   use BorutaIdentityWeb.ConnCase, async: true
 
   import BorutaIdentity.AccountsFixtures
+  import BorutaIdentity.Factory
 
   describe "whithout client set" do
     test "new registration redirects to home", %{conn: conn} do
@@ -39,7 +40,10 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
 
   describe "GET /users/register" do
     setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_relying_party =
+        insert(:client_relying_party,
+          relying_party: build(:relying_party, registrable: true)
+        )
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
 
@@ -62,7 +66,10 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
 
   describe "POST /users/register" do
     setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_relying_party =
+        insert(:client_relying_party,
+          relying_party: build(:relying_party, registrable: true)
+        )
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
 

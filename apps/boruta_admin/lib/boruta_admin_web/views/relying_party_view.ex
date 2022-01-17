@@ -11,8 +11,11 @@ defmodule BorutaAdminWeb.RelyingPartyView do
   end
 
   def render("relying_party.json", %{relying_party: relying_party}) do
-    %{id: relying_party.id,
+    %{
+      id: relying_party.id,
       name: relying_party.name,
-      type: relying_party.type}
+      type: relying_party.type,
+      registrable: relying_party.registrable
+    }
   end
 end

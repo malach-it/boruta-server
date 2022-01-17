@@ -14,6 +14,13 @@
             <option value="internal">internal</option>
           </select>
         </div>
+        <h3>Features</h3>
+        <div class="ui segment field field">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="relyingParty.registrable">
+            <label>registrable</label>
+          </div>
+        </div>
         <hr />
         <button class="ui large right floated violet button" type="submit">{{ action }}</button>
         <a class="ui large button" v-on:click="back()">Back</a>

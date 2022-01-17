@@ -44,12 +44,12 @@ defmodule BorutaIdentity.Accounts.Utils do
           raise "`module` must be part of function parameters"
 
       def unquote({name, [line: __ENV__.line], params}) do
-        case BorutaIdentity.Accounts.Utils.client_relying_party(unquote(client_id_param)) do
-          {:ok, relying_party} ->
+        with {:ok, relying_party} <- BorutaIdentity.Accounts.Utils.client_relying_party(unquote(client_id_param)),
+             :ok <- BorutaIdentity.RelyingParties.RelyingParty.check_feature(relying_party, unquote(name)) do
             var!(client_rp) = relying_party
 
             unquote(block)
-
+        else
           {:error, reason} ->
             unquote(module_param).invalid_relying_party(
               unquote(context_param),
