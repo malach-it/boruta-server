@@ -5,7 +5,6 @@ defmodule BorutaIdentity.AccountsTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
@@ -692,7 +691,9 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert is_nil(user.password)
       assert user = Accounts.get_user_by_email(user.email)
-      assert {:ok, _user} = Accounts.Internal.check_user_against(user, %{password: "new valid password"})
+
+      assert {:ok, _user} =
+               Accounts.Internal.check_user_against(user, %{password: "new valid password"})
     end
 
     test "deletes all tokens for the given user", %{user: user} do

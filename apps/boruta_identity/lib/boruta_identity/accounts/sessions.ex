@@ -114,7 +114,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
   @doc """
   Generates a session token.
   """
-  @deprecated "deprecated in `BorutaIdentity.Accounts` interface"
   @spec generate_user_session_token(user :: User.t()) :: token :: String.t()
   def generate_user_session_token(user) do
     User.login_changeset(user) |> Repo.update()

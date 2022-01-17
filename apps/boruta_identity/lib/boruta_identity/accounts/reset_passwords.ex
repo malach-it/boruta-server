@@ -70,6 +70,8 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
             ) ::
               :ok | {:error, reason :: String.t()}
 
+  @callback reset_password_changeset(token :: String.t()) :: changeset :: Ecto.Changeset.t()
+
   @callback reset_password(reset_password_params :: reset_password_params()) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t() | Ecto.Changeset.t()}
 

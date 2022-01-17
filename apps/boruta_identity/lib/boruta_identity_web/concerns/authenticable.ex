@@ -30,7 +30,6 @@ defmodule BorutaIdentityWeb.Authenticable do
   """
   @spec log_in(conn :: Plug.Conn.t(), %Accounts.User{}) :: conn :: Plug.Conn.t()
   @spec log_in(conn :: Plug.Conn.t(), %Accounts.User{}, map()) :: conn :: Plug.Conn.t()
-  @deprecated "prefer using `Authenticable.store_session/2`"
   def log_in(conn, user, params \\ %{}) do
     token = Accounts.generate_user_session_token(user)
 

@@ -119,21 +119,21 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate reset_password(context, client_id, reset_password_params, module), to: ResetPasswords
 
+  ## WIP Confirmation
+
+  defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
+  defdelegate confirm_user(token), to: Confirmations
+
   ## Deprecated Sessions
 
-  @deprecated "prefer using `Accounts` use cases"
   defdelegate generate_user_session_token(user), to: Sessions
 
   ## Database getters
 
   defdelegate list_users, to: Users
-  @deprecated "Prefer using Accounts use cases."
   defdelegate get_user(id), to: Users
-  @deprecated "TODO remove while confirmations will be inverted (bor-150)"
   defdelegate get_user_by_email(email), to: Users
-  @deprecated "TODO make sessions backend agnostic (bor-157)"
   defdelegate get_user_by_session_token(token), to: Users
-  defdelegate get_user_by_reset_password_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
 
   ## User settings
@@ -147,17 +147,8 @@ defmodule BorutaIdentity.Accounts do
   defdelegate apply_user_email(user, password, attrs), to: Settings
   defdelegate update_user_email(user, token), to: Settings
   defdelegate delete_user(id), to: Settings
-
-  ## Delivery
-
   defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
     to: Deliveries
-
-  defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
-
-  ## Confirmation
-
-  defdelegate confirm_user(token), to: Confirmations
 
   ## Consent
   defdelegate consent(user, attrs), to: Consents
