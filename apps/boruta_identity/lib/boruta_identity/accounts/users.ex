@@ -56,7 +56,6 @@ defmodule BorutaIdentity.Accounts.Users do
 
   """
   @spec get_user(id :: Ecto.UUID.t()) :: user :: User.t() | nil
-  @deprecated "prefer using `BorutaIdentity.Accounts` implementation instead"
   def get_user(id) do
     Repo.one(
       from(u in User,

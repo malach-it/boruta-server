@@ -1,10 +1,11 @@
 defmodule BorutaIdentity.Accounts.SessionError do
   @enforce_keys [:message]
-  defexception [:message, :changeset]
+  defexception [:message, :changeset, :relying_party]
 
   @type t :: %__MODULE__{
           message: String.t(),
-          changeset: Ecto.Changeset.t() | nil
+          changeset: Ecto.Changeset.t() | nil,
+          relying_party: BorutaIdentity.RelyingParties.RelyingParty.t() | nil
         }
 
   def exception(message) when is_binary(message) do
@@ -20,6 +21,11 @@ defmodule BorutaIdentity.Accounts.SessionApplication do
   @moduledoc """
   TODO SessionApplication documentation
   """
+
+  @callback session_initialized(
+              context :: any(),
+              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t()
+            ) :: any()
 
   @callback user_authenticated(
               context :: any(),
@@ -45,11 +51,12 @@ end
 defmodule BorutaIdentity.Accounts.Sessions do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientimpl: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   @type user_params :: %{
@@ -74,13 +81,24 @@ defmodule BorutaIdentity.Accounts.Sessions do
   # TODO move that function out of internal secondary port (bor-156)
   @callback delete_session(session_token :: String.t()) :: :ok | {:error, String.t()}
 
+  @spec initialize_session(
+          context :: any(),
+          client_id :: String.t(),
+          module :: atom()
+        ) :: callback_result :: any()
+  defwithclientrp initialize_session(context, client_id, module) do
+    module.session_initialized(context, client_rp)
+  end
+
   @spec create_session(
           context :: any(),
           client_id :: String.t(),
           authentication_params :: authentication_params(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientimpl create_session(context, client_id, authentication_params, module) do
+  defwithclientrp create_session(context, client_id, authentication_params, module) do
+    client_impl = RelyingParty.implementation(client_rp)
+
     with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
          {:ok, user} <-
            apply(client_impl, :check_user_against, [user, authentication_params]),
@@ -89,7 +107,8 @@ defmodule BorutaIdentity.Accounts.Sessions do
     else
       {:error, _reason} ->
         module.authentication_failure(context, %SessionError{
-          message: "Invalid email or password."
+          message: "Invalid email or password.",
+          relying_party: client_rp
         })
     end
   end
@@ -101,7 +120,9 @@ defmodule BorutaIdentity.Accounts.Sessions do
           module :: atom()
         ) ::
           callback_result :: any()
-  defwithclientimpl delete_session(context, client_id, session_token, module) do
+  defwithclientrp delete_session(context, client_id, session_token, module) do
+    client_impl = RelyingParty.implementation(client_rp)
+
     case apply(client_impl, :delete_session, [session_token]) do
       :ok ->
         module.session_deleted(context)
@@ -114,7 +135,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
   @doc """
   Generates a session token.
   """
-  @deprecated "deprecated in `BorutaIdentity.Accounts` interface"
   @spec generate_user_session_token(user :: User.t()) :: token :: String.t()
   def generate_user_session_token(user) do
     User.login_changeset(user) |> Repo.update()

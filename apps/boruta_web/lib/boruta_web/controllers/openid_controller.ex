@@ -2,11 +2,12 @@ defmodule BorutaWeb.OpenidController do
   use BorutaWeb, :controller
 
   alias Boruta.Ecto
+  alias Boruta.Oauth.ResourceOwner
   alias BorutaWeb.OauthView
 
   def userinfo(conn, _params) do
     with %{"sub" => "" <> sub, "scope" => scope} <- conn.assigns[:introspected_token],
-         userinfo <- BorutaWeb.ResourceOwners.claims(sub, scope)
+         userinfo <- BorutaWeb.ResourceOwners.claims(%ResourceOwner{sub: sub}, scope)
          |> Map.put(:sub, sub) do
       conn
       |> put_view(OauthView)

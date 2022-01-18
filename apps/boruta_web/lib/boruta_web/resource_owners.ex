@@ -45,7 +45,7 @@ defmodule BorutaWeb.ResourceOwners do
   def authorized_scopes(_), do: []
 
   @impl Boruta.Oauth.ResourceOwners
-  def claims(sub, scope) do
+  def claims(%ResourceOwner{sub: sub}, scope) do
     with %User{email: email} <- Accounts.get_user(sub) do
       scope
       |> Scope.split()

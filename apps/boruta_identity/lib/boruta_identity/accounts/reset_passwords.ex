@@ -35,7 +35,10 @@ defmodule BorutaIdentity.Accounts.ResetPasswordApplication do
   @callback password_reseted(context :: any(), user :: BorutaIdentity.Accounts.User.t()) ::
               any()
 
-  @callback password_reset_failure(context :: any(), error :: BorutaIdentity.Accounts.ResetPasswordError.t()) ::
+  @callback password_reset_failure(
+              context :: any(),
+              error :: BorutaIdentity.Accounts.ResetPasswordError.t()
+            ) ::
               any()
 
   @callback invalid_relying_party(
@@ -47,10 +50,11 @@ end
 defmodule BorutaIdentity.Accounts.ResetPasswords do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientimpl: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
   alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.RelyingParties.RelyingParty
 
   @type reset_password_url_fun :: (token :: String.t() -> reset_password_url :: String.t())
 
@@ -70,6 +74,9 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
             ) ::
               :ok | {:error, reason :: String.t()}
 
+  @callback reset_password_changeset(token :: String.t()) ::
+              {:ok, changeset :: Ecto.Changeset.t()} | {:error, reason :: String.t()}
+
   @callback reset_password(reset_password_params :: reset_password_params()) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t() | Ecto.Changeset.t()}
 
@@ -80,13 +87,15 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           reset_password_url_fun :: reset_password_url_fun(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientimpl send_reset_password_instructions(
-                      context,
-                      client_id,
-                      reset_password_instructions_params,
-                      reset_password_url_fun,
-                      module
-                    ) do
+  defwithclientrp send_reset_password_instructions(
+                    context,
+                    client_id,
+                    reset_password_instructions_params,
+                    reset_password_url_fun,
+                    module
+                  ) do
+    client_impl = RelyingParty.implementation(client_rp)
+
     with {:ok, user} <- apply(client_impl, :get_user, [reset_password_instructions_params]) do
       apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
     end
@@ -101,12 +110,14 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           token :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientimpl initialize_password_reset(
-                      context,
-                      client_id,
-                      token,
-                      module
-                    ) do
+  defwithclientrp initialize_password_reset(
+                    context,
+                    client_id,
+                    token,
+                    module
+                  ) do
+    client_impl = RelyingParty.implementation(client_rp)
+
     case apply(client_impl, :reset_password_changeset, [token]) do
       {:ok, changeset} ->
         module.password_reset_initialized(context, token, changeset)
@@ -122,12 +133,14 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           reset_password_params :: reset_password_params(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientimpl reset_password(
-                      context,
-                      client_id,
-                      reset_password_params,
-                      module
-                    ) do
+  defwithclientrp reset_password(
+                    context,
+                    client_id,
+                    reset_password_params,
+                    module
+                  ) do
+    client_impl = RelyingParty.implementation(client_rp)
+
     case apply(client_impl, :reset_password, [reset_password_params]) do
       {:ok, user} ->
         module.password_reseted(context, user)

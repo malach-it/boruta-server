@@ -5,12 +5,12 @@ defmodule BorutaIdentity.AccountsTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
+  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   defmodule DummyRegistration do
@@ -41,6 +41,11 @@ defmodule BorutaIdentity.AccountsTest do
     @behaviour Accounts.SessionApplication
 
     @impl Accounts.SessionApplication
+    def session_initialized(context, relying_party) do
+      {:session_initialized, context, relying_party}
+    end
+
+    @impl Accounts.SessionApplication
     def user_authenticated(context, user, session_token) do
       {:user_authenticated, context, user, session_token}
     end
@@ -61,37 +66,39 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "Utils.client_implementation/1" do
+  describe "Utils.client_relying_party/1" do
     test "returns an error when client_id is nil" do
       client_id = nil
 
-      assert Accounts.Utils.client_implementation(client_id) ==
+      assert Accounts.Utils.client_relying_party(client_id) ==
                {:error, "Client identifier not provided."}
     end
 
     test "returns an error when client_id is unknown" do
       client_id = SecureRandom.uuid()
 
-      assert Accounts.Utils.client_implementation(client_id) ==
+      assert Accounts.Utils.client_relying_party(client_id) ==
                {:error,
                 "Relying Party not configured for given OAuth client. " <>
                   "Please contact your administrator."}
     end
 
-    test "returns client relying party implementation" do
+    test "returns client relying_party" do
       relying_party = BorutaIdentity.Factory.insert(:relying_party, type: "internal")
 
       %ClientRelyingParty{client_id: client_id} =
         BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
 
-      assert Accounts.Utils.client_implementation(client_id) ==
-               {:ok, BorutaIdentity.Accounts.Internal}
+      assert Accounts.Utils.client_relying_party(client_id) == {:ok, relying_party}
     end
   end
 
   describe "initialize_registration/3" do
     setup do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_relying_party =
+        BorutaIdentity.Factory.insert(:client_relying_party,
+          relying_party: build(:relying_party, registrable: true)
+        )
 
       {:ok, client_id: client_relying_party.client_id}
     end
@@ -115,6 +122,18 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert error.message ==
                "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
+    test "returns an error if registration is not enabled for client relying party" do
+      %ClientRelyingParty{client_id: client_id} = insert(:client_relying_party)
+
+      context = :context
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.initialize_registration(context, client_id, DummyRegistration)
+
+      assert error.message ==
+               "Feature is not enabled for client relying party."
     end
 
     test "returns a changeset", %{client_id: client_id} do
@@ -129,7 +148,10 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "register/3" do
     setup do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_relying_party =
+        BorutaIdentity.Factory.insert(:client_relying_party,
+          relying_party: build(:relying_party, registrable: true)
+        )
 
       {:ok, client_id: client_relying_party.client_id}
     end
@@ -169,6 +191,25 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert error.message ==
                "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
+    test "returns an error if registrations is disabled for client relying party" do
+      %ClientRelyingParty{client_id: client_id} = insert(:client_relying_party)
+      context = :context
+      user_params = %{}
+      confirmation_callback_fun = & &1
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
+      assert error.message ==
+               "Feature is not enabled for client relying party."
     end
 
     test "requires email and password to be set", %{client_id: client_id} do
@@ -287,6 +328,54 @@ defmodule BorutaIdentity.AccountsTest do
 
     @tag :skip
     test "delivers a confirmation mail"
+  end
+
+  describe "initialize_session/3" do
+    setup do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      {:ok, client_id: client_relying_party.client_id}
+    end
+
+    test "returns an error with nil client_id" do
+      context = :context
+      client_id = nil
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.initialize_session(
+                 context,
+                 client_id,
+                 DummySession
+               )
+
+      assert error.message == "Client identifier not provided."
+    end
+
+    test "returns an error with unknown client_id" do
+      context = :context
+      client_id = SecureRandom.uuid()
+
+      assert {:invalid_relying_party, ^context, %RelyingPartyError{} = error} =
+               Accounts.initialize_session(
+                 context,
+                 client_id,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+    end
+
+    test "returns relying party", %{client_id: client_id} do
+      context = :context
+
+      assert {:session_initialized, ^context, %RelyingParty{}} =
+               Accounts.initialize_session(
+                 context,
+                 client_id,
+                 DummySession
+               )
+    end
   end
 
   describe "create_session/4" do
@@ -480,6 +569,7 @@ defmodule BorutaIdentity.AccountsTest do
                  authentication_params,
                  DummySession
                )
+
       assert session_token
       assert Repo.get_by(UserToken, token: session_token)
 
@@ -692,7 +782,9 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert is_nil(user.password)
       assert user = Accounts.get_user_by_email(user.email)
-      assert {:ok, _user} = Accounts.Internal.check_user_against(user, %{password: "new valid password"})
+
+      assert {:ok, _user} =
+               Accounts.Internal.check_user_against(user, %{password: "new valid password"})
     end
 
     test "deletes all tokens for the given user", %{user: user} do

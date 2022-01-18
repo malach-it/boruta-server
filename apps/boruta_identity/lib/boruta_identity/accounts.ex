@@ -4,14 +4,14 @@ defmodule BorutaIdentity.Accounts.Utils do
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
-  @spec client_implementation(client_id :: String.t() | nil) ::
-          {:ok, implementation :: atom()} | {:error, reason :: String.t()}
-  def client_implementation(nil), do: {:error, "Client identifier not provided."}
+  @spec client_relying_party(client_id :: String.t() | nil) ::
+          {:ok, relying_party :: RelyingParty.t()} | {:error, reason :: String.t()}
+  def client_relying_party(nil), do: {:error, "Client identifier not provided."}
 
-  def client_implementation(client_id) do
+  def client_relying_party(client_id) do
     case RelyingParties.get_relying_party_by_client_id(client_id) do
       %RelyingParty{} = relying_party ->
-        {:ok, RelyingParty.implementation(relying_party)}
+        {:ok, relying_party}
 
       nil ->
         {:error,
@@ -24,7 +24,7 @@ defmodule BorutaIdentity.Accounts.Utils do
   `context`, `client_id` and `module' as parameters.
   """
   # TODO find a better way to delegate to the given client impl
-  defmacro defwithclientimpl(fun, do: block) do
+  defmacro defwithclientrp(fun, do: block) do
     fun = Macro.escape(fun, unquote: true)
     block = Macro.escape(block, unquote: true)
 
@@ -44,10 +44,12 @@ defmodule BorutaIdentity.Accounts.Utils do
           raise "`module` must be part of function parameters"
 
       def unquote({name, [line: __ENV__.line], params}) do
-        case BorutaIdentity.Accounts.Utils.client_implementation(unquote(client_id_param)) do
-          {:ok, var!(client_impl)} ->
-            unquote(block)
+        with {:ok, relying_party} <- BorutaIdentity.Accounts.Utils.client_relying_party(unquote(client_id_param)),
+             :ok <- BorutaIdentity.RelyingParties.RelyingParty.check_feature(relying_party, unquote(name)) do
+            var!(client_rp) = relying_party
 
+            unquote(block)
+        else
           {:error, reason} ->
             unquote(module_param).invalid_relying_party(
               unquote(context_param),
@@ -100,6 +102,8 @@ defmodule BorutaIdentity.Accounts do
 
   ## Sessions
 
+  defdelegate initialize_session(context, client_id, module), to: Sessions
+
   defdelegate create_session(context, client_id, authentication_params, module), to: Sessions
 
   defdelegate delete_session(context, client_id, session_token, module), to: Sessions
@@ -119,21 +123,21 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate reset_password(context, client_id, reset_password_params, module), to: ResetPasswords
 
+  ## WIP Confirmation
+
+  defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
+  defdelegate confirm_user(token), to: Confirmations
+
   ## Deprecated Sessions
 
-  @deprecated "prefer using `Accounts` use cases"
   defdelegate generate_user_session_token(user), to: Sessions
 
   ## Database getters
 
   defdelegate list_users, to: Users
-  @deprecated "Prefer using Accounts use cases."
   defdelegate get_user(id), to: Users
-  @deprecated "TODO remove while confirmations will be inverted (bor-150)"
   defdelegate get_user_by_email(email), to: Users
-  @deprecated "TODO make sessions backend agnostic (bor-157)"
   defdelegate get_user_by_session_token(token), to: Users
-  defdelegate get_user_by_reset_password_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
 
   ## User settings
@@ -147,17 +151,8 @@ defmodule BorutaIdentity.Accounts do
   defdelegate apply_user_email(user, password, attrs), to: Settings
   defdelegate update_user_email(user, token), to: Settings
   defdelegate delete_user(id), to: Settings
-
-  ## Delivery
-
   defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
     to: Deliveries
-
-  defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
-
-  ## Confirmation
-
-  defdelegate confirm_user(token), to: Confirmations
 
   ## Consent
   defdelegate consent(user, attrs), to: Consents

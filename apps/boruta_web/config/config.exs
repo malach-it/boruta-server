@@ -1,7 +1,7 @@
 use Mix.Config
 
 config :boruta_web,
-  ecto_repos: [BorutaIdentity.Repo, BorutaWeb.Repo],
+  ecto_repos: [BorutaWeb.Repo],
   generators: [context_app: :boruta, binary_id: true]
 
 config :boruta_web, BorutaWeb.Endpoint,

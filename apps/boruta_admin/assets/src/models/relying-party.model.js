@@ -10,7 +10,8 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
-  type: function ({ type }) { this.type = type }
+  type: function ({ type }) { this.type = type },
+  registrable: function ({ registrable }) { this.registrable = registrable }
 }
 
 class RelyingParty {
@@ -61,12 +62,13 @@ class RelyingParty {
   }
 
   get serialized () {
-    const { id, name, type } = this
+    const { id, name, type, registrable } = this
 
     return {
       id,
       name,
-      type
+      type,
+      registrable
     }
   }
 

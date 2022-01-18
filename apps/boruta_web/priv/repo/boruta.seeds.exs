@@ -2,62 +2,59 @@
 import Ecto.Changeset
 import Ecto.Query
 
-  BorutaWeb.Repo.insert(
+  BorutaExample.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "scopes:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaWeb.Repo.insert(
+  BorutaExample.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "clients:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaWeb.Repo.insert(
+  BorutaExample.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "upstreams:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaWeb.Repo.insert(
+  BorutaExample.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "users:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaWeb.Repo.insert(
+  BorutaExample.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "relying-parties:manage:all"
     },
     on_conflict: :nothing
   )
 
-{:ok, instance_scope} =
-  BorutaWeb.Repo.insert(
+  BorutaExample.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "instances:manage:user"
     },
     on_conflict: :nothing
   )
 
-with {:ok, client} <- %Boruta.Ecto.Client{} |> Boruta.Ecto.Client.create_changeset(%{
+%Boruta.Ecto.Client{} |> Boruta.Ecto.Client.create_changeset(%{
+    secret: System.get_env("BORUTA_ADMIN_CLIENT_SECRET", "777"),
+    id: System.get_env("BORUTA_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
   redirect_uris: [
     "#{System.get_env("VUE_APP_BORUTA_BASE_URL", "http://localhost:4002")}/oauth-callback"
   ],
-  authorize_scope: false,
   access_token_ttl: 3600,
-  authorization_code_ttl: 60
-}) |> BorutaWeb.Repo.insert() do
-  client |> change(%{
-    secret: System.get_env("BORUTA_ADMIN_CLIENT_SECRET", "777"),
-    id: System.get_env("BORUTA_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
-  }) |> BorutaWeb.Repo.update()
-end
+  authorization_code_ttl: 60,
+  authorize_scope: true,
+  authorized_scopes: BorutaExample.Repo.all(Boruta.Ecto.Scope) |> Enum.map(&Map.from_struct/1)
+}) |> BorutaExample.Repo.insert()
 
 BorutaGateway.Repo.insert(
   %BorutaGateway.Upstreams.Upstream{
