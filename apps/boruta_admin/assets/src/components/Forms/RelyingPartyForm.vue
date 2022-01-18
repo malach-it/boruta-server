@@ -20,6 +20,9 @@
             <input type="checkbox" v-model="relyingParty.registrable">
             <label>registrable</label>
           </div>
+          <p class="ui info message">
+            Give the ability for end users to register within the given relying party. If activated the user have access to registration page and can provide its own credentials.
+          </p>
         </div>
         <hr />
         <button class="ui large right floated violet button" type="submit">{{ action }}</button>
