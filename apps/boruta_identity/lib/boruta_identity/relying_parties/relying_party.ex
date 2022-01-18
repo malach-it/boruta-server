@@ -52,7 +52,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "relying_parties" do
     field(:name, :string)
-    field(:type, :string)
+    field(:type, :string, default: "internal")
     field(:registrable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
     field(:reset_password, :boolean, default: true, virtual: true)
@@ -88,5 +88,6 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     |> cast(attrs, [:name, :type, :registrable])
     |> validate_required([:name, :type])
     |> validate_inclusion(:type, @types)
+    |> unique_constraint(:name)
   end
 end

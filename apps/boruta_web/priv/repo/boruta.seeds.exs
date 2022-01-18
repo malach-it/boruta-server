@@ -2,42 +2,42 @@
 import Ecto.Changeset
 import Ecto.Query
 
-  BorutaExample.Repo.insert(
+  BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "scopes:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaExample.Repo.insert(
+  BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "clients:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaExample.Repo.insert(
+  BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "upstreams:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaExample.Repo.insert(
+  BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "users:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaExample.Repo.insert(
+  BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "relying-parties:manage:all"
     },
     on_conflict: :nothing
   )
 
-  BorutaExample.Repo.insert(
+  BorutaWeb.Repo.insert(
     %Boruta.Ecto.Scope{
       name: "instances:manage:user"
     },
@@ -53,8 +53,8 @@ import Ecto.Query
   access_token_ttl: 3600,
   authorization_code_ttl: 60,
   authorize_scope: true,
-  authorized_scopes: BorutaExample.Repo.all(Boruta.Ecto.Scope) |> Enum.map(&Map.from_struct/1)
-}) |> BorutaExample.Repo.insert()
+  authorized_scopes: BorutaWeb.Repo.all(Boruta.Ecto.Scope) |> Enum.map(&Map.from_struct/1)
+}) |> BorutaWeb.Repo.insert()
 
 BorutaGateway.Repo.insert(
   %BorutaGateway.Upstreams.Upstream{
@@ -65,6 +65,11 @@ BorutaGateway.Repo.insert(
   },
   on_conflict: :nothing
 )
+
+BorutaIdentity.RelyingParties.create_relying_party(%{
+  name: "Default",
+  registrable: true
+})
 
 BorutaIdentity.Accounts.register_user(%{
   email: System.get_env("ADMIN_EMAIL", "test@test.test"),

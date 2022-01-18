@@ -47,6 +47,19 @@ defmodule BorutaIdentity.RelyingPartiesTest do
               }} = RelyingParties.create_relying_party(@invalid_attrs)
     end
 
+    test "create_relying_party/1 with invalid data (unique name) returns error changeset" do
+      relying_party_fixture()
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  name:
+                    {"has already been taken",
+                     [constraint: :unique, constraint_name: "relying_parties_name_index"]}
+                ]
+              }} = RelyingParties.create_relying_party(@valid_attrs)
+    end
+
     test "update_relying_party/2 with valid data updates the relying_party" do
       relying_party = relying_party_fixture()
 
@@ -61,6 +74,22 @@ defmodule BorutaIdentity.RelyingPartiesTest do
 
       assert {:error, %Ecto.Changeset{}} =
                RelyingParties.update_relying_party(relying_party, @invalid_attrs)
+
+      assert relying_party == RelyingParties.get_relying_party!(relying_party.id)
+    end
+
+    test "update_relying_party/2 with invalid data (unique name) returns error changeset" do
+      relying_party_fixture()
+      relying_party = relying_party_fixture(%{name: "other"})
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  name:
+                    {"has already been taken",
+                     [constraint: :unique, constraint_name: "relying_parties_name_index"]}
+                ]
+              }} = RelyingParties.update_relying_party(relying_party, @valid_attrs)
 
       assert relying_party == RelyingParties.get_relying_party!(relying_party.id)
     end
@@ -93,8 +122,7 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     end
 
     test "updates client relying party" do
-      %ClientRelyingParty{client_id: client_id} =
-        insert(:client_relying_party)
+      %ClientRelyingParty{client_id: client_id} = insert(:client_relying_party)
 
       %RelyingParty{id: new_relying_party_id} = insert(:relying_party)
 
@@ -120,7 +148,8 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     end
 
     test "returns client's relying party" do
-      %ClientRelyingParty{client_id: client_id, relying_party: relying_party} = insert(:client_relying_party)
+      %ClientRelyingParty{client_id: client_id, relying_party: relying_party} =
+        insert(:client_relying_party)
 
       assert RelyingParties.get_relying_party_by_client_id(client_id) == relying_party
     end
