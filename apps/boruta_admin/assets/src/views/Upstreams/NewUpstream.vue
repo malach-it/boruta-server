@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import Upstream from '@/models/upstream.model'
-import UpstreamForm from '@/components/Forms/UpstreamForm.vue'
+import Upstream from '../../models/upstream.model'
+import UpstreamForm from '../../components/Forms/UpstreamForm.vue'
 
 export default {
   name: 'new-upstream',

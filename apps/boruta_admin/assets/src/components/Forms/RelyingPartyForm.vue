@@ -14,8 +14,8 @@
             <option value="internal">internal</option>
           </select>
         </div>
-        <h3>Features</h3>
-        <div class="ui segment field field">
+        <h3>Registration</h3>
+        <div class="ui segment field">
           <div class="ui toggle checkbox">
             <input type="checkbox" v-model="relyingParty.registrable">
             <label>registrable</label>
@@ -23,6 +23,9 @@
           <p class="ui info message">
             Give the ability for end users to register within the given relying party. If activated the user have access to registration page and can provide its own credentials.
           </p>
+        </div>
+        <div class="ui segment field" v-if="relyingParty.registrable">
+          <router-link :to="{ name: 'edit-registration-template', relyingPartyId: relyingParty.id }">Edit registration template</router-link>
         </div>
         <hr />
         <button class="ui large right floated violet button" type="submit">{{ action }}</button>
@@ -33,7 +36,7 @@
 </template>
 
 <script>
-import FormErrors from '@/components/Forms/FormErrors.vue'
+import FormErrors from './FormErrors.vue'
 
 export default {
   name: 'relying-party-form',

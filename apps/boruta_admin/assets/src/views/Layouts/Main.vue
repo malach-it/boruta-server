@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import Header from '@/components/Header.vue'
+import Header from '../../components/Header.vue'
 
 export default {
   name: 'Main',
@@ -187,6 +187,7 @@ export default {
   display: flex;
   min-height: calc(100% - 41px);
   background: #1b1c1d;
+  color: white;
   .main.header {
     text-align: center;
     position: relative;
@@ -202,6 +203,9 @@ export default {
       position: absolute;
       right: .6rem;
       top: .6rem;
+    }
+    .segment {
+      text-align: left;
     }
     @media screen and (max-width: 753px) {
       .button {

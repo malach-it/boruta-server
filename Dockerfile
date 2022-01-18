@@ -1,4 +1,6 @@
-FROM node:16.5.0 AS assets
+FROM node:17.4.0 AS assets
+
+ENV NODE_OPTIONS=--openssl-legacy-provider
 
 WORKDIR /app
 

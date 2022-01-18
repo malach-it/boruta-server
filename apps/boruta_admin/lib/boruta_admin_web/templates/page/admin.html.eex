@@ -14,12 +14,14 @@
         VUE_APP_BORUTA_BASE_SOCKET_URL: '<%= System.get_env("VUE_APP_BORUTA_BASE_SOCKET_URL", "ws://localhost:4002") %>'
       }
     </script>
+    <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/assets/style.css") %>" media="all"/>
   </head>
   <body>
     <noscript>
       <strong>We're sorry but boruta-admin doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
     <div id="app"></div>
-    <!-- built files will be auto injected -->
-  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script></body>
+
+    <script type="module" src="<%= Routes.static_path(@conn, "/assets/app.umd.js") %>"></script>
+  </body>
 </html>

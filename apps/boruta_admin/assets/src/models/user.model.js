@@ -1,5 +1,5 @@
 import axios from 'axios'
-import Scope from '@/models/scope.model'
+import Scope from './scope.model'
 
 const defaults = {
   errors: null,

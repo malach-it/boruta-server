@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import RelyingParty from '@/models/relying-party.model'
+import RelyingParty from '../../models/relying-party.model'
 
 export default {
   name: 'relying-party-list',

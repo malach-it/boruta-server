@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import Client from '@/models/client.model'
+import Client from '../../models/client.model'
 
 export default {
   name: 'client-list',

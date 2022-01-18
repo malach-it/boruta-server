@@ -16,8 +16,8 @@
 import palette from 'google-palette'
 import { groupBy, sortBy, size, sum } from 'lodash'
 import { mapGetters } from 'vuex'
-import LineChart from '@/components/LineChart.vue'
-import PieChart from '@/components/PieChart.vue'
+import LineChart from './LineChart.vue'
+import PieChart from './PieChart.vue'
 
 export default {
   name: 'home',

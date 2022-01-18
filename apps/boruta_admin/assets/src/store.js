@@ -1,13 +1,10 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import { createStore } from 'vuex'
 import { Socket } from 'phoenix'
 
 import oauth from './services/oauth.service'
 import User from './models/user.model'
 
-Vue.use(Vuex)
-
-export default new Vuex.Store({
+export default createStore({
   state: {
     isAuthenticated: false,
     currentUser: User.default,

@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import Scope from '@/models/scope.model'
+import Scope from '../../models/scope.model'
 export default {
   name: 'client-list',
   data () {

@@ -1,6 +1,5 @@
-import Vue from 'vue'
-import Router from 'vue-router'
-import oauth from '@/services/oauth.service'
+import { createWebHistory, createRouter } from 'vue-router'
+import oauth from './services/oauth.service'
 
 import Main from './views/Layouts/Main.vue'
 
@@ -21,6 +20,7 @@ import EditUpstream from './views/Upstreams/EditUpstream.vue'
 import RelyingParties from './views/RelyingParties.vue'
 import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
 import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
+import EditRegistrationTemplate from './views/RelyingParties/EditRegistrationTemplate.vue'
 import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
 import UserList from './views/RelyingParties/UserList.vue'
 import EditUser from './views/RelyingParties/EditUser.vue'
@@ -30,10 +30,8 @@ import ScopeList from './views/Scopes/ScopeList.vue'
 
 import Dashboard from './views/Dashboard.vue'
 
-Vue.use(Router)
-
-const router = new Router({
-  mode: 'history',
+const router = createRouter({
+  history: createWebHistory(),
   linkActiveClass: 'active',
   routes: [
     {
@@ -70,6 +68,10 @@ const router = new Router({
               path: '/relying-parties/:relyingPartyId/edit',
               name: 'edit-relying-party',
               component: EditRelyingParty
+            }, {
+              path: '/relying-parties/:relyingPartyId/edit/registration-template',
+              name: 'edit-registration-template',
+              component: EditRegistrationTemplate
             }, {
               path: 'users',
               name: 'user-list',
@@ -138,9 +140,7 @@ const router = new Router({
   ]
 })
 
-router.beforeEach(authGuard)
-
-function authGuard (to, from, next) {
+router.beforeEach((to, from, next) => {
   if (to.name === 'oauth-callback') return next()
 
   if (to.name) oauth.storeLocationName(to.name, to.params)
@@ -154,6 +154,6 @@ function authGuard (to, from, next) {
   }
 
   return next()
-}
+})
 
 export default router
