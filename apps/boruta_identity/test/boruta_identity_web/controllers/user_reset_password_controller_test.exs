@@ -15,6 +15,14 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "GET /users/reset_password" do
+    setup %{conn: conn} do
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+
+      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
+
+      {:ok, conn: conn}
+    end
+
     test "renders the reset password page", %{conn: conn} do
       conn = get(conn, Routes.user_reset_password_path(conn, :new))
       response = html_response(conn, 200)

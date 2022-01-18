@@ -8,7 +8,9 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
   alias BorutaIdentity.Accounts.ResetPasswordError
 
   def new(conn, _params) do
-    render(conn, "new.html")
+    client_id = get_session(conn, :current_client_id)
+
+    Accounts.initialize_password_instructions(conn, client_id, __MODULE__)
   end
 
   def create(conn, %{"user" => %{"email" => email}}) do
@@ -45,6 +47,11 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
     }
 
     Accounts.reset_password(conn, client_id, reset_password_params, __MODULE__)
+  end
+
+  @impl BorutaIdentity.Accounts.ResetPasswordApplication
+  def password_instructions_initialized(conn, relying_party) do
+    render(conn, "new.html", relying_party: relying_party)
   end
 
   @impl BorutaIdentity.Accounts.ResetPasswordApplication

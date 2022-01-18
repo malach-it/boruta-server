@@ -22,6 +22,11 @@ defmodule BorutaIdentity.Accounts.ResetPasswordApplication do
   TODO SessionApplication documentation
   """
 
+  @callback password_instructions_initialized(
+              context :: any(),
+              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t()
+            ) :: any()
+
   @callback reset_password_instructions_delivered(context :: any()) ::
               any()
 
@@ -79,6 +84,15 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
 
   @callback reset_password(reset_password_params :: reset_password_params()) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t() | Ecto.Changeset.t()}
+
+  @spec initialize_password_instructions(
+          context :: any(),
+          client_id :: String.t(),
+          module :: atom()
+        ) :: callback_result :: any()
+  defwithclientrp initialize_password_instructions(context, client_id, module) do
+    module.password_instructions_initialized(context, client_rp)
+  end
 
   @spec send_reset_password_instructions(
           context :: any(),

@@ -110,6 +110,8 @@ defmodule BorutaIdentity.Accounts do
 
   ## Reset passwords
 
+  defdelegate initialize_password_instructions(context, client_id, module), to: ResetPasswords
+
   defdelegate send_reset_password_instructions(
                 context,
                 client_id,

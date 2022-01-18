@@ -39,6 +39,8 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     ],
     reset_password: [
       # BorutaIdentity.Accounts.ResetPasswords
+      :initialize_password_instructions,
+      # BorutaIdentity.Accounts.ResetPasswords
       :send_reset_password_instructions,
       # BorutaIdentity.Accounts.ResetPasswords
       :initialize_password_reset,
