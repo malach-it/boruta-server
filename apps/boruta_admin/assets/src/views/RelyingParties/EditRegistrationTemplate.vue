@@ -6,15 +6,7 @@
         <router-link :to="{ name: 'edit-relying-party', relyingPartyId: relyingParty.id }">edit relying party</router-link> > registration template
       </div>
     </div>
-    <div class="container">
-      <div class="ui grid">
-        <div class="eight wide column">
-          <TextEditor content="Hello world" />
-        </div>
-        <div class="eight wide column">
-        </div>
-      </div>
-    </div>
+    <TextEditor :content="content" @codeUpdate="setContent" />
   </div>
 </template>
 
@@ -35,6 +27,7 @@ export default {
   },
   data () {
     return {
+      content: 'Hello world !',
       relyingParty: new RelyingParty()
     }
   },
@@ -42,11 +35,19 @@ export default {
     back () {
       this.$router.push({ name: 'relying-party-list' })
     },
-    updateRelyingParty () {
-      return this.relyingParty.save().then(() => {
-        this.$router.push({ name: 'relying-party-list' })
-      }).catch()
+    setContent (code) {
+      this.content = code
     }
   }
 }
 </script>
+
+<style scoped lang="scss">
+.edit-registration-template {
+  position: relative;
+  height: 100%;
+}
+.preview {
+  padding: 15px;
+}
+</style>
