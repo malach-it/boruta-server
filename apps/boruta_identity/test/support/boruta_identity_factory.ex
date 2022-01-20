@@ -6,6 +6,7 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.RelyingParties.Template
 
   def consent_factory do
     %Consent{
@@ -25,6 +26,14 @@ defmodule BorutaIdentity.Factory do
     %RelyingParty{
       name: sequence(:name, &"Relying party #{&1}"),
       type: "internal"
+    }
+  end
+
+  def template_factory do
+    %Template{
+      type: "new_registration",
+      content: "new registration template content",
+      relying_party: build(:relying_party)
     }
   end
 end

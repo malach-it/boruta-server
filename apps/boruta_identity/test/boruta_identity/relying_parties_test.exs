@@ -1,9 +1,12 @@
 defmodule BorutaIdentity.RelyingPartiesTest do
   use BorutaIdentity.DataCase
 
+  import BorutaIdentity.Factory
+
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.RelyingParties.Template
 
   describe "relying_parties" do
     @valid_attrs %{name: "some name", type: "internal"}
@@ -11,12 +14,7 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     @invalid_attrs %{name: nil, type: "other"}
 
     def relying_party_fixture(attrs \\ %{}) do
-      {:ok, relying_party} =
-        attrs
-        |> Enum.into(@valid_attrs)
-        |> RelyingParties.create_relying_party()
-
-      relying_party
+      insert(:relying_party, Map.merge(@valid_attrs, attrs))
     end
 
     test "list_relying_parties/0 returns all relying_parties" do
@@ -35,6 +33,25 @@ defmodule BorutaIdentity.RelyingPartiesTest do
 
       assert relying_party.name == "some name"
       assert relying_party.type == "internal"
+    end
+
+    test "create_relying_party/1 with valid data creates all default templates" do
+      assert {:ok, %RelyingParty{} = relying_party} =
+               RelyingParties.create_relying_party(@valid_attrs)
+
+      relying_party = Repo.preload(relying_party, :templates)
+      assert [%Template{content: content}] = relying_party.templates
+      assert content =~ ~r/Register/
+    end
+
+    test "create_relying_party/1 with valid data (with a new template) creates a relying_party" do
+      templates_attrs = %{templates: [%{type: "new_registration", content: "test content"}]}
+
+      assert {:ok, %RelyingParty{} = relying_party} =
+               RelyingParties.create_relying_party(Map.merge(@valid_attrs, templates_attrs))
+
+      assert [%Template{type: "new_registration", content: "test content"}] =
+               relying_party.templates
     end
 
     test "create_relying_party/1 with invalid data returns error changeset" do
@@ -67,6 +84,47 @@ defmodule BorutaIdentity.RelyingPartiesTest do
                RelyingParties.update_relying_party(relying_party, @update_attrs)
 
       assert relying_party.name == "some updated name"
+    end
+
+    test "create_relying_party/1 with valid data (with an existing template) creates a relying_party" do
+      relying_party = relying_party_fixture()
+      template = insert(:template, relying_party: relying_party)
+
+      templates_attrs = %{
+        templates: [%{id: template.id, type: "new_registration", content: "test content"}]
+      }
+
+      assert {:ok, %RelyingParty{} = relying_party} =
+               RelyingParties.update_relying_party(relying_party, templates_attrs)
+
+      template_id = template.id
+
+      assert [
+               %Template{
+                 id: ^template_id,
+                 type: "new_registration",
+                 content: "test content"
+               }
+             ] = relying_party.templates
+    end
+
+    test "create_relying_party/1 with valid data (with an existing template, delete_if_exists) creates a relying_party" do
+      relying_party = relying_party_fixture()
+      insert(:template, relying_party: relying_party)
+
+      templates_attrs = %{
+        templates: [%{type: "new_registration", content: "test content"}]
+      }
+
+      assert {:ok, %RelyingParty{} = relying_party} =
+               RelyingParties.update_relying_party(relying_party, templates_attrs)
+
+      assert [
+               %Template{
+                 type: "new_registration",
+                 content: "test content"
+               }
+             ] = relying_party.templates
     end
 
     test "update_relying_party/2 with invalid data returns error changeset" do

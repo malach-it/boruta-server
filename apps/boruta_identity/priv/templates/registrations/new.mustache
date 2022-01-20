@@ -1,0 +1,23 @@
+<h1>Register</h1>
+
+<form action="{{ create_user_registration_url }}" method="POST">
+  {{#errors}}
+    <div class="ui error message">{{ message }}</div>
+  {{/errors}}
+
+  <div class="field">
+    <label for="user[email]">Email</label>
+    <input name="user[email]" />
+  </div>
+
+  <div class="field">
+    <label for="user[password]">Password</label>
+    <input name="user[password]" />
+  </div>
+
+</form>
+
+<p>
+  <a href="{{ new_user_session_url }}">Log in</a>
+  <a href="{{ new_user_reset_password_url }}">Forgot your password?</a>
+</p>
