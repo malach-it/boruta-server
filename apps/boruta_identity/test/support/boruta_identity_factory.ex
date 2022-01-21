@@ -31,9 +31,15 @@ defmodule BorutaIdentity.Factory do
 
   def template_factory do
     %Template{
+      type: "template_type",
+      content: "template content"
+    }
+  end
+
+  def new_registration_template_factory do
+    %Template{
       type: "new_registration",
-      content: "new registration template content",
-      relying_party: build(:relying_party)
+      content: Template.default_template(:new_registration)
     }
   end
 end

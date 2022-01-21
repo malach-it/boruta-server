@@ -1,5 +1,6 @@
 %{
   "argon2_elixir": {:hex, :argon2_elixir, "2.4.0", "2a22ea06e979f524c53b42b598fc6ba38cdcbc977a155e33e057732cfb1fb311", [:make, :mix], [{:comeonin, "~> 5.3", [hex: :comeonin, repo: "hexpm", optional: false]}, {:elixir_make, "~> 0.6", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm", "4ea82e183cf8e7f66dab1f767fedcfe6a195e140357ef2b0423146b72e0a551d"},
+  "bbmustache": {:hex, :bbmustache, "1.12.2", "0cabdce0db9fe6d3318131174b9f2b351328a4c0afbeb3e6e99bb0e02e9b621d", [:rebar3], [], "hexpm", "688b33a4d5cc2d51f575adf0b3683fc40a38314a2f150906edcfc77f5b577b3b"},
   "bcrypt_elixir": {:hex, :bcrypt_elixir, "2.3.0", "6cb662d5c1b0a8858801cf20997bd006e7016aa8c52959c9ef80e0f34fb60b7a", [:make, :mix], [{:comeonin, "~> 5.3", [hex: :comeonin, repo: "hexpm", optional: false]}, {:elixir_make, "~> 0.6", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm", "2c81d61d4f6ed0e5cf7bf27a9109b791ff216a1034b3d541327484f46dd43769"},
   "boruta": {:git, "https://gitlab.com/patatoid/boruta_auth.git", "38fda2e9e6c58d05fff5849e255d5f31dfaca281", []},
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm", "7af5c7e09fe1d40f76c8e4f9dd2be7cebd83909f31fee7cd0e9eadc567da8353"},
@@ -34,6 +35,7 @@
   "metrics": {:hex, :metrics, "2.5.0", "268d218d56529cb5f070d74bbfc3af64c668379b5b18fafda88959442f790c57", [:rebar3], [], "hexpm", "ae061938c8c3bde97d17be9a792b63e15c1e1effe16598ab87a62384f5f3714b"},
   "mime": {:hex, :mime, "2.0.2", "0b9e1a4c840eafb68d820b0e2158ef5c49385d17fb36855ac6e7e087d4b1dcc5", [:mix], [], "hexpm", "e6a3f76b4c277739e36c2e21a2c640778ba4c3846189d5ab19f97f126df5f9b7"},
   "mint": {:hex, :mint, "1.3.0", "396b3301102f7b775e103da5a20494b25753aed818d6d6f0ad222a3a018c3600", [:mix], [{:castore, "~> 0.1.0", [hex: :castore, repo: "hexpm", optional: true]}], "hexpm", "a9aac960562e43ca69a77e5176576abfa78b8398cec5543dd4fb4ab0131d5c1e"},
+  "mustachex": {:git, "https://github.com/jui/mustachex.git", "7686ab64c0177f6342150c881b08922afce8b42f", []},
   "nebulex": {:hex, :nebulex, "2.3.0", "c8d6d6676a1ff0493251422fdb4c071ce1022a9e94320f85d1c78bac206f5818", [:mix], [{:decorator, "~> 1.4", [hex: :decorator, repo: "hexpm", optional: true]}, {:shards, "~> 1.0", [hex: :shards, repo: "hexpm", optional: true]}, {:telemetry, "~> 0.4 or ~> 1.0", [hex: :telemetry, repo: "hexpm", optional: true]}], "hexpm", "b1bde6083391551375fdc34f752d56e9f6ed2c528637cf7a9fa02cfa59a34596"},
   "nimble_options": {:hex, :nimble_options, "0.3.6", "365d03c05d43483d3eacf820671dafce5b49d692667b3bb8cae28447fd2414ef", [:mix], [], "hexpm", "1c1d3536c4aee1be2c8f3c691bf27c62dbd88d9bb3a0b1a011913453932e8c15"},
   "nimble_pool": {:hex, :nimble_pool, "0.2.4", "1db8e9f8a53d967d595e0b32a17030cdb6c0dc4a451b8ac787bf601d3f7704c3", [:mix], [], "hexpm", "367e8071e137b787764e6a9992ccb57b276dc2282535f767a07d881951ebeac6"},

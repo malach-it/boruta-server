@@ -6,6 +6,13 @@ defmodule BorutaIdentity.RelyingParties.Template do
 
   alias BorutaIdentity.RelyingParties.RelyingParty
 
+  @type t :: %__MODULE__{
+    type: String.t(),
+    content: String.t(),
+    inserted_at: DateTime.t(),
+    updated_at: DateTime.t()
+  }
+
   @template_types [:new_registration]
 
   @default_templates %{

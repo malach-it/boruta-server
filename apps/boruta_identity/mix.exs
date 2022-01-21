@@ -44,6 +44,7 @@ defmodule BorutaIdentity.MixProject do
       {:finch, "~> 0.8"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
+      {:mustachex, git: "https://github.com/jui/mustachex.git"},
       {:phoenix, "~> 1.5.3"},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 2.11"},
