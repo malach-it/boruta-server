@@ -181,24 +181,6 @@ export default {
       background: rgba(33, 140, 116,0.7)!important;
     }
   }
-  .codejar-wrap {
-    height: 100%;
-    .codejar-linenumbers {
-      height: 100%;
-    }
-    .editor {
-      cursor: text;
-      height: 100%;
-      border-radius: 6px;
-      box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
-      font-family: 'Source Code Pro', monospace;
-      font-size: 1.3em;
-      font-weight: 400;
-      letter-spacing: normal;
-      line-height: 20px;
-      tab-size: 4;
-    }
-  }
 }
 #main {
   position: relative;
@@ -384,6 +366,7 @@ export default {
   }
   .content {
     flex: 1;
+    width: calc(100vw - 250px);
     .container {
       padding: 0 1rem;
       @media screen and (max-width: 768px) {
@@ -395,6 +378,9 @@ export default {
     flex-direction: column;
     .sidebar-menu {
       height: auto;
+    }
+    .content {
+      width: auto;
     }
     .menu {
       border-right: none;

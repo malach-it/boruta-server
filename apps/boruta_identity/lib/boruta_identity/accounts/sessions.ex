@@ -1,11 +1,12 @@
 defmodule BorutaIdentity.Accounts.SessionError do
   @enforce_keys [:message]
-  defexception [:message, :changeset, :relying_party]
+  defexception [:message, :changeset, :relying_party, :template]
 
   @type t :: %__MODULE__{
           message: String.t(),
           changeset: Ecto.Changeset.t() | nil,
-          relying_party: BorutaIdentity.RelyingParties.RelyingParty.t() | nil
+          relying_party: BorutaIdentity.RelyingParties.RelyingParty.t() | nil,
+          template: BorutaIdentity.RelyingParties.Template.t()
         }
 
   def exception(message) when is_binary(message) do
@@ -24,7 +25,8 @@ defmodule BorutaIdentity.Accounts.SessionApplication do
 
   @callback session_initialized(
               context :: any(),
-              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t()
+              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t(),
+              template :: BorutaIdentity.RelyingParties.Template.t()
             ) :: any()
 
   @callback user_authenticated(
@@ -87,7 +89,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientrp initialize_session(context, client_id, module) do
-    module.session_initialized(context, client_rp)
+    module.session_initialized(context, client_rp, new_session_template(client_rp))
   end
 
   @spec create_session(
@@ -107,6 +109,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
     else
       {:error, _reason} ->
         module.authentication_failure(context, %SessionError{
+          template: new_session_template(client_rp),
           message: "Invalid email or password.",
           relying_party: client_rp
         })
@@ -142,5 +145,9 @@ defmodule BorutaIdentity.Accounts.Sessions do
     {token, user_token} = UserToken.build_session_token(user)
     Repo.insert!(user_token)
     token
+  end
+
+  defp new_session_template(relying_party) do
+    RelyingParty.template(relying_party, :new_session)
   end
 end

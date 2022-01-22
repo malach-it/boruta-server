@@ -73,10 +73,10 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
       end
 
     context = %{
-      create_user_registration_url:
+      create_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :create),
-      new_user_session_url: Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new),
-      new_user_reset_password_url:
+      new_user_session_path: Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new),
+      new_user_reset_password_path:
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new),
       _csrf_token: Plug.CSRFProtection.get_csrf_token(),
       # TODO improve error format

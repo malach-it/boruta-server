@@ -42,8 +42,8 @@ defmodule BorutaIdentity.AccountsTest do
     @behaviour Accounts.SessionApplication
 
     @impl Accounts.SessionApplication
-    def session_initialized(context, relying_party) do
-      {:session_initialized, context, relying_party}
+    def session_initialized(context, relying_party, template) do
+      {:session_initialized, context, relying_party, template}
     end
 
     @impl Accounts.SessionApplication
@@ -388,10 +388,10 @@ defmodule BorutaIdentity.AccountsTest do
                "Relying Party not configured for given OAuth client. Please contact your administrator."
     end
 
-    test "returns relying party", %{client_id: client_id} do
+    test "returns relying party and a template", %{client_id: client_id} do
       context = :context
 
-      assert {:session_initialized, ^context, %RelyingParty{}} =
+      assert {:session_initialized, ^context, %RelyingParty{}, %Template{type: "new_session"}} =
                Accounts.initialize_session(
                  context,
                  client_id,
@@ -444,7 +444,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{}
 
-      assert {:authentication_failure, ^context, %SessionError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{template: %Template{type: "new_session"}} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -460,7 +460,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: "does_not_exist"}
 
-      assert {:authentication_failure, ^context, %SessionError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{template: %Template{type: "new_session"}} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -477,7 +477,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: email}
 
-      assert {:authentication_failure, ^context, %SessionError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{template: %Template{type: "new_session"}} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -494,7 +494,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: email, password: "wrong password"}
 
-      assert {:authentication_failure, ^context, %SessionError{} = error} =
+      assert {:authentication_failure, ^context, %SessionError{template: %Template{type: "new_session"}} = error} =
                Accounts.create_session(
                  context,
                  client_id,
