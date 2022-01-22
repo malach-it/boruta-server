@@ -14,16 +14,30 @@
             <option value="internal">internal</option>
           </select>
         </div>
-        <h3>Registration</h3>
-        <div class="ui segment field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="relyingParty.registrable">
-            <label>registrable</label>
+        <section v-if="relyingParty.id">
+          <h3>Sessions</h3>
+          <div class="ui segment">
+            <router-link
+              :to="{ name: 'edit-session-template', params: { relyingPartyId: relyingParty.id } }"
+              class="ui fluid blue button">Edit login template</router-link>
           </div>
-          <p class="ui info message">
-            Give the ability for end users to register within the given relying party. If activated the user have access to registration page and can provide its own credentials.
-          </p>
-        </div>
+        </section>
+        <section>
+          <h3>Registration</h3>
+          <div class="ui segment field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="relyingParty.registrable">
+              <label>registrable</label>
+            </div>
+            <p class="ui info message">
+              Give the ability for end users to register within the given relying party. If activated the user have access to registration page and can provide its own credentials.
+            </p>
+            <router-link
+              :to="{ name: 'edit-registration-template', params: { relyingPartyId: relyingParty.id } }"
+              v-if="relyingParty.id && relyingParty.registrable"
+              class="ui fluid blue button">Edit registration template</router-link>
+          </div>
+        </section>
         <hr />
         <button class="ui large right floated violet button" type="submit">{{ action }}</button>
         <a class="ui large button" v-on:click="back()">Back</a>
