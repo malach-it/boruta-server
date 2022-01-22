@@ -40,7 +40,7 @@
 </template>
 
 <script>
-import Upstream from '@/models/upstream.model'
+import Upstream from '../../models/upstream.model'
 
 export default {
   name: 'upstream-list',

@@ -16,7 +16,7 @@ defmodule BorutaAdminWeb.Endpoint do
     at: "/",
     from: :boruta_admin,
     gzip: false,
-    only: ~w(js)
+    only: ~w(assets)
 
   socket "/socket", BorutaAdminWeb.UserSocket,
     websocket: true,

@@ -14,8 +14,8 @@
             <option value="internal">internal</option>
           </select>
         </div>
-        <h3>Features</h3>
-        <div class="ui segment field field">
+        <h3>Registration</h3>
+        <div class="ui segment field">
           <div class="ui toggle checkbox">
             <input type="checkbox" v-model="relyingParty.registrable">
             <label>registrable</label>
@@ -33,7 +33,7 @@
 </template>
 
 <script>
-import FormErrors from '@/components/Forms/FormErrors.vue'
+import FormErrors from './FormErrors.vue'
 
 export default {
   name: 'relying-party-form',

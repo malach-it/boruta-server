@@ -11,14 +11,15 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.RelyingParties.Template
   alias BorutaIdentity.Repo
 
   defmodule DummyRegistration do
     @behaviour Accounts.RegistrationApplication
 
     @impl Accounts.RegistrationApplication
-    def user_initialized(context, changeset) do
-      {:user_initialized, context, changeset}
+    def registration_initialized(context, changeset, template) do
+      {:registration_initialized, context, changeset, template}
     end
 
     @impl Accounts.RegistrationApplication
@@ -97,7 +98,10 @@ defmodule BorutaIdentity.AccountsTest do
     setup do
       client_relying_party =
         BorutaIdentity.Factory.insert(:client_relying_party,
-          relying_party: build(:relying_party, registrable: true)
+          relying_party: build(
+            :relying_party,
+            registrable: true
+          )
         )
 
       {:ok, client_id: client_relying_party.client_id}
@@ -136,10 +140,10 @@ defmodule BorutaIdentity.AccountsTest do
                "Feature is not enabled for client relying party."
     end
 
-    test "returns a changeset", %{client_id: client_id} do
+    test "returns a changeset and a template", %{client_id: client_id} do
       context = :context
 
-      assert {:user_initialized, ^context, %Ecto.Changeset{} = changeset} =
+      assert {:registration_initialized, ^context, %Ecto.Changeset{} = changeset, %Template{}} =
                Accounts.initialize_registration(context, client_id, DummyRegistration)
 
       assert changeset.required == [:password, :email]
@@ -150,7 +154,10 @@ defmodule BorutaIdentity.AccountsTest do
     setup do
       client_relying_party =
         BorutaIdentity.Factory.insert(:client_relying_party,
-          relying_party: build(:relying_party, registrable: true)
+          relying_party: build(
+            :relying_party,
+            registrable: true
+          )
         )
 
       {:ok, client_id: client_relying_party.client_id}
@@ -210,6 +217,21 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert error.message ==
                "Feature is not enabled for client relying party."
+    end
+
+    test "returns a template on error", %{client_id: client_id} do
+      context = :context
+      user_params = %{}
+      confirmation_callback_fun = & &1
+
+      assert {:registration_failure, ^context, %RegistrationError{template: %Template{}}} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
     end
 
     test "requires email and password to be set", %{client_id: client_id} do

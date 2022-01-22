@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import Client from '@/models/client.model'
-import ClientForm from '@/components/Forms/ClientForm.vue'
+import Client from '../../models/client.model'
+import ClientForm from '../../components/Forms/ClientForm.vue'
 
 export default {
   name: 'clients',

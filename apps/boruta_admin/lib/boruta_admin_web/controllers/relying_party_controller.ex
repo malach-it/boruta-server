@@ -8,6 +8,7 @@ defmodule BorutaAdminWeb.RelyingPartyController do
 
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.RelyingParties.Template
 
   action_fallback(BorutaAdminWeb.FallbackController)
 
@@ -33,12 +34,30 @@ defmodule BorutaAdminWeb.RelyingPartyController do
     render(conn, "show.json", relying_party: relying_party)
   end
 
+  def template(conn, %{"relying_party_id" => id, "template_type" => template_type}) do
+    template = RelyingParties.get_relying_party_template!(id, String.to_atom(template_type))
+    render(conn, "show_template.json", template: template)
+  end
+
   def update(conn, %{"id" => id, "relying_party" => relying_party_params}) do
     relying_party = RelyingParties.get_relying_party!(id)
 
     with {:ok, %RelyingParty{} = relying_party} <-
            RelyingParties.update_relying_party(relying_party, relying_party_params) do
       render(conn, "show.json", relying_party: relying_party)
+    end
+  end
+
+  def update_template(conn, %{
+        "relying_party_id" => id,
+        "template_type" => template_type,
+        "template" => template_params
+      }) do
+    template = RelyingParties.get_relying_party_template!(id, String.to_atom(template_type))
+
+    with {:ok, %Template{} = template} <-
+           RelyingParties.upsert_template(template, template_params) do
+      render(conn, "show_template.json", template: template)
     end
   end
 

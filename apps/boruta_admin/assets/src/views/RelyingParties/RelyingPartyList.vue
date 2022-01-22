@@ -10,6 +10,10 @@
         <div class="ui large relyingParty highlightable segment">
           <div class="actions">
             <router-link
+              :to="{ name: 'edit-registration-template', params: { relyingPartyId: relyingParty.id } }"
+              v-if="relyingParty.registrable"
+              class="ui tiny blue button">Edit registration template</router-link>
+            <router-link
               :to="{ name: 'edit-relying-party', params: { relyingPartyId: relyingParty.id } }"
               class="ui tiny blue button">edit</router-link>
             <a v-on:click="deleteRelyingParty(relyingParty)" class="ui tiny red button">delete</a>
@@ -36,7 +40,7 @@
 </template>
 
 <script>
-import RelyingParty from '@/models/relying-party.model'
+import RelyingParty from '../../models/relying-party.model'
 
 export default {
   name: 'relying-party-list',

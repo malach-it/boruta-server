@@ -27,13 +27,19 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
 
     test "new registration redirects to home", %{conn: conn} do
       conn = get(conn, Routes.user_registration_path(conn, :new))
-      assert get_flash(conn, :error) == "Relying Party not configured for given OAuth client. Please contact your administrator."
+
+      assert get_flash(conn, :error) ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+
       assert redirected_to(conn) == "/"
     end
 
     test "create registration redirects to home", %{conn: conn} do
       conn = post(conn, Routes.user_registration_path(conn, :create), %{"user" => %{}})
-      assert get_flash(conn, :error) == "Relying Party not configured for given OAuth client. Please contact your administrator."
+
+      assert get_flash(conn, :error) ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+
       assert redirected_to(conn) == "/"
     end
   end
@@ -42,7 +48,10 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
     setup %{conn: conn} do
       client_relying_party =
         insert(:client_relying_party,
-          relying_party: build(:relying_party, registrable: true)
+          relying_party:
+            build(:relying_party,
+              registrable: true
+            )
         )
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})

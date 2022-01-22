@@ -1,10 +1,11 @@
 defmodule BorutaIdentity.Accounts.RegistrationError do
   @enforce_keys [:message]
-  defexception [:message, :changeset]
+  defexception [:message, :changeset, :template]
 
   @type t :: %__MODULE__{
           message: String.t(),
-          changeset: Ecto.Changeset.t() | nil
+          changeset: Ecto.Changeset.t() | nil,
+          template: BorutaIdentity.RelyingParties.Template.t()
         }
 
   def exception(message) when is_binary(message) do
@@ -21,9 +22,17 @@ defmodule BorutaIdentity.Accounts.RegistrationApplication do
   TODO RegistrationApplication documentation
   """
 
-  @callback user_initialized(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
+  @callback registration_initialized(
+              context :: any(),
+              changeset :: Ecto.Changeset.t(),
+              template :: BorutaIdentity.RelyingParties.Template.t()
+            ) :: any()
 
-  @callback user_registered(context :: any(), user :: BorutaIdentity.Accounts.User.t(), session_token :: String.t()) ::
+  @callback user_registered(
+              context :: any(),
+              user :: BorutaIdentity.Accounts.User.t(),
+              session_token :: String.t()
+            ) ::
               any()
 
   @callback registration_failure(
@@ -64,7 +73,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
     client_impl = RelyingParty.implementation(client_rp)
     changeset = apply(client_impl, :registration_changeset, [%User{}])
 
-    module.user_initialized(context, changeset)
+    module.registration_initialized(context, changeset, new_registration_template(client_rp))
   end
 
   @spec register(
@@ -75,26 +84,35 @@ defmodule BorutaIdentity.Accounts.Registrations do
           module :: atom()
         ) :: calback_result :: any()
   defwithclientrp register(
-                      context,
-                      client_id,
-                      registration_params,
-                      confirmation_url_fun,
-                      module
-                    ) do
+                    context,
+                    client_id,
+                    registration_params,
+                    confirmation_url_fun,
+                    module
+                  ) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    with {:ok, user} <- apply(client_impl, :register, [registration_params, confirmation_url_fun]),
+    with {:ok, user} <-
+           apply(client_impl, :register, [registration_params, confirmation_url_fun]),
          {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
       module.user_registered(context, user, session_token)
     else
       {:error, %Ecto.Changeset{} = changeset} ->
         module.registration_failure(context, %RegistrationError{
           changeset: changeset,
-          message: "Could not create user with given params."
+          message: "Could not create user with given params.",
+          template: new_registration_template(client_rp)
         })
 
       {:error, reason} ->
-        module.registration_failure(context, %RegistrationError{message: reason})
+        module.registration_failure(context, %RegistrationError{
+          message: reason,
+          template: new_registration_template(client_rp)
+        })
     end
+  end
+
+  defp new_registration_template(relying_party) do
+    RelyingParty.template(relying_party, :new_registration)
   end
 end

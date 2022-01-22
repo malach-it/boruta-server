@@ -55,9 +55,9 @@
 </template>
 
 <script>
-import Scope from '@/models/scope.model'
-import GatewayScopesField from '@/components/Forms/GatewayScopesField.vue'
-import FormErrors from '@/components/Forms/FormErrors.vue'
+import Scope from '../../models/scope.model'
+import GatewayScopesField from '../../components/Forms/GatewayScopesField.vue'
+import FormErrors from '../../components/Forms/FormErrors.vue'
 
 export default {
   name: 'upstream-form',

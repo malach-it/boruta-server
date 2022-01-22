@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import GatewayRequests from '@/components/GatewayRequests.vue'
+import GatewayRequests from '../components/GatewayRequests.vue'
 
 export default {
   name: 'home',

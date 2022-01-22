@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import RelyingParty from '@/models/relying-party.model'
-import RelyingPartyForm from '@/components/Forms/RelyingPartyForm.vue'
+import RelyingParty from '../../models/relying-party.model'
+import RelyingPartyForm from '../../components/Forms/RelyingPartyForm.vue'
 
 export default {
   name: 'new-relying-party',

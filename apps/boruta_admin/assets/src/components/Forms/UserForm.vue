@@ -14,9 +14,9 @@
 </template>
 
 <script>
-import Scope from '@/models/scope.model'
-import ScopesField from '@/components/Forms/ScopesField.vue'
-import FormErrors from '@/components/Forms/FormErrors.vue'
+import Scope from '../../models/scope.model'
+import ScopesField from './ScopesField.vue'
+import FormErrors from './FormErrors.vue'
 
 export default {
   name: 'user-form',

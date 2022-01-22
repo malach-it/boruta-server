@@ -1,6 +1,6 @@
 import axios from 'axios'
-import Scope from '@/models/scope.model'
-import RelyingParty from '@/models/relying-party.model'
+import Scope from './scope.model'
+import RelyingParty from './relying-party.model'
 
 const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit', 'revoke', 'introspect']
 

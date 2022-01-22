@@ -1,0 +1,30 @@
+<h1>Register</h1>
+
+<form action="{{ create_user_registration_url }}" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+
+  {{^valid?}}
+  <div class="alert alert-danger">
+  {{#errors}}
+    <li>{{ message }}</li>
+  {{/errors}}
+  </div>
+  {{/valid?}}
+
+  <div class="field">
+    <label for="user_email">Email</label>
+    <input type="email" id="user_email" name="user[email]" />
+  </div>
+
+  <div class="field">
+    <label for="user_password">Password</label>
+    <input type="password" id="user_password" name="user[password]" />
+  </div>
+
+  <button type="submit">Register</button>
+
+</form>
+
+<p>
+  <a href="{{ new_user_session_url }}">Log in</a> | <a href="{{ new_user_reset_password_url }}">Forgot your password?</a>
+</p>

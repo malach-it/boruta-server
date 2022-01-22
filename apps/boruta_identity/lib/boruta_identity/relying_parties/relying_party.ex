@@ -5,6 +5,8 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   import Ecto.Changeset
 
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
+  alias BorutaIdentity.RelyingParties.Template
+  alias BorutaIdentity.Repo
 
   @type t :: %__MODULE__{
           name: String.t(),
@@ -45,7 +47,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       # BorutaIdentity.Accounts.ResetPasswords
       :initialize_password_reset,
       # BorutaIdentity.Accounts.ResetPasswords
-      :reset_password,
+      :reset_password
     ]
   }
 
@@ -58,8 +60,23 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     field(:reset_password, :boolean, default: true, virtual: true)
 
     has_many(:client_relying_parties, ClientRelyingParty)
+    has_many(:templates, Template, on_replace: :delete_if_exists)
 
     timestamps()
+  end
+
+  @spec template(relying_party :: t(), type :: atom()) :: Template.t() | nil
+  def template(relying_party, type) do
+    %__MODULE__{templates: templates} = Repo.preload(relying_party, :templates)
+
+    case Enum.find(templates, fn
+      %Template{type: template_type} -> Atom.to_string(type) == template_type
+    end) do
+      nil ->
+        template = Template.default_template(type)
+        template && %{template|relying_party_id: relying_party.id}
+      template -> template
+    end
   end
 
   @spec implementation(client_relying_party :: %__MODULE__{}) :: implementation :: atom()
@@ -85,9 +102,11 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   @doc false
   def changeset(relying_party, attrs) do
     relying_party
+    |> Repo.preload(:templates)
     |> cast(attrs, [:name, :type, :registrable])
     |> validate_required([:name, :type])
     |> validate_inclusion(:type, @types)
     |> unique_constraint(:name)
+    |> cast_assoc(:templates, with: &Template.assoc_changeset/2)
   end
 end
