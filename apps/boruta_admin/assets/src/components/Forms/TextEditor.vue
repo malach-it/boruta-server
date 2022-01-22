@@ -1,6 +1,6 @@
 <template>
-  <div class="field text-editor">
-    <div class="editor lang-markup" ref="editor">{{ code }}</div>
+  <div class="text-editor">
+    <div class="editor lang-markup" ref="editor"></div>
   </div>
 </template>
 
@@ -12,17 +12,11 @@ import { highlight, languages } from 'prismjs'
 export default {
   name: 'TextEditor',
   props: ['content'],
-  data () {
-    return {
-      code: this.content
-    }
-  },
   mounted () {
     const highlightFunc = (editor) => {
       const code = editor.textContent
 
       editor.innerHTML = highlight(code, languages.markup, 'markup')
-      console.log(languages.markup)
     }
 
     const editor = CodeJar(this.$refs.editor, withLineNumbers(highlightFunc), {
@@ -30,15 +24,23 @@ export default {
       spellcheck: false
     })
 
-      editor.onUpdate(code => {
-          this.$emit('codeUpdate', code)
-          })
+    editor.onUpdate(code => {
+      this.$emit('codeUpdate', code)
+    })
+
+    this.editor = editor
+  },
+  watch: {
+    content (code) {
+      this.editor.updateCode(code)
+    }
   }
 }
 </script>
 
 <style scoped lang="scss">
-.field.text-editor {
+.text-editor {
   height: 100%;
+  overflow: hidden;
 }
 </style>

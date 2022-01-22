@@ -24,9 +24,6 @@
             Give the ability for end users to register within the given relying party. If activated the user have access to registration page and can provide its own credentials.
           </p>
         </div>
-        <div class="ui segment field" v-if="relyingParty.registrable">
-          <router-link :to="{ name: 'edit-registration-template', relyingPartyId: relyingParty.id }">Edit registration template</router-link>
-        </div>
         <hr />
         <button class="ui large right floated violet button" type="submit">{{ action }}</button>
         <a class="ui large button" v-on:click="back()">Back</a>

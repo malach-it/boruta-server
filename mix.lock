@@ -1,6 +1,5 @@
 %{
   "argon2_elixir": {:hex, :argon2_elixir, "2.4.0", "2a22ea06e979f524c53b42b598fc6ba38cdcbc977a155e33e057732cfb1fb311", [:make, :mix], [{:comeonin, "~> 5.3", [hex: :comeonin, repo: "hexpm", optional: false]}, {:elixir_make, "~> 0.6", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm", "4ea82e183cf8e7f66dab1f767fedcfe6a195e140357ef2b0423146b72e0a551d"},
-  "bbmustache": {:hex, :bbmustache, "1.12.2", "0cabdce0db9fe6d3318131174b9f2b351328a4c0afbeb3e6e99bb0e02e9b621d", [:rebar3], [], "hexpm", "688b33a4d5cc2d51f575adf0b3683fc40a38314a2f150906edcfc77f5b577b3b"},
   "bcrypt_elixir": {:hex, :bcrypt_elixir, "2.3.0", "6cb662d5c1b0a8858801cf20997bd006e7016aa8c52959c9ef80e0f34fb60b7a", [:make, :mix], [{:comeonin, "~> 5.3", [hex: :comeonin, repo: "hexpm", optional: false]}, {:elixir_make, "~> 0.6", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm", "2c81d61d4f6ed0e5cf7bf27a9109b791ff216a1034b3d541327484f46dd43769"},
   "boruta": {:git, "https://gitlab.com/patatoid/boruta_auth.git", "38fda2e9e6c58d05fff5849e255d5f31dfaca281", []},
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm", "7af5c7e09fe1d40f76c8e4f9dd2be7cebd83909f31fee7cd0e9eadc567da8353"},

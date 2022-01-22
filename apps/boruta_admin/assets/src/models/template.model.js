@@ -3,18 +3,19 @@ import axios from 'axios'
 const defaults = {
   id: null,
   name: null,
-  type: 'internal',
+  content: null,
+  type: null,
   errors: null
 }
 
 const assign = {
   id: function ({ id }) { this.id = id },
-  name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
-  registrable: function ({ registrable }) { this.registrable = registrable }
+  content: function ({ content }) { this.content = content },
+  relying_party_id: function ({ relying_party_id }) { this.relying_party_id = relying_party_id },
 }
 
-class RelyingParty {
+class Template {
   constructor (params = {}) {
     Object.assign(this, defaults)
 
@@ -26,15 +27,9 @@ class RelyingParty {
 
   save () {
     // TODO trigger validate
-    let response
-    const { id, serialized } = this
-    if (id) {
-      response = this.constructor.api().patch(`/${id}`, { relying_party: serialized })
-    } else {
-      response = this.constructor.api().post('/', { relying_party: serialized })
-    }
+    const { type, relying_party_id: relyingPartyId, serialized } = this
 
-    return response
+    return this.constructor.api().patch(`/${relyingPartyId}/templates/${type}`, { template: serialized })
       .then(({ data }) => {
         const params = data.data
 
@@ -51,18 +46,11 @@ class RelyingParty {
       })
   }
 
-  destroy () {
-    return this.constructor.api().delete(`/${this.id}`)
-  }
-
   get serialized () {
-    const { id, name, type, registrable } = this
+    const { content } = this
 
     return {
-      id,
-      name,
-      type,
-      registrable
+      content
     }
   }
 
@@ -75,17 +63,11 @@ class RelyingParty {
     })
   }
 
-  static all () {
-    return this.api().get('/').then(({ data }) => {
-      return data.data.map((relyingParty) => new RelyingParty(relyingParty))
-    })
-  }
-
-  static get (id) {
-    return this.api().get(`/${id}`).then(({ data }) => {
-      return new RelyingParty(data.data)
+  static get (relyingPartyId, type) {
+    return this.api().get(`/${relyingPartyId}/templates/${type}`).then(({ data }) => {
+      return new Template(data.data)
     })
   }
 }
 
-export default RelyingParty
+export default Template

@@ -7,13 +7,16 @@ defmodule BorutaIdentity.RelyingParties.Template do
   alias BorutaIdentity.RelyingParties.RelyingParty
 
   @type t :: %__MODULE__{
-    type: String.t(),
-    content: String.t(),
-    inserted_at: DateTime.t(),
-    updated_at: DateTime.t()
-  }
+          id: String.t() | nil,
+          type: String.t(),
+          default: boolean(),
+          content: String.t(),
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
 
   @template_types [:new_registration]
+  @type template_type :: :new_registration
 
   @default_templates %{
     new_registration:
@@ -22,19 +25,41 @@ defmodule BorutaIdentity.RelyingParties.Template do
       |> File.read!()
   }
 
-  def template_types, do: @template_types
-
-  def default_template(type) when type in @template_types, do: @default_templates[type]
-
   @foreign_key_type :binary_id
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "relying_party_templates" do
     field(:content, :string)
     field(:type, :string)
 
+    field(:default, :boolean, virtual: true, default: false)
+
     belongs_to(:relying_party, RelyingParty)
 
     timestamps()
+  end
+
+  def template_types, do: @template_types
+
+  @spec default_content(type :: template_type()) :: template_content :: String.t()
+  def default_content(type) when type in @template_types, do: @default_templates[type]
+
+  @spec default_template(type :: atom()) :: template :: t() | nil
+  def default_template(type) when type in @template_types do
+    %__MODULE__{
+      default: true,
+      type: Atom.to_string(type),
+      content: default_content(type)
+    }
+  end
+
+  def default_template(_type), do: nil
+
+  @doc false
+  def changeset(template, attrs) do
+    template
+    |> cast(attrs, [:type, :content, :relying_party_id])
+    |> validate_required([:relying_party_id])
+    |> foreign_key_constraint(:relying_party_id)
   end
 
   @doc false
@@ -54,7 +79,7 @@ defmodule BorutaIdentity.RelyingParties.Template do
       _ ->
         change(
           changeset,
-          content: default_template(changeset |> fetch_change!(:type) |> String.to_atom())
+          content: default_template(changeset |> fetch_field!(:type) |> String.to_atom())
         )
     end
   end

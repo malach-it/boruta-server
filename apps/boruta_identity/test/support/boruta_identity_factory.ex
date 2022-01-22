@@ -39,7 +39,7 @@ defmodule BorutaIdentity.Factory do
   def new_registration_template_factory do
     %Template{
       type: "new_registration",
-      content: Template.default_template(:new_registration)
+      content: Template.default_content(:new_registration)
     }
   end
 end

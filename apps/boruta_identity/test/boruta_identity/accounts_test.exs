@@ -100,8 +100,7 @@ defmodule BorutaIdentity.AccountsTest do
         BorutaIdentity.Factory.insert(:client_relying_party,
           relying_party: build(
             :relying_party,
-            registrable: true,
-            templates: [build(:new_registration_template)]
+            registrable: true
           )
         )
 
@@ -157,8 +156,7 @@ defmodule BorutaIdentity.AccountsTest do
         BorutaIdentity.Factory.insert(:client_relying_party,
           relying_party: build(
             :relying_party,
-            registrable: true,
-            templates: [build(:new_registration_template)]
+            registrable: true
           )
         )
 

@@ -1,16 +1,20 @@
 <template>
-  <div class="edit-registration-template">
+  <div class="container edit-registration-template">
     <div class="main header">
       <h1>Edit {{ relyingParty.name }} registration template</h1>
-      <div class="ui segment">
-        <router-link :to="{ name: 'edit-relying-party', relyingPartyId: relyingParty.id }">edit relying party</router-link> > registration template
-      </div>
     </div>
-    <TextEditor :content="content" @codeUpdate="setContent" />
+    <div class="field">
+      <TextEditor :content="content" @codeUpdate="setContent" />
+    </div>
+    <div class="ui actions segment">
+      <button v-on:click="update()" class="ui large violet right floated button">Save</button>
+      <router-link :to="{ name: 'relying-party-list' }" class="ui large blue button">Back</router-link>
+    </div>
   </div>
 </template>
 
 <script>
+import Template from '../../models/template.model'
 import RelyingParty from '../../models/relying-party.model'
 import TextEditor from '../../components/Forms/TextEditor.vue'
 
@@ -24,19 +28,30 @@ export default {
     RelyingParty.get(relyingPartyId).then((relyingParty) => {
       this.relyingParty = relyingParty
     })
+    Template.get(relyingPartyId, 'new_registration').then((template) => {
+      this.template = template
+      this.content = template.content
+      console.log(template)
+    })
   },
   data () {
     return {
-      content: 'Hello world !',
-      relyingParty: new RelyingParty()
+      content: '',
+      relyingParty: new RelyingParty(),
+      template: new Template()
     }
   },
   methods: {
     back () {
       this.$router.push({ name: 'relying-party-list' })
     },
-    setContent (code) {
-      this.content = code
+    setContent(code) {
+      this.template.content = code
+    },
+    update () {
+      this.template.save().then(() => {
+        this.$router.push({ name: 'relying-party-list' })
+      })
     }
   }
 }
@@ -44,10 +59,11 @@ export default {
 
 <style scoped lang="scss">
 .edit-registration-template {
-  position: relative;
   height: 100%;
-}
-.preview {
-  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  .field {
+    flex: 1;
+  }
 }
 </style>

@@ -54,8 +54,6 @@ defmodule BorutaIdentity.Accounts.Registrations do
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties.RelyingParty
-  alias BorutaIdentity.RelyingParties.Template
-  alias BorutaIdentity.Repo
 
   @type registration_params :: map()
 
@@ -115,11 +113,6 @@ defmodule BorutaIdentity.Accounts.Registrations do
   end
 
   defp new_registration_template(relying_party) do
-    %RelyingParty{templates: templates} = Repo.preload(relying_party, :templates)
-
-    Enum.find(templates, fn
-      %Template{type: "new_registration"} -> true
-      _ -> false
-    end)
+    RelyingParty.template(relying_party, :new_registration)
   end
 end

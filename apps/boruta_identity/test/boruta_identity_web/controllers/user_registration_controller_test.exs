@@ -50,8 +50,7 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
         insert(:client_relying_party,
           relying_party:
             build(:relying_party,
-              registrable: true,
-              templates: [build(:new_registration_template)]
+              registrable: true
             )
         )
 
@@ -76,7 +75,7 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
     setup %{conn: conn} do
       client_relying_party =
         insert(:client_relying_party,
-          relying_party: build(:relying_party, registrable: true, templates: [build(:new_registration_template)])
+          relying_party: build(:relying_party, registrable: true)
         )
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})

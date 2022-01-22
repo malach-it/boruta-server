@@ -65,6 +65,20 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     timestamps()
   end
 
+  @spec template(relying_party :: t(), type :: atom()) :: Template.t() | nil
+  def template(relying_party, type) do
+    %__MODULE__{templates: templates} = Repo.preload(relying_party, :templates)
+
+    case Enum.find(templates, fn
+      %Template{type: template_type} -> Atom.to_string(type) == template_type
+    end) do
+      nil ->
+        template = Template.default_template(type)
+        template && %{template|relying_party_id: relying_party.id}
+      template -> template
+    end
+  end
+
   @spec implementation(client_relying_party :: %__MODULE__{}) :: implementation :: atom()
   def implementation(%__MODULE__{type: type}) do
     Map.fetch!(@implementations, type)
@@ -93,26 +107,6 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     |> validate_required([:name, :type])
     |> validate_inclusion(:type, @types)
     |> unique_constraint(:name)
-    |> fill_default_templates()
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)
-  end
-
-  defp fill_default_templates(changeset) do
-    templates = fetch_field!(changeset, :templates)
-
-    Enum.reduce(Template.template_types(), changeset, fn template_type, changeset ->
-      template_type = Atom.to_string(template_type)
-
-      case templates
-           |> Enum.map(&Map.get(&1, :type))
-           |> Enum.member?(template_type) do
-        true ->
-          changeset
-
-        false ->
-          template_changeset = Template.assoc_changeset(%Template{}, %{type: template_type})
-          put_change(changeset, :templates, [template_changeset | templates])
-      end
-    end)
   end
 end

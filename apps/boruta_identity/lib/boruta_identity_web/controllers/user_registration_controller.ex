@@ -61,10 +61,16 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   end
 
   defp compile_template(%Template{content: content}, opts \\ %{}) do
-    errors = case Map.fetch(opts, :changeset)  do
-      {:ok, changeset} -> changeset |> ErrorHelpers.error_messages() |> Enum.map(fn message -> %{message: message} end)
-      :error -> []
-    end
+    errors =
+      case Map.fetch(opts, :changeset) do
+        {:ok, changeset} ->
+          changeset
+          |> ErrorHelpers.error_messages()
+          |> Enum.map(fn message -> %{message: message} end)
+
+        :error ->
+          []
+      end
 
     context = %{
       create_user_registration_url:

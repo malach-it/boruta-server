@@ -126,4 +126,50 @@ defmodule BorutaIdentity.RelyingParties do
         nil
     end
   end
+
+  alias BorutaIdentity.RelyingParties.Template
+
+  @doc """
+  Gets a relying_party template. Returns a default template if relying party template is not defined.
+
+  Raises `Ecto.NoResultsError` if the Relying party does not exist.
+
+  ## Examples
+
+      iex> get_relying_party_template!(123, :new_registration)
+      %Template{}
+
+      iex> get_relying_party_template!(456, :new_registration)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_relying_party_template!(relying_party_id, type) do
+    case RelyingParty
+    |> Repo.get!(relying_party_id)
+    |> RelyingParty.template(type) do
+      nil -> raise Ecto.NoResultsError, queryable: Template
+      template -> template
+    end
+  end
+
+  @doc """
+  Upserts a template.
+
+  ## Examples
+
+      iex> upsert_template(template, %{field: new_value})
+      {:ok, %Template{}}
+
+      iex> upsert_template(template, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def upsert_template(%Template{id: template_id} = template, attrs) do
+    changeset = Template.changeset(template, attrs)
+
+    case template_id do
+      nil -> Repo.insert(changeset)
+      _ -> Repo.update(changeset)
+    end
+  end
 end
