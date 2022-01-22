@@ -15,10 +15,14 @@ defmodule BorutaIdentity.RelyingParties.Template do
           updated_at: DateTime.t() | nil
         }
 
-  @template_types [:new_registration]
-  @type template_type :: :new_registration
+  @template_types [:new_session, :new_registration]
+  @type template_type :: :new_session | :new_registration
 
   @default_templates %{
+    new_session:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/sessions/new.mustache")
+      |> File.read!(),
     new_registration:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/registrations/new.mustache")

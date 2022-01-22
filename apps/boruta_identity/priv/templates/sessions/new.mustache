@@ -1,0 +1,35 @@
+<h1>Log in</h1>
+
+<form action="{{ create_user_session_path }}" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+
+  {{^valid?}}
+  <div class="alert alert-danger">
+  {{#errors}}
+    <li>{{ message }}</li>
+  {{/errors}}
+  </div>
+  {{/valid?}}
+
+  <div class="field">
+    <label for="user_email">Email</label>
+    <input type="email" id="user_email" name="user[email]" required />
+  </div>
+
+  <div class="field">
+    <label for="user_password">Password</label>
+    <input type="password" id="user_password" name="user[password]" />
+  </div>
+
+  <div class="field">
+    <label for="user_remember_me">Keep me logged in for 60 days</label>
+    <input type="checkbox" id="user_remember_me" name="user[remember_me]" />
+  </div>
+
+  <button type="submit">Log in</button>
+
+</form>
+
+<p>
+  {{#registrable?}}<a href="{{ new_user_registration_path }}">Register</a> | {{/registrable?}}<a href="{{ new_user_reset_password_path }}">Forgot your password?</a>
+</p>

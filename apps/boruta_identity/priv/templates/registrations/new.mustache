@@ -1,6 +1,6 @@
 <h1>Register</h1>
 
-<form action="{{ create_user_registration_url }}" method="POST">
+<form action="{{ create_user_registration_path }}" method="POST">
   <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
 
   {{^valid?}}
@@ -26,5 +26,5 @@
 </form>
 
 <p>
-  <a href="{{ new_user_session_url }}">Log in</a> | <a href="{{ new_user_reset_password_url }}">Forgot your password?</a>
+  <a href="{{ new_user_session_path }}">Log in</a> | <a href="{{ new_user_reset_password_path }}">Forgot your password?</a>
 </p>
