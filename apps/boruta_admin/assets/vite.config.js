@@ -7,7 +7,6 @@ import path from 'path'
 export default defineConfig({
   plugins: [vue(), viteSingleFile()],
   build: {
-    watch: {},
     outDir: path.resolve(__dirname, '../priv/static/assets'),
     lib: {
       entry: path.resolve(__dirname, './src/main.js'),
