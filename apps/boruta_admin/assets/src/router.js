@@ -21,6 +21,7 @@ import RelyingParties from './views/RelyingParties.vue'
 import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
 import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
 import EditRegistrationTemplate from './views/RelyingParties/EditRegistrationTemplate.vue'
+import EditSessionTemplate from './views/RelyingParties/EditSessionTemplate.vue'
 import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
 import UserList from './views/RelyingParties/UserList.vue'
 import EditUser from './views/RelyingParties/EditUser.vue'
@@ -72,6 +73,10 @@ const router = createRouter({
               path: '/relying-parties/:relyingPartyId/edit/registration-template',
               name: 'edit-registration-template',
               component: EditRegistrationTemplate
+            }, {
+              path: '/relying-parties/:relyingPartyId/edit/session-template',
+              name: 'edit-session-template',
+              component: EditSessionTemplate
             }, {
               path: 'users',
               name: 'user-list',
