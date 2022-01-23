@@ -68,9 +68,9 @@
           </router-link>
         </div>
       </div>
-      <div class="content">
-        <Breadcrumb />
-        <router-view/>
+      <div class="content-wrapper">
+        <Breadcrumb class="main-breadcrumb" />
+        <router-view class="content" />
       </div>
     </div>
   </div>
@@ -356,9 +356,14 @@ export default {
       background: rgba(255,255,255,.08);
     }
   }
-  .content {
+  .content-wrapper {
     flex: 1;
     width: calc(100vw - 250px);
+    display: flex;
+    flex-direction: column;
+    .content {
+      flex: 1;
+    }
     .container {
       padding: 0 1rem;
       @media screen and (max-width: 768px) {
@@ -371,7 +376,7 @@ export default {
     .sidebar-menu {
       height: auto;
     }
-    .content {
+    .content-wrapper {
       width: auto;
     }
     .menu {

@@ -3,7 +3,7 @@
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
-    <div class="ui actions segment">
+    <div class="ui segment">
       <button v-on:click="update()" class="ui large violet right floated button">Save</button>
       <router-link :to="{ name: 'edit-relying-party', params: { relyingPartyId: relyingParty.id } }" class="ui large blue button">Back</router-link>
     </div>

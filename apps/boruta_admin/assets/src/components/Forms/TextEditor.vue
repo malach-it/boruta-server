@@ -38,7 +38,7 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .text-editor {
   height: 100%;
   width: 100%;
