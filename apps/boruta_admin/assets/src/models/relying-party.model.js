@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const defaults = {
-  id: null,
+  id: 'non-existing',
   name: null,
   type: 'internal',
   errors: null
