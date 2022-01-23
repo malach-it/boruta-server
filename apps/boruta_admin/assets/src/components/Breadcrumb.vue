@@ -20,7 +20,7 @@ const labels = {
   'dashboard': 'Dashboard',
   'relying-parties': "Relying parties",
   'new-relying-party': 'Create',
-  'edit-relying-party': 'Edit',
+  'relying-party': ({ params }) => params.relyingPartyId,
   'edit-registration-template': 'Edit registration template',
   'edit-session-template': 'Edit login template',
   'edit-new-reset-password-template': 'Edit send reset password instructions template',
@@ -30,10 +30,10 @@ const labels = {
   'edit-user': 'Edit user',
   'clients': 'Clients',
   'new-client': 'Create',
-  'edit-client': 'Edit',
+  'client': ({ params }) => params.clientId,
   'upstreams': 'Upstreams',
   'new-upstream': 'Create',
-  'edit-upstream': 'Edit',
+  'upstream': ({ params }) => params.upstreamId,
   'scopes': 'Scopes'
 }
 
@@ -44,15 +44,17 @@ export default {
       const items = this.$route.matched
         .filter(({ name }) => name)
         .filter(({ name }) => labels[name])
-        .map(({ name, path }) => {
+        .map((route) => {
+          const { name } = route
+          const label = labels[name]
+
           return {
-            label: labels[name],
-            path: path
+            label: (label instanceof Function) ? label(this.$route) : label,
+            path: { name, params: this.$route.params }
           }
         })
 
-      console.log(items)
-      return items || []
+      return items
     }
   }
 }
@@ -63,6 +65,13 @@ export default {
   font-size: 1.3em;
   .divider {
     color: white!important;
+  }
+  a.section {
+    font-weight: bold;
+    color: rgba(153, 153, 153, 1.0)!important;
+    &:hover {
+      color: rgba(153, 153, 153, 0.7)!important;
+    }
   }
 }
 </style>

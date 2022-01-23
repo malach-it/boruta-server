@@ -28,7 +28,6 @@ export default {
     Template.get(relyingPartyId, 'new_registration').then((template) => {
       this.template = template
       this.content = template.content
-      console.log(template)
     })
   },
   data () {

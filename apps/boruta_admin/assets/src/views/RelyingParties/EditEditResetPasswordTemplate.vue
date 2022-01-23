@@ -28,7 +28,6 @@ export default {
     Template.get(relyingPartyId, 'edit_reset_password').then((template) => {
       this.template = template
       this.content = template.content
-      console.log(template)
     })
   },
   data () {
