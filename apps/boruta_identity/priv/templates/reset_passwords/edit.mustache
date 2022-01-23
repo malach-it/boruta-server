@@ -1,0 +1,31 @@
+<h1>Reset password</h1>
+
+<form action="{{ update_user_reset_password_path }}" method="POST">
+  <input type="hidden" name="_method" value="put" />
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+
+  {{^valid?}}
+  <div class="alert alert-danger">
+  {{#errors}}
+    <li>{{ message }}</li>
+  {{/errors}}
+  </div>
+  {{/valid?}}
+
+  <div class="field">
+    <label for="user_password">Password</label>
+    <input type="password" id="user_password" name="user[password]" required />
+  </div>
+
+  <div class="field">
+    <label for="user_password_confirmation">Password confirmation</label>
+    <input type="password" id="user_password_confirmation" name="user[password_confirmation]" required />
+  </div>
+
+  <button type="submit">Reset password</button>
+
+</form>
+
+<p>
+  {{#registrable?}}<a href="{{ new_user_registration_path }}">Register</a> | {{/registrable?}}<a href="{{ new_user_session_path }}">Log in</a>
+</p>

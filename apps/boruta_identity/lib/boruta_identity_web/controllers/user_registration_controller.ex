@@ -79,9 +79,9 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
       new_user_reset_password_path:
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new),
       _csrf_token: Plug.CSRFProtection.get_csrf_token(),
+      valid?: Map.get(opts, :valid?, true),
       # TODO improve error format
-      errors: errors,
-      valid?: Map.get(opts, :valid?, true)
+      errors: errors
     }
 
     Mustachex.render(content, context)

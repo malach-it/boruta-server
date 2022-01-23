@@ -1,0 +1,17 @@
+<h1>Forgot your password?</h1>
+
+<form action="{{ create_user_reset_password_path }}" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+
+  <div class="field">
+    <label for="user_email">Email</label>
+    <input type="email" id="user_email" name="user[email]" required />
+  </div>
+
+  <button type="submit">Send instructions to reset password</button>
+
+</form>
+
+<p>
+  {{#registrable?}}<a href="{{ new_user_registration_path }}">Register</a> | {{/registrable?}}<a href="{{ new_user_session_path }}">Log in</a>
+</p>
