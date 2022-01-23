@@ -1,11 +1,13 @@
 defmodule BorutaIdentity.Accounts.ResetPasswordError do
   @enforce_keys [:message]
-  defexception [:message, :changeset, :token]
+  defexception [:message, :changeset, :token, :relying_party, :template]
 
   @type t :: %__MODULE__{
           message: String.t(),
-          token: String.t() | nil,
-          changeset: Ecto.Changeset.t() | nil
+          token: String.t(),
+          changeset: Ecto.Changeset.t() | nil,
+          relying_party: relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t(),
+          template: template :: BorutaIdentity.RelyingParties.Template.t()
         }
 
   def exception(message) when is_binary(message) do
@@ -24,7 +26,8 @@ defmodule BorutaIdentity.Accounts.ResetPasswordApplication do
 
   @callback password_instructions_initialized(
               context :: any(),
-              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t()
+              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t(),
+              template :: BorutaIdentity.RelyingParties.Template.t()
             ) :: any()
 
   @callback reset_password_instructions_delivered(context :: any()) ::
@@ -33,7 +36,8 @@ defmodule BorutaIdentity.Accounts.ResetPasswordApplication do
   @callback password_reset_initialized(
               context :: any(),
               token :: String.t(),
-              changeset :: Ecto.Changeset.t()
+              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t(),
+              template :: BorutaIdentity.RelyingParties.Template.t()
             ) ::
               any()
 
@@ -91,7 +95,11 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientrp initialize_password_instructions(context, client_id, module) do
-    module.password_instructions_initialized(context, client_rp)
+    module.password_instructions_initialized(
+      context,
+      client_rp,
+      new_reset_password_template(client_rp)
+    )
   end
 
   @spec send_reset_password_instructions(
@@ -133,8 +141,13 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
     client_impl = RelyingParty.implementation(client_rp)
 
     case apply(client_impl, :reset_password_changeset, [token]) do
-      {:ok, changeset} ->
-        module.password_reset_initialized(context, token, changeset)
+      {:ok, _changeset} ->
+        module.password_reset_initialized(
+          context,
+          token,
+          client_rp,
+          edit_reset_password_template(client_rp)
+        )
 
       {:error, reason} ->
         module.password_reset_failure(context, %ResetPasswordError{message: reason, token: token})
@@ -154,6 +167,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                     module
                   ) do
     client_impl = RelyingParty.implementation(client_rp)
+    edit_template = edit_reset_password_template(client_rp)
 
     case apply(client_impl, :reset_password, [reset_password_params]) do
       {:ok, user} ->
@@ -161,16 +175,28 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         module.password_reset_failure(context, %ResetPasswordError{
+          relying_party: client_rp,
           token: reset_password_params.reset_password_token,
           message: "Could not update user password.",
-          changeset: changeset
+          changeset: changeset,
+          template: edit_template
         })
 
       {:error, reason} ->
         module.password_reset_failure(context, %ResetPasswordError{
+          relying_party: client_rp,
+          template: edit_template,
           token: reset_password_params.reset_password_token,
           message: reason
         })
     end
+  end
+
+  defp new_reset_password_template(relying_party) do
+    RelyingParty.template(relying_party, :new_reset_password)
+  end
+
+  defp edit_reset_password_template(relying_party) do
+    RelyingParty.template(relying_party, :edit_reset_password)
   end
 end

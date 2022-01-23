@@ -608,7 +608,16 @@ defmodule BorutaIdentity.AccountsTest do
   end
 
   @tag :skip
+  test "initialize_password_instructions/3"
+
+  @tag :skip
   test "send_reset_password_instructions/5"
+
+  @tag :skip
+  test "initialize_password_reset/3"
+
+  @tag :skip
+  test "reset_password/4"
 
   describe "list_users/0" do
     test "returns an empty list" do

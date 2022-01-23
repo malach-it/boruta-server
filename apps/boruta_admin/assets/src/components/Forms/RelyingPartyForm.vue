@@ -21,6 +21,16 @@
               :to="{ name: 'edit-session-template', params: { relyingPartyId: relyingParty.id } }"
               class="ui fluid blue button">Edit login template</router-link>
           </div>
+          <div class="ui segment">
+            <router-link
+              :to="{ name: 'edit-new-reset-password-template', params: { relyingPartyId: relyingParty.id } }"
+              class="ui fluid blue button">Edit send reset password instructions template</router-link>
+          </div>
+          <div class="ui segment">
+            <router-link
+              :to="{ name: 'edit-edit-reset-password-template', params: { relyingPartyId: relyingParty.id } }"
+              class="ui fluid blue button">Edit reset password template</router-link>
+          </div>
         </section>
         <section>
           <h3>Registration</h3>

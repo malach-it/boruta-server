@@ -1,7 +1,7 @@
 <template>
-  <div class="container edit-registration-template">
+  <div class="container edit-edit-reset-password-template">
     <div class="main header">
-      <h1>Edit {{ relyingParty.name }} registration template</h1>
+      <h1>Edit {{ relyingParty.name }} reset_password</h1>
     </div>
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
@@ -19,7 +19,7 @@ import RelyingParty from '../../models/relying-party.model'
 import TextEditor from '../../components/Forms/TextEditor.vue'
 
 export default {
-  name: 'edit-registration-template',
+  name: 'edit-edit-reset-password-template',
   components: {
     TextEditor
   },
@@ -28,7 +28,7 @@ export default {
     RelyingParty.get(relyingPartyId).then((relyingParty) => {
       this.relyingParty = relyingParty
     })
-    Template.get(relyingPartyId, 'new_registration').then((template) => {
+    Template.get(relyingPartyId, 'edit_reset_password').then((template) => {
       this.template = template
       this.content = template.content
       console.log(template)

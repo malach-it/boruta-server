@@ -42,15 +42,12 @@ export default {
     }
   },
   methods: {
-    back () {
-      this.$router.push({ name: 'relying-party-list' })
-    },
     setContent(code) {
       this.template.content = code
     },
     update () {
       this.template.save().then(() => {
-        this.$router.push({ name: 'relying-party-list' })
+        this.$router.push({ name: 'edit-relying-party', params: { relyingPartyId: this.relyingParty.id } })
       })
     }
   }

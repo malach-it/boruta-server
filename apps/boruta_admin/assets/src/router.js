@@ -20,8 +20,10 @@ import EditUpstream from './views/Upstreams/EditUpstream.vue'
 import RelyingParties from './views/RelyingParties.vue'
 import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
 import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
-import EditRegistrationTemplate from './views/RelyingParties/EditRegistrationTemplate.vue'
 import EditSessionTemplate from './views/RelyingParties/EditSessionTemplate.vue'
+import EditNewResetPasswordTemplate from './views/RelyingParties/EditNewResetPasswordTemplate.vue'
+import EditEditResetPasswordTemplate from './views/RelyingParties/EditEditResetPasswordTemplate.vue'
+import EditRegistrationTemplate from './views/RelyingParties/EditRegistrationTemplate.vue'
 import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
 import UserList from './views/RelyingParties/UserList.vue'
 import EditUser from './views/RelyingParties/EditUser.vue'
@@ -70,13 +72,21 @@ const router = createRouter({
               name: 'edit-relying-party',
               component: EditRelyingParty
             }, {
-              path: '/relying-parties/:relyingPartyId/edit/registration-template',
-              name: 'edit-registration-template',
-              component: EditRegistrationTemplate
-            }, {
               path: '/relying-parties/:relyingPartyId/edit/session-template',
               name: 'edit-session-template',
               component: EditSessionTemplate
+            }, {
+              path: '/relying-parties/:relyingPartyId/edit-send-reset-password-instructions-template',
+              name: 'edit-new-reset-password-template',
+              component: EditNewResetPasswordTemplate
+            }, {
+              path: '/relying-parties/:relyingPartyId/edit-reset-password-template',
+              name: 'edit-edit-reset-password-template',
+              component: EditEditResetPasswordTemplate
+            }, {
+              path: '/relying-parties/:relyingPartyId/edit/registration-template',
+              name: 'edit-registration-template',
+              component: EditRegistrationTemplate
             }, {
               path: 'users',
               name: 'user-list',

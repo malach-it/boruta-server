@@ -15,8 +15,8 @@ defmodule BorutaIdentity.RelyingParties.Template do
           updated_at: DateTime.t() | nil
         }
 
-  @template_types [:new_session, :new_registration]
-  @type template_type :: :new_session | :new_registration
+  @template_types [:new_session, :new_registration, :new_reset_password, :edit_reset_password]
+  @type template_type :: :new_session | :new_registration | :new_reset_password | :edit_reset_password
 
   @default_templates %{
     new_session:
@@ -26,6 +26,14 @@ defmodule BorutaIdentity.RelyingParties.Template do
     new_registration:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/registrations/new.mustache")
+      |> File.read!(),
+    new_reset_password:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/reset_passwords/new.mustache")
+      |> File.read!(),
+    edit_reset_password:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/reset_passwords/edit.mustache")
       |> File.read!()
   }
 
