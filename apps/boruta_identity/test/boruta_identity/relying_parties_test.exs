@@ -153,6 +153,14 @@ defmodule BorutaIdentity.RelyingPartiesTest do
       end
     end
 
+    test "delete_relying_party/1 returns an error when associated to a client" do
+      relying_party = relying_party_fixture()
+      insert(:client_relying_party, relying_party: relying_party)
+
+      assert {:error, %Ecto.Changeset{errors: [client_relying_parties: {_message, []}]}} =
+               RelyingParties.delete_relying_party(relying_party)
+    end
+
     test "change_relying_party/1 returns a relying_party changeset" do
       relying_party = relying_party_fixture()
       assert %Ecto.Changeset{} = RelyingParties.change_relying_party(relying_party)
@@ -227,7 +235,10 @@ defmodule BorutaIdentity.RelyingPartiesTest do
 
       template = RelyingParties.get_relying_party_template!(relying_party_id, :new_registration)
 
-      assert template == %{Template.default_template(:new_registration)|relying_party_id: relying_party_id}
+      assert template == %{
+               Template.default_template(:new_registration)
+               | relying_party_id: relying_party_id
+             }
     end
 
     test "returns relying party template" do

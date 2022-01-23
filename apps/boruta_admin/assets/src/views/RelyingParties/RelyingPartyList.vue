@@ -25,6 +25,7 @@
               <span class="description">{{ relyingParty.id }}</span>
             </div>
           </div>
+          <FormErrors v-if="relyingParty.errors" :errors="relyingParty.errors" />
         </div>
         </div>
       </div>
@@ -33,10 +34,14 @@
 </template>
 
 <script>
+import FormErrors from '../../components/Forms/FormErrors.vue'
 import RelyingParty from '../../models/relying-party.model'
 
 export default {
   name: 'relying-party-list',
+  components: {
+    FormErrors
+  },
   data () {
     return { relyingParties: [] }
   },

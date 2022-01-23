@@ -87,7 +87,9 @@ defmodule BorutaIdentity.RelyingParties do
 
   """
   def delete_relying_party(%RelyingParty{} = relying_party) do
-    Repo.delete(relying_party)
+    relying_party
+    |> RelyingParty.delete_changeset()
+    |> Repo.delete()
   end
 
   @doc """

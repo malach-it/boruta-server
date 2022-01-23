@@ -109,4 +109,17 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     |> unique_constraint(:name)
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)
   end
+
+  @doc false
+  def delete_changeset(relying_party) do
+    changeset = change(relying_party)
+
+    case Repo.preload(relying_party, :client_relying_parties) do
+      %__MODULE__{client_relying_parties: []} ->
+        changeset
+      %__MODULE__{client_relying_parties: client_relying_parties} ->
+        client_ids = Enum.map(client_relying_parties, fn %ClientRelyingParty{client_id: client_id} -> client_id end)
+        add_error(changeset, :client_relying_parties, "Relying party is associated with client(s) #{Enum.join(client_ids, ", ")}")
+    end
+  end
 end

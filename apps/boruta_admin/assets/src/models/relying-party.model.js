@@ -53,6 +53,11 @@ class RelyingParty {
 
   destroy () {
     return this.constructor.api().delete(`/${this.id}`)
+      .catch((error) => {
+        const { errors } = error.response.data
+        this.errors = errors
+        throw errors
+      })
   }
 
   get serialized () {
