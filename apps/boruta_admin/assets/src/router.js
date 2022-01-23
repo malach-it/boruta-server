@@ -10,15 +10,18 @@ import OauthCallback from './views/OauthCallback.vue'
 import Clients from './views/Clients.vue'
 import ClientList from './views/Clients/ClientList.vue'
 import NewClient from './views/Clients/NewClient.vue'
+import Client from './views/Clients/Client.vue'
 import EditClient from './views/Clients/EditClient.vue'
 
 import Upstreams from './views/Upstreams.vue'
 import UpstreamList from './views/Upstreams/UpstreamList.vue'
+import Upstream from './views/Upstreams/Upstream.vue'
 import NewUpstream from './views/Upstreams/NewUpstream.vue'
 import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
 import RelyingParties from './views/RelyingParties.vue'
 import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
+import RelyingParty from './views/RelyingParties/RelyingParty.vue'
 import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
 import EditSessionTemplate from './views/RelyingParties/EditSessionTemplate.vue'
 import EditNewResetPasswordTemplate from './views/RelyingParties/EditNewResetPasswordTemplate.vue'
@@ -40,6 +43,8 @@ const router = createRouter({
     {
       path: '/',
       component: Main,
+      name: 'root',
+      redirect: '/',
       children: [
         {
           path: '',
@@ -68,25 +73,36 @@ const router = createRouter({
               name: 'new-relying-party',
               component: NewRelyingParty
             }, {
-              path: '/relying-parties/:relyingPartyId/edit',
-              name: 'edit-relying-party',
-              component: EditRelyingParty
-            }, {
-              path: '/relying-parties/:relyingPartyId/edit/session-template',
-              name: 'edit-session-template',
-              component: EditSessionTemplate
-            }, {
-              path: '/relying-parties/:relyingPartyId/edit-send-reset-password-instructions-template',
-              name: 'edit-new-reset-password-template',
-              component: EditNewResetPasswordTemplate
-            }, {
-              path: '/relying-parties/:relyingPartyId/edit-reset-password-template',
-              name: 'edit-edit-reset-password-template',
-              component: EditEditResetPasswordTemplate
-            }, {
-              path: '/relying-parties/:relyingPartyId/edit/registration-template',
-              name: 'edit-registration-template',
-              component: EditRegistrationTemplate
+              path: '/relying-parties/:relyingPartyId',
+              name: 'relying-party',
+              component: RelyingParty,
+              redirect: to => ({
+                name: 'edit-relying-party',
+                params: { relyingPartyId: to.params.relyingPartyId }
+              }),
+              children: [
+                {
+                  path: 'edit',
+                  name: 'edit-relying-party',
+                  component: EditRelyingParty
+                }, {
+                  path: 'edit/session-template',
+                  name: 'edit-session-template',
+                  component: EditSessionTemplate
+                }, {
+                  path: 'edit-send-reset-password-instructions-template',
+                  name: 'edit-new-reset-password-template',
+                  component: EditNewResetPasswordTemplate
+                }, {
+                  path: 'edit-reset-password-template',
+                  name: 'edit-edit-reset-password-template',
+                  component: EditEditResetPasswordTemplate
+                }, {
+                  path: 'edit/registration-template',
+                  name: 'edit-registration-template',
+                  component: EditRegistrationTemplate
+                }
+              ],
             }, {
               path: 'users',
               name: 'user-list',
@@ -112,9 +128,20 @@ const router = createRouter({
               name: 'new-client',
               component: NewClient
             }, {
-              path: '/clients/:clientId/edit',
-              name: 'edit-client',
-              component: EditClient
+              path: '/clients/:clientId',
+              name: 'client',
+              component: Client,
+              redirect: to => ({
+                name: 'edit-client',
+                params: { clientId: to.params.clientId }
+              }),
+              children: [
+                {
+                  path: 'edit',
+                  name: 'edit-client',
+                  component: EditClient
+                }
+              ]
             }
           ]
         }, {
@@ -132,9 +159,20 @@ const router = createRouter({
               name: 'new-upstream',
               component: NewUpstream
             }, {
-              path: '/upstreams/:upstreamId/edit',
-              name: 'edit-upstream',
-              component: EditUpstream
+              path: '/upstreams/:upstreamId',
+              name: 'upstream',
+              component: Upstream,
+              redirect: to => ({
+                name: 'edit-upstream',
+                params: { upstreamId: to.params.upstreamId }
+              }),
+              children: [
+                {
+                  path: 'edit',
+                  name: 'edit-upstream',
+                  component: EditUpstream
+                }
+              ]
             }
           ]
         }, {

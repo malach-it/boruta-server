@@ -1,8 +1,5 @@
 <template>
   <div class="edit-relying-party">
-    <div class="main header">
-      <h1>Edit a relying party</h1>
-    </div>
     <div class="ui container">
       <div class="ui large segment">
         <div class="ui attribute list">

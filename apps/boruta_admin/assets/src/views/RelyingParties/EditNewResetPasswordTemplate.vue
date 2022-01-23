@@ -1,8 +1,5 @@
 <template>
   <div class="container edit-new-reset-password-template">
-    <div class="main header">
-      <h1>Edit {{ relyingParty.name }} reset_password</h1>
-    </div>
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
@@ -31,7 +28,6 @@ export default {
     Template.get(relyingPartyId, 'new_reset_password').then((template) => {
       this.template = template
       this.content = template.content
-      console.log(template)
     })
   },
   data () {

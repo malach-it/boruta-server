@@ -1,8 +1,5 @@
 <template>
   <div class="dashboard">
-    <div class="main header">
-      <h1>Dashboard</h1>
-    </div>
     <div class="container">
       <GatewayRequests />
     </div>

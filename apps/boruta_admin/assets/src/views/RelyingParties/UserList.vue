@@ -1,8 +1,5 @@
 <template>
   <div class="user-list">
-    <div class="main header">
-      <h1>User management</h1>
-    </div>
     <div class="container">
       <div class="ui three column stackable grid" v-if="users.length">
         <div v-for="user in users" class="column" :key="user.id">

@@ -1,8 +1,5 @@
 <template>
   <div class="new-client">
-    <div class="main header">
-      <h1>New Client</h1>
-    </div>
     <div class="ui container">
       <ClientForm :client="client" @submit="createClient()" @back="back()" action="Create" />
     </div>

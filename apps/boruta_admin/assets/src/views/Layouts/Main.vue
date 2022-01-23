@@ -69,6 +69,7 @@
         </div>
       </div>
       <div class="content">
+        <Breadcrumb />
         <router-view/>
       </div>
     </div>
@@ -77,11 +78,13 @@
 
 <script>
 import Header from '../../components/Header.vue'
+import Breadcrumb from '../../components/Breadcrumb.vue'
 
 export default {
   name: 'Main',
   components: {
-    Header
+    Header,
+    Breadcrumb
   },
   mounted () {
     const sidebarOffset = this.$refs.header.$el.offsetHeight
@@ -188,29 +191,18 @@ export default {
   min-height: calc(100% - 41px);
   background: #1b1c1d;
   color: white;
-  .main.header {
-    text-align: center;
-    position: relative;
-    padding: .6rem;
-    background: rgba(255,255,255,.05);
-    margin-bottom: 1rem;
-    h1 {
-      margin: 0;
-      color: white;
-      line-height: 1.7em;
-    }
-    .button {
-      position: absolute;
-      right: .6rem;
-      top: .6rem;
-    }
-    .segment {
-      text-align: left;
-    }
-    @media screen and (max-width: 753px) {
-      .button {
-        position: relative;
-      }
+  .main.create.button {
+    position: absolute;
+    top: .5em;
+    right: .5em;
+    @media screen and (max-width: 1127px) {
+      position: relative;
+      display: block;
+      top: 0;
+      right: 0;
+      margin: 0 1rem;
+      margin-bottom: 1rem;
+
     }
   }
   a {

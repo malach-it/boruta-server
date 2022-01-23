@@ -1,7 +1,6 @@
 <template>
   <div class="oauth-callback">
     <div class="ui container">
-      <h1>Redirection...</h1>
       <div class="ui loading placeholder segment"></div>
     </div>
   </div>
