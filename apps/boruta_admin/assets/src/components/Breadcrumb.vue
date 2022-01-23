@@ -61,8 +61,9 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.breadcrumb {
+.ui.breadcrumb {
   font-size: 1.3em;
+  line-height: 1.3em;
   .divider {
     color: white!important;
   }
@@ -72,6 +73,9 @@ export default {
     &:hover {
       color: rgba(153, 153, 153, 0.7)!important;
     }
+  }
+  .section {
+    display: inline;
   }
 }
 </style>

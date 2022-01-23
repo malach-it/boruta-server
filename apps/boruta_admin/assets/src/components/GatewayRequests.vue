@@ -1,13 +1,15 @@
 <template>
   <div class="gateway-requests">
-    <div class="request-time">
-      <LineChart :chart-data="requestTimes" :options="options" :styles="graphStyles" />
-    </div>
-    <div class="request-per-second">
-      <LineChart :chart-data="requestsPerSecond" :options="options" :styles="graphStyles" />
-    </div>
-    <div class="status-codes">
-      <PieChart :chart-data="statusCodes" />
+    <div class="ui two column stackable grid">
+      <div class="column request-time">
+        <LineChart :chartData="requestTimes" :options="options" height="500" />
+      </div>
+      <div class="column request-per-second">
+        <LineChart :chartData="requestsPerSecond" :options="options" height="500" />
+      </div>
+      <div class="column status-codes">
+        <PieChart :chart-data="statusCodes" />
+      </div>
     </div>
   </div>
 </template>
@@ -16,8 +18,9 @@
 import palette from 'google-palette'
 import { groupBy, sortBy, size, sum } from 'lodash'
 import { mapGetters } from 'vuex'
-import LineChart from './LineChart.vue'
-import PieChart from './PieChart.vue'
+import { LineChart, PieChart } from "vue-chart-3";
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
 
 export default {
   name: 'home',
@@ -28,20 +31,14 @@ export default {
   data () {
     const options = {
       scales: {
-        xAxes: [{
-          type: 'time',
-          time: {
-            unit: 'second'
-          }
-        }]
+        xAxis: {
+          display: false
+        }
       }
     }
     return {
       data: [],
-      options,
-      graphStyles: {
-        position: 'relative'
-      }
+      options
     }
   },
   computed: {
