@@ -1,8 +1,5 @@
 <template>
   <div class="edit-user">
-    <div class="main header">
-      <h1>Edit a user</h1>
-    </div>
     <div class="ui container">
       <div class="ui large segment">
         <div class="ui attribute list">

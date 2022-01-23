@@ -1,8 +1,5 @@
 <template>
   <div id="scope-list">
-    <div class="main header">
-      <h1>Scope management</h1>
-    </div>
     <div class="container">
       <div class="ui segments" v-if="scopes.length">
         <div v-for="(scope, index) in scopes" class="ui mini highlightable segment" :key="index">

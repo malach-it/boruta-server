@@ -1,8 +1,5 @@
 <template>
   <div class="edit-upstream">
-    <div class="main header">
-      <h1>Edit Upstream</h1>
-    </div>
     <div class="ui container">
       <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update" />
     </div>

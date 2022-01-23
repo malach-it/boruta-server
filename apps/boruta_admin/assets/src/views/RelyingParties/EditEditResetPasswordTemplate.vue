@@ -1,8 +1,5 @@
 <template>
   <div class="container edit-edit-reset-password-template">
-    <div class="main header">
-      <h1>Edit {{ relyingParty.name }} reset_password</h1>
-    </div>
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>

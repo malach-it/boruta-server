@@ -40,6 +40,7 @@ const router = createRouter({
     {
       path: '/',
       component: Main,
+      name: 'root',
       children: [
         {
           path: '',
@@ -68,6 +69,7 @@ const router = createRouter({
               name: 'new-relying-party',
               component: NewRelyingParty
             }, {
+              // TODO put in a relying-party nested route
               path: '/relying-parties/:relyingPartyId/edit',
               name: 'edit-relying-party',
               component: EditRelyingParty
@@ -91,10 +93,13 @@ const router = createRouter({
               path: 'users',
               name: 'user-list',
               component: UserList
+              // END put in a relying-party nested route
             }, {
+              // TODO put in a user-list > user nested route
               path: '/users/:userId/edit',
               name: 'edit-user',
               component: EditUser
+              // END put in a user-list > user nested route
             }
           ]
         }, {
@@ -112,9 +117,11 @@ const router = createRouter({
               name: 'new-client',
               component: NewClient
             }, {
+              // TODO put in a client nested route
               path: '/clients/:clientId/edit',
               name: 'edit-client',
               component: EditClient
+              // END put in a client nested route
             }
           ]
         }, {
@@ -132,9 +139,11 @@ const router = createRouter({
               name: 'new-upstream',
               component: NewUpstream
             }, {
+              // TODO put in a upstream nested route
               path: '/upstreams/:upstreamId/edit',
               name: 'edit-upstream',
               component: EditUpstream
+              // END put in a upstream nested route
             }
           ]
         }, {

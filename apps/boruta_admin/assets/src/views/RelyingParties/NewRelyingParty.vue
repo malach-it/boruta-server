@@ -1,8 +1,5 @@
 <template>
   <div class="new-relying-party">
-    <div class="main header">
-      <h1>New relying party</h1>
-    </div>
     <div class="ui container">
       <RelyingPartyForm :relyingParty="relyingParty" @submit="createRelyingParty()" @back="back()" action="Create" />
     </div>

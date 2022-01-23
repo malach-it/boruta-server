@@ -1,8 +1,5 @@
 <template>
   <div class="new-upstream">
-    <div class="main header">
-      <h1>New Upstream</h1>
-    </div>
     <div class="ui container">
       <UpstreamForm :upstream="upstream" @submit="createUpstream()" @back="back()" action="Create" />
     </div>

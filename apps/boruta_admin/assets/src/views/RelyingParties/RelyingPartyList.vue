@@ -1,9 +1,6 @@
 <template>
   <div class="relyingParty-list">
-    <div class="main header">
-      <h1>Relying party management</h1>
-      <router-link :to="{ name: 'new-relying-party' }" class="ui teal big button">Add a relying party</router-link>
-    </div>
+    <router-link :to="{ name: 'new-relying-party' }" class="ui teal main create button">Add a relying party</router-link>
     <div class="container">
       <div class="ui three column relyingParties stackable grid" v-if="relyingParties.length">
         <div v-for="relyingParty in relyingParties" :key="relyingParty.id" class="column">

@@ -1,8 +1,5 @@
 <template>
   <div class="container edit-registration-template">
-    <div class="main header">
-      <h1>Edit {{ relyingParty.name }} registration template</h1>
-    </div>
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
