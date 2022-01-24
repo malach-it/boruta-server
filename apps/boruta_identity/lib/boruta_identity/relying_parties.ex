@@ -114,6 +114,18 @@ defmodule BorutaIdentity.RelyingParties do
     )
   end
 
+  def remove_client_relying_party(client_id) do
+    query = from(cr in ClientRelyingParty,
+      where: cr.client_id == ^client_id,
+      select: cr)
+    case Repo.delete_all(query) do
+      {1, [client_relying_party]} ->
+        {:ok, client_relying_party}
+      {0, []} ->
+        {:ok, nil}
+    end
+  end
+
   def get_relying_party_by_client_id(client_id) do
     case Ecto.UUID.cast(client_id) do
       {:ok, client_id} ->

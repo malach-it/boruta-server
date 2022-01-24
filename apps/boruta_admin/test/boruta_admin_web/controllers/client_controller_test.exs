@@ -142,5 +142,15 @@ defmodule BorutaAdminWeb.ClientControllerTest do
         get(conn, Routes.admin_client_path(conn, :show, client))
       end)
     end
+
+    @tag authorized: ["clients:manage:all"]
+    test "deletes client relying party association", %{conn: conn, client: client} do
+      BorutaIdentity.Factory.insert(:client_relying_party, client_id: client.id)
+
+      conn = delete(conn, Routes.admin_client_path(conn, :delete, client))
+      assert response(conn, 204)
+
+      refute BorutaIdentity.Repo.get_by(ClientRelyingParty, client_id: client.id)
+    end
   end
 end

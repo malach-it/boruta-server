@@ -192,6 +192,23 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     end
   end
 
+  describe "remove_client_relying_party/2" do
+    test "remove client relying party" do
+      client_id = SecureRandom.uuid()
+      client_relying_party = insert(:client_relying_party, client_id: client_id) |> Repo.reload()
+
+      assert {:ok, ^client_relying_party} = RelyingParties.remove_client_relying_party(client_id)
+
+      assert_raise Ecto.NoResultsError, fn -> Repo.get!(ClientRelyingParty, client_relying_party.id) end
+    end
+
+    test "returns nil when not exists" do
+      client_id = SecureRandom.uuid()
+
+      assert RelyingParties.remove_client_relying_party(client_id) == {:ok, nil}
+    end
+  end
+
   describe "get_relying_party_by_client_id/1" do
     test "returns nil with nil" do
       assert RelyingParties.get_relying_party_by_client_id(nil) == nil

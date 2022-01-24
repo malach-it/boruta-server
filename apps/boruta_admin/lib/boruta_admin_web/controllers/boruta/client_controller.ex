@@ -84,7 +84,8 @@ defmodule BorutaAdminWeb.ClientController do
   def delete(conn, %{"id" => client_id}) do
     client = get_client(client_id)
 
-    with {:ok, %Client{}} <- Admin.delete_client(client) do
+    with {:ok, %Client{}} <- Admin.delete_client(client),
+          {:ok, _client_relying_party} <- RelyingParties.remove_client_relying_party(client_id) do
       send_resp(conn, :no_content, "")
     end
   end
