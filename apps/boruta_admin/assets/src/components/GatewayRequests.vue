@@ -120,21 +120,5 @@ export default {
 
 <style scoped lang="scss">
 .gateway-requests {
-  display: flex;
-  flex-wrap: wrap;
-  &>div {
-    width: 33%;
-  }
-  @media (max-width: 1200px) {
-    &>div {
-      width: 50%;
-    }
-  }
-  @media (max-width: 768px) {
-    flex-direction: column;
-    &>div {
-      width: 100%;
-    }
-  }
 }
 </style>
