@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const DEFAULT_ID = 'non-existing'
+
 const defaults = {
-  id: 'non-existing',
+  id: DEFAULT_ID,
   name: null,
   type: 'internal',
   errors: null
@@ -28,7 +30,7 @@ class RelyingParty {
     // TODO trigger validate
     let response
     const { id, serialized } = this
-    if (id) {
+    if (id && id != DEFAULT_ID) {
       response = this.constructor.api().patch(`/${id}`, { relying_party: serialized })
     } else {
       response = this.constructor.api().post('/', { relying_party: serialized })
