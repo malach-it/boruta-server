@@ -26,11 +26,15 @@ class RelyingParty {
     })
   }
 
+  get isPersisted () {
+    return this.id && this.id != DEFAULT_ID
+  }
+
   save () {
     // TODO trigger validate
     let response
     const { id, serialized } = this
-    if (id && id != DEFAULT_ID) {
+    if (this.isPersisted) {
       response = this.constructor.api().patch(`/${id}`, { relying_party: serialized })
     } else {
       response = this.constructor.api().post('/', { relying_party: serialized })

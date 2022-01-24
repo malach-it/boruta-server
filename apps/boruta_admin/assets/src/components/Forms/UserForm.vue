@@ -3,7 +3,7 @@
     <div class="ui large segment">
       <FormErrors :errors="user.errors" v-if="user.errors" />
       <h3>Accessible scopes</h3>
-      <form class="ui form" v-on:submit.prevent="submit()">
+      <form class="ui form" @submit.prevent="submit">
         <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         <hr />
         <button class="ui large right floated violet button" type="submit">{{ action }}</button>
@@ -38,9 +38,6 @@ export default {
   methods: {
     back () {
       this.$emit('back')
-    },
-    submit () {
-      this.$emit('submit', this.user)
     },
     addScope () {
       this.user.authorized_scopes.push({ model: new Scope() })

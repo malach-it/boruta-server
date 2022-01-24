@@ -4,7 +4,7 @@
       <div class="ui segments" v-if="scopes.length">
         <div v-for="(scope, index) in scopes" class="ui mini highlightable segment" :key="index">
           <div v-if="scope.edit">
-            <form v-on:submit.prevent="saveScope(scope)" class="ui form">
+            <form @submit.prevent="saveScope(scope)" class="ui form">
               <div class="ui stackable grid">
                 <div class="four wide column">
                   <div class="ui input" :class="{ 'error': scope.errors && scope.errors.name }">

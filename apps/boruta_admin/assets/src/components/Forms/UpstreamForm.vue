@@ -2,7 +2,7 @@
   <div class="upstream-form">
     <div class="ui large segment">
       <FormErrors v-if="upstream.errors" :errors="upstream.errors" />
-      <form class="ui form" v-on:submit.prevent="submit()">
+      <form class="ui form" @submit.prevent="submit">
         <h3>General configuration</h3>
         <div class="field">
           <label>Scheme</label>
@@ -69,9 +69,6 @@ export default {
   methods: {
     back () {
       this.$emit('back')
-    },
-    submit () {
-      this.$emit('submit', this.upstream)
     },
     addUpstreamUri () {
       this.upstream.uris.push({})

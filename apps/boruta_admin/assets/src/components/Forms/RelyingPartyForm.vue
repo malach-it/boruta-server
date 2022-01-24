@@ -2,7 +2,7 @@
   <div class="relying-party-form">
     <div class="ui large segment">
       <FormErrors v-if="relyingParty.errors" :errors="relyingParty.errors" />
-      <form class="ui form" v-on:submit.prevent="submit()">
+      <form class="ui form" @submit.prevent="submit">
         <h3>General configuration</h3>
         <div class="field">
           <label>Name</label>
@@ -14,7 +14,7 @@
             <option value="internal">internal</option>
           </select>
         </div>
-        <section v-if="relyingParty.id">
+        <section v-if="relyingParty.isPersisted">
           <h3>Sessions</h3>
           <div class="ui segment">
             <router-link
@@ -44,7 +44,7 @@
             </p>
             <router-link
               :to="{ name: 'edit-registration-template', params: { relyingPartyId: relyingParty.id } }"
-              v-if="relyingParty.id && relyingParty.registrable"
+              v-if="relyingParty.isPersisted && relyingParty.registrable"
               class="ui fluid blue button">Edit registration template</router-link>
           </div>
         </section>
@@ -68,9 +68,6 @@ export default {
   methods: {
     back () {
       this.$emit('back')
-    },
-    submit () {
-      this.$emit('submit', this.relyingParty)
     }
   }
 }

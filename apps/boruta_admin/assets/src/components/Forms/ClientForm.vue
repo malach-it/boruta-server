@@ -2,7 +2,7 @@
   <div class="client-form">
     <div class="ui large segment">
       <FormErrors v-if="client.errors" :errors="client.errors" />
-      <form class="ui form" v-on:submit.prevent="submit()">
+      <form class="ui form" @submit.prevent="submit">
         <h3>General configuration</h3>
         <div class="field">
           <label>Name</label>
@@ -97,9 +97,6 @@ export default {
     FormErrors
   },
   methods: {
-    submit () {
-      this.$emit('submit', this.client)
-    },
     back () {
       this.$emit('back')
     },
