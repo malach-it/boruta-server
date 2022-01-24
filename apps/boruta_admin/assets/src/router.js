@@ -203,7 +203,6 @@ router.beforeEach((to, from, next) => {
     window.addEventListener('logged_in', () => { next() })
 
     oauth.silentRefresh()
-    return next(false)
   }
 
   return next()
