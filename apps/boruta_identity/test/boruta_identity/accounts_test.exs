@@ -146,21 +146,19 @@ defmodule BorutaIdentity.AccountsTest do
       assert {:registration_initialized, ^context, %Ecto.Changeset{} = changeset, %Template{}} =
                Accounts.initialize_registration(context, client_id, DummyRegistration)
 
-      assert changeset.required == [:password, :email]
+      assert changeset.required == [:password, :email, :relying_party_id]
     end
   end
 
   describe "register/3" do
     setup do
+      relying_party = insert(:relying_party, registrable: true)
       client_relying_party =
         BorutaIdentity.Factory.insert(:client_relying_party,
-          relying_party: build(
-            :relying_party,
-            registrable: true
-          )
+          relying_party: relying_party
         )
 
-      {:ok, client_id: client_relying_party.client_id}
+      {:ok, relying_party: relying_party, client_id: client_relying_party.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -346,6 +344,24 @@ defmodule BorutaIdentity.AccountsTest do
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
+    end
+
+    test "associates user with relying party", %{client_id: client_id, relying_party: relying_party} do
+      email = unique_user_email()
+      context = :context
+      user_params = %{email: email, password: valid_user_password()}
+      confirmation_callback_fun = & &1
+
+      assert {:user_registered, ^context, user, _session_token} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
+      assert user.relying_party_id == relying_party.id
     end
 
     @tag :skip

@@ -20,8 +20,8 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.Registrations
-  def register(registration_params, confirmation_url_fun) do
-    case create_user(registration_params, confirmation_url_fun) do
+  def register(relying_party, registration_params, confirmation_url_fun) do
+    case create_user(relying_party, registration_params, confirmation_url_fun) do
       {:ok, %{create_user: user}} ->
         {:ok, user}
 
@@ -115,10 +115,10 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  defp create_user(registration_params, confirmation_url_fun) do
+  defp create_user(relying_party, registration_params, confirmation_url_fun) do
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:create_user, fn _changes ->
-      User.registration_changeset(%User{}, registration_params)
+      User.registration_changeset(%User{}, registration_params |> Map.put(:relying_party_id, relying_party.id))
     end)
     |> Ecto.Multi.run(:deliver_confirmation_mail, fn _repo, %{create_user: user} ->
       Deliveries.deliver_user_confirmation_instructions(
