@@ -49,9 +49,11 @@ defmodule BorutaAdminWeb.Router do
     resources("/clients", ClientController, except: [:new, :edit])
     # TODO user scopes
     # resources "/users/:user_id/scopes, only: [:create, :delete]
-    resources("/users", UserController, except: [:new, :edit, :create])
+    resources("/users", UserController, except: [:index, :new, :edit, :create])
     resources("/upstreams", UpstreamController, except: [:new, :edit])
     resources "/relying-parties", RelyingPartyController, except: [:new, :edit] do
+      resources("/users", UserController, only: [:index])
+
       get "/templates/:template_type", RelyingPartyController, :template, as: :template
       patch "/templates/:template_type", RelyingPartyController, :update_template, as: :template
     end

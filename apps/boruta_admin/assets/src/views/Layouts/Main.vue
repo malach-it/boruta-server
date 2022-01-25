@@ -27,6 +27,16 @@
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'relying-parties' }">
+            <div class="relying-parties item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="users icon"></i>
+                <span>Relying parties</span>
+              </a>
+            </div>
+          </router-link>
+          <!-- <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'relying-parties' }">
             <div class="users item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="users icon"></i>
@@ -45,7 +55,7 @@
                 </div>
               </div>
             </div>
-          </router-link>
+          </router-link> -->
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'clients' }">

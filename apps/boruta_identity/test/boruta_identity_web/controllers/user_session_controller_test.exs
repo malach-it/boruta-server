@@ -3,10 +3,6 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
 
   import BorutaIdentity.AccountsFixtures
 
-  setup do
-    %{user: user_fixture()}
-  end
-
   describe "whithout client set" do
     test "create session redirects to home", %{conn: conn} do
       conn = post(conn, Routes.user_session_path(conn, :create), %{"user" => %{}})
@@ -35,7 +31,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
 
-      {:ok, conn: conn}
+      {:ok, conn: conn, user: user_fixture(%{relying_party_id: client_relying_party.relying_party_id})}
     end
 
     test "renders log in page", %{conn: conn} do
@@ -56,7 +52,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
 
-      {:ok, conn: conn}
+      {:ok, conn: conn, user: user_fixture(%{relying_party_id: client_relying_party.relying_party_id})}
     end
 
     test "logs the user in", %{conn: conn, user: user} do
@@ -122,7 +118,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
 
-      {:ok, conn: conn}
+      {:ok, conn: conn, user: user_fixture(%{relying_party_id: client_relying_party.relying_party_id})}
     end
 
     test "logs the user out", %{conn: conn, user: user} do

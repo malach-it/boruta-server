@@ -75,8 +75,7 @@ defmodule BorutaIdentity.Accounts.User do
     |> validate_required([:email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
-    |> unsafe_validate_unique(:email, BorutaIdentity.Repo)
-    |> unique_constraint(:email)
+    |> unique_constraint([:email, :relying_party_id])
   end
 
   defp validate_password(changeset, opts) do

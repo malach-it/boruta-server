@@ -48,6 +48,10 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       :initialize_password_reset,
       # BorutaIdentity.Accounts.ResetPasswords
       :reset_password
+    ],
+    admin: [
+      # BorutaIdentity.Accounts.Admin
+      :list_users
     ]
   }
 
@@ -55,9 +59,11 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   schema "relying_parties" do
     field(:name, :string)
     field(:type, :string, default: "internal")
+
     field(:registrable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
     field(:reset_password, :boolean, default: true, virtual: true)
+    field(:admin, :boolean, default: true, virtual: true)
 
     has_many(:client_relying_parties, ClientRelyingParty)
     has_many(:templates, Template, on_replace: :delete_if_exists)

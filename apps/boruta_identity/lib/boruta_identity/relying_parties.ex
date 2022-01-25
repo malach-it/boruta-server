@@ -115,12 +115,16 @@ defmodule BorutaIdentity.RelyingParties do
   end
 
   def remove_client_relying_party(client_id) do
-    query = from(cr in ClientRelyingParty,
-      where: cr.client_id == ^client_id,
-      select: cr)
+    query =
+      from(cr in ClientRelyingParty,
+        where: cr.client_id == ^client_id,
+        select: cr
+      )
+
     case Repo.delete_all(query) do
       {1, [client_relying_party]} ->
         {:ok, client_relying_party}
+
       {0, []} ->
         {:ok, nil}
     end
@@ -141,6 +145,10 @@ defmodule BorutaIdentity.RelyingParties do
     end
   end
 
+  def get_relying_party_client_id(relying_party_id) do
+    Repo.get_by(ClientRelyingParty, relying_party_id: relying_party_id)
+  end
+
   alias BorutaIdentity.RelyingParties.Template
 
   @doc """
@@ -159,8 +167,8 @@ defmodule BorutaIdentity.RelyingParties do
   """
   def get_relying_party_template!(relying_party_id, type) do
     case RelyingParty
-    |> Repo.get!(relying_party_id)
-    |> RelyingParty.template(type) do
+         |> Repo.get!(relying_party_id)
+         |> RelyingParty.template(type) do
       nil -> raise Ecto.NoResultsError, queryable: Template
       template -> template
     end

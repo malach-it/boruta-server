@@ -23,6 +23,7 @@ import RelyingParties from './views/RelyingParties.vue'
 import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
 import RelyingParty from './views/RelyingParties/RelyingParty.vue'
 import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
+import Users from './views/RelyingParties/Users.vue'
 import EditSessionTemplate from './views/RelyingParties/EditSessionTemplate.vue'
 import EditNewResetPasswordTemplate from './views/RelyingParties/EditNewResetPasswordTemplate.vue'
 import EditEditResetPasswordTemplate from './views/RelyingParties/EditEditResetPasswordTemplate.vue'
@@ -101,16 +102,27 @@ const router = createRouter({
                   path: 'edit/registration-template',
                   name: 'edit-registration-template',
                   component: EditRegistrationTemplate
+                }, {
+                  path: 'users',
+                  name: 'users',
+                  component: Users,
+                  redirect: to => ({
+                    name: 'user-list',
+                    params: { relyingPartyId: to.params.relyingPartyId }
+                  }),
+                  children: [
+                    {
+                      path: '',
+                      name: 'user-list',
+                      component: UserList
+                    }, {
+                      path: ':userId/edit',
+                      name: 'edit-user',
+                      component: EditUser
+                    }
+                  ]
                 }
-              ],
-            }, {
-              path: 'users',
-              name: 'user-list',
-              component: UserList
-            }, {
-              path: '/users/:userId/edit',
-              name: 'edit-user',
-              component: EditUser
+              ]
             }
           ]
         }, {
