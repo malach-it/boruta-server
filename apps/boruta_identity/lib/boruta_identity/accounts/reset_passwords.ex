@@ -118,7 +118,10 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                   ) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    with {:ok, user} <- apply(client_impl, :get_user, [reset_password_instructions_params]) do
+    with {:ok, user} <-
+           apply(client_impl, :get_user, [
+             reset_password_instructions_params |> Map.put(:relying_party_id, client_rp.id)
+           ]) do
       apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
     end
 
@@ -169,7 +172,9 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
     client_impl = RelyingParty.implementation(client_rp)
     edit_template = edit_reset_password_template(client_rp)
 
-    case apply(client_impl, :reset_password, [reset_password_params]) do
+    case apply(client_impl, :reset_password, [
+           reset_password_params |> Map.put(:relying_party_id, client_rp.id)
+         ]) do
       {:ok, user} ->
         module.password_reseted(context, user)
 

@@ -23,9 +23,13 @@ defmodule BorutaAdminWeb.UserControllerTest do
   end
 
   describe "index" do
+    setup do
+      {:ok, relying_party: BorutaIdentity.Factory.insert(:relying_party)}
+    end
+
     @tag authorized: ["users:manage:all"]
-    test "lists all users", %{conn: conn} do
-      conn = get(conn, Routes.admin_user_path(conn, :index))
+    test "lists all users", %{conn: conn, relying_party: relying_party} do
+      conn = get(conn, Routes.admin_relying_party_user_path(conn, :index, relying_party))
       assert json_response(conn, 200)["data"] == []
     end
   end

@@ -10,19 +10,15 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
   setup :set_swoosh_global
 
-  setup do
-    %{user: user_fixture()}
-  end
-
-  describe "GET /users/reset_password" do
-    setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+  setup %{conn: conn} do
+    client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
 
-      {:ok, conn: conn}
-    end
+      {:ok, conn: conn, user: user_fixture(%{relying_party_id: client_relying_party.relying_party_id})}
+  end
 
+  describe "GET /users/reset_password" do
     test "renders the reset password page", %{conn: conn} do
       conn = get(conn, Routes.user_reset_password_path(conn, :new))
       response = html_response(conn, 200)
@@ -31,14 +27,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "POST /users/reset_password" do
-    setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
-
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
-      {:ok, conn: conn}
-    end
-
     @tag :capture_log
     test "sends a new reset password token", %{conn: conn, user: user} do
       conn =
@@ -69,15 +57,11 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "GET /users/reset_password/:token" do
-    setup %{conn: conn, user: user} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
-
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
+    setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
       {:ok, token} = Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
-      {:ok, conn: conn, token: token}
+      {:ok, token: token}
     end
 
     test "renders reset password", %{conn: conn, token: token} do
@@ -93,15 +77,11 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "PUT /users/reset_password/:token" do
-    setup %{conn: conn, user: user} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
-
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
+    setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
       {:ok, token} = Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
-      {:ok, conn: conn, token: token}
+      {:ok, token: token}
     end
 
     test "resets password once", %{conn: conn, user: user, token: token} do
