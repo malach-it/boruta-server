@@ -215,9 +215,9 @@ router.beforeEach((to, from, next) => {
     window.addEventListener('logged_in', () => { next() })
 
     oauth.silentRefresh()
+  } else {
+    return next()
   }
-
-  return next()
 })
 
 export default router
