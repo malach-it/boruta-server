@@ -44,7 +44,7 @@ export default {
   },
   methods: {
     getUsers () {
-      User.all(this.$route.params.relyingPartyId).then((users) => {
+      User.all().then((users) => {
         this.users = users
       })
     },

@@ -101,7 +101,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
   defwithclientrp create_session(context, client_id, authentication_params, module) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    with {:ok, user} <- apply(client_impl, :get_user, [authentication_params |> Map.put(:relying_party_id, client_rp.id)]),
+    with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
          {:ok, user} <-
            apply(client_impl, :check_user_against, [user, authentication_params]),
          {:ok, session_token} <- apply(client_impl, :create_session, [user]) do

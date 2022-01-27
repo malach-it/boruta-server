@@ -51,9 +51,9 @@ class User {
     const { id, serialized } = this
     let response
     if (id) {
-      response = this.constructor.api().patch(`/users/${id}`, { user: serialized })
+      response = this.constructor.api().patch(`/${id}`, { user: serialized })
     } else {
-      response = this.constructor.api().post('/users', { user: serialized })
+      response = this.constructor.api().post('/', { user: serialized })
     }
     return response
       .then(({ data }) => {
@@ -90,19 +90,19 @@ User.api = function () {
   const accessToken = localStorage.getItem('access_token')
 
   return axios.create({
-    baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api`,
+    baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/users`,
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 }
 
-User.all = function (relyingPartyId) {
-  return this.api().get(`/relying-parties/${relyingPartyId}/users`).then(({ data }) => {
+User.all = function () {
+  return this.api().get('/').then(({ data }) => {
     return data.data.map((user) => new User(user))
   })
 }
 
 User.get = function (id) {
-  return this.api().get(`/users/${id}`).then(({ data }) => {
+  return this.api().get(`/${id}`).then(({ data }) => {
     return new User(data.data)
   })
 }
@@ -110,7 +110,7 @@ User.get = function (id) {
 User.default = defaults
 
 User.current = function () {
-  return this.api().get(`/users/current`).then(({ data }) => {
+  return this.api().get(`/current`).then(({ data }) => {
     return new User(data.data)
   })
 }

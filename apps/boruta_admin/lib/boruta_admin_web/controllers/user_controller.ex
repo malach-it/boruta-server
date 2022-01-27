@@ -5,8 +5,6 @@ defmodule BorutaAdminWeb.UserController do
     authorize: 2
   ]
 
-  @behaviour BorutaIdentity.Accounts.AdminApplication
-
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
 
@@ -14,12 +12,8 @@ defmodule BorutaAdminWeb.UserController do
 
   action_fallback BorutaAdminWeb.FallbackController
 
-  def index(conn, %{"relying_party_id" => relying_party_id}) do
-    Accounts.list_users(conn, relying_party_id, __MODULE__)
-  end
-
-  @impl BorutaIdentity.Accounts.AdminApplication
-  def user_list(conn, users) do
+  def index(conn, _params) do
+    users = Accounts.list_users()
     render(conn, "index.json", users: users)
   end
 

@@ -7,7 +7,6 @@ defmodule BorutaIdentity.Accounts.User do
 
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.UserAuthorizedScope
-  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   @type t :: %__MODULE__{
@@ -17,7 +16,6 @@ defmodule BorutaIdentity.Accounts.User do
           confirmed_at: NaiveDateTime.t(),
           authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
           consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
-          relying_party: Ecto.Association.NotLoaded.t() | list(RelyingParty.t()),
           last_login_at: DateTime.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
@@ -32,8 +30,6 @@ defmodule BorutaIdentity.Accounts.User do
     field(:hashed_password, :string)
     field(:confirmed_at, :utc_datetime_usec)
     field(:last_login_at, :utc_datetime_usec)
-
-    belongs_to(:relying_party, RelyingParty)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:consents, Consent, on_replace: :delete)
@@ -60,8 +56,7 @@ defmodule BorutaIdentity.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password, :relying_party_id])
-    |> validate_required([:relying_party_id])
+    |> cast(attrs, [:email, :password])
     |> validate_email()
     |> validate_password(opts)
   end
@@ -75,7 +70,8 @@ defmodule BorutaIdentity.Accounts.User do
     |> validate_required([:email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
-    |> unique_constraint([:email, :relying_party_id])
+    |> unsafe_validate_unique(:email, BorutaIdentity.Repo)
+    |> unique_constraint(:email)
   end
 
   defp validate_password(changeset, opts) do
