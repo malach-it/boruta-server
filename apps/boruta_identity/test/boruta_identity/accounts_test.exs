@@ -18,8 +18,8 @@ defmodule BorutaIdentity.AccountsTest do
     @behaviour Accounts.RegistrationApplication
 
     @impl Accounts.RegistrationApplication
-    def registration_initialized(context, changeset, template) do
-      {:registration_initialized, context, changeset, template}
+    def registration_initialized(context, template) do
+      {:registration_initialized, context, template}
     end
 
     @impl Accounts.RegistrationApplication
@@ -143,10 +143,8 @@ defmodule BorutaIdentity.AccountsTest do
     test "returns a changeset and a template", %{client_id: client_id} do
       context = :context
 
-      assert {:registration_initialized, ^context, %Ecto.Changeset{} = changeset, %Template{}} =
+      assert {:registration_initialized, ^context, %Template{}} =
                Accounts.initialize_registration(context, client_id, DummyRegistration)
-
-      assert changeset.required == [:password, :email]
     end
   end
 

@@ -15,11 +15,6 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Repo
 
   @impl BorutaIdentity.Accounts.Registrations
-  def registration_changeset(user) do
-    User.registration_changeset(user, %{})
-  end
-
-  @impl BorutaIdentity.Accounts.Registrations
   def register(registration_params, confirmation_url_fun) do
     case create_user(registration_params, confirmation_url_fun) do
       {:ok, %{create_user: user}} ->

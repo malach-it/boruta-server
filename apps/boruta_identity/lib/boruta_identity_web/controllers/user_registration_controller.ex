@@ -31,8 +31,8 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   end
 
   @impl BorutaIdentity.Accounts.RegistrationApplication
-  def registration_initialized(conn, changeset, template) do
-    render(conn, "new.html", changeset: changeset, template: compile_template(template))
+  def registration_initialized(conn, template) do
+    render(conn, "new.html", template: compile_template(template))
   end
 
   @impl BorutaIdentity.Accounts.RegistrationApplication

@@ -24,7 +24,6 @@ defmodule BorutaIdentity.Accounts.RegistrationApplication do
 
   @callback registration_initialized(
               context :: any(),
-              changeset :: Ecto.Changeset.t(),
               template :: BorutaIdentity.RelyingParties.Template.t()
             ) :: any()
 
@@ -57,8 +56,6 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   @type registration_params :: map()
 
-  @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
-
   @callback register(
               registration_params :: registration_params(),
               confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
@@ -70,10 +67,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
   @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
           callback_result :: any()
   defwithclientrp initialize_registration(context, client_id, module) do
-    client_impl = RelyingParty.implementation(client_rp)
-    changeset = apply(client_impl, :registration_changeset, [%User{}])
-
-    module.registration_initialized(context, changeset, new_registration_template(client_rp))
+    module.registration_initialized(context, new_registration_template(client_rp))
   end
 
   @spec register(
