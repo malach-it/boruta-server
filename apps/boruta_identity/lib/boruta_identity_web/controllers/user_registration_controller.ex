@@ -21,15 +21,10 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   def create(conn, %{"user" => user_params}) do
     client_id = get_session(conn, :current_client_id)
 
-    registration_params = %{
-      email: user_params["email"],
-      password: user_params["password"]
-    }
-
     Accounts.register(
       conn,
       client_id,
-      registration_params,
+      user_params,
       &Routes.user_confirmation_url(conn, :confirm, &1),
       __MODULE__
     )

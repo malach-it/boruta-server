@@ -85,7 +85,6 @@ defmodule BorutaIdentity.Accounts do
   The Accounts context.
   """
 
-  alias BorutaIdentity.Accounts.Admin
   alias BorutaIdentity.Accounts.Confirmations
   alias BorutaIdentity.Accounts.Consents
   alias BorutaIdentity.Accounts.Deliveries
@@ -131,16 +130,13 @@ defmodule BorutaIdentity.Accounts do
   defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
   defdelegate confirm_user(token), to: Confirmations
 
-  ## WIP Admin
-
-  defdelegate list_users(context, relying_party_id, module), to: Admin
-
   ## Deprecated Sessions
 
   defdelegate generate_user_session_token(user), to: Sessions
 
   ## Database getters
 
+  defdelegate list_users, to: Users
   defdelegate get_user(id), to: Users
   defdelegate get_user_by_email(email), to: Users
   defdelegate get_user_by_session_token(token), to: Users

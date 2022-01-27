@@ -67,15 +67,6 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  defmodule DummyAdmin do
-    @behaviour Accounts.AdminApplication
-
-    @impl Accounts.AdminApplication
-    def user_list(context, users) do
-      {:user_list, context, users}
-    end
-  end
-
   describe "Utils.client_relying_party/1" do
     test "returns an error when client_id is nil" do
       client_id = nil
@@ -155,19 +146,21 @@ defmodule BorutaIdentity.AccountsTest do
       assert {:registration_initialized, ^context, %Ecto.Changeset{} = changeset, %Template{}} =
                Accounts.initialize_registration(context, client_id, DummyRegistration)
 
-      assert changeset.required == [:password, :email, :relying_party_id]
+      assert changeset.required == [:password, :email]
     end
   end
 
   describe "register/3" do
     setup do
-      relying_party = insert(:relying_party, registrable: true)
       client_relying_party =
         BorutaIdentity.Factory.insert(:client_relying_party,
-          relying_party: relying_party
+          relying_party: build(
+            :relying_party,
+            registrable: true
+          )
         )
 
-      {:ok, relying_party: relying_party, client_id: client_relying_party.client_id}
+      {:ok, client_id: client_relying_party.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -300,10 +293,10 @@ defmodule BorutaIdentity.AccountsTest do
       assert "should be at most 80 character(s)" in errors_on(changeset).password
     end
 
-    test "validates email uniqueness", %{client_id: client_id, relying_party: relying_party} do
-      %{email: email} = user_fixture(%{relying_party: relying_party})
+    test "validates email uniqueness", %{client_id: client_id} do
+      %{email: email} = user_fixture()
       context = :context
-      user_params = %{email: email, password: valid_user_password()}
+      user_params = %{email: email}
       confirmation_callback_fun = & &1
 
       assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
@@ -318,7 +311,7 @@ defmodule BorutaIdentity.AccountsTest do
       assert "has already been taken" in errors_on(changeset).email
 
       # Now try with the upper cased email too, to check that email case is ignored.
-      user_params = %{email: String.upcase(email), password: valid_user_password()}
+      user_params = %{email: String.upcase(email)}
       confirmation_callback_fun = & &1
 
       assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
@@ -353,24 +346,6 @@ defmodule BorutaIdentity.AccountsTest do
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
-    end
-
-    test "associates user with relying party", %{client_id: client_id, relying_party: relying_party} do
-      email = unique_user_email()
-      context = :context
-      user_params = %{email: email, password: valid_user_password()}
-      confirmation_callback_fun = & &1
-
-      assert {:user_registered, ^context, user, _session_token} =
-               Accounts.register(
-                 context,
-                 client_id,
-                 user_params,
-                 confirmation_callback_fun,
-                 DummyRegistration
-               )
-
-      assert user.relying_party_id == relying_party.id
     end
 
     @tag :skip
@@ -427,10 +402,9 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "create_session/4" do
     setup do
-      relying_party = insert(:relying_party)
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
 
-      {:ok, client_id: client_relying_party.client_id, relying_party: relying_party}
+      {:ok, client_id: client_relying_party.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -532,12 +506,12 @@ defmodule BorutaIdentity.AccountsTest do
                "Invalid email or password."
     end
 
-    test "authenticates the user", %{client_id: client_id, relying_party: relying_party} do
-      %User{email: email} = user_fixture(%{relying_party: relying_party})
+    test "authenticates the user", %{client_id: client_id} do
+      %User{email: email} = user = user_fixture()
       context = :context
       authentication_params = %{email: email, password: valid_user_password()}
 
-      assert {:user_authenticated, ^context, %User{email: ^email}, session_token} =
+      assert {:user_authenticated, ^context, ^user, session_token} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -554,10 +528,9 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "delete_session/4" do
     setup do
-      relying_party = insert(:relying_party)
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
+      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
 
-      {:ok, client_id: client_relying_party.client_id, relying_party: relying_party}
+      {:ok, client_id: client_relying_party.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -606,9 +579,9 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "deletes session", %{client_id: client_id, relying_party: relying_party} do
+    test "deletes session", %{client_id: client_id} do
       context = :context
-      %User{email: email} = user = user_fixture(%{relying_party_id: relying_party.id})
+      %User{email: email} = user = user_fixture()
       authentication_params = %{email: email, password: valid_user_password()}
 
       assert {:user_authenticated, ^context, ^user, session_token} =
@@ -647,23 +620,13 @@ defmodule BorutaIdentity.AccountsTest do
   test "reset_password/4"
 
   describe "list_users/0" do
-    test "returns empty list" do
-      context = :context
-      relying_party_id = insert(:relying_party).id
-
-      user_fixture()
-      assert {:user_list, ^context, []} = Accounts.list_users(context, relying_party_id, DummyAdmin)
+    test "returns an empty list" do
+      assert Accounts.list_users() == []
     end
 
     test "returns users" do
-      context = :context
-      relying_party_id = insert(:relying_party).id
-      other_relying_party_id = insert(:relying_party).id
-
-      user = user_fixture(%{relying_party_id: relying_party_id})
-      user_fixture(%{relying_party_id: other_relying_party_id})
-
-      assert {:user_list, ^context, [^user]} = Accounts.list_users(context, relying_party_id, DummyAdmin)
+      user = user_fixture()
+      assert Accounts.list_users() == [user]
     end
   end
 
@@ -704,7 +667,6 @@ defmodule BorutaIdentity.AccountsTest do
       assert "should be at most 160 character(s)" in errors_on(changeset).email
     end
 
-    @tag :skip
     test "validates email uniqueness", %{user: user} do
       %{email: email} = user_fixture()
 

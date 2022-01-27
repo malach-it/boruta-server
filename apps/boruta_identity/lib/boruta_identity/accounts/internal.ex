@@ -3,7 +3,6 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
-  @behaviour BorutaIdentity.Accounts.Admin
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
@@ -14,17 +13,6 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
-
-  @impl BorutaIdentity.Accounts.Admin
-  def list_users(relying_party_id) do
-    Repo.all(
-      from(u in User,
-        left_join: as in assoc(u, :authorized_scopes),
-        where: u.relying_party_id == ^relying_party_id,
-        preload: [authorized_scopes: as]
-      )
-    )
-  end
 
   @impl BorutaIdentity.Accounts.Registrations
   def registration_changeset(user) do
@@ -52,14 +40,13 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.Sessions
-  def get_user(%{email: email, relying_party_id: relying_party_id}) when is_binary(email) do
+  def get_user(%{email: email}) when is_binary(email) do
     user =
       Repo.one!(
-        from(u in User,
+        from u in User,
           left_join: as in assoc(u, :authorized_scopes),
-          where: u.email == ^email and u.relying_party_id == ^relying_party_id,
+          where: u.email == ^email,
           preload: [authorized_scopes: as]
-        )
       )
 
     {:ok, user}
@@ -131,10 +118,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   defp create_user(registration_params, confirmation_url_fun) do
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:create_user, fn _changes ->
-      User.registration_changeset(
-        %User{},
-        registration_params
-      )
+      User.registration_changeset(%User{}, registration_params)
     end)
     |> Ecto.Multi.run(:deliver_confirmation_mail, fn _repo, %{create_user: user} ->
       Deliveries.deliver_user_confirmation_instructions(

@@ -15,14 +15,6 @@
           </select>
         </div>
         <section v-if="relyingParty.isPersisted">
-          <h3>Users</h3>
-          <div class="ui segment">
-            <router-link
-              :to="{ name: 'users', params: { relyingPartyId: relyingParty.id } }"
-              class="ui fluid blue button">List users</router-link>
-          </div>
-        </section>
-        <section v-if="relyingParty.isPersisted">
           <h3>Sessions</h3>
           <div class="ui segment">
             <router-link

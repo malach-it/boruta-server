@@ -55,10 +55,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties.RelyingParty
 
-  @type registration_params :: %{
-    email: String.t(),
-    password: String.t()
-  }
+  @type registration_params :: map()
 
   @callback registration_changeset(user :: User.t()) :: changeset :: Ecto.Changeset.t()
 
@@ -96,7 +93,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
     client_impl = RelyingParty.implementation(client_rp)
 
     with {:ok, user} <-
-      apply(client_impl, :register, [registration_params |> Map.put(:relying_party_id, client_rp.id), confirmation_url_fun]),
+           apply(client_impl, :register, [registration_params, confirmation_url_fun]),
          {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
       module.user_registered(context, user, session_token)
     else
