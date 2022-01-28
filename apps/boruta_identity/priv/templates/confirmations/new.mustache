@@ -1,0 +1,17 @@
+<h1>Resend confirmation instructions</h1>
+
+<form action="{{ create_user_confirmation_path }}" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+
+  <div class="field">
+    <label for="user_email">Email</label>
+    <input type="email" id="user_email" name="user[email]" required />
+  </div>
+
+  <button type="submit">Ressend confirmation instructions</button>
+
+</form>
+
+<p>
+  {{#registrable?}}<a href="{{ new_user_registration_path }}">Register</a> | {{/registrable?}}<a href="{{ new_user_reset_password_path }}">Forgot your password?</a>
+</p>

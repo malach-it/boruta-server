@@ -1,6 +1,8 @@
 defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   use BorutaIdentityWeb.ConnCase, async: true
 
+  import BorutaIdentity.Factory
+
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Repo
   import BorutaIdentity.AccountsFixtures
@@ -9,7 +11,43 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
     %{user: user_fixture()}
   end
 
+  describe "whithout client set" do
+    test "new confirmation redirects to home", %{conn: conn} do
+      conn = get(conn, Routes.user_confirmation_path(conn, :new))
+      assert get_flash(conn, :error) == "Client identifier not provided."
+      assert redirected_to(conn) == "/"
+    end
+  end
+
+  describe "whithout client relying party" do
+    setup %{conn: conn} do
+      conn = init_test_session(conn, %{current_client_id: SecureRandom.uuid()})
+
+      {:ok, conn: conn}
+    end
+
+    test "new confirmation redirects to home", %{conn: conn} do
+      conn = get(conn, Routes.user_confirmation_path(conn, :new))
+
+      assert get_flash(conn, :error) ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+
+      assert redirected_to(conn) == "/"
+    end
+  end
+
   describe "GET /users/confirm" do
+    setup %{conn: conn} do
+      client_relying_party =
+        insert(:client_relying_party,
+          relying_party: build(:relying_party, registrable: true)
+        )
+
+      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
+
+      {:ok, conn: conn}
+    end
+
     test "renders the confirmation page", %{conn: conn} do
       conn = get(conn, Routes.user_confirmation_path(conn, :new))
       response = html_response(conn, 200)

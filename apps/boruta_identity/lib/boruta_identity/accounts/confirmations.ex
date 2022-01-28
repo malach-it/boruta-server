@@ -1,9 +1,37 @@
+defmodule BorutaIdentity.Accounts.ConfirmationApplication do
+  @moduledoc """
+  TODO ConfirmationApplication documentation
+  """
+
+  @callback confirmation_instructions_initialized(
+              context :: any(),
+              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t(),
+              template :: BorutaIdentity.RelyingParties.Template.t()
+            ) :: any()
+
+  @callback invalid_relying_party(
+              context :: any(),
+              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
+            ) :: any()
+end
+
 defmodule BorutaIdentity.Accounts.Confirmations do
   @moduledoc false
 
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
+
+  defwithclientrp initialize_confirmation_instructions(context, client_id, module) do
+    module.confirmation_instructions_initialized(
+      context,
+      client_rp,
+      new_confirmation_instructions_template(client_rp)
+    )
+  end
 
   @doc """
   Confirms a user by the given token.
@@ -26,5 +54,9 @@ defmodule BorutaIdentity.Accounts.Confirmations do
     Ecto.Multi.new()
     |> Ecto.Multi.update(:user, User.confirm_changeset(user))
     |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, ["confirm"]))
+  end
+
+  defp new_confirmation_instructions_template(relying_party) do
+    RelyingParty.template(relying_party, :new_confirmation_instructions)
   end
 end

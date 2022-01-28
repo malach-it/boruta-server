@@ -140,7 +140,7 @@ defmodule BorutaIdentity.AccountsTest do
                "Feature is not enabled for client relying party."
     end
 
-    test "returns a changeset and a template", %{client_id: client_id} do
+    test "returns a template", %{client_id: client_id} do
       context = :context
 
       assert {:registration_initialized, ^context, %Template{}} =

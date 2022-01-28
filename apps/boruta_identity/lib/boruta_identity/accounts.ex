@@ -127,6 +127,8 @@ defmodule BorutaIdentity.Accounts do
 
   ## WIP Confirmation
 
+  defdelegate initialize_confirmation_instructions(context, client_id, module), to: Confirmations
+
   defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
   defdelegate confirm_user(token), to: Confirmations
 
