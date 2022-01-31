@@ -3,6 +3,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
+  @behaviour BorutaIdentity.Accounts.Confirmations
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
@@ -102,11 +103,36 @@ defmodule BorutaIdentity.Accounts.Internal do
   def reset_password(reset_password_params) do
     with {:ok, user} <-
            get_user_by_reset_password_token(reset_password_params.reset_password_token),
-         {:ok, %{user: user}} <- reset_user_password(user, reset_password_params) do
+         {:ok, %{user: user}} <- reset_user_password_multi(user, reset_password_params) do
       {:ok, user}
     else
       {:error, :user, changeset, _} -> {:error, changeset}
       {:error, _reason} = error -> error
+    end
+  end
+
+  @impl BorutaIdentity.Accounts.Confirmations
+  def send_confirmation_instructions(user, confirmation_url_fun) do
+    with {:ok, _email} <-
+           Deliveries.deliver_user_confirmation_instructions(
+             user,
+             confirmation_url_fun
+           ) do
+      :ok
+    end
+  end
+
+  @impl BorutaIdentity.Accounts.Confirmations
+  def confirm_user(token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
+         %User{confirmed_at: nil} = user <- Repo.one(query),
+         {:ok, %{user: user}} <- Repo.transaction(confirm_user_multi(user)) do
+      {:ok, user}
+    else
+      %User{} ->
+        {:error, "Account has already been confirmed."}
+      _ ->
+        {:error, "Account confirmation token is invalid or it has expired."}
     end
   end
 
@@ -133,10 +159,15 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  defp reset_user_password(user, reset_password_params) do
+  defp reset_user_password_multi(user, reset_password_params) do
     Ecto.Multi.new()
     |> Ecto.Multi.update(:user, User.password_changeset(user, reset_password_params))
     |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
     |> Repo.transaction()
+  end
+
+  defp confirm_user_multi(user) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, User.confirm_changeset(user))
   end
 end

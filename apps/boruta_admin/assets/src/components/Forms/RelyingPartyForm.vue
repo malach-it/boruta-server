@@ -48,6 +48,14 @@
               class="ui fluid blue button">Edit registration template</router-link>
           </div>
         </section>
+        <section v-if="relyingParty.isPersisted && relyingParty.confirmable">
+          <h3>Confirmation</h3>
+          <div class="ui segment">
+            <router-link
+              :to="{ name: 'edit-new-confirmation-template', params: { relyingPartyId: relyingParty.id } }"
+              class="ui fluid blue button">Edit send confirmation template</router-link>
+          </div>
+        </section>
         <hr />
         <button class="ui large right floated violet button" type="submit">{{ action }}</button>
         <a class="ui large button" v-on:click="back()">Back</a>

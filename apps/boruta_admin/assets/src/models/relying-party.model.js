@@ -13,7 +13,8 @@ const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
-  registrable: function ({ registrable }) { this.registrable = registrable }
+  registrable: function ({ registrable }) { this.registrable = registrable },
+  confirmable: function ({ confirmable }) { this.confirmable = confirmable }
 }
 
 class RelyingParty {

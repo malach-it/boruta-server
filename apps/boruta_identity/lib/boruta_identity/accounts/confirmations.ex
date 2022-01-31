@@ -1,9 +1,108 @@
+defmodule BorutaIdentity.Accounts.ConfirmationError do
+  @enforce_keys [:message]
+  defexception [:message]
+
+  @type t :: %__MODULE__{
+          message: String.t()
+        }
+
+  def exception(message) when is_binary(message) do
+    %__MODULE__{message: message}
+  end
+
+  def message(exception) do
+    exception.message
+  end
+end
+
+defmodule BorutaIdentity.Accounts.ConfirmationApplication do
+  @moduledoc """
+  TODO ConfirmationApplication documentation
+  """
+
+  @callback confirmation_instructions_initialized(
+              context :: any(),
+              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t(),
+              template :: BorutaIdentity.RelyingParties.Template.t()
+            ) :: any()
+
+  @callback confirmation_instructions_delivered(context :: any()) ::
+              any()
+
+  @callback user_confirmed(context :: any(), user :: BorutaIdentity.Accounts.User.t()) ::
+              any()
+
+  @callback user_confirmation_failure(
+              context :: any(),
+              error :: BorutaIdentity.Accounts.ConfirmationError.t()
+            ) ::
+              any()
+
+  @callback invalid_relying_party(
+              context :: any(),
+              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
+            ) :: any()
+end
+
 defmodule BorutaIdentity.Accounts.Confirmations do
   @moduledoc false
 
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+
+  alias BorutaIdentity.Accounts.ConfirmationError
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.UserToken
-  alias BorutaIdentity.Repo
+  alias BorutaIdentity.RelyingParties.RelyingParty
+
+  @type confirmation_instructions_params :: %{
+          email: String.t()
+        }
+  @type confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
+
+  @callback send_confirmation_instructions(
+              user :: User.t(),
+              confirmation_url_fun :: confirmation_url_fun()
+            ) ::
+              :ok | {:error, reason :: String.t()}
+
+  @callback confirm_user(token :: String.t()) ::
+              {:ok, user :: User.t()} | {:error, reason :: String.t()}
+
+  @spec initialize_confirmation_instructions(
+          context :: any(),
+          client_id :: String.t(),
+          module :: atom()
+        ) :: callback_result :: any()
+  defwithclientrp initialize_confirmation_instructions(context, client_id, module) do
+    module.confirmation_instructions_initialized(
+      context,
+      client_rp,
+      new_confirmation_instructions_template(client_rp)
+    )
+  end
+
+  @spec send_confirmation_instructions(
+          context :: any(),
+          client_id :: String.t(),
+          confirmation_instructions_params :: confirmation_instructions_params(),
+          confirmation_url_fun :: confirmation_url_fun(),
+          module :: atom()
+        ) :: callback_result :: any()
+  defwithclientrp send_confirmation_instructions(
+                    context,
+                    client_id,
+                    confirmation_instructions_params,
+                    confirmation_url_fun,
+                    module
+                  ) do
+    client_impl = RelyingParty.implementation(client_rp)
+
+    with {:ok, user} <- apply(client_impl, :get_user, [confirmation_instructions_params]) do
+      apply(client_impl, :send_confirmation_instructions, [user, confirmation_url_fun])
+    end
+
+    # NOTE return a success either confirmation instructions email sent or not
+    module.confirmation_instructions_delivered(context)
+  end
 
   @doc """
   Confirms a user by the given token.
@@ -11,20 +110,36 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   If the token matches, the user account is marked as confirmed
   and the token is deleted.
   """
-  @spec confirm_user(token :: String.t()) :: {:ok, user :: User.t()} | :error
-  def confirm_user(token) do
-    with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
-         %User{} = user <- Repo.one(query),
-         {:ok, %{user: user}} <- Repo.transaction(confirm_user_multi(user)) do
-      {:ok, user}
-    else
-      _ -> :error
+  @spec confirm_user(
+          context :: any(),
+          current_user :: User.t() | nil,
+          client_id :: String.t(),
+          token :: String.t(),
+          module :: atom()
+        ) :: callback_result :: any()
+  defwithclientrp confirm_user(context, client_id, current_user, token, module) do
+    client_impl = RelyingParty.implementation(client_rp)
+
+    case current_user do
+      %User{confirmed_at: confirmed_at} when not is_nil(confirmed_at) ->
+        module.user_confirmation_failure(context, %ConfirmationError{
+          message: "Account has already been confirmed."
+        })
+
+      _ ->
+        case apply(client_impl, :confirm_user, [token]) do
+          {:ok, user} ->
+            module.user_confirmed(context, user)
+
+          {:error, _reason} ->
+            module.user_confirmation_failure(context, %ConfirmationError{
+              message: "Account confirmation token is invalid or it has expired."
+            })
+        end
     end
   end
 
-  defp confirm_user_multi(user) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, User.confirm_changeset(user))
-    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, ["confirm"]))
+  defp new_confirmation_instructions_template(relying_party) do
+    RelyingParty.template(relying_party, :new_confirmation_instructions)
   end
 end

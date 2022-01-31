@@ -11,6 +11,10 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   @type t :: %__MODULE__{
           name: String.t(),
           type: String.t(),
+          registrable: boolean(),
+          confirmable: boolean(),
+          authenticable: boolean(),
+          reset_password: boolean(),
           client_relying_parties: list(ClientRelyingParty.t()) | Ecto.Association.NotLoaded.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
@@ -30,6 +34,14 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       :initialize_registration,
       # BorutaIdentity.Accounts.Registrations
       :register
+    ],
+    confirmable: [
+      # BorutaIdentity.Accounts.Confirmations
+      :initialize_confirmation_instructions,
+      # BorutaIdentity.Accounts.Confirmations
+      :send_confirmation_instructions,
+      # BorutaIdentity.Accounts.Confirmations
+      :confirm_user
     ],
     authenticable: [
       # BorutaIdentity.Accounts.Sessions
@@ -56,6 +68,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     field(:name, :string)
     field(:type, :string, default: "internal")
     field(:registrable, :boolean, default: false)
+    field(:confirmable, :boolean, default: true, virtual: true)
     field(:authenticable, :boolean, default: true, virtual: true)
     field(:reset_password, :boolean, default: true, virtual: true)
 
