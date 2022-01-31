@@ -48,11 +48,19 @@
               class="ui fluid blue button">Edit registration template</router-link>
           </div>
         </section>
-        <section v-if="relyingParty.isPersisted && relyingParty.confirmable">
+        <section v-if="relyingParty.isPersisted">
           <h3>Confirmation</h3>
-          <div class="ui segment">
+          <div class="ui segment field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="relyingParty.confirmable">
+              <label>confirmable</label>
+            </div>
+            <p class="ui info message">
+              Confirm users.
+            </p>
             <router-link
               :to="{ name: 'edit-new-confirmation-template', params: { relyingPartyId: relyingParty.id } }"
+              v-if="relyingParty.confirmable"
               class="ui fluid blue button">Edit send confirmation template</router-link>
           </div>
         </section>

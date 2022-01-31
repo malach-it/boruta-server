@@ -68,7 +68,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     field(:name, :string)
     field(:type, :string, default: "internal")
     field(:registrable, :boolean, default: false)
-    field(:confirmable, :boolean, default: true, virtual: true)
+    field(:confirmable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
     field(:reset_password, :boolean, default: true, virtual: true)
 
@@ -116,7 +116,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   def changeset(relying_party, attrs) do
     relying_party
     |> Repo.preload(:templates)
-    |> cast(attrs, [:name, :type, :registrable])
+    |> cast(attrs, [:name, :type, :registrable, :confirmable])
     |> validate_required([:name, :type])
     |> validate_inclusion(:type, @types)
     |> unique_constraint(:name)

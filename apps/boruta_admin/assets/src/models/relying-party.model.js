@@ -68,13 +68,14 @@ class RelyingParty {
   }
 
   get serialized () {
-    const { id, name, type, registrable } = this
+    const { id, name, type, registrable, confirmable } = this
 
     return {
       id,
       name,
       type,
-      registrable
+      registrable,
+      confirmable
     }
   }
 
