@@ -15,14 +15,23 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   end
 
   def create(conn, %{"user" => %{"email" => email}}) do
-    with %User{} = user <- Accounts.get_user_by_email(email) do
-      Accounts.deliver_user_confirmation_instructions(
-        user,
-        &Routes.user_confirmation_url(conn, :confirm, &1)
-      )
-    end
+    client_id = get_session(conn, :current_client_id)
 
-    # Regardless of the outcome, show an impartial success/error message.
+    confirmation_params = %{
+      email: email
+    }
+
+    Accounts.send_confirmation_instructions(
+      conn,
+      client_id,
+      confirmation_params,
+      &Routes.user_confirmation_url(conn, :confirm, &1),
+      __MODULE__
+    )
+  end
+
+  @impl BorutaIdentity.Accounts.ConfirmationApplication
+  def confirmation_instructions_delivered(conn) do
     conn
     |> put_flash(
       :info,

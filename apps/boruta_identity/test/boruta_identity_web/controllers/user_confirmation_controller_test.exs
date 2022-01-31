@@ -4,6 +4,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Repo
   import BorutaIdentity.AccountsFixtures
 
@@ -14,6 +15,19 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   describe "whithout client set" do
     test "new confirmation redirects to home", %{conn: conn} do
       conn = get(conn, Routes.user_confirmation_path(conn, :new))
+      assert get_flash(conn, :error) == "Client identifier not provided."
+      assert redirected_to(conn) == "/"
+    end
+
+    test "create confirmation redirects to home", %{conn: conn} do
+      conn =
+        post(
+          conn,
+          Routes.user_confirmation_path(conn, :create, %{
+            "user" => %{"email" => "user@email.test"}
+          })
+        )
+
       assert get_flash(conn, :error) == "Client identifier not provided."
       assert redirected_to(conn) == "/"
     end
@@ -34,13 +48,28 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
 
       assert redirected_to(conn) == "/"
     end
+
+    test "create confirmation redirects to home", %{conn: conn} do
+      conn =
+        post(
+          conn,
+          Routes.user_confirmation_path(conn, :create, %{
+            "user" => %{"email" => "user@email.test"}
+          })
+        )
+
+      assert get_flash(conn, :error) ==
+               "Relying Party not configured for given OAuth client. Please contact your administrator."
+
+      assert redirected_to(conn) == "/"
+    end
   end
 
   describe "GET /users/confirm" do
     setup %{conn: conn} do
       client_relying_party =
         insert(:client_relying_party,
-          relying_party: build(:relying_party, registrable: true)
+          relying_party: build(:relying_party, confirmable: true)
         )
 
       conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
@@ -56,6 +85,17 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   end
 
   describe "POST /users/confirm" do
+    setup %{conn: conn} do
+      client_relying_party =
+        insert(:client_relying_party,
+          relying_party: build(:relying_party, confirmable: true)
+        )
+
+      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
+
+      {:ok, conn: conn}
+    end
+
     @tag :capture_log
     test "sends a new confirmation token", %{conn: conn, user: user} do
       conn =
@@ -96,7 +136,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   describe "GET /users/confirm/:token" do
     test "confirms the given token once", %{conn: conn, user: user} do
       confirmation_url_fun = fn _ -> "http://test.host" end
-      {:ok, token} = Accounts.deliver_user_confirmation_instructions(user, confirmation_url_fun)
+      {:ok, token} = Deliveries.deliver_user_confirmation_instructions(user, confirmation_url_fun)
 
       conn = get(conn, Routes.user_confirmation_path(conn, :confirm, token))
       assert redirected_to(conn) == "/"

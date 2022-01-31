@@ -37,7 +37,9 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     ],
     confirmable: [
       # BorutaIdentity.Accounts.Confirmations
-      :initialize_confirmation_instructions
+      :initialize_confirmation_instructions,
+      # BorutaIdentity.Accounts.Confirmations
+      :send_confirmation_instructions
     ],
     authenticable: [
       # BorutaIdentity.Accounts.Sessions

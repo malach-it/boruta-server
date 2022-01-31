@@ -9,6 +9,9 @@ defmodule BorutaIdentity.Accounts.ConfirmationApplication do
               template :: BorutaIdentity.RelyingParties.Template.t()
             ) :: any()
 
+  @callback confirmation_instructions_delivered(context :: any()) ::
+              any()
+
   @callback invalid_relying_party(
               context :: any(),
               error :: BorutaIdentity.Accounts.RelyingPartyError.t()
@@ -25,12 +28,52 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
+  @type confirmation_instructions_params :: %{
+          email: String.t()
+        }
+  @type confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
+
+  @callback send_confirmation_instructions(
+              user :: User.t(),
+              confirmation_url_fun :: confirmation_url_fun()
+            ) ::
+              :ok | {:error, reason :: String.t()}
+
+  @spec initialize_confirmation_instructions(
+          context :: any(),
+          client_id :: String.t(),
+          module :: atom()
+        ) :: callback_result :: any()
   defwithclientrp initialize_confirmation_instructions(context, client_id, module) do
     module.confirmation_instructions_initialized(
       context,
       client_rp,
       new_confirmation_instructions_template(client_rp)
     )
+  end
+
+  @spec send_confirmation_instructions(
+          context :: any(),
+          client_id :: String.t(),
+          confirmation_instructions_params :: confirmation_instructions_params(),
+          confirmation_url_fun :: confirmation_url_fun(),
+          module :: atom()
+        ) :: callback_result :: any()
+  defwithclientrp send_confirmation_instructions(
+                    context,
+                    client_id,
+                    confirmation_instructions_params,
+                    confirmation_url_fun,
+                    module
+                  ) do
+    client_impl = RelyingParty.implementation(client_rp)
+
+    with {:ok, user} <- apply(client_impl, :get_user, [confirmation_instructions_params]) do
+      apply(client_impl, :send_confirmation_instructions, [user, confirmation_url_fun])
+    end
+
+    # NOTE return a success either confirmation instructions email sent or not
+    module.confirmation_instructions_delivered(context)
   end
 
   @doc """

@@ -3,6 +3,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
+  @behaviour BorutaIdentity.Accounts.Confirmations
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
@@ -107,6 +108,17 @@ defmodule BorutaIdentity.Accounts.Internal do
     else
       {:error, :user, changeset, _} -> {:error, changeset}
       {:error, _reason} = error -> error
+    end
+  end
+
+  @impl BorutaIdentity.Accounts.Confirmations
+  def send_confirmation_instructions(user, confirmation_url_fun) do
+    with {:ok, _email} <-
+           Deliveries.deliver_user_confirmation_instructions(
+             user,
+             confirmation_url_fun
+           ) do
+      :ok
     end
   end
 

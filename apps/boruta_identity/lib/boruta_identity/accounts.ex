@@ -44,11 +44,16 @@ defmodule BorutaIdentity.Accounts.Utils do
           raise "`module` must be part of function parameters"
 
       def unquote({name, [line: __ENV__.line], params}) do
-        with {:ok, relying_party} <- BorutaIdentity.Accounts.Utils.client_relying_party(unquote(client_id_param)),
-             :ok <- BorutaIdentity.RelyingParties.RelyingParty.check_feature(relying_party, unquote(name)) do
-            var!(client_rp) = relying_party
+        with {:ok, relying_party} <-
+               BorutaIdentity.Accounts.Utils.client_relying_party(unquote(client_id_param)),
+             :ok <-
+               BorutaIdentity.RelyingParties.RelyingParty.check_feature(
+                 relying_party,
+                 unquote(name)
+               ) do
+          var!(client_rp) = relying_party
 
-            unquote(block)
+          unquote(block)
         else
           {:error, reason} ->
             unquote(module_param).invalid_relying_party(
@@ -123,13 +128,22 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate initialize_password_reset(context, client_id, token, module), to: ResetPasswords
 
-  defdelegate reset_password(context, client_id, reset_password_params, module), to: ResetPasswords
+  defdelegate reset_password(context, client_id, reset_password_params, module),
+    to: ResetPasswords
 
   ## WIP Confirmation
 
   defdelegate initialize_confirmation_instructions(context, client_id, module), to: Confirmations
 
-  defdelegate deliver_user_confirmation_instructions(user, confirmation_url_fun), to: Deliveries
+  defdelegate send_confirmation_instructions(
+                context,
+                client_id,
+                confirmation_params,
+                confirmation_url_fun,
+                module
+              ),
+              to: Confirmations
+
   defdelegate confirm_user(token), to: Confirmations
 
   ## Deprecated Sessions
@@ -155,6 +169,7 @@ defmodule BorutaIdentity.Accounts do
   defdelegate apply_user_email(user, password, attrs), to: Settings
   defdelegate update_user_email(user, token), to: Settings
   defdelegate delete_user(id), to: Settings
+
   defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
     to: Deliveries
 
