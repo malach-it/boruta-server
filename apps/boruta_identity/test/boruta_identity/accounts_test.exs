@@ -5,7 +5,6 @@ defmodule BorutaIdentity.AccountsTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
@@ -887,37 +886,8 @@ defmodule BorutaIdentity.AccountsTest do
   @tag :skip
   test "send_confirmation_instructions/5"
 
-  describe "confirm_user/2" do
-    setup do
-      user = user_fixture()
-
-      confirmation_url_fun = fn _ -> "http://test.host" end
-      {:ok, token} = Deliveries.deliver_user_confirmation_instructions(user, confirmation_url_fun)
-
-      %{user: user, token: token}
-    end
-
-    test "confirms the email with a valid token", %{user: user, token: token} do
-      assert {:ok, confirmed_user} = Accounts.confirm_user(token)
-      assert confirmed_user.confirmed_at
-      assert confirmed_user.confirmed_at != user.confirmed_at
-      assert Repo.get!(User, user.id).confirmed_at
-      refute Repo.get_by(UserToken, user_id: user.id)
-    end
-
-    test "does not confirm with invalid token", %{user: user} do
-      assert Accounts.confirm_user("oops") == :error
-      refute Repo.get!(User, user.id).confirmed_at
-      assert Repo.get_by(UserToken, user_id: user.id)
-    end
-
-    test "does not confirm email if token expired", %{user: user, token: token} do
-      {1, nil} = Repo.update_all(UserToken, set: [inserted_at: ~N[2020-01-01 00:00:00]])
-      assert Accounts.confirm_user(token) == :error
-      refute Repo.get!(User, user.id).confirmed_at
-      assert Repo.get_by(UserToken, user_id: user.id)
-    end
-  end
+  @tag :skip
+  test "confirm_user/4"
 
   describe "inspect/2" do
     test "does not include password" do

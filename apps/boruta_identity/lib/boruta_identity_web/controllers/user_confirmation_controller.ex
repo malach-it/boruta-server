@@ -4,6 +4,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   use BorutaIdentityWeb, :controller
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.ConfirmationError
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties.Template
@@ -30,6 +31,37 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
     )
   end
 
+  # Do not log in the user after confirmation to avoid a
+  # leaked token giving the user access to the account.
+  def confirm(conn, %{"token" => token}) do
+    client_id = get_session(conn, :current_client_id)
+    current_user = conn.assigns[:current_user]
+
+    Accounts.confirm_user(conn, client_id, current_user, token, __MODULE__)
+  end
+
+  @impl BorutaIdentity.Accounts.ConfirmationApplication
+  def user_confirmed(conn, _user) do
+    conn
+    |> put_flash(:info, "Account confirmed successfully.")
+    |> redirect(to: "/")
+  end
+
+  @impl BorutaIdentity.Accounts.ConfirmationApplication
+  def user_confirmation_failure(conn, %ConfirmationError{message: message}) do
+    case conn.assigns[:current_user] do
+      %User{} ->
+        conn
+        |> put_flash(:error, message)
+        |> redirect(to: "/")
+
+      _ ->
+        conn
+        |> put_flash(:error, message)
+        |> redirect(to: Routes.user_session_path(conn, :new))
+    end
+  end
+
   @impl BorutaIdentity.Accounts.ConfirmationApplication
   def confirmation_instructions_delivered(conn) do
     conn
@@ -39,29 +71,6 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
         "you will receive an email with instructions shortly."
     )
     |> redirect(to: "/")
-  end
-
-  # Do not log in the user after confirmation to avoid a
-  # leaked token giving the user access to the account.
-  def confirm(conn, %{"token" => token}) do
-    case {conn.assigns[:current_user], Accounts.confirm_user(token)} do
-      {_assigns, {:ok, _user}} ->
-        conn
-        |> put_flash(:info, "Account confirmed successfully.")
-        |> redirect(to: "/")
-
-      # If there is a current user and the account was already confirmed,
-      # then odds are that the confirmation link was already visited, either
-      # by some automation or by the user themselves, so we redirect without
-      # a warning message.
-      {%User{confirmed_at: confirmed_at}, :error} when not is_nil(confirmed_at) ->
-        redirect(conn, to: Routes.user_session_path(conn, :new))
-
-      {_, :error} ->
-        conn
-        |> put_flash(:error, "Account confirmation link is invalid or it has expired.")
-        |> redirect(to: Routes.user_session_path(conn, :new))
-    end
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication

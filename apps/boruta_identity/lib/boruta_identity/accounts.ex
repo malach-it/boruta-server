@@ -144,7 +144,7 @@ defmodule BorutaIdentity.Accounts do
               ),
               to: Confirmations
 
-  defdelegate confirm_user(token), to: Confirmations
+  defdelegate confirm_user(context, client_id, current_user, token, module), to: Confirmations
 
   ## Deprecated Sessions
 
