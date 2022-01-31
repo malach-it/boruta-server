@@ -28,6 +28,7 @@ import EditNewResetPasswordTemplate from './views/RelyingParties/EditNewResetPas
 import EditEditResetPasswordTemplate from './views/RelyingParties/EditEditResetPasswordTemplate.vue'
 import EditRegistrationTemplate from './views/RelyingParties/EditRegistrationTemplate.vue'
 import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
+import Users from './views/RelyingParties/Users.vue'
 import UserList from './views/RelyingParties/UserList.vue'
 import EditUser from './views/RelyingParties/EditUser.vue'
 
@@ -105,12 +106,20 @@ const router = createRouter({
               ],
             }, {
               path: 'users',
-              name: 'user-list',
-              component: UserList
-            }, {
-              path: '/users/:userId/edit',
-              name: 'edit-user',
-              component: EditUser
+              name: 'users',
+              component: Users,
+              redirect: '/relying-parties/users/',
+              children: [
+                {
+                  path: '',
+                  name: 'user-list',
+                  component: UserList
+                }, {
+                  path: '/users/:userId/edit',
+                  name: 'edit-user',
+                  component: EditUser
+                }
+              ]
             }
           ]
         }, {

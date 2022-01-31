@@ -193,8 +193,8 @@ export default {
   color: white;
   .main.create.button {
     position: absolute;
-    top: .6em;
-    right: .6em;
+    top: .5em;
+    right: .5em;
     @media screen and (max-width: 1127px) {
       position: relative;
       display: block;

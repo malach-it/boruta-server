@@ -26,8 +26,8 @@ const labels = {
   'edit-new-reset-password-template': 'Edit send reset password instructions template',
   'edit-edit-reset-password-template': 'Edit reset password template',
   'edit-registration-template': 'Edit registration template',
-  'user-list': 'Users',
-  'edit-user': 'Edit user',
+  'users': 'Users',
+  'edit-user': ({ params }) => params.userId,
   'clients': 'Clients',
   'new-client': 'Create',
   'client': ({ params }) => params.clientId,
@@ -62,8 +62,8 @@ export default {
 
 <style scoped lang="scss">
 .ui.breadcrumb {
-  font-size: 1.3em;
-  line-height: 1.3em;
+  font-size: 1em;
+  line-height: 1em;
   .divider {
     color: white!important;
   }
