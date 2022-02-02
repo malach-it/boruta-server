@@ -347,7 +347,10 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     @tag :skip
-    test "delivers a confirmation mail"
+    test "delivers a confirmation mail when relying party confirmable"
+
+    @tag :skip
+    test "does not deliver a confirmation mail when relying party not confirmable"
   end
 
   describe "initialize_session/3" do

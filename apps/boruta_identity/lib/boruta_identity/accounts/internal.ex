@@ -16,8 +16,8 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Repo
 
   @impl BorutaIdentity.Accounts.Registrations
-  def register(registration_params, confirmation_url_fun) do
-    case create_user(registration_params, confirmation_url_fun) do
+  def register(registration_params, confirmation_url_fun, opts) do
+    case create_user(registration_params, confirmation_url_fun, opts) do
       {:ok, %{create_user: user}} ->
         {:ok, user}
 
@@ -39,10 +39,11 @@ defmodule BorutaIdentity.Accounts.Internal do
   def get_user(%{email: email}) when is_binary(email) do
     user =
       Repo.one!(
-        from u in User,
+        from(u in User,
           left_join: as in assoc(u, :authorized_scopes),
           where: u.email == ^email,
           preload: [authorized_scopes: as]
+        )
       )
 
     {:ok, user}
@@ -131,23 +132,30 @@ defmodule BorutaIdentity.Accounts.Internal do
     else
       %User{} ->
         {:error, "Account has already been confirmed."}
+
       _ ->
         {:error, "Account confirmation token is invalid or it has expired."}
     end
   end
 
-  defp create_user(registration_params, confirmation_url_fun) do
+  defp create_user(registration_params, confirmation_url_fun, opts) do
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:create_user, fn _changes ->
       User.registration_changeset(%User{}, registration_params)
     end)
-    |> Ecto.Multi.run(:deliver_confirmation_mail, fn _repo, %{create_user: user} ->
+    |> deliver_confirmation_email(confirmation_url_fun, opts[:confirmable?])
+    |> Repo.transaction()
+  end
+
+  defp deliver_confirmation_email(multi, _confirmation_url_fun, false), do: multi
+
+  defp deliver_confirmation_email(multi, confirmation_url_fun, true) do
+    Ecto.Multi.run(multi, :deliver_confirmation_mail, fn _repo, %{create_user: user} ->
       Deliveries.deliver_user_confirmation_instructions(
         user,
         confirmation_url_fun
       )
     end)
-    |> Repo.transaction()
   end
 
   defp get_user_by_reset_password_token(token) do

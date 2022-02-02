@@ -58,7 +58,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   @callback register(
               registration_params :: registration_params(),
-              confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
+              confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
+              opts :: Keyword.t()
             ) ::
               {:ok, user :: User.t()}
               | {:error, reason :: String.t()}
@@ -87,7 +88,11 @@ defmodule BorutaIdentity.Accounts.Registrations do
     client_impl = RelyingParty.implementation(client_rp)
 
     with {:ok, user} <-
-           apply(client_impl, :register, [registration_params, confirmation_url_fun]),
+           apply(client_impl, :register, [
+             registration_params,
+             confirmation_url_fun,
+             [confirmable?: client_rp.confirmable]
+           ]),
          {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
       module.user_registered(context, user, session_token)
     else

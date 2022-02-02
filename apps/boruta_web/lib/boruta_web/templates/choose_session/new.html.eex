@@ -4,9 +4,9 @@
       <h1 class="ui right aligned header">Continue ?</h1>
       <div class="ui segment">
         <div class="choose-session">
-          <%= link "New login", to: delete_user_session_path(@conn), method: :delete, class: "ui massive fluid violet button" %>
+          <%= link "New login", to: delete_user_session_path(@conn), method: :delete, class: "ui large fluid violet button" %>
           <span class="ui horizontal divider">or</span>
-          <%= link "Continue as #{current_user_email(@conn)}", to: authorize_url(@conn), class: "ui massive fluid violet inverted button" %>
+          <%= link "Continue as #{current_user_email(@conn)}", to: authorize_url(@conn), class: "ui large fluid violet inverted button" %>
         </div>
       </div>
     </div>
