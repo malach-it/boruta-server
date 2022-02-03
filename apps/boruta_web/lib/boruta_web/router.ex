@@ -38,6 +38,12 @@ defmodule BorutaWeb.Router do
   end
 
   scope "/", BorutaWeb do
+    pipe_through(:api)
+
+    get("/.well-known/openid-configuration", OpenidController, :well_known)
+  end
+
+  scope "/", BorutaWeb do
     pipe_through(:browser)
 
     get("/", PageController, :index)
@@ -47,7 +53,7 @@ defmodule BorutaWeb.Router do
 
   forward("/accounts", BorutaIdentityWeb.Endpoint)
 
-  scope "/oauth", BorutaWeb do
+  scope "/openid", BorutaWeb do
     pipe_through(:api)
 
     get("/jwks", OpenidController, :jwks_index)

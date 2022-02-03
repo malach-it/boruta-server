@@ -72,6 +72,20 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
+  def render("well_known.json", %{routes: routes}) do
+    issuer = Boruta.Config.issuer
+
+    %{
+      "issuer" => issuer,
+      "authorization_endpoint" => issuer <> routes.authorize_path(BorutaWeb.Endpoint, :authorize),
+      "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
+      "jwks_uri" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :jwks_index),
+      "response_types_supported" => Boruta.Ecto.Client.grant_types(),
+      "subject_types_supported" => ["public"],
+      "id_token_signing_alg_values_supported" => ["RS512"]
+    }
+  end
+
   def render("userinfo.json", %{userinfo: userinfo}) do
     userinfo
   end

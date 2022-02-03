@@ -4,7 +4,9 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
-  describe "OpenID Connect" do
+  alias Boruta.Ecto
+
+  describe "OpenID Connect flows" do
     setup %{conn: conn} do
       resource_owner = user_fixture()
       redirect_uri = "http://redirect.uri"
@@ -136,6 +138,51 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         )
 
       assert html_response(conn, 200) =~ ~r/choose-session/
+    end
+  end
+
+  describe "jwks endpoints" do
+    test "returns an empty list", %{conn: conn} do
+      conn = get(conn, Routes.openid_path(conn, :jwks_index))
+
+      assert json_response(conn, 200) == %{"keys" => []}
+    end
+
+    test "returns all clients keys", %{conn: conn} do
+      %Ecto.Client{id: client_id} = insert(:client)
+
+      conn = get(conn, Routes.openid_path(conn, :jwks_index))
+
+      assert %{
+        "keys" => [%{"kid" => ^client_id}]
+      } = json_response(conn, 200)
+    end
+  end
+
+  describe "Opeind discovery 1.0" do
+    test "returns required keys", %{conn: conn} do
+      required_keys = [
+        "authorization_endpoint",
+        "id_token_signing_alg_values_supported",
+        "issuer",
+        "jwks_uri",
+        "response_types_supported",
+        "subject_types_supported",
+        "token_endpoint"
+      ]
+
+      conn = get(conn, Routes.openid_path(conn, :well_known))
+
+      assert json_response(conn, 200) |> Map.keys() == required_keys
+      assert json_response(conn, 200) == %{
+        "authorization_endpoint" => "boruta/oauth/authorize",
+        "id_token_signing_alg_values_supported" => ["RS512"],
+        "issuer" => "boruta",
+        "jwks_uri" => "boruta/openid/jwks",
+        "response_types_supported" => ["client_credentials", "password", "authorization_code", "refresh_token", "implicit", "revoke", "introspect"],
+        "subject_types_supported" => ["public"],
+        "token_endpoint" => "boruta/oauth/token"
+      }
     end
   end
 end

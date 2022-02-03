@@ -32,4 +32,10 @@ defmodule BorutaWeb.OpenidController do
       |> render("jwk.json", client: client)
     end
   end
+
+  def well_known(conn, _params) do
+    conn
+    |> put_view(OauthView)
+    |> render("well_known.json", routes: Routes)
+  end
 end
