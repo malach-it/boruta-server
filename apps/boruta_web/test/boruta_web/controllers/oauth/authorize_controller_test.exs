@@ -18,28 +18,6 @@ defmodule BorutaWeb.AuthorizeControllerTest do
        conn: conn, client: client, redirect_uri: redirect_uri, resource_owner: resource_owner}
     end
 
-    test "stores oauth request params in session when current_user is not set", %{
-      conn: conn,
-      client: client,
-      redirect_uri: redirect_uri
-    } do
-      oauth_url =
-        Routes.authorize_path(conn, :authorize, %{
-          response_type: "token",
-          client_id: client.id,
-          redirect_uri: redirect_uri,
-          code_challenge: "code challenge",
-          nonce: "nonce",
-          state: "state",
-          scope: "scope",
-          request: "request"
-        })
-
-      conn = get(conn, oauth_url)
-
-      assert get_session(conn, :user_return_to) |> URI.parse() == URI.parse(oauth_url)
-    end
-
     test "redirects to choose session if session not chosen", %{
       conn: conn,
       redirect_uri: redirect_uri,

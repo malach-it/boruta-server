@@ -14,13 +14,11 @@ defmodule BorutaIdentityWeb.ConsentControllerTest do
     end
 
     test "redirects to after sign in path with valid params", %{conn: conn} do
-      after_sign_in_path = "/after"
       conn = conn
              |> log_in(user_fixture())
-             |> init_test_session(%{user_return_to: after_sign_in_path})
              |> post(Routes.consent_path(conn, :consent), %{client_id: "client_id", scopes: ["test"]})
 
-      assert redirected_to(conn) == after_sign_in_path
+      assert redirected_to(conn) == "/"
     end
   end
 end

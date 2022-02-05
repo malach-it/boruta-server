@@ -44,7 +44,6 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       {:ok, user} ->
         conn
         |> put_flash(:info, "Password updated successfully.")
-        |> put_session(:user_return_to, Routes.user_settings_path(conn, :edit))
         |> log_in(user)
 
       {:error, changeset} ->

@@ -8,60 +8,46 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   end
 
   describe "whithout client set" do
+    test "new session redirects to home", %{conn: conn} do
+      conn = get(conn, Routes.user_session_path(conn, :new), %{"user" => %{}})
+      assert get_flash(conn, :error) == "Client identifier not provided."
+      assert redirected_to(conn) == "/"
+    end
+
     test "create session redirects to home", %{conn: conn} do
       conn = post(conn, Routes.user_session_path(conn, :create), %{"user" => %{}})
       assert get_flash(conn, :error) == "Client identifier not provided."
       assert redirected_to(conn) == "/"
     end
-  end
 
-  describe "whithout client relying party" do
-    setup %{conn: conn} do
-      conn = init_test_session(conn, %{current_client_id: SecureRandom.uuid()})
-
-      {:ok, conn: conn}
-    end
-
-    test "create session redirects to home", %{conn: conn} do
-      conn = post(conn, Routes.user_session_path(conn, :create), %{"user" => %{}})
-      assert get_flash(conn, :error) == "Relying Party not configured for given OAuth client. Please contact your administrator."
+    test "delete session redirects to home", %{conn: conn} do
+      conn = delete(conn, Routes.user_session_path(conn, :delete), %{"user" => %{}})
+      assert get_flash(conn, :error) == "Client identifier not provided."
       assert redirected_to(conn) == "/"
     end
   end
 
   describe "GET /users/log_in" do
-    setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+    setup :with_a_request
 
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
-      {:ok, conn: conn}
-    end
-
-    test "renders log in page", %{conn: conn} do
-      conn = get(conn, Routes.user_session_path(conn, :new))
+    test "renders log in page", %{conn: conn, request: request} do
+      conn = get(conn, Routes.user_session_path(conn, :new, request: request))
       response = html_response(conn, 200)
       assert response =~ "<h1>Log in</h1>"
     end
 
-    test "redirects if already logged in", %{conn: conn, user: user} do
-      conn = conn |> log_in(user) |> get(Routes.user_session_path(conn, :new))
-      assert redirected_to(conn) == "/"
+    test "redirects if already logged in", %{conn: conn, user: user, request: request} do
+      conn = conn |> log_in(user) |> get(Routes.user_session_path(conn, :new, request: request))
+      assert redirected_to(conn) == "/user_return_to"
     end
   end
 
   describe "POST /users/log_in" do
-    setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+    setup :with_a_request
 
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
-      {:ok, conn: conn}
-    end
-
-    test "logs the user in", %{conn: conn, user: user} do
+    test "logs the user in", %{conn: conn, user: user, request: request} do
       conn =
-        post(conn, Routes.user_session_path(conn, :create), %{
+        post(conn, Routes.user_session_path(conn, :create, request: request), %{
           "user" => %{"email" => user.email, "password" => valid_user_password()}
         })
 
@@ -76,9 +62,9 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
       assert response =~ "Log out</a>"
     end
 
-    test "logs the user in with remember me", %{conn: conn, user: user} do
+    test "logs the user in with remember me", %{conn: conn, user: user, request: request} do
       conn =
-        post(conn, Routes.user_session_path(conn, :create), %{
+        post(conn, Routes.user_session_path(conn, :create, request: request), %{
           "user" => %{
             "email" => user.email,
             "password" => valid_user_password(),
@@ -90,23 +76,22 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
       assert redirected_to(conn) =~ "/"
     end
 
-    test "logs the user in with return to", %{conn: conn, user: user} do
+    test "logs the user in with return to", %{conn: conn, user: user, request: request} do
       conn =
         conn
-        |> init_test_session(user_return_to: "/foo/bar")
-        |> post(Routes.user_session_path(conn, :create), %{
+        |> post(Routes.user_session_path(conn, :create, request: request), %{
           "user" => %{
             "email" => user.email,
             "password" => valid_user_password()
           }
         })
 
-      assert redirected_to(conn) == "/foo/bar"
+      assert redirected_to(conn) == "/user_return_to"
     end
 
-    test "emits error message with invalid credentials", %{conn: conn, user: user} do
+    test "emits error message with invalid credentials", %{conn: conn, user: user, request: request} do
       conn =
-        post(conn, Routes.user_session_path(conn, :create), %{
+        post(conn, Routes.user_session_path(conn, :create, request: request), %{
           "user" => %{"email" => user.email, "password" => "invalid_password"}
         })
 
@@ -117,23 +102,17 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   end
 
   describe "DELETE /users/log_out" do
-    setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+    setup :with_a_request
 
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
-      {:ok, conn: conn}
-    end
-
-    test "logs the user out", %{conn: conn, user: user} do
-      conn = conn |> log_in(user) |> delete(Routes.user_session_path(conn, :delete))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+    test "logs the user out", %{conn: conn, user: user, request: request} do
+      conn = conn |> log_in(user) |> delete(Routes.user_session_path(conn, :delete, request: request))
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "Logged out successfully"
     end
 
-    test "succeeds even if the user is not logged in", %{conn: conn} do
-      conn = delete(conn, Routes.user_session_path(conn, :delete))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+    test "succeeds even if the user is not logged in", %{conn: conn, request: request} do
+      conn = delete(conn, Routes.user_session_path(conn, :delete, request: request))
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "Logged out successfully"
     end
   end

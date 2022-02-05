@@ -2,6 +2,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   @behaviour BorutaIdentity.Accounts.ConfirmationApplication
 
   use BorutaIdentityWeb, :controller
+  import BorutaIdentityWeb.Authenticable, only: [client_id_from_request: 1]
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.ConfirmationError
@@ -10,13 +11,13 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   alias BorutaIdentity.RelyingParties.Template
 
   def new(conn, _params) do
-    client_id = get_session(conn, :current_client_id)
+    client_id = client_id_from_request(conn)
 
     Accounts.initialize_confirmation_instructions(conn, client_id, __MODULE__)
   end
 
   def create(conn, %{"user" => %{"email" => email}}) do
-    client_id = get_session(conn, :current_client_id)
+    client_id = client_id_from_request(conn)
 
     confirmation_params = %{
       email: email
@@ -34,7 +35,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   # Do not log in the user after confirmation to avoid a
   # leaked token giving the user access to the account.
   def confirm(conn, %{"token" => token}) do
-    client_id = get_session(conn, :current_client_id)
+    client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
 
     Accounts.confirm_user(conn, client_id, current_user, token, __MODULE__)
@@ -48,7 +49,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
-  def user_confirmation_failure(conn, %ConfirmationError{message: message}) do
+  def user_confirmation_failure(%Plug.Conn{query_params: query_params} = conn, %ConfirmationError{message: message}) do
     case conn.assigns[:current_user] do
       %User{} ->
         conn
@@ -58,7 +59,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
       _ ->
         conn
         |> put_flash(:error, message)
-        |> redirect(to: Routes.user_session_path(conn, :new))
+        |> redirect(to: Routes.user_session_path(conn, :new, request: query_params["request"]))
     end
   end
 

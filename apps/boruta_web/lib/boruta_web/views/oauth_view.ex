@@ -19,15 +19,9 @@ defmodule BorutaWeb.OauthView do
   def render("introspect.jwt", %{response: %Boruta.Oauth.IntrospectResponse{active: false}}) do
     payload = %{"active" => false}
 
-    signer =
-      Joken.Signer.create(
-        "HS512",
-        Application.get_env(:boruta_web, BorutaWeb.Endpoint)[:secret_key_base]
-      )
+    {:ok, token, _payload} = Joken.encode_and_sign(payload, Token.application_signer())
 
-    with {:ok, token, _payload} <- Token.encode_and_sign(payload, signer) do
-      token
-    end
+    token
   end
 
   def render("introspect.jwt", %{
@@ -39,10 +33,9 @@ defmodule BorutaWeb.OauthView do
       |> Map.from_struct()
 
     signer = Joken.Signer.create("RS512", %{"pem" => private_key})
+    {:ok, token, _payload} = Joken.encode_and_sign(payload, signer)
 
-    with {:ok, token, _payload} <- Token.encode_and_sign(payload, signer) do
-      token
-    end
+    token
   end
 
   def render("error.json", %{error: error, error_description: error_description}) do
@@ -53,11 +46,12 @@ defmodule BorutaWeb.OauthView do
   end
 
   def render("jwks.json", %{clients: clients}) do
-    keys = Enum.map(clients, fn (%Ecto.Client{id: client_id, public_key: public_key}) ->
-      {_type, jwk} = public_key |> :jose_jwk.from_pem() |> :jose_jwk.to_map()
+    keys =
+      Enum.map(clients, fn %Ecto.Client{id: client_id, public_key: public_key} ->
+        {_type, jwk} = public_key |> :jose_jwk.from_pem() |> :jose_jwk.to_map()
 
-      Map.put(jwk, :kid, client_id)
-    end)
+        Map.put(jwk, :kid, client_id)
+      end)
 
     %{
       keys: keys
@@ -73,7 +67,7 @@ defmodule BorutaWeb.OauthView do
   end
 
   def render("well_known.json", %{routes: routes}) do
-    issuer = Boruta.Config.issuer
+    issuer = Boruta.Config.issuer()
 
     %{
       "issuer" => issuer,
