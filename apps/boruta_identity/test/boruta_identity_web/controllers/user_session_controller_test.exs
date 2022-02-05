@@ -21,7 +21,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
     end
 
     test "delete session redirects to home", %{conn: conn} do
-      conn = delete(conn, Routes.user_session_path(conn, :delete), %{"user" => %{}})
+      conn = get(conn, Routes.user_session_path(conn, :delete), %{"user" => %{}})
       assert get_flash(conn, :error) == "Client identifier not provided."
       assert redirected_to(conn) == "/"
     end
@@ -101,17 +101,17 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
     end
   end
 
-  describe "DELETE /users/log_out" do
+  describe "GET /users/log_out" do
     setup :with_a_request
 
     test "logs the user out", %{conn: conn, user: user, request: request} do
-      conn = conn |> log_in(user) |> delete(Routes.user_session_path(conn, :delete, request: request))
+      conn = conn |> log_in(user) |> get(Routes.user_session_path(conn, :delete, request: request))
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "Logged out successfully"
     end
 
     test "succeeds even if the user is not logged in", %{conn: conn, request: request} do
-      conn = delete(conn, Routes.user_session_path(conn, :delete, request: request))
+      conn = get(conn, Routes.user_session_path(conn, :delete, request: request))
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "Logged out successfully"
     end

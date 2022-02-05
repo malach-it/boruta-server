@@ -16,22 +16,24 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaWeb.OauthView
 
-  def authorize(%Plug.Conn{query_params: query_params} = conn, _params) do
+  def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
-    session_chosen = get_session(conn, :session_chosen) || false
 
-    conn
-    |> put_unsigned_request()
-    |> authorize_response(
-      current_user,
-      session_chosen,
-      Accounts.consented?(current_user, conn),
-      query_params["prompt"],
-      query_params["max_age"]
-    )
+    conn = put_unsigned_request(conn)
+
+    with {:unchanged, conn} <- prompt_redirection(conn, current_user),
+         {:unchanged, conn} <- max_age_redirection(conn, current_user),
+         {:unchanged, conn} <- choose_session(conn, current_user) do
+      redirect(conn,
+        to:
+          IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
+            request: request_param(conn)
+          })
+      )
+    end
   end
 
-  defp authorize_response(conn, current_user, _, _, "none", _) do
+  def prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "none"}} = conn, current_user) do
     current_user = current_user || %User{}
 
     resource_owner = %ResourceOwner{
@@ -47,7 +49,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, _, _, _, "login", _) do
+  def prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "login"}} = conn, _current_user) do
     redirect(conn,
       to:
         IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
@@ -56,32 +58,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
-    conn
-    |> Oauth.preauthorize(
-      %ResourceOwner{
-        sub: current_user.id,
-        username: current_user.email,
-        last_login_at: current_user.last_login_at
-      },
-      __MODULE__
-    )
-  end
+  def prompt_redirection(conn, _current_user), do: {:unchanged, conn}
 
-  defp authorize_response(conn, %User{} = current_user, true, true, _, _) do
-    conn
-    |> Oauth.authorize(
-      %ResourceOwner{
-        sub: current_user.id,
-        username: current_user.email,
-        last_login_at: current_user.last_login_at
-      },
-      __MODULE__
-    )
-  end
+  def prompt_redirection(conn), do: {:unchanged, conn}
 
-  defp authorize_response(conn, %User{} = current_user, _, _, _, max_age) do
-    # TODO a render can be a better choice
+  def max_age_redirection(
+        %Plug.Conn{query_params: %{"max_age" => max_age}} = conn,
+        %User{} = current_user
+      ) do
     case login_expired?(current_user, max_age) do
       true ->
         redirect(conn,
@@ -92,21 +76,48 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         )
 
       false ->
-        conn
-        |> put_session(:session_chosen, true)
-        |> put_view(BorutaWeb.ChooseSessionView)
-        |> render("new.html", request_param: request_param(conn), authorize_url: user_return_to(conn))
+        {:unchanged, conn}
     end
   end
 
-  defp authorize_response(conn, _, _, _, _, _) do
-    redirect(conn,
-      to:
-        IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
-          request: request_param(conn)
-        })
-    )
+  def max_age_redirection(conn, _current_user), do: {:unchanged, conn}
+
+  def choose_session(conn, %User{} = current_user) do
+    case {get_session(conn, :session_chosen), Accounts.consented?(current_user, conn)} do
+      {true, false} ->
+        conn
+        |> Oauth.preauthorize(
+          %ResourceOwner{
+            sub: current_user.id,
+            username: current_user.email,
+            last_login_at: current_user.last_login_at
+          },
+          __MODULE__
+        )
+
+      {true, true} ->
+        conn
+        |> Oauth.authorize(
+          %ResourceOwner{
+            sub: current_user.id,
+            username: current_user.email,
+            last_login_at: current_user.last_login_at
+          },
+          __MODULE__
+        )
+
+      _ ->
+        conn
+        |> put_session(:session_chosen, true)
+        |> put_view(BorutaWeb.ChooseSessionView)
+        |> render("new.html",
+          request_param: request_param(conn),
+          authorize_url: user_return_to(conn)
+        )
+    end
   end
+
+  def choose_session(conn, _current_user), do: {:unchanged, conn}
 
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, %AuthorizationSuccess{client: client, scope: scope}) do
