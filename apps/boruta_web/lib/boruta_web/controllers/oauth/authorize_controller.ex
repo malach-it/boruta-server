@@ -21,8 +21,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     session_chosen = get_session(conn, :session_chosen) || false
 
     conn
-    |> store_user_return_to()
-    |> store_client_id()
     |> put_unsigned_request()
     |> authorize_response(
       current_user,
@@ -50,7 +48,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp authorize_response(conn, _, _, _, "login", _) do
-    redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete))
+    redirect(conn,
+      to:
+        IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
+          request: request_param(conn)
+        })
+    )
   end
 
   defp authorize_response(conn, %User{} = current_user, true, false, _, _) do
@@ -81,18 +84,28 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     # TODO a render can be a better choice
     case login_expired?(current_user, max_age) do
       true ->
-        redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete))
+        redirect(conn,
+          to:
+            IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
+              request: request_param(conn)
+            })
+        )
 
       false ->
         conn
         |> put_session(:session_chosen, true)
         |> put_view(BorutaWeb.ChooseSessionView)
-        |> render("new.html")
+        |> render("new.html", request_param: request_param(conn), authorize_url: user_return_to(conn))
     end
   end
 
   defp authorize_response(conn, _, _, _, _, _) do
-    redirect(conn, to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
+    redirect(conn,
+      to:
+        IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
+          request: request_param(conn)
+        })
+    )
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
@@ -173,7 +186,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       _ ->
         conn
         |> delete_session(:session_chosen)
-        |> redirect(to: IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new))
+        |> redirect(
+          to:
+            IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
+              request: request_param(conn)
+            })
+        )
     end
   end
 
@@ -221,23 +239,29 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     %{conn | query_params: query_params}
   end
 
-  # TODO move oauth request params to query_params
-  defp store_user_return_to(conn) do
-    put_session(
-      conn,
-      :user_return_to,
-      current_path(conn)
-      |> String.replace(~r/prompt=(login|none)/, "")
-      |> String.replace(~r/max_age=(\d+)/, "")
-    )
+  defp request_param(conn) do
+    case Oauth.Request.authorize_request(conn, %ResourceOwner{sub: ""}) do
+      {:ok, %_{client_id: client_id}} ->
+        {:ok, jwt, _payload} =
+          Joken.encode_and_sign(
+            %{
+              "client_id" => client_id,
+              # TODO keep prompt and max_age params
+              "user_return_to" => user_return_to(conn)
+            },
+            BorutaIdentityWeb.Token.application_signer()
+          )
+
+        jwt
+
+      _ ->
+        ""
+    end
   end
 
-  # TODO move client_id to query_params
-  defp store_client_id(%Plug.Conn{query_params: query_params} = conn) do
-    put_session(
-      conn,
-      :current_client_id,
-      query_params["client_id"]
-    )
+  def user_return_to(conn) do
+    current_path(conn)
+    |> String.replace(~r/prompt=(login|none)/, "")
+    |> String.replace(~r/max_age=(\d+)/, "")
   end
 end

@@ -2,7 +2,8 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
   use BorutaIdentityWeb.ConnCase, async: true
 
   import BorutaIdentity.AccountsFixtures
-  import BorutaIdentity.Factory
+
+  alias BorutaIdentity.Repo
 
   describe "whithout client set" do
     test "new registration redirects to home", %{conn: conn} do
@@ -18,82 +19,63 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
     end
   end
 
-  describe "whithout client relying party" do
-    setup %{conn: conn} do
-      conn = init_test_session(conn, %{current_client_id: SecureRandom.uuid()})
+  describe "with registrable feature disabled" do
+    setup :with_a_request
 
-      {:ok, conn: conn}
+    setup %{relying_party: relying_party} do
+      relying_party = relying_party
+      |> Ecto.Changeset.change(registrable: false)
+      |> Repo.update()
+
+      {:ok, relying_party: relying_party}
     end
 
-    test "new registration redirects to home", %{conn: conn} do
-      conn = get(conn, Routes.user_registration_path(conn, :new))
-
-      assert get_flash(conn, :error) ==
-               "Relying Party not configured for given OAuth client. Please contact your administrator."
-
-      assert redirected_to(conn) == "/"
+    test "new registration redirects to home", %{conn: conn, request: request} do
+      conn = get(conn, Routes.user_registration_path(conn, :new, request: request))
+      assert get_flash(conn, :error) == "Feature is not enabled for client relying party."
+      assert redirected_to(conn) == "/user_return_to"
     end
 
-    test "create registration redirects to home", %{conn: conn} do
-      conn = post(conn, Routes.user_registration_path(conn, :create), %{"user" => %{}})
-
-      assert get_flash(conn, :error) ==
-               "Relying Party not configured for given OAuth client. Please contact your administrator."
-
-      assert redirected_to(conn) == "/"
+    test "create registration redirects to home", %{conn: conn, request: request} do
+      conn = post(conn, Routes.user_registration_path(conn, :create, request: request), %{"user" => %{}})
+      assert get_flash(conn, :error) == "Feature is not enabled for client relying party."
+      assert redirected_to(conn) == "/user_return_to"
     end
   end
 
   describe "GET /users/register" do
-    setup %{conn: conn} do
-      client_relying_party =
-        insert(:client_relying_party,
-          relying_party:
-            build(:relying_party,
-              registrable: true
-            )
-        )
+    setup :with_a_request
 
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
-      {:ok, conn: conn}
-    end
-
-    test "renders registration page", %{conn: conn} do
-      conn = get(conn, Routes.user_registration_path(conn, :new))
+    test "renders registration page", %{conn: conn, request: request} do
+      conn = get(conn, Routes.user_registration_path(conn, :new, request: request))
       response = html_response(conn, 200)
       assert response =~ "<h1>Register</h1>"
     end
 
-    test "redirects if already logged in", %{conn: conn} do
-      conn = conn |> log_in(user_fixture()) |> get(Routes.user_registration_path(conn, :new))
-      assert redirected_to(conn) == "/"
+    test "redirects if already logged in", %{conn: conn, request: request} do
+      conn =
+        conn
+        |> log_in(user_fixture())
+        |> get(Routes.user_registration_path(conn, :new, request: request))
+
+      assert redirected_to(conn) == "/user_return_to"
     end
   end
 
   describe "POST /users/register" do
-    setup %{conn: conn} do
-      client_relying_party =
-        insert(:client_relying_party,
-          relying_party: build(:relying_party, registrable: true)
-        )
-
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
-      {:ok, conn: conn}
-    end
+    setup :with_a_request
 
     @tag :capture_log
-    test "creates account and logs the user in", %{conn: conn} do
+    test "creates account and logs the user in", %{conn: conn, request: request} do
       email = unique_user_email()
 
       conn =
-        post(conn, Routes.user_registration_path(conn, :create), %{
+        post(conn, Routes.user_registration_path(conn, :create, request: request), %{
           "user" => %{"email" => email, "password" => valid_user_password()}
         })
 
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) =~ "/"
+      assert redirected_to(conn) =~ "/user_return_to"
 
       # Now do a logged in request and assert on the menu
       conn = get(conn, "/")
@@ -103,9 +85,9 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
       assert response =~ "Log out</a>"
     end
 
-    test "render errors for invalid data", %{conn: conn} do
+    test "render errors for invalid data", %{conn: conn, request: request} do
       conn =
-        post(conn, Routes.user_registration_path(conn, :create), %{
+        post(conn, Routes.user_registration_path(conn, :create, request: request), %{
           "user" => %{"email" => "with spaces", "password" => "too short"}
         })
 

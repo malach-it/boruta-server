@@ -14,6 +14,7 @@ defmodule BorutaIdentityWeb.SessionsTest do
       conn
       |> Map.replace!(:secret_key_base, BorutaIdentityWeb.Endpoint.config(:secret_key_base))
       |> init_test_session(%{})
+      |> Plug.Conn.fetch_query_params()
 
     %{user: user_fixture(), conn: conn}
   end
@@ -23,6 +24,13 @@ defmodule BorutaIdentityWeb.SessionsTest do
       user_token = Accounts.generate_user_session_token(user)
       conn = conn |> put_session(:user_token, user_token) |> Sessions.fetch_current_user([])
       assert conn.assigns.current_user.id == user.id
+    end
+
+    test "does not authenticate if data is missing", %{conn: conn, user: user} do
+      _ = Accounts.generate_user_session_token(user)
+      conn = Sessions.fetch_current_user(conn, [])
+      refute get_session(conn, :user_token)
+      refute conn.assigns.current_user
     end
 
     test "authenticates user from cookies", %{conn: conn, user: user} do
@@ -39,13 +47,6 @@ defmodule BorutaIdentityWeb.SessionsTest do
 
       assert get_session(conn, :user_token) == user_token
       assert conn.assigns.current_user.id == user.id
-    end
-
-    test "does not authenticate if data is missing", %{conn: conn, user: user} do
-      _ = Accounts.generate_user_session_token(user)
-      conn = Sessions.fetch_current_user(conn, [])
-      refute get_session(conn, :user_token)
-      refute conn.assigns.current_user
     end
   end
 

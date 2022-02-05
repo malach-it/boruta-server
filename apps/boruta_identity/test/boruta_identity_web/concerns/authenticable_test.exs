@@ -18,7 +18,11 @@ defmodule BorutaIdentityWeb.AuthenticableTest do
   end
 
   describe "log_in/3" do
+    setup :with_a_request
+
     test "stores the user token in the session", %{conn: conn, user: user} do
+      conn = fetch_query_params(conn)
+
       conn = Authenticable.log_in(conn, user)
       assert token = get_session(conn, :user_token)
       assert get_session(conn, :live_socket_id) == "users_sessions:#{Base.url_encode64(token)}"
@@ -26,12 +30,16 @@ defmodule BorutaIdentityWeb.AuthenticableTest do
       assert Accounts.get_user_by_session_token(token)
     end
 
-    test "redirects to the configured path", %{conn: conn, user: user} do
-      conn = conn |> put_session(:user_return_to, "/hello") |> Authenticable.log_in(user)
-      assert redirected_to(conn) == "/hello"
+    test "redirects to the configured path", %{conn: conn, user: user, request: request} do
+      conn = %{conn|query_params: %{"request" => request}}
+
+      conn = Authenticable.log_in(conn, user)
+      assert redirected_to(conn) == "/user_return_to"
     end
 
     test "writes a cookie if remember_me is configured", %{conn: conn, user: user} do
+      conn = fetch_query_params(conn)
+
       conn = conn |> fetch_cookies() |> Authenticable.log_in(user, %{"remember_me" => "true"})
       assert get_session(conn, :user_token) == conn.cookies[@remember_me_cookie]
 
@@ -42,14 +50,18 @@ defmodule BorutaIdentityWeb.AuthenticableTest do
   end
 
   describe "after_sign_in_path" do
+    setup :with_a_request
+
     test "returns root path", %{conn: conn} do
+      conn = Plug.Conn.fetch_query_params(conn)
+
       assert Authenticable.after_sign_in_path(conn) == "/"
     end
 
-    test "returns session stored path if provided", %{conn: conn} do
-      path = "/a/path"
-      conn = put_session(conn, :user_return_to, path)
-      assert Authenticable.after_sign_in_path(conn) == path
+    test "returns session stored path if provided", %{conn: conn, request: request} do
+      conn = %{conn|query_params: %{"request" => request}}
+
+      assert Authenticable.after_sign_in_path(conn) == "/user_return_to"
     end
   end
 end

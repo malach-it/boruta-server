@@ -70,4 +70,22 @@ defmodule BorutaIdentityWeb.ConnCase do
     |> Phoenix.ConnTest.init_test_session(%{})
     |> Plug.Conn.put_session(:user_token, token)
   end
+
+  def with_a_request(_params) do
+    relying_party = BorutaIdentity.Factory.insert(:relying_party, registrable: true, confirmable: true)
+
+    client_relying_party =
+      BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
+
+    {:ok, jwt, _payload} =
+      Joken.encode_and_sign(
+        %{
+          client_id: client_relying_party.client_id,
+          user_return_to: "/user_return_to"
+        },
+        BorutaIdentityWeb.Token.application_signer()
+      )
+
+    %{request: jwt, relying_party: relying_party}
+  end
 end

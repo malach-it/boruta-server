@@ -40,7 +40,8 @@ defmodule BorutaIdentityWeb.Authenticable do
     |> redirect(to: after_sign_in_path(conn))
   end
 
-  @spec store_user_session(conn :: Plug.Conn.t(), session_token :: String.t()) :: conn :: Plug.Conn.t()
+  @spec store_user_session(conn :: Plug.Conn.t(), session_token :: String.t()) ::
+          conn :: Plug.Conn.t()
   def store_user_session(%Plug.Conn{body_params: params} = conn, session_token) do
     conn
     |> put_session(@session_key, session_token)
@@ -70,13 +71,43 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   # TODO test it
   @spec after_sign_in_path(conn :: Plug.Conn.t()) :: String.t()
-  def after_sign_in_path(conn), do: get_session(conn, :user_return_to) || "/"
+  def after_sign_in_path(conn), do: user_return_to_from_request(conn) || "/"
 
   # TODO test it
   @spec after_registration_path(conn :: Plug.Conn.t()) :: String.t()
-  def after_registration_path(conn), do: get_session(conn, :user_return_to) || "/"
+  def after_registration_path(conn), do: user_return_to_from_request(conn) || "/"
 
   # TODO test it
   @spec after_sign_out_path(conn :: Plug.Conn.t()) :: String.t()
-  def after_sign_out_path(conn), do: Routes.user_session_path(conn, :new)
+  def after_sign_out_path(%Plug.Conn{query_params: query_params} = conn) do
+    Routes.user_session_path(conn, :new, query_params)
+  end
+
+  @spec client_id_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
+  def client_id_from_request(%Plug.Conn{query_params: query_params}) do
+    with {:ok, claims} <-
+           BorutaIdentityWeb.Token.verify(
+             query_params["request"] || "",
+             BorutaIdentityWeb.Token.application_signer()
+           ),
+         {:ok, client_id} <- Map.fetch(claims, "client_id") do
+      client_id
+    else
+      _ -> nil
+    end
+  end
+
+  @spec user_return_to_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
+  def user_return_to_from_request(%Plug.Conn{query_params: query_params}) do
+    with {:ok, claims} <-
+           BorutaIdentityWeb.Token.verify(
+             query_params["request"] || "",
+             BorutaIdentityWeb.Token.application_signer()
+           ),
+         {:ok, user_return_to} <- Map.fetch(claims, "user_return_to") do
+      user_return_to
+    else
+      _ -> nil
+    end
+  end
 end

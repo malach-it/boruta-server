@@ -15,38 +15,26 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "GET /users/reset_password" do
-    setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+    setup :with_a_request
 
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
-      {:ok, conn: conn}
-    end
-
-    test "renders the reset password page", %{conn: conn} do
-      conn = get(conn, Routes.user_reset_password_path(conn, :new))
+    test "renders the reset password page", %{conn: conn, request: request} do
+      conn = get(conn, Routes.user_reset_password_path(conn, :new, request: request))
       response = html_response(conn, 200)
       assert response =~ "<h1>Forgot your password?</h1>"
     end
   end
 
   describe "POST /users/reset_password" do
-    setup %{conn: conn} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
-
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
-      {:ok, conn: conn}
-    end
+    setup :with_a_request
 
     @tag :capture_log
-    test "sends a new reset password token", %{conn: conn, user: user} do
+    test "sends a new reset password token", %{conn: conn, user: user, request: request} do
       conn =
-        post(conn, Routes.user_reset_password_path(conn, :create), %{
+        post(conn, Routes.user_reset_password_path(conn, :create, request: request), %{
           "user" => %{"email" => user.email}
         })
 
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "If your email is in our system"
 
       user_token = Repo.get_by!(Accounts.UserToken, user_id: user.id)
@@ -54,13 +42,13 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       assert_email_sent([text_body: ~r/reset your password/])
     end
 
-    test "does not send reset password token if email is invalid", %{conn: conn} do
+    test "does not send reset password token if email is invalid", %{conn: conn, request: request} do
       conn =
-        post(conn, Routes.user_reset_password_path(conn, :create), %{
+        post(conn, Routes.user_reset_password_path(conn, :create, request: request), %{
           "user" => %{"email" => "unknown@example.com"}
         })
 
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "If your email is in our system"
       assert Repo.all(Accounts.UserToken) == []
 
@@ -69,60 +57,54 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "GET /users/reset_password/:token" do
-    setup %{conn: conn, user: user} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
-
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
+    setup :with_a_request
+    setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
       {:ok, token} = Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
-      {:ok, conn: conn, token: token}
+      {:ok, token: token}
     end
 
-    test "renders reset password", %{conn: conn, token: token} do
-      conn = get(conn, Routes.user_reset_password_path(conn, :edit, token))
+    test "renders reset password", %{conn: conn, token: token, request: request} do
+      conn = get(conn, Routes.user_reset_password_path(conn, :edit, token, request: request))
       assert html_response(conn, 200) =~ "<h1>Reset password</h1>"
     end
 
-    test "does not render reset password with invalid token", %{conn: conn} do
-      conn = get(conn, Routes.user_reset_password_path(conn, :edit, "oops"))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+    test "does not render reset password with invalid token", %{conn: conn, request: request} do
+      conn = get(conn, Routes.user_reset_password_path(conn, :edit, "oops", request: request))
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :error) =~ "Given reset password token is invalid."
     end
   end
 
   describe "PUT /users/reset_password/:token" do
-    setup %{conn: conn, user: user} do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
-
-      conn = init_test_session(conn, %{current_client_id: client_relying_party.client_id})
-
+    setup :with_a_request
+    setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
       {:ok, token} = Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
-      {:ok, conn: conn, token: token}
+      {:ok, token: token}
     end
 
-    test "resets password once", %{conn: conn, user: user, token: token} do
+    test "resets password once", %{conn: conn, user: user, token: token, request: request} do
       conn =
-        put(conn, Routes.user_reset_password_path(conn, :update, token), %{
+        put(conn, Routes.user_reset_password_path(conn, :update, token, request: request), %{
           "user" => %{
             "password" => "new valid password",
             "password_confirmation" => "new valid password"
           }
         })
 
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       refute get_session(conn, :user_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
       assert user = Accounts.get_user_by_email(user.email)
       assert {:ok, _user} = Accounts.Internal.check_user_against(user, %{password: "new valid password"})
     end
 
-    test "does not reset password on invalid data", %{conn: conn, token: token} do
+    test "does not reset password on invalid data", %{conn: conn, token: token, request: request} do
       conn =
-        put(conn, Routes.user_reset_password_path(conn, :update, token), %{
+        put(conn, Routes.user_reset_password_path(conn, :update, token, request: request), %{
           "user" => %{
             "password" => "too short",
             "password_confirmation" => "does not match"
@@ -135,9 +117,9 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       assert response =~ "does not match password"
     end
 
-    test "does not reset password with invalid token", %{conn: conn} do
-      conn = put(conn, Routes.user_reset_password_path(conn, :update, "oops"))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+    test "does not reset password with invalid token", %{conn: conn, request: request} do
+      conn = put(conn, Routes.user_reset_password_path(conn, :update, "oops", request: request))
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :error) =~ "Given reset password token is invalid."
     end
   end
