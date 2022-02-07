@@ -23,6 +23,7 @@ import RelyingParties from './views/RelyingParties.vue'
 import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
 import RelyingParty from './views/RelyingParties/RelyingParty.vue'
 import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
+import EditLayoutTemplate from './views/RelyingParties/EditLayoutTemplate.vue'
 import EditSessionTemplate from './views/RelyingParties/EditSessionTemplate.vue'
 import EditNewConfirmationTemplate from './views/RelyingParties/EditNewConfirmationTemplate.vue'
 import EditNewResetPasswordTemplate from './views/RelyingParties/EditNewResetPasswordTemplate.vue'
@@ -87,6 +88,10 @@ const router = createRouter({
                   path: 'edit',
                   name: 'edit-relying-party',
                   component: EditRelyingParty
+                }, {
+                  path: 'edit/layout-template',
+                  name: 'edit-layout-template',
+                  component: EditLayoutTemplate
                 }, {
                   path: 'edit/session-template',
                   name: 'edit-session-template',

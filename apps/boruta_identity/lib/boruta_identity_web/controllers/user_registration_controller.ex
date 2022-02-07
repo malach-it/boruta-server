@@ -90,17 +90,6 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
         }
       end)
 
-    errors =
-      case Map.fetch(opts, :changeset) do
-        {:ok, changeset} ->
-          changeset
-          |> ErrorHelpers.error_messages()
-          |> Enum.map(fn message -> %{message: message} end)
-
-        :error ->
-          []
-      end
-
     context = %{
       create_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
