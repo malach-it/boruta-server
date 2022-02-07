@@ -8,7 +8,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingPartyTest do
 
   describe "template/2" do
     setup do
-      relying_party = insert(:relying_party)
+      relying_party = insert(:relying_party, templates: [])
 
       relying_party_with_template =
         insert(:relying_party,

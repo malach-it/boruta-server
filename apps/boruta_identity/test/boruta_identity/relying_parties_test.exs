@@ -199,7 +199,9 @@ defmodule BorutaIdentity.RelyingPartiesTest do
 
       assert {:ok, ^client_relying_party} = RelyingParties.remove_client_relying_party(client_id)
 
-      assert_raise Ecto.NoResultsError, fn -> Repo.get!(ClientRelyingParty, client_relying_party.id) end
+      assert_raise Ecto.NoResultsError, fn ->
+        Repo.get!(ClientRelyingParty, client_relying_party.id)
+      end
     end
 
     test "returns nil when not exists" do
@@ -248,18 +250,19 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     end
 
     test "returns default template" do
-      relying_party_id = insert(:relying_party).id
+      relying_party = insert(:relying_party, templates: [])
 
-      template = RelyingParties.get_relying_party_template!(relying_party_id, :new_registration)
+      template = RelyingParties.get_relying_party_template!(relying_party.id, :new_registration)
 
       assert template == %{
                Template.default_template(:new_registration)
-               | relying_party_id: relying_party_id
+               | relying_party_id: relying_party.id,
+                 layout: RelyingParty.template(relying_party, :layout)
              }
     end
 
-    test "returns relying party template" do
-      relying_party = insert(:relying_party)
+    test "returns relying party template with a layout" do
+      relying_party = insert(:relying_party, templates: [])
 
       template =
         insert(:new_registration_template,
@@ -269,7 +272,7 @@ defmodule BorutaIdentity.RelyingPartiesTest do
         |> Repo.reload()
 
       assert RelyingParties.get_relying_party_template!(relying_party.id, :new_registration) ==
-               template
+               %{template | layout: RelyingParty.template(relying_party, :layout)}
     end
   end
 

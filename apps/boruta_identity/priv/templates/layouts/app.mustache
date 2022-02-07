@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
+    <title>BorutaIdentity · Phoenix Framework</title>
+    <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    .wrapper {
+      height: 100%;
+      display: flex;
+    }
+
+    .main.message {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+    }
+
+    header {
+      height: 100%;
+      width: 50%;
+      background-image: url('https://picsum.photos/1920/1080?grayscale');
+      background-size: cover;
+      background-position: center;
+    }
+
+    main {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    main>.content {
+      flex: 1;
+      max-width: 500px;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        display: none;
+      }
+    }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <header></header>
+      <main role="main" class="container">
+        <div class="content">
+          {{#messages}}
+          <div class="ui main {{ type }} message">
+            {{ content }}
+          </div>
+          {{/messages}}
+          {{> inner_content }}
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
+

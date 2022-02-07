@@ -58,6 +58,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
@@ -148,6 +149,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
   end
 
   defp new_session_template(relying_party) do
-    RelyingParty.template(relying_party, :new_session)
+    RelyingParties.get_relying_party_template!(relying_party.id, :new_session)
   end
 end

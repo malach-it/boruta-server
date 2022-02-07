@@ -9,6 +9,7 @@ defmodule BorutaIdentity.RelyingParties.Template do
   @type t :: %__MODULE__{
           id: String.t() | nil,
           type: String.t(),
+          layout: t(),
           default: boolean(),
           content: String.t(),
           inserted_at: DateTime.t() | nil,
@@ -16,6 +17,7 @@ defmodule BorutaIdentity.RelyingParties.Template do
         }
 
   @template_types [
+    :layout,
     :new_session,
     :new_registration,
     :new_reset_password,
@@ -23,13 +25,18 @@ defmodule BorutaIdentity.RelyingParties.Template do
     :new_confirmation_instructions
   ]
   @type template_type ::
-          :new_session
+          :layout
+          | :new_session
           | :new_registration
           | :new_reset_password
           | :edit_reset_password
           | :new_confirmation_instructions
 
   @default_templates %{
+    layout:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/layouts/app.mustache")
+      |> File.read!(),
     new_session:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/sessions/new.mustache")
@@ -59,6 +66,7 @@ defmodule BorutaIdentity.RelyingParties.Template do
     field(:type, :string)
 
     field(:default, :boolean, virtual: true, default: false)
+    field(:layout, :any, virtual: true, default: nil)
 
     belongs_to(:relying_party, RelyingParty)
 
@@ -70,7 +78,7 @@ defmodule BorutaIdentity.RelyingParties.Template do
   @spec default_content(type :: template_type()) :: template_content :: String.t()
   def default_content(type) when type in @template_types, do: @default_templates[type]
 
-  @spec default_template(type :: atom()) :: template :: t() | nil
+  @spec default_template(type :: atom()) :: %__MODULE__{} | nil
   def default_template(type) when type in @template_types do
     %__MODULE__{
       default: true,

@@ -11,7 +11,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   end
 
   describe "whithout client set" do
-    test "new confirmation redirects to home", %{conn: conn} do
+    test "new confirmation redirects to log in", %{conn: conn} do
       conn = get(conn, Routes.user_confirmation_path(conn, :new))
       assert get_flash(conn, :error) == "Client identifier not provided."
       assert redirected_to(conn) == "/"
@@ -88,7 +88,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
           "user" => %{"email" => user.email}
         })
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "If your email is in our system"
       assert Repo.get_by!(Accounts.UserToken, user_id: user.id).context == "confirm"
     end
@@ -105,7 +105,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
           "user" => %{"email" => user.email}
         })
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "If your email is in our system"
       refute Repo.get_by(Accounts.UserToken, user_id: user.id)
     end
@@ -116,7 +116,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
           "user" => %{"email" => "unknown@example.com"}
         })
 
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "If your email is in our system"
       assert Repo.all(Accounts.UserToken) == []
     end
@@ -132,7 +132,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
       confirm_conn =
         get(conn, Routes.user_confirmation_path(conn, :confirm, token, request: request))
 
-      assert redirected_to(confirm_conn) == "/"
+      assert redirected_to(confirm_conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(confirm_conn, :info) =~ "Account confirmed successfully"
       assert Accounts.get_user(user.id).confirmed_at
       refute get_session(confirm_conn, :user_token)
@@ -153,7 +153,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
         |> log_in(user)
         |> get(Routes.user_confirmation_path(conn, :confirm, token, request: request))
 
-      assert redirected_to(signed_in_conn) == "/"
+      assert redirected_to(signed_in_conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(signed_in_conn, :error) =~ "Account has already been confirmed"
     end
 
