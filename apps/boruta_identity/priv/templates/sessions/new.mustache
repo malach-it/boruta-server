@@ -1,15 +1,15 @@
 <h1>Log in</h1>
 
-<form action="{{ create_user_session_path }}" method="POST">
-  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+{{^valid?}}
+<div class="ui error message">
+{{#errors}}
+  <li>{{ message }}</li>
+{{/errors}}
+</div>
+{{/valid?}}
 
-  {{^valid?}}
-  <div class="alert alert-danger">
-  {{#errors}}
-    <li>{{ message }}</li>
-  {{/errors}}
-  </div>
-  {{/valid?}}
+<form class="ui form" action="{{ create_user_session_path }}" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
 
   <div class="field">
     <label for="user_email">Email</label>
@@ -21,12 +21,12 @@
     <input type="password" id="user_password" name="user[password]" />
   </div>
 
-  <div class="field">
-    <label for="user_remember_me">Keep me logged in for 60 days</label>
+  <div class="ui checkbox field">
     <input type="checkbox" id="user_remember_me" name="user[remember_me]" />
+    <label for="user_remember_me">Remember me</label>
   </div>
 
-  <button type="submit">Log in</button>
+  <button class="ui large fluid button" type="submit">Log in</button>
 
 </form>
 

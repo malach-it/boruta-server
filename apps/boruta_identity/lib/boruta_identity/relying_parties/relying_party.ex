@@ -79,9 +79,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   end
 
   @spec template(relying_party :: t(), type :: atom()) :: Template.t() | nil
-  def template(relying_party, type) do
-    %__MODULE__{templates: templates} = Repo.preload(relying_party, :templates)
-
+  def template(%__MODULE__{templates: templates} = relying_party, type) when is_list(templates) do
     case Enum.find(templates, fn
       %Template{type: template_type} -> Atom.to_string(type) == template_type
     end) do

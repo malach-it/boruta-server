@@ -3,17 +3,24 @@
     <div class="ui large segment">
       <FormErrors v-if="relyingParty.errors" :errors="relyingParty.errors" />
       <form class="ui form" @submit.prevent="submit">
-        <h3>General configuration</h3>
-        <div class="field">
-          <label>Name</label>
-          <input type="text" v-model="relyingParty.name" placeholder="Super relying party">
-        </div>
-        <div class="field">
-          <label>Type</label>
-          <select v-model="relyingParty.type">
-            <option value="internal">internal</option>
-          </select>
-        </div>
+        <section>
+          <h3>General configuration</h3>
+          <div class="field">
+            <label>Name</label>
+            <input type="text" v-model="relyingParty.name" placeholder="Super relying party">
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select v-model="relyingParty.type">
+              <option value="internal">internal</option>
+            </select>
+          </div>
+          <div v-if="relyingParty.isPersisted" class="ui segment">
+            <router-link
+              :to="{ name: 'edit-layout-template', params: { relyingPartyId: relyingParty.id } }"
+              class="ui fluid blue button">Edit layout template</router-link>
+          </div>
+        </section>
         <section v-if="relyingParty.isPersisted">
           <h3>Sessions</h3>
           <div class="ui segment">

@@ -1,6 +1,6 @@
 <h1>Resend confirmation instructions</h1>
 
-<form action="{{ create_user_confirmation_path }}" method="POST">
+<form class="ui form" action="{{ create_user_confirmation_path }}" method="POST">
   <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
 
   <div class="field">
@@ -8,7 +8,7 @@
     <input type="email" id="user_email" name="user[email]" required />
   </div>
 
-  <button type="submit">Ressend confirmation instructions</button>
+  <button class="ui fluid button" type="submit">Ressend confirmation instructions</button>
 
 </form>
 

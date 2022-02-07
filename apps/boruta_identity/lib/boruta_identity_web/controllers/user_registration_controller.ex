@@ -32,23 +32,23 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   end
 
   @impl BorutaIdentity.Accounts.RegistrationApplication
-  def registration_initialized(%Plug.Conn{query_params: query_params} = conn, template) do
-    request = query_params["request"]
-
-    render(conn, "new.html", template: compile_template(template, %{request: request}))
+  def registration_initialized(%Plug.Conn{} = conn, template) do
+    conn
+    |> put_layout(false)
+    |> render("new.html", template: compile_template(template, %{conn: conn}))
   end
 
   @impl BorutaIdentity.Accounts.RegistrationApplication
-  def registration_failure(%Plug.Conn{query_params: query_params} = conn, %RegistrationError{
+  def registration_failure(%Plug.Conn{} = conn, %RegistrationError{
         changeset: %Ecto.Changeset{} = changeset,
         template: template
       }) do
-    request = query_params["request"]
-
-    render(conn, "new.html",
+    conn
+    |> put_layout(false)
+    |> render("new.html",
       changeset: changeset,
       template:
-        compile_template(template, %{request: request, changeset: changeset, valid?: false})
+        compile_template(template, %{conn: conn, changeset: changeset, valid?: false})
     )
   end
 
@@ -66,8 +66,9 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
     |> redirect(to: after_registration_path(conn))
   end
 
-  defp compile_template(%Template{content: content}, opts) do
-    request = Map.fetch!(opts, :request)
+  defp compile_template(%Template{layout: layout, content: content}, opts) do
+    %Plug.Conn{query_params: query_params} = conn = Map.fetch!(opts, :conn)
+    request = Map.get(query_params, "request")
 
     errors =
       case Map.fetch(opts, :changeset) do
@@ -80,6 +81,15 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
           []
       end
 
+    messages =
+      get_flash(conn)
+      |> Enum.map(fn {type, value} ->
+        %{
+          "type" => type,
+          "content" => value
+        }
+      end)
+
     context = %{
       create_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
@@ -88,11 +98,12 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
       new_user_reset_password_path:
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       _csrf_token: Plug.CSRFProtection.get_csrf_token(),
+      messages: messages,
       valid?: Map.get(opts, :valid?, true),
       # TODO improve error format
       errors: errors
     }
 
-    Mustachex.render(content, context)
+    Mustachex.render(layout.content, context, partials: %{inner_content: content})
   end
 end

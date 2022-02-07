@@ -51,6 +51,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
 
   alias BorutaIdentity.Accounts.ConfirmationError
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
   @type confirmation_instructions_params :: %{
@@ -140,6 +141,6 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   end
 
   defp new_confirmation_instructions_template(relying_party) do
-    RelyingParty.template(relying_party, :new_confirmation_instructions)
+    RelyingParties.get_relying_party_template!(relying_party.id, :new_confirmation_instructions)
   end
 end

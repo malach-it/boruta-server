@@ -63,6 +63,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
 
   alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
   @type reset_password_url_fun :: (token :: String.t() -> reset_password_url :: String.t())
@@ -193,10 +194,10 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
   end
 
   defp new_reset_password_template(relying_party) do
-    RelyingParty.template(relying_party, :new_reset_password)
+    RelyingParties.get_relying_party_template!(relying_party.id, :new_reset_password)
   end
 
   defp edit_reset_password_template(relying_party) do
-    RelyingParty.template(relying_party, :edit_reset_password)
+    RelyingParties.get_relying_party_template!(relying_party.id, :edit_reset_password)
   end
 end

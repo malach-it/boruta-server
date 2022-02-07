@@ -42,10 +42,10 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
-  def user_confirmed(conn, _user) do
+  def user_confirmed(%Plug.Conn{query_params: query_params} = conn, _user) do
     conn
     |> put_flash(:info, "Account confirmed successfully.")
-    |> redirect(to: "/")
+    |> redirect(to: Routes.user_session_path(conn, :new, %{request: query_params["request"]}))
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
@@ -54,7 +54,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
       %User{} ->
         conn
         |> put_flash(:error, message)
-        |> redirect(to: "/")
+        |> redirect(to: Routes.user_session_path(conn, :new, request: query_params["request"]))
 
       _ ->
         conn
@@ -64,19 +64,21 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
-  def confirmation_instructions_delivered(conn) do
+  def confirmation_instructions_delivered(%Plug.Conn{query_params: query_params} = conn) do
     conn
     |> put_flash(
       :info,
       "If your email is in our system and it has not been confirmed yet, " <>
         "you will receive an email with instructions shortly."
     )
-    |> redirect(to: "/")
+    |> redirect(to: Routes.user_session_path(conn, :new, request: query_params["request"]))
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
   def confirmation_instructions_initialized(conn, relying_party, template) do
-    render(conn, "new.html", template: compile_template(template, %{relying_party: relying_party}))
+    conn
+    |> put_layout(false)
+    |> render("new.html", template: compile_template(template, %{conn: conn, relying_party: relying_party}))
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
@@ -86,17 +88,30 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
     |> redirect(to: "/")
   end
 
-  defp compile_template(%Template{content: content}, opts) do
+  defp compile_template(%Template{layout: layout, content: content}, opts) do
+    %Plug.Conn{query_params: query_params} = conn = Map.fetch!(opts, :conn)
+    request = Map.get(query_params, "request")
+
+    messages =
+      get_flash(conn)
+      |> Enum.map(fn {type, value} ->
+        %{
+          "type" => type,
+          "content" => value
+        }
+      end)
+
     context = %{
       create_user_confirmation_path:
-        Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create),
-      new_user_registration_path: Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new),
+        Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
+      new_user_registration_path: Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_reset_password_path:
-        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new),
+        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       _csrf_token: Plug.CSRFProtection.get_csrf_token(),
+      messages: messages,
       registrable?: Map.fetch!(opts, :relying_party).registrable
     }
 
-    Mustachex.render(content, context)
+    Mustachex.render(layout.content, context, partials: %{inner_content: content})
   end
 end

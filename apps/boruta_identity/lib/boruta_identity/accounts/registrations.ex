@@ -52,6 +52,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
   @type registration_params :: map()
@@ -112,6 +113,6 @@ defmodule BorutaIdentity.Accounts.Registrations do
   end
 
   defp new_registration_template(relying_party) do
-    RelyingParty.template(relying_party, :new_registration)
+    RelyingParties.get_relying_party_template!(relying_party.id, :new_registration)
   end
 end

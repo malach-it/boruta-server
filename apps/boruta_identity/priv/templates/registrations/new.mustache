@@ -1,15 +1,15 @@
 <h1>Register</h1>
 
-<form action="{{ create_user_registration_path }}" method="POST">
-  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+{{^valid?}}
+<div class="ui error message">
+{{#errors}}
+  <li>{{ message }}</li>
+{{/errors}}
+</div>
+{{/valid?}}
 
-  {{^valid?}}
-  <div class="alert alert-danger">
-  {{#errors}}
-    <li>{{ message }}</li>
-  {{/errors}}
-  </div>
-  {{/valid?}}
+<form class="ui form" action="{{ create_user_registration_path }}" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
 
   <div class="field">
     <label for="user_email">Email</label>
@@ -21,8 +21,7 @@
     <input type="password" id="user_password" name="user[password]" />
   </div>
 
-  <button type="submit">Register</button>
-
+  <button class="ui fluid button" type="submit">Register</button>
 </form>
 
 <p>

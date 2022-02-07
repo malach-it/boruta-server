@@ -23,7 +23,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     with {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
-         {:unchanged, conn} <- choose_session(conn, current_user) do
+         {:unchanged, conn} <- do_authorize(conn, current_user) do
       redirect(conn,
         to:
           IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
@@ -82,7 +82,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def max_age_redirection(conn, _current_user), do: {:unchanged, conn}
 
-  def choose_session(conn, %User{} = current_user) do
+  def do_authorize(conn, %User{} = current_user) do
     case {get_session(conn, :session_chosen), Accounts.consented?(current_user, conn)} do
       {true, false} ->
         conn
@@ -117,7 +117,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
-  def choose_session(conn, _current_user), do: {:unchanged, conn}
+  def do_authorize(conn, _current_user), do: {:unchanged, conn}
 
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, %AuthorizationSuccess{client: client, scope: scope}) do
