@@ -58,6 +58,9 @@ build:
 deploy:
   stage: deploy
   image: debian:latest
+  cache:
+    paths:
+    - .cache/pip
   before_script:
   - apt-get update
   - apt-get install -y curl python3-pip apt-transport-https
