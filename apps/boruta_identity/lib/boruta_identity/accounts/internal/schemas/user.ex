@@ -159,6 +159,9 @@ defmodule BorutaIdentity.Accounts.User do
     false
   end
 
+  def confirmed?(%__MODULE__{confirmed_at: nil}), do: false
+  def confirmed?(%__MODULE__{confirmed_at: _confirmed_at}), do: true
+
   @doc """
   Validates the current password otherwise adds an error to the changeset.
   """

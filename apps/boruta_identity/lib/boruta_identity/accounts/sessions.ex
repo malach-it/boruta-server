@@ -74,7 +74,11 @@ defmodule BorutaIdentity.Accounts.Sessions do
   @callback get_user(user_params :: user_params()) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
-  @callback check_user_against(user :: User.t(), authentication_params :: authentication_params()) ::
+  @callback check_user_against(
+              user :: User.t(),
+              authentication_params :: authentication_params(),
+              relying_party :: RelyingParty.t()
+            ) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
   # TODO move that function out of internal secondary port (bor-156)
@@ -104,7 +108,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
     with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
          {:ok, user} <-
-           apply(client_impl, :check_user_against, [user, authentication_params]),
+           apply(client_impl, :check_user_against, [user, authentication_params, client_rp]),
          {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
       module.user_authenticated(context, user, session_token)
     else
@@ -112,6 +116,13 @@ defmodule BorutaIdentity.Accounts.Sessions do
         module.authentication_failure(context, %SessionError{
           template: new_session_template(client_rp),
           message: "Invalid email or password.",
+          relying_party: client_rp
+        })
+
+      {:user_not_confirmed, reason} ->
+        module.authentication_failure(context, %SessionError{
+          template: new_confirmation_instructions_template(client_rp),
+          message: reason,
           relying_party: client_rp
         })
     end
@@ -150,5 +161,9 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
   defp new_session_template(relying_party) do
     RelyingParties.get_relying_party_template!(relying_party.id, :new_session)
+  end
+
+  defp new_confirmation_instructions_template(relying_party) do
+    RelyingParties.get_relying_party_template!(relying_party.id, :new_confirmation_instructions)
   end
 end

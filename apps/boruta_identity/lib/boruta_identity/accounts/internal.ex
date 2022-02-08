@@ -13,6 +13,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   @impl BorutaIdentity.Accounts.Registrations
@@ -55,10 +56,27 @@ defmodule BorutaIdentity.Accounts.Internal do
   def get_user(_authentication_params), do: {:error, "Cannot find an user without an email."}
 
   @impl BorutaIdentity.Accounts.Sessions
-  def check_user_against(user, authentication_params) do
-    case User.valid_password?(user, authentication_params[:password]) do
+  def check_user_against(user, authentication_params, %RelyingParty{confirmable: false}) do
+    check_user_password(user, authentication_params[:password])
+  end
+
+  def check_user_against(user, authentication_params, %RelyingParty{confirmable: true}) do
+    with {:ok, user} <- check_user_password(user, authentication_params[:password]) do
+      check_user_confirmed(user)
+    end
+  end
+
+  defp check_user_password(user, password) do
+    case User.valid_password?(user, password) do
       true -> {:ok, user}
-      false -> {:error, "Provided password is invalid."}
+      false -> {:error, "Invalid user password."}
+    end
+  end
+
+  defp check_user_confirmed(user) do
+    case User.confirmed?(user) do
+      true -> {:ok, user}
+      false -> {:user_not_confirmed, "Email confirmation is required to authenticate."}
     end
   end
 

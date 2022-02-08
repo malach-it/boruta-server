@@ -6,6 +6,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Deliveries
+  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   setup :set_swoosh_global
@@ -39,7 +40,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
       user_token = Repo.get_by!(Accounts.UserToken, user_id: user.id)
       assert user_token.context == "reset_password"
-      assert_email_sent([text_body: ~r/reset your password/])
+      assert_email_sent(text_body: ~r/reset your password/)
     end
 
     test "does not send reset password token if email is invalid", %{conn: conn, request: request} do
@@ -58,9 +59,12 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
   describe "GET /users/reset_password/:token" do
     setup :with_a_request
+
     setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
-      {:ok, token} = Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+
+      {:ok, token} =
+        Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       {:ok, token: token}
     end
@@ -79,9 +83,12 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
   describe "PUT /users/reset_password/:token" do
     setup :with_a_request
+
     setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
-      {:ok, token} = Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+
+      {:ok, token} =
+        Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
 
       {:ok, token: token}
     end
@@ -99,7 +106,13 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       refute get_session(conn, :user_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
       assert user = Accounts.get_user_by_email(user.email)
-      assert {:ok, _user} = Accounts.Internal.check_user_against(user, %{password: "new valid password"})
+
+      assert {:ok, _user} =
+               Accounts.Internal.check_user_against(
+                 user,
+                 %{password: "new valid password"},
+                 %RelyingParty{confirmable: false}
+               )
     end
 
     test "does not reset password on invalid data", %{conn: conn, token: token, request: request} do
