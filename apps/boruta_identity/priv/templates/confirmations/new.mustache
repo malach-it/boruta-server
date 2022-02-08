@@ -1,5 +1,13 @@
 <h1>Resend confirmation instructions</h1>
 
+{{^valid?}}
+<div class="ui error message">
+{{#errors}}
+  <li>{{ message }}</li>
+{{/errors}}
+</div>
+{{/valid?}}
+
 <form class="ui form" action="{{ create_user_confirmation_path }}" method="POST">
   <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
 

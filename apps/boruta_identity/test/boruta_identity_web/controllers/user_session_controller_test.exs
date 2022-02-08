@@ -4,7 +4,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   import BorutaIdentity.AccountsFixtures
 
   setup do
-    %{user: user_fixture()}
+    %{user: user_fixture(%{confirmed_at: DateTime.utc_now()})}
   end
 
   describe "whithout client set" do
@@ -69,17 +69,17 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
       assert redirected_to(conn) =~ "/"
     end
 
-    test "logs the user in with return to", %{conn: conn, user: user, request: request} do
+    test "returns an error when not confirmed", %{conn: conn, request: request} do
+      user = user_fixture()
+
       conn =
-        conn
-        |> post(Routes.user_session_path(conn, :create, request: request), %{
-          "user" => %{
-            "email" => user.email,
-            "password" => valid_user_password()
-          }
+        post(conn, Routes.user_session_path(conn, :create, request: request), %{
+          "user" => %{"email" => user.email, "password" => valid_user_password()}
         })
 
-      assert redirected_to(conn) == "/user_return_to"
+      response = html_response(conn, 200)
+      assert response =~ "<h1>Resend confirmation instructions</h1>"
+      assert response =~ "Email confirmation is required to authenticate."
     end
 
     test "emits error message with invalid credentials", %{conn: conn, user: user, request: request} do

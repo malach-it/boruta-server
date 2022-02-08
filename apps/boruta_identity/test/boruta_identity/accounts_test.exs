@@ -98,10 +98,11 @@ defmodule BorutaIdentity.AccountsTest do
     setup do
       client_relying_party =
         BorutaIdentity.Factory.insert(:client_relying_party,
-          relying_party: build(
-            :relying_party,
-            registrable: true
-          )
+          relying_party:
+            build(
+              :relying_party,
+              registrable: true
+            )
         )
 
       {:ok, client_id: client_relying_party.client_id}
@@ -152,10 +153,11 @@ defmodule BorutaIdentity.AccountsTest do
     setup do
       client_relying_party =
         BorutaIdentity.Factory.insert(:client_relying_party,
-          relying_party: build(
-            :relying_party,
-            registrable: true
-          )
+          relying_party:
+            build(
+              :relying_party,
+              registrable: true
+            )
         )
 
       {:ok, client_id: client_relying_party.client_id}
@@ -403,9 +405,17 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "create_session/4" do
     setup do
+      confirmable_client_relying_party =
+        BorutaIdentity.Factory.insert(
+          :client_relying_party,
+          relying_party: insert(:relying_party, confirmable: true)
+        )
+
       client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
 
-      {:ok, client_id: client_relying_party.client_id}
+      {:ok,
+       client_id: client_relying_party.client_id,
+       confirmable_client_id: confirmable_client_relying_party.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -445,7 +455,8 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{}
 
-      assert {:authentication_failure, ^context, %SessionError{template: %Template{type: "new_session"}} = error} =
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -461,7 +472,8 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: "does_not_exist"}
 
-      assert {:authentication_failure, ^context, %SessionError{template: %Template{type: "new_session"}} = error} =
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -478,7 +490,8 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: email}
 
-      assert {:authentication_failure, ^context, %SessionError{template: %Template{type: "new_session"}} = error} =
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -495,7 +508,8 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       authentication_params = %{email: email, password: "wrong password"}
 
-      assert {:authentication_failure, ^context, %SessionError{template: %Template{type: "new_session"}} = error} =
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -505,6 +519,44 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert error.message ==
                "Invalid email or password."
+    end
+
+    test "returns an error with a wrong password (confirmable)", %{
+      confirmable_client_id: client_id
+    } do
+      %User{email: email} = user_fixture()
+      context = :context
+      authentication_params = %{email: email, password: "wrong password"}
+
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error if not confirmed", %{confirmable_client_id: client_id} do
+      %User{email: email} = user_fixture()
+      context = :context
+      authentication_params = %{email: email, password: valid_user_password()}
+
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_confirmation_instructions"}} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Email confirmation is required to authenticate."
     end
 
     test "authenticates the user", %{client_id: client_id} do
@@ -816,7 +868,11 @@ defmodule BorutaIdentity.AccountsTest do
       assert user = Accounts.get_user_by_email(user.email)
 
       assert {:ok, _user} =
-               Accounts.Internal.check_user_against(user, %{password: "new valid password"})
+               Accounts.Internal.check_user_against(
+                 user,
+                 %{password: "new valid password"},
+                 %RelyingParty{confirmable: false}
+               )
     end
 
     test "deletes all tokens for the given user", %{user: user} do
