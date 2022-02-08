@@ -105,11 +105,14 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
     context = %{
       create_user_confirmation_path:
         Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
+      new_user_session_path:
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_registration_path: Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_reset_password_path:
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       _csrf_token: Plug.CSRFProtection.get_csrf_token(),
       messages: messages,
+      valid?: Map.get(opts, :valid?, true),
       registrable?: Map.fetch!(opts, :relying_party).registrable
     }
 

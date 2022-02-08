@@ -112,6 +112,8 @@ defmodule BorutaIdentityWeb.UserSessionController do
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
       create_user_confirmation_path:
         Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
+      new_user_session_path:
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_reset_password_path:
