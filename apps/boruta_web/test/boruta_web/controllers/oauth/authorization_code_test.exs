@@ -6,10 +6,6 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
 
   alias BorutaIdentity.Accounts
 
-  setup %{conn: conn} do
-    {:ok, conn: conn}
-  end
-
   describe "#authorize" do
     setup %{conn: conn} do
       resource_owner = user_fixture()
@@ -45,10 +41,11 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
   end
 
   describe "authorization code grant" do
-    # TODO est token delivrance with code
+    # TODO test token delivrance with code
     setup %{conn: conn} do
       resource_owner = user_fixture()
       client = insert(:client)
+      BorutaIdentity.Factory.insert(:client_relying_party, client_id: client.id)
       scope = insert(:scope, public: true)
 
       {:ok,

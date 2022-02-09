@@ -60,6 +60,10 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       :initialize_password_reset,
       # BorutaIdentity.Accounts.ResetPasswords
       :reset_password
+    ],
+    consent: [
+      # BorutaIdentity.Accounts.Consents
+      :initialize_consent
     ]
   }
 
@@ -71,6 +75,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     field(:confirmable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
     field(:reset_password, :boolean, default: true, virtual: true)
+    field(:consent, :boolean, default: true, virtual: true)
 
     has_many(:client_relying_parties, ClientRelyingParty)
     has_many(:templates, Template, on_replace: :delete_if_exists)

@@ -19,6 +19,7 @@ defmodule BorutaIdentity.RelyingParties.Template do
   @template_types [
     :layout,
     :new_session,
+    :new_consent,
     :new_registration,
     :new_reset_password,
     :edit_reset_password,
@@ -27,6 +28,7 @@ defmodule BorutaIdentity.RelyingParties.Template do
   @type template_type ::
           :layout
           | :new_session
+          | :new_consent
           | :new_registration
           | :new_reset_password
           | :edit_reset_password
@@ -40,6 +42,10 @@ defmodule BorutaIdentity.RelyingParties.Template do
     new_session:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/sessions/new.mustache")
+      |> File.read!(),
+    new_consent:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/consents/new.mustache")
       |> File.read!(),
     new_registration:
       :code.priv_dir(:boruta_identity)

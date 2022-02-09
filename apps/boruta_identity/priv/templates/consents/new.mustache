@@ -1,0 +1,22 @@
+<div class="ui segment" style="max-width: 400px;">
+  <h1 style="padding: 0 30px 30px 30px;" class="ui center aligned icon header">
+    <i class="circular address card icon"></i>
+    <strong>{{ client.name }}</strong> require access to your data
+  </h1>
+  <div class="ui massive form">
+    <form action="{{ create_consent_path }}" method="POST">
+      <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+      <input type="hidden" name="client_id" value="{{ client.id }}">
+      {{#scopes}}
+      <div class="field">
+        <div class="ui checkbox">
+          <input type="checkbox" name="scopes[]" id="{{ name }}" value="{{ name }}" checked="checked">
+          <label style="font-size: 1.5rem; cursor: pointer" class="content" for="{{ name }}">{{ label }}</label>
+        </div>
+      </div>
+      {{/scopes}}
+      <hr />
+      <button type="submit" class="ui violet fluid button">Consent</button>
+    </form>
+  </div>
+</div>

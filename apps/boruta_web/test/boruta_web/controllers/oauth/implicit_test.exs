@@ -15,6 +15,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       resource_owner = user_fixture()
       redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
+      BorutaIdentity.Factory.insert(:client_relying_party, client_id: client.id)
       scope = insert(:scope, public: true)
 
       {:ok,

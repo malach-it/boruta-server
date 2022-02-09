@@ -146,6 +146,13 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate confirm_user(context, client_id, current_user, token, module), to: Confirmations
 
+  ## WIP Consent
+
+  defdelegate initialize_consent(context, client_id, authorization, module), to: Consents
+
+  defdelegate consent(user, attrs), to: Consents
+  defdelegate consented?(user, conn), to: Consents
+
   ## Deprecated Sessions
 
   defdelegate generate_user_session_token(user), to: Sessions
@@ -172,9 +179,4 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
     to: Deliveries
-
-  ## Consent
-  defdelegate consent(user, attrs), to: Consents
-  defdelegate consented?(user, conn), to: Consents
-  defdelegate consented_scopes(user, conn), to: Consents
 end

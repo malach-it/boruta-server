@@ -948,6 +948,9 @@ defmodule BorutaIdentity.AccountsTest do
   @tag :skip
   test "confirm_user/4"
 
+  @tag :skip
+  test "initialize_consent/4"
+
   describe "inspect/2" do
     test "does not include password" do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
@@ -1089,58 +1092,6 @@ defmodule BorutaIdentity.AccountsTest do
       oauth_request_with_consented_scope: oauth_request
     } do
       assert Accounts.consented?(user, oauth_request) == true
-    end
-  end
-
-  describe "consented_scopes/2" do
-    setup do
-      user = user_fixture()
-      client_id = SecureRandom.uuid()
-      consent = insert(:consent, user: user, scopes: ["consented:scope"])
-
-      redirect_uri = "http://test.host"
-
-      oauth_request = %Plug.Conn{
-        query_params: %{
-          "scope" => "",
-          "response_type" => "token",
-          "client_id" => client_id,
-          "redirect_uri" => redirect_uri
-        }
-      }
-
-      oauth_request_with_consented_scopes = %Plug.Conn{
-        query_params: %{
-          "scope" => "scope:a scope:b",
-          "response_type" => "token",
-          "client_id" => consent.client_id,
-          "redirect_uri" => redirect_uri
-        }
-      }
-
-      {:ok,
-       user: user,
-       consent: consent,
-       oauth_request: oauth_request,
-       oauth_request_with_consented_scopes: oauth_request_with_consented_scopes}
-    end
-
-    test "returns an empty array", %{user: user} do
-      assert Accounts.consented_scopes(user, %Plug.Conn{}) == []
-    end
-
-    test "returns an empty array with a valid oauth request", %{
-      user: user,
-      oauth_request: oauth_request
-    } do
-      assert Accounts.consented_scopes(user, oauth_request) == []
-    end
-
-    test "returns existing consented scopes", %{
-      user: user,
-      oauth_request_with_consented_scopes: oauth_request
-    } do
-      assert Accounts.consented_scopes(user, oauth_request) == ["consented:scope"]
     end
   end
 end
