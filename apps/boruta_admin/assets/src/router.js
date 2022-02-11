@@ -97,21 +97,21 @@ const router = createRouter({
                   name: 'edit-session-template',
                   component: EditSessionTemplate
                 }, {
-                  path: 'edit-send-reset-password-instructions-template',
+                  path: 'edit/registration-template',
+                  name: 'edit-registration-template',
+                  component: EditRegistrationTemplate
+                }, {
+                  path: 'edit/send-reset-password-instructions-template',
                   name: 'edit-new-reset-password-template',
                   component: EditNewResetPasswordTemplate
                 }, {
-                  path: 'edit-reset-password-template',
+                  path: 'edit/reset-password-template',
                   name: 'edit-edit-reset-password-template',
                   component: EditEditResetPasswordTemplate
                 }, {
-                  path: 'edit-send-confirmation-instructions-template',
+                  path: 'edit/send-confirmation-instructions-template',
                   name: 'edit-new-confirmation-template',
                   component: EditNewConfirmationTemplate
-                }, {
-                  path: 'edit-registration-template',
-                  name: 'edit-registration-template',
-                  component: EditRegistrationTemplate
                 }
               ],
             }, {
