@@ -122,6 +122,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, %AuthorizationSuccess{client: client} = authorization) do
+    # TODO redirect to identity consent controller
     Accounts.initialize_consent(conn, client.id, authorization, __MODULE__)
   end
 
@@ -288,7 +289,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp compile_template(%Template{layout: layout, content: content}, opts) do
     conn = Map.fetch!(opts, :conn)
-    _request = Map.fetch!(opts, :request)
+    request = Map.fetch!(opts, :request)
     scopes = Map.fetch!(opts, :scopes) |> Enum.map(&Map.from_struct/1)
     client = Map.fetch!(opts, :client) |> Map.from_struct()
 
@@ -302,7 +303,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       end)
 
     context = %{
-      create_user_consent_path: "/accounts/consent",
+      create_user_consent_path: IdentityRoutes.consent_path(BorutaIdentityWeb.Endpoint, :consent, %{request: request}),
       client: client,
       scopes: scopes,
       _csrf_token: Plug.CSRFProtection.get_csrf_token(),
