@@ -4,12 +4,14 @@ defmodule BorutaIdentityWeb.ConsentControllerTest do
   import BorutaIdentity.AccountsFixtures
 
   describe "POST /consent" do
-    test "render 422 with invalid params", %{conn: conn} do
+    setup :with_a_request
+
+    test "render 422 with invalid params", %{conn: conn, request: request} do
       conn = conn
              |> log_in(user_fixture())
-             |> post(Routes.consent_path(conn, :consent), %{})
+             |> post(Routes.consent_path(conn, :consent, %{request: request}), %{})
 
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, %{request: request})
       assert get_flash(conn, :error) |> Phoenix.HTML.safe_to_string() =~ ~r/client_id/
     end
 

@@ -4,8 +4,6 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
-  alias BorutaIdentity.Accounts
-
   describe "#authorize" do
     setup %{conn: conn} do
       resource_owner = user_fixture()
@@ -184,7 +182,12 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         |> init_test_session(session_chosen: true)
 
       redirect_uri = List.first(client.redirect_uris)
-      Accounts.consent(resource_owner, %{client_id: client.id, scopes: [scope.name]})
+
+      BorutaIdentity.Factory.insert(:consent,
+        user_id: resource_owner.id,
+        client_id: client.id,
+        scopes: [scope.name]
+      )
 
       conn =
         get(

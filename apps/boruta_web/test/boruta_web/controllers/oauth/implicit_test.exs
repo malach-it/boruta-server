@@ -4,8 +4,6 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
-  alias BorutaIdentity.Accounts
-
   setup %{conn: conn} do
     {:ok, conn: conn}
   end
@@ -192,7 +190,11 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
         |> log_in(resource_owner)
         |> init_test_session(session_chosen: true)
 
-      Accounts.consent(resource_owner, %{client_id: client.id, scopes: [scope.name]})
+      BorutaIdentity.Factory.insert(:consent,
+        user_id: resource_owner.id,
+        client_id: client.id,
+        scopes: [scope.name]
+      )
 
       conn =
         get(

@@ -37,22 +37,38 @@ defmodule BorutaIdentity.Accounts.Consents do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientrp initialize_consent(
-        context,
-        client_id,
-        %AuthorizationSuccess{client: client, scope: scope},
-        module
-      ) do
+                    context,
+                    client_id,
+                    %AuthorizationSuccess{client: client, scope: scope},
+                    module
+                  ) do
     scopes = Scope.split(scope) |> Admin.get_scopes_by_names()
 
     module.consent_initialized(context, client, scopes, new_consent_template(client_rp))
   end
 
-  @spec consent(user :: User.t(), attrs :: map()) ::
-          {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}
-  def consent(%User{} = user, attrs) do
-    user
-    |> User.consent_changeset(%{"consents" => [attrs]})
-    |> Repo.update()
+  @type consent_params :: %{
+          client_id: String.t(),
+          scopes: list(String.t())
+        }
+
+  @spec consent(
+          context :: any(),
+          client_id :: String.t(),
+          user :: User.t(),
+          params :: consent_params(),
+          module :: atom()
+        ) :: callback_result :: any()
+  def consent(context, _client_id, user, params, module) do
+    case user
+         |> User.consent_changeset(%{consents: [params]})
+         |> Repo.update() do
+      {:ok, _user} ->
+        module.consented(context)
+
+      {:error, changeset} ->
+        module.consent_failed(context, changeset)
+    end
   end
 
   @spec consented?(user :: User.t(), conn :: Plug.Conn.t()) :: boolean()

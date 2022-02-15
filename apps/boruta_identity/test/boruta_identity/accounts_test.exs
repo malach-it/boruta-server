@@ -999,37 +999,8 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "consent/2" do
-    setup do
-      user = user_fixture()
-
-      {:ok, user: user}
-    end
-
-    test "returns an error with invalid params", %{user: user} do
-      scopes = []
-      client_id = nil
-
-      assert {:error, %Ecto.Changeset{}} =
-               Accounts.consent(user, %{"client_id" => client_id, "scopes" => scopes})
-    end
-
-    test "adds user consent for a given client_id", %{user: user} do
-      scopes = ["scope:a", "scope:b"]
-      client_id = "client_id"
-
-      {:ok, %User{consents: [consent]}} =
-        Accounts.consent(user, %{"client_id" => client_id, "scopes" => scopes})
-
-      assert consent.client_id == client_id
-      assert consent.scopes == scopes
-
-      %User{consents: [consent]} = Repo.one(User) |> Repo.preload(:consents)
-
-      assert consent.client_id == client_id
-      assert consent.scopes == scopes
-    end
-  end
+  @tag :skip
+  test "consent/5"
 
   describe "consented?/2" do
     setup do
