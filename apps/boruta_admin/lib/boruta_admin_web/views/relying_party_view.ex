@@ -20,6 +20,7 @@ defmodule BorutaAdminWeb.RelyingPartyView do
       name: relying_party.name,
       type: relying_party.type,
       registrable: relying_party.registrable,
+      consentable: relying_party.consentable,
       confirmable: relying_party.confirmable
     }
   end

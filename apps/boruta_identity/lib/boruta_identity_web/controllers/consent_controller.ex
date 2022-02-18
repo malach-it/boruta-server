@@ -35,6 +35,11 @@ defmodule BorutaIdentityWeb.ConsentController do
   end
 
   @impl BorutaIdentity.Accounts.ConsentApplication
+  def consent_not_required(conn) do
+    redirect(conn, to: after_sign_in_path(conn))
+  end
+
+  @impl BorutaIdentity.Accounts.ConsentApplication
   def consented(conn) do
     redirect(conn, to: after_sign_in_path(conn))
   end

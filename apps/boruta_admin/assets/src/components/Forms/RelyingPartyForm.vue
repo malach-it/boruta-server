@@ -54,20 +54,42 @@
                 :to="{ name: 'edit-registration-template', params: { relyingPartyId: relyingParty.id } }"
                 v-if="relyingParty.isPersisted && relyingParty.registrable"
                 class="ui fluid blue button">Edit registration template</router-link>
-              <h4>Email confirmation</h4>
-              <div class=" field">
-                <div class="ui toggle checkbox">
-                  <input type="checkbox" v-model="relyingParty.confirmable">
-                  <label>confirmable</label>
-                </div>
-                <p class="ui info message">
-                  Confirm new registred accounts. sends an email in order to confirm user's email.
-                </p>
-                <router-link
-                  :to="{ name: 'edit-new-confirmation-template', params: { relyingPartyId: relyingParty.id } }"
-                  v-if="relyingParty.isPersisted && relyingParty.confirmable"
-                  class="ui fluid blue button">Edit send confirmation template</router-link>
+            </div>
+          </div>
+        </section>
+        <section>
+          <h3>Email confirmation</h3>
+          <div class="ui segment">
+            <div class=" field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="relyingParty.confirmable">
+                <label>confirmable</label>
               </div>
+              <p class="ui info message">
+                Confirm new registred accounts. sends an email in order to confirm user's email.
+              </p>
+              <router-link
+                :to="{ name: 'edit-new-confirmation-template', params: { relyingPartyId: relyingParty.id } }"
+                v-if="relyingParty.isPersisted && relyingParty.confirmable"
+                class="ui fluid blue button">Edit send confirmation template</router-link>
+            </div>
+          </div>
+        </section>
+        <section>
+          <h3>User consent</h3>
+          <div class="ui segment">
+            <div class=" field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="relyingParty.consentable">
+                <label>user consent</label>
+              </div>
+              <p class="ui info message">
+                Users have to consent requested scopes to be authorized.
+              </p>
+              <router-link
+                :to="{ name: 'edit-new-consent-template', params: { relyingPartyId: relyingParty.id } }"
+                v-if="relyingParty.isPersisted && relyingParty.consentable"
+                class="ui fluid blue button">Edit consent template</router-link>
             </div>
           </div>
         </section>
