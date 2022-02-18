@@ -74,9 +74,9 @@ config :boruta_web, BorutaWeb.Authorization,
   ]
 
 config :boruta, Boruta.Oauth,
-  repo: BorutaWeb.Repo,
+  repo: BorutaAuth.Repo,
   contexts: [
-    resource_owners: BorutaWeb.ResourceOwners
+    resource_owners: BorutaIdentity.ResourceOwners
   ],
   issuer: "https://oauth.boruta.patatoid.fr"
 

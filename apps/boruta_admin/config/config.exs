@@ -26,7 +26,7 @@ config :logger, :console,
 config :boruta, Boruta.Oauth,
   repo: BorutaWeb.Repo,
   contexts: [
-    resource_owners: BorutaWeb.ResourceOwners
+    resource_owners: BorutaIdentity.ResourceOwners
   ]
 
 # Use Jason for JSON parsing in Phoenix
