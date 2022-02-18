@@ -4,6 +4,8 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentityWeb.Authenticable
+
   setup %{conn: conn} do
     {:ok, conn: conn}
   end
@@ -92,10 +94,20 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "token",
+            client_id: client.id,
+            redirect_uri: redirect_uri
+          })
+        )
+      )
       conn =
         conn
         |> log_in(resource_owner)
-        |> init_test_session(session_chosen: true)
+        |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
         get(
@@ -123,12 +135,22 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
+      given_state = "state"
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            state: given_state
+          })
+        )
+      )
       conn =
         conn
         |> log_in(resource_owner)
-        |> init_test_session(session_chosen: true)
-
-      given_state = "state"
+        |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
         get(
@@ -186,10 +208,21 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       resource_owner: resource_owner,
       scope: scope
     } do
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: scope.name
+          })
+        )
+      )
       conn =
         conn
         |> log_in(resource_owner)
-        |> init_test_session(session_chosen: true)
+        |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       BorutaIdentity.Factory.insert(:consent,
         user_id: resource_owner.id,

@@ -3,6 +3,7 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   use BorutaIdentityWeb, :controller
 
+  alias Boruta.Oauth
   alias BorutaIdentity.Accounts
 
   # Make the remember me cookie valid for 60 days.
@@ -81,6 +82,35 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec after_sign_out_path(conn :: Plug.Conn.t()) :: String.t()
   def after_sign_out_path(%Plug.Conn{query_params: query_params} = conn) do
     Routes.user_session_path(conn, :new, query_params)
+  end
+
+  @spec request_param(conn :: Plug.Conn.t()) :: request_param :: String.t()
+  def request_param(conn) do
+    case Oauth.Request.authorize_request(conn, %Oauth.ResourceOwner{sub: ""}) do
+      {:ok, %_{client_id: client_id, scope: scope}} ->
+        {:ok, jwt, _payload} =
+          Joken.encode_and_sign(
+            %{
+              "client_id" => client_id,
+              "scope" => scope,
+              # TODO keep prompt and max_age params
+              "user_return_to" => user_return_to(conn)
+            },
+            BorutaIdentityWeb.Token.application_signer()
+          )
+
+        jwt
+
+      _ ->
+        ""
+    end
+  end
+
+  @spec user_return_to(conn :: Plug.Conn.t()) :: return_to_path :: String.t()
+  def user_return_to(conn) do
+    current_path(conn)
+    |> String.replace(~r/prompt=(login|none)/, "")
+    |> String.replace(~r/max_age=(\d+)/, "")
   end
 
   @spec scope_from_request(conn :: Plug.Conn.t()) :: String.t() | nil

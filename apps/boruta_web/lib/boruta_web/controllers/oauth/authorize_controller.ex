@@ -3,12 +3,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   @behaviour Boruta.Oauth.AuthorizeApplication
 
   use BorutaWeb, :controller
+  import BorutaIdentityWeb.Authenticable, only: [request_param: 1, user_return_to: 1]
 
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
-  alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
 
@@ -79,26 +79,36 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   def max_age_redirection(conn, _current_user), do: {:unchanged, conn}
 
   def do_authorize(conn, %User{} = current_user) do
-    case {get_session(conn, :session_chosen), Accounts.consented?(current_user, conn)} do
-      {true, false} ->
+    resource_owner = %ResourceOwner{
+      sub: current_user.id,
+      username: current_user.email,
+      last_login_at: current_user.last_login_at
+    }
+
+    preauthorized? =
+      case get_session(conn, :preauthorizations) do
+        nil ->
+          false
+
+        preauthorizations ->
+          Map.get(preauthorizations, request_param(conn)) || false
+      end
+    session_chosen? = get_session(conn, :session_chosen)
+
+    case {session_chosen?, preauthorized?} do
+      {true, true} ->
         conn
-        |> Oauth.preauthorize(
-          %ResourceOwner{
-            sub: current_user.id,
-            username: current_user.email,
-            last_login_at: current_user.last_login_at
-          },
+        |> delete_session(:preauthorizations)
+        |> Oauth.authorize(
+          resource_owner,
           __MODULE__
         )
 
-      {true, true} ->
+      {true, false} ->
         conn
-        |> Oauth.authorize(
-          %ResourceOwner{
-            sub: current_user.id,
-            username: current_user.email,
-            last_login_at: current_user.last_login_at
-          },
+        |> put_session(:preauthorized, %{request_param(conn) => true})
+        |> Oauth.preauthorize(
+          resource_owner,
           __MODULE__
         )
 
@@ -118,7 +128,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, _authorization) do
     # TODO redirect to identity consent controller
-    redirect(conn, to: IdentityRoutes.consent_path(BorutaIdentityWeb.Endpoint, :index, %{request: request_param(conn)}))
+    redirect(conn,
+      to:
+        IdentityRoutes.consent_path(BorutaIdentityWeb.Endpoint, :index, %{
+          request: request_param(conn)
+        })
+    )
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
@@ -200,32 +215,5 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     query_params = Map.merge(query_params, unsigned_request)
 
     %{conn | query_params: query_params}
-  end
-
-  defp request_param(conn) do
-    case Oauth.Request.authorize_request(conn, %ResourceOwner{sub: ""}) do
-      {:ok, %_{client_id: client_id, scope: scope}} ->
-        {:ok, jwt, _payload} =
-          Joken.encode_and_sign(
-            %{
-              "client_id" => client_id,
-              "scope" => scope,
-              # TODO keep prompt and max_age params
-              "user_return_to" => user_return_to(conn)
-            },
-            BorutaIdentityWeb.Token.application_signer()
-          )
-
-        jwt
-
-      _ ->
-        ""
-    end
-  end
-
-  def user_return_to(conn) do
-    current_path(conn)
-    |> String.replace(~r/prompt=(login|none)/, "")
-    |> String.replace(~r/max_age=(\d+)/, "")
   end
 end

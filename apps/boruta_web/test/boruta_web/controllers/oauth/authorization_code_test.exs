@@ -4,6 +4,8 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentityWeb.Authenticable
+
   describe "#authorize" do
     setup %{conn: conn} do
       resource_owner = user_fixture()
@@ -44,7 +46,12 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
       resource_owner = user_fixture()
       client = insert(:client)
       relying_party = BorutaIdentity.Factory.insert(:relying_party, consentable: true)
-      BorutaIdentity.Factory.insert(:client_relying_party, client_id: client.id, relying_party: relying_party)
+
+      BorutaIdentity.Factory.insert(:client_relying_party,
+        client_id: client.id,
+        relying_party: relying_party
+      )
+
       scope = insert(:scope, public: true)
 
       {:ok,
@@ -52,6 +59,44 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
        client: client,
        resource_owner: resource_owner,
        scope: scope}
+    end
+
+    test "renders preauthorize with scope", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner,
+      scope: scope
+    } do
+      redirect_uri = List.first(client.redirect_uris)
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: scope.name
+          })
+        )
+      )
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
+
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: scope.name
+          })
+        )
+
+      # TODO test request query param
+      assert redirected_to(conn) == IdentityRoutes.consent_path(conn, :index, request: request_param)
     end
 
     test "redirects to redirect_uri with errors in query if redirect_uri is invalid", %{
@@ -83,12 +128,21 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
       client: client,
       resource_owner: resource_owner
     } do
+      redirect_uri = List.first(client.redirect_uris)
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: client.id,
+            redirect_uri: redirect_uri
+          })
+        )
+      )
       conn =
         conn
         |> log_in(resource_owner)
-        |> init_test_session(session_chosen: true)
-
-      redirect_uri = List.first(client.redirect_uris)
+        |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
         get(
@@ -114,13 +168,24 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
       client: client,
       resource_owner: resource_owner
     } do
+      given_state = "state"
+      redirect_uri = List.first(client.redirect_uris)
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            state: given_state
+          })
+        )
+      )
+
       conn =
         conn
         |> log_in(resource_owner)
-        |> init_test_session(session_chosen: true)
-
-      given_state = "state"
-      redirect_uri = List.first(client.redirect_uris)
+        |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
         get(
@@ -143,20 +208,14 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
       assert state == given_state
     end
 
-    test "renders preauthorize with scope", %{
+    test "redirects to redirect_uri with consented scope", %{
       conn: conn,
       client: client,
       resource_owner: resource_owner,
       scope: scope
     } do
-      conn =
-        conn
-        |> log_in(resource_owner)
-        |> init_test_session(session_chosen: true)
-
       redirect_uri = List.first(client.redirect_uris)
-
-      conn =
+      request_param =
         get(
           conn,
           Routes.authorize_path(conn, :authorize, %{
@@ -166,23 +225,12 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
             scope: scope.name
           })
         )
+        |> Authenticable.request_param()
 
-      # TODO test request query param
-      assert redirected_to(conn) =~ IdentityRoutes.consent_path(conn, :index)
-    end
-
-    test "redirects to redirect_uri with consented scope", %{
-      conn: conn,
-      client: client,
-      resource_owner: resource_owner,
-      scope: scope
-    } do
       conn =
         conn
         |> log_in(resource_owner)
-        |> init_test_session(session_chosen: true)
-
-      redirect_uri = List.first(client.redirect_uris)
+        |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       BorutaIdentity.Factory.insert(:consent,
         user_id: resource_owner.id,
