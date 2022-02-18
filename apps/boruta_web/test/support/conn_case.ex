@@ -26,6 +26,7 @@ defmodule BorutaWeb.ConnCase do
       import BorutaIdentityWeb.ConnCase
       import BorutaWeb.ConnCase
 
+      alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
       alias BorutaWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing

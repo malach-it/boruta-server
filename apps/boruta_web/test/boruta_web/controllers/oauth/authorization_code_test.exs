@@ -166,8 +166,8 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
           })
         )
 
-      assert html_response(conn, 200) =~ ~r/#{scope.name}/
-      assert html_response(conn, 200) =~ ~r/Consent/
+      # TODO test request query param
+      assert redirected_to(conn) =~ IdentityRoutes.consent_path(conn, :index)
     end
 
     test "redirects to redirect_uri with consented scope", %{
