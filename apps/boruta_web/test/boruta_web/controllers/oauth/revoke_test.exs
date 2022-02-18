@@ -92,7 +92,7 @@ defmodule BorutaWeb.Oauth.RevokeTest do
         "client_id=#{client.id}&client_secret=#{client.secret}&token=#{token.value}"
       )
 
-      assert BorutaWeb.Repo.get_by(Token, value: token.value).revoked_at
+      assert BorutaAuth.Repo.get_by(Token, value: token.value).revoked_at
     end
   end
 end

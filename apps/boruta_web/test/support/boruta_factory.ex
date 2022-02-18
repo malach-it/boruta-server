@@ -1,7 +1,7 @@
 defmodule Boruta.Factory do
   @moduledoc false
 
-  use ExMachina.Ecto, repo: BorutaWeb.Repo
+  use ExMachina.Ecto, repo: BorutaAuth.Repo
 
   alias Boruta.Ecto
 

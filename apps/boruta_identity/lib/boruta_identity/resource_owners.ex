@@ -1,4 +1,4 @@
-defmodule BorutaWeb.ResourceOwners do
+defmodule BorutaIdentity.ResourceOwners do
   @moduledoc false
 
   @behaviour Boruta.Oauth.ResourceOwners

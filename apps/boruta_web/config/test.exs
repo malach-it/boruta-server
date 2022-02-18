@@ -10,6 +10,13 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
   server: false,
   secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
 
+config :boruta_web, BorutaWeb.Repo,
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_web_test",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox
+
 config :boruta_identity, BorutaIdentity.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
@@ -17,7 +24,7 @@ config :boruta_identity, BorutaIdentity.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :boruta_web, BorutaWeb.Repo,
+config :boruta_auth, BorutaAuth.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database: System.get_env("POSTGRES_DATABASE") || "boruta_web_test",

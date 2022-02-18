@@ -1,7 +1,7 @@
 use Mix.Config
 
 config :boruta_identity,
-  ecto_repos: [BorutaIdentity.Repo]
+  ecto_repos: [BorutaIdentity.Repo, BorutaAuth.Repo]
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   url: [host: "localhost"],

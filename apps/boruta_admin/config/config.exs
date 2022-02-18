@@ -8,7 +8,7 @@
 use Mix.Config
 
 config :boruta_admin,
-  ecto_repos: [BorutaAdmin.Repo, BorutaIdentity.Repo, BorutaGateway.Repo, BorutaWeb.Repo]
+  ecto_repos: [BorutaAdmin.Repo, BorutaAuth.Repo, BorutaIdentity.Repo, BorutaGateway.Repo, BorutaWeb.Repo]
 
 # Configures the endpoint
 config :boruta_admin, BorutaAdminWeb.Endpoint,

@@ -1,8 +1,7 @@
 use Mix.Config
 
 config :boruta_web,
-  ecto_repos: [BorutaWeb.Repo],
-  generators: [context_app: :boruta, binary_id: true]
+  ecto_repos: [BorutaAuth.Repo, BorutaWeb.Repo]
 
 config :boruta_web, BorutaWeb.Endpoint,
   url: [host: "localhost"],
@@ -19,9 +18,9 @@ config :phoenix, :json_library, Jason
 config :swoosh, :api_client, Swoosh.ApiClient.Finch
 
 config :boruta, Boruta.Oauth,
-  repo: BorutaWeb.Repo,
+  repo: BorutaAuth.Repo,
   contexts: [
-    resource_owners: BorutaWeb.ResourceOwners
+    resource_owners: BorutaIdentity.ResourceOwners
   ]
 
 import_config "#{Mix.env()}.exs"
