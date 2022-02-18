@@ -1,5 +1,5 @@
 defmodule BorutaWeb.Integration.OpenidConnectTest do
-  use BorutaWeb.ConnCase, async: true
+  use BorutaWeb.ConnCase, async: false
 
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures

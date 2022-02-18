@@ -61,9 +61,11 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       # BorutaIdentity.Accounts.ResetPasswords
       :reset_password
     ],
-    consent: [
+    consentable: [
       # BorutaIdentity.Accounts.Consents
-      :initialize_consent
+      :initialize_consent,
+      # BorutaIdentity.Accounts.Consents
+      :consent
     ]
   }
 
@@ -73,9 +75,9 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     field(:type, :string, default: "internal")
     field(:registrable, :boolean, default: false)
     field(:confirmable, :boolean, default: false)
+    field(:consentable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
     field(:reset_password, :boolean, default: true, virtual: true)
-    field(:consent, :boolean, default: true, virtual: true)
 
     has_many(:client_relying_parties, ClientRelyingParty)
     has_many(:templates, Template, on_replace: :delete_if_exists)
@@ -119,7 +121,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   def changeset(relying_party, attrs) do
     relying_party
     |> Repo.preload(:templates)
-    |> cast(attrs, [:name, :type, :registrable, :confirmable])
+    |> cast(attrs, [:name, :type, :registrable, :consentable, :confirmable])
     |> validate_required([:name, :type])
     |> validate_inclusion(:type, @types)
     |> unique_constraint(:name)

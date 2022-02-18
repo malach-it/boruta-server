@@ -10,6 +10,12 @@ defmodule BorutaIdentity.Accounts.ConsentApplication do
               template :: BorutaIdentity.RelyingParties.Template.t()
             ) :: any()
 
+  @callback consent_not_required(context :: any()) :: any()
+
+  @callback consented(context :: any()) :: any()
+
+  @callback consent_failed(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
+
   @callback invalid_relying_party(
               context :: any(),
               error :: BorutaIdentity.Accounts.RelyingPartyError.t()
@@ -22,29 +28,35 @@ defmodule BorutaIdentity.Accounts.Consents do
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
   alias Boruta.Ecto.Admin
-  alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.Request
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties
+  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   @spec initialize_consent(
           context :: any(),
           client_id :: String.t(),
-          authorization :: Boruta.Oauth.AuthorizationSuccess.t(),
+          scope :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
   defwithclientrp initialize_consent(
                     context,
                     client_id,
-                    %AuthorizationSuccess{client: client, scope: scope},
+                    scope,
                     module
                   ) do
+    client = Admin.get_client!(client_id)
     scopes = Scope.split(scope) |> Admin.get_scopes_by_names()
 
-    module.consent_initialized(context, client, scopes, new_consent_template(client_rp))
+    case client_rp.consentable do
+      true ->
+        module.consent_initialized(context, client, scopes, new_consent_template(client_rp))
+      false ->
+        module.consent_not_required(context)
+    end
   end
 
   @type consent_params :: %{
@@ -75,9 +87,11 @@ defmodule BorutaIdentity.Accounts.Consents do
   def consented?(user, conn) do
     with {:ok, %_request_type{client_id: client_id, scope: scope}} <-
            Request.authorize_request(conn, user),
+         %RelyingParty{consentable: true} <- RelyingParties.get_relying_party_by_client_id(client_id),
          true <- scopes_consented?(user, client_id, Scope.split(scope)) do
       true
     else
+      %RelyingParty{consentable: false} -> true
       _ -> false
     end
   end

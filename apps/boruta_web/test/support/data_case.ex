@@ -32,6 +32,7 @@ defmodule BorutaWeb.DataCase do
   setup tags do
     :ok = Sandbox.checkout(BorutaIdentity.Repo)
     :ok = Sandbox.checkout(BorutaWeb.Repo)
+    :ok = Sandbox.checkout(BorutaAuth.Repo)
 
     unless tags[:async] do
       Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})

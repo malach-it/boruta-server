@@ -1007,7 +1007,10 @@ defmodule BorutaIdentity.AccountsTest do
       user = user_fixture()
       client_id = SecureRandom.uuid()
       redirect_uri = "http://test.host"
+      relying_party = insert(:relying_party, consentable: true)
       consent = insert(:consent, user: user, scopes: ["consented", "scope"])
+      insert(:client_relying_party, client_id: consent.client_id, relying_party: relying_party)
+      insert(:client_relying_party, client_id: client_id, relying_party: relying_party)
 
       oauth_request = %Plug.Conn{
         query_params: %{
@@ -1048,6 +1051,23 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "returns true with empty scope", %{user: user, oauth_request: oauth_request} do
+      assert Accounts.consented?(user, oauth_request) == true
+    end
+
+    test "returns true with a non consentable relying party", %{user: user} do
+      client_id = SecureRandom.uuid()
+      redirect_uri = "http://test.host"
+      relying_party = insert(:relying_party, consentable: false)
+      insert(:client_relying_party, client_id: client_id, relying_party: relying_party)
+      oauth_request = %Plug.Conn{
+        query_params: %{
+          "scope" => "",
+          "response_type" => "token",
+          "client_id" => client_id,
+          "redirect_uri" => redirect_uri
+        }
+      }
+
       assert Accounts.consented?(user, oauth_request) == true
     end
 

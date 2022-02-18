@@ -13,7 +13,7 @@ defmodule BorutaWeb.Oauth.RevokeTest do
   describe "revoke" do
     setup %{conn: conn} do
       client = insert(:client)
-      client_token = insert(:token, type: "access_token", value: "777", client: client)
+      client_token = insert(:token, type: "access_token", value: SecureRandom.uuid(), client: client)
       resource_owner = user_fixture()
 
       resource_owner_token =
@@ -92,7 +92,7 @@ defmodule BorutaWeb.Oauth.RevokeTest do
         "client_id=#{client.id}&client_secret=#{client.secret}&token=#{token.value}"
       )
 
-      assert BorutaWeb.Repo.get_by(Token, value: token.value).revoked_at
+      assert BorutaAuth.Repo.get_by(Token, value: token.value).revoked_at
     end
   end
 end

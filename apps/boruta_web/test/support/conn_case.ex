@@ -26,6 +26,7 @@ defmodule BorutaWeb.ConnCase do
       import BorutaIdentityWeb.ConnCase
       import BorutaWeb.ConnCase
 
+      alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
       alias BorutaWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
@@ -36,6 +37,7 @@ defmodule BorutaWeb.ConnCase do
   setup tags do
     :ok = Sandbox.checkout(BorutaIdentity.Repo)
     :ok = Sandbox.checkout(BorutaWeb.Repo)
+    :ok = Sandbox.checkout(BorutaAuth.Repo)
 
     :ok = Scopes.invalidate(:public)
 

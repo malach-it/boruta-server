@@ -83,6 +83,20 @@ defmodule BorutaIdentityWeb.Authenticable do
     Routes.user_session_path(conn, :new, query_params)
   end
 
+  @spec scope_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
+  def scope_from_request(%Plug.Conn{query_params: query_params}) do
+    with {:ok, claims} <-
+           BorutaIdentityWeb.Token.verify(
+             query_params["request"] || "",
+             BorutaIdentityWeb.Token.application_signer()
+           ),
+         {:ok, scope} <- Map.fetch(claims, "scope") do
+      scope
+    else
+      _ -> nil
+    end
+  end
+
   @spec client_id_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
   def client_id_from_request(%Plug.Conn{query_params: query_params}) do
     with {:ok, claims} <-

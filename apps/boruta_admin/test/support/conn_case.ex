@@ -36,6 +36,7 @@ defmodule BorutaAdminWeb.ConnCase do
 
   setup tags do
     :ok = Sandbox.checkout(BorutaAdmin.Repo)
+    :ok = Sandbox.checkout(BorutaAuth.Repo)
     :ok = Sandbox.checkout(BorutaGateway.Repo)
     :ok = Sandbox.checkout(BorutaIdentity.Repo)
     :ok = Sandbox.checkout(BorutaWeb.Repo)

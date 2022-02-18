@@ -1,21 +1,16 @@
 defmodule BorutaWeb.Oauth.AuthorizeController do
   @dialyzer :no_match
   @behaviour Boruta.Oauth.AuthorizeApplication
-  @behaviour BorutaIdentity.Accounts.ConsentApplication
 
   use BorutaWeb, :controller
 
   alias Boruta.Oauth
-  alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.RelyingParties.Template
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
-  alias BorutaWeb.OauthView
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -121,9 +116,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   def do_authorize(conn, _current_user), do: {:unchanged, conn}
 
   @impl Boruta.Oauth.AuthorizeApplication
-  def preauthorize_success(conn, %AuthorizationSuccess{client: client} = authorization) do
+  def preauthorize_success(conn, _authorization) do
     # TODO redirect to identity consent controller
-    Accounts.initialize_consent(conn, client.id, authorization, __MODULE__)
+    redirect(conn, to: IdentityRoutes.consent_path(BorutaIdentityWeb.Endpoint, :index, %{request: request_param(conn)}))
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
@@ -181,26 +176,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     |> render("error." <> get_format(conn), error: error, error_description: error_description)
   end
 
-  @impl BorutaIdentity.Accounts.ConsentApplication
-  def consent_initialized(conn, client, scopes, template) do
-    conn
-    |> put_view(OauthView)
-    |> put_layout(false)
-    |> render("preauthorize.html", template: compile_template(template, %{
-      conn: conn,
-      request: request_param(conn),
-      scopes: scopes,
-      client: client
-    }))
-  end
-
-  @impl BorutaIdentity.Accounts.ConsentApplication
-  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
-    conn
-    |> put_flash(:error, message)
-    |> redirect(to: "/")
-  end
-
   defp login_expired?(current_user, max_age) do
     now = DateTime.utc_now() |> DateTime.to_unix()
 
@@ -229,11 +204,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp request_param(conn) do
     case Oauth.Request.authorize_request(conn, %ResourceOwner{sub: ""}) do
-      {:ok, %_{client_id: client_id}} ->
+      {:ok, %_{client_id: client_id, scope: scope}} ->
         {:ok, jwt, _payload} =
           Joken.encode_and_sign(
             %{
               "client_id" => client_id,
+              "scope" => scope,
               # TODO keep prompt and max_age params
               "user_return_to" => user_return_to(conn)
             },
@@ -251,31 +227,5 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     current_path(conn)
     |> String.replace(~r/prompt=(login|none)/, "")
     |> String.replace(~r/max_age=(\d+)/, "")
-  end
-
-  defp compile_template(%Template{layout: layout, content: content}, opts) do
-    conn = Map.fetch!(opts, :conn)
-    request = Map.fetch!(opts, :request)
-    scopes = Map.fetch!(opts, :scopes) |> Enum.map(&Map.from_struct/1)
-    client = Map.fetch!(opts, :client) |> Map.from_struct()
-
-    messages =
-      get_flash(conn)
-      |> Enum.map(fn {type, value} ->
-        %{
-          "type" => type,
-          "content" => value
-        }
-      end)
-
-    context = %{
-      create_user_consent_path: IdentityRoutes.consent_path(BorutaIdentityWeb.Endpoint, :consent, %{request: request}),
-      client: client,
-      scopes: scopes,
-      _csrf_token: Plug.CSRFProtection.get_csrf_token(),
-      messages: messages,
-    }
-
-    Mustachex.render(layout.content, context, partials: %{inner_content: content})
   end
 end
