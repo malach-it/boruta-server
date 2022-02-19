@@ -28,33 +28,35 @@ defmodule BorutaIdentity.Accounts.Consents do
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
   alias Boruta.Ecto.Admin
-  alias Boruta.Oauth.Request
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   @spec initialize_consent(
           context :: any(),
           client_id :: String.t(),
+          user :: User.t(),
           scope :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
   defwithclientrp initialize_consent(
                     context,
                     client_id,
+                    user,
                     scope,
                     module
                   ) do
     client = Admin.get_client!(client_id)
-    scopes = Scope.split(scope) |> Admin.get_scopes_by_names()
+    scopes = Scope.split(scope)
 
-    case client_rp.consentable do
-      true ->
+    case {client_rp.consentable, consented?(user, client_id, scopes)} do
+      {true, false} ->
+        scopes = Admin.get_scopes_by_names(scopes)
+
         module.consent_initialized(context, client, scopes, new_consent_template(client_rp))
-      false ->
+      _ ->
         module.consent_not_required(context)
     end
   end
@@ -83,22 +85,10 @@ defmodule BorutaIdentity.Accounts.Consents do
     end
   end
 
-  @spec consented?(user :: User.t(), conn :: Plug.Conn.t()) :: boolean()
-  def consented?(user, conn) do
-    with {:ok, %_request_type{client_id: client_id, scope: scope}} <-
-           Request.authorize_request(conn, user),
-         %RelyingParty{consentable: true} <- RelyingParties.get_relying_party_by_client_id(client_id),
-         true <- scopes_consented?(user, client_id, Scope.split(scope)) do
-      true
-    else
-      %RelyingParty{consentable: false} -> true
-      _ -> false
-    end
-  end
+  @spec consented?(user :: User.t(), client_id :: String.t(), scopes :: list(String.t())) :: boolean()
+  def consented?(%User{}, _client_id, []), do: true
 
-  defp scopes_consented?(%User{}, _client_id, []), do: true
-
-  defp scopes_consented?(%User{} = user, client_id, scopes) do
+  def consented?(%User{} = user, client_id, scopes) do
     %User{consents: consents} = Repo.preload(user, :consents)
 
     Enum.any?(consents, fn %Consent{client_id: consent_client_id, scopes: consent_scopes} ->
@@ -107,7 +97,7 @@ defmodule BorutaIdentity.Accounts.Consents do
     end)
   end
 
-  defp scopes_consented?(_, _, _), do: false
+  def consented?(_, _, _), do: false
 
   defp new_consent_template(relying_party) do
     RelyingParties.get_relying_party_template!(relying_party.id, :new_consent)

@@ -109,8 +109,6 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec user_return_to(conn :: Plug.Conn.t()) :: return_to_path :: String.t()
   def user_return_to(conn) do
     current_path(conn)
-    |> String.replace(~r/prompt=(login|none)/, "")
-    |> String.replace(~r/max_age=(\d+)/, "")
   end
 
   @spec scope_from_request(conn :: Plug.Conn.t()) :: String.t() | nil

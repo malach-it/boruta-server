@@ -16,10 +16,11 @@ defmodule BorutaIdentityWeb.ConsentController do
   action_fallback(BorutaIdentityWeb.FallbackController)
 
   def index(conn, _params) do
+    current_user = conn.assigns[:current_user]
     client_id = client_id_from_request(conn)
     scope = scope_from_request(conn)
 
-    Accounts.initialize_consent(conn, client_id, scope, __MODULE__)
+    Accounts.initialize_consent(conn, client_id, current_user, scope, __MODULE__)
   end
 
   def consent(conn, params) do

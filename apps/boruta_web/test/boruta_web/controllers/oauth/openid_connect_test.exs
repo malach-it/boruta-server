@@ -4,6 +4,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentityWeb.Authenticable
+
   alias Boruta.Ecto
 
   describe "OpenID Connect flows" do
@@ -21,7 +23,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
        scope: scope}
     end
 
-    test "redirect to login with prompt='login'", %{conn: conn} do
+    test "redirect to login with prompt=login", %{conn: conn} do
       conn =
         get(
           conn,
@@ -33,12 +35,25 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert redirected_to(conn) =~ "/users/log_out"
     end
 
-    test "redirects to login with prompt='none' without any current_user", %{
+    test "returns an error with prompt=none without any current_user", %{
       conn: conn,
       client: client,
       redirect_uri: redirect_uri
     } do
-      conn = init_test_session(conn, session_chosen: true)
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+      )
+      conn = init_test_session(conn, session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
         get(
@@ -62,10 +77,23 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       resource_owner: resource_owner,
       redirect_uri: redirect_uri
     } do
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+      )
       conn =
         conn
         |> log_in(resource_owner)
-        |> init_test_session(session_chosen: true)
+        |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
         get(
@@ -114,15 +142,29 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert redirected_to(conn) =~ "/users/log_out"
     end
 
-    test "redirects to choose session with a non expired max_age and current_user", %{
+    test "redirects to redirect_uri session with a non expired max_age and current_user", %{
       conn: conn,
       client: client,
       resource_owner: resource_owner,
       redirect_uri: redirect_uri
     } do
+      request_param = Authenticable.request_param(
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: "openid",
+            nonce: "nonce",
+            max_age: 10
+          })
+        )
+      )
       conn =
         conn
         |> log_in(resource_owner)
+        |> init_test_session(preauthorizations: %{request_param => true})
 
       conn =
         get(
@@ -137,7 +179,12 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
           })
         )
 
-      assert html_response(conn, 200) =~ ~r/choose-session/
+      assert url = redirected_to(conn)
+      assert [_, _id_token] =
+               Regex.run(
+                 ~r/#{redirect_uri}#id_token=(.+)/,
+                 url
+               )
     end
   end
 

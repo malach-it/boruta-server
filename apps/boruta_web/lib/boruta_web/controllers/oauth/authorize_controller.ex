@@ -17,68 +17,85 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = put_unsigned_request(conn)
 
-    with {:unchanged, conn} <- prompt_redirection(conn, current_user),
+    with {:unchanged, conn} <- check_preauthorized(conn),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
-         {:unchanged, conn} <- do_authorize(conn, current_user) do
+         {:unchanged, conn} <- prompt_redirection(conn, current_user),
+         {:unchanged, conn} <- preauthorize(conn, current_user) do
       redirect(conn,
         to:
           IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
             request: request_param(conn)
           })
       )
+    else
+      {:preauthorized, conn} ->
+        do_authorize(conn, current_user)
+
+      {:preauthorize, conn} ->
+        conn
+
+      {:redirected, conn} ->
+        conn
     end
   end
 
-  def prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "none"}} = conn, current_user) do
-    current_user = current_user || %User{}
+  defp check_preauthorized(conn) do
+    case get_session(conn, :preauthorizations) do
+      nil ->
+        {:unchanged, conn}
 
-    resource_owner = %ResourceOwner{
-      sub: current_user.id,
-      username: current_user.email,
-      last_login_at: current_user.last_login_at
-    }
-
-    conn
-    |> Oauth.authorize(
-      resource_owner,
-      __MODULE__
-    )
+      preauthorizations ->
+        case Map.get(preauthorizations, request_param(conn), false) do
+          false -> {:unchanged, conn}
+          true -> {:preauthorized, conn}
+        end
+    end
   end
 
-  def prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "login"}} = conn, _current_user) do
-    redirect(conn,
-      to:
-        IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
-          request: request_param(conn)
-        })
-    )
-  end
-
-  def prompt_redirection(conn, _current_user), do: {:unchanged, conn}
-
-  def prompt_redirection(conn), do: {:unchanged, conn}
-
-  def max_age_redirection(
-        %Plug.Conn{query_params: %{"max_age" => max_age}} = conn,
-        %User{} = current_user
-      ) do
+  defp max_age_redirection(
+         %Plug.Conn{query_params: %{"max_age" => max_age}} = conn,
+         %User{} = current_user
+       ) do
     case login_expired?(current_user, max_age) do
       true ->
-        redirect(conn,
-          to:
-            IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
-              request: request_param(conn)
-            })
-        )
+        conn =
+          redirect(conn,
+            to:
+              IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
+                request: request_param(conn)
+              })
+          )
+
+        {:redirected, conn}
 
       false ->
         {:unchanged, conn}
     end
   end
 
-  def max_age_redirection(conn, _current_user), do: {:unchanged, conn}
+  defp max_age_redirection(conn, _current_user), do: {:unchanged, conn}
 
-  def do_authorize(conn, %User{} = current_user) do
+  defp prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "none"}} = conn, current_user) do
+    current_user = current_user || %User{}
+
+    preauthorize(conn, current_user)
+  end
+
+  defp prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "login"}} = conn, _current_user) do
+    conn =
+      redirect(conn,
+        to:
+          IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
+            request: request_param(conn)
+          })
+      )
+
+    {:redirected, conn}
+  end
+
+  defp prompt_redirection(conn, _current_user), do: {:unchanged, conn}
+
+  defp preauthorize(conn, %User{} = current_user) do
     resource_owner = %ResourceOwner{
       sub: current_user.id,
       username: current_user.email,
@@ -93,26 +110,58 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         preauthorizations ->
           Map.get(preauthorizations, request_param(conn)) || false
       end
-    session_chosen? = get_session(conn, :session_chosen)
 
-    case {session_chosen?, preauthorized?} do
-      {true, true} ->
+    case preauthorized? do
+      true ->
+        {:preauthorized, conn}
+
+      false ->
+        conn =
+          conn
+          |> Oauth.preauthorize(
+            resource_owner,
+            __MODULE__
+          )
+
+        {:preauthorize, conn}
+    end
+  end
+
+  defp preauthorize(conn, _current_user), do: {:unchanged, conn}
+
+  defp do_authorize(conn, current_user) do
+    current_user = current_user || %User{}
+
+    resource_owner = %ResourceOwner{
+      sub: current_user.id,
+      username: current_user.email,
+      last_login_at: current_user.last_login_at
+    }
+
+    conn
+    |> delete_session(:preauthorizations)
+    |> Oauth.authorize(
+      resource_owner,
+      __MODULE__
+    )
+  end
+
+  @impl Boruta.Oauth.AuthorizeApplication
+  def preauthorize_success(conn, _authorization) do
+    session_chosen? = get_session(conn, :session_chosen) || false
+
+    case session_chosen? do
+      true ->
         conn
-        |> delete_session(:preauthorizations)
-        |> Oauth.authorize(
-          resource_owner,
-          __MODULE__
+        |> put_session(:preauthorizations, %{request_param(conn) => true})
+        |> redirect(
+          to:
+            IdentityRoutes.consent_path(BorutaIdentityWeb.Endpoint, :index, %{
+              request: request_param(conn)
+            })
         )
 
-      {true, false} ->
-        conn
-        |> put_session(:preauthorized, %{request_param(conn) => true})
-        |> Oauth.preauthorize(
-          resource_owner,
-          __MODULE__
-        )
-
-      _ ->
+      false ->
         conn
         |> put_session(:session_chosen, true)
         |> put_view(BorutaWeb.ChooseSessionView)
@@ -121,19 +170,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           authorize_url: user_return_to(conn)
         )
     end
-  end
-
-  def do_authorize(conn, _current_user), do: {:unchanged, conn}
-
-  @impl Boruta.Oauth.AuthorizeApplication
-  def preauthorize_success(conn, _authorization) do
-    # TODO redirect to identity consent controller
-    redirect(conn,
-      to:
-        IdentityRoutes.consent_path(BorutaIdentityWeb.Endpoint, :index, %{
-          request: request_param(conn)
-        })
-    )
   end
 
   @impl Boruta.Oauth.AuthorizeApplication

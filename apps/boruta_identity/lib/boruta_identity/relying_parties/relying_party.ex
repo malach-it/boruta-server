@@ -49,7 +49,9 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       # BorutaIdentity.Accounts.Sessions
       :create_session,
       # BorutaIdentity.Accounts.Sessions
-      :delete_session
+      :delete_session,
+      # BorutaIdentity.Accounts.Consents
+      :initialize_consent,
     ],
     reset_password: [
       # BorutaIdentity.Accounts.ResetPasswords
@@ -62,8 +64,6 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       :reset_password
     ],
     consentable: [
-      # BorutaIdentity.Accounts.Consents
-      :initialize_consent,
       # BorutaIdentity.Accounts.Consents
       :consent
     ]

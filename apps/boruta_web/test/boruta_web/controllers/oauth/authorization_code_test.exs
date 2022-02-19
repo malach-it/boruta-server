@@ -18,6 +18,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
 
     test "redirects to choose session if session not chosen", %{
       conn: conn,
+      client: client,
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
@@ -30,7 +31,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
           conn,
           Routes.authorize_path(conn, :authorize, %{
             response_type: "token",
-            client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
+            client_id: client.id,
             redirect_uri: redirect_uri,
             state: "state"
           })
