@@ -1,4 +1,5 @@
 import axios from 'axios'
+import router from '../router'
 
 const defaults = {
   name: '',
@@ -73,10 +74,21 @@ class Scope {
 Scope.api = function () {
   const accessToken = localStorage.getItem('access_token')
 
-  return axios.create({
+  const instance = axios.create({
     baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/scopes`,
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
+
+  instance.interceptors.response.use(function (response) {
+      return response;
+    }, function (error) {
+      if (error.response?.status === 404) return router.push({ name: 'not-found' })
+      if (error.response?.status === 400) return router.push({ name: 'bad-request' })
+
+      return Promise.reject(error)
+    })
+
+  return instance
 }
 
 Scope.all = function () {

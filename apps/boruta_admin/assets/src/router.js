@@ -6,6 +6,8 @@ import Main from './views/Layouts/Main.vue'
 import Home from './views/Home.vue'
 
 import OauthCallback from './views/OauthCallback.vue'
+import NotFound from './views/NotFound.vue'
+import BadRequest from './views/BadRequest.vue'
 
 import Clients from './views/Clients.vue'
 import ClientList from './views/Clients/ClientList.vue'
@@ -54,6 +56,14 @@ const router = createRouter({
           path: '',
           name: 'home',
           component: Home
+        }, {
+          path: 'not-found',
+          name: 'not-found',
+          component: NotFound
+        }, {
+          path: 'bad-request',
+          name: 'bad-request',
+          component: BadRequest
         }, {
           path: '/oauth-callback',
           name: 'oauth-callback',
@@ -211,6 +221,9 @@ const router = createRouter({
               component: ScopeList
             }
           ]
+        }, {
+          path: '/:pathMatch(.*)*',
+          redirect: '/not-found'
         }
       ]
     }

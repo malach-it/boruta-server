@@ -1,4 +1,5 @@
 import axios from 'axios'
+import router from '../router'
 
 const defaults = {
   id: null,
@@ -57,10 +58,21 @@ class Template {
   static api () {
     const accessToken = localStorage.getItem('access_token')
 
-    return axios.create({
+    const instance = axios.create({
       baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/relying-parties`,
       headers: { 'Authorization': `Bearer ${accessToken}` }
     })
+
+    instance.interceptors.response.use(function (response) {
+        return response;
+      }, function (error) {
+        if (error.response?.status === 404) return router.push({ name: 'not-found' })
+        if (error.response?.status === 400) return router.push({ name: 'bad-request' })
+
+        return Promise.reject(error)
+      })
+
+    return instance
   }
 
   static get (relyingPartyId, type) {
