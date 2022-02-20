@@ -34,6 +34,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       {:preauthorize, conn} ->
         conn
 
+      {:authorize, conn} ->
+        conn
+
       {:redirected, conn} ->
         conn
     end
@@ -76,9 +79,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp max_age_redirection(conn, _current_user), do: {:unchanged, conn}
 
   defp prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "none"}} = conn, current_user) do
-    current_user = current_user || %User{}
-
-    preauthorize(conn, current_user)
+    {:authorize, do_authorize(conn, current_user)}
   end
 
   defp prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "login"}} = conn, _current_user) do

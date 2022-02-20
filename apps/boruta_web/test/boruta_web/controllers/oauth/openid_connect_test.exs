@@ -40,6 +40,27 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       client: client,
       redirect_uri: redirect_uri
     } do
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+    assert redirected_to(conn) =~ ~r/error=login_required/
+  end
+
+    test "returns an error with prompt=none without any current_user (preauthorized)", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri
+    } do
       request_param = Authenticable.request_param(
         get(
           conn,

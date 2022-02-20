@@ -4,7 +4,7 @@ import store from '../store'
 class Oauth {
   constructor () {
     const oauth = new BorutaOauth({
-      window: window,
+      window,
       host: window.env.VUE_APP_OAUTH_BASE_URL,
       authorizePath: '/oauth/authorize'
     })
