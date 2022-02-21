@@ -53,6 +53,10 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       # BorutaIdentity.Accounts.Consents
       :initialize_consent,
     ],
+    choose_session: [
+      # BorutaIdentity.Accounts.ChooseSessions
+      :initialize_choose_session
+    ],
     reset_password: [
       # BorutaIdentity.Accounts.ResetPasswords
       :initialize_password_instructions,
@@ -77,6 +81,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     field(:confirmable, :boolean, default: false)
     field(:consentable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
+    field(:choose_session, :boolean, default: true, virtual: true)
     field(:reset_password, :boolean, default: true, virtual: true)
 
     has_many(:client_relying_parties, ClientRelyingParty)

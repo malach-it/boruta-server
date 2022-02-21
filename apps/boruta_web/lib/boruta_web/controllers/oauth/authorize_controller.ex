@@ -3,7 +3,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   @behaviour Boruta.Oauth.AuthorizeApplication
 
   use BorutaWeb, :controller
-  import BorutaIdentityWeb.Authenticable, only: [request_param: 1, user_return_to: 1]
+  import BorutaIdentityWeb.Authenticable, only: [request_param: 1]
 
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizeResponse
@@ -165,10 +165,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       false ->
         conn
         |> put_session(:session_chosen, true)
-        |> put_view(BorutaWeb.ChooseSessionView)
-        |> render("new.html",
-          request_param: request_param(conn),
-          authorize_url: user_return_to(conn)
+        |> redirect(
+          to:
+            IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
+              request: request_param(conn)
+            })
         )
     end
   end
