@@ -26,8 +26,9 @@ import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
 import RelyingParty from './views/RelyingParties/RelyingParty.vue'
 import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
 import EditLayoutTemplate from './views/RelyingParties/EditLayoutTemplate.vue'
-import EditNewConsentTemplate from './views/RelyingParties/EditNewConsentTemplate.vue'
 import EditSessionTemplate from './views/RelyingParties/EditSessionTemplate.vue'
+import EditNewChooseSessionTemplate from './views/RelyingParties/EditNewChooseSessionTemplate.vue'
+import EditNewConsentTemplate from './views/RelyingParties/EditNewConsentTemplate.vue'
 import EditNewConfirmationTemplate from './views/RelyingParties/EditNewConfirmationTemplate.vue'
 import EditNewResetPasswordTemplate from './views/RelyingParties/EditNewResetPasswordTemplate.vue'
 import EditEditResetPasswordTemplate from './views/RelyingParties/EditEditResetPasswordTemplate.vue'
@@ -99,6 +100,10 @@ const router = createRouter({
                   path: 'edit',
                   name: 'edit-relying-party',
                   component: EditRelyingParty
+                }, {
+                  path: 'edit/choose-session-template',
+                  name: 'edit-choose-session-template',
+                  component: EditNewChooseSessionTemplate
                 }, {
                   path: 'edit/layout-template',
                   name: 'edit-layout-template',

@@ -1,5 +1,5 @@
 <template>
-  <div class="container edit-consent-template">
+  <div class="container choose-session-template">
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
@@ -16,7 +16,7 @@ import RelyingParty from '../../models/relying-party.model'
 import TextEditor from '../../components/Forms/TextEditor.vue'
 
 export default {
-  name: 'edit-consent-template',
+  name: 'choose-session-template',
   components: {
     TextEditor
   },
@@ -25,7 +25,7 @@ export default {
     RelyingParty.get(relyingPartyId).then((relyingParty) => {
       this.relyingParty = relyingParty
     })
-    Template.get(relyingPartyId, 'new_consent').then((template) => {
+    Template.get(relyingPartyId, 'choose_session').then((template) => {
       this.template = template
       this.content = template.content
     })
@@ -51,7 +51,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.edit-consent-template {
+.choose-session-template {
   height: 100%;
   display: flex;
   flex-direction: column;

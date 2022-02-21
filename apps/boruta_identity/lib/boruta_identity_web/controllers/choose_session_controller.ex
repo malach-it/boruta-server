@@ -27,6 +27,13 @@ defmodule BorutaIdentityWeb.ChooseSessionController do
   end
 
   @impl BorutaIdentity.Accounts.ChooseSessionApplication
+  def choose_session_not_required(conn) do
+    conn
+    |> put_session(:session_chosen, true)
+    |> redirect(to: Routes.user_session_path(conn, :new, conn.query_params))
+  end
+
+  @impl BorutaIdentity.Accounts.ChooseSessionApplication
   def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
     conn
     |> put_flash(:error, message)

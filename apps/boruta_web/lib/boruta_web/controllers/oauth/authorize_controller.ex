@@ -164,7 +164,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
       false ->
         conn
-        |> put_session(:session_chosen, true)
         |> redirect(
           to:
             IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
