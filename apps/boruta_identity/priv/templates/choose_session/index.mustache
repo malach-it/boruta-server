@@ -1,0 +1,10 @@
+<div class="choose-session">
+  <h1 class="ui right aligned header">Continue ?</h1>
+  <div class="ui segment">
+    <div class="choose-session">
+      <a href="{{ delete_user_session_path }}" class="ui large fluid button">New login</a>
+      <span class="ui horizontal divider">or</span>
+      <a href="{{ new_user_session_path }}" class="ui large fluid basic button">Continue as {{ current_user.email }}</a>
+    </div>
+  </div>
+</div>

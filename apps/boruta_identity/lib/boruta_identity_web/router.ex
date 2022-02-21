@@ -42,6 +42,7 @@ defmodule BorutaIdentityWeb.Router do
   scope "/", BorutaIdentityWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    get "/users/choose_session", ChooseSessionController, :index
     get "/users/consent", ConsentController, :index
     post "/users/consent", ConsentController, :consent
     get "/users/settings", UserSettingsController, :edit

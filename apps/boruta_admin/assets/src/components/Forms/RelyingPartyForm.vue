@@ -40,6 +40,24 @@
           </div>
         </section>
         <section>
+          <h3>Choose session</h3>
+          <div class="ui segment">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="relyingParty.choose_session">
+              <label>choose session</label>
+            </div>
+            <p class="ui info message">
+              Give the ability for the user to choose to keep current session or to create a new one on authorization
+            </p>
+            <div v-if="relyingParty.choose_session">
+              <router-link
+                :to="{ name: 'edit-choose-session-template', params: { relyingPartyId: relyingParty.id } }"
+                v-if="relyingParty.isPersisted && relyingParty.choose_session"
+                class="ui fluid blue button">Edit choose session template</router-link>
+            </div>
+          </div>
+        </section>
+        <section>
           <h3>Registration</h3>
           <div class="ui segment">
             <div class="ui toggle checkbox">

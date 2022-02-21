@@ -90,6 +90,7 @@ defmodule BorutaIdentity.Accounts do
   The Accounts context.
   """
 
+  alias BorutaIdentity.Accounts.ChooseSessions
   alias BorutaIdentity.Accounts.Confirmations
   alias BorutaIdentity.Accounts.Consents
   alias BorutaIdentity.Accounts.Deliveries
@@ -146,10 +147,13 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate confirm_user(context, client_id, current_user, token, module), to: Confirmations
 
-  ## WIP Consent
+  ## Consent
 
   defdelegate initialize_consent(context, client_id, user, scope, module), to: Consents
   defdelegate consent(context, client_id, user, params, module), to: Consents
+
+  ## Choose session
+  defdelegate initialize_choose_session(context, client_id, module), to: ChooseSessions
 
   ## Deprecated Sessions
 

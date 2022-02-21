@@ -37,7 +37,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
           })
         )
 
-      assert html_response(conn, 200) =~ ~r/choose-session/
+      assert redirected_to(conn) =~ IdentityRoutes.choose_session_path(conn, :index)
     end
   end
 

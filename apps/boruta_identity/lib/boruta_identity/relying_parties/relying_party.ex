@@ -52,6 +52,8 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       :delete_session,
       # BorutaIdentity.Accounts.Consents
       :initialize_consent,
+      # BorutaIdentity.Accounts.ChooseSessions
+      :initialize_choose_session
     ],
     reset_password: [
       # BorutaIdentity.Accounts.ResetPasswords
@@ -73,6 +75,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   schema "relying_parties" do
     field(:name, :string)
     field(:type, :string, default: "internal")
+    field(:choose_session, :boolean, default: true)
     field(:registrable, :boolean, default: false)
     field(:confirmable, :boolean, default: false)
     field(:consentable, :boolean, default: false)
@@ -121,7 +124,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   def changeset(relying_party, attrs) do
     relying_party
     |> Repo.preload(:templates)
-    |> cast(attrs, [:name, :type, :registrable, :consentable, :confirmable])
+    |> cast(attrs, [:name, :type, :choose_session, :registrable, :consentable, :confirmable])
     |> validate_required([:name, :type])
     |> validate_inclusion(:type, @types)
     |> unique_constraint(:name)
