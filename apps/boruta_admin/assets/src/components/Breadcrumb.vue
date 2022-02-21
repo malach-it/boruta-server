@@ -23,6 +23,7 @@ const labels = {
   'relying-party': ({ params }) => params.relyingPartyId,
   'edit-layout-template': 'Edit layout template',
   'edit-session-template': 'Edit login template',
+  'edit-choose-session-template': 'Edit choose session template',
   'edit-registration-template': 'Edit registration template',
   'edit-new-reset-password-template': 'Edit send reset password instructions template',
   'edit-edit-reset-password-template': 'Edit reset password template',
