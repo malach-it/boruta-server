@@ -197,4 +197,35 @@ defmodule BorutaIdentity.RelyingParties do
       _ -> Repo.update(changeset)
     end
   end
+
+  @doc """
+  Deletes a relying party template.
+
+  ## Examples
+
+      iex> delete_relying_party_template!(template, :new_session)
+      {:ok, %Template{}}
+
+      iex> delete_relying_party_template!(template, :unknown)
+      ** (Ecto.NoResultsError)
+
+  """
+  def delete_relying_party_template!(relying_party_id, type) do
+    template_type = Atom.to_string(type)
+
+    with {1, _results} <-
+           Repo.delete_all(
+             from(t in Template,
+               join: rp in assoc(t, :relying_party),
+               where:
+                 rp.id == ^relying_party_id and
+                   t.type == ^template_type
+             )
+           ),
+         %Template{} = template <- get_relying_party_template!(relying_party_id, type) do
+      template
+    else
+      {0, nil} -> raise Ecto.NoResultsError, queryable: Template
+    end
+  end
 end

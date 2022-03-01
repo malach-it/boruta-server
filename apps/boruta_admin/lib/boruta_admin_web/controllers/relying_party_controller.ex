@@ -61,6 +61,11 @@ defmodule BorutaAdminWeb.RelyingPartyController do
     end
   end
 
+  def delete_template(conn, %{"relying_party_id" => id, "template_type" => template_type}) do
+    template = RelyingParties.delete_relying_party_template!(id, String.to_atom(template_type))
+    render(conn, "show_template.json", template: template)
+  end
+
   def delete(conn, %{"id" => id}) do
     relying_party = RelyingParties.get_relying_party!(id)
 

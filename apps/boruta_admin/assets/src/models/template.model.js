@@ -47,6 +47,26 @@ class Template {
       })
   }
 
+  destroy () {
+    const { type, relying_party_id: relyingPartyId } = this
+
+    return this.constructor.api().delete(`/${relyingPartyId}/templates/${type}`)
+      .then(({ data }) => {
+        const params = data.data
+
+        Object.keys(params).forEach((key) => {
+          this[key] = params[key]
+          assign[key].bind(this)(params)
+        })
+        return this
+      })
+      .catch((error) => {
+        const { errors } = error.response.data
+        this.errors = errors
+        throw errors
+      })
+  }
+
   get serialized () {
     const { content } = this
 

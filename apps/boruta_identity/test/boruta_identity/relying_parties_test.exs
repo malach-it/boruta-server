@@ -295,4 +295,50 @@ defmodule BorutaIdentity.RelyingPartiesTest do
       assert Repo.reload(template)
     end
   end
+
+  describe "delete_relying_party_template!/2" do
+    test "raises an error with unexisting relying party" do
+      relying_party_id = SecureRandom.uuid()
+
+      assert_raise Ecto.NoResultsError, fn ->
+        RelyingParties.delete_relying_party_template!(relying_party_id, :unexisting)
+      end
+    end
+
+    test "raises an error with unexisting template" do
+      relying_party_id = insert(:relying_party).id
+
+      assert_raise Ecto.NoResultsError, fn ->
+        RelyingParties.delete_relying_party_template!(relying_party_id, :unexisting)
+      end
+    end
+
+    test "returns an error if template is default" do
+      relying_party = insert(:relying_party, templates: [])
+
+      assert_raise Ecto.NoResultsError, fn ->
+        RelyingParties.delete_relying_party_template!(relying_party.id, :new_registration)
+      end
+    end
+
+    test "returns relying party template with a layout" do
+      relying_party = insert(:relying_party, templates: [])
+
+      template =
+        insert(:new_registration_template,
+          content: "custom registration template",
+          relying_party: relying_party
+        )
+        |> Repo.reload()
+
+      assert RelyingParties.delete_relying_party_template!(relying_party.id, :new_registration) ==
+               %{
+                 Template.default_template(:new_registration)
+                 | relying_party_id: relying_party.id,
+                   layout: RelyingParty.template(relying_party, :layout)
+               }
+
+      assert Repo.get_by(Template, id: template.id) == nil
+    end
+  end
 end

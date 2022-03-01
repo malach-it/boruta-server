@@ -54,6 +54,7 @@ defmodule BorutaAdminWeb.Router do
     resources "/relying-parties", RelyingPartyController, except: [:new, :edit] do
       get "/templates/:template_type", RelyingPartyController, :template, as: :template
       patch "/templates/:template_type", RelyingPartyController, :update_template, as: :template
+      delete "/templates/:template_type", RelyingPartyController, :delete_template, as: :template
     end
   end
 

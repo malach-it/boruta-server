@@ -1,6 +1,8 @@
 defmodule BorutaAdminWeb.RelyingPartyControllerTest do
   use BorutaAdminWeb.ConnCase
 
+  import BorutaIdentity.Factory
+
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
@@ -63,6 +65,17 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
              )
            )
            |> response(401)
+
+    assert conn
+           |> delete(
+             Routes.admin_relying_party_template_path(
+               conn,
+               :delete_template,
+               "relying_party_id",
+               "template_type"
+             )
+           )
+           |> response(401)
   end
 
   describe "with bad scope" do
@@ -100,6 +113,17 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
                Routes.admin_relying_party_template_path(
                  conn,
                  :update_template,
+                 "relying_party_id",
+                 "template_type"
+               )
+             )
+             |> response(403)
+
+      assert conn
+             |> delete(
+               Routes.admin_relying_party_template_path(
+                 conn,
+                 :delete_template,
                  "relying_party_id",
                  "template_type"
                )
@@ -232,6 +256,73 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
         )
 
       assert json_response(conn, 422)["errors"] != %{}
+    end
+  end
+
+  describe "delete relying_party template" do
+    setup [:create_relying_party]
+
+    @tag authorized: ["relying-parties:manage:all"]
+    test "respond a 404 when relying party does not exist", %{
+      conn: conn
+    } do
+      relying_party_id = SecureRandom.uuid()
+      type = "new_registration"
+
+      assert_error_sent(404, fn ->
+        delete(
+          conn,
+          Routes.admin_relying_party_template_path(
+            conn,
+            :delete_template,
+            relying_party_id,
+            type
+          )
+        )
+      end)
+    end
+
+    @tag authorized: ["relying-parties:manage:all"]
+    test "respond a 404 when template does not exist", %{
+      conn: conn,
+      relying_party: %RelyingParty{id: relying_party_id}
+    } do
+      type = "new_registration"
+
+      assert_error_sent(404, fn ->
+        delete(
+          conn,
+          Routes.admin_relying_party_template_path(
+            conn,
+            :delete_template,
+            relying_party_id,
+            type
+          )
+        )
+      end)
+    end
+
+    @tag authorized: ["relying-parties:manage:all"]
+    test "deletes relying_party template when template exists", %{
+      conn: conn,
+      relying_party: %RelyingParty{id: relying_party_id} = relying_party
+    } do
+      type = "new_registration"
+      insert(:template, type: type, relying_party: relying_party)
+
+      conn =
+        delete(
+          conn,
+          Routes.admin_relying_party_template_path(
+            conn,
+            :delete_template,
+            relying_party_id,
+            type
+          )
+        )
+
+      assert %{"id" => nil, "type" => "new_registration"} =
+               json_response(conn, 200)["data"]
     end
   end
 
