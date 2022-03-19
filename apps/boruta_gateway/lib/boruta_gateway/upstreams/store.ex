@@ -33,9 +33,6 @@ defmodule BorutaGateway.Upstreams.Store do
   end
 
   def hydrate do
-    # NOTE wait for genserver startup in order to gracefully shutdown
-    # and not to reach supervisor max restarts
-    :timer.sleep(100)
     GenServer.cast(__MODULE__, :hydrate)
   end
 
