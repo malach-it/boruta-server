@@ -6,6 +6,7 @@ defmodule BorutaGateway.Application do
   use Application
 
   alias BorutaGateway.Upstreams
+  alias BorutaGateway.Upstreams.ClientSupervisor
 
   def start(_type, _args) do
     children = [
@@ -14,10 +15,7 @@ defmodule BorutaGateway.Application do
         id: Upstreams.Store,
         start: {Upstreams.Store, :start_link, []}
       },
-      %{
-        id: Upstreams.Client,
-        start: {Upstreams.Client, :start_link, [[pool_size: 64]]}
-      }
+      {ClientSupervisor, strategy: :one_for_one}
     ]
 
     children =

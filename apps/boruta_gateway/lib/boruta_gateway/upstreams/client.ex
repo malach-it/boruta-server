@@ -1,5 +1,7 @@
 defmodule BorutaGateway.Upstreams.Client do
-  @moduledoc false
+  @moduledoc """
+  Upstream scoped HTTP client
+  """
 
   use GenServer
 
@@ -7,30 +9,64 @@ defmodule BorutaGateway.Upstreams.Client do
 
   alias BorutaGateway.Upstreams.Upstream
 
-  @katipo_pool :katipo_pool
-
-  def katipo_pool, do: @katipo_pool
-
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  def child_spec(upstream) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [upstream]},
+      type: :worker,
+      restart: :transient
+    }
   end
 
-  @impl GenServer
-  def init(opts) do
-    :katipo_pool.start(@katipo_pool, opts[:pool_size], pipelining: :multiplex)
-
-    {:ok, []}
+  def name(%Upstream{id: upstream_id}) when is_binary(upstream_id) do
+    "client_#{upstream_id}" |> String.replace("-", "") |> String.to_atom()
   end
 
-  # @spec request(conn :: %Plug.Conn{}) ::
-  def request(%Upstream{} = upstream, %Plug.Conn{} = conn) do
-    :katipo.req(:katipo_pool, %{
-      method: transform_method(conn),
-      headers: transform_headers(conn),
-      body: transform_body(conn),
-      url: transform_url(upstream, conn),
-      return_metrics: true
-    })
+  def name(_), do: nil
+
+  def start_link(upstream) do
+    GenServer.start_link(__MODULE__, upstream, name: name(upstream))
+  end
+
+  def init(upstream) do
+    name = SecureRandom.hex() |> String.to_atom()
+    {:ok, _pid} =
+      Finch.start_link(
+        name: name,
+        pools: %{
+          :default => [size: 20]
+        }
+      )
+
+    {:ok, %{upstream: upstream, http_client: name}}
+  end
+
+  def upstream(client) do
+    GenServer.call(client, {:get, :upstream})
+  end
+
+  def http_client(client) do
+    GenServer.call(client, {:get, :http_client})
+  end
+
+  def request(%Upstream{http_client: http_client} = upstream, conn) do
+    http_client = http_client(http_client)
+
+    Finch.build(
+      transform_method(conn),
+      transform_url(upstream, conn),
+      transform_headers(conn),
+      transform_body(conn)
+    )
+    |> Finch.request(http_client)
+  end
+
+  def handle_call({:get, :upstream}, _from, %{upstream: upstream} = state) do
+    {:reply, upstream, state}
+  end
+
+  def handle_call({:get, :http_client}, _from, %{http_client: http_client} = state) do
+    {:reply, http_client, state}
   end
 
   defp transform_method(%Plug.Conn{method: method}) do

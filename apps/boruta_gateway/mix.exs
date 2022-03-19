@@ -37,13 +37,14 @@ defmodule BorutaGateway.MixProject do
   defp deps do
     [
       {:boruta, "~> 2.0"},
-      {:katipo, "~> 0.9"},
       {:ecto_sql, "~> 3.0"},
-      {:postgrex, ">= 0.0.0"},
-      {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"},
       {:ex_json_schema, "~> 0.7.3"},
-      {:telemetry, "~> 0.4"}
+      {:finch, "~> 0.10"},
+      {:jason, "~> 1.0"},
+      {:katipo, "~> 0.9"},
+      {:plug_cowboy, "~> 2.0"},
+      {:postgrex, ">= 0.0.0"},
+      {:telemetry, "~> 0.4"},
     ]
   end
 
