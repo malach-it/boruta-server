@@ -23,7 +23,7 @@ defmodule BorutaGateway.MixProject do
   def application do
     [
       mod: {BorutaGateway.Application, []},
-      extra_applications: [:logger, :runtime_tools, :syntax_tools, :katipo]
+      extra_applications: [:logger, :runtime_tools, :syntax_tools]
     ]
   end
 
@@ -41,7 +41,6 @@ defmodule BorutaGateway.MixProject do
       {:ex_json_schema, "~> 0.7.3"},
       {:finch, "~> 0.10"},
       {:jason, "~> 1.0"},
-      {:katipo, "~> 0.9"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
       {:telemetry, "~> 0.4"},

@@ -41,10 +41,10 @@ defmodule BorutaGateway.Upstreams.ClientTest do
 
   # TODO change for an internal server
   describe "external http calls" do
-    test "should request an external url (httpbin.org/status) given a Plug.Conn" do
+    test "should request an external url (httpbin.patatoid.fr/status) given a Plug.Conn" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          {:ok, upstream} = Upstreams.create_upstream(%{scheme: "http", host: "httpbin.org", port: 80})
+          {:ok, upstream} = Upstreams.create_upstream(%{scheme: "http", host: "httpbin.patatoid.fr", port: 80})
           :timer.sleep(100)
 
           conn =
@@ -65,10 +65,10 @@ defmodule BorutaGateway.Upstreams.ClientTest do
       end)
     end
 
-    test "should request an external url (httpbin.org/headers) given a Plug.Conn" do
+    test "should request an external url (httpbin.patatoid.fr/headers) given a Plug.Conn" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          {:ok, upstream} = Upstreams.create_upstream(%{scheme: "http", host: "httpbin.org", port: 80})
+          {:ok, upstream} = Upstreams.create_upstream(%{scheme: "http", host: "httpbin.patatoid.fr", port: 80})
           :timer.sleep(100)
 
           conn =
@@ -91,7 +91,7 @@ defmodule BorutaGateway.Upstreams.ClientTest do
                  end)
 
           assert Enum.any?(req_headers, fn
-                   {"Host", "httpbin.org"} -> true
+                   {"Host", "httpbin.patatoid.fr"} -> true
                    _ -> false
                  end)
         after
