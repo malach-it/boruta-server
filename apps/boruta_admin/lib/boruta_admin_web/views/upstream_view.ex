@@ -19,7 +19,8 @@ defmodule BorutaAdminWeb.UpstreamView do
       uris: upstream.uris,
       strip_uri: upstream.strip_uri,
       authorize: upstream.authorize,
-      required_scopes: upstream.required_scopes
+      required_scopes: upstream.required_scopes,
+      pool_size: upstream.pool_size
     }
   end
 end

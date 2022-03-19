@@ -5,7 +5,8 @@ import Scope from './scope.model'
 const defaults = {
   errors: null,
   uris: [],
-  required_scopes: []
+  required_scopes: [],
+  pool_size: 10
 }
 
 const assign = {
@@ -13,6 +14,7 @@ const assign = {
   scheme: function ({ scheme }) { this.scheme = scheme },
   host: function ({ host }) { this.host = host },
   port: function ({ port }) { this.port = port },
+  pool_size: function ({ pool_size }) { this.pool_size = pool_size },
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
@@ -73,13 +75,14 @@ class Upstream {
   }
 
   get serialized () {
-    const { id, scheme, host, port, uris, strip_uri, authorize, required_scopes } = this
+    const { id, scheme, host, port, pool_size, uris, strip_uri, authorize, required_scopes } = this
 
     return {
       id,
       scheme,
       host,
       port,
+      pool_size,
       uris: uris.map(({ uri }) => uri),
       required_scopes: required_scopes.reduce((acc, { model: { name }, method }) => {
         acc[method] = acc[method] || []

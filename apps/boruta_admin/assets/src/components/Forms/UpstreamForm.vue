@@ -19,6 +19,10 @@
           <label>Port</label>
           <input type="text" v-model="upstream.port" placeholder="443">
         </div>
+        <div class="field">
+          <label>Pool size</label>
+          <input type="number" v-model="upstream.pool_size" placeholder="10">
+        </div>
         <div class="upstreams field">
           <label>URIs</label>
           <div v-for="(upstreamUri, index) in upstream.uris" class="field" :key="index">

@@ -19,6 +19,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias BorutaGateway.Upstreams.ClientSupervisor
+
   @type t :: %__MODULE__{
           scheme: String.t(),
           host: String.t(),
@@ -41,14 +43,40 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:required_scopes, :map, default: %{})
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
+    field(:pool_size, :integer, default: 10)
+
+    field(:http_client, :any, virtual: true)
 
     timestamps()
+  end
+
+  def with_http_client(%__MODULE__{http_client: nil} = upstream) do
+    # TODO manage failure
+    {:ok, http_client} = ClientSupervisor.client_for_upstream(upstream)
+
+    %{upstream|http_client: http_client}
+  end
+
+  def with_http_client(%__MODULE__{http_client: http_client} = upstream) when is_pid(http_client) do
+    ClientSupervisor.kill(http_client)
+    # TODO manage failure
+    {:ok, http_client} = Enum.reduce_while(1..100, http_client, fn _i, http_client ->
+      :timer.sleep(10)
+      case Process.alive?(http_client) do
+        true ->
+          {:cont, http_client}
+        false ->
+          {:halt, ClientSupervisor.client_for_upstream(upstream)}
+      end
+    end)
+
+    %{upstream|http_client: http_client}
   end
 
   @doc false
   def changeset(upstream, attrs) do
     upstream
-    |> cast(attrs, [:scheme, :host, :port, :uris, :strip_uri, :authorize, :required_scopes])
+    |> cast(attrs, [:scheme, :host, :port, :uris, :strip_uri, :authorize, :required_scopes, :pool_size])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_uris()

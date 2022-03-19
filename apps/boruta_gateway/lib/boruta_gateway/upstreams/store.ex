@@ -6,6 +6,7 @@ defmodule BorutaGateway.Upstreams.Store do
   use GenServer
 
   alias BorutaGateway.Repo
+  alias BorutaGateway.Upstreams.ClientSupervisor
   alias BorutaGateway.Upstreams.Upstream
 
   def start_link do
@@ -32,9 +33,6 @@ defmodule BorutaGateway.Upstreams.Store do
   end
 
   def hydrate do
-    # NOTE wait for genserver startup in order to gracefully shutdown
-    # and not to reach supervisor max restarts
-    :timer.sleep(2000)
     GenServer.cast(__MODULE__, :hydrate)
   end
 
@@ -64,12 +62,17 @@ defmodule BorutaGateway.Upstreams.Store do
     end) do
       upstream
     end
+
     {:reply, upstream, state}
   end
 
   @impl GenServer
   def handle_cast(:hydrate, state) do
-    upstreams = Repo.all(Upstream) |>  structure()
+    upstreams = Repo.all(Upstream)
+                |> Enum.map(fn upstream ->
+                  Upstream.with_http_client(upstream)
+                end)
+                |>  structure()
     {:noreply, %{state|hydrated: true, upstreams: upstreams}}
   rescue
     error ->
@@ -97,12 +100,14 @@ defmodule BorutaGateway.Upstreams.Store do
       Upstream,
       Enum.map(record, fn ({key, value}) -> {String.to_atom(key), value} end)
     )
+    |> Upstream.with_http_client()
 
     upstreams
     |> Enum.map(fn ({_uri, upstream}) -> upstream end)
     |> List.insert_at(0, new)
     |> structure()
   end
+
   defp update_upstreams(upstreams, %{"operation" => "UPDATE", "record" => record}) do
     updated = struct(
       Upstream,
@@ -113,16 +118,21 @@ defmodule BorutaGateway.Upstreams.Store do
     upstreams
     |> Enum.map(fn ({_uri, upstream}) -> upstream end)
     |> Enum.map(fn
-      (%{id: ^updated_id}) -> updated
+      (%{id: ^updated_id, http_client: http_client}) ->
+        Upstream.with_http_client(%{updated|http_client: http_client})
       (upstream) -> upstream
     end)
     |> structure()
   end
+
   defp update_upstreams(upstreams, %{"operation" => "DELETE", "record" => %{"id" => id}}) do
     upstreams
     |> Enum.map(fn ({_uri, upstream}) -> upstream end)
     |> Enum.reject(fn
-      (%{id: ^id}) -> true
+      (%{id: ^id, http_client: http_client}) ->
+        # TODO manage failure
+        true = ClientSupervisor.kill(http_client)
+        true
       (_) -> false
     end)
     |> structure()
