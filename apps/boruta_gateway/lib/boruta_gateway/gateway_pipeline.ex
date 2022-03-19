@@ -3,7 +3,6 @@ defmodule BorutaGateway.GatewayPipeline do
 
   use Plug.Router
 
-  plug BorutaGateway.Plug.Metrics
   plug BorutaGateway.Plug.AssignUpstream
   plug BorutaGateway.Plug.Authorize
   plug Plug.Logger
