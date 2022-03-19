@@ -43,6 +43,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:required_scopes, :map, default: %{})
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
+    field(:pool_size, :integer, default: 10)
 
     field(:http_client, :any, virtual: true)
 
@@ -75,7 +76,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
   @doc false
   def changeset(upstream, attrs) do
     upstream
-    |> cast(attrs, [:scheme, :host, :port, :uris, :strip_uri, :authorize, :required_scopes])
+    |> cast(attrs, [:scheme, :host, :port, :uris, :strip_uri, :authorize, :required_scopes, :pool_size])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_uris()

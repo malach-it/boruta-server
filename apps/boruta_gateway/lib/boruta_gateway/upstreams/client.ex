@@ -34,7 +34,7 @@ defmodule BorutaGateway.Upstreams.Client do
       Finch.start_link(
         name: name,
         pools: %{
-          :default => [size: 20]
+          :default => [size: upstream.pool_size]
         }
       )
 
