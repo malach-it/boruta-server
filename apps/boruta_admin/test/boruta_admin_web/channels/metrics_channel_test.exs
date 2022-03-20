@@ -2,8 +2,6 @@ defmodule BorutaAdminWeb.MetricsChannelTest do
   use BorutaAdminWeb.ChannelCase
 
   alias BorutaAdminWeb.UserSocket
-  alias BorutaGateway.Upstreams.Upstream
-  alias Ecto.Adapters.SQL.Sandbox
 
   test "fails when user is not connected" do
     assert connect(UserSocket, %{"token" => "bad token"}, %{}) == :error

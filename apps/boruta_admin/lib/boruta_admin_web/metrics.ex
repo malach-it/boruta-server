@@ -6,15 +6,11 @@ defmodule BorutaAdminWeb.Metrics do
 
     defstruct start_time: nil,
               request_time: nil,
-              gateway_time: nil,
-              upstream_time: nil,
               status_code: nil
 
     @type t :: %{
             start_time: integer(),
             request_time: integer(),
-            gateway_time: integer(),
-            upstream_time: integer(),
             statuc_code: integer()
           }
   end
@@ -47,6 +43,7 @@ defmodule BorutaAdminWeb.Metrics do
       &BorutaAdminWeb.Metrics.handle_event/4,
       nil
     )
+
     {:noreply, state}
   end
 
@@ -71,8 +68,6 @@ defmodule BorutaAdminWeb.Metrics do
         %{
           start_times: 0,
           request_times: [],
-          gateway_times: [],
-          upstream_times: [],
           count: 0
         }
       end,
@@ -85,16 +80,12 @@ defmodule BorutaAdminWeb.Metrics do
       %{
         start_time: start_time,
         request_times: request_times,
-        gateway_times: gateway_times,
-        upstream_times: upstream_times,
         status_code: status_code,
         count: count
       } = measurements ->
         MetricsChannel.handle_event(%{
           start_time: start_time / 1000,
           request_time: Enum.sum(request_times) / count,
-          gateway_time: Enum.sum(gateway_times) / count,
-          upstream_time: Enum.sum(upstream_times) / count,
           status_code: status_code,
           count: count
         })
@@ -108,15 +99,11 @@ defmodule BorutaAdminWeb.Metrics do
           acc :: %{
             start_time: integer(),
             request_times: list(integer()),
-            gateway_times: list(integer()),
-            upstream_times: list(integer()),
             count: integer()
           }
         ) :: %{
           start_time: integer(),
           request_times: list(integer()),
-          gateway_times: list(integer()),
-          upstream_times: list(integer()),
           status_code: integer(),
           count: integer()
         }
@@ -124,8 +111,6 @@ defmodule BorutaAdminWeb.Metrics do
     %{
       start_time: measurement.start_time,
       request_times: [measurement.request_time | acc[:request_times] || []],
-      gateway_times: [measurement.gateway_time | acc[:gateway_times] || []],
-      upstream_times: [measurement.upstream_time | acc[:upstream_times] || []],
       count: acc[:count] + 1,
       status_code: measurement.status_code
     }
@@ -137,23 +122,20 @@ defmodule BorutaAdminWeb.Metrics do
         [:boruta_gateway, :request, :done],
         %{
           request_time: request_time,
-          gateway_time: gateway_time,
-          upstream_time: upstream_time,
           status_code: status_code
         },
         %{start_time: start_time},
         _state
       ) do
-      Enum.map([node() | Node.list()], fn node ->
-        :rpc.call(node, Producer, :increment, [
-          %Measurements{
-            start_time: start_time,
-            request_time: request_time,
-            gateway_time: gateway_time,
-            upstream_time: upstream_time,
-            status_code: status_code
-          }])
-      end)
+    Enum.map([node() | Node.list()], fn node ->
+      :rpc.call(node, Producer, :increment, [
+        %Measurements{
+          start_time: start_time,
+          request_time: request_time,
+          status_code: status_code
+        }
+      ])
+    end)
   end
 
   defmodule Producer do
@@ -180,15 +162,11 @@ defmodule BorutaAdminWeb.Metrics do
     def increment(
           %Measurements{
             start_time: start_time,
-            request_time: request_time,
-            gateway_time: gateway_time,
-            upstream_time: upstream_time
+            request_time: request_time
           } = measurement
         )
         when is_integer(start_time) and
-               is_integer(request_time) and
-               is_integer(gateway_time) and
-               is_integer(upstream_time) do
+               is_integer(request_time) do
       GenServer.call(__MODULE__, {:increment, measurement})
     end
 

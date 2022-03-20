@@ -18,14 +18,11 @@ defmodule BorutaGateway.Plug.Metrics do
 
     register_before_send(conn, fn conn ->
       now = System.system_time(:microsecond)
-      upstream_time = floor(Map.get(conn.assigns, :upstream_time, 0))
       request_time = now - start
 
       :telemetry.execute(
         [:boruta_gateway, :request, :done],
         %{
-          gateway_time: request_time - upstream_time,
-          upstream_time: upstream_time,
           request_time: request_time,
           status_code: conn.status
         },

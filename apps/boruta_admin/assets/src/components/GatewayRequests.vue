@@ -55,18 +55,6 @@ export default {
             fill: false,
             lineTension: 0,
             data: this.formatedData.map(({ request_time }) => request_time)
-          }, {
-            label: 'Gateway time',
-            borderColor: 'blue',
-            fill: false,
-            lineTension: 0,
-            data: this.formatedData.map(({ gateway_time }) => gateway_time)
-          }, {
-            label: 'Upstream time',
-            borderColor: 'red',
-            fill: false,
-            lineTension: 0,
-            data: this.formatedData.map(({ upstream_time }) => upstream_time)
           }
         ]
       }
