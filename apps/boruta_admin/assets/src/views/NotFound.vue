@@ -4,7 +4,7 @@
       <div class="ui placeholder segment">
         <div class="ui icon header">
           <i class="sign question circle icon"></i>
-          The page you are looking for does not exist
+          The resource you are looking for does not exist
         </div>
       </div>
     </div>
