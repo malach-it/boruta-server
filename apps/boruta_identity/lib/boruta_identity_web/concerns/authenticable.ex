@@ -62,7 +62,8 @@ defmodule BorutaIdentityWeb.Authenticable do
     |> delete_session(@session_key)
   end
 
-  defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}) do
+  defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => remember_me})
+       when remember_me in ["true", "on"] do
     put_resp_cookie(conn, @remember_me_cookie, token, @remember_me_options)
   end
 
