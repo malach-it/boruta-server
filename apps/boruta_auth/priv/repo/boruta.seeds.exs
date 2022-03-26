@@ -71,10 +71,10 @@ BorutaIdentity.RelyingParties.create_relying_party(%{
   registrable: true
 })
 
-BorutaIdentity.Accounts.register_user(%{
+{:ok, user} = BorutaIdentity.Accounts.User.registration_changeset(%BorutaIdentity.Accounts.User{}, %{
   email: System.get_env("ADMIN_EMAIL", "test@test.test"),
   password: System.get_env("ADMIN_PASSWORD", "passwordesat")
-})
+}) |> BorutaIdentity.Repo.insert()
 
 scopes =
   [
