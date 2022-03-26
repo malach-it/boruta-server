@@ -230,6 +230,7 @@
             namespace: boruta-staging
           backoffLimit: 3
           spec:
+            ttlSecondsAfterFinished: 864000
             template:
               spec:
                 containers:
