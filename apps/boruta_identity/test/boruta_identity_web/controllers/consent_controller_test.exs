@@ -1,4 +1,4 @@
-defmodule BorutaIdentityWeb.ConsentControllerTest do
+defmodule BorutaIdentityWeb.UserConsentControllerTest do
   use BorutaIdentityWeb.ConnCase
 
   import BorutaIdentity.AccountsFixtures
@@ -9,7 +9,7 @@ defmodule BorutaIdentityWeb.ConsentControllerTest do
     test "", %{conn: conn, request: request, client: client} do
       conn = conn
              |> log_in(user_fixture())
-             |> get(Routes.consent_path(conn, :index, %{request: request}))
+             |> get(Routes.user_consent_path(conn, :index, %{request: request}))
 
       assert html_response(conn, 200) =~ "Scope from request"
       assert html_response(conn, 200) =~ client.id
@@ -22,7 +22,7 @@ defmodule BorutaIdentityWeb.ConsentControllerTest do
     test "render 422 with invalid params", %{conn: conn, request: request} do
       conn = conn
              |> log_in(user_fixture())
-             |> post(Routes.consent_path(conn, :consent, %{request: request}), %{})
+             |> post(Routes.user_consent_path(conn, :consent, %{request: request}), %{})
 
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, %{request: request})
       assert get_flash(conn, :error) |> Phoenix.HTML.safe_to_string() =~ ~r/client_id/
@@ -31,7 +31,7 @@ defmodule BorutaIdentityWeb.ConsentControllerTest do
     test "redirects to after sign in path with valid params", %{conn: conn, client: client} do
       conn = conn
              |> log_in(user_fixture())
-             |> post(Routes.consent_path(conn, :consent), %{client_id: client.id, scopes: ["test"]})
+             |> post(Routes.user_consent_path(conn, :consent), %{client_id: client.id, scopes: ["test"]})
 
       assert redirected_to(conn) == "/"
     end

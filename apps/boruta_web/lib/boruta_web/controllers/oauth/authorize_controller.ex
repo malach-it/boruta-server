@@ -157,7 +157,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         |> put_session(:preauthorizations, %{request_param(conn) => true})
         |> redirect(
           to:
-            IdentityRoutes.consent_path(BorutaIdentityWeb.Endpoint, :index, %{
+            IdentityRoutes.user_consent_path(BorutaIdentityWeb.Endpoint, :index, %{
               request: request_param(conn)
             })
         )

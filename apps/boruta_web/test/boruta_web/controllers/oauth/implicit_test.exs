@@ -198,7 +198,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
         )
 
       # TODO test request query param
-      assert redirected_to(conn) =~ IdentityRoutes.consent_path(conn, :index)
+      assert redirected_to(conn) =~ IdentityRoutes.user_consent_path(conn, :index)
     end
 
     test "redirects to redirect_uri with consented scope", %{

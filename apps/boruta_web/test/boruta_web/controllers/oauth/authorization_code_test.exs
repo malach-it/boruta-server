@@ -97,7 +97,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         )
 
       # TODO test request query param
-      assert redirected_to(conn) == IdentityRoutes.consent_path(conn, :index, request: request_param)
+      assert redirected_to(conn) == IdentityRoutes.user_consent_path(conn, :index, request: request_param)
     end
 
     test "redirects to redirect_uri with errors in query if redirect_uri is invalid", %{

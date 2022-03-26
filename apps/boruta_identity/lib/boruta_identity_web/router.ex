@@ -43,8 +43,8 @@ defmodule BorutaIdentityWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
 
     get "/users/choose_session", ChooseSessionController, :index
-    get "/users/consent", ConsentController, :index
-    post "/users/consent", ConsentController, :consent
+    get "/users/consent", UserConsentController, :index
+    post "/users/consent", UserConsentController, :consent
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
     get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email

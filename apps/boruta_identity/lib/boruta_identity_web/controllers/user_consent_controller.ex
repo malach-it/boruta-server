@@ -1,4 +1,4 @@
-defmodule BorutaIdentityWeb.ConsentController do
+defmodule BorutaIdentityWeb.UserConsentController do
   @behaviour BorutaIdentity.Accounts.ConsentApplication
 
   use BorutaIdentityWeb, :controller
@@ -93,7 +93,7 @@ defmodule BorutaIdentityWeb.ConsentController do
 
     context = %{
       create_user_consent_path:
-        Routes.consent_path(conn, :consent, %{request: request}),
+        Routes.user_consent_path(conn, :consent, %{request: request}),
       client: client,
       scopes: scopes,
       _csrf_token: Plug.CSRFProtection.get_csrf_token(),

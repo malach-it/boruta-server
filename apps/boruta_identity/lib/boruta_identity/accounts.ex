@@ -101,6 +101,7 @@ defmodule BorutaIdentity.Accounts do
   alias BorutaIdentity.Accounts.Users
 
   ## Registrations
+
   defdelegate initialize_registration(context, client_id, module), to: Registrations
 
   defdelegate register(context, client_id, registration_params, confirmation_url_fun, module),
@@ -132,7 +133,7 @@ defmodule BorutaIdentity.Accounts do
   defdelegate reset_password(context, client_id, reset_password_params, module),
     to: ResetPasswords
 
-  ## WIP Confirmation
+  ## Confirmation
 
   defdelegate initialize_confirmation_instructions(context, client_id, module), to: Confirmations
 
@@ -150,9 +151,11 @@ defmodule BorutaIdentity.Accounts do
   ## Consent
 
   defdelegate initialize_consent(context, client_id, user, scope, module), to: Consents
+
   defdelegate consent(context, client_id, user, params, module), to: Consents
 
   ## Choose session
+
   defdelegate initialize_choose_session(context, client_id, module), to: ChooseSessions
 
   ## Deprecated Sessions
