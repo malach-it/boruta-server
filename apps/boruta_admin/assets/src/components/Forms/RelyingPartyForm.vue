@@ -39,7 +39,7 @@
               class="ui fluid blue button">Edit reset password template</router-link>
           </div>
         </section>
-        <section>
+        <section v-if="relyingParty.isPersisted">
           <h3>Choose session</h3>
           <div class="ui segment">
             <div class="ui toggle checkbox">
@@ -52,12 +52,11 @@
             <div v-if="relyingParty.choose_session">
               <router-link
                 :to="{ name: 'edit-choose-session-template', params: { relyingPartyId: relyingParty.id } }"
-                v-if="relyingParty.isPersisted && relyingParty.choose_session"
                 class="ui fluid blue button">Edit choose session template</router-link>
             </div>
           </div>
         </section>
-        <section>
+        <section v-if="relyingParty.isPersisted">
           <h3>Registration</h3>
           <div class="ui segment">
             <div class="ui toggle checkbox">
@@ -70,12 +69,11 @@
             <div v-if="relyingParty.registrable">
               <router-link
                 :to="{ name: 'edit-registration-template', params: { relyingPartyId: relyingParty.id } }"
-                v-if="relyingParty.isPersisted && relyingParty.registrable"
                 class="ui fluid blue button">Edit registration template</router-link>
             </div>
           </div>
         </section>
-        <section>
+        <section v-if="relyingParty.isPersisted">
           <h3>Email confirmation</h3>
           <div class="ui segment">
             <div class=" field">
@@ -86,14 +84,15 @@
               <p class="ui info message">
                 Confirm new registred accounts. sends an email in order to confirm user's email.
               </p>
-              <router-link
-                :to="{ name: 'edit-new-confirmation-template', params: { relyingPartyId: relyingParty.id } }"
-                v-if="relyingParty.isPersisted && relyingParty.confirmable"
-                class="ui fluid blue button">Edit send confirmation template</router-link>
+              <div v-if="relyingParty.confirmable">
+                <router-link
+                  :to="{ name: 'edit-new-confirmation-template', params: { relyingPartyId: relyingParty.id } }"
+                  class="ui fluid blue button">Edit send confirmation template</router-link>
+              </div>
             </div>
           </div>
         </section>
-        <section>
+        <section v-if="relyingParty.isPersisted">
           <h3>User consent</h3>
           <div class="ui segment">
             <div class=" field">
@@ -104,10 +103,11 @@
               <p class="ui info message">
                 Users have to consent requested scopes to be authorized.
               </p>
-              <router-link
-                :to="{ name: 'edit-new-consent-template', params: { relyingPartyId: relyingParty.id } }"
-                v-if="relyingParty.isPersisted && relyingParty.consentable"
-                class="ui fluid blue button">Edit consent template</router-link>
+              <div v-if="relyingParty.consentable">
+                <router-link
+                  :to="{ name: 'edit-new-consent-template', params: { relyingPartyId: relyingParty.id } }"
+                  class="ui fluid blue button">Edit consent template</router-link>
+              </div>
             </div>
           </div>
         </section>
@@ -137,5 +137,9 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.relying-party-form {}
+.relying-party-form {
+  section {
+    margin-bottom: 1rem;
+  }
+}
 </style>
