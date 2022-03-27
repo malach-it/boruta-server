@@ -58,6 +58,8 @@ build:
 deploy:
   stage: deploy
   image: debian:latest
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   cache:
     paths:
     - .cache/pip
