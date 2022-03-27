@@ -18,8 +18,8 @@ admin_password: !vault |
           3239
 
 
-boruta_base_url: http://admin.boruta.local
-vue_app_boruta_base_socket_url: ws://admin.boruta.local
+boruta_base_url: https://admin.boruta.local
+vue_app_boruta_base_socket_url: wss://admin.boruta.local
 
 mailjet_secret: !vault |
           $ANSIBLE_VAULT;1.1;AES256

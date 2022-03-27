@@ -1,9 +1,14 @@
 - hosts: localhost
   tasks:
-    - name: Add stable chart repo
+    - name: Add stable bitnami repo
       kubernetes.core.helm_repository:
         name: bitnami
         repo_url: https://charts.bitnami.com/bitnami
+
+    - name: Add stable jetstack repo
+      kubernetes.core.helm_repository:
+        name: jetstack
+        repo_url: https://charts.jetstack.io
 
     - name: Create a k8s namespace
       kubernetes.core.k8s:
@@ -11,6 +16,16 @@
         name: boruta-staging
         kind: Namespace
         state: present
+
+    - name: Install cert-manager helm package
+      kubernetes.core.helm:
+        name: cert-manager
+        chart_ref: jetstack/cert-manager
+        chart_version: 1.7.2
+        release_namespace: cert-manager
+        create_namespace: true
+        values:
+          installCRDs: true
 
     - name: Install postgres helm package
       kubernetes.core.helm:
@@ -20,7 +35,7 @@
         release_namespace: boruta-staging
         values:
           postgresqlPassword: "{{ postgresql_password }}"
-          postgresqlMaxConnections: "150"
+          postgresqlMaxConnections: "200"
 
     - name: Create libcluster role
       kubernetes.core.k8s:
@@ -114,6 +129,28 @@
               name: admin-tcp
               port: 4000
 
+    - name: Create SSL let's encrypt certificate
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: cert-manager.io/v1
+          kind: ClusterIssuer
+          metadata:
+            name: letsencrypt-production
+          spec:
+            acme:
+              email: io.pascal.knoth@gmail.com
+              server: https://acme-v02.api.letsencrypt.org/directory
+              privateKeySecretRef:
+                name: boruta-staging-ssl-account-key
+              solvers:
+              - http01:
+                  ingress:
+                    class: nginx
+                selector:
+                  dnsZones:
+                  - 'boruta.patatoid.fr'
+
     - name: Create Boruta Ingress
       kubernetes.core.k8s:
         state: present
@@ -123,7 +160,8 @@
           metadata:
             name: main-ingress
             namespace: boruta-staging
-            # annotations:
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-production
             #   nginx.ingress.kubernetes.io/rewrite-target: /
           spec:
             rules:
@@ -157,6 +195,12 @@
                       name: boruta-admin
                       port:
                         number: 4002
+            tls:
+              - hosts:
+                - "{{ oauth_host }}"
+                - "{{ admin_host }}"
+                - "{{ gateway_host }}"
+                secretName: boruta-staging-cert
 
     - name: create boruta app ConfigMap
       kubernetes.core.k8s:

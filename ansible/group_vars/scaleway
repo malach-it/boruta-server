@@ -36,8 +36,8 @@ admin_password: !vault |
           3464373031316338640a313735323132313431616636366539343436643366366334643638303963
           3239
 
-boruta_base_url: http://admin.boruta.patatoid.fr
-vue_app_boruta_base_socket_url: ws://admin.boruta.patatoid.fr
+boruta_base_url: https://admin.boruta.patatoid.fr
+vue_app_boruta_base_socket_url: wss://admin.boruta.patatoid.fr
 
 
 mailjet_secret: !vault |
