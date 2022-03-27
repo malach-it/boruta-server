@@ -4,7 +4,8 @@ defmodule BorutaWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_boruta_web_key",
-    signing_salt: "OCKBuS86"
+    signing_salt: "OCKBuS86",
+    extra: "SameSite=None" # TODO add Secure
   ]
 
   # Serve at "/" the static files from "priv/static" directory.
