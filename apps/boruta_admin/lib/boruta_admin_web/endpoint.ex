@@ -6,7 +6,7 @@ defmodule BorutaAdminWeb.Endpoint do
     store: :cookie,
     key: "_boruta_web_key",
     signing_salt: "OCKBuS86",
-    extra: "SameSite=None" # TODO add Secure
+    extra: "SameSite=None; Secure" # TODO add Secure
   ]
 
   # Serve at "/" the static files from "priv/static" directory.
