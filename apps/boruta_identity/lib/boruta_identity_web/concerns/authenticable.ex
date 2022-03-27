@@ -94,8 +94,7 @@ defmodule BorutaIdentityWeb.Authenticable do
             %{
               "client_id" => client_id,
               "scope" => scope,
-              # TODO keep prompt and max_age params
-              "user_return_to" => user_return_to(conn)
+              "user_return_to" => current_path(conn)
             },
             BorutaIdentityWeb.Token.application_signer()
           )
@@ -105,11 +104,6 @@ defmodule BorutaIdentityWeb.Authenticable do
       _ ->
         ""
     end
-  end
-
-  @spec user_return_to(conn :: Plug.Conn.t()) :: return_to_path :: String.t()
-  def user_return_to(conn) do
-    current_path(conn)
   end
 
   @spec scope_from_request(conn :: Plug.Conn.t()) :: String.t() | nil

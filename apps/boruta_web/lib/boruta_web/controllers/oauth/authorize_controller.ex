@@ -103,29 +103,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       last_login_at: current_user.last_login_at
     }
 
-    preauthorized? =
-      case get_session(conn, :preauthorizations) do
-        nil ->
-          false
+    conn = conn
+    |> Oauth.preauthorize(
+      resource_owner,
+      __MODULE__
+    )
 
-        preauthorizations ->
-          Map.get(preauthorizations, request_param(conn)) || false
-      end
-
-    case preauthorized? do
-      true ->
-        {:preauthorized, conn}
-
-      false ->
-        conn =
-          conn
-          |> Oauth.preauthorize(
-            resource_owner,
-            __MODULE__
-          )
-
-        {:preauthorize, conn}
-    end
+    {:preauthorize, conn}
   end
 
   defp preauthorize(conn, _current_user), do: {:unchanged, conn}
