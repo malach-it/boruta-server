@@ -28,6 +28,7 @@ const labels = {
   'edit-new-reset-password-template': 'Edit send reset password instructions template',
   'edit-edit-reset-password-template': 'Edit reset password template',
   'edit-new-confirmation-template': 'Edit send confirmation instructions template',
+  'edit-new-consent-template': 'Edit consent template',
   'users': 'Users',
   'edit-user': ({ params }) => params.userId,
   'clients': 'Clients',
