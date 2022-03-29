@@ -157,8 +157,25 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
+  # TODO test it
   @impl Boruta.Oauth.AuthorizeApplication
-  defdelegate preauthorize_error(conn, error), to: __MODULE__, as: :authorize_error
+  def preauthorize_error(conn, error) do
+    session_chosen? = get_session(conn, :session_chosen) || false
+
+    case session_chosen? do
+      true ->
+        authorize_error(conn, error)
+
+      false ->
+        conn
+        |> redirect(
+          to:
+            IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
+              request: request_param(conn)
+            })
+        )
+    end
+  end
 
   @impl Boruta.Oauth.AuthorizeApplication
   def authorize_success(conn, response) do
