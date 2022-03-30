@@ -20,11 +20,11 @@ defmodule BorutaIdentityWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", BorutaIdentityWeb do
-    pipe_through :browser
+  # scope "/", BorutaIdentityWeb do
+  #   pipe_through :browser
 
-    get "/", PageController, :index
-  end
+  #   get "/", PageController, :index
+  # end
 
   ## Authentication routes
 
