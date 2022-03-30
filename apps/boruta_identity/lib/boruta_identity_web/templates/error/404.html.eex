@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Boruta · Phoenix Framework</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha256-9mbkOfVho3ZPXfM7W8sV2SndrGDuh7wuyLjtsWeTI1Q=" crossorigin="anonymous" />
+  </head>
+  <body style="height: 100%;">
+    <div class="ui placeholder segment" style="height: 100%;">
+      <h1 class="ui icon header">
+        <i class="question icon"></i>
+        <div class="content">
+          Page not found
+          <div class="sub header">The page you requested was not found. Please contact your administrator.</div>
+        </div>
+      </h1>
+    </div>
+    </main>
+  </body>
+</html>
