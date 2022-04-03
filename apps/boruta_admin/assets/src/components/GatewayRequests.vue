@@ -1,6 +1,6 @@
 <template>
   <div class="gateway-requests">
-    <div class="ui two column stackable grid">
+    <div class="ui three column stackable grid">
       <div class="column request-time">
         <LineChart :chartData="requestTimes" :options="options" height="500" />
       </div>
