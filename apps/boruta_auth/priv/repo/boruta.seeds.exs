@@ -42,6 +42,7 @@ BorutaAuth.Repo.insert(
   on_conflict: :nothing
 )
 
+# TODO add relying party
 %Boruta.Ecto.Client{}
 |> Boruta.Ecto.Client.create_changeset(%{
   secret: System.get_env("BORUTA_ADMIN_CLIENT_SECRET", "777"),
