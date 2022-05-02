@@ -227,7 +227,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
     end
   end
 
-  describe "Opeind discovery 1.0" do
+  describe "discovery 1.0" do
     test "returns required keys", %{conn: conn} do
       required_keys = [
         "authorization_endpoint",
