@@ -162,7 +162,7 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate generate_user_session_token(user), to: Sessions
 
-  ## Database getters
+  ## Deprecated Database getters
 
   defdelegate list_users, to: Users
   defdelegate get_user(id), to: Users
@@ -170,7 +170,7 @@ defmodule BorutaIdentity.Accounts do
   defdelegate get_user_by_session_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
 
-  ## User settings
+  ## Deprecated User settings
 
   defdelegate update_user_password(user, password, attrs), to: Settings
   defdelegate change_user_password(user), to: Settings
@@ -181,7 +181,6 @@ defmodule BorutaIdentity.Accounts do
   defdelegate apply_user_email(user, password, attrs), to: Settings
   defdelegate update_user_email(user, token), to: Settings
   defdelegate delete_user(id), to: Settings
-
   defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
     to: Deliveries
 end

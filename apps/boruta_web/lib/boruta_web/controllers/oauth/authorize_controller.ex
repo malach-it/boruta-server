@@ -17,6 +17,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = put_unsigned_request(conn)
 
+    # TODO check consented scopes
     with {:unchanged, conn} <- check_preauthorized(conn),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
          {:unchanged, conn} <- prompt_redirection(conn, current_user),

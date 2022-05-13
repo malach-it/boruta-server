@@ -8,6 +8,14 @@
           <label>Name</label>
           <input v-model="client.name" placeholder="Super client" />
         </div>
+        <div class="field" v-if="!client.isPersisted">
+          <label>Client ID</label>
+          <input v-model="client.id" placeholder="Must be an UUIDv4 - Leave blank to autogenerate" />
+        </div>
+        <div class="field">
+          <label>Client secret</label>
+          <input v-model="client.secret" placeholder="Leave blank to autogenerate" />
+        </div>
         <div class="field">
           <label>Access token TTL (seconds)</label>
           <input type="number" v-model="client.access_token_ttl" placeholder="3600" />

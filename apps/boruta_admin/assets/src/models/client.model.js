@@ -90,8 +90,8 @@ class Client {
 
     // TODO trigger validate
     let response
-    const { id, serialized } = this
-    if (id) {
+    const { id, isPersisted, serialized } = this
+    if (isPersisted) {
       response = this.constructor.api().patch(`/${id}`, { client: serialized })
     } else {
       response = this.constructor.api().post('/', { client: serialized })
@@ -181,13 +181,17 @@ Client.api = function () {
 
 Client.all = function () {
   return this.api().get('/').then(({ data }) => {
-    return data.data.map((client) => new Client(client))
+    return data.data
+      .map((client) => new Client(client))
+      .map((client) => Object.assign(client, { isPersisted: true }))
   })
 }
 
 Client.get = function (id) {
   return this.api().get(`/${id}`).then(({ data }) => {
-    return new Client(data.data)
+    const client = new Client(data.data)
+    client.isPersisted = true
+    return client
   })
 }
 

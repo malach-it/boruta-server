@@ -32,7 +32,7 @@ defmodule BorutaAdminWeb.ClientController do
   defp create_client(client_params) do
     relying_party_id = get_in(client_params, ["relying_party", "id"])
 
-    BorutaWeb.Repo.transaction(fn ->
+    BorutaAuth.Repo.transaction(fn ->
       with {:ok, client} <- Admin.create_client(client_params),
            {:ok, _client_relying_party} <-
              RelyingParties.upsert_client_relying_party(
@@ -42,7 +42,7 @@ defmodule BorutaAdminWeb.ClientController do
         client
       else
         {:error, error} ->
-          BorutaWeb.Repo.rollback(error)
+          BorutaAuth.Repo.rollback(error)
       end
     end)
   end
