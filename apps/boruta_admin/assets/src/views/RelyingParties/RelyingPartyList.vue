@@ -55,7 +55,7 @@ export default {
       })
     },
     deleteRelyingParty (relyingParty) {
-      if (confirm('Are yousure ?')) {
+      if (confirm('Are you sure ?')) {
         relyingParty.destroy().then(() => {
           this.relyingParties.splice(this.relyingParties.indexOf(relyingParty), 1)
         })

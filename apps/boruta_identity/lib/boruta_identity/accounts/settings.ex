@@ -141,11 +141,11 @@ defmodule BorutaIdentity.Accounts.Settings do
   end
 
   @spec delete_user(user_id :: Ecto.UUID.t()) ::
-          {:ok, user :: User.t()} | {:error, String.t()} | {:error, Ecto.Changeset.t()}
+          {:ok, user :: User.t()} | {:error, atom()} | {:error, Ecto.Changeset.t()}
   def delete_user(user_id) when is_binary(user_id) do
     case Users.get_user(user_id) do
       nil ->
-        {:error, "User not found."}
+        {:error, :not_found}
 
       user ->
         Repo.delete(user)

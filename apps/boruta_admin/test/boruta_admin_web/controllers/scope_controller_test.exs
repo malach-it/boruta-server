@@ -20,15 +20,65 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
   end
 
   test "returns a 401", %{conn: conn} do
-    conn = get(conn, Routes.admin_scope_path(conn, :index))
-    assert response(conn, 401)
+    assert conn
+           |> get(Routes.admin_scope_path(conn, :index))
+           |> json_response(401) == %{
+             "code" => "UNAUTHORIZED",
+             "message" => "The client is unauthorized to access this resource."
+           }
+
+    assert conn
+           |> post(Routes.admin_scope_path(conn, :create))
+           |> json_response(401) == %{
+             "code" => "UNAUTHORIZED",
+             "message" => "The client is unauthorized to access this resource."
+           }
+
+    assert conn
+           |> patch(Routes.admin_scope_path(conn, :update, "id"))
+           |> json_response(401) == %{
+             "code" => "UNAUTHORIZED",
+             "message" => "The client is unauthorized to access this resource."
+           }
+
+    assert conn
+           |> delete(Routes.admin_scope_path(conn, :delete, "id"))
+           |> json_response(401) == %{
+             "code" => "UNAUTHORIZED",
+             "message" => "The client is unauthorized to access this resource."
+           }
   end
 
   describe "with bad scope" do
     @tag authorized: ["bad:scope"]
     test "returns a 403", %{conn: conn} do
-      conn = get(conn, Routes.admin_scope_path(conn, :index))
-      assert response(conn, 403)
+      assert conn
+             |> get(Routes.admin_scope_path(conn, :index))
+             |> json_response(403) == %{
+               "code" => "FORBIDDEN",
+               "message" => "The client is forbidden to access this resource."
+             }
+
+      assert conn
+             |> post(Routes.admin_scope_path(conn, :create))
+             |> json_response(403) == %{
+               "code" => "FORBIDDEN",
+               "message" => "The client is forbidden to access this resource."
+             }
+
+      assert conn
+             |> patch(Routes.admin_scope_path(conn, :update, "id"))
+             |> json_response(403) == %{
+               "code" => "FORBIDDEN",
+               "message" => "The client is forbidden to access this resource."
+             }
+
+      assert conn
+             |> delete(Routes.admin_scope_path(conn, :delete, "id"))
+             |> json_response(403) == %{
+               "code" => "FORBIDDEN",
+               "message" => "The client is forbidden to access this resource."
+             }
     end
   end
 

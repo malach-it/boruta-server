@@ -889,7 +889,7 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "delete_user/1" do
     test "returns an error" do
-      assert Accounts.delete_user(Ecto.UUID.generate()) == {:error, "User not found."}
+      assert Accounts.delete_user(Ecto.UUID.generate()) == {:error, :not_found}
     end
 
     test "returns deleted user" do

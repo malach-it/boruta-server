@@ -68,7 +68,7 @@ export default {
       })
     },
     deleteClient (client) {
-      if (confirm('Are yousure ?')) {
+      if (confirm('Are you sure ?')) {
         client.destroy().then(() => {
           this.clients.splice(this.clients.indexOf(client), 1)
         })

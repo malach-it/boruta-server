@@ -54,7 +54,7 @@ export default {
       })
     },
     deleteUpstream (upstream) {
-      if (confirm('Are yousure ?')) {
+      if (confirm('Are you sure ?')) {
         upstream.destroy().then(() => {
           this.upstreams.splice(this.upstreams.indexOf(upstream), 1)
         })
