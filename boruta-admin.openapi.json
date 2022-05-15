@@ -1,0 +1,2012 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Boruta Administration",
+    "contact": {},
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://example.com",
+      "variables": {}
+    }
+  ],
+  "paths": {
+    "/api/clients": {
+      "get": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "list clients",
+        "operationId": "listclients",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Client"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "create a client",
+        "operationId": "createaclient",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createaclientrequest"
+              },
+              "example": {
+                "client": {
+                  "access_token_ttl": 86400,
+                  "authorization_code_ttl": 60,
+                  "authorize_scope": false,
+                  "authorized_scopes": [],
+                  "id": "b70e3293-d661-4eee-a709-d5161cb27d9d",
+                  "id_token_ttl": 86400,
+                  "name": "Created from API",
+                  "pkce": false,
+                  "public_refresh_token": false,
+                  "public_revoke": false,
+                  "redirect_uris": [],
+                  "refresh_token_ttl": 2592000,
+                  "relying_party": {
+                    "id": "f74e3d72-b41c-4fad-aa38-635c45831a1e"
+                  },
+                  "secret": "GMx4LfhqIkLea1rzYGcr5cEmZ9ugif5EgKHQ3qgdvJ72Nyfyk9wC6YU7YICedaDEd8ZVNrOkoAV77dQPzBWLgm",
+                  "supported_grant_types": [
+                    "client_credentials",
+                    "password",
+                    "authorization_code",
+                    "refresh_token",
+                    "implicit",
+                    "revoke",
+                    "introspect"
+                  ]
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Client"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/clients/{client_id}": {
+      "get": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "show a client",
+        "operationId": "showaclient",
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Client"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "update a client",
+        "operationId": "updateaclient",
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updateaclientrequest"
+              },
+              "example": {
+                "client": {
+                  "access_token_ttl": 86400,
+                  "authorization_code_ttl": 60,
+                  "authorize_scope": false,
+                  "authorized_scopes": [],
+                  "id": "b70e3293-d661-4eee-a709-d5161cb27d9d",
+                  "id_token_ttl": 86400,
+                  "name": "Updated from API",
+                  "pkce": false,
+                  "public_refresh_token": false,
+                  "public_revoke": false,
+                  "redirect_uris": [],
+                  "refresh_token_ttl": 2592000,
+                  "relying_party": {
+                    "id": "f74e3d72-b41c-4fad-aa38-635c45831a1e"
+                  },
+                  "secret": "GMx4LfhqIkLea1rzYGcr5cEmZ9ugif5EgKHQ3qgdvJ72Nyfyk9wC6YU7YICedaDEd8ZVNrOkoAV77dQPzBWLgm",
+                  "supported_grant_types": [
+                    "client_credentials",
+                    "password",
+                    "authorization_code",
+                    "refresh_token",
+                    "implicit",
+                    "revoke",
+                    "introspect"
+                  ]
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Client"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "delete a client",
+        "operationId": "deleteaclient",
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/scopes": {
+      "get": {
+        "tags": [
+          "Scopes"
+        ],
+        "summary": "list scopes",
+        "operationId": "listscopes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Scope"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Scopes"
+        ],
+        "summary": "create a scope",
+        "operationId": "createascope",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createascoperequest"
+              },
+              "example": {
+                "scope": {
+                  "name": "from:api",
+                  "label": "Created from API"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Scope"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/scopes/{scope_id}": {
+      "get": {
+        "tags": [
+          "Scopes"
+        ],
+        "summary": "show a scope",
+        "operationId": "showascope",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Scope"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Scopes"
+        ],
+        "summary": "update a scope",
+        "operationId": "updateascope",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updateascoperequest"
+              },
+              "example": {
+                "scope": {
+                  "label": "Updated from API"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Scope"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Scopes"
+        ],
+        "summary": "delete a scope",
+        "operationId": "deleteascope",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/upstreams": {
+      "get": {
+        "tags": [
+          "Upstreams"
+        ],
+        "summary": "list upstreams",
+        "operationId": "listupstreams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Upstream"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Upstreams"
+        ],
+        "summary": "create an upstream",
+        "operationId": "createanupstream",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createanupstreamrequest"
+              },
+              "example": {
+                "upstream": {
+                  "authorize": true,
+                  "host": "from.api",
+                  "pool_size": 10,
+                  "port": "80",
+                  "required_scopes": {
+                    "GET": [
+                      "test"
+                    ]
+                  },
+                  "scheme": "http",
+                  "strip_uri": true,
+                  "uris": [
+                    "/from-api"
+                  ]
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Upstream"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/upstreams/{upstream_id}": {
+      "get": {
+        "tags": [
+          "Upstreams"
+        ],
+        "summary": "show an upstream",
+        "operationId": "showanupstream",
+        "parameters": [
+          {
+            "name": "upstream_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Upstream"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Upstreams"
+        ],
+        "summary": "update an upstream",
+        "operationId": "updateanupstream",
+        "parameters": [
+          {
+            "name": "upstream_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updateanupstreamrequest"
+              },
+              "example": {
+                "upstream": {
+                  "authorize": true,
+                  "host": "from.api.updated",
+                  "pool_size": 10,
+                  "port": "80",
+                  "required_scopes": {
+                    "GET": [
+                      "test"
+                    ]
+                  },
+                  "scheme": "http",
+                  "strip_uri": true,
+                  "uris": [
+                    "/from-api"
+                  ]
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Upstream"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Upstreams"
+        ],
+        "summary": "delete an upstream",
+        "operationId": "deleteanupstream",
+        "parameters": [
+          {
+            "name": "upstream_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/relying-parties": {
+      "get": {
+        "tags": [
+          "Relying parties"
+        ],
+        "summary": "list relying parties",
+        "operationId": "listrelyingparties",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RelyingParty"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Relying parties"
+        ],
+        "summary": "create a relying party",
+        "operationId": "createarelyingparty",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createarelyingpartyrequest"
+              },
+              "example": {
+                "relying_party": {
+                  "choose_session": true,
+                  "confirmable": false,
+                  "consentable": false,
+                  "name": "Created fom API",
+                  "registrable": false,
+                  "type": "internal"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RelyingParty"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/relying-parties/{relying_party_id}": {
+      "get": {
+        "tags": [
+          "Relying parties"
+        ],
+        "summary": "show a relying party",
+        "operationId": "showarelyingparty",
+        "parameters": [
+          {
+            "name": "relying_party_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RelyingParty"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Relying parties"
+        ],
+        "summary": "update a relying party",
+        "operationId": "updatearelyingparty",
+        "parameters": [
+          {
+            "name": "relying_party_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updatearelyingpartyrequest"
+              },
+              "example": {
+                "relying_party": {
+                  "choose_session": true,
+                  "confirmable": false,
+                  "consentable": false,
+                  "name": "Updated fom API",
+                  "registrable": false,
+                  "type": "internal"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RelyingParty"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Relying parties"
+        ],
+        "summary": "delete a relying party",
+        "operationId": "deletearelyingparty",
+        "parameters": [
+          {
+            "name": "relying_party_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/relying-parties/{relying_party_id}/templates/{template_name}": {
+      "get": {
+        "tags": [
+          "Relying parties"
+        ],
+        "summary": "show a relying party template",
+        "operationId": "showarelyingpartytemplate",
+        "parameters": [
+          {
+            "name": "relying_party_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "template_name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Template"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Relying parties"
+        ],
+        "summary": "list users",
+        "operationId": "listusers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client is unauthorized to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The client is forbidden to access this resource.",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "createaclientrequest": {
+        "title": "createaclientrequest",
+        "required": [
+          "client"
+        ],
+        "type": "object",
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/Client"
+          }
+        },
+        "example": {
+          "client": {
+            "access_token_ttl": 86400,
+            "authorization_code_ttl": 60,
+            "authorize_scope": false,
+            "authorized_scopes": [],
+            "id": "b70e3293-d661-4eee-a709-d5161cb27d9d",
+            "id_token_ttl": 86400,
+            "name": "Created from API",
+            "pkce": false,
+            "public_refresh_token": false,
+            "public_revoke": false,
+            "redirect_uris": [],
+            "refresh_token_ttl": 2592000,
+            "relying_party": {
+              "id": "f74e3d72-b41c-4fad-aa38-635c45831a1e"
+            },
+            "secret": "GMx4LfhqIkLea1rzYGcr5cEmZ9ugif5EgKHQ3qgdvJ72Nyfyk9wC6YU7YICedaDEd8ZVNrOkoAV77dQPzBWLgm",
+            "supported_grant_types": [
+              "client_credentials",
+              "password",
+              "authorization_code",
+              "refresh_token",
+              "implicit",
+              "revoke",
+              "introspect"
+            ]
+          }
+        }
+      },
+      "Client": {
+        "title": "Client",
+        "type": "object",
+        "required": [
+          "relying_party"
+        ],
+        "properties": {
+          "access_token_ttl": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "authorization_code_ttl": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "authorize_scope": {
+            "type": "boolean"
+          },
+          "authorized_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "id": {
+            "type": "string"
+          },
+          "id_token_ttl": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pkce": {
+            "type": "boolean"
+          },
+          "public_refresh_token": {
+            "type": "boolean"
+          },
+          "public_revoke": {
+            "type": "boolean"
+          },
+          "redirect_uris": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "refresh_token_ttl": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "relying_party": {
+            "$ref": "#/components/schemas/RelyingParty"
+          },
+          "secret": {
+            "type": "string"
+          },
+          "supported_grant_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "access_token_ttl": 86400,
+          "authorization_code_ttl": 60,
+          "authorize_scope": false,
+          "authorized_scopes": [],
+          "id": "b70e3293-d661-4eee-a709-d5161cb27d9d",
+          "id_token_ttl": 86400,
+          "name": "Created from API",
+          "pkce": false,
+          "public_refresh_token": false,
+          "public_revoke": false,
+          "redirect_uris": [],
+          "refresh_token_ttl": 2592000,
+          "relying_party": {
+            "id": "f74e3d72-b41c-4fad-aa38-635c45831a1e"
+          },
+          "secret": "GMx4LfhqIkLea1rzYGcr5cEmZ9ugif5EgKHQ3qgdvJ72Nyfyk9wC6YU7YICedaDEd8ZVNrOkoAV77dQPzBWLgm",
+          "supported_grant_types": [
+            "client_credentials",
+            "password",
+            "authorization_code",
+            "refresh_token",
+            "implicit",
+            "revoke",
+            "introspect"
+          ]
+        }
+      },
+      "updateaclientrequest": {
+        "title": "updateaclientrequest",
+        "required": [
+          "client"
+        ],
+        "type": "object",
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/Client"
+          }
+        },
+        "example": {
+          "client": {
+            "access_token_ttl": 86400,
+            "authorization_code_ttl": 60,
+            "authorize_scope": false,
+            "authorized_scopes": [],
+            "id": "b70e3293-d661-4eee-a709-d5161cb27d9d",
+            "id_token_ttl": 86400,
+            "name": "Updated from API",
+            "pkce": false,
+            "public_refresh_token": false,
+            "public_revoke": false,
+            "redirect_uris": [],
+            "refresh_token_ttl": 2592000,
+            "relying_party": {
+              "id": "f74e3d72-b41c-4fad-aa38-635c45831a1e"
+            },
+            "secret": "GMx4LfhqIkLea1rzYGcr5cEmZ9ugif5EgKHQ3qgdvJ72Nyfyk9wC6YU7YICedaDEd8ZVNrOkoAV77dQPzBWLgm",
+            "supported_grant_types": [
+              "client_credentials",
+              "password",
+              "authorization_code",
+              "refresh_token",
+              "implicit",
+              "revoke",
+              "introspect"
+            ]
+          }
+        }
+      },
+      "createascoperequest": {
+        "title": "createascoperequest",
+        "required": [
+          "scope"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          }
+        },
+        "example": {
+          "scope": {
+            "name": "from:api",
+            "label": "Created from API"
+          }
+        }
+      },
+      "Scope": {
+        "title": "Scope",
+        "required": [
+          "name",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "name": "from:api",
+          "label": "Created from API"
+        }
+      },
+      "updateascoperequest": {
+        "title": "updateascoperequest",
+        "required": [
+          "scope"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/Scope1"
+          }
+        },
+        "example": {
+          "scope": {
+            "label": "Updated from API"
+          }
+        }
+      },
+      "Scope1": {
+        "title": "Scope1",
+        "required": [
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "label": "Updated from API"
+        }
+      },
+      "deleteascoperequest": {
+        "title": "deleteascoperequest",
+        "required": [
+          "scope"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/Scope1"
+          }
+        },
+        "example": {
+          "scope": {
+            "label": "Updated from API"
+          }
+        }
+      },
+      "createanupstreamrequest": {
+        "title": "createanupstreamrequest",
+        "required": [
+          "upstream"
+        ],
+        "type": "object",
+        "properties": {
+          "upstream": {
+            "$ref": "#/components/schemas/Upstream"
+          }
+        },
+        "example": {
+          "upstream": {
+            "authorize": true,
+            "host": "from.api",
+            "pool_size": 10,
+            "port": "80",
+            "required_scopes": {
+              "GET": [
+                "test"
+              ]
+            },
+            "scheme": "http",
+            "strip_uri": true,
+            "uris": [
+              "/from-api"
+            ]
+          }
+        }
+      },
+      "Upstream": {
+        "title": "Upstream",
+        "required": [
+          "authorize",
+          "host",
+          "pool_size",
+          "port",
+          "required_scopes",
+          "scheme",
+          "strip_uri",
+          "uris"
+        ],
+        "type": "object",
+        "properties": {
+          "authorize": {
+            "type": "boolean"
+          },
+          "host": {
+            "type": "string"
+          },
+          "pool_size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "port": {
+            "type": "string"
+          },
+          "required_scopes": {
+            "$ref": "#/components/schemas/RequiredScopes"
+          },
+          "scheme": {
+            "type": "string"
+          },
+          "strip_uri": {
+            "type": "boolean"
+          },
+          "uris": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "authorize": true,
+          "host": "from.api",
+          "pool_size": 10,
+          "port": "80",
+          "required_scopes": {
+            "GET": [
+              "test"
+            ]
+          },
+          "scheme": "http",
+          "strip_uri": true,
+          "uris": [
+            "/from-api"
+          ]
+        }
+      },
+      "RequiredScopes": {
+        "title": "RequiredScopes",
+        "required": [
+          "GET"
+        ],
+        "type": "object",
+        "properties": {
+          "GET": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "GET": [
+            "test"
+          ]
+        }
+      },
+      "updateanupstreamrequest": {
+        "title": "updateanupstreamrequest",
+        "required": [
+          "upstream"
+        ],
+        "type": "object",
+        "properties": {
+          "upstream": {
+            "$ref": "#/components/schemas/Upstream"
+          }
+        },
+        "example": {
+          "upstream": {
+            "authorize": true,
+            "host": "from.api.updated",
+            "pool_size": 10,
+            "port": "80",
+            "required_scopes": {
+              "GET": [
+                "test"
+              ]
+            },
+            "scheme": "http",
+            "strip_uri": true,
+            "uris": [
+              "/from-api"
+            ]
+          }
+        }
+      },
+      "deleteanupstreamrequest": {
+        "title": "deleteanupstreamrequest",
+        "required": [
+          "scope"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/Scope1"
+          }
+        },
+        "example": {
+          "scope": {
+            "label": "Updated from API"
+          }
+        }
+      },
+      "createarelyingpartyrequest": {
+        "title": "createarelyingpartyrequest",
+        "required": [
+          "relying_party"
+        ],
+        "type": "object",
+        "properties": {
+          "relying_party": {
+            "$ref": "#/components/schemas/RelyingParty"
+          }
+        },
+        "example": {
+          "relying_party": {
+            "choose_session": true,
+            "confirmable": false,
+            "consentable": false,
+            "name": "Created fom API",
+            "registrable": false,
+            "type": "internal"
+          }
+        }
+      },
+      "RelyingParty": {
+        "title": "RelyingParty",
+        "required": [
+          "choose_session",
+          "confirmable",
+          "consentable",
+          "name",
+          "registrable",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "choose_session": {
+            "type": "boolean"
+          },
+          "confirmable": {
+            "type": "boolean"
+          },
+          "consentable": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "registrable": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "choose_session": true,
+          "confirmable": false,
+          "consentable": false,
+          "name": "Created fom API",
+          "registrable": false,
+          "type": "internal"
+        }
+      },
+      "Template": {
+        "title": "Template",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "relying_party_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "content": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\"/>\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>\n    <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css\" integrity=\"sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==\" crossorigin=\"anonymous\" />\n    <title>BorutaIdentity · Phoenix Framework</title>\n    <style>\n    html, body {\n      height: 100%;\n      margin: 0;\n    }\n\n    .wrapper {\n      height: 100%;\n      display: flex;\n    }\n\n    .main.message {\n      position: absolute;\n      top: 1rem;\n      left: 1rem;\n      right: 1rem;\n    }\n\n    header {\n      height: 100%;\n      width: 50%;\n      background-image: url('https://picsum.photos/1920/1080?grayscale');\n      background-size: cover;\n      background-position: center;\n    }\n\n    main {\n      flex: 1;\n      position: relative;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      padding: 1rem;\n    }\n\n    main>.content {\n      flex: 1;\n      max-width: 500px;\n    }\n\n    @media (max-width: 768px) {\n      header {\n        display: none;\n      }\n    }\n    </style>\n  </head>\n  <body>\n    <div class=\"wrapper\">\n      <header></header>\n      <main role=\"main\" class=\"container\">\n        <div class=\"content\">\n          {{#messages}}\n          <div class=\"ui main {{ type }} message\">\n            {{ content }}\n          </div>\n          {{/messages}}\n          {{> inner_content }}\n        </div>\n      </main>\n    </div>\n  </body>\n</html>\n",
+          "id": null,
+          "relying_party_id": "75da9775-2f6f-4418-aff5-b98e63830079",
+          "type": "layout"
+        }
+      },
+      "User": {
+        "title": "User",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "authorized_scopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Scope"
+            }
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "content": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\"/>\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>\n    <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css\" integrity=\"sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==\" crossorigin=\"anonymous\" />\n    <title>BorutaIdentity · Phoenix Framework</title>\n    <style>\n    html, body {\n      height: 100%;\n      margin: 0;\n    }\n\n    .wrapper {\n      height: 100%;\n      display: flex;\n    }\n\n    .main.message {\n      position: absolute;\n      top: 1rem;\n      left: 1rem;\n      right: 1rem;\n    }\n\n    header {\n      height: 100%;\n      width: 50%;\n      background-image: url('https://picsum.photos/1920/1080?grayscale');\n      background-size: cover;\n      background-position: center;\n    }\n\n    main {\n      flex: 1;\n      position: relative;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      padding: 1rem;\n    }\n\n    main>.content {\n      flex: 1;\n      max-width: 500px;\n    }\n\n    @media (max-width: 768px) {\n      header {\n        display: none;\n      }\n    }\n    </style>\n  </head>\n  <body>\n    <div class=\"wrapper\">\n      <header></header>\n      <main role=\"main\" class=\"container\">\n        <div class=\"content\">\n          {{#messages}}\n          <div class=\"ui main {{ type }} message\">\n            {{ content }}\n          </div>\n          {{/messages}}\n          {{> inner_content }}\n        </div>\n      </main>\n    </div>\n  </body>\n</html>\n",
+          "id": null,
+          "relying_party_id": "75da9775-2f6f-4418-aff5-b98e63830079",
+          "type": "layout"
+        }
+      },
+      "updatearelyingpartyrequest": {
+        "title": "updatearelyingpartyrequest",
+        "required": [
+          "relying_party"
+        ],
+        "type": "object",
+        "properties": {
+          "relying_party": {
+            "$ref": "#/components/schemas/RelyingParty"
+          }
+        },
+        "example": {
+          "relying_party": {
+            "choose_session": true,
+            "confirmable": false,
+            "consentable": false,
+            "name": "Updated fom API",
+            "registrable": false,
+            "type": "internal"
+          }
+        }
+      },
+      "deletearelyingpartyrequest": {
+        "title": "deletearelyingpartyrequest",
+        "required": [
+          "scope"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/Scope1"
+          }
+        },
+        "example": {
+          "scope": {
+            "label": "Updated from API"
+          }
+        }
+      },
+      "Unauthorized": {
+        "title": "Unauthorized",
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "code": "UNAUTHORIZED",
+          "message": "The client is unauthorized to access this resource."
+        }
+      },
+      "Forbidden": {
+        "title": "Forbidden",
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "code": "FORBIDDEN",
+          "message": "The client is forbidden to access this resource."
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "Clients"
+    },
+    {
+      "name": "Scopes"
+    },
+    {
+      "name": "Upstreams"
+    },
+    {
+      "name": "Relying parties"
+    },
+    {
+      "name": "Misc",
+      "description": ""
+    }
+  ]
+}
