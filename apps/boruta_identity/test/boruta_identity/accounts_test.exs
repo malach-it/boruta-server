@@ -8,7 +8,7 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
-  alias BorutaIdentity.Accounts.{User, UserAuthorizedScope, UserToken}
+  alias BorutaIdentity.Accounts.{User, UserToken}
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.RelyingParties.Template
@@ -672,17 +672,6 @@ defmodule BorutaIdentity.AccountsTest do
   @tag :skip
   test "reset_password/4"
 
-  describe "list_users/0" do
-    test "returns an empty list" do
-      assert Accounts.list_users() == []
-    end
-
-    test "returns users" do
-      user = user_fixture()
-      assert Accounts.list_users() == [user]
-    end
-  end
-
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do
       refute Accounts.get_user_by_email("unknown@example.com")
@@ -954,33 +943,6 @@ defmodule BorutaIdentity.AccountsTest do
   describe "inspect/2" do
     test "does not include password" do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
-    end
-  end
-
-  describe "update_user_authorized_scopes/2" do
-    test "returns an error on duplicates" do
-      user = user_fixture()
-
-      {:error, %Ecto.Changeset{} = changeset} =
-        Accounts.update_user_authorized_scopes(user, [%{"name" => "test"}, %{"name" => "test"}])
-
-      assert changeset
-    end
-
-    test "stores user scopes" do
-      user = user_fixture()
-
-      {:ok,
-       %User{
-         authorized_scopes:
-           [
-             %UserAuthorizedScope{
-               name: "test"
-             }
-           ] = authorized_scopes
-       }} = Accounts.update_user_authorized_scopes(user, [%{"name" => "test"}])
-
-      assert Repo.all(UserAuthorizedScope) == authorized_scopes
     end
   end
 

@@ -164,7 +164,6 @@ defmodule BorutaIdentity.Accounts do
 
   ## Deprecated Database getters
 
-  defdelegate list_users, to: Users
   defdelegate get_user(id), to: Users
   defdelegate get_user_by_email(email), to: Users
   defdelegate get_user_by_session_token(token), to: Users
@@ -172,10 +171,11 @@ defmodule BorutaIdentity.Accounts do
 
   ## Deprecated User settings
 
+  defdelegate initialize_edit_user(context, client_id, module), to: Settings
+
   defdelegate update_user_password(user, password, attrs), to: Settings
   defdelegate change_user_password(user), to: Settings
   defdelegate change_user_password(user, attrs), to: Settings
-  defdelegate update_user_authorized_scopes(user, scopes), to: Settings
   defdelegate change_user_email(user), to: Settings
   defdelegate change_user_email(user, attrs), to: Settings
   defdelegate apply_user_email(user, password, attrs), to: Settings

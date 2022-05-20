@@ -35,6 +35,10 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       # BorutaIdentity.Accounts.Registrations
       :register
     ],
+    user_editable: [
+      # BorutaIdentity.Accounts.Settings
+      :initialize_edit_user
+    ],
     confirmable: [
       # BorutaIdentity.Accounts.Confirmations
       :initialize_confirmation_instructions,
@@ -77,6 +81,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     field(:type, :string, default: "internal")
     field(:choose_session, :boolean, default: true)
     field(:registrable, :boolean, default: false)
+    field(:user_editable, :boolean, default: false)
     field(:confirmable, :boolean, default: false)
     field(:consentable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)

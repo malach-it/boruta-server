@@ -58,13 +58,6 @@ defmodule BorutaIdentityWeb.TemplateView do
     %{
       create_user_reset_password_path:
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
-      update_user_reset_password_path:
-        Routes.user_reset_password_path(
-          BorutaIdentityWeb.Endpoint,
-          :update,
-          Map.get(assigns, :token, ""),
-          %{request: request}
-        ),
       create_user_confirmation_path:
         Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
       create_user_consent_path: Routes.user_consent_path(conn, :consent, %{request: request}),
@@ -79,7 +72,15 @@ defmodule BorutaIdentityWeb.TemplateView do
       new_user_reset_password_path:
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request})
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+      update_user_reset_password_path:
+        Routes.user_reset_password_path(
+          BorutaIdentityWeb.Endpoint,
+          :update,
+          Map.get(assigns, :token, ""),
+          %{request: request}
+        ),
+      update_user_path: Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :update, %{request: request})
     }
   end
 

@@ -1,0 +1,34 @@
+<h1>Edit user</h1>
+
+{{^valid?}}
+<div class="ui error message">
+{{#errors}}
+  <li>{{ message }}</li>
+{{/errors}}
+</div>
+{{/valid?}}
+
+<form class="ui form" action="{{ update_user_path }}" method="PATCH">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+
+  <div class="field">
+    <label for="user_email">Email</label>
+    <input type="email" id="user_email" name="user[email]" />
+  </div>
+
+  <div class="field">
+    <label for="new_user_password">New password</label>
+    <input type="password" id="new_user_password" name="user[password]" placeholder="leave blank to keep current password" ">
+  </div>
+
+  <div class="field">
+    <label for="current_user_password">Current password</label>
+    <input type="password" id="current_user_password" name="user[current_password]" />
+  </div>
+
+  <button class="ui fluid button" type="submit">update</button>
+</form>
+
+<p>
+  <a href="{{ new_user_session_path }}">Log in</a> | <a href="{{ new_user_reset_password_path }}">Forgot your password?</a>
+</p>

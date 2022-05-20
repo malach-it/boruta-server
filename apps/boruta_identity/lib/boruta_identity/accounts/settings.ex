@@ -1,15 +1,35 @@
+defmodule BorutaIdentity.Accounts.SettingsApplication do
+  @moduledoc false
+
+  @callback edit_user_initialized(
+              context :: any(),
+              template :: BorutaIdentity.RelyingParties.Template.t()
+            ) :: any()
+
+  @callback invalid_relying_party(
+              context :: any(),
+              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
+            ) :: any()
+end
+
 defmodule BorutaIdentity.Accounts.Settings do
   @moduledoc false
 
-  import Ecto.Query
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.Repo
 
   @type user_registration_attrs :: map()
+
+  @spec initialize_edit_user(context :: any(), client_id :: String.t(), module :: atom()) ::
+          callback_result :: any()
+  defwithclientrp initialize_edit_user(context, client_id, module) do
+    module.edit_user_initialized(context, edit_user_template(client_rp))
+  end
 
   @doc """
   Updates the user password.
@@ -36,29 +56,6 @@ defmodule BorutaIdentity.Accounts.Settings do
     |> case do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
-    end
-  end
-
-  @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::
-          {:ok, %User{}} | {:error, Ecto.Changeset.t()}
-  def update_user_authorized_scopes(%User{id: user_id} = user, scopes) do
-    Repo.delete_all(from(s in UserAuthorizedScope, where: s.user_id == ^user_id))
-
-    case Enum.reduce(scopes, Ecto.Multi.new(), fn attrs, multi ->
-           changeset =
-             UserAuthorizedScope.changeset(
-               %UserAuthorizedScope{},
-               Map.put(attrs, "user_id", user_id)
-             )
-
-           Ecto.Multi.insert(multi, "scope_-#{SecureRandom.uuid()}", changeset)
-         end)
-         |> Repo.transaction() do
-      {:ok, _result} ->
-        {:ok, user |> Repo.reload() |> Repo.preload(:authorized_scopes)}
-
-      {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
-        {:error, changeset}
     end
   end
 
@@ -150,5 +147,9 @@ defmodule BorutaIdentity.Accounts.Settings do
       user ->
         Repo.delete(user)
     end
+  end
+
+  defp edit_user_template(relying_party) do
+    RelyingParties.get_relying_party_template!(relying_party.id, :edit_user)
   end
 end

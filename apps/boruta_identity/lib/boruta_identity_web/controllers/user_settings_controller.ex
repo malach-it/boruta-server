@@ -1,15 +1,32 @@
 defmodule BorutaIdentityWeb.UserSettingsController do
+  @behaviour BorutaIdentity.Accounts.SettingsApplication
+
   use BorutaIdentityWeb, :controller
 
-  import BorutaIdentityWeb.Authenticable, only: [log_in: 2]
+  import BorutaIdentityWeb.Authenticable, only: [
+    client_id_from_request: 1,
+    log_in: 2
+  ]
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentityWeb.TemplateView
 
   plug :assign_email_and_password_changesets
 
   def edit(conn, _params) do
-    render(conn, "edit.html")
+    client_id = client_id_from_request(conn)
+
+    Accounts.initialize_edit_user(conn, client_id, __MODULE__)
+  end
+
+  @impl BorutaIdentity.Accounts.SettingsApplication
+  def edit_user_initialized(conn, template) do
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html", template: template, assigns: %{})
   end
 
   def update(conn, %{"action" => "update_email"} = params) do
@@ -71,5 +88,12 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     conn
     |> assign(:email_changeset, Accounts.change_user_email(user))
     |> assign(:password_changeset, Accounts.change_user_password(user))
+  end
+
+  @impl BorutaIdentity.Accounts.SettingsApplication
+  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
+    conn
+    |> put_flash(:error, message)
+    |> redirect(to: "/")
   end
 end

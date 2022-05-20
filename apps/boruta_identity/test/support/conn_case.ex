@@ -77,7 +77,8 @@ defmodule BorutaIdentityWeb.ConnCase do
       BorutaIdentity.Factory.insert(:relying_party,
         registrable: true,
         consentable: true,
-        confirmable: true
+        confirmable: true,
+        user_editable: true
       )
 
     client = Boruta.Factory.insert(:client)

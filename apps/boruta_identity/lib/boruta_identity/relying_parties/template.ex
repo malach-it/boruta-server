@@ -24,7 +24,8 @@ defmodule BorutaIdentity.RelyingParties.Template do
     :new_registration,
     :new_reset_password,
     :edit_reset_password,
-    :new_confirmation_instructions
+    :new_confirmation_instructions,
+    :edit_user
   ]
   @type template_type ::
           :layout
@@ -35,6 +36,7 @@ defmodule BorutaIdentity.RelyingParties.Template do
           | :new_reset_password
           | :edit_reset_password
           | :new_confirmation_instructions
+          | :edit_user
 
   @default_templates %{
     layout:
@@ -57,10 +59,6 @@ defmodule BorutaIdentity.RelyingParties.Template do
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/registrations/new.mustache")
       |> File.read!(),
-    new_confirmation_instructions:
-      :code.priv_dir(:boruta_identity)
-      |> Path.join("templates/confirmations/new.mustache")
-      |> File.read!(),
     new_reset_password:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/reset_passwords/new.mustache")
@@ -68,7 +66,15 @@ defmodule BorutaIdentity.RelyingParties.Template do
     edit_reset_password:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/reset_passwords/edit.mustache")
-      |> File.read!()
+      |> File.read!(),
+    new_confirmation_instructions:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/confirmations/new.mustache")
+      |> File.read!(),
+    edit_user:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/settings/edit_user.mustache")
+      |> File.read!(),
   }
 
   @foreign_key_type :binary_id
