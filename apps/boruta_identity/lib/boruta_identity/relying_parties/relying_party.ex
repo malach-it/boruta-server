@@ -108,7 +108,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   @spec check_feature(relying_party :: t(), action_name :: atom()) ::
           :ok | {:error, reason :: String.t()}
   def check_feature(relying_party, requested_action_name) do
-    with {feature_name, _action_name} <-
+    with {feature_name, _actions} <-
            Enum.find(@features, fn {_feature_name, actions} ->
              Enum.member?(actions, requested_action_name)
            end),

@@ -1409,9 +1409,6 @@
       "Client": {
         "title": "Client",
         "type": "object",
-        "required": [
-          "relying_party"
-        ],
         "properties": {
           "access_token_ttl": {
             "type": "integer",

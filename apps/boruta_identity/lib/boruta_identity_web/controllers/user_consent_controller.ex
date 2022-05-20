@@ -10,8 +10,8 @@ defmodule BorutaIdentityWeb.UserConsentController do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RelyingPartyError
-  alias BorutaIdentity.RelyingParties.Template
   alias BorutaIdentityWeb.ChangesetView
+  alias BorutaIdentityWeb.TemplateView
 
   action_fallback(BorutaIdentityWeb.FallbackController)
 
@@ -59,13 +59,13 @@ defmodule BorutaIdentityWeb.UserConsentController do
   def consent_initialized(conn, client, scopes, template) do
     conn
     |> put_layout(false)
-    |> render("index.html",
-      template:
-        compile_template(template, %{
-          conn: conn,
-          scopes: scopes,
-          client: client
-        })
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        scopes: scopes,
+        client: client
+      }
     )
   end
 
@@ -74,32 +74,5 @@ defmodule BorutaIdentityWeb.UserConsentController do
     conn
     |> put_flash(:error, message)
     |> redirect(to: "/")
-  end
-
-  defp compile_template(%Template{layout: layout, content: content}, opts) do
-    %Plug.Conn{query_params: query_params} = conn = Map.fetch!(opts, :conn)
-    request = Map.get(query_params, "request")
-    scopes = Map.fetch!(opts, :scopes) |> Enum.map(&Map.from_struct/1)
-    client = Map.fetch!(opts, :client) |> Map.from_struct()
-
-    messages =
-      get_flash(conn)
-      |> Enum.map(fn {type, value} ->
-        %{
-          "type" => type,
-          "content" => value
-        }
-      end)
-
-    context = %{
-      create_user_consent_path:
-        Routes.user_consent_path(conn, :consent, %{request: request}),
-      client: client,
-      scopes: scopes,
-      _csrf_token: Plug.CSRFProtection.get_csrf_token(),
-      messages: messages
-    }
-
-    Mustachex.render(layout.content, context, partials: %{inner_content: content})
   end
 end

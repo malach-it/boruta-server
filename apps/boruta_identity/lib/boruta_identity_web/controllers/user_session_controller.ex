@@ -16,7 +16,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
-  alias BorutaIdentity.RelyingParties.Template
+  alias BorutaIdentityWeb.TemplateView
 
   def new(conn, _params) do
     client_id = client_id_from_request(conn)
@@ -46,9 +46,10 @@ defmodule BorutaIdentityWeb.UserSessionController do
   def session_initialized(%Plug.Conn{} = conn, relying_party, template) do
     conn
     |> put_layout(false)
-    |> render("new.html",
-      error_message: nil,
-      template: compile_template(template, %{relying_party: relying_party, conn: conn})
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{relying_party: relying_party, conn: conn}
     )
   end
 
@@ -68,14 +69,15 @@ defmodule BorutaIdentityWeb.UserSessionController do
       }) do
     conn
     |> put_layout(false)
-    |> render("new.html",
-      template:
-        compile_template(template, %{
-          relying_party: relying_party,
-          conn: conn,
-          valid?: false,
-          errors: [message]
-        })
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        relying_party: relying_party,
+        conn: conn,
+        valid?: false,
+        errors: [message]
+      }
     )
   end
 
@@ -92,39 +94,5 @@ defmodule BorutaIdentityWeb.UserSessionController do
     |> remove_user_session()
     |> put_flash(:info, "Logged out successfully.")
     |> redirect(to: after_sign_out_path(conn))
-  end
-
-  defp compile_template(%Template{layout: layout, content: content}, opts) do
-    %Plug.Conn{query_params: query_params} = conn = Map.fetch!(opts, :conn)
-    request = Map.get(query_params, "request")
-
-    messages =
-      get_flash(conn)
-      |> Enum.map(fn {type, value} ->
-        %{
-          "type" => type,
-          "content" => value
-        }
-      end)
-
-    context = [
-      create_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
-      create_user_confirmation_path:
-        Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
-      new_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      new_user_registration_path:
-        Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      new_user_reset_password_path:
-        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      _csrf_token: Plug.CSRFProtection.get_csrf_token(),
-      registrable?: Map.fetch!(opts, :relying_party).registrable,
-      valid?: Map.get(opts, :valid?, true),
-      messages: messages,
-      errors: Map.get(opts, :errors, []) |> Enum.map(&%{message: &1})
-    ]
-
-    Mustachex.render(layout.content, context, partials: %{inner_content: content})
   end
 end

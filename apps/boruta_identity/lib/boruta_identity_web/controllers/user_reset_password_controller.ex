@@ -8,8 +8,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.ResetPasswordError
-  alias BorutaIdentity.RelyingParties.Template
-  alias BorutaIdentityWeb.ErrorHelpers
+  alias BorutaIdentityWeb.TemplateView
 
   def new(conn, _params) do
     client_id = client_id_from_request(conn)
@@ -62,8 +61,10 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
       ) do
     conn
     |> put_layout(false)
-    |> render("new.html",
-      template: compile_template(template, %{relying_party: relying_party, conn: conn})
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{relying_party: relying_party}
     )
   end
 
@@ -99,9 +100,10 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
       ) do
     conn
     |> put_layout(false)
-    |> render("edit.html",
-      template:
-        compile_template(template, %{relying_party: relying_party, conn: conn, token: token})
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{relying_party: relying_party, conn: conn, token: token}
     )
   end
 
@@ -125,15 +127,16 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
       }) do
     conn
     |> put_layout(false)
-    |> render("edit.html",
-      template:
-        compile_template(template, %{
-          valid?: false,
-          relying_party: relying_party,
-          conn: conn,
-          changeset: changeset,
-          token: token
-        })
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        valid?: false,
+        relying_party: relying_party,
+        conn: conn,
+        changeset: changeset,
+        token: token
+      }
     )
   end
 
@@ -146,53 +149,5 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
     conn
     |> put_flash(:error, message)
     |> redirect(to: Routes.user_session_path(conn, :new, %{request: request}))
-  end
-
-  defp compile_template(%Template{layout: layout, content: content}, opts) do
-    %Plug.Conn{query_params: query_params} = conn = Map.fetch!(opts, :conn)
-    request = Map.get(query_params, "request")
-
-    errors =
-      case Map.fetch(opts, :changeset) do
-        {:ok, changeset} ->
-          changeset
-          |> ErrorHelpers.error_messages()
-          |> Enum.map(fn message -> %{message: message} end)
-
-        :error ->
-          []
-      end
-
-    messages =
-      get_flash(conn)
-      |> Enum.map(fn {type, value} ->
-        %{
-          "type" => type,
-          "content" => value
-        }
-      end)
-
-    context = %{
-      create_user_reset_password_path:
-        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
-      update_user_reset_password_path:
-        Routes.user_reset_password_path(
-          BorutaIdentityWeb.Endpoint,
-          :update,
-          Map.get(opts, :token, ""),
-          %{request: request}
-        ),
-      new_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      new_user_registration_path:
-        Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      _csrf_token: Plug.CSRFProtection.get_csrf_token(),
-      valid?: Map.get(opts, :valid?, true),
-      errors: errors,
-      messages: messages,
-      registrable?: Map.fetch!(opts, :relying_party).registrable
-    }
-
-    Mustachex.render(layout.content, context, partials: [inner_content: content])
   end
 end

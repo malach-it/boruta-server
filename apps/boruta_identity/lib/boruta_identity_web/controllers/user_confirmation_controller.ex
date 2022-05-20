@@ -8,7 +8,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   alias BorutaIdentity.Accounts.ConfirmationError
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.RelyingParties.Template
+  alias BorutaIdentityWeb.TemplateView
 
   def new(conn, _params) do
     client_id = client_id_from_request(conn)
@@ -79,7 +79,11 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   def confirmation_instructions_initialized(conn, relying_party, template) do
     conn
     |> put_layout(false)
-    |> render("new.html", template: compile_template(template, %{conn: conn, relying_party: relying_party}))
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{conn: conn, relying_party: relying_party}
+    )
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
@@ -87,35 +91,5 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
     conn
     |> put_flash(:error, message)
     |> redirect(to: "/")
-  end
-
-  defp compile_template(%Template{layout: layout, content: content}, opts) do
-    %Plug.Conn{query_params: query_params} = conn = Map.fetch!(opts, :conn)
-    request = Map.get(query_params, "request")
-
-    messages =
-      get_flash(conn)
-      |> Enum.map(fn {type, value} ->
-        %{
-          "type" => type,
-          "content" => value
-        }
-      end)
-
-    context = %{
-      create_user_confirmation_path:
-        Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
-      new_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      new_user_registration_path: Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      new_user_reset_password_path:
-        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      _csrf_token: Plug.CSRFProtection.get_csrf_token(),
-      messages: messages,
-      valid?: Map.get(opts, :valid?, true),
-      registrable?: Map.fetch!(opts, :relying_party).registrable
-    }
-
-    Mustachex.render(layout.content, context, partials: %{inner_content: content})
   end
 end

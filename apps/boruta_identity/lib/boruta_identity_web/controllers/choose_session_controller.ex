@@ -8,7 +8,7 @@ defmodule BorutaIdentityWeb.ChooseSessionController do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RelyingPartyError
-  alias BorutaIdentity.RelyingParties.Template
+  alias BorutaIdentityWeb.TemplateView
 
   def index(conn, _params) do
     client_id = client_id_from_request(conn)
@@ -23,7 +23,8 @@ defmodule BorutaIdentityWeb.ChooseSessionController do
     conn
     |> put_session(:session_chosen, true)
     |> put_layout(false)
-    |> render("new.html", template: compile_template(template, %{conn: conn, current_user: current_user}))
+    |> put_view(TemplateView)
+    |> render("template.html", template: template, assigns: %{conn: conn, current_user: current_user})
   end
 
   @impl BorutaIdentity.Accounts.ChooseSessionApplication
@@ -38,31 +39,5 @@ defmodule BorutaIdentityWeb.ChooseSessionController do
     conn
     |> put_flash(:error, message)
     |> redirect(to: "/")
-  end
-
-  defp compile_template(%Template{layout: layout, content: content}, opts) do
-    %Plug.Conn{query_params: query_params} = conn = Map.fetch!(opts, :conn)
-    request = Map.get(query_params, "request")
-    current_user = Map.fetch!(opts, :current_user) |> Map.from_struct()
-
-    messages =
-      get_flash(conn)
-      |> Enum.map(fn {type, value} ->
-        %{
-          "type" => type,
-          "content" => value
-        }
-      end)
-
-    context = %{
-      new_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
-      delete_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{request: request}),
-      current_user: current_user,
-      messages: messages
-    }
-
-    Mustachex.render(layout.content, context, partials: %{inner_content: content})
   end
 end
