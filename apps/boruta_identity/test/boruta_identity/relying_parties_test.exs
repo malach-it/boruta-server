@@ -257,22 +257,26 @@ defmodule BorutaIdentity.RelyingPartiesTest do
       assert template == %{
                Template.default_template(:new_registration)
                | relying_party_id: relying_party.id,
+                 relying_party: relying_party,
                  layout: RelyingParty.template(relying_party, :layout)
              }
     end
 
     test "returns relying party template with a layout" do
-      relying_party = insert(:relying_party, templates: [])
-
       template =
-        insert(:new_registration_template,
-          content: "custom registration template",
-          relying_party: relying_party
+        build(:new_registration_template,
+          content: "custom registration template"
         )
-        |> Repo.reload()
+
+      %RelyingParty{templates: [template]} =
+        relying_party = insert(:relying_party, templates: [template])
 
       assert RelyingParties.get_relying_party_template!(relying_party.id, :new_registration) ==
-               %{template | layout: RelyingParty.template(relying_party, :layout)}
+               %{
+                 template
+                 | layout: RelyingParty.template(relying_party, :layout),
+                   relying_party: relying_party
+               }
     end
   end
 
@@ -322,21 +326,25 @@ defmodule BorutaIdentity.RelyingPartiesTest do
     end
 
     test "returns relying party template with a layout" do
-      relying_party = insert(:relying_party, templates: [])
-
       template =
-        insert(:new_registration_template,
-          content: "custom registration template",
-          relying_party: relying_party
+        build(:new_registration_template,
+          content: "custom registration template"
         )
-        |> Repo.reload()
 
-      assert RelyingParties.delete_relying_party_template!(relying_party.id, :new_registration) ==
-               %{
-                 Template.default_template(:new_registration)
-                 | relying_party_id: relying_party.id,
-                   layout: RelyingParty.template(relying_party, :layout)
-               }
+      %RelyingParty{templates: [template]} =
+        relying_party = insert(:relying_party, templates: [template])
+
+      default_template = %{
+        Template.default_template(:new_registration)
+        | relying_party_id: relying_party.id
+      }
+
+      reseted_template =
+        RelyingParties.delete_relying_party_template!(relying_party.id, :new_registration)
+
+      assert reseted_template.default == true
+      assert reseted_template.type == "new_registration"
+      assert reseted_template.content == default_template.content
 
       assert Repo.get_by(Template, id: template.id) == nil
     end

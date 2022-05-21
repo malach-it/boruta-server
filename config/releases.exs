@@ -35,7 +35,8 @@ config :boruta_admin, BorutaAdmin.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 1
 
-config :boruta_identity, Boruta.Accounts, secret_key_base: System.get_env("SECRET_KEY_BASE")
+config :boruta_identity, Boruta.Accounts,
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentity.Mailer,
   adapter: Swoosh.Adapters.Mailjet,

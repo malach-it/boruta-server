@@ -37,7 +37,9 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     ],
     user_editable: [
       # BorutaIdentity.Accounts.Settings
-      :initialize_edit_user
+      :initialize_edit_user,
+      # BorutaIdentity.Accounts.Settings
+      :update_user
     ],
     confirmable: [
       # BorutaIdentity.Accounts.Confirmations
@@ -100,8 +102,8 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     end) do
       nil ->
         template = Template.default_template(type)
-        template && %{template|relying_party_id: relying_party.id}
-      template -> template
+        template && %{template|relying_party_id: relying_party.id, relying_party: relying_party}
+      template -> %{template|relying_party: relying_party}
     end
   end
 

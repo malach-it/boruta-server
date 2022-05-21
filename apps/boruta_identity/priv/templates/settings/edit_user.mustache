@@ -1,3 +1,4 @@
+<a href="{{ choose_session_path }}">Back</a>
 <h1>Edit user</h1>
 
 {{^valid?}}
@@ -8,12 +9,13 @@
 </div>
 {{/valid?}}
 
-<form class="ui form" action="{{ update_user_path }}" method="PATCH">
+<form class="ui form" action="{{ update_user_path }}" method="POST">
+  <input type="hidden" name="_method" value="put" />
   <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
 
   <div class="field">
     <label for="user_email">Email</label>
-    <input type="email" id="user_email" name="user[email]" />
+    <input type="email" id="user_email" name="user[email]" value="{{ current_user.email }}" />
   </div>
 
   <div class="field">
@@ -28,7 +30,3 @@
 
   <button class="ui fluid button" type="submit">update</button>
 </form>
-
-<p>
-  <a href="{{ new_user_session_path }}">Log in</a> | <a href="{{ new_user_reset_password_path }}">Forgot your password?</a>
-</p>

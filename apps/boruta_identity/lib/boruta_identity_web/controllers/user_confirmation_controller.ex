@@ -76,13 +76,13 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
-  def confirmation_instructions_initialized(conn, relying_party, template) do
+  def confirmation_instructions_initialized(conn, template) do
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
-      assigns: %{conn: conn, relying_party: relying_party}
+      assigns: %{}
     )
   end
 

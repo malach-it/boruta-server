@@ -24,7 +24,7 @@ defmodule BorutaIdentityWeb.ChooseSessionController do
     |> put_session(:session_chosen, true)
     |> put_layout(false)
     |> put_view(TemplateView)
-    |> render("template.html", template: template, assigns: %{conn: conn, current_user: current_user})
+    |> render("template.html", template: template, assigns: %{current_user: current_user})
   end
 
   @impl BorutaIdentity.Accounts.ChooseSessionApplication

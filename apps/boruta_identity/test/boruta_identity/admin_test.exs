@@ -44,4 +44,16 @@ defmodule BorutaIdentity.AdminTest do
       assert Admin.list_users() == [user]
     end
   end
+
+  describe "delete_user/1" do
+    test "returns an error" do
+      assert Admin.delete_user(Ecto.UUID.generate()) == {:error, :not_found}
+    end
+
+    test "returns deleted user" do
+      %User{id: user_id} = user_fixture()
+      assert {:ok, %User{id: ^user_id}} = Admin.delete_user(user_id)
+      assert Repo.get(User, user_id) == nil
+    end
+  end
 end
