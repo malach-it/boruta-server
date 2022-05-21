@@ -74,6 +74,23 @@
           </div>
         </section>
         <section v-if="relyingParty.isPersisted">
+          <h3>User information edition</h3>
+          <div class="ui segment">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="relyingParty.user_editable">
+              <label>user editable</label>
+            </div>
+            <p class="ui info message">
+              Give the ability for end users to update their account information.
+            </p>
+            <div v-if="relyingParty.user_editable">
+              <router-link
+                :to="{ name: 'edit-edit-user-template', params: { relyingPartyId: relyingParty.id } }"
+                class="ui fluid blue button">Edit user edition template</router-link>
+            </div>
+          </div>
+        </section>
+        <section v-if="relyingParty.isPersisted">
           <h3>Email confirmation</h3>
           <div class="ui segment">
             <div class=" field">

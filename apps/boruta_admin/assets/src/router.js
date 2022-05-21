@@ -33,6 +33,7 @@ import EditNewConfirmationTemplate from './views/RelyingParties/EditNewConfirmat
 import EditNewResetPasswordTemplate from './views/RelyingParties/EditNewResetPasswordTemplate.vue'
 import EditEditResetPasswordTemplate from './views/RelyingParties/EditEditResetPasswordTemplate.vue'
 import EditRegistrationTemplate from './views/RelyingParties/EditRegistrationTemplate.vue'
+import EditEditUserTemplate from './views/RelyingParties/EditEditUserTemplate.vue'
 import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
 import Users from './views/RelyingParties/Users.vue'
 import UserList from './views/RelyingParties/UserList.vue'
@@ -116,6 +117,10 @@ const router = createRouter({
                   path: 'edit/registration-template',
                   name: 'edit-registration-template',
                   component: EditRegistrationTemplate
+                }, {
+                  path: 'edit/edit-user-template',
+                  name: 'edit-edit-user-template',
+                  component: EditEditUserTemplate
                 }, {
                   path: 'edit/send-reset-password-instructions-template',
                   name: 'edit-new-reset-password-template',

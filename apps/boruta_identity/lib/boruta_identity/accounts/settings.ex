@@ -49,7 +49,6 @@ defmodule BorutaIdentity.Accounts.Settings do
 
   alias BorutaIdentity.Accounts.SettingsError
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
@@ -64,12 +63,13 @@ defmodule BorutaIdentity.Accounts.Settings do
   @callback update_user(user :: User.t(), user_update_params :: user_update_params()) ::
               {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}
 
-  @callback check_user_against(
-              user :: User.t(),
-              authentication_params :: authentication_params(),
-              relying_party :: RelyingParty.t()
-            ) ::
-              {:ok, user :: User.t()} | {:error, reason :: String.t()}
+  # NOTE emits a compilation warning since callback is already defined in BorutaIdentity.Accounts.Sessions
+  # @callback check_user_against(
+  #             user :: User.t(),
+  #             authentication_params :: authentication_params(),
+  #             relying_party :: RelyingParty.t()
+  #           ) ::
+  #             {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
   @spec initialize_edit_user(
           context :: any(),

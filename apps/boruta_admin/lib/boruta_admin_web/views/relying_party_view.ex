@@ -21,6 +21,7 @@ defmodule BorutaAdminWeb.RelyingPartyView do
       type: relying_party.type,
       choose_session: relying_party.choose_session,
       registrable: relying_party.registrable,
+      user_editable: relying_party.user_editable,
       consentable: relying_party.consentable,
       confirmable: relying_party.confirmable
     }

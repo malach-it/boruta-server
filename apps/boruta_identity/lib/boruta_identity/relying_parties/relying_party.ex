@@ -131,7 +131,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   def changeset(relying_party, attrs) do
     relying_party
     |> Repo.preload(:templates)
-    |> cast(attrs, [:name, :type, :choose_session, :registrable, :consentable, :confirmable])
+    |> cast(attrs, [:name, :type, :choose_session, :registrable, :user_editable, :consentable, :confirmable])
     |> validate_required([:name, :type])
     |> validate_inclusion(:type, @types)
     |> unique_constraint(:name)
