@@ -48,7 +48,9 @@ class User {
   }
 
   async save () {
+    this.errors = null
     await this.validate()
+
     const { id, serialized } = this
     let response
     if (id) {

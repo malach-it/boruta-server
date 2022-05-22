@@ -1,5 +1,6 @@
 <template>
   <div class="edit-relying-party">
+    <Toaster :active="success" message="Relying party has been updated" type="success" />
     <div class="ui container">
       <div class="ui large segment">
         <div class="ui attribute list">
@@ -21,11 +22,13 @@
 <script>
 import RelyingParty from '../../models/relying-party.model'
 import RelyingPartyForm from '../../components/Forms/RelyingPartyForm.vue'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'edit-relying-party',
   components: {
-    RelyingPartyForm
+    RelyingPartyForm,
+    Toaster
   },
   mounted () {
     const { relyingPartyId } = this.$route.params
@@ -35,7 +38,8 @@ export default {
   },
   data () {
     return {
-      relyingParty: new RelyingParty()
+      relyingParty: new RelyingParty(),
+      success: false
     }
   },
   methods: {
@@ -43,8 +47,9 @@ export default {
       this.$router.push({ name: 'relying-party-list' })
     },
     updateRelyingParty () {
+      this.success = false
       return this.relyingParty.save().then(() => {
-        this.$router.push({ name: 'relying-party-list' })
+        this.success = true
       }).catch()
     }
   }

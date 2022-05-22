@@ -1,5 +1,6 @@
 <template>
   <div class="edit-client">
+    <Toaster :active="success" message="Client has been updated" type="success" />
     <div class="ui container">
       <div class="ui large segment">
         <div class="ui attribute list">
@@ -21,11 +22,13 @@
 <script>
 import Client from '../../models/client.model'
 import ClientForm from '../../components/Forms/ClientForm.vue'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'clients',
   components: {
-    ClientForm
+    ClientForm,
+    Toaster
   },
   mounted () {
     const { clientId } = this.$route.params
@@ -37,6 +40,7 @@ export default {
     return {
       errors: null,
       scopes: [],
+      success: false,
       client: new Client()
     }
   },
@@ -45,10 +49,12 @@ export default {
       this.$router.push({ name: 'client-list' })
     },
     updateClient () {
+      this.success = false
       return this.client.save().then(() => {
-        this.$router.push({ name: 'client-list' })
+        this.success = true
       }).catch()
     }
   }
 }
 </script>
+

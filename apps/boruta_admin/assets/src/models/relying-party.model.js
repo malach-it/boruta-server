@@ -36,6 +36,7 @@ class RelyingParty {
   }
 
   save () {
+    this.errors = null
     // TODO trigger validate
     let response
     const { id, serialized } = this

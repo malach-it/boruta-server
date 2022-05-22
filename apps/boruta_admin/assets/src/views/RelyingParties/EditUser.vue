@@ -1,5 +1,6 @@
 <template>
   <div class="edit-user">
+    <Toaster :active="success" message="User has been updated" type="success" />
     <div class="ui container">
       <div class="ui large segment">
         <div class="ui attribute list">
@@ -21,11 +22,13 @@
 <script>
 import User from '../../models/user.model'
 import UserForm from '../../components/Forms/UserForm.vue'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'edit-user',
   components: {
-    UserForm
+    UserForm,
+    Toaster
   },
   mounted () {
     const { userId } = this.$route.params
@@ -35,7 +38,8 @@ export default {
   },
   data () {
     return {
-      user: new User()
+      user: new User(),
+      success: false
     }
   },
   methods: {
@@ -43,8 +47,9 @@ export default {
       this.$router.push({ name: 'user-list' })
     },
     updateUser () {
+      this.success = false
       return this.user.save().then(() => {
-        this.$router.push({ name: 'user-list' })
+        this.success = true
       }).catch()
     }
   }

@@ -1,5 +1,6 @@
 <template>
   <div class="edit-upstream">
+    <Toaster :active="success" message="Upstream has been updated" type="success" />
     <div class="ui container">
       <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update" />
     </div>
@@ -9,11 +10,13 @@
 <script>
 import Upstream from '../../models/upstream.model'
 import UpstreamForm from '../../components/Forms/UpstreamForm.vue'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'upstreams',
   components: {
-    UpstreamForm
+    UpstreamForm,
+    Toaster
   },
   mounted () {
     const { upstreamId } = this.$route.params
@@ -23,7 +26,8 @@ export default {
   },
   data () {
     return {
-      upstream: new Upstream()
+      upstream: new Upstream(),
+      success: false
     }
   },
   methods: {
@@ -31,8 +35,9 @@ export default {
       this.$router.push({ name: 'upstream-list' })
     },
     updateUpstream () {
+      this.success = false
       return this.upstream.save().then(() => {
-        this.$router.push({ name: 'upstream-list' })
+        this.success = true
       }).catch()
     }
   }

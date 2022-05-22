@@ -1,5 +1,6 @@
 <template>
   <div class="container edit-session-template">
+    <Toaster :active="success" message="Template has been updated" type="success" />
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
@@ -15,11 +16,13 @@
 import Template from '../../models/template.model'
 import RelyingParty from '../../models/relying-party.model'
 import TextEditor from '../../components/Forms/TextEditor.vue'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'edit-session-template',
   components: {
-    TextEditor
+    TextEditor,
+    Toaster
   },
   mounted () {
     const { relyingPartyId } = this.$route.params
@@ -35,7 +38,8 @@ export default {
     return {
       content: '',
       relyingParty: new RelyingParty(),
-      template: new Template()
+      template: new Template(),
+      success: false
     }
   },
   methods: {
@@ -43,8 +47,9 @@ export default {
       this.template.content = code
     },
     update () {
+      this.success = false
       this.template.save().then(() => {
-        this.$router.push({ name: 'edit-relying-party', params: { relyingPartyId: this.relyingParty.id } })
+        this.success = true
       })
     },
     destroy () {

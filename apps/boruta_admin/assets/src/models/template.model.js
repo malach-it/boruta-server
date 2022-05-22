@@ -27,6 +27,7 @@ class Template {
   }
 
   save () {
+    this.errors = null
     // TODO trigger validate
     const { type, relying_party_id: relyingPartyId, serialized } = this
 
