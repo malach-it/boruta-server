@@ -9,24 +9,6 @@ defmodule BorutaIdentity.Accounts.Users do
   alias BorutaIdentity.Repo
 
   @doc """
-  List all users
-
-  ## Examples
-
-      iex> list_users()
-      [...]
-  """
-  @spec list_users() :: list(User.t())
-  def list_users do
-    Repo.all(
-      from(u in User,
-        left_join: as in assoc(u, :authorized_scopes),
-        preload: [authorized_scopes: as]
-      )
-    )
-  end
-
-  @doc """
   Gets a user by email.
 
   ## Examples

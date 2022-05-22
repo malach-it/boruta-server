@@ -158,29 +158,25 @@ defmodule BorutaIdentity.Accounts do
 
   defdelegate initialize_choose_session(context, client_id, module), to: ChooseSessions
 
-  ## Deprecated Sessions
+  ## User settings
 
-  defdelegate generate_user_session_token(user), to: Sessions
+  defdelegate initialize_edit_user(context, client_id, user, module), to: Settings
+  defdelegate update_user(context, client_id, user, params, module), to: Settings
+
+  ## Deprecated user settings
+
+  defdelegate update_user_email(user, token), to: Settings
+  defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
+    to: Deliveries
 
   ## Deprecated Database getters
 
-  defdelegate list_users, to: Users
   defdelegate get_user(id), to: Users
   defdelegate get_user_by_email(email), to: Users
   defdelegate get_user_by_session_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
 
-  ## Deprecated User settings
+  ## Deprecated Sessions
 
-  defdelegate update_user_password(user, password, attrs), to: Settings
-  defdelegate change_user_password(user), to: Settings
-  defdelegate change_user_password(user, attrs), to: Settings
-  defdelegate update_user_authorized_scopes(user, scopes), to: Settings
-  defdelegate change_user_email(user), to: Settings
-  defdelegate change_user_email(user, attrs), to: Settings
-  defdelegate apply_user_email(user, password, attrs), to: Settings
-  defdelegate update_user_email(user, token), to: Settings
-  defdelegate delete_user(id), to: Settings
-  defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
-    to: Deliveries
+  defdelegate generate_user_session_token(user), to: Sessions
 end

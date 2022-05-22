@@ -35,6 +35,12 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
       # BorutaIdentity.Accounts.Registrations
       :register
     ],
+    user_editable: [
+      # BorutaIdentity.Accounts.Settings
+      :initialize_edit_user,
+      # BorutaIdentity.Accounts.Settings
+      :update_user
+    ],
     confirmable: [
       # BorutaIdentity.Accounts.Confirmations
       :initialize_confirmation_instructions,
@@ -77,6 +83,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     field(:type, :string, default: "internal")
     field(:choose_session, :boolean, default: true)
     field(:registrable, :boolean, default: false)
+    field(:user_editable, :boolean, default: false)
     field(:confirmable, :boolean, default: false)
     field(:consentable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
@@ -95,8 +102,8 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     end) do
       nil ->
         template = Template.default_template(type)
-        template && %{template|relying_party_id: relying_party.id}
-      template -> template
+        template && %{template|relying_party_id: relying_party.id, relying_party: relying_party}
+      template -> %{template|relying_party: relying_party}
     end
   end
 
@@ -124,7 +131,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
   def changeset(relying_party, attrs) do
     relying_party
     |> Repo.preload(:templates)
-    |> cast(attrs, [:name, :type, :choose_session, :registrable, :consentable, :confirmable])
+    |> cast(attrs, [:name, :type, :choose_session, :registrable, :user_editable, :consentable, :confirmable])
     |> validate_required([:name, :type])
     |> validate_inclusion(:type, @types)
     |> unique_constraint(:name)

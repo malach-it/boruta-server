@@ -7,6 +7,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
+  @behaviour BorutaIdentity.Accounts.Settings
 
   import Ecto.Query, only: [from: 2]
 
@@ -55,7 +56,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   def get_user(_authentication_params), do: {:error, "Cannot find an user without an email."}
 
-  @impl BorutaIdentity.Accounts.Sessions
+  @impl true # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings
   def check_user_against(user, authentication_params, %RelyingParty{confirmable: false}) do
     check_user_password(user, authentication_params[:password])
   end
@@ -154,6 +155,14 @@ defmodule BorutaIdentity.Accounts.Internal do
       _ ->
         {:error, "Account confirmation token is invalid or it has expired."}
     end
+  end
+
+  @impl BorutaIdentity.Accounts.Settings
+  def update_user(user, params) do
+    # TODO manage email confirmation
+    user
+    |> User.update_changeset(params)
+    |> Repo.update()
   end
 
   defp create_user(registration_params, confirmation_url_fun, opts) do

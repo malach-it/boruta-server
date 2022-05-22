@@ -1,102 +1,57 @@
 defmodule BorutaIdentityWeb.UserSettingsControllerTest do
-  use BorutaIdentityWeb.ConnCase, async: true
+  use BorutaIdentityWeb.ConnCase
 
   alias BorutaIdentity.Accounts
   import BorutaIdentity.AccountsFixtures
 
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.Repo
 
   setup :register_and_log_in
 
+  describe "whithout client set" do
+    test "edit user redirects to home", %{conn: conn} do
+      conn = get(conn, Routes.user_settings_path(conn, :edit))
+      assert get_flash(conn, :error) == "Client identifier not provided."
+      assert redirected_to(conn) == "/"
+    end
+  end
+
+  describe "with user_editable feature disabled" do
+    setup :with_a_request
+
+    setup %{relying_party: relying_party} do
+      relying_party = relying_party
+      |> Ecto.Changeset.change(user_editable: false)
+      |> Repo.update()
+
+      {:ok, relying_party: relying_party}
+    end
+
+    test "edit user redirects to home", %{conn: conn, request: request} do
+      conn = get(conn, Routes.user_settings_path(conn, :edit, request: request))
+      assert get_flash(conn, :error) == "Feature is not enabled for client relying party."
+      assert redirected_to(conn) == "/"
+    end
+  end
+
   describe "GET /users/settings" do
-    test "renders settings page", %{conn: conn} do
-      conn = get(conn, Routes.user_settings_path(conn, :edit))
+    setup :with_a_request
+
+    test "renders settings page", %{conn: conn, request: request} do
+      conn = get(conn, Routes.user_settings_path(conn, :edit, request: request))
       response = html_response(conn, 200)
-      assert response =~ "<h1>Settings</h1>"
+      assert response =~ "<h1>Edit user</h1>"
     end
 
-    test "redirects if user is not logged in" do
+    test "redirects if user is not logged in", %{request: request} do
       conn = build_conn()
-      conn = get(conn, Routes.user_settings_path(conn, :edit))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      conn = get(conn, Routes.user_settings_path(conn, :edit, request: request))
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
     end
   end
 
-  describe "PUT /users/settings (change password form)" do
-    test "updates the user password and resets tokens", %{conn: conn, user: user} do
-      new_password_conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
-          "action" => "update_password",
-          "current_password" => valid_user_password(),
-          "user" => %{
-            "password" => "new valid password",
-            "password_confirmation" => "new valid password"
-          }
-        })
-
-      assert redirected_to(new_password_conn) == "/"
-      assert get_session(new_password_conn, :user_token) != get_session(conn, :user_token)
-      assert get_flash(new_password_conn, :info) =~ "Password updated successfully"
-      assert user = Accounts.get_user_by_email(user.email)
-
-      assert {:ok, _user} =
-               Accounts.Internal.check_user_against(
-                 user,
-                 %{password: "new valid password"},
-                 %RelyingParty{confirmable: false}
-               )
-    end
-
-    test "does not update password on invalid data", %{conn: conn} do
-      old_password_conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
-          "action" => "update_password",
-          "current_password" => "invalid",
-          "user" => %{
-            "password" => "too short",
-            "password_confirmation" => "does not match"
-          }
-        })
-
-      response = html_response(old_password_conn, 200)
-      assert response =~ "<h1>Settings</h1>"
-      assert response =~ "should be at least 12 character(s)"
-      assert response =~ "does not match password"
-      assert response =~ "is not valid"
-
-      assert get_session(old_password_conn, :user_token) == get_session(conn, :user_token)
-    end
-  end
-
-  describe "PUT /users/settings (change email form)" do
-    @tag :capture_log
-    test "updates the user email", %{conn: conn, user: user} do
-      conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
-          "action" => "update_email",
-          "current_password" => valid_user_password(),
-          "user" => %{"email" => unique_user_email()}
-        })
-
-      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
-      assert get_flash(conn, :info) =~ "A link to confirm your email"
-      assert Accounts.get_user_by_email(user.email)
-    end
-
-    test "does not update email on invalid data", %{conn: conn} do
-      conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
-          "action" => "update_email",
-          "current_password" => "invalid",
-          "user" => %{"email" => "with spaces"}
-        })
-
-      response = html_response(conn, 200)
-      assert response =~ "<h1>Settings</h1>"
-      assert response =~ "must have the @ sign and no spaces"
-      assert response =~ "is not valid"
-    end
-  end
+  @tag :skip
+  test "PUT /users/settings"
 
   describe "GET /users/settings/confirm_email/:token" do
     setup %{user: user} do

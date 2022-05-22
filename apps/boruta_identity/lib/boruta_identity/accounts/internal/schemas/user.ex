@@ -57,6 +57,7 @@ defmodule BorutaIdentity.Accounts.User do
   def registration_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email, :password])
+    |> validate_required([:email, :password])
     |> validate_email()
     |> validate_password(opts)
   end
@@ -67,7 +68,6 @@ defmodule BorutaIdentity.Accounts.User do
 
   defp validate_email(changeset) do
     changeset
-    |> validate_required([:email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
     |> unsafe_validate_unique(:email, BorutaIdentity.Repo)
@@ -76,7 +76,6 @@ defmodule BorutaIdentity.Accounts.User do
 
   defp validate_password(changeset, opts) do
     changeset
-    |> validate_required([:password])
     |> validate_length(:password, min: 12, max: 80)
     # |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
     # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
@@ -95,6 +94,13 @@ defmodule BorutaIdentity.Accounts.User do
     else
       changeset
     end
+  end
+
+  def update_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email, :password])
+    |> validate_email()
+    |> validate_password(opts)
   end
 
   @doc """

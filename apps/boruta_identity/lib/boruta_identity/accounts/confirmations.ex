@@ -22,7 +22,6 @@ defmodule BorutaIdentity.Accounts.ConfirmationApplication do
 
   @callback confirmation_instructions_initialized(
               context :: any(),
-              relying_party :: BorutaIdentity.RelyingParties.RelyingParty.t(),
               template :: BorutaIdentity.RelyingParties.Template.t()
             ) :: any()
 
@@ -76,7 +75,6 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   defwithclientrp initialize_confirmation_instructions(context, client_id, module) do
     module.confirmation_instructions_initialized(
       context,
-      client_rp,
       new_confirmation_instructions_template(client_rp)
     )
   end

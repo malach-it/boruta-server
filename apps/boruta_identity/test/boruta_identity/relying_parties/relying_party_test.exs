@@ -5,6 +5,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingPartyTest do
 
   alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.RelyingParties.Template
+  alias BorutaIdentity.Repo
 
   describe "template/2" do
     setup do
@@ -27,12 +28,12 @@ defmodule BorutaIdentity.RelyingParties.RelyingPartyTest do
 
     test "returns default template", %{relying_party: relying_party} do
       assert RelyingParty.template(relying_party, :new_registration) ==
-        %{Template.default_template(:new_registration)|relying_party_id: relying_party.id}
+        %{Template.default_template(:new_registration)|relying_party_id: relying_party.id, relying_party: relying_party}
     end
 
     test "returns relying party template", %{relying_party_with_template: relying_party} do
       assert RelyingParty.template(relying_party, :new_registration) ==
-        List.first(relying_party.templates)
+        List.first(relying_party.templates) |> Repo.preload(relying_party: :templates)
     end
   end
 end

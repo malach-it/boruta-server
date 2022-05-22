@@ -43,13 +43,13 @@ defmodule BorutaIdentityWeb.UserSessionController do
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
-  def session_initialized(%Plug.Conn{} = conn, relying_party, template) do
+  def session_initialized(%Plug.Conn{} = conn, template) do
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
-      assigns: %{relying_party: relying_party, conn: conn}
+      assigns: %{}
     )
   end
 
@@ -64,7 +64,6 @@ defmodule BorutaIdentityWeb.UserSessionController do
   @impl BorutaIdentity.Accounts.SessionApplication
   def authentication_failure(%Plug.Conn{} = conn, %SessionError{
         message: message,
-        relying_party: relying_party,
         template: template
       }) do
     conn
@@ -73,9 +72,6 @@ defmodule BorutaIdentityWeb.UserSessionController do
     |> render("template.html",
       template: template,
       assigns: %{
-        relying_party: relying_party,
-        conn: conn,
-        valid?: false,
         errors: [message]
       }
     )

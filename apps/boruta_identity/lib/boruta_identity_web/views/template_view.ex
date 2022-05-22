@@ -6,7 +6,7 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   def render("template.html", %{
         conn: conn,
-        template: %Template{layout: layout, content: content},
+        template: %Template{layout: layout, content: content, relying_party: relying_party},
         assigns: assigns
       }) do
     context =
@@ -15,14 +15,9 @@ defmodule BorutaIdentityWeb.TemplateView do
       |> Map.put(:_csrf_token, Plug.CSRFProtection.get_csrf_token())
       |> Map.merge(errors(assigns))
       |> Map.merge(paths(conn, assigns))
+      |> Map.merge(relying_party_configurations(relying_party))
 
     {:safe, Mustachex.render(layout.content, context, partials: %{inner_content: content})}
-  end
-
-  def context(context, %{relying_party: relying_party} = assigns) do
-    %{registrable?: relying_party.registrable}
-    |> Map.merge(context)
-    |> context(Map.delete(assigns, :relying_party))
   end
 
   def context(context, %{current_user: current_user} = assigns) do
@@ -56,15 +51,10 @@ defmodule BorutaIdentityWeb.TemplateView do
     request = Map.get(query_params, "request")
 
     %{
+      choose_session_path:
+        Routes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{request: request}),
       create_user_reset_password_path:
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
-      update_user_reset_password_path:
-        Routes.user_reset_password_path(
-          BorutaIdentityWeb.Endpoint,
-          :update,
-          Map.get(assigns, :token, ""),
-          %{request: request}
-        ),
       create_user_confirmation_path:
         Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
       create_user_consent_path: Routes.user_consent_path(conn, :consent, %{request: request}),
@@ -74,12 +64,21 @@ defmodule BorutaIdentityWeb.TemplateView do
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
       delete_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{request: request}),
+      edit_user_path: Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :edit, %{request: request}),
       new_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_reset_password_path:
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request})
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+      update_user_reset_password_path:
+        Routes.user_reset_password_path(
+          BorutaIdentityWeb.Endpoint,
+          :update,
+          Map.get(assigns, :token, ""),
+          %{request: request}
+        ),
+      update_user_path: Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :update, %{request: request})
     }
   end
 
@@ -108,5 +107,12 @@ defmodule BorutaIdentityWeb.TemplateView do
         "content" => value
       }
     end)
+  end
+
+  defp relying_party_configurations(relying_party) do
+    %{
+      registrable?: relying_party.registrable,
+      user_editable?: relying_party.user_editable,
+    }
   end
 end

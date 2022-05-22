@@ -56,7 +56,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
   @impl BorutaIdentity.Accounts.ResetPasswordApplication
   def password_instructions_initialized(
         conn,
-        relying_party,
         template
       ) do
     conn
@@ -64,7 +63,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
-      assigns: %{relying_party: relying_party}
+      assigns: %{}
     )
   end
 
@@ -95,7 +94,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
   def password_reset_initialized(
         conn,
         token,
-        relying_party,
         template
       ) do
     conn
@@ -103,7 +101,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
-      assigns: %{relying_party: relying_party, conn: conn, token: token}
+      assigns: %{token: token}
     )
   end
 
@@ -120,7 +118,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
 
   @impl BorutaIdentity.Accounts.ResetPasswordApplication
   def password_reset_failure(%Plug.Conn{} = conn, %ResetPasswordError{
-        relying_party: relying_party,
         template: template,
         changeset: %Ecto.Changeset{} = changeset,
         token: token
@@ -131,9 +128,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
     |> render("template.html",
       template: template,
       assigns: %{
-        valid?: false,
-        relying_party: relying_party,
-        conn: conn,
         changeset: changeset,
         token: token
       }

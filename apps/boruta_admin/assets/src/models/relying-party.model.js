@@ -16,6 +16,7 @@ const assign = {
   type: function ({ type }) { this.type = type },
   choose_session: function ({ choose_session }) { this.choose_session = choose_session },
   registrable: function ({ registrable }) { this.registrable = registrable },
+  user_editable: function ({ user_editable }) { this.user_editable = user_editable },
   consentable: function ({ consentable }) { this.consentable = consentable },
   confirmable: function ({ confirmable }) { this.confirmable = confirmable }
 }
@@ -71,13 +72,14 @@ class RelyingParty {
   }
 
   get serialized () {
-    const { id, name, type, choose_session, registrable, consentable, confirmable } = this
+    const { id, name, type, choose_session, registrable, user_editable, consentable, confirmable } = this
 
     return {
       id,
       name,
       type,
       choose_session,
+      user_editable,
       registrable,
       consentable,
       confirmable
