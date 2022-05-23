@@ -34,6 +34,8 @@ defmodule BorutaWeb.Router do
   end
 
   pipeline :api do
+    plug CORSPlug
+
     plug(:accepts, ["json", "jwt"])
   end
 
@@ -66,6 +68,8 @@ defmodule BorutaWeb.Router do
     post("/token", TokenController, :token)
     post("/introspect", IntrospectController, :introspect)
     post("/revoke", RevokeController, :revoke)
+    options("/introspect", IntrospectController, :options)
+    options("/revoke", RevokeController, :options)
   end
 
   scope "/oauth", BorutaWeb do

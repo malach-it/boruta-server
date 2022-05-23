@@ -57,10 +57,11 @@ export default createStore({
       }
     },
     logout ({ commit }) {
-      oauth.logout()
-      commit('SET_CURRENT_USER', User.default)
-      commit('SET_AUTHENTICATED', false)
-      return oauth.login()
+      oauth.logout().then(() => {
+        commit('SET_CURRENT_USER', User.default)
+        commit('SET_AUTHENTICATED', false)
+        return oauth.login()
+      })
     }
   }
 })

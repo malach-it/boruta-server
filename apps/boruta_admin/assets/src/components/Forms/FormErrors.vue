@@ -19,7 +19,8 @@ const labels = {
   'refresh_token_ttl': 'Refresh token TTL',
   'id_token_ttl': 'ID token TTL',
   'authorized_scopes': 'Authorized scopes',
-  'relying_party_id': 'Relying party'
+  'relying_party_id': 'Relying party',
+  'redirect_uris': 'Redirect URIs'
 }
 export default {
   name: 'FormErrors',

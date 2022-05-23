@@ -6,15 +6,20 @@ class Oauth {
     const oauth = new BorutaOauth({
       window,
       host: window.env.VUE_APP_OAUTH_BASE_URL,
-      authorizePath: '/oauth/authorize'
+      authorizePath: '/oauth/authorize',
+      revokePath: '/oauth/revoke'
     })
 
-    this.client = new oauth.Implicit({
+    this.implicitClient = new oauth.Implicit({
       clientId: window.env.VUE_APP_ADMIN_CLIENT_ID,
       redirectUri: `${window.env.VUE_APP_BORUTA_BASE_URL}/oauth-callback`,
       scope: 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all relying-parties:manage:all',
       silentRefresh: true,
       silentRefreshCallback: this.authenticate.bind(this)
+    })
+
+    this.revokeClient = new oauth.Revoke({
+      clientId: window.env.VUE_APP_ADMIN_CLIENT_ID
     })
   }
 
@@ -37,15 +42,15 @@ class Oauth {
   }
 
   login () {
-    window.location = this.client.loginUrl
+    window.location = this.implicitClient.loginUrl
   }
 
   silentRefresh () {
-    this.client.silentRefresh()
+    this.implicitClient.silentRefresh()
   }
 
   async callback () {
-    return this.client.callback().then(response => {
+    return this.implicitClient.callback().then(response => {
       this.authenticate(response)
     }).catch((error) => {
       alert(error.message)
@@ -54,9 +59,10 @@ class Oauth {
   }
 
   logout () {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('token_expires_at')
-    return Promise.resolve(true)
+    return this.revokeClient.revoke(this.accessToken).then(() => {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('token_expires_at')
+    })
   }
 
   storeLocationName (name, params) {
