@@ -14,14 +14,14 @@ services:
   - mix local.rebar --force
   - mix deps.get
 
-dialyzer:
-  stage: test
-  extends: .elixir-task
-  cache:
-    paths:
-      - _build/
-  script:
-  - mix dialyzer
+    # dialyzer:
+    #   stage: test
+    #   extends: .elixir-task
+    #   cache:
+    #     paths:
+    #       - _build/
+    #   script:
+    #   - mix dialyzer
 
 credo:
   stage: test
@@ -82,7 +82,6 @@ deploy:
   script:
   - cd ansible
   - echo $VAULT_PASSWORD > vault_pass.txt
-  - cat vault_pass.txt
   - ansible-vault decrypt ./.kube/kubeconfig-k8s-boruta.yaml --vault-password-file vault_pass.txt
   - KUBECONFIG=./.kube/kubeconfig-k8s-boruta.yaml ansible-playbook -i ./inventories/scaleway deploy.yml -e release_tag=$CI_COMMIT_SHORT_SHA --vault-password-file vault_pass.txt
   only:
