@@ -4,26 +4,26 @@
       <FormErrors v-if="upstream.errors" :errors="upstream.errors" />
       <form class="ui form" @submit.prevent="submit">
         <h3>General configuration</h3>
-        <div class="field">
+        <div class="field" :class="{ 'error': upstream.errors?.scheme }">
           <label>Scheme</label>
           <select v-model="upstream.scheme" placeholder="https">
             <option value="https">https</option>
             <option value="http">http</option>
           </select>
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': upstream.errors?.host }">
           <label>Host</label>
           <input type="text" v-model="upstream.host" placeholder="host.test">
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': upstream.errors?.port }">
           <label>Port</label>
           <input type="text" v-model="upstream.port" placeholder="443">
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': upstream.errors?.pool_size }">
           <label>Pool size</label>
           <input type="number" v-model="upstream.pool_size" placeholder="10">
         </div>
-        <div class="upstreams field">
+        <div class="upstreams field" :class="{ 'error': upstream.errors?.uris }">
           <label>URIs</label>
           <div v-for="(upstreamUri, index) in upstream.uris" class="field" :key="index">
             <div class="ui right icon input">
@@ -46,7 +46,7 @@
             <label>Authorize</label>
           </div>
         </div>
-        <div class="field" v-if="upstream.authorize">
+        <div class="field" v-if="upstream.authorize" :class="{ 'error': upstream.errors?.required_scopes }">
           <label>Required scopes <i>(leave empty to not filter)</i></label>
           <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         </div>

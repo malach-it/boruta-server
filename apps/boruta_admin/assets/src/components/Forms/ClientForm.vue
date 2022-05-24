@@ -4,35 +4,35 @@
       <FormErrors v-if="client.errors" :errors="client.errors" />
       <form class="ui form" @submit.prevent="submit">
         <h3>General configuration</h3>
-        <div class="field">
+        <div class="field" :class="{ 'error': client.errors?.name }">
           <label>Name</label>
           <input v-model="client.name" placeholder="Super client" />
         </div>
-        <div class="field" v-if="!client.isPersisted">
+        <div class="field" :class="{ 'error': client.errors?.id }" v-if="!client.isPersisted">
           <label>Client ID</label>
           <input v-model="client.id" placeholder="Must be an UUIDv4 - Leave blank to autogenerate" />
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': client.errors?.secret }">
           <label>Client secret</label>
           <input v-model="client.secret" placeholder="Leave blank to autogenerate" />
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': client.errors?.access_token_ttl }">
           <label>Access token TTL (seconds)</label>
           <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': client.errors?.authorization_code_ttl }">
           <label>Authorization code TTL (seconds)</label>
           <input type="number" v-model="client.authorization_code_ttl" placeholder="60" />
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': client.errors?.refresh_token_ttl }">
           <label>Refresh token TTL (seconds)</label>
           <input type="number" v-model="client.refresh_token_ttl" placeholder="2592000" />
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': client.errors?.id_token_ttl }">
           <label>ID token TTL (seconds)</label>
           <input type="number" v-model="client.id_token_ttl" placeholder="3600" />
         </div>
-        <div class="field">
+        <div class="field" :class="{ 'error': client.errors?.redirect_uris }">
           <label>Redirect URIs</label>
           <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">
             <div class="ui right icon input">
@@ -51,7 +51,9 @@
             <label>Authorize scopes</label>
           </div>
         </div>
-        <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+        <div class="field" :class="{ 'error': client.errors?.authorized_scopes }">
+          <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+        </div>
         <h3>PKCE configuration</h3>
         <div class="ui large segment">
           <div class="ui toggle checkbox">

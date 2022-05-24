@@ -7,13 +7,13 @@
             <form @submit.prevent="saveScope(scope)" class="ui form">
               <div class="ui stackable grid">
                 <div class="four wide column">
-                  <div class="ui input" :class="{ 'error': scope.errors && scope.errors.name }">
+                  <div class="ui field" :class="{ 'error': scope.errors && scope.errors.name }">
                     <input type="text" v-model="scope.name" placeholder="iam:a:scope">
                     <em v-if="scope.errors && scope.errors.name" class="error-message">{{ scope.errors.name[0] }}</em>
                   </div>
                 </div>
                 <div class="four wide column">
-                  <div class="ui input" :class="{ 'error': scope.errors && scope.errors.label }">
+                  <div class="ui field" :class="{ 'error': scope.errors && scope.errors.label }">
                     <input type="text" v-model="scope.label" placeholder="I am a scope label">
                     <em v-if="scope.errors && scope.errors.label" class="error-message">{{ scope.errors.label[0] }}</em>
                   </div>
@@ -135,7 +135,7 @@ export default {
         margin-left: 1em;
       }
     }
-    .input {
+    .field {
       flex-direction: column;
       width: 100%;
       .error-message {

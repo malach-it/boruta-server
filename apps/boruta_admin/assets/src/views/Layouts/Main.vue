@@ -142,13 +142,26 @@ export default {
       background: #393939;
       color: white;
     }
+    label {
+      color: white!important;
+    }
     .ui.input {
       color: white;
     }
     .error-message {
+      color: #e09494!important;
       position: absolute;
-      bottom: -1em;
+      bottom: -.2em;
       left: 1em;
+    }
+    .error.field {
+      label {
+        color: #e09494!important;
+      }
+      select, input {
+        border: 1px solid #e09494;
+        background: #493939;
+      }
     }
   }
   .label {
@@ -207,9 +220,6 @@ export default {
   }
   a {
     cursor: pointer;
-  }
-  label {
-    color: white!important;
   }
   .actions {
     float: right;
