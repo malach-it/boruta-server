@@ -30,14 +30,15 @@ class Oauth {
       this.login()
     }
 
-    const loggedIn = new Event('logged_in')
-    window.dispatchEvent(loggedIn)
-
     const { access_token, expires_in } = response
     const expires_at = new Date().getTime() + expires_in * 1000
 
     localStorage.setItem('access_token', access_token)
     localStorage.setItem('token_expires_at', expires_at)
+
+    const loggedIn = new Event('logged_in')
+    window.dispatchEvent(loggedIn)
+
     store.dispatch('getCurrentUser')
   }
 

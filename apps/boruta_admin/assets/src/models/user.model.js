@@ -1,6 +1,7 @@
 import axios from 'axios'
 import router from '../router'
 import Scope from './scope.model'
+import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
   errors: null,
@@ -97,16 +98,7 @@ User.api = function () {
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 
-  instance.interceptors.response.use(function (response) {
-      return response;
-    }, function (error) {
-      if (error.response?.status === 404) return router.push({ name: 'not-found' })
-      if (error.response?.status === 400) return router.push({ name: 'bad-request' })
-
-      return Promise.reject(error)
-    })
-
-  return instance
+  return addClientErrorInterceptor(instance)
 }
 
 User.all = function () {
