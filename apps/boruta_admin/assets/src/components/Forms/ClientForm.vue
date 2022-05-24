@@ -43,7 +43,9 @@
           <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
         </div>
         <h3>Authentication</h3>
-        <RelyingPartyField :relyingParty="client.relying_party.model" @relyingPartyChange="setRelyingParty"/>
+        <div class="field" :class="{ 'error': client.errors?.relying_party_id }">
+          <RelyingPartyField :relyingParty="client.relying_party.model" @relyingPartyChange="setRelyingParty"/>
+        </div>
         <h3>Authorization</h3>
         <div class="field">
           <div class="ui toggle checkbox">
