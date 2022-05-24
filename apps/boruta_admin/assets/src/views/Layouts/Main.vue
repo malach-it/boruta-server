@@ -326,8 +326,7 @@ export default {
     }
   }
   .ui.grid {
-    margin: 0;
-    margin: -1rem 0;
+    margin: -1rem 0 1rem 0;
     .column {
       padding: 0;
       padding-top: 1rem;
