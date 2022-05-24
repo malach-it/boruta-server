@@ -1,5 +1,6 @@
 <template>
   <div class="upstream-list">
+    <Toaster :active="deleted" message="Upstream has been updated" type="error" />
     <router-link :to="{ name: 'new-upstream' }" class="ui teal main create button">Add an upstream</router-link>
     <div class="container">
       <div class="ui three column upstreams stackable grid" v-if="upstreams.length">
@@ -38,11 +39,18 @@
 
 <script>
 import Upstream from '../../models/upstream.model'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'upstream-list',
+  components: {
+    Toaster
+  },
   data () {
-    return { upstreams: [] }
+    return {
+      upstreams: [],
+      deleted: false
+    }
   },
   mounted () {
     this.getUpstreams()
@@ -54,11 +62,12 @@ export default {
       })
     },
     deleteUpstream (upstream) {
-      if (confirm('Are you sure ?')) {
-        upstream.destroy().then(() => {
-          this.upstreams.splice(this.upstreams.indexOf(upstream), 1)
-        })
-      }
+      if (!confirm('Are you sure ?')) return
+      this.deleted = false
+      upstream.destroy().then(() => {
+        this.deleted = true
+        this.upstreams.splice(this.upstreams.indexOf(upstream), 1)
+      })
     }
   }
 }

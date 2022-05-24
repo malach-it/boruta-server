@@ -1,5 +1,6 @@
 <template>
   <div class="relyingParty-list">
+    <Toaster :active="deleted" message="Relying party has been deleted" type="error" />
     <router-link :to="{ name: 'new-relying-party' }" class="ui teal main create button">Add a relying party</router-link>
     <div class="container">
       <div class="ui three column relyingParties stackable grid" v-if="relyingParties.length">
@@ -25,7 +26,6 @@
               <span class="description">{{ relyingParty.id }}</span>
             </div>
           </div>
-          <FormErrors v-if="relyingParty.errors" :errors="relyingParty.errors" />
         </div>
         </div>
       </div>
@@ -34,16 +34,19 @@
 </template>
 
 <script>
-import FormErrors from '../../components/Forms/FormErrors.vue'
 import RelyingParty from '../../models/relying-party.model'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'relying-party-list',
   components: {
-    FormErrors
+    Toaster
   },
   data () {
-    return { relyingParties: [] }
+    return {
+      relyingParties: [],
+      deleted: false
+    }
   },
   mounted () {
     this.getRelyingParties()
@@ -55,11 +58,12 @@ export default {
       })
     },
     deleteRelyingParty (relyingParty) {
-      if (confirm('Are you sure ?')) {
-        relyingParty.destroy().then(() => {
-          this.relyingParties.splice(this.relyingParties.indexOf(relyingParty), 1)
-        })
-      }
+      if (!confirm('Are you sure ?')) return
+      this.deleted = false
+      relyingParty.destroy().then(() => {
+        this.deleted = true
+        this.relyingParties.splice(this.relyingParties.indexOf(relyingParty), 1)
+      })
     }
   }
 }

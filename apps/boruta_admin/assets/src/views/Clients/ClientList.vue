@@ -1,5 +1,6 @@
 <template>
   <div class="client-list">
+    <Toaster :active="deleted" message="Client has been deleted" type="error" />
     <router-link :to="{ name: 'new-client' }" class="ui teal main create button">Add a client</router-link>
     <div class="container">
       <div class="ui two column clients stackable grid" v-if="clients.length">
@@ -52,11 +53,18 @@
 
 <script>
 import Client from '../../models/client.model'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'client-list',
+  components: {
+    Toaster
+  },
   data () {
-    return { clients: [] }
+    return {
+      clients: [] ,
+      deleted: false
+    }
   },
   mounted () {
     this.getClients()
@@ -68,11 +76,12 @@ export default {
       })
     },
     deleteClient (client) {
-      if (confirm('Are you sure ?')) {
-        client.destroy().then(() => {
-          this.clients.splice(this.clients.indexOf(client), 1)
-        })
-      }
+      if (!confirm('Are you sure ?')) return
+      this.deleted = false
+      client.destroy().then(() => {
+        this.deleted = true
+        this.clients.splice(this.clients.indexOf(client), 1)
+      })
     }
   }
 }

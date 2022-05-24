@@ -1,5 +1,6 @@
 <template>
   <div class="user-list">
+    <Toaster :active="deleted" message="User has been deleted" type="error" />
     <div class="container">
       <div class="ui three column stackable grid" v-if="users.length">
         <div v-for="user in users" class="column" :key="user.id">
@@ -33,11 +34,18 @@
 
 <script>
 import User from '../../models/user.model'
+import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'user-list',
+  components: {
+    Toaster
+  },
   data () {
-    return { users: [] }
+    return {
+      users: [],
+      deleted: false
+    }
   },
   mounted () {
     this.getUsers()
@@ -49,11 +57,12 @@ export default {
       })
     },
     deleteUser (user) {
-      if (confirm('Are you sure ?')) {
-        user.destroy().then(() => {
-          this.users.splice(this.users.indexOf(user), 1)
-        })
-      }
+      if (!confirm('Are you sure ?')) return
+      this.deleted = false
+      user.destroy().then(() => {
+        this.deleted = true
+        this.users.splice(this.users.indexOf(user), 1)
+      })
     }
   }
 }
