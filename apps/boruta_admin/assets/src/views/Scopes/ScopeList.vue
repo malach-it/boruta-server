@@ -1,5 +1,7 @@
 <template>
   <div id="scope-list">
+    <Toaster :active="saved" message="Scope has been saved" type="success" />
+    <Toaster :active="deleted" message="Scope has been deleted" type="error" />
     <div class="container">
       <div class="ui segments" v-if="scopes.length">
         <div v-for="(scope, index) in scopes" class="ui mini highlightable segment" :key="index">
@@ -61,10 +63,20 @@
 
 <script>
 import Scope from '../../models/scope.model'
+import Toaster from '../../components/Toaster.vue'
+
 export default {
   name: 'client-list',
+  components: {
+    Toaster
+  },
   data () {
-    return { scopes: [], errors: null }
+    return {
+      scopes: [],
+      errors: null,
+      saved: false,
+      deleted: false
+    }
   },
   mounted () {
     this.getScopes()
@@ -92,14 +104,18 @@ export default {
     },
     saveScope (scope) {
       this.errors = null
+      this.saved = false
       scope.save().then((scope) => {
+        this.saved = true
         scope.edit = false
       })
     },
     deleteScope (scope) {
       if (!confirm('Are you sure ?')) return
+      this.deleted = false
       if (scope.persisted) {
         scope.destroy().then(() => {
+          this.deleted = true
           this.scopes.splice(
             this.scopes.indexOf(scope),
             1
