@@ -164,6 +164,9 @@ export default {
       }
     }
   }
+  input[disabled]~label {
+    color: #ddd!important;
+  }
   .label {
     cursor: default;
   }
