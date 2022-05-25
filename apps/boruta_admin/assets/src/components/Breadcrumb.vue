@@ -67,16 +67,6 @@ export default {
 .ui.breadcrumb {
   font-size: 1em;
   line-height: 1em;
-  .divider {
-    color: white!important;
-  }
-  a.section {
-    font-weight: bold;
-    color: rgba(153, 153, 153, 1.0)!important;
-    &:hover {
-      color: rgba(153, 153, 153, 0.7)!important;
-    }
-  }
   .section {
     display: inline;
   }

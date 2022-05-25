@@ -1,9 +1,14 @@
 <template>
-  <div id="app">
-    <Header ref="header" />
+  <div id="app" :class="{ 'dark': currentMode }">
+    <Header ref="header" :darkMode="currentMode" />
     <div id="main" ref="main">
       <div class="sidebar-menu">
-        <div class="ui big vertical inverted fluid tabular menu">
+        <div class="ui big vertical fluid tabular menu" :class="{ 'inverted': currentMode }">
+          <a @click="toggleDarkMode()">
+            <div class="dark-mode item">
+              <i class="sun icon" :class="{ 'outline': currentMode }"></i>
+            </div>
+          </a>
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'dashboard' }">
@@ -37,7 +42,7 @@
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'relying-parties' }">
-            <div class="users item" :class="{'active': isActive }">
+            <div class="relying-parties item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="users icon"></i>
                 <span>Relying parties</span>
@@ -86,25 +91,23 @@ export default {
     Header,
     Breadcrumb
   },
-  mounted () {
-    const sidebarOffset = this.$refs.header.$el.offsetHeight
-
-    document.addEventListener('scroll', () => {
-      const main = this.$refs.main
-
-      if (window.scrollY < sidebarOffset) {
-        main.classList.remove('fixed-sidebar')
-      } else {
-        main.classList.add('fixed-sidebar')
-      }
-    })
+  data() {
+    return {
+      currentMode: JSON.parse(localStorage.getItem('dark_mode'))
+    }
+  },
+  methods: {
+    toggleDarkMode() {
+      this.currentMode = !this.currentMode
+      localStorage.setItem('dark_mode', this.currentMode)
+    }
   }
 }
 </script>
 
 <style lang="scss">
 #app {
-  height: 100%;
+  min-height: 100vh;
   position: relative;
   .ui.label {
     margin: 5px;
@@ -135,78 +138,14 @@ export default {
   .ui.menu>.item {
     border-radius: 0!important;
   }
-  .ui.form {
-    position: relative;
-    select, input {
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      background: #393939;
-      color: white;
-    }
-    label {
-      color: white!important;
-    }
-    .ui.input {
-      color: white;
-    }
-    .error-message {
-      color: #e09494!important;
-      position: absolute;
-      bottom: -.2em;
-      left: 1em;
-    }
-    .error.field {
-      label {
-        color: #e09494!important;
-      }
-      select, input {
-        border: 1px solid #e09494;
-        background: #493939;
-      }
-    }
-  }
-  input[disabled]~label {
-    color: #ddd!important;
-  }
   .label {
     cursor: default;
-  }
-  .olive {
-    background: rgba(61, 61, 61, 1.0)!important;
-    &.button:hover, &.label:hover {
-      background: rgba(61, 61, 61, 0.7)!important;
-    }
-  }
-  .violet {
-    background: rgba(131, 52, 113, 1.0)!important;
-    &.button:hover, &.label:hover {
-      background: rgba(131, 52, 113, 0.7)!important;
-    }
-  }
-  .blue {
-    background: rgba(34, 112, 147,1.0)!important;
-    &.button:hover, &.label:hover {
-      background: rgba(34, 112, 147,0.7)!important;
-    }
-  }
-  .red {
-    background: rgba(179, 57, 57,1.0)!important;
-    &.button:hover, &.label:hover {
-      background: rgba(179, 57, 57,0.7)!important;
-    }
-  }
-  .teal {
-    background: rgba(33, 140, 116,1.0)!important;
-    &.button:hover, &.label:hover {
-      background: rgba(33, 140, 116,0.7)!important;
-    }
   }
 }
 #main {
   position: relative;
   display: flex;
   min-height: calc(100% - 41px);
-  background: #1b1c1d;
-  color: white;
   .main.create.button {
     position: absolute;
     top: .5em;
@@ -234,17 +173,19 @@ export default {
     }
   }
   .sidebar-menu {
-    background: #1b1c1d;
     min-width: 200px;
-    color: white;
-    border-right: 1px solid rgba(255,255,255,.05);
+    height: 100%;
     .menu {
+      height: 100%;
       border: none;
       .item {
         position: relative;
         padding: 0;
         min-width: 4em;
         min-height: 4em;
+        border: 1px solid #d4d4d5;
+        border-top: none;
+        cursor: pointer;
         span {
           margin-left: 1.5em;
           margin-right: 4em;
@@ -256,13 +197,13 @@ export default {
           right: 1.5em;
         }
         &.active {
-          background: rgba(255,255,255,.05);
-          border: none;
           .dropdown {
             display: block;
-          }
-          &:hover {
-            background: rgba(255,255,255,.08);
+            .subitem {
+              &:last-child {
+                border-bottom: none;
+              }
+            }
           }
         }
         &:not(.active):hover {
@@ -270,10 +211,9 @@ export default {
             display: block;
             position: absolute;
             left: 100%;
-            top: -2px;
+            top: -1px;
             width: 200px;
             z-index: 1000;
-            border: 1px solid rgba(255,255,255,.03);
             .subitem {
               text-align: left;
             }
@@ -284,44 +224,45 @@ export default {
         }
       }
       a {
+        color: rgba(0,0,0,.87);
         display: block;
         height: 100%;
       }
       .dropdown {
         display: none;
-        background: #1b1c1d;
+        background: white;
+        border-top: 1px solid #d4d4d5;
         .subitem {
-          text-align: right;
           position: relative;
+          border: 1px solid #d4d4d5;
+          border-top: none;
+          text-align: right;
           font-size: .85em;
           height: 3rem;
           span {
+            line-height: 3rem;
             padding-left: 2rem;
             margin: 1em;
           }
           a {
-            color: white;
-            &.active {
-              background: inherit;
-              &:hover {
-                background: rgba(255,255,255,.08);
-              }
-            }
+            font-weight: normal!important;
             &.router-link-exact-active {
-              background: rgba(255,255,255,.05);
-              border: none;
-              &:hover {
-                background: rgba(255,255,255,.08);
-              }
+              font-weight: bold!important;
             }
             &:hover {
-              background: rgba(255,255,255,.08);
+              font-weight: bold!important;
             }
           }
-          span {
-            line-height: 3rem;
-          }
         }
+      }
+    }
+    .dark-mode {
+      text-align: center;
+      @media screen and (min-width: 1127px) {
+        border: none!important;
+        position: fixed!important;
+        bottom: 0;
+        left: 0;
       }
     }
   }
@@ -350,8 +291,13 @@ export default {
       }
     }
   }
-  .ui.header {
-    color: white;
+  .ui.form {
+    position: relative;
+    .error-message {
+      position: absolute;
+      bottom: -.2em;
+      left: 1em;
+    }
   }
   .ui.segments {
     margin: 0;
@@ -360,13 +306,7 @@ export default {
     }
   }
   .ui.segment {
-    background: rgba(255,255,255,.05);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.1);
     margin-bottom: 1rem;
-    &.highlightable:hover {
-      background: rgba(255,255,255,.08);
-    }
   }
   .content-wrapper {
     flex: 1;
@@ -403,18 +343,154 @@ export default {
       }
     }
   }
-  @media screen and (min-width: 1127px) {
-    .sidebar-menu {
-      height: 100%;
-    }
-    &.fixed-sidebar {
-      padding-left: 200px;
-      .sidebar-menu {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
+}
+#app.dark {
+  background: #1b1c1d;
+  color: white;
+  .sidebar-menu {
+    background: #1b1c1d;
+    color: white;
+    border-top: 1px solid rgba(255,255,255,.05);
+    .menu {
+      border: none;
+      .item {
+        border: 1px solid rgba(255,255,255,.05);
+        border-top: none;
+        &.active {
+          border: none;
+          background: rgba(255,255,255,.05);
+          &:hover {
+            background: rgba(255,255,255,.08);
+            &:not(.active) {
+              border: 1px solid rgba(255,255,255,.03);
+            }
+          }
+        }
+        &:hover {
+          color: white;
+        }
+        a {
+          color: white;
+        }
       }
+      .dropdown {
+        border: none;
+        background: #1b1c1d;
+        border-top: 1px solid rgba(255,255,255,.05);
+        .subitem {
+          border: none;
+          a {
+            color: white;
+            font-weight: normal!important;
+            &.active {
+              background: inherit;
+              &:hover {
+                background: rgba(255,255,255,.08);
+              }
+            }
+            &.router-link-exact-active {
+              background: rgba(255,255,255,.05);
+              border: none;
+              &:hover {
+                background: rgba(255,255,255,.08);
+              }
+            }
+            &:hover {
+              background: rgba(255,255,255,.08);
+            }
+          }
+        }
+      }
+    }
+  }
+  .ui.form {
+    position: relative;
+    select, input {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #393939;
+      color: white;
+    }
+    label {
+      color: white!important;
+    }
+    .ui.input {
+      color: white;
+    }
+    .error-message {
+      color: #e09494!important;
+      position: absolute;
+      bottom: -.2em;
+      left: 1em;
+    }
+    .error.field {
+      label {
+        color: #e09494!important;
+      }
+      select, input {
+        border: 1px solid #e09494;
+        background: #493939;
+      }
+    }
+  }
+  input[disabled]~label {
+    color: #ddd!important;
+  }
+  .ui.segment {
+    background: rgba(255,255,255,.05);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    &.highlightable:hover {
+      background: rgba(255,255,255,.08);
+    }
+  }
+  .ui.breadcrumb {
+    .divider {
+      color: white!important;
+    }
+    a.section {
+      font-weight: bold;
+      color: rgba(153, 153, 153, 1.0)!important;
+      &:hover {
+        color: rgba(153, 153, 153, 0.7)!important;
+      }
+    }
+  }
+  .ui.header {
+    color: white;
+  }
+  .olive {
+    background: rgba(61, 61, 61, 1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(61, 61, 61, 0.7)!important;
+    }
+  }
+  .violet {
+    background: rgba(131, 52, 113, 1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(131, 52, 113, 0.7)!important;
+    }
+  }
+  .blue {
+    background: rgba(34, 112, 147,1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(34, 112, 147,0.7)!important;
+    }
+  }
+  .red {
+    background: rgba(179, 57, 57,1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(179, 57, 57,0.7)!important;
+    }
+  }
+  .teal {
+    background: rgba(33, 140, 116,1.0)!important;
+    &.button:hover, &.label:hover {
+      background: rgba(33, 140, 116,0.7)!important;
+    }
+  }
+  .dark-mode {
+    &:hover {
+      background: inherit!important;
     }
   }
 }

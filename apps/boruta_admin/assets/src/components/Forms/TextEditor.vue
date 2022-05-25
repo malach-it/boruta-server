@@ -49,7 +49,6 @@ export default {
       height: 100%;
     }
     .editor {
-      color: white;
       cursor: text;
       height: 100%;
       border-radius: 6px;

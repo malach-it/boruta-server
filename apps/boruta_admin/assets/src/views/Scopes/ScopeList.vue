@@ -140,6 +140,9 @@ export default {
       padding: 0 1rem;
     }
   }
+  .ui.grid {
+    margin-bottom: -1rem;
+  }
   .column {
     padding: 1rem!important;
     display: flex;

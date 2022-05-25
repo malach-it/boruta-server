@@ -10,6 +10,7 @@ export default {
 
 <style lang="scss">
 body {
-  background: #1b1c1d;
+  min-height: 100%;
+  height: auto;
 }
 </style>

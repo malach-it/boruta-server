@@ -1,6 +1,6 @@
 <template>
-  <div class="header">
-    <div class="ui main inverted menu">
+  <div class="header" :class="{ 'dark': darkMode }">
+    <div class="ui main menu" :class="{ 'inverted': darkMode }">
       <router-link :to="{ name: 'home' }" class="logo item">
         Boruta
       </router-link>
@@ -21,6 +21,7 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'Header',
+  props: ['darkMode'],
   computed: {
     ...mapGetters(['currentUser', 'isAuthenticated'])
   },
@@ -36,8 +37,13 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.header {
+.header.dark {
   background: #1b1c1d;
+  .main.menu {
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+}
+.header {
   max-width: 100%;
   overflow: hidden;
   .item.logo {
@@ -46,7 +52,6 @@ export default {
   }
   .main.menu {
     border-radius: 0;
-    border-bottom: 1px solid rgba(255,255,255,.08);
   }
 
   @media screen and (max-width: 1127px) {
