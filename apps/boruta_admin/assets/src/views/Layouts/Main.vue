@@ -96,6 +96,19 @@ export default {
       currentMode: JSON.parse(localStorage.getItem('dark_mode'))
     }
   },
+  mounted () {
+    const sidebarOffset = this.$refs.header.$el.offsetHeight
+
+    document.addEventListener('scroll', () => {
+      const main = this.$refs.main
+
+      if (window.scrollY < sidebarOffset) {
+        main.classList.remove('fixed-sidebar')
+      } else {
+        main.classList.add('fixed-sidebar')
+      }
+    })
+  },
   methods: {
     toggleDarkMode() {
       this.currentMode = !this.currentMode
@@ -174,7 +187,6 @@ export default {
   }
   .sidebar-menu {
     min-width: 200px;
-    height: 100%;
     .menu {
       height: 100%;
       border: none;
@@ -226,7 +238,6 @@ export default {
       a {
         color: rgba(0,0,0,.87);
         display: block;
-        height: 100%;
       }
       .dropdown {
         display: none;
@@ -263,6 +274,17 @@ export default {
         position: fixed!important;
         bottom: 0;
         left: 0;
+      }
+    }
+  }
+  &.fixed-sidebar {
+    @media screen and (min-width: 1127px) {
+      padding-left: 200px;
+      .sidebar-menu {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 100;
       }
     }
   }
