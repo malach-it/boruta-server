@@ -175,8 +175,4 @@ defmodule BorutaIdentity.Accounts do
   defdelegate get_user_by_email(email), to: Users
   defdelegate get_user_by_session_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
-
-  ## Deprecated Sessions
-
-  defdelegate generate_user_session_token(user), to: Sessions
 end

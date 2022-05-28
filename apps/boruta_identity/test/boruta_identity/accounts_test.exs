@@ -707,31 +707,10 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "generate_user_session_token/1" do
-    setup do
-      %{user: user_fixture()}
-    end
-
-    test "generates a token", %{user: user} do
-      token = Accounts.generate_user_session_token(user)
-      assert user_token = Repo.get_by(UserToken, token: token)
-      assert user_token.context == "session"
-
-      # Creating the same token for another user should fail
-      assert_raise Ecto.ConstraintError, fn ->
-        Repo.insert!(%UserToken{
-          token: user_token.token,
-          user_id: user_fixture().id,
-          context: "session"
-        })
-      end
-    end
-  end
-
   describe "get_user_by_session_token/1" do
     setup do
       user = user_fixture()
-      token = Accounts.generate_user_session_token(user)
+      token = BorutaIdentityWeb.ConnCase.generate_user_session_token(user)
       %{user: user, token: token}
     end
 

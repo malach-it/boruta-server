@@ -17,6 +17,10 @@ defmodule BorutaIdentityWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.Repo
+  alias BorutaIdentityWeb.Authenticable
   alias Ecto.Adapters.SQL.Sandbox
 
   using do
@@ -59,17 +63,30 @@ defmodule BorutaIdentityWeb.ConnCase do
   end
 
   @doc """
+  Generates a session token.
+  """
+  @spec generate_user_session_token(user :: User.t()) :: token :: String.t()
+  def generate_user_session_token(user) do
+    User.login_changeset(user) |> Repo.update()
+
+    {token, user_token} = UserToken.build_session_token(user)
+    Repo.insert!(user_token)
+    token
+  end
+
+  @doc """
   Logs the given `user` into the `conn`.
 
   It returns an updated `conn`.
   """
   # TODO typespec
-  def log_in(conn, user) do
-    token = BorutaIdentity.Accounts.generate_user_session_token(user)
+  def log_in(conn, user, params \\ %{}) do
+    token = generate_user_session_token(user)
 
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
-    |> Plug.Conn.put_session(:user_token, token)
+    |> Map.put(:body_params, params)
+    |> Authenticable.store_user_session(token)
   end
 
   def with_a_request(_params) do
