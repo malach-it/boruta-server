@@ -9,7 +9,7 @@ defmodule BorutaIdentity.Accounts.DeliveriesTest do
 
   describe "deliver_user_reset_password_instructions/2" do
     setup do
-      %{user: user_fixture()}
+      {:ok, user: user_fixture()}
     end
 
     test "sends token through notification", %{user: user} do

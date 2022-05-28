@@ -1,4 +1,4 @@
-defmodule BorutaIdentity.Accounts.User do
+defmodule BorutaIdentity.Accounts.Internal.User do
   @moduledoc false
 
   use Ecto.Schema
@@ -104,21 +104,6 @@ defmodule BorutaIdentity.Accounts.User do
   end
 
   @doc """
-  A user changeset for changing the email.
-
-  It requires the email to change otherwise an error is added.
-  """
-  def email_changeset(user, attrs) do
-    user
-    |> cast(attrs, [:email])
-    |> validate_email()
-    |> case do
-      %{changes: %{email: _}} = changeset -> changeset
-      %{} = changeset -> add_error(changeset, :email, "did not change")
-    end
-  end
-
-  @doc """
   A user changeset for changing the password.
 
   ## Options
@@ -155,7 +140,7 @@ defmodule BorutaIdentity.Accounts.User do
   @doc """
   Verifies the password.
   """
-  def valid_password?(%BorutaIdentity.Accounts.User{hashed_password: hashed_password}, password)
+  def valid_password?(%__MODULE__{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
     Argon2.verify_pass(password, hashed_password)
   end

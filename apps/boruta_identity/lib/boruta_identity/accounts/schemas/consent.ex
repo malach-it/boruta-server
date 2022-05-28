@@ -4,7 +4,7 @@ defmodule BorutaIdentity.Accounts.Consent do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.Internal.User
 
   @type t :: %__MODULE__{
           id: String.t(),

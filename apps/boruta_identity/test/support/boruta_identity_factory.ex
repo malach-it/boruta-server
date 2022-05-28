@@ -4,9 +4,20 @@ defmodule BorutaIdentity.Factory do
   use ExMachina.Ecto, repo: BorutaIdentity.Repo
 
   alias BorutaIdentity.Accounts.Consent
+  alias BorutaIdentity.Accounts.Internal.User
   alias BorutaIdentity.RelyingParties.ClientRelyingParty
   alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.RelyingParties.Template
+
+  # @password "hello world!"
+  @hashed_password "$argon2id$v=19$m=131072,t=8,p=4$9lPv7KsJogno0FlnhaRQXA$TeTY9FYjR1HJtZzg+N1z0oDC+0Mn7buPpOMhDP+M2Ik"
+
+  def internal_user_factory do
+    %User{
+      email: "user#{System.unique_integer()}@example.com",
+      hashed_password: @hashed_password
+    }
+  end
 
   def consent_factory do
     %Consent{

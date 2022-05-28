@@ -20,7 +20,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
     field :token, :binary
     field :context, :string
     field :sent_to, :string
-    belongs_to :user, BorutaIdentity.Accounts.User
+    belongs_to :user, BorutaIdentity.Accounts.Internal.User
 
     timestamps(updated_at: false)
   end
@@ -107,7 +107,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
 
   The query returns the user token record.
   """
-  def verify_change_email_token_query(token, context) do
+  def verify_confirm_email_token_query(token, context) do
     case Base.url_decode64(token, padding: false) do
       {:ok, decoded_token} ->
         hashed_token = :crypto.hash(@hash_algorithm, decoded_token)

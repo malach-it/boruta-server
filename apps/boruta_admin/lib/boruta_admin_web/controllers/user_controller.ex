@@ -5,7 +5,7 @@ defmodule BorutaAdminWeb.UserController do
     authorize: 2
   ]
 
-  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.Internal.User
   alias BorutaIdentity.Admin
 
   plug :authorize, ["users:manage:all"]

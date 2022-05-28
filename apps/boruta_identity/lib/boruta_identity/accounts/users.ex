@@ -3,7 +3,7 @@ defmodule BorutaIdentity.Accounts.Users do
 
   import Ecto.Query
 
-  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.Internal.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo

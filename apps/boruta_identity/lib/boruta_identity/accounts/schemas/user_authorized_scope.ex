@@ -4,7 +4,7 @@ defmodule BorutaIdentity.Accounts.UserAuthorizedScope do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.Internal.User
 
   @type t :: %__MODULE__{
           user: Ecto.Association.NotLoaded.t() | User.t(),

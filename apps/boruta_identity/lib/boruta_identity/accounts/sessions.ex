@@ -53,6 +53,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
@@ -70,7 +71,10 @@ defmodule BorutaIdentity.Accounts.Sessions do
         }
 
   @callback get_user(user_params :: user_params()) ::
-              {:ok, user :: User.t()} | {:error, reason :: String.t()}
+              {:ok, implmentation_user :: any()} | {:error, reason :: String.t()}
+
+  @callback domain_user!(implementation_user :: any()) ::
+              user :: User.t()
 
   @callback check_user_against(
               user :: User.t(),
@@ -108,6 +112,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
          {:ok, user} <-
            apply(client_impl, :check_user_against, [user, authentication_params, client_rp]),
          {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
+      user = apply(client_impl, :domain_user!, [user])
       module.user_authenticated(context, user, session_token)
     else
       {:error, _reason} ->
@@ -147,8 +152,9 @@ defmodule BorutaIdentity.Accounts.Sessions do
   Generates a session token.
   """
   @spec generate_user_session_token(user :: User.t()) :: token :: String.t()
+  @deprecated "refactoring"
   def generate_user_session_token(user) do
-    User.login_changeset(user) |> Repo.update()
+    Internal.User.login_changeset(user) |> Repo.update()
 
     {token, user_token} = UserToken.build_session_token(user)
     Repo.insert!(user_token)

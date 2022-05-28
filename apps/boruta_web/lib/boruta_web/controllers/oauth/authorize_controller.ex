@@ -9,7 +9,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
-  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.Internal.User
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
 
   def authorize(%Plug.Conn{} = conn, _params) do

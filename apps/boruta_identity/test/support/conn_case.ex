@@ -17,6 +17,7 @@ defmodule BorutaIdentityWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
@@ -66,8 +67,9 @@ defmodule BorutaIdentityWeb.ConnCase do
   Generates a session token.
   """
   @spec generate_user_session_token(user :: User.t()) :: token :: String.t()
-  def generate_user_session_token(user) do
-    User.login_changeset(user) |> Repo.update()
+  def generate_user_session_token(%User{id: user_id}) do
+    user = Repo.get!(Internal.User, user_id)
+    Internal.User.login_changeset(user) |> Repo.update()
 
     {token, user_token} = UserToken.build_session_token(user)
     Repo.insert!(user_token)

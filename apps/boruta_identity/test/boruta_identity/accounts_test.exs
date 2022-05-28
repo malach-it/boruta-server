@@ -5,6 +5,7 @@ defmodule BorutaIdentity.AccountsTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
@@ -684,26 +685,7 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "returns the user if the email exists" do
       %{id: id} = user = user_fixture()
-      assert %User{id: ^id} = Accounts.get_user_by_email(user.email)
-    end
-  end
-
-  describe "deliver_update_email_instructions/3" do
-    setup do
-      %{user: user_fixture()}
-    end
-
-    test "sends token through notification", %{user: user} do
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_update_email_instructions(user, "current@example.com", url)
-        end)
-
-      {:ok, token} = Base.url_decode64(token, padding: false)
-      assert user_token = Repo.get_by(UserToken, token: :crypto.hash(:sha256, token))
-      assert user_token.user_id == user.id
-      assert user_token.sent_to == user.email
-      assert user_token.context == "change:current@example.com"
+      assert %Internal.User{id: ^id} = Accounts.get_user_by_email(user.email)
     end
   end
 

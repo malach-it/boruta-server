@@ -4,6 +4,7 @@ defmodule BorutaIdentity.AccountsFixtures do
   entities via the `BorutaIdentity.Accounts` context.
   """
 
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Repo
@@ -16,16 +17,17 @@ defmodule BorutaIdentity.AccountsFixtures do
 
   def user_fixture(attrs \\ %{}) do
     # TODO user with static password to speed up tests
-    {:ok, user} =
-      Repo.insert(
-        %User{
+    implementation_user =
+      Repo.insert!(
+        %Internal.User{
           email: unique_user_email(),
           hashed_password: @hashed_password
         }
         |> Ecto.Changeset.change(attrs)
       )
+      |> Repo.preload(:authorized_scopes)
 
-    user |> Repo.preload(:authorized_scopes)
+    struct(User, Map.from_struct(implementation_user))
   end
 
   def user_scopes_fixture(user, attrs \\ %{}) do

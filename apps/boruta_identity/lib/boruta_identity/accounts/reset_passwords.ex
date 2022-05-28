@@ -115,7 +115,8 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                   ) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    with {:ok, user} <- apply(client_impl, :get_user, [reset_password_instructions_params]) do
+    with {:ok, implementation_user} <- apply(client_impl, :get_user, [reset_password_instructions_params]) do
+      user = apply(client_impl, :domain_user!, [implementation_user])
       apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
     end
 

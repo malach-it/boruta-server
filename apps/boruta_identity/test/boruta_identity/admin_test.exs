@@ -1,15 +1,16 @@
 defmodule BorutaIdentity.AdminTest do
   use BorutaIdentity.DataCase
 
-  import BorutaIdentity.AccountsFixtures
+  import BorutaIdentity.Factory
 
+  alias BorutaIdentity.Accounts.Internal.User
+  alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Admin
-  alias BorutaIdentity.Accounts.{User, UserAuthorizedScope}
   alias BorutaIdentity.Repo
 
   describe "update_user_authorized_scopes/2" do
     test "returns an error on duplicates" do
-      user = user_fixture()
+      user = insert(:internal_user)
 
       {:error, %Ecto.Changeset{} = changeset} =
         Admin.update_user_authorized_scopes(user, [%{"name" => "test"}, %{"name" => "test"}])
@@ -18,7 +19,7 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "stores user scopes" do
-      user = user_fixture()
+      user = insert(:internal_user)
 
       {:ok,
        %User{
@@ -40,7 +41,7 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns users" do
-      user = user_fixture()
+      user = insert(:internal_user) |> Repo.preload(:authorized_scopes)
       assert Admin.list_users() == [user]
     end
   end
@@ -51,7 +52,7 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns deleted user" do
-      %User{id: user_id} = user_fixture()
+      %User{id: user_id} = insert(:internal_user)
       assert {:ok, %User{id: ^user_id}} = Admin.delete_user(user_id)
       assert Repo.get(User, user_id) == nil
     end

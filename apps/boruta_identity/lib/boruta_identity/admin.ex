@@ -5,7 +5,8 @@ defmodule BorutaIdentity.Admin do
 
   import Ecto.Query
 
-  alias BorutaIdentity.Accounts.{User, UserAuthorizedScope}
+  alias BorutaIdentity.Accounts.Internal.User
+  alias BorutaIdentity.Accounts.{UserAuthorizedScope}
   alias BorutaIdentity.Repo
 
   @doc """

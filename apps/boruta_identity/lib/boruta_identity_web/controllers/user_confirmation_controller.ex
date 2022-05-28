@@ -37,9 +37,8 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   # leaked token giving the user access to the account.
   def confirm(conn, %{"token" => token}) do
     client_id = client_id_from_request(conn)
-    current_user = conn.assigns[:current_user]
 
-    Accounts.confirm_user(conn, client_id, current_user, token, __MODULE__)
+    Accounts.confirm_user(conn, client_id, token, __MODULE__)
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication

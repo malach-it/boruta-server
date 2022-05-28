@@ -30,6 +30,7 @@ defmodule BorutaIdentity.Accounts.Consents do
   alias Boruta.Ecto.Admin
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.Consent
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.Repo
@@ -75,7 +76,7 @@ defmodule BorutaIdentity.Accounts.Consents do
         ) :: callback_result :: any()
   def consent(context, _client_id, user, params, module) do
     case user
-         |> User.consent_changeset(%{consents: [params]})
+         |> Internal.User.consent_changeset(%{consents: [params]})
          |> Repo.update() do
       {:ok, _user} ->
         module.consented(context)
