@@ -294,7 +294,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "validates email uniqueness", %{client_id: client_id} do
-      %{email: email} = user_fixture()
+      %{username: email} = user_fixture()
       context = :context
       user_params = %{email: email}
       confirmation_callback_fun = & &1
@@ -342,8 +342,7 @@ defmodule BorutaIdentity.AccountsTest do
                )
 
       assert session_token
-      assert user.email == email
-      assert is_binary(user.hashed_password)
+      assert user.username == email
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
     end
@@ -486,7 +485,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "returns an error without password", %{client_id: client_id} do
-      %User{email: email} = user_fixture()
+      %Internal.User{email: email} = insert(:internal_user)
       context = :context
       authentication_params = %{email: email}
 
@@ -504,7 +503,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "returns an error with a wrong password", %{client_id: client_id} do
-      %User{email: email} = user_fixture()
+      %Internal.User{email: email} = insert(:internal_user)
       context = :context
       authentication_params = %{email: email, password: "wrong password"}
 
@@ -524,7 +523,7 @@ defmodule BorutaIdentity.AccountsTest do
     test "returns an error with a wrong password (confirmable)", %{
       confirmable_client_id: client_id
     } do
-      %User{email: email} = user_fixture()
+      %Internal.User{email: email} = insert(:internal_user)
       context = :context
       authentication_params = %{email: email, password: "wrong password"}
 
@@ -542,7 +541,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "returns an error if not confirmed", %{confirmable_client_id: client_id} do
-      %User{email: email} = user_fixture()
+      %Internal.User{email: email} = insert(:internal_user)
       context = :context
       authentication_params = %{email: email, password: valid_user_password()}
 
@@ -560,11 +559,14 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "authenticates the user", %{client_id: client_id} do
-      %User{email: email} = user = user_fixture()
+      %Internal.User{id: uid, email: username} = insert(:internal_user)
       context = :context
-      authentication_params = %{email: email, password: valid_user_password()}
+      authentication_params = %{email: username, password: valid_user_password()}
 
-      assert {:user_authenticated, ^context, ^user, session_token} =
+      provider = to_string(Internal)
+      assert {:user_authenticated, ^context,
+              %User{username: ^username, provider: ^provider, uid: ^uid},
+              session_token} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -573,6 +575,38 @@ defmodule BorutaIdentity.AccountsTest do
                )
 
       assert session_token
+    end
+
+    test "does not create multiple users accross multiple authentications", %{client_id: client_id} do
+      %Internal.User{id: uid, email: username} = insert(:internal_user)
+      context = :context
+      authentication_params = %{email: username, password: valid_user_password()}
+
+      provider = to_string(Internal)
+      assert {:user_authenticated, ^context,
+              %User{id: user_id, username: ^username, provider: ^provider, uid: ^uid},
+              session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert session_token
+
+      assert {:user_authenticated, ^context,
+              %User{id: new_user_id, username: ^username, provider: ^provider, uid: ^uid},
+              session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert session_token
+      assert user_id == new_user_id
     end
 
     @tag :skip
@@ -634,10 +668,10 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "deletes session", %{client_id: client_id} do
       context = :context
-      %User{email: email} = user = user_fixture()
+      %User{id: user_id, username: email} = user_fixture()
       authentication_params = %{email: email, password: valid_user_password()}
 
-      assert {:user_authenticated, ^context, ^user, session_token} =
+      assert {:user_authenticated, ^context, %User{id: ^user_id}, session_token} =
                Accounts.create_session(
                  context,
                  client_id,
@@ -685,7 +719,7 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "returns the user if the email exists" do
       %{id: id} = user = user_fixture()
-      assert %Internal.User{id: ^id} = Accounts.get_user_by_email(user.email)
+      assert %User{id: ^id} = Accounts.get_user_by_email(user.username)
     end
   end
 

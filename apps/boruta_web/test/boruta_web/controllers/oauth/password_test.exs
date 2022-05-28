@@ -31,7 +31,7 @@ defmodule BorutaWeb.Oauth.PasswordTest do
         post(
           conn,
           "/oauth/token",
-          "grant_type=password&username=#{resource_owner.email}&password=#{password}&client_id=#{
+          "grant_type=password&username=#{resource_owner.username}&password=#{password}&client_id=#{
             client.id
           }&client_secret=#{client.secret}"
         )

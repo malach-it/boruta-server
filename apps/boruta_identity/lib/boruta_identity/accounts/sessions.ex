@@ -53,7 +53,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
-  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
@@ -78,14 +77,9 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
   @callback check_user_against(
               user :: User.t(),
-              authentication_params :: authentication_params(),
-              relying_party :: RelyingParty.t()
+              authentication_params :: authentication_params()
             ) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
-
-  # TODO move that function out of internal secondary port (bor-156)
-  @callback create_session(user :: User.t()) ::
-              {:ok, session_token :: String.t()} | {:error, changeset :: Ecto.Changeset.t()}
 
   # TODO move that function out of internal secondary port (bor-156)
   @callback delete_session(session_token :: String.t()) :: :ok | {:error, String.t()}
@@ -110,9 +104,10 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
     with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
          {:ok, user} <-
-           apply(client_impl, :check_user_against, [user, authentication_params, client_rp]),
-         {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
-      user = apply(client_impl, :domain_user!, [user])
+           apply(client_impl, :check_user_against, [user, authentication_params]),
+         %User{} = user <- apply(client_impl, :domain_user!, [user]),
+         :ok <- ensure_user_confirmed(user, client_rp),
+         {:ok, user, session_token} <- create_user_session(user) do
       module.user_authenticated(context, user, session_token)
     else
       {:error, _reason} ->
@@ -148,17 +143,23 @@ defmodule BorutaIdentity.Accounts.Sessions do
     end
   end
 
-  @doc """
-  Generates a session token.
-  """
-  @spec generate_user_session_token(user :: User.t()) :: token :: String.t()
-  @deprecated "refactoring"
-  def generate_user_session_token(user) do
-    Internal.User.login_changeset(user) |> Repo.update()
+  @spec create_user_session(user :: User.t()) ::
+          {:ok, user :: User.t(), session_token :: String.t()}
+          | {:error, changeset :: Ecto.Changeset.t()}
+  def create_user_session(%User{} = user) do
+    with {_token, user_token} <- UserToken.build_session_token(user),
+         {:ok, session_token} <- Repo.insert(user_token) do
+      {:ok, user, session_token.token}
+    end
+  end
 
-    {token, user_token} = UserToken.build_session_token(user)
-    Repo.insert!(user_token)
-    token
+  defp ensure_user_confirmed(_user, %RelyingParty{confirmable: false}), do: :ok
+
+  defp ensure_user_confirmed(user, %RelyingParty{confirmable: true}) do
+    case User.confirmed?(user) do
+      true -> :ok
+      false -> {:user_not_confirmed, "Email confirmation is required to authenticate."}
+    end
   end
 
   defp new_session_template(relying_party) do

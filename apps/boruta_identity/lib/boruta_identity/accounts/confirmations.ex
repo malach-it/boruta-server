@@ -48,6 +48,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
+  alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.ConfirmationError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties
@@ -95,7 +96,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
                   ) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    with {:ok, user} <- apply(client_impl, :get_user, [confirmation_instructions_params]) do
+    with %User{} = user <- Accounts.get_user_by_email(confirmation_instructions_params[:email]) do
       apply(client_impl, :send_confirmation_instructions, [user, confirmation_url_fun])
     end
 

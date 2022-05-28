@@ -5,7 +5,7 @@ defmodule BorutaAdminWeb.UserController do
     authorize: 2
   ]
 
-  alias BorutaIdentity.Accounts.Internal.User
+  alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Admin
 
   plug :authorize, ["users:manage:all"]
@@ -44,7 +44,7 @@ defmodule BorutaAdminWeb.UserController do
 
   def current(conn, _) do
     %{"sub" => sub, "username" => username} = conn.assigns[:introspected_token]
-    user = %User{id: sub, email: username}
+    user = %User{id: sub, username: username}
     render(conn, "current.json", user: user)
   end
 end

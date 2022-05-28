@@ -3,24 +3,22 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
+  # TODO split into multiple submodule
   @behaviour BorutaIdentity.Accounts.Confirmations
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
   @behaviour BorutaIdentity.Accounts.Settings
 
-  import Ecto.Query, only: [from: 2]
-
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
-  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   @impl BorutaIdentity.Accounts.Registrations
   def register(registration_params, confirmation_url_fun, opts) do
-    case create_user(registration_params, confirmation_url_fun, opts) do
+    case create_user_multi(registration_params, confirmation_url_fun, opts) do
       {:ok, %{create_user: user}} ->
         {:ok, user}
 
@@ -40,14 +38,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Accounts.Sessions
   def get_user(%{email: email}) when is_binary(email) do
-    user =
-      Repo.one!(
-        from(u in Internal.User,
-          left_join: as in assoc(u, :authorized_scopes),
-          where: u.email == ^email,
-          preload: [authorized_scopes: as]
-        )
-      )
+    user = Repo.get_by!(Internal.User, email: email)
 
     {:ok, user}
   rescue
@@ -58,41 +49,30 @@ defmodule BorutaIdentity.Accounts.Internal do
   def get_user(_authentication_params), do: {:error, "Cannot find an user without an email."}
 
   @impl BorutaIdentity.Accounts.Sessions
-  def domain_user!(user) do
-    struct(User, Map.from_struct(user))
+  def domain_user!(%Internal.User{id: id, email: email}) do
+    %User{
+      uid: id,
+      username: email
+    }
+    |> User.login_changeset(__MODULE__)
+    |> Repo.insert!(
+      on_conflict: {:replace, [:username]},
+      returning: true,
+      conflict_target: [:provider, :uid]
+    )
+    |> Repo.preload([:authorized_scopes, :consents])
   end
 
-  @impl true # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings
-  def check_user_against(user, authentication_params, %RelyingParty{confirmable: false}) do
+  # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings
+  @impl true
+  def check_user_against(user, authentication_params) do
     check_user_password(user, authentication_params[:password])
-  end
-
-  def check_user_against(user, authentication_params, %RelyingParty{confirmable: true}) do
-    with {:ok, user} <- check_user_password(user, authentication_params[:password]) do
-      check_user_confirmed(user)
-    end
   end
 
   defp check_user_password(user, password) do
     case Internal.User.valid_password?(user, password) do
       true -> {:ok, user}
       false -> {:error, "Invalid user password."}
-    end
-  end
-
-  defp check_user_confirmed(user) do
-    case Internal.User.confirmed?(user) do
-      true -> {:ok, user}
-      false -> {:user_not_confirmed, "Email confirmation is required to authenticate."}
-    end
-  end
-
-  @impl BorutaIdentity.Accounts.Sessions
-  def create_session(user) do
-    with {:ok, user} <- Internal.User.login_changeset(user) |> Repo.update(),
-         {_token, user_token} = UserToken.build_session_token(user),
-         {:ok, session_token} <- Repo.insert(user_token) do
-      {:ok, session_token.token}
     end
   end
 
@@ -141,7 +121,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   def send_confirmation_instructions(user, confirmation_url_fun) do
     with {:ok, _email} <-
            Deliveries.deliver_user_confirmation_instructions(
-             domain_user!(user),
+             user,
              confirmation_url_fun
            ) do
       :ok
@@ -149,9 +129,10 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.Confirmations
+  # TODO move confirmation token in internal or move out to domain
   def confirm_user(token) do
     with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
-         %Internal.User{confirmed_at: nil} = user <- Repo.one(query),
+         %User{confirmed_at: nil} = user <- Repo.one(query),
          {:ok, %{user: user}} <- Repo.transaction(confirm_user_multi(user)) do
       {:ok, user}
     else
@@ -168,7 +149,7 @@ defmodule BorutaIdentity.Accounts.Internal do
     |> Repo.update()
   end
 
-  defp create_user(registration_params, confirmation_url_fun, opts) do
+  defp create_user_multi(registration_params, confirmation_url_fun, opts) do
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:create_user, fn _changes ->
       Internal.User.registration_changeset(%Internal.User{}, registration_params)
@@ -180,9 +161,18 @@ defmodule BorutaIdentity.Accounts.Internal do
   defp deliver_confirmation_email(multi, _confirmation_url_fun, false), do: multi
 
   defp deliver_confirmation_email(multi, confirmation_url_fun, true) do
-    Ecto.Multi.run(multi, :deliver_confirmation_mail, fn _repo, %{create_user: user} ->
+    Ecto.Multi.run(multi, :get_user, fn _repo, %{create_user: user} ->
+      domain_user!(user)
+      |> User.login_changeset(__MODULE__)
+      |> Repo.insert(
+        on_conflict: {:replace_all_except, [:id]},
+        returning: true,
+        conflict_target: [:provider, :uid]
+      )
+    end)
+    |> Ecto.Multi.run(:deliver_confirmation_mail, fn _repo, %{get_user: user} ->
       Deliveries.deliver_user_confirmation_instructions(
-        domain_user!(user),
+        user,
         confirmation_url_fun
       )
     end)
@@ -190,7 +180,8 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   defp get_user_by_reset_password_token(token) do
     with {:ok, query} <- UserToken.verify_email_token_query(token, "reset_password"),
-         %Internal.User{} = user <- Repo.one(query) do
+         %User{} = user <- Repo.one(query),
+         %Internal.User{} = user <- Repo.get(Internal.User, user.uid) do
       {:ok, user}
     else
       _ -> {:error, "Given reset password token is invalid."}
@@ -206,7 +197,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   defp confirm_user_multi(user) do
     Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, Internal.User.confirm_changeset(user))
+    |> Ecto.Multi.update(:user, User.confirm_changeset(user))
     |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, ["confirm"]))
   end
 end

@@ -16,14 +16,14 @@ defmodule BorutaIdentity.ResourceOwnersTest do
       user = user_fixture(email: @valid_username, password: @valid_password)
 
       {:ok, result} = ResourceOwners.get_by(username: @valid_username)
-      assert result == %ResourceOwner{sub: user.id, username: user.email}
+      assert result == %ResourceOwner{sub: user.id, username: user.username}
     end
 
     test "returns an user by sub" do
       user = user_fixture(email: @valid_username, password: @valid_password)
 
       {:ok, result} = ResourceOwners.get_by(sub: user.id)
-      assert result == %ResourceOwner{sub: user.id, username: user.email}
+      assert result == %ResourceOwner{sub: user.id, username: user.username}
     end
 
     test "returns nil when username do not exists" do
@@ -37,7 +37,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
     test "returns ok if password match" do
       user = user_fixture(email: @valid_username, password: @valid_password)
 
-      resource_owner = %ResourceOwner{sub: user.id}
+      resource_owner = %ResourceOwner{sub: user.id, username: user.username}
       assert ResourceOwners.check_password(resource_owner, @valid_password) == :ok
     end
 

@@ -6,7 +6,6 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   alias BorutaIdentity.Repo
 
   import BorutaIdentity.AccountsFixtures
-  import BorutaIdentity.Factory
 
   setup do
     %{user: user_fixture()}
@@ -87,7 +86,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
     test "sends a new confirmation token", %{conn: conn, user: user, request: request} do
       conn =
         post(conn, Routes.user_confirmation_path(conn, :create, request: request), %{
-          "user" => %{"email" => user.email}
+          "user" => %{"email" => user.username}
         })
 
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
@@ -99,11 +98,11 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
       conn: conn,
       request: request
     } do
-      user = insert(:internal_user, confirmed_at: DateTime.utc_now())
+      {:ok, user} = user_fixture() |> Ecto.Changeset.change(confirmed_at: DateTime.utc_now()) |> Repo.update()
 
       conn =
         post(conn, Routes.user_confirmation_path(conn, :create, request: request), %{
-          "user" => %{"email" => user.email}
+          "user" => %{"email" => user.username}
         })
 
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
@@ -150,7 +149,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
     end
 
     test "redirects if user is already confirmed", %{conn: conn, request: request} do
-      insert(:internal_user, confirmed_at: DateTime.utc_now())
+      user_fixture() |> Ecto.Changeset.change(confirmed_at: DateTime.utc_now()) |> Repo.update()
 
       signed_in_conn =
         conn

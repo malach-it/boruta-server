@@ -51,6 +51,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
   alias BorutaIdentity.Accounts.RegistrationError
+  alias BorutaIdentity.Accounts.Sessions
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
@@ -94,7 +95,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
              confirmation_url_fun,
              [confirmable?: client_rp.confirmable]
            ]),
-         {:ok, session_token} <- apply(client_impl, :create_session, [user]) do
+         %User{} = user <- apply(client_impl, :domain_user!, [user]),
+         {:ok, user, session_token} <- Sessions.create_user_session(user) do
       # TODO do not log in user if confirmable is set
       module.user_registered(context, user, session_token)
     else

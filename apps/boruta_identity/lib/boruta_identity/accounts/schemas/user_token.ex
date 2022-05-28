@@ -14,13 +14,13 @@ defmodule BorutaIdentity.Accounts.UserToken do
   @change_email_validity_in_days 7
   @session_validity_in_days 60
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  @primary_key {:id, Ecto.UUID, autogenerate: true}
+  @foreign_key_type Ecto.UUID
   schema "users_tokens" do
     field :token, :binary
     field :context, :string
     field :sent_to, :string
-    belongs_to :user, BorutaIdentity.Accounts.Internal.User
+    belongs_to :user, BorutaIdentity.Accounts.User
 
     timestamps(updated_at: false)
   end
@@ -59,7 +59,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
   their email.
   """
   def build_email_token(user, context) do
-    build_hashed_token(user, context, user.email)
+    build_hashed_token(user, context, user.username)
   end
 
   defp build_hashed_token(user, context, sent_to) do
@@ -89,7 +89,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
         query =
           from token in token_and_context_query(hashed_token, context),
             join: user in assoc(token, :user),
-            where: token.inserted_at > ago(^days, "day") and token.sent_to == user.email,
+            where: token.inserted_at > ago(^days, "day") and token.sent_to == user.username,
             select: user
 
         {:ok, query}

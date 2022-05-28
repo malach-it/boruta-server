@@ -96,7 +96,8 @@ defmodule BorutaIdentity.Accounts.Settings do
              %{password: user_update_params[:current_password]},
              client_rp
            ]),
-         {:ok, user} <- apply(client_impl, :update_user, [user, user_update_params]) do
+         {:ok, implementation_user} <- apply(client_impl, :update_user, [user, user_update_params]) do
+      user = apply(client_impl, :domain_user!, [implementation_user])
       module.user_updated(context, user)
     else
       {:error, %Ecto.Changeset{} = changeset} ->

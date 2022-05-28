@@ -6,13 +6,12 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Deliveries
-  alias BorutaIdentity.RelyingParties.RelyingParty
   alias BorutaIdentity.Repo
 
   setup :set_swoosh_global
 
   setup do
-    %{user: user_fixture()}
+    {:ok, user: user_fixture()}
   end
 
   describe "GET /users/reset_password" do
@@ -32,7 +31,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
     test "sends a new reset password token", %{conn: conn, user: user, request: request} do
       conn =
         post(conn, Routes.user_reset_password_path(conn, :create, request: request), %{
-          "user" => %{"email" => user.email}
+          "user" => %{"email" => user.username}
         })
 
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
@@ -105,13 +104,12 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       refute get_session(conn, :user_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
-      assert user = Accounts.get_user_by_email(user.email)
+      assert {:ok, user} = Accounts.Internal.get_user(%{email: user.username})
 
       assert {:ok, _user} =
                Accounts.Internal.check_user_against(
                  user,
-                 %{password: "new valid password"},
-                 %RelyingParty{confirmable: false}
+                 %{password: "new valid password"}
                )
     end
 

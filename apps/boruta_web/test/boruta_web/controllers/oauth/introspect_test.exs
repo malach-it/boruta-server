@@ -114,7 +114,7 @@ defmodule BorutaWeb.Oauth.IntrospectTest do
                "iss" => "boruta",
                "scope" => token.scope,
                "sub" => resource_owner.id,
-               "username" => resource_owner.email
+               "username" => resource_owner.username
              }
     end
 

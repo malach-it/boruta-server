@@ -9,7 +9,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
-  alias BorutaIdentity.Accounts.Internal.User
+  alias BorutaIdentity.Accounts.User
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
 
   def authorize(%Plug.Conn{} = conn, _params) do
@@ -100,7 +100,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp preauthorize(conn, %User{} = current_user) do
     resource_owner = %ResourceOwner{
       sub: current_user.id,
-      username: current_user.email,
+      username: current_user.username,
       last_login_at: current_user.last_login_at
     }
 
@@ -120,7 +120,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     resource_owner = %ResourceOwner{
       sub: current_user.id,
-      username: current_user.email,
+      username: current_user.username,
       last_login_at: current_user.last_login_at
     }
 

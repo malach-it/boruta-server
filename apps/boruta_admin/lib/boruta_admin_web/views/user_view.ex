@@ -14,7 +14,7 @@ defmodule BorutaAdminWeb.UserView do
   def render("user.json", %{user: user}) do
     %{
       id: user.id,
-      email: user.email,
+      email: user.username,
       authorized_scopes: user.authorized_scopes
     }
   end
@@ -23,7 +23,7 @@ defmodule BorutaAdminWeb.UserView do
     %{
       data: %{
         id: user.id,
-        email: user.email
+        email: user.username
       }
     }
   end

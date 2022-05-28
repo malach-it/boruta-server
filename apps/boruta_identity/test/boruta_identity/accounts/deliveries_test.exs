@@ -21,7 +21,7 @@ defmodule BorutaIdentity.Accounts.DeliveriesTest do
       {:ok, token} = Base.url_decode64(token, padding: false)
       assert user_token = Repo.get_by(UserToken, token: :crypto.hash(:sha256, token))
       assert user_token.user_id == user.id
-      assert user_token.sent_to == user.email
+      assert user_token.sent_to == user.username
       assert user_token.context == "reset_password"
     end
   end

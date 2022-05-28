@@ -43,7 +43,7 @@ BorutaAuth.Repo.insert(
 )
 
 # TODO add relying party
-%Boruta.Ecto.Client{}
+{:ok, client} = %Boruta.Ecto.Client{}
 |> Boruta.Ecto.Client.create_changeset(%{
   secret: System.get_env("BORUTA_ADMIN_CLIENT_SECRET", "777"),
   id: System.get_env("BORUTA_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
@@ -55,7 +55,7 @@ BorutaAuth.Repo.insert(
   authorize_scope: true,
   authorized_scopes: BorutaAuth.Repo.all(Boruta.Ecto.Scope) |> Enum.map(&Map.from_struct/1)
 })
-|> BorutaAuth.Repo.insert()
+|> BorutaAuth.Repo.insert(on_conflict: :nothing)
 
 BorutaGateway.Repo.insert(
   %BorutaGateway.Upstreams.Upstream{
@@ -67,12 +67,14 @@ BorutaGateway.Repo.insert(
   on_conflict: :nothing
 )
 
-BorutaIdentity.RelyingParties.create_relying_party(%{
+{:ok, relying_party} = BorutaIdentity.RelyingParties.create_relying_party(%{
   name: "Default",
   registrable: true
 })
 
-{:ok, user} = BorutaIdentity.Accounts.User.registration_changeset(%BorutaIdentity.Accounts.User{}, %{
+BorutaIdentity.RelyingParties.upsert_client_relying_party(client.id, relying_party.id)
+
+{:ok, user} = BorutaIdentity.Accounts.Internal.User.registration_changeset(%BorutaIdentity.Accounts.Internal.User{}, %{
   email: System.get_env("ADMIN_EMAIL", "test@test.test"),
   password: System.get_env("ADMIN_PASSWORD", "passwordesat")
 }) |> BorutaIdentity.Repo.insert()

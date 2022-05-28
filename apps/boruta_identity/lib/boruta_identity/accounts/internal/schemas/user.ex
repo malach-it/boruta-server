@@ -5,34 +5,21 @@ defmodule BorutaIdentity.Accounts.Internal.User do
 
   import Ecto.Changeset
 
-  alias BorutaIdentity.Accounts.Consent
-  alias BorutaIdentity.Accounts.UserAuthorizedScope
-  alias BorutaIdentity.Repo
-
   @type t :: %__MODULE__{
           email: String.t(),
           password: String.t(),
           hashed_password: String.t(),
-          confirmed_at: NaiveDateTime.t(),
-          authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
-          consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
-          last_login_at: DateTime.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
 
   @derive {Inspect, except: [:password]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  @foreign_key_type :binary_id
-  schema "users" do
+  @foreign_key_type Ecto.UUID
+  schema "internal_users" do
     field(:email, :string)
     field(:password, :string, virtual: true)
     field(:hashed_password, :string)
-    field(:confirmed_at, :utc_datetime_usec)
-    field(:last_login_at, :utc_datetime_usec)
-
-    has_many(:authorized_scopes, UserAuthorizedScope)
-    has_many(:consents, Consent, on_replace: :delete)
 
     timestamps()
   end
@@ -60,10 +47,6 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     |> validate_required([:email, :password])
     |> validate_email()
     |> validate_password(opts)
-  end
-
-  def login_changeset(user) do
-    change(user, last_login_at: DateTime.utc_now())
   end
 
   defp validate_email(changeset) do
@@ -123,21 +106,6 @@ defmodule BorutaIdentity.Accounts.Internal.User do
   end
 
   @doc """
-  Confirms the account by setting `confirmed_at`.
-  """
-  def confirm_changeset(user) do
-    now = DateTime.utc_now()
-    change(user, confirmed_at: now)
-  end
-
-  def consent_changeset(user, attrs) do
-    user
-    |> Repo.preload(:consents)
-    |> cast(attrs, [])
-    |> cast_assoc(:consents, with: &Consent.changeset/2)
-  end
-
-  @doc """
   Verifies the password.
   """
   def valid_password?(%__MODULE__{hashed_password: hashed_password}, password)
@@ -149,9 +117,6 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     Argon2.no_user_verify()
     false
   end
-
-  def confirmed?(%__MODULE__{confirmed_at: nil}), do: false
-  def confirmed?(%__MODULE__{confirmed_at: _confirmed_at}), do: true
 
   @doc """
   Validates the current password otherwise adds an error to the changeset.
