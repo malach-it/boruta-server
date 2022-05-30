@@ -3,8 +3,6 @@ defmodule BorutaIdentityWeb.SessionsTest do
 
   import BorutaIdentity.AccountsFixtures
 
-  alias BorutaIdentity.Accounts
-  alias BorutaIdentityWeb.Authenticable
   alias BorutaIdentityWeb.Sessions
 
   @remember_me_cookie "_boruta_identity_web_user_remember_me"
@@ -21,13 +19,13 @@ defmodule BorutaIdentityWeb.SessionsTest do
 
   describe "fetch_current_user/2" do
     test "authenticates user from session", %{conn: conn, user: user} do
-      user_token = Accounts.generate_user_session_token(user)
+      user_token = generate_user_session_token(user)
       conn = conn |> put_session(:user_token, user_token) |> Sessions.fetch_current_user([])
       assert conn.assigns.current_user.id == user.id
     end
 
     test "does not authenticate if data is missing", %{conn: conn, user: user} do
-      _ = Accounts.generate_user_session_token(user)
+      _ = generate_user_session_token(user)
       conn = Sessions.fetch_current_user(conn, [])
       refute get_session(conn, :user_token)
       refute conn.assigns.current_user
@@ -35,7 +33,9 @@ defmodule BorutaIdentityWeb.SessionsTest do
 
     test "authenticates user from cookies", %{conn: conn, user: user} do
       logged_in_conn =
-        conn |> fetch_cookies() |> Authenticable.log_in(user, %{"remember_me" => "true"})
+        conn
+        |> fetch_cookies()
+        |> log_in(user, %{"user" => %{"remember_me" => "true"}})
 
       user_token = logged_in_conn.cookies[@remember_me_cookie]
       %{value: signed_token} = logged_in_conn.resp_cookies[@remember_me_cookie]

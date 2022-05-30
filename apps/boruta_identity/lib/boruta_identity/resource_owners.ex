@@ -6,19 +6,20 @@ defmodule BorutaIdentity.ResourceOwners do
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
     case Accounts.get_user_by_email(username) do
-      %User{id: id, email: email, last_login_at: last_login_at} ->
+      %User{id: id, username: email, last_login_at: last_login_at} ->
         {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
       _ -> {:error, "User not found."}
     end
   end
   def get_by(sub: sub) when not is_nil(sub) do
     case Accounts.get_user(sub) do
-      %User{id: id, email: email, last_login_at: last_login_at} ->
+      %User{id: id, username: email, last_login_at: last_login_at} ->
         {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
       _ -> {:error, "User not found."}
     end
@@ -27,11 +28,12 @@ defmodule BorutaIdentity.ResourceOwners do
   def get_by(_), do: {:error, "User not found."}
 
   @impl Boruta.Oauth.ResourceOwners
-  def check_password(%ResourceOwner{sub: sub}, password) do
-    user = Accounts.get_user(sub)
-    case User.valid_password?(user, password) do
-      true -> :ok
-      false -> {:error, "Invalid password."}
+  def check_password(%ResourceOwner{username: username}, password) do
+    with {:ok, user} <- Accounts.Internal.get_user(%{email: username}),
+         true <- Internal.User.valid_password?(user, password) do
+      :ok
+    else
+      _ -> {:error, "Invalid password."}
     end
   end
 
@@ -47,7 +49,7 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def claims(%ResourceOwner{sub: sub}, scope) do
     case Accounts.get_user(sub) do
-      %User{email: email} ->
+      %User{username: email} ->
         scope
         |> Scope.split()
         |> Enum.reduce(%{}, fn

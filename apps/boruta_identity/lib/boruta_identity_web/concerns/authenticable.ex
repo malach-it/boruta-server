@@ -4,7 +4,6 @@ defmodule BorutaIdentityWeb.Authenticable do
   use BorutaIdentityWeb, :controller
 
   alias Boruta.Oauth
-  alias BorutaIdentity.Accounts
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -16,30 +15,6 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   @spec remember_me_cookie() :: String.t()
   def remember_me_cookie, do: @remember_me_cookie
-
-  @doc """
-  Logs the user in.
-
-  It renews the session ID and clears the whole session
-  to avoid fixation attacks. See the renew_session
-  function to customize this behaviour.
-
-  It also sets a `:live_socket_id` key in the session,
-  so LiveView sessions are identified and automatically
-  disconnected on log out. The line can be safely removed
-  if you are not using LiveView.
-  """
-  @spec log_in(conn :: Plug.Conn.t(), %Accounts.User{}) :: conn :: Plug.Conn.t()
-  @spec log_in(conn :: Plug.Conn.t(), %Accounts.User{}, map()) :: conn :: Plug.Conn.t()
-  def log_in(conn, user, params \\ %{}) do
-    token = Accounts.generate_user_session_token(user)
-
-    conn
-    |> put_session(:user_token, token)
-    |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
-    |> maybe_write_remember_me_cookie(token, params)
-    |> redirect(to: after_sign_in_path(conn))
-  end
 
   @spec store_user_session(conn :: Plug.Conn.t(), session_token :: String.t()) ::
           conn :: Plug.Conn.t()

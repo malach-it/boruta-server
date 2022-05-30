@@ -48,6 +48,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
+  alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.ConfirmationError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.RelyingParties
@@ -95,7 +96,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
                   ) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    with {:ok, user} <- apply(client_impl, :get_user, [confirmation_instructions_params]) do
+    with %User{} = user <- Accounts.get_user_by_email(confirmation_instructions_params[:email]) do
       apply(client_impl, :send_confirmation_instructions, [user, confirmation_url_fun])
     end
 
@@ -111,30 +112,21 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   """
   @spec confirm_user(
           context :: any(),
-          current_user :: User.t() | nil,
           client_id :: String.t(),
           token :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp confirm_user(context, client_id, current_user, token, module) do
+  defwithclientrp confirm_user(context, client_id, token, module) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    case current_user do
-      %User{confirmed_at: confirmed_at} when not is_nil(confirmed_at) ->
+    case apply(client_impl, :confirm_user, [token]) do
+      {:ok, user} ->
+        module.user_confirmed(context, user)
+
+      {:error, _reason} ->
         module.user_confirmation_failure(context, %ConfirmationError{
-          message: "Account has already been confirmed."
+          message: "Account confirmation token is invalid or it has expired."
         })
-
-      _ ->
-        case apply(client_impl, :confirm_user, [token]) do
-          {:ok, user} ->
-            module.user_confirmed(context, user)
-
-          {:error, _reason} ->
-            module.user_confirmation_failure(context, %ConfirmationError{
-              message: "Account confirmation token is invalid or it has expired."
-            })
-        end
     end
   end
 

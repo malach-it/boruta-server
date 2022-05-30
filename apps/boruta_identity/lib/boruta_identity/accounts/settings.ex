@@ -49,10 +49,8 @@ defmodule BorutaIdentity.Accounts.Settings do
 
   alias BorutaIdentity.Accounts.SettingsError
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
-  alias BorutaIdentity.Repo
 
   @type user_update_params :: map()
 
@@ -98,7 +96,8 @@ defmodule BorutaIdentity.Accounts.Settings do
              %{password: user_update_params[:current_password]},
              client_rp
            ]),
-         {:ok, user} <- apply(client_impl, :update_user, [user, user_update_params]) do
+         {:ok, implementation_user} <- apply(client_impl, :update_user, [user, user_update_params]) do
+      user = apply(client_impl, :domain_user!, [implementation_user])
       module.user_updated(context, user)
     else
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -114,33 +113,6 @@ defmodule BorutaIdentity.Accounts.Settings do
           message: reason
         })
     end
-  end
-
-  @doc """
-  Updates the user email using the given token.
-
-  If the token matches, the user email is updated and the token is deleted.
-  The confirmed_at date is also updated to the current time.
-  """
-  @spec update_user_email(user :: User.t(), token :: String.t()) :: :ok | :error
-  def update_user_email(user, token) do
-    context = "change:#{user.email}"
-
-    with {:ok, query} <- UserToken.verify_change_email_token_query(token, context),
-         %UserToken{sent_to: email} <- Repo.one(query),
-         {:ok, _} <- Repo.transaction(user_email_multi(user, email, context)) do
-      :ok
-    else
-      _ -> :error
-    end
-  end
-
-  defp user_email_multi(user, email, context) do
-    changeset = user |> User.email_changeset(%{email: email}) |> User.confirm_changeset()
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, changeset)
-    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, [context]))
   end
 
   defp edit_user_template(relying_party) do

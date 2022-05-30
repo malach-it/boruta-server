@@ -3,6 +3,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
 
   setup %{conn: conn} do
@@ -123,7 +124,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
         delete(conn, Routes.admin_user_path(conn, :update, user_id))
 
       assert response(conn, 204)
-      refute BorutaIdentity.Repo.get(User, user_id)
+      refute BorutaIdentity.Repo.get(Internal.User, user_id)
     end
   end
 end

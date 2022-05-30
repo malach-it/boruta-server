@@ -100,7 +100,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp preauthorize(conn, %User{} = current_user) do
     resource_owner = %ResourceOwner{
       sub: current_user.id,
-      username: current_user.email,
+      username: current_user.username,
       last_login_at: current_user.last_login_at
     }
 
@@ -120,7 +120,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     resource_owner = %ResourceOwner{
       sub: current_user.id,
-      username: current_user.email,
+      username: current_user.username,
       last_login_at: current_user.last_login_at
     }
 

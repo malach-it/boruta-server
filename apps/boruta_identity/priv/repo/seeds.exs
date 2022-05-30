@@ -1,15 +1,23 @@
+alias BorutaIdentity.Accounts.Internal
 alias BorutaIdentity.Accounts.User
 
 {:ok, user} =
-  User.registration_changeset(%User{}, %{
-    email: "test@test.test",
+  Internal.User.registration_changeset(%Internal.User{}, %{
+    email: "identity@test.test",
     password: "passwordesat"
   })
   |> BorutaIdentity.Repo.insert()
 
+{:ok, user} = BorutaIdentity.Repo.insert(%User{
+  uid: user.id,
+  username: user.email,
+  provider: to_string(Internal)
+})
+
 [
   "users:manage:all",
   "clients:manage:all",
+  "relying-parties:manage:all",
   "scopes:manage:all",
   "upstreams:manage:all"
 ]

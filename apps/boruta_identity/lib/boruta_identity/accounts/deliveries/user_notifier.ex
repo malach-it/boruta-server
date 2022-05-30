@@ -37,7 +37,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
 
     ==============================
 
-    Hi #{user.email},
+    Hi #{user.username},
 
     You can confirm your account by visiting the URL below:
 
@@ -49,7 +49,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     """
 
     new()
-    |> to(user.email)
+    |> to(user.username)
     |> from("io.pascal.knoth@gmail.com")
     |> subject("Confirm your account.")
     |> text_body(body)
@@ -63,7 +63,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
 
     ==============================
 
-    Hi #{user.email},
+    Hi #{user.username},
 
     You can reset your password by visiting the URL below:
 
@@ -75,7 +75,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     """
 
     new()
-    |> to(user.email)
+    |> to(user.username)
     |> from("io.pascal.knoth@gmail.com")
     |> subject("Reset your password.")
     |> text_body(body)
@@ -89,7 +89,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
 
     ==============================
 
-    Hi #{user.email},
+    Hi #{user.username},
 
     You can change your email by visiting the URL below:
 
@@ -101,6 +101,6 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     """
 
     Logger.debug(body)
-    {:ok, %{to: user.email, body: body}}
+    {:ok, %{to: user.username, body: body}}
   end
 end

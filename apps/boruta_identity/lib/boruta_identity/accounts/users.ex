@@ -9,6 +9,31 @@ defmodule BorutaIdentity.Accounts.Users do
   alias BorutaIdentity.Repo
 
   @doc """
+  Gets a user by uid.
+
+  ## Examples
+
+      iex> get_user_by_uid("foo@example.com")
+      %User{}
+
+      iex> get_user_by_uid("unknown@example.com")
+      nil
+
+  """
+  @spec get_user_by_uid(provider :: atom(), uid :: String.t()) :: user :: User.t() | nil
+  def get_user_by_uid(provider, uid) when is_binary(uid) do
+    provider = to_string(provider)
+
+    Repo.one(
+      from(u in User,
+        left_join: as in assoc(u, :authorized_scopes),
+        preload: [authorized_scopes: as],
+        where: u.username == ^uid and u.provider == ^provider
+      )
+    )
+  end
+
+  @doc """
   Gets a user by email.
 
   ## Examples
@@ -22,7 +47,13 @@ defmodule BorutaIdentity.Accounts.Users do
   """
   @spec get_user_by_email(email :: String.t()) :: user :: User.t() | nil
   def get_user_by_email(email) when is_binary(email) do
-    Repo.get_by(User, email: email)
+    Repo.one(
+      from(u in User,
+        left_join: as in assoc(u, :authorized_scopes),
+        preload: [authorized_scopes: as],
+        where: u.username == ^email
+      )
+    )
   end
 
   @doc """

@@ -60,6 +60,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
 
   alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.RelyingParties
   alias BorutaIdentity.RelyingParties.RelyingParty
 
@@ -115,7 +116,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                   ) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    with {:ok, user} <- apply(client_impl, :get_user, [reset_password_instructions_params]) do
+    with %User{} = user <- Users.get_user_by_email(reset_password_instructions_params[:email]) do
       apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
     end
 

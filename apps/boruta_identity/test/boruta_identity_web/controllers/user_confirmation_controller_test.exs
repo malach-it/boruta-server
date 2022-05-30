@@ -4,6 +4,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Repo
+
   import BorutaIdentity.AccountsFixtures
 
   setup do
@@ -85,7 +86,7 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
     test "sends a new confirmation token", %{conn: conn, user: user, request: request} do
       conn =
         post(conn, Routes.user_confirmation_path(conn, :create, request: request), %{
-          "user" => %{"email" => user.email}
+          "user" => %{"email" => user.username}
         })
 
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
@@ -95,14 +96,13 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
 
     test "does not send confirmation token if account is confirmed", %{
       conn: conn,
-      user: user,
       request: request
     } do
-      Repo.update!(Accounts.User.confirm_changeset(user))
+      {:ok, user} = user_fixture() |> Ecto.Changeset.change(confirmed_at: DateTime.utc_now()) |> Repo.update()
 
       conn =
         post(conn, Routes.user_confirmation_path(conn, :create, request: request), %{
-          "user" => %{"email" => user.email}
+          "user" => %{"email" => user.username}
         })
 
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
@@ -146,15 +146,17 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
 
       assert get_flash(signed_out_conn, :error) =~
                "Account confirmation token is invalid or it has expired"
+    end
 
-      # When logged in
+    test "redirects if user is already confirmed", %{conn: conn, request: request} do
+      user_fixture() |> Ecto.Changeset.change(confirmed_at: DateTime.utc_now()) |> Repo.update()
+
       signed_in_conn =
         conn
-        |> log_in(user)
-        |> get(Routes.user_confirmation_path(conn, :confirm, token, request: request))
+        |> get(Routes.user_confirmation_path(conn, :confirm, "unused_token", request: request))
 
       assert redirected_to(signed_in_conn) == Routes.user_session_path(conn, :new, request: request)
-      assert get_flash(signed_in_conn, :error) =~ "Account has already been confirmed"
+      assert get_flash(signed_in_conn, :error) =~ "Account confirmation token is invalid or it has expired"
     end
 
     test "does not confirm email with invalid token", %{conn: conn, user: user, request: request} do

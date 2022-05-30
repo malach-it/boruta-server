@@ -93,7 +93,6 @@ defmodule BorutaIdentity.Accounts do
   alias BorutaIdentity.Accounts.ChooseSessions
   alias BorutaIdentity.Accounts.Confirmations
   alias BorutaIdentity.Accounts.Consents
-  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.Registrations
   alias BorutaIdentity.Accounts.ResetPasswords
   alias BorutaIdentity.Accounts.Sessions
@@ -103,22 +102,18 @@ defmodule BorutaIdentity.Accounts do
   ## Registrations
 
   defdelegate initialize_registration(context, client_id, module), to: Registrations
-
   defdelegate register(context, client_id, registration_params, confirmation_url_fun, module),
     to: Registrations
 
   ## Sessions
 
   defdelegate initialize_session(context, client_id, module), to: Sessions
-
   defdelegate create_session(context, client_id, authentication_params, module), to: Sessions
-
   defdelegate delete_session(context, client_id, session_token, module), to: Sessions
 
   ## Reset passwords
 
   defdelegate initialize_password_instructions(context, client_id, module), to: ResetPasswords
-
   defdelegate send_reset_password_instructions(
                 context,
                 client_id,
@@ -129,14 +124,12 @@ defmodule BorutaIdentity.Accounts do
               to: ResetPasswords
 
   defdelegate initialize_password_reset(context, client_id, token, module), to: ResetPasswords
-
   defdelegate reset_password(context, client_id, reset_password_params, module),
     to: ResetPasswords
 
   ## Confirmation
 
   defdelegate initialize_confirmation_instructions(context, client_id, module), to: Confirmations
-
   defdelegate send_confirmation_instructions(
                 context,
                 client_id,
@@ -145,13 +138,11 @@ defmodule BorutaIdentity.Accounts do
                 module
               ),
               to: Confirmations
-
-  defdelegate confirm_user(context, client_id, current_user, token, module), to: Confirmations
+  defdelegate confirm_user(context, client_id, token, module), to: Confirmations
 
   ## Consent
 
   defdelegate initialize_consent(context, client_id, user, scope, module), to: Consents
-
   defdelegate consent(context, client_id, user, params, module), to: Consents
 
   ## Choose session
@@ -163,20 +154,10 @@ defmodule BorutaIdentity.Accounts do
   defdelegate initialize_edit_user(context, client_id, user, module), to: Settings
   defdelegate update_user(context, client_id, user, params, module), to: Settings
 
-  ## Deprecated user settings
-
-  defdelegate update_user_email(user, token), to: Settings
-  defdelegate deliver_update_email_instructions(user, current_email, update_email_url_fun),
-    to: Deliveries
-
   ## Deprecated Database getters
 
   defdelegate get_user(id), to: Users
   defdelegate get_user_by_email(email), to: Users
   defdelegate get_user_by_session_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
-
-  ## Deprecated Sessions
-
-  defdelegate generate_user_session_token(user), to: Sessions
 end
