@@ -4,11 +4,14 @@ defmodule BorutaIdentity.Accounts.Internal do
   """
 
   # TODO split into multiple submodule
+  @behaviour BorutaIdentity.Admin
   @behaviour BorutaIdentity.Accounts.Confirmations
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
   @behaviour BorutaIdentity.Accounts.Settings
+
+  import Ecto.Query, only: [from: 2]
 
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.Internal
@@ -147,6 +150,14 @@ defmodule BorutaIdentity.Accounts.Internal do
     user
     |> Internal.User.update_changeset(params)
     |> Repo.update()
+  end
+
+  @impl BorutaIdentity.Admin
+  def delete_user(user_id) do
+    case Repo.delete_all(from u in Internal.User, where: u.id == ^user_id) do
+      {1, nil} -> :ok
+      _ -> {:error, "User could not be deleted."}
+    end
   end
 
   defp create_user_multi(registration_params, confirmation_url_fun, opts) do

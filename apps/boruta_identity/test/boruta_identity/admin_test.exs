@@ -1,8 +1,10 @@
 defmodule BorutaIdentity.AdminTest do
   use BorutaIdentity.DataCase
 
+  import BorutaIdentity.AccountsFixtures
   import BorutaIdentity.Factory
 
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Admin
@@ -52,9 +54,10 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns deleted user" do
-      %User{id: user_id} = insert(:user)
+      %User{id: user_id, uid: user_uid} = user_fixture()
       assert {:ok, %User{id: ^user_id}} = Admin.delete_user(user_id)
-      assert Repo.get(User, user_id) == nil
+      refute Repo.get(User, user_id)
+      refute Repo.get(Internal.User, user_uid)
     end
   end
 end

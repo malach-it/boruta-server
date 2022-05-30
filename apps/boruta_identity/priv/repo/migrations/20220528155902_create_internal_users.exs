@@ -17,32 +17,49 @@ defmodule BorutaIdentity.Repo.Migrations.CreateInternalUsers do
 
     rename table(:users), to: table(:internal_users)
 
+    execute("CREATE TABLE users as (SELECT * FROM internal_users)")
+
+    alter table(:users, primary_key: false) do
+      modify :id, :uuid, primary_key: true
+      add :provider, :string
+      add :uid, :string
+      remove :hashed_password
+    end
+
+    execute("""
+    ALTER TABLE users
+      ALTER COLUMN provider TYPE varchar(255)
+        USING '#{to_string(BorutaIdentity.Accounts.Internal)}'
+    """)
+    execute("""
+    ALTER TABLE users
+      ALTER COLUMN provider SET NOT NULL
+    """)
+    execute("""
+    ALTER TABLE users
+      ALTER COLUMN uid TYPE varchar(255)
+        USING (users.id::varchar)
+    """)
+    execute("""
+    ALTER TABLE users
+      ALTER COLUMN uid SET NOT NULL
+    """)
+
+    rename table(:users), :email, to: :username
+
     alter table(:internal_users) do
       remove :last_login_at
       remove :confirmed_at
     end
 
-    create table(:users, primary_key: false) do
-      add :id, :binary_id, primary_key: true
-      add :username, :citext, null: false
-      add :provider, :string, null: false
-      add :uid, :string, null: false
-      add :confirmed_at, :utc_datetime_usec
-      add :last_login_at, :utc_datetime_usec
-      timestamps()
-    end
-
     create index(:users, [:provider, :uid], unique: true)
 
-    execute("DELETE FROM users_authorized_scopes")
     alter table(:users_authorized_scopes) do
       modify :user_id, references(:users, type: :uuid, on_delete: :delete_all), null: false
     end
-    execute("DELETE FROM users_tokens")
     alter table(:users_tokens) do
       modify :user_id, references(:users, type: :uuid, on_delete: :delete_all), null: false
     end
-    execute("DELETE FROM consents")
     alter table(:consents) do
       modify :user_id, references(:users, type: :uuid, on_delete: :delete_all), null: false
     end
@@ -62,24 +79,51 @@ defmodule BorutaIdentity.Repo.Migrations.CreateInternalUsers do
       modify :user_id, :uuid
     end
 
-    drop table(:users)
+    drop index(:users, [:provider, :uid], unique: true)
 
-    rename table(:internal_users), to: table(:users)
-
-    alter table(:users) do
-      add :last_login_at, :utc_datetime_usec
-      add :confirmed_at, :utc_datetime_usec
+    alter table(:users, primary_key: false) do
+      add :hashed_password, :string
     end
 
-    execute("DELETE FROM users_authorized_scopes")
+    execute("""
+    CREATE OR REPLACE FUNCTION hashed_password(uid varchar(255))
+    RETURNS varchar(255) AS
+    $$
+      DECLARE hp varchar(255);
+      BEGIN
+        SELECT hashed_password INTO hp
+        FROM internal_users
+        WHERE id = $1::uuid;
+
+        RETURN hp;
+      END;
+    $$ LANGUAGE plpgsql
+    """)
+    execute("""
+    ALTER TABLE users
+      ALTER COLUMN hashed_password TYPE varchar(255)
+        USING hashed_password(users.uid)
+    """)
+    execute("""
+    ALTER TABLE users
+      ALTER COLUMN hashed_password SET NOT NULL
+    """)
+
+    alter table(:users, primary_key: false) do
+      remove :provider
+      remove :uid
+    end
+
+    drop table(:internal_users)
+
+    rename table(:users), :username, to: :email
+
     alter table(:users_authorized_scopes) do
       modify :user_id, references(:users, type: :uuid, on_delete: :delete_all), null: false
     end
-    execute("DELETE FROM users_tokens")
     alter table(:users_tokens) do
       modify :user_id, references(:users, type: :uuid, on_delete: :delete_all), null: false
     end
-    execute("DELETE FROM consents")
     alter table(:consents) do
       modify :user_id, references(:users, type: :uuid, on_delete: :delete_all), null: false
     end

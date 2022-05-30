@@ -107,6 +107,7 @@ defmodule BorutaIdentity.RelyingParties.RelyingParty do
     end
   end
 
+  # TODO rename to providers
   @spec implementation(client_relying_party :: %__MODULE__{}) :: implementation :: atom()
   def implementation(%__MODULE__{type: type}) do
     Map.fetch!(@implementations, type)

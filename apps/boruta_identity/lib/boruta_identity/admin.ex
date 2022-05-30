@@ -9,6 +9,8 @@ defmodule BorutaIdentity.Admin do
   alias BorutaIdentity.Accounts.{UserAuthorizedScope}
   alias BorutaIdentity.Repo
 
+  @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: any()}
+
   @doc """
   List all users
 
@@ -81,6 +83,8 @@ defmodule BorutaIdentity.Admin do
         {:error, :not_found}
 
       user ->
+        # TODO delete both provider and domain users in a transaction
+        apply(String.to_atom(user.provider), :delete_user, [user.uid])
         Repo.delete(user)
     end
   end

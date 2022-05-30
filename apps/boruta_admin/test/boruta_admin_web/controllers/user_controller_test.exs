@@ -118,13 +118,14 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
     @tag authorized: ["users:manage:all"]
     test "deletes the user", %{conn: conn} do
-      %{id: user_id} = user_fixture()
+      %{id: user_id, uid: user_uid} = user_fixture()
 
       conn =
         delete(conn, Routes.admin_user_path(conn, :update, user_id))
 
       assert response(conn, 204)
-      refute BorutaIdentity.Repo.get(Internal.User, user_id)
+      refute BorutaIdentity.Repo.get(User, user_id)
+      refute BorutaIdentity.Repo.get(Internal.User, user_uid)
     end
   end
 end
