@@ -69,7 +69,7 @@ defmodule BorutaIdentityWeb.ConnCase do
   @spec generate_user_session_token(user :: User.t()) :: token :: String.t()
   def generate_user_session_token(%User{id: user_id}) do
     user = Repo.get!(User, user_id)
-    User.login_changeset(user, Internal) |> Repo.update()
+    User.login_changeset(user) |> Repo.update()
 
     {token, user_token} = UserToken.build_session_token(user)
     Repo.insert!(user_token)

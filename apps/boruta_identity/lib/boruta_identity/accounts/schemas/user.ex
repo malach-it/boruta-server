@@ -37,10 +37,15 @@ defmodule BorutaIdentity.Accounts.User do
     timestamps()
   end
 
-  def login_changeset(user, client_impl) do
+  def implementation_changeset(attrs) do
+    %__MODULE__{}
+    |> cast(attrs, [:provider, :uid, :username])
+    |> validate_required([:provider, :uid, :username])
+  end
+
+  def login_changeset(user) do
     user
     |> change(last_login_at: DateTime.utc_now())
-    |> change(provider: to_string(client_impl))
     |> validate_required([:provider])
   end
 

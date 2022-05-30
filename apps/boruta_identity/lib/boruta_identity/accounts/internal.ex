@@ -40,6 +40,15 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.Sessions
+  def get_user(%{id: id}) when is_binary(id) do
+    user = Repo.get_by!(Internal.User, id: id)
+
+    {:ok, user}
+  rescue
+    Ecto.NoResultsError ->
+      {:error, "User not found."}
+  end
+
   def get_user(%{email: email}) when is_binary(email) do
     user = Repo.get_by!(Internal.User, email: email)
 
@@ -53,11 +62,11 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Accounts.Sessions
   def domain_user!(%Internal.User{id: id, email: email}) do
-    %User{
+    User.implementation_changeset(%{
       uid: id,
-      username: email
-    }
-    |> User.login_changeset(__MODULE__)
+      username: email,
+      provider: to_string(__MODULE__)
+    })
     |> Repo.insert!(
       on_conflict: {:replace, [:username]},
       returning: true,
@@ -173,13 +182,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   defp deliver_confirmation_email(multi, confirmation_url_fun, true) do
     Ecto.Multi.run(multi, :get_user, fn _repo, %{create_user: user} ->
-      domain_user!(user)
-      |> User.login_changeset(__MODULE__)
-      |> Repo.insert(
-        on_conflict: {:replace_all_except, [:id]},
-        returning: true,
-        conflict_target: [:provider, :uid]
-      )
+      {:ok, domain_user!(user)}
     end)
     |> Ecto.Multi.run(:deliver_confirmation_mail, fn _repo, %{get_user: user} ->
       Deliveries.deliver_user_confirmation_instructions(

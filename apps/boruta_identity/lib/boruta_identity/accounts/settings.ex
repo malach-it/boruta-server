@@ -90,13 +90,13 @@ defmodule BorutaIdentity.Accounts.Settings do
   defwithclientrp update_user(context, client_id, user, user_update_params, module) do
     client_impl = RelyingParty.implementation(client_rp)
 
-    with {:ok, _user} <-
+    with {:ok, implementation_user} <- apply(client_impl, :get_user, [%{id: user.uid}]),
+         {:ok, _user} <-
            apply(client_impl, :check_user_against, [
-             user,
-             %{password: user_update_params[:current_password]},
-             client_rp
+             implementation_user,
+             %{password: user_update_params[:current_password]}
            ]),
-         {:ok, implementation_user} <- apply(client_impl, :update_user, [user, user_update_params]) do
+         {:ok, implementation_user} <- apply(client_impl, :update_user, [implementation_user, user_update_params]) do
       user = apply(client_impl, :domain_user!, [implementation_user])
       module.user_updated(context, user)
     else
