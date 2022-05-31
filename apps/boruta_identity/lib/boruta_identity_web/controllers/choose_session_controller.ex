@@ -7,7 +7,6 @@ defmodule BorutaIdentityWeb.ChooseSessionController do
     only: [client_id_from_request: 1]
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentityWeb.TemplateView
 
   def index(conn, _params) do
@@ -32,12 +31,5 @@ defmodule BorutaIdentityWeb.ChooseSessionController do
     conn
     |> put_session(:session_chosen, true)
     |> redirect(to: Routes.user_session_path(conn, :new, conn.query_params))
-  end
-
-  @impl BorutaIdentity.Accounts.ChooseSessionApplication
-  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
-    conn
-    |> put_flash(:error, message)
-    |> redirect(to: "/")
   end
 end

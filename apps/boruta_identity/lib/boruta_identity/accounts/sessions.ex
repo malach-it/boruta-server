@@ -41,11 +41,6 @@ defmodule BorutaIdentity.Accounts.SessionApplication do
               any()
 
   @callback session_deleted(context :: any()) :: any()
-
-  @callback invalid_relying_party(
-              context :: any(),
-              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
-            ) :: any()
 end
 
 defmodule BorutaIdentity.Accounts.Sessions do

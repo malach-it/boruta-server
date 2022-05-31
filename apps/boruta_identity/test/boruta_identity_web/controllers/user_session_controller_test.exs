@@ -12,26 +12,6 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
     %{user: user}
   end
 
-  describe "whithout client set" do
-    test "new session redirects to home", %{conn: conn} do
-      conn = get(conn, Routes.user_session_path(conn, :new), %{"user" => %{}})
-      assert get_flash(conn, :error) == "Client identifier not provided."
-      assert redirected_to(conn) == "/"
-    end
-
-    test "create session redirects to home", %{conn: conn} do
-      conn = post(conn, Routes.user_session_path(conn, :create), %{"user" => %{}})
-      assert get_flash(conn, :error) == "Client identifier not provided."
-      assert redirected_to(conn) == "/"
-    end
-
-    test "delete session redirects to home", %{conn: conn} do
-      conn = get(conn, Routes.user_session_path(conn, :delete), %{"user" => %{}})
-      assert get_flash(conn, :error) == "Client identifier not provided."
-      assert redirected_to(conn) == "/"
-    end
-  end
-
   describe "GET /users/log_in" do
     setup :with_a_request
 

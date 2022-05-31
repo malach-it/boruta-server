@@ -38,11 +38,6 @@ defmodule BorutaIdentity.Accounts.RegistrationApplication do
               context :: any(),
               error :: BorutaIdentity.Accounts.RegistrationError.t()
             ) :: any()
-
-  @callback invalid_relying_party(
-              context :: any(),
-              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
-            ) :: any()
 end
 
 defmodule BorutaIdentity.Accounts.Registrations do

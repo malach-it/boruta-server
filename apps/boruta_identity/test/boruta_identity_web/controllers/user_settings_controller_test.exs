@@ -1,35 +1,7 @@
 defmodule BorutaIdentityWeb.UserSettingsControllerTest do
   use BorutaIdentityWeb.ConnCase
 
-  alias BorutaIdentity.Repo
-
   setup :register_and_log_in
-
-  describe "whithout client set" do
-    test "edit user redirects to home", %{conn: conn} do
-      conn = get(conn, Routes.user_settings_path(conn, :edit))
-      assert get_flash(conn, :error) == "Client identifier not provided."
-      assert redirected_to(conn) == "/"
-    end
-  end
-
-  describe "with user_editable feature disabled" do
-    setup :with_a_request
-
-    setup %{relying_party: relying_party} do
-      relying_party = relying_party
-      |> Ecto.Changeset.change(user_editable: false)
-      |> Repo.update()
-
-      {:ok, relying_party: relying_party}
-    end
-
-    test "edit user redirects to home", %{conn: conn, request: request} do
-      conn = get(conn, Routes.user_settings_path(conn, :edit, request: request))
-      assert get_flash(conn, :error) == "Feature is not enabled for client relying party."
-      assert redirected_to(conn) == "/"
-    end
-  end
 
   describe "GET /users/settings" do
     setup :with_a_request

@@ -15,11 +15,6 @@ defmodule BorutaIdentity.Accounts.ConsentApplication do
   @callback consented(context :: any()) :: any()
 
   @callback consent_failed(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
-
-  @callback invalid_relying_party(
-              context :: any(),
-              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
-            ) :: any()
 end
 
 defmodule BorutaIdentity.Accounts.Consents do

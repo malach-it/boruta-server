@@ -6,7 +6,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
   import BorutaIdentityWeb.Authenticable, only: [client_id_from_request: 1]
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentityWeb.TemplateView
 
@@ -76,17 +75,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
       :info,
       "If your email is in our system, you will receive instructions to reset your password shortly."
     )
-    |> redirect(to: Routes.user_session_path(conn, :new, %{request: request}))
-  end
-
-  @impl BorutaIdentity.Accounts.ResetPasswordApplication
-  def invalid_relying_party(%Plug.Conn{query_params: query_params} = conn, %RelyingPartyError{
-        message: message
-      }) do
-    request = query_params["request"]
-
-    conn
-    |> put_flash(:error, message)
     |> redirect(to: Routes.user_session_path(conn, :new, %{request: request}))
   end
 

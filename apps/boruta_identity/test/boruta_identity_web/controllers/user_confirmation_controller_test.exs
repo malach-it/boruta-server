@@ -11,64 +11,6 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
     %{user: user_fixture()}
   end
 
-  describe "whithout client set" do
-    test "new confirmation redirects to log in", %{conn: conn} do
-      conn = get(conn, Routes.user_confirmation_path(conn, :new))
-      assert get_flash(conn, :error) == "Client identifier not provided."
-      assert redirected_to(conn) == "/"
-    end
-
-    test "create confirmation redirects to home", %{conn: conn} do
-      conn =
-        post(
-          conn,
-          Routes.user_confirmation_path(conn, :create, %{
-            "user" => %{"email" => "user@email.test"}
-          })
-        )
-
-      assert get_flash(conn, :error) == "Client identifier not provided."
-      assert redirected_to(conn) == "/"
-    end
-  end
-
-  describe "whithout client confirmable configuration enabled" do
-    setup :with_a_request
-
-    setup %{relying_party: relying_party} do
-      relying_party
-      |> Ecto.Changeset.change(confirmable: false)
-      |> Repo.update()
-
-      {:ok, relying_party: relying_party}
-    end
-
-    test "new confirmation redirects to home", %{conn: conn, request: request} do
-      conn = get(conn, Routes.user_confirmation_path(conn, :new, request: request))
-
-      assert get_flash(conn, :error) ==
-               "Feature is not enabled for client relying party."
-
-      assert redirected_to(conn) == "/"
-    end
-
-    test "create confirmation redirects to home", %{conn: conn, request: request} do
-      conn =
-        post(
-          conn,
-          Routes.user_confirmation_path(conn, :create, %{
-            "user" => %{"email" => "user@email.test"},
-            request: request
-          })
-        )
-
-      assert get_flash(conn, :error) ==
-               "Feature is not enabled for client relying party."
-
-      assert redirected_to(conn) == "/"
-    end
-  end
-
   describe "GET /users/confirm" do
     setup :with_a_request
 

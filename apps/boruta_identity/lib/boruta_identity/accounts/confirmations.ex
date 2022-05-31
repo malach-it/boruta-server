@@ -36,11 +36,6 @@ defmodule BorutaIdentity.Accounts.ConfirmationApplication do
               error :: BorutaIdentity.Accounts.ConfirmationError.t()
             ) ::
               any()
-
-  @callback invalid_relying_party(
-              context :: any(),
-              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
-            ) :: any()
 end
 
 defmodule BorutaIdentity.Accounts.Confirmations do

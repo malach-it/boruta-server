@@ -9,7 +9,6 @@ defmodule BorutaIdentityWeb.UserConsentController do
   import BorutaIdentityWeb.ErrorHelpers
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentityWeb.ChangesetView
   alias BorutaIdentityWeb.TemplateView
 
@@ -67,12 +66,5 @@ defmodule BorutaIdentityWeb.UserConsentController do
         client: client
       }
     )
-  end
-
-  @impl BorutaIdentity.Accounts.ConsentApplication
-  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
-    conn
-    |> put_flash(:error, message)
-    |> redirect(to: "/")
   end
 end

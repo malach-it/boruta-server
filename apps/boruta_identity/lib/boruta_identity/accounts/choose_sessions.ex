@@ -9,11 +9,6 @@ defmodule BorutaIdentity.Accounts.ChooseSessionApplication do
             ) :: any()
 
   @callback choose_session_not_required(context :: any()) :: any()
-
-  @callback invalid_relying_party(
-              context :: any(),
-              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
-            ) :: any()
 end
 
 defmodule BorutaIdentity.Accounts.ChooseSessions do

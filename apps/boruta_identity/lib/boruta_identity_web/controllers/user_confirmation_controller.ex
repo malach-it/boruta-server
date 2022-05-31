@@ -6,7 +6,6 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.ConfirmationError
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentityWeb.TemplateView
 
@@ -83,12 +82,5 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
       template: template,
       assigns: %{}
     )
-  end
-
-  @impl BorutaIdentity.Accounts.ConfirmationApplication
-  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
-    conn
-    |> put_flash(:error, message)
-    |> redirect(to: "/")
   end
 end

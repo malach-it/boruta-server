@@ -56,12 +56,7 @@ defmodule BorutaIdentity.Accounts.Utils do
           unquote(block)
         else
           {:error, reason} ->
-            unquote(module_param).invalid_relying_party(
-              unquote(context_param),
-              %BorutaIdentity.Accounts.RelyingPartyError{
-                message: reason
-              }
-            )
+            raise BorutaIdentity.Accounts.RelyingPartyError, reason
         end
       end
     end
@@ -70,7 +65,7 @@ end
 
 defmodule BorutaIdentity.Accounts.RelyingPartyError do
   @enforce_keys [:message]
-  defexception [:message]
+  defexception [:message, plug_status: 400]
 
   @type t :: %__MODULE__{
           message: String.t()

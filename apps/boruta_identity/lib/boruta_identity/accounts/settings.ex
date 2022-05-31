@@ -35,11 +35,6 @@ defmodule BorutaIdentity.Accounts.SettingsApplication do
               context :: any(),
               error :: BorutaIdentity.Accounts.SettingsError.t()
             ) :: any()
-
-  @callback invalid_relying_party(
-              context :: any(),
-              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
-            ) :: any()
 end
 
 defmodule BorutaIdentity.Accounts.Settings do

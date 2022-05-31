@@ -8,7 +8,6 @@ defmodule BorutaIdentityWeb.UserSettingsController do
   ]
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SettingsError
   alias BorutaIdentityWeb.TemplateView
 
@@ -77,12 +76,5 @@ defmodule BorutaIdentityWeb.UserSettingsController do
         errors: [error]
       }
     )
-  end
-
-  @impl BorutaIdentity.Accounts.SettingsApplication
-  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
-    conn
-    |> put_flash(:error, message)
-    |> redirect(to: "/")
   end
 end

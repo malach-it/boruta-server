@@ -8,7 +8,6 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.RegistrationError
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentityWeb.TemplateView
 
   def new(conn, _params) do
@@ -52,13 +51,6 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
         changeset: changeset
       }
     )
-  end
-
-  @impl BorutaIdentity.Accounts.RegistrationApplication
-  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
-    conn
-    |> put_flash(:error, message)
-    |> redirect(to: after_registration_path(conn))
   end
 
   @impl BorutaIdentity.Accounts.RegistrationApplication

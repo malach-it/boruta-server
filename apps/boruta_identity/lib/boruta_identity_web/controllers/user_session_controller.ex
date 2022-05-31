@@ -14,7 +14,6 @@ defmodule BorutaIdentityWeb.UserSessionController do
     ]
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentityWeb.TemplateView
 
@@ -75,13 +74,6 @@ defmodule BorutaIdentityWeb.UserSessionController do
         errors: [message]
       }
     )
-  end
-
-  @impl BorutaIdentity.Accounts.SessionApplication
-  def invalid_relying_party(conn, %RelyingPartyError{message: message}) do
-    conn
-    |> put_flash(:error, message)
-    |> redirect(to: "/")
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication

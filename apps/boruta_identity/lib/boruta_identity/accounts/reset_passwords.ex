@@ -46,11 +46,6 @@ defmodule BorutaIdentity.Accounts.ResetPasswordApplication do
               error :: BorutaIdentity.Accounts.ResetPasswordError.t()
             ) ::
               any()
-
-  @callback invalid_relying_party(
-              context :: any(),
-              error :: BorutaIdentity.Accounts.RelyingPartyError.t()
-            ) :: any()
 end
 
 defmodule BorutaIdentity.Accounts.ResetPasswords do
