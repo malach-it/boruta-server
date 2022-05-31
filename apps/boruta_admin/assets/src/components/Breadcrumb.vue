@@ -25,6 +25,7 @@ const labels = {
   'edit-session-template': 'Edit login template',
   'edit-choose-session-template': 'Edit choose session template',
   'edit-registration-template': 'Edit registration template',
+  'edit-edit-user-template': 'Edit user edition template',
   'edit-new-reset-password-template': 'Edit send reset password instructions template',
   'edit-edit-reset-password-template': 'Edit reset password template',
   'edit-new-confirmation-template': 'Edit send confirmation instructions template',
