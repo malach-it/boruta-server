@@ -21,14 +21,16 @@ const labels = {
   'authorized_scopes': 'Authorized scopes',
   'relying_party_id': 'Relying party',
   'redirect_uris': 'Redirect URIs',
-  'id_token_signature_alg': 'ID token signature algorithm'
+  'id_token_signature_alg': 'ID token signature algorithm',
+  'resource': ''
 }
+
 export default {
   name: 'FormErrors',
   props: ['errors'],
   methods: {
     label(key) {
-      return labels[key] || key
+      return labels[key] === undefined ? key : labels[key]
     }
   }
 }

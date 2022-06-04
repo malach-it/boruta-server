@@ -1,7 +1,7 @@
 <template>
   <div class="user-list">
     <Toaster :active="deleted" message="User has been deleted" type="warning" />
-    <Toaster :active="deletionError" :message="deletionError" type="error" />
+    <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <div class="container">
       <div class="ui three column stackable grid" v-if="users.length">
         <div v-for="user in users" class="column" :key="user.id">
@@ -46,7 +46,7 @@ export default {
     return {
       users: [],
       deleted: false,
-      deletionError: false
+      errorMessage: false
     }
   },
   mounted () {
@@ -60,13 +60,13 @@ export default {
     },
     deleteUser (user) {
       if (!confirm('Are you sure ?')) return
-      this.deletionError = false
+      this.errorMessage = false
       this.deleted = false
       user.destroy().then(() => {
         this.deleted = true
         this.users.splice(this.users.indexOf(user), 1)
       }).catch((error) => {
-        this.deletionError = error.response.data.message
+        this.errorMessage = error.response.data.message
       })
     }
   }

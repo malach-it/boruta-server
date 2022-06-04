@@ -119,6 +119,11 @@ class Client {
 
   destroy () {
     return this.constructor.api().delete(`/${this.id}`)
+      .catch((error) => {
+        const { code, message, errors } = error.response.data
+        this.errors = errors
+        throw { code, message, errors }
+      })
   }
 
   get serialized () {

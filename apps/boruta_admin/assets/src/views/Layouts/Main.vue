@@ -340,6 +340,7 @@ export default {
     }
   }
   .ui.segment {
+    margin-top: 0;
     margin-bottom: 1rem;
     &>.field, &>.fields {
       margin: 0;

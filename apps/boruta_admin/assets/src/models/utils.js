@@ -27,7 +27,6 @@ export function addClientErrorInterceptor(instance) {
           setTimeout(reject, 2000)
         })
       }
-      console.log(error)
 
       return Promise.reject(error)
     }

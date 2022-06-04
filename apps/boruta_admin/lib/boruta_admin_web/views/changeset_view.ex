@@ -12,6 +12,10 @@ defmodule BorutaAdminWeb.ChangesetView do
   end
 
   def render("error.json", %{changeset: changeset}) do
-    %{errors: translate_errors(changeset)}
+    %{
+      code: "UNPROCESSABLE_ENTITY",
+      message: "Your request could not be processed.",
+      errors: translate_errors(changeset)
+    }
   end
 end

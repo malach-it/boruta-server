@@ -4,21 +4,30 @@ defmodule BorutaAdminWeb.ErrorView do
   def render("404.json", _assigns) do
     %{
       code: "NOT_FOUND",
-      message: "The requested resource could not be found."
+      message: "The requested resource could not be found.",
+      errors: %{
+        resource: ["the requested resource could not be found."]
+      }
     }
   end
 
   def render("401.json", _assigns) do
     %{
       code: "UNAUTHORIZED",
-      message: "You are unauthorized to access this resource."
+      message: "You are unauthorized to access this resource.",
+      errors: %{
+        resource: ["you are unauthorized to access this resource."]
+      }
     }
   end
 
   def render("403.json", _assigns) do
     %{
       code: "FORBIDDEN",
-      message: "You are forbidden to access this resource."
+      message: "You are forbidden to access this resource.",
+      errors: %{
+        resource: ["you are forbidden to access this resource."]
+      }
     }
   end
 
