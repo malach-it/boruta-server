@@ -106,6 +106,17 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
+    test "cannot update administration ui client", %{conn: conn, client: client} do
+      current_admin_ui_client_id = System.get_env("VUE_APP_ADMIN_CLIENT_ID", "")
+      System.put_env("VUE_APP_ADMIN_CLIENT_ID", client.id)
+
+      conn = put(conn, Routes.admin_client_path(conn, :update, client), client: @update_attrs)
+      assert response(conn, 403)
+
+      System.put_env("VUE_APP_ADMIN_CLIENT_ID", current_admin_ui_client_id)
+    end
+
+    @tag authorized: ["clients:manage:all"]
     test "updates client relying party when data is valid", %{conn: conn, client: %Client{id: id} = client} do
       relying_party = BorutaIdentity.Factory.insert(:relying_party)
       update_attrs = Map.put(@update_attrs, "relying_party", %{"id" => relying_party.id})

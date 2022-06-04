@@ -69,6 +69,7 @@ defmodule BorutaAdminWeb.RelyingPartyController do
   def delete(conn, %{"id" => id}) do
     relying_party = RelyingParties.get_relying_party!(id)
 
+    # TODO cannot delete admin UI relying party
     with {:ok, %RelyingParty{}} <- RelyingParties.delete_relying_party(relying_party) do
       send_resp(conn, :no_content, "")
     end

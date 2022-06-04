@@ -127,6 +127,15 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
     end
 
     @tag authorized: ["scopes:manage:all"]
+    test "cannot update protected scopes", %{conn: conn} do
+      Enum.map(@protected_scopes, fn name ->
+        conn = put(conn, Routes.admin_scope_path(conn, :update, insert(:scope, name: name)), scope: @update_attrs)
+
+        assert response(conn, 403)
+      end)
+    end
+
+    @tag authorized: ["scopes:manage:all"]
     test "renders errors when data is invalid", %{conn: conn, existing_scope: scope} do
       conn = put(conn, Routes.admin_scope_path(conn, :update, scope), scope: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}

@@ -43,7 +43,8 @@ defmodule BorutaAdminWeb.ScopeController do
   def update(conn, %{"id" => id, "scope" => scope_params}) do
     scope = Admin.get_scope!(id)
 
-    with {:ok, %Scope{} = scope} <- Admin.update_scope(scope, scope_params) do
+    with :ok <- ensure_deletion_allowed(scope),
+         {:ok, %Scope{} = scope} <- Admin.update_scope(scope, scope_params) do
       render(conn, "show.json", scope: scope)
     end
   end

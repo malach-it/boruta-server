@@ -80,28 +80,40 @@ defmodule BorutaAdminWeb.UserControllerTest do
     end
   end
 
-  describe "update resource_owner" do
+  describe "update user" do
     setup %{conn: conn} do
-      resource_owner = user_fixture()
+      user = user_fixture()
       scope = Boruta.Factory.insert(:scope)
 
-      {:ok, conn: conn, resource_owner: resource_owner, existing_scope: scope}
+      {:ok, conn: conn, user: user, existing_scope: scope}
     end
 
     @tag authorized: ["users:manage:all"]
-    test "renders resource_owner when data is valid", %{
+    test "renders user when data is valid", %{
       conn: conn,
-      resource_owner: %User{id: id} = resource_owner,
+      user: %User{id: id} = user,
       existing_scope: scope
     } do
       conn =
-        put(conn, Routes.admin_user_path(conn, :update, resource_owner),
+        put(conn, Routes.admin_user_path(conn, :update, user),
           user: %{
             "authorized_scopes" => [%{"name" => scope.name}]
           }
         )
 
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
+    end
+
+    @tag user_authorized: ["users:manage:all"]
+    test "cannot update current user", %{conn: conn, existing_scope: scope, resource_owner: resource_owner} do
+      conn =
+        put(conn, Routes.admin_user_path(conn, :update, resource_owner.sub),
+          user: %{
+            "authorized_scopes" => [%{"name" => scope.name}]
+          }
+        )
+
+      assert response(conn, 403)
     end
   end
 
@@ -110,8 +122,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
     test "returns a 404", %{conn: conn} do
       user_id = SecureRandom.uuid()
 
-      conn =
-        delete(conn, Routes.admin_user_path(conn, :update, user_id))
+      conn = delete(conn, Routes.admin_user_path(conn, :delete, user_id))
 
       assert response(conn, 404)
     end
@@ -120,8 +131,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
     test "deletes the user", %{conn: conn} do
       %{id: user_id, uid: user_uid} = user_fixture()
 
-      conn =
-        delete(conn, Routes.admin_user_path(conn, :update, user_id))
+      conn = delete(conn, Routes.admin_user_path(conn, :delete, user_id))
 
       assert response(conn, 204)
       refute BorutaIdentity.Repo.get(User, user_id)
@@ -130,8 +140,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
     @tag user_authorized: ["users:manage:all"]
     test "cannot delete current user", %{conn: conn, resource_owner: resource_owner} do
-      conn =
-        delete(conn, Routes.admin_user_path(conn, :update, resource_owner.sub))
+      conn = delete(conn, Routes.admin_user_path(conn, :delete, resource_owner.sub))
 
       assert response(conn, 403)
     end

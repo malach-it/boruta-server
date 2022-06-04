@@ -1,16 +1,17 @@
 defmodule BorutaAdminWeb.UserController do
   use BorutaAdminWeb, :controller
 
-  import BorutaAdminWeb.Authorization, only: [
-    authorize: 2
-  ]
+  import BorutaAdminWeb.Authorization,
+    only: [
+      authorize: 2
+    ]
 
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Admin
 
-  plug :authorize, ["users:manage:all"]
+  plug(:authorize, ["users:manage:all"])
 
-  action_fallback BorutaAdminWeb.FallbackController
+  action_fallback(BorutaAdminWeb.FallbackController)
 
   def index(conn, _params) do
     users = Admin.list_users()
@@ -21,14 +22,16 @@ defmodule BorutaAdminWeb.UserController do
     case Admin.get_user(id) do
       %User{} = user ->
         render(conn, "show.json", user: user)
+
       nil ->
         {:error, :not_found}
     end
   end
 
   def update(conn, %{"id" => id, "user" => %{"authorized_scopes" => scopes}}) do
-    with %User{} = user <- Admin.get_user(id),
-      {:ok, %User{} = user} <- Admin.update_user_authorized_scopes(user, scopes) do
+    with :ok <- ensure_deletion_allowed(id, conn),
+         %User{} = user <- Admin.get_user(id),
+         {:ok, %User{} = user} <- Admin.update_user_authorized_scopes(user, scopes) do
       render(conn, "show.json", user: user)
     else
       nil -> {:error, :not_found}
