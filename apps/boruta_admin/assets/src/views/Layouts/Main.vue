@@ -228,6 +228,9 @@ export default {
             .subitem {
               text-align: left;
             }
+            @media screen and (max-width: 1127px) {
+              display: none;
+            }
           }
         }
         &:hover {
@@ -261,9 +264,6 @@ export default {
               font-weight: bold!important;
             }
           }
-        }
-        @media screen and (max-width: 1127px) {
-          display: none!important;
         }
       }
     }

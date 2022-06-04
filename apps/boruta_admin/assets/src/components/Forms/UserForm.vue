@@ -2,7 +2,7 @@
   <div class="user-form">
     <div class="ui segment">
       <FormErrors :errors="user.errors" v-if="user.errors" />
-      <h3>Accessible scopes</h3>
+      <h3>Authorized scopes</h3>
       <form class="ui form" @submit.prevent="submit">
         <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         <hr />
