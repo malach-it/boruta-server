@@ -31,10 +31,10 @@
       kubernetes.core.helm:
         name: postgres
         chart_ref: bitnami/postgresql
-        chart_version: 10.13.1
+        chart_version: 10.16.2
         release_namespace: boruta-staging
         values:
-          postgresqlPassword: "{{ postgresql_password }}"
+          global.postgresql.postgresqlPassword	: "{{ postgresql_password }}"
           postgresqlMaxConnections: "200"
 
     - name: Create libcluster role
