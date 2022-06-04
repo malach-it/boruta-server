@@ -42,7 +42,8 @@ defmodule BorutaAdminWeb.ClientView do
           public: scope.public
         }
       end),
-      supported_grant_types: client.supported_grant_types
+      supported_grant_types: client.supported_grant_types,
+      id_token_signature_alg: client.id_token_signature_alg
     }
   end
 end

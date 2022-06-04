@@ -10,8 +10,8 @@ defmodule BorutaIdentity.AccountsFixtures do
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Repo
 
+  # From BorutaIdentity.Factory
   @password "hello world!"
-  @hashed_password "$argon2id$v=19$m=131072,t=8,p=4$9lPv7KsJogno0FlnhaRQXA$TeTY9FYjR1HJtZzg+N1z0oDC+0Mn7buPpOMhDP+M2Ik"
 
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
   def valid_user_password, do: @password

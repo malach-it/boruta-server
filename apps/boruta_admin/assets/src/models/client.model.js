@@ -11,6 +11,7 @@ const defaults = {
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
+  id_token_signature_alg: 'RS512',
   relying_party: { model: new RelyingParty() },
   grantTypes: allGrantTypes.map((label) => {
     return {
@@ -52,7 +53,8 @@ const assign = {
         label
       }
     })
-  }
+  },
+  id_token_signature_alg: function ({ id_token_signature_alg }) { this.id_token_signature_alg = id_token_signature_alg },
 }
 
 class Client {
@@ -135,7 +137,8 @@ class Client {
       redirect_uris,
       refresh_token_ttl,
       relying_party,
-      secret
+      secret,
+      id_token_signature_alg
     } = this
 
     return {
@@ -155,7 +158,8 @@ class Client {
       secret,
       supported_grant_types: grantTypes
         .filter(({ value }) => value)
-        .map(({ label }) => label)
+        .map(({ label }) => label),
+      id_token_signature_alg
     }
   }
 }
@@ -186,5 +190,14 @@ Client.get = function (id) {
     return client
   })
 }
+
+Client.idTokenSignatureAlgorithms = [
+  "HS256",
+  "HS384",
+  "HS512",
+  "RS256",
+  "RS384",
+  "RS512"
+]
 
 export default Client

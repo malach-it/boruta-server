@@ -26,7 +26,7 @@ defmodule BorutaAuth.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", branch: "20-configurable-signature_alg-and-hash_alg"},
     ]
   end
 end

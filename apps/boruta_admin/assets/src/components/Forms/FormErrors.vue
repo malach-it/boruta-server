@@ -20,7 +20,8 @@ const labels = {
   'id_token_ttl': 'ID token TTL',
   'authorized_scopes': 'Authorized scopes',
   'relying_party_id': 'Relying party',
-  'redirect_uris': 'Redirect URIs'
+  'redirect_uris': 'Redirect URIs',
+  'id_token_signature_alg': 'ID token signature algorithm'
 }
 export default {
   name: 'FormErrors',

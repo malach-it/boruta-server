@@ -1,6 +1,6 @@
 <template>
   <div class="client-form">
-    <div class="ui large segment">
+    <div class="ui segment">
       <FormErrors v-if="client.errors" :errors="client.errors" />
       <form class="ui form" @submit.prevent="submit">
         <h3>General configuration</h3>
@@ -42,6 +42,17 @@
           </div>
           <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
         </div>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.id_token_signature_alg }">
+            <label>ID token signature algorithm</label>
+            <div class="field" v-for="alg in idTokenSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg }}</label>
+                <input type="radio" v-model="client.id_token_signature_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
+        </div>
         <h3>Authentication</h3>
         <div class="field" :class="{ 'error': client.errors?.relying_party_id }">
           <RelyingPartyField :relyingParty="client.relying_party.model" @relyingPartyChange="setRelyingParty"/>
@@ -57,19 +68,19 @@
           <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         </div>
         <h3>PKCE configuration</h3>
-        <div class="ui large segment">
+        <div class="ui segment">
           <div class="ui toggle checkbox">
             <input type="checkbox" v-model="client.pkce">
             <label>PKCE enabled</label>
           </div>
         </div>
-        <div class="ui large segment">
+        <div class="ui segment">
           <div class="ui toggle checkbox">
             <input type="checkbox" v-model="client.public_refresh_token">
             <label>Public refresh token</label>
           </div>
         </div>
-        <div class="ui large segment">
+        <div class="ui segment">
           <div class="ui toggle checkbox">
             <input type="checkbox" v-model="client.public_revoke">
             <label>Public revoke</label>
@@ -77,18 +88,16 @@
         </div>
         <div class="field">
           <h3>Supported grant types</h3>
-          <div class="ui segments">
-            <div class="ui large segment" v-for="grantType in client.grantTypes" :key="grantType.label">
-              <div class="ui toggle checkbox">
-                <input type="checkbox" v-model="grantType.value">
-                <label>{{ grantType.label }}</label>
-              </div>
+          <div class="ui segment" v-for="grantType in client.grantTypes" :key="grantType.label">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="grantType.value">
+              <label>{{ grantType.label }}</label>
             </div>
           </div>
         </div>
         <hr />
-        <button class="ui large right floated violet button" type="submit">{{ action }}</button>
-        <a v-on:click="back()" class="ui large button">Back</a>
+        <button class="ui right floated violet button" type="submit">{{ action }}</button>
+        <a v-on:click="back()" class="ui button">Back</a>
       </form>
     </div>
   </div>
@@ -96,6 +105,7 @@
 
 <script>
 import Scope from '../../models/scope.model'
+import Client from '../../models/client.model'
 import ScopesField from './ScopesField.vue'
 import RelyingPartyField from './RelyingPartyField.vue'
 import FormErrors from './FormErrors.vue'
@@ -107,6 +117,11 @@ export default {
     ScopesField,
     RelyingPartyField,
     FormErrors
+  },
+  data() {
+    return {
+      idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms
+    }
   },
   methods: {
     back () {

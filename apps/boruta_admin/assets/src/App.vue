@@ -12,7 +12,7 @@ export default {
 body {
   min-height: 100%;
   height: auto;
-  max-width: 100%;
+  width: 100%;
   overflow-x: hidden;
 }
 </style>

@@ -193,20 +193,20 @@ export default {
       .item {
         position: relative;
         padding: 0;
-        min-width: 4em;
-        min-height: 4em;
+        min-width: 3em;
+        min-height: 3em;
         border: 1px solid #d4d4d5;
         border-top: none;
         cursor: pointer;
         span {
           margin-left: 1.5em;
-          margin-right: 4em;
-          line-height: 4em;
+          margin-right: 3em;
+          line-height: 3rem;
         }
         i {
           position: absolute;
-          top: 1.5em;
-          right: 1.5em;
+          top: 1em;
+          right: 1em;
         }
         &.active {
           .dropdown {
@@ -245,15 +245,13 @@ export default {
         border-top: 1px solid #d4d4d5;
         .subitem {
           position: relative;
-          border: 1px solid #d4d4d5;
           border-top: none;
           text-align: right;
           font-size: .85em;
-          height: 3rem;
+          height: 1.7rem;
           span {
-            line-height: 3rem;
-            padding-left: 2rem;
-            margin: 1em;
+            line-height: 1.7rem;
+            padding-left: .5rem;
           }
           a {
             font-weight: normal!important;
@@ -264,6 +262,9 @@ export default {
               font-weight: bold!important;
             }
           }
+        }
+        @media screen and (max-width: 1127px) {
+          display: none!important;
         }
       }
     }
@@ -286,6 +287,11 @@ export default {
         top: 0;
         z-index: 100;
       }
+    }
+  }
+  .ui.list {
+    & .item:last-child {
+      margin: 0;
     }
   }
   .ui.grid {
@@ -320,6 +326,13 @@ export default {
       bottom: -.2em;
       left: 1em;
     }
+    .ui.checkbox input[type=radio] {
+      opacity: 1!important;
+    }
+    .inline.fields>label {
+      display: block;
+      width: 100%;
+    }
   }
   .ui.segments {
     margin: 0;
@@ -329,6 +342,9 @@ export default {
   }
   .ui.segment {
     margin-bottom: 1rem;
+    &>.field, &>.fields {
+      margin: 0;
+    }
   }
   .content-wrapper {
     flex: 1;
