@@ -1,6 +1,6 @@
 <template>
   <div class="user-form">
-    <div class="ui large segment">
+    <div class="ui segment">
       <FormErrors :errors="user.errors" v-if="user.errors" />
       <h3>Accessible scopes</h3>
       <form class="ui form" @submit.prevent="submit">

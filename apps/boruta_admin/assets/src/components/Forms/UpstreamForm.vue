@@ -1,6 +1,6 @@
 <template>
   <div class="upstream-form">
-    <div class="ui large segment">
+    <div class="ui segment">
       <FormErrors v-if="upstream.errors" :errors="upstream.errors" />
       <form class="ui form" @submit.prevent="submit">
         <h3>General configuration</h3>

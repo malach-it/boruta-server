@@ -1,6 +1,6 @@
 <template>
   <div class="relying-party-form">
-    <div class="ui large segment">
+    <div class="ui segment">
       <FormErrors v-if="relyingParty.errors" :errors="relyingParty.errors" />
       <form class="ui form" @submit.prevent="submit">
         <section>

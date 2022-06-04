@@ -2,7 +2,7 @@
   <div class="edit-user">
     <Toaster :active="success" message="User has been updated" type="success" />
     <div class="ui container">
-      <div class="ui large segment">
+      <div class="ui segment">
         <div class="ui attribute list">
           <div class="item">
             <span class="header">User ID</span>

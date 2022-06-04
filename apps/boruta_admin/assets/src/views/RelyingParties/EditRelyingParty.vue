@@ -2,7 +2,7 @@
   <div class="edit-relying-party">
     <Toaster :active="success" message="Relying party has been updated" type="success" />
     <div class="ui container">
-      <div class="ui large segment">
+      <div class="ui segment">
         <div class="ui attribute list">
           <div class="item">
             <span class="header">Relying party ID</span>

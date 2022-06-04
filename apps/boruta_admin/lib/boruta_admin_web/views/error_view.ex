@@ -1,12 +1,6 @@
 defmodule BorutaAdminWeb.ErrorView do
   use BorutaAdminWeb, :view
 
-  # If you want to customize a particular status code
-  # for a certain format, you may uncomment below.
-  # def render("500.html", _assigns) do
-  #   "Internal Server Error"
-  # end
-
   def render("404.json", _assigns) do
     %{
       code: "NOT_FOUND",
@@ -26,5 +20,9 @@ defmodule BorutaAdminWeb.ErrorView do
       code: "FORBIDDEN",
       message: "You are forbidden to access this resource."
     }
+  end
+
+  def template_not_found(template, _assigns) do
+    Phoenix.Controller.status_message_from_template(template)
   end
 end

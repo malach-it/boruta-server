@@ -5,7 +5,7 @@
     <div class="container">
       <div class="ui three column upstreams stackable grid" v-if="upstreams.length">
         <div v-for="upstream in upstreams" :key="upstream.id" class="column">
-        <div class="ui large upstream highlightable segment">
+        <div class="ui upstream highlightable segment">
           <div class="actions">
             <router-link
               :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"

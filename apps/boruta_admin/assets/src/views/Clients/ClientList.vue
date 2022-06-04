@@ -6,7 +6,7 @@
     <div class="container">
       <div class="ui two column clients stackable grid" v-if="clients.length">
         <div v-for="client in clients" class="ui column" :key="client.id">
-          <div class="ui large client highlightable segment">
+          <div class="ui client highlightable segment">
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-client', params: { clientId: client.id } }"

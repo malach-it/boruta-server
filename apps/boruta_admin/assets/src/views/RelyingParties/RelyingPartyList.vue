@@ -5,7 +5,7 @@
     <div class="container">
       <div class="ui three column relyingParties stackable grid" v-if="relyingParties.length">
         <div v-for="relyingParty in relyingParties" :key="relyingParty.id" class="column">
-        <div class="ui large relyingParty highlightable segment">
+        <div class="ui relyingParty highlightable segment">
           <div class="actions">
             <router-link
               :to="{ name: 'edit-relying-party', params: { relyingPartyId: relyingParty.id } }"

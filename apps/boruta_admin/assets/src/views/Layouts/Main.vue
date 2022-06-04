@@ -3,7 +3,7 @@
     <Header ref="header" :darkMode="currentMode" />
     <div id="main" ref="main">
       <div class="sidebar-menu">
-        <div class="ui big vertical fluid tabular menu" :class="{ 'inverted': currentMode }">
+        <div class="ui vertical fluid tabular menu" :class="{ 'inverted': currentMode }">
           <a @click="toggleDarkMode()">
             <div class="dark-mode item">
               <i class="sun icon" :class="{ 'outline': currentMode }"></i>
@@ -136,12 +136,11 @@ export default {
     margin: 0;
     .item {
       list-style-type: none;
-      margin-bottom: 1rem;
       .header {
         color: #999;
       }
       .description {
-        padding-left: 1rem;
+        padding-left: .5rem;
         color: inherit;
         text-overflow: ellipsis;
         overflow: hidden;
@@ -247,10 +246,10 @@ export default {
           position: relative;
           border-top: none;
           text-align: right;
-          font-size: .85em;
-          height: 1.7rem;
+          font-size: .9em;
+          height: 2rem;
           span {
-            line-height: 1.7rem;
+            line-height: 2rem;
             padding-left: .5rem;
           }
           a {
