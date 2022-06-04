@@ -407,6 +407,18 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
     setup [:create_relying_party]
 
     @tag authorized: ["relying-parties:manage:all"]
+    test "cannot delete admin ui relying_party", %{conn: conn} do
+      client_relying_party = insert(:client_relying_party)
+      current_admin_ui_client_id = System.get_env("VUE_APP_ADMIN_CLIENT_ID", "")
+      System.put_env("VUE_APP_ADMIN_CLIENT_ID", client_relying_party.client_id)
+
+      conn = delete(conn, Routes.admin_relying_party_path(conn, :delete, client_relying_party.relying_party))
+      assert response(conn, 403)
+
+      System.put_env("VUE_APP_ADMIN_CLIENT_ID", current_admin_ui_client_id)
+    end
+
+    @tag authorized: ["relying-parties:manage:all"]
     test "deletes chosen relying_party", %{conn: conn, relying_party: relying_party} do
       conn = delete(conn, Routes.admin_relying_party_path(conn, :delete, relying_party))
       assert response(conn, 204)
