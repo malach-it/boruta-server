@@ -1,6 +1,7 @@
 <template>
   <div class="client-list">
-    <Toaster :active="deleted" message="Client has been deleted" type="error" />
+    <Toaster :active="deleted" message="Client has been deleted" type="warning" />
+    <Toaster :active="deletionError" :message="deletionError" type="error" />
     <router-link :to="{ name: 'new-client' }" class="ui teal main create button">Add a client</router-link>
     <div class="container">
       <div class="ui two column clients stackable grid" v-if="clients.length">
@@ -63,7 +64,8 @@ export default {
   data () {
     return {
       clients: [] ,
-      deleted: false
+      deleted: false,
+      deletionError: false
     }
   },
   mounted () {
@@ -78,9 +80,12 @@ export default {
     deleteClient (client) {
       if (!confirm('Are you sure ?')) return
       this.deleted = false
+      this.deletionError = false
       client.destroy().then(() => {
         this.deleted = true
         this.clients.splice(this.clients.indexOf(client), 1)
+      }).catch((error) => {
+        this.deletionError = error.response.data.message
       })
     }
   }

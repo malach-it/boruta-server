@@ -1,7 +1,8 @@
 <template>
   <div id="scope-list">
     <Toaster :active="saved" message="Scope has been saved" type="success" />
-    <Toaster :active="deleted" message="Scope has been deleted" type="error" />
+    <Toaster :active="deleted" message="Scope has been deleted" type="warning" />
+    <Toaster :active="deletionError" :message="deletionError" type="error" />
     <div class="container">
       <div class="ui segments" v-if="scopes.length">
         <div v-for="(scope, index) in scopes" class="ui mini highlightable segment" :key="index">
@@ -73,9 +74,9 @@ export default {
   data () {
     return {
       scopes: [],
-      errors: null,
       saved: false,
-      deleted: false
+      deleted: false,
+      deletionError: false
     }
   },
   mounted () {
@@ -103,7 +104,6 @@ export default {
       }
     },
     saveScope (scope) {
-      this.errors = null
       this.saved = false
       scope.save().then((scope) => {
         this.saved = true
@@ -112,6 +112,7 @@ export default {
     },
     deleteScope (scope) {
       if (!confirm('Are you sure ?')) return
+      this.deletionError = false
       this.deleted = false
       if (scope.persisted) {
         scope.destroy().then(() => {
@@ -120,6 +121,8 @@ export default {
             this.scopes.indexOf(scope),
             1
           )
+        }).catch((error) => {
+          this.deletionError = error.response.data.message
         })
       } else {
         this.scopes.splice(

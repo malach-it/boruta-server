@@ -1,6 +1,6 @@
 <template>
   <div class="relyingParty-list">
-    <Toaster :active="deleted" message="Relying party has been deleted" type="error" />
+    <Toaster :active="deleted" message="Relying party has been deleted" type="warning" />
     <router-link :to="{ name: 'new-relying-party' }" class="ui teal main create button">Add a relying party</router-link>
     <div class="container">
       <div class="ui three column relyingParties stackable grid" v-if="relyingParties.length">

@@ -15,21 +15,21 @@ defmodule BorutaAdminWeb.UserControllerTest do
            |> get(Routes.admin_user_path(conn, :index))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
 
     assert conn
            |> patch(Routes.admin_user_path(conn, :update, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
 
     assert conn
            |> delete(Routes.admin_user_path(conn, :delete, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
   end
 
@@ -40,21 +40,21 @@ defmodule BorutaAdminWeb.UserControllerTest do
              |> get(Routes.admin_user_path(conn, :index))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
 
       assert conn
              |> patch(Routes.admin_user_path(conn, :update, "id"))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
 
       assert conn
              |> delete(Routes.admin_user_path(conn, :delete, "id"))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
     end
   end
@@ -126,6 +126,14 @@ defmodule BorutaAdminWeb.UserControllerTest do
       assert response(conn, 204)
       refute BorutaIdentity.Repo.get(User, user_id)
       refute BorutaIdentity.Repo.get(Internal.User, user_uid)
+    end
+
+    @tag user_authorized: ["users:manage:all"]
+    test "cannot delete current user", %{conn: conn, resource_owner: resource_owner} do
+      conn =
+        delete(conn, Routes.admin_user_path(conn, :update, resource_owner.sub))
+
+      assert response(conn, 403)
     end
   end
 end

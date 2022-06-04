@@ -134,6 +134,17 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
+    test "cannot delete administration ui client", %{conn: conn, client: client} do
+      current_admin_ui_client_id = System.get_env("VUE_APP_ADMIN_CLIENT_ID", "")
+      System.put_env("VUE_APP_ADMIN_CLIENT_ID", client.id)
+
+      conn = delete(conn, Routes.admin_client_path(conn, :delete, client))
+      assert response(conn, 403)
+
+      System.put_env("VUE_APP_ADMIN_CLIENT_ID", current_admin_ui_client_id)
+    end
+
+    @tag authorized: ["clients:manage:all"]
     test "deletes chosen client", %{conn: conn, client: client} do
       conn = delete(conn, Routes.admin_client_path(conn, :delete, client))
       assert response(conn, 204)

@@ -17,6 +17,9 @@ defmodule BorutaAdminWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  import BorutaIdentity.AccountsFixtures
+
+  alias Boruta.Ecto.OauthMapper
   alias Boruta.Oauth.IntrospectResponse
   alias Ecto.Adapters.SQL.Sandbox
 
@@ -50,16 +53,27 @@ defmodule BorutaAdminWeb.ConnCase do
 
     conn = Phoenix.ConnTest.build_conn()
 
-    conn =
-      case tags[:authorized] do
-        nil -> conn
-        scopes -> authorized(conn, scopes)
-      end
-
-    {:ok, conn: conn}
+    {:ok, merge_tags_params(conn, tags)}
   end
 
-  def authorized(conn, scopes) do
+  def merge_tags_params(conn, tags) do
+    Enum.reduce(tags, [conn: conn], fn
+      {:authorized, scopes}, params ->
+        Keyword.merge(
+          params,
+          authorized_params(conn, scopes)
+        )
+      {:user_authorized, scopes}, params ->
+        Keyword.merge(
+          params,
+          user_authorized_params(conn, scopes)
+        )
+      _, params ->
+        params
+    end)
+  end
+
+  def authorized_params(conn, scopes) do
     token = Boruta.Factory.insert(:token, type: "access_token", scope: Enum.join(scopes, " "))
 
     conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{token.value}")
@@ -74,12 +88,46 @@ defmodule BorutaAdminWeb.ConnCase do
     bypass = Bypass.open(port: port)
     Bypass.up(bypass)
 
-    introspected_token = token |> Boruta.Ecto.OauthMapper.to_oauth_schema() |> IntrospectResponse.from_token()
+    introspected_token =
+      token |> OauthMapper.to_oauth_schema() |> IntrospectResponse.from_token()
 
     Bypass.stub(bypass, "POST", "/oauth/introspect", fn conn ->
       Plug.Conn.resp(conn, 200, Jason.encode!(introspected_token))
     end)
 
-    conn
+    [conn: conn]
+  end
+
+  def user_authorized_params(conn, scopes) do
+    %{id: sub} = user_fixture()
+    resource_owner = %Boruta.Oauth.ResourceOwner{sub: sub}
+
+    token =
+      Boruta.Factory.insert(:token,
+        type: "access_token",
+        scope: Enum.join(scopes, " "),
+        sub: resource_owner.sub
+      )
+
+    conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{token.value}")
+
+    %URI{port: port} =
+      URI.parse(
+        Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2][
+          :site
+        ]
+      )
+
+    bypass = Bypass.open(port: port)
+    Bypass.up(bypass)
+
+    introspected_token =
+      token |> OauthMapper.to_oauth_schema() |> IntrospectResponse.from_token()
+
+    Bypass.stub(bypass, "POST", "/oauth/introspect", fn conn ->
+      Plug.Conn.resp(conn, 200, Jason.encode!(introspected_token))
+    end)
+
+    [conn: conn, resource_owner: resource_owner]
   end
 end

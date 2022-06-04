@@ -14,6 +14,13 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
     public: false
   }
   @invalid_attrs %{name: nil, public: nil}
+  @protected_scopes [
+    "users:manage:all",
+    "clients:manage:all",
+    "relying-parties:manage:all",
+    "scopes:manage:all",
+    "upstreams:manage:all"
+  ]
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -24,28 +31,28 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
            |> get(Routes.admin_scope_path(conn, :index))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
 
     assert conn
            |> post(Routes.admin_scope_path(conn, :create))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
 
     assert conn
            |> patch(Routes.admin_scope_path(conn, :update, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
 
     assert conn
            |> delete(Routes.admin_scope_path(conn, :delete, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
   end
 
@@ -56,28 +63,28 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
              |> get(Routes.admin_scope_path(conn, :index))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
 
       assert conn
              |> post(Routes.admin_scope_path(conn, :create))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
 
       assert conn
              |> patch(Routes.admin_scope_path(conn, :update, "id"))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
 
       assert conn
              |> delete(Routes.admin_scope_path(conn, :delete, "id"))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
     end
   end
@@ -131,6 +138,15 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
       scope = insert(:scope)
 
       {:ok, conn: conn, existing_scope: scope}
+    end
+
+    @tag authorized: ["scopes:manage:all"]
+    test "cannot delete protected scopes", %{conn: conn} do
+      Enum.map(@protected_scopes, fn name ->
+        conn = delete(conn, Routes.admin_scope_path(conn, :delete, insert(:scope, name: name)))
+
+        assert response(conn, 403)
+      end)
     end
 
     @tag authorized: ["scopes:manage:all"]

@@ -36,8 +36,9 @@ defmodule BorutaAdminWeb.UserController do
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    with {:ok, _user} <- Admin.delete_user(id) do
+  def delete(conn, %{"id" => user_id}) do
+    with :ok <- ensure_deletion_allowed(user_id, conn),
+         {:ok, _user} <- Admin.delete_user(user_id) do
       send_resp(conn, 204, "")
     end
   end
@@ -46,5 +47,14 @@ defmodule BorutaAdminWeb.UserController do
     %{"sub" => sub, "username" => username} = conn.assigns[:introspected_token]
     user = %User{id: sub, username: username}
     render(conn, "current.json", user: user)
+  end
+
+  defp ensure_deletion_allowed(user_id, conn) do
+    %{"sub" => sub} = conn.assigns[:introspected_token]
+
+    case user_id do
+      ^sub -> {:error, :forbidden}
+      _ -> :ok
+    end
   end
 end

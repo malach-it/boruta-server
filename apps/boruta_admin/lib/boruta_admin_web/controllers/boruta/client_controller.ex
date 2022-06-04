@@ -84,7 +84,8 @@ defmodule BorutaAdminWeb.ClientController do
   def delete(conn, %{"id" => client_id}) do
     client = get_client(client_id)
 
-    with {:ok, %Client{}} <- Admin.delete_client(client),
+    with :ok <- ensure_deletion_allowed(client),
+         {:ok, %Client{}} <- Admin.delete_client(client),
           {:ok, _client_relying_party} <- RelyingParties.remove_client_relying_party(client_id) do
       send_resp(conn, :no_content, "")
     end
@@ -92,5 +93,14 @@ defmodule BorutaAdminWeb.ClientController do
 
   defp get_client(client_id) do
     Admin.get_client!(client_id)
+  end
+
+  defp ensure_deletion_allowed(client) do
+    admin_ui_client_id = System.get_env("VUE_APP_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
+
+    case client.id do
+      ^admin_ui_client_id -> {:error, :forbidden}
+      _ -> :ok
+    end
   end
 end

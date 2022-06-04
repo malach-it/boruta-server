@@ -1,6 +1,6 @@
 <template>
   <div class="upstream-list">
-    <Toaster :active="deleted" message="Upstream has been updated" type="error" />
+    <Toaster :active="deleted" message="Upstream has been updated" type="warning" />
     <router-link :to="{ name: 'new-upstream' }" class="ui teal main create button">Add an upstream</router-link>
     <div class="container">
       <div class="ui three column upstreams stackable grid" v-if="upstreams.length">

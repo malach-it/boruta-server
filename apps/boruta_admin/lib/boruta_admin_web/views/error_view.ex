@@ -7,24 +7,24 @@ defmodule BorutaAdminWeb.ErrorView do
   #   "Internal Server Error"
   # end
 
+  def render("404.json", _assigns) do
+    %{
+      code: "NOT_FOUND",
+      message: "The requested resource could not be found."
+    }
+  end
+
   def render("401.json", _assigns) do
     %{
       code: "UNAUTHORIZED",
-      message: "The client is unauthorized to access this resource."
+      message: "You are unauthorized to access this resource."
     }
   end
 
   def render("403.json", _assigns) do
     %{
       code: "FORBIDDEN",
-      message: "The client is forbidden to access this resource."
+      message: "You are forbidden to access this resource."
     }
-  end
-
-  # By default, Phoenix returns the status message from
-  # the template name. For example, "404.html" becomes
-  # "Not Found".
-  def template_not_found(template, _assigns) do
-    Phoenix.Controller.status_message_from_template(template)
   end
 end

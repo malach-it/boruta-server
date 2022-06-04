@@ -30,28 +30,28 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
            |> get(Routes.admin_upstream_path(conn, :index))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
 
     assert conn
            |> post(Routes.admin_upstream_path(conn, :create))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
 
     assert conn
            |> patch(Routes.admin_upstream_path(conn, :update, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
 
     assert conn
            |> delete(Routes.admin_upstream_path(conn, :delete, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "The client is unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource."
            }
   end
 
@@ -62,28 +62,28 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
              |> get(Routes.admin_upstream_path(conn, :index))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
 
       assert conn
              |> post(Routes.admin_upstream_path(conn, :create))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
 
       assert conn
              |> patch(Routes.admin_upstream_path(conn, :update, "id"))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
 
       assert conn
              |> delete(Routes.admin_upstream_path(conn, :delete, "id"))
              |> json_response(403) == %{
                "code" => "FORBIDDEN",
-               "message" => "The client is forbidden to access this resource."
+               "message" => "You are forbidden to access this resource."
              }
     end
   end

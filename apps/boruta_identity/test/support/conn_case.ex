@@ -17,7 +17,6 @@ defmodule BorutaIdentityWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
-  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo

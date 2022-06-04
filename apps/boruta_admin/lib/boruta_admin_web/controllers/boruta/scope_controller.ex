@@ -1,16 +1,25 @@
 defmodule BorutaAdminWeb.ScopeController do
   use BorutaAdminWeb, :controller
 
-  import BorutaAdminWeb.Authorization, only: [
-    authorize: 2
-  ]
+  import BorutaAdminWeb.Authorization,
+    only: [
+      authorize: 2
+    ]
 
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Scope
 
-  plug :authorize, ["scopes:manage:all"]
+  @protected_scopes [
+    "users:manage:all",
+    "clients:manage:all",
+    "relying-parties:manage:all",
+    "scopes:manage:all",
+    "upstreams:manage:all"
+  ]
 
-  action_fallback BorutaAdminWeb.FallbackController
+  plug(:authorize, ["scopes:manage:all"])
+
+  action_fallback(BorutaAdminWeb.FallbackController)
 
   def index(conn, _params) do
     scopes = Admin.list_scopes()
@@ -42,8 +51,16 @@ defmodule BorutaAdminWeb.ScopeController do
   def delete(conn, %{"id" => id}) do
     scope = Admin.get_scope!(id)
 
-    with {:ok, %Scope{}} <- Admin.delete_scope(scope) do
+    with :ok <- ensure_deletion_allowed(scope),
+         {:ok, %Scope{}} <- Admin.delete_scope(scope) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  def ensure_deletion_allowed(scope) do
+    case Enum.member?(@protected_scopes, scope.name) do
+      true -> {:error, :forbidden}
+      false -> :ok
     end
   end
 end
