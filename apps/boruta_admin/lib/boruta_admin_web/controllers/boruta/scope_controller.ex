@@ -43,7 +43,7 @@ defmodule BorutaAdminWeb.ScopeController do
   def update(conn, %{"id" => id, "scope" => scope_params}) do
     scope = Admin.get_scope!(id)
 
-    with :ok <- ensure_deletion_allowed(scope),
+    with :ok <- ensure_open_for_edition(scope),
          {:ok, %Scope{} = scope} <- Admin.update_scope(scope, scope_params) do
       render(conn, "show.json", scope: scope)
     end
@@ -52,13 +52,13 @@ defmodule BorutaAdminWeb.ScopeController do
   def delete(conn, %{"id" => id}) do
     scope = Admin.get_scope!(id)
 
-    with :ok <- ensure_deletion_allowed(scope),
+    with :ok <- ensure_open_for_edition(scope),
          {:ok, %Scope{}} <- Admin.delete_scope(scope) do
       send_resp(conn, :no_content, "")
     end
   end
 
-  def ensure_deletion_allowed(scope) do
+  def ensure_open_for_edition(scope) do
     case Enum.member?(@protected_scopes, scope.name) do
       true -> {:error, :forbidden}
       false -> :ok

@@ -69,13 +69,13 @@ defmodule BorutaAdminWeb.RelyingPartyController do
   def delete(conn, %{"id" => id}) do
     relying_party = RelyingParties.get_relying_party!(id)
 
-    with :ok <- ensure_deletion_allowed(id),
+    with :ok <- ensure_open_for_edition(id),
          {:ok, %RelyingParty{}} <- RelyingParties.delete_relying_party(relying_party) do
       send_resp(conn, :no_content, "")
     end
   end
 
-  defp ensure_deletion_allowed(relying_party_id) do
+  defp ensure_open_for_edition(relying_party_id) do
     admin_ui_client_id =
       System.get_env("VUE_APP_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
 
