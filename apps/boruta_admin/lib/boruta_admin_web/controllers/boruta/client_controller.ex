@@ -101,7 +101,7 @@ defmodule BorutaAdminWeb.ClientController do
       System.get_env("VUE_APP_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
 
     case client_id do
-      ^admin_ui_client_id -> {:error, :forbidden}
+      ^admin_ui_client_id -> {:error, :protected_resource}
       _ -> :ok
     end
   end

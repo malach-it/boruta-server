@@ -60,7 +60,7 @@ defmodule BorutaAdminWeb.ScopeController do
 
   def ensure_open_for_edition(scope) do
     case Enum.member?(@protected_scopes, scope.name) do
-      true -> {:error, :forbidden}
+      true -> {:error, :protected_resource}
       false -> :ok
     end
   end

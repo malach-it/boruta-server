@@ -31,6 +31,16 @@ defmodule BorutaAdminWeb.ErrorView do
     }
   end
 
+  def render("protected_resource.json", _assigns) do
+    %{
+      code: "FORBIDDEN",
+      message: "The resource is write protected.",
+      errors: %{
+        resource: ["is write protected."]
+      }
+    }
+  end
+
   def template_not_found(template, _assigns) do
     Phoenix.Controller.status_message_from_template(template)
   end

@@ -56,7 +56,7 @@ defmodule BorutaAdminWeb.UserController do
     %{"sub" => sub} = conn.assigns[:introspected_token]
 
     case user_id do
-      ^sub -> {:error, :forbidden}
+      ^sub -> {:error, :protected_resource}
       _ -> :ok
     end
   end

@@ -81,7 +81,7 @@ defmodule BorutaAdminWeb.RelyingPartyController do
 
     case RelyingParties.get_relying_party_by_client_id(admin_ui_client_id) do
       %RelyingParty{id: ^relying_party_id} ->
-        {:error, :forbidden}
+        {:error, :protected_resource}
       _ ->
         :ok
     end

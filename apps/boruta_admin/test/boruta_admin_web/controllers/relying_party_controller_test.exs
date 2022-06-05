@@ -32,28 +32,40 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
            |> get(Routes.admin_relying_party_path(conn, :index))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "You are unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource.",
+             "errors" => %{
+               "resource" => ["you are unauthorized to access this resource."]
+             }
            }
 
     assert conn
            |> post(Routes.admin_relying_party_path(conn, :create))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "You are unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource.",
+             "errors" => %{
+               "resource" => ["you are unauthorized to access this resource."]
+             }
            }
 
     assert conn
            |> patch(Routes.admin_relying_party_path(conn, :update, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "You are unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource.",
+             "errors" => %{
+               "resource" => ["you are unauthorized to access this resource."]
+             }
            }
 
     assert conn
            |> delete(Routes.admin_relying_party_path(conn, :delete, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "You are unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource.",
+             "errors" => %{
+               "resource" => ["you are unauthorized to access this resource."]
+             }
            }
 
     assert conn
@@ -67,7 +79,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
            )
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "You are unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource.",
+             "errors" => %{
+               "resource" => ["you are unauthorized to access this resource."]
+             }
            }
 
     assert conn
@@ -81,7 +96,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
            )
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "You are unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource.",
+             "errors" => %{
+               "resource" => ["you are unauthorized to access this resource."]
+             }
            }
 
     assert conn
@@ -95,7 +113,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
            )
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
-             "message" => "You are unauthorized to access this resource."
+             "message" => "You are unauthorized to access this resource.",
+             "errors" => %{
+               "resource" => ["you are unauthorized to access this resource."]
+             }
            }
   end
 
@@ -105,29 +126,41 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
       assert conn
              |> get(Routes.admin_relying_party_path(conn, :index))
              |> json_response(403) == %{
-               "code" => "FORBIDDEN",
-               "message" => "You are forbidden to access this resource."
+               "code" =>"FORBIDDEN",
+               "message" =>"You are forbidden to access this resource.",
+               "errors" =>%{
+                 "resource" =>["you are forbidden to access this resource."]
+               }
              }
 
       assert conn
              |> post(Routes.admin_relying_party_path(conn, :create))
              |> json_response(403) == %{
-               "code" => "FORBIDDEN",
-               "message" => "You are forbidden to access this resource."
+               "code" =>"FORBIDDEN",
+               "message" =>"You are forbidden to access this resource.",
+               "errors" =>%{
+                 "resource" =>["you are forbidden to access this resource."]
+               }
              }
 
       assert conn
              |> patch(Routes.admin_relying_party_path(conn, :update, "id"))
              |> json_response(403) == %{
-               "code" => "FORBIDDEN",
-               "message" => "You are forbidden to access this resource."
+               "code" =>"FORBIDDEN",
+               "message" =>"You are forbidden to access this resource.",
+               "errors" =>%{
+                 "resource" =>["you are forbidden to access this resource."]
+               }
              }
 
       assert conn
              |> delete(Routes.admin_relying_party_path(conn, :delete, "id"))
              |> json_response(403) == %{
-               "code" => "FORBIDDEN",
-               "message" => "You are forbidden to access this resource."
+               "code" =>"FORBIDDEN",
+               "message" =>"You are forbidden to access this resource.",
+               "errors" =>%{
+                 "resource" =>["you are forbidden to access this resource."]
+               }
              }
 
       assert conn
@@ -140,8 +173,11 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" => "FORBIDDEN",
-               "message" => "You are forbidden to access this resource."
+               "code" =>"FORBIDDEN",
+               "message" =>"You are forbidden to access this resource.",
+               "errors" =>%{
+                 "resource" =>["you are forbidden to access this resource."]
+               }
              }
 
       assert conn
@@ -154,8 +190,11 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" => "FORBIDDEN",
-               "message" => "You are forbidden to access this resource."
+               "code" =>"FORBIDDEN",
+               "message" =>"You are forbidden to access this resource.",
+               "errors" =>%{
+                 "resource" =>["you are forbidden to access this resource."]
+               }
              }
 
       assert conn
@@ -168,8 +207,11 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" => "FORBIDDEN",
-               "message" => "You are forbidden to access this resource."
+               "code" =>"FORBIDDEN",
+               "message" =>"You are forbidden to access this resource.",
+               "errors" =>%{
+                 "resource" =>["you are forbidden to access this resource."]
+               }
              }
     end
   end

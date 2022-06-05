@@ -33,4 +33,11 @@ defmodule BorutaAdminWeb.FallbackController do
     |> put_view(BorutaAdminWeb.ErrorView)
     |> render("403." <> get_format(conn))
   end
+
+  def call(conn, {:error, :protected_resource}) do
+    conn
+    |> put_status(:forbidden)
+    |> put_view(BorutaAdminWeb.ErrorView)
+    |> render("protected_resource." <> get_format(conn))
+  end
 end
