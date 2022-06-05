@@ -50,9 +50,9 @@ class Scope {
         .then(({ data }) => Object.assign(this, data.data))
     }
     return response.catch((error) => {
-      const { errors } = error.response.data
+      const { code, message, errors } = error.response.data
       this.errors = errors
-      throw errors
+      throw { code, message, errors }
     })
   }
 

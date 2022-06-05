@@ -105,10 +105,13 @@ export default {
     },
     saveScope (scope) {
       this.saved = false
+      this.errorMessage = false
       scope.save().then((scope) => {
         this.saved = true
         scope.edit = false
-      }).catch()
+      }).catch((error) => {
+        this.errorMessage = error.message
+      })
     },
     deleteScope (scope) {
       if (!confirm('Are you sure ?')) return
