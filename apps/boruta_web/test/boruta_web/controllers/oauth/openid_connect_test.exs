@@ -222,7 +222,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn = get(conn, Routes.openid_path(conn, :jwks_index))
 
       assert %{
-        "keys" => [%{"kid" => ^client_id}]
+        "keys" => [%{"kid" => ^client_id, "kty" => "RSA"}, %{"kid" => ^client_id, "kty" => "oct"}]
       } = json_response(conn, 200)
     end
   end
@@ -244,7 +244,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert json_response(conn, 200) |> Map.keys() == required_keys
       assert json_response(conn, 200) == %{
         "authorization_endpoint" => "boruta/oauth/authorize",
-        "id_token_signing_alg_values_supported" => ["RS512"],
+        "id_token_signing_alg_values_supported" => ["RS256", "RS384", "RS512", "HS256", "HS384", "HS512"],
         "issuer" => "boruta",
         "jwks_uri" => "boruta/openid/jwks",
         "response_types_supported" => ["client_credentials", "password", "authorization_code", "refresh_token", "implicit", "revoke", "introspect"],

@@ -3,6 +3,8 @@ defmodule BorutaIdentity.ResourceOwners do
 
   @behaviour Boruta.Oauth.ResourceOwners
 
+  use BorutaIdentityWeb, :controller
+
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts

@@ -2,6 +2,7 @@ defmodule BorutaWeb.OauthView do
   use BorutaWeb, :view
 
   alias Boruta.Ecto
+  alias Boruta.Oauth.IdToken
   alias BorutaWeb.Token
 
   def render("token.json", %{response: %Boruta.Oauth.TokenResponse{} = response}) do
@@ -45,14 +46,7 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
-  def render("jwks.json", %{clients: clients}) do
-    keys =
-      Enum.map(clients, fn %Ecto.Client{id: client_id, public_key: public_key} ->
-        {_type, jwk} = public_key |> :jose_jwk.from_pem() |> :jose_jwk.to_map()
-
-        Map.put(jwk, :kid, client_id)
-      end)
-
+  def render("jwks.json", %{keys: keys}) do
     %{
       keys: keys
     }
@@ -76,7 +70,7 @@ defmodule BorutaWeb.OauthView do
       "jwks_uri" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :jwks_index),
       "response_types_supported" => Boruta.Oauth.Client.grant_types(),
       "subject_types_supported" => ["public"],
-      "id_token_signing_alg_values_supported" => ["RS512"]
+      "id_token_signing_alg_values_supported" => IdToken.signature_algorithms()
     }
   end
 
