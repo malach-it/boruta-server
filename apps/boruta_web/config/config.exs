@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :boruta_web,
   ecto_repos: [BorutaAuth.Repo, BorutaWeb.Repo]

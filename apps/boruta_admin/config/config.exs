@@ -5,7 +5,7 @@
 # is restricted to this project.
 
 # General application configuration
-use Mix.Config
+import Config
 
 config :boruta_admin,
   ecto_repos: [BorutaAdmin.Repo, BorutaAuth.Repo, BorutaIdentity.Repo, BorutaGateway.Repo, BorutaWeb.Repo]

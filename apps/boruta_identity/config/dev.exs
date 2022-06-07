@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :boruta_identity, BorutaIdentity.Repo,
   username: "postgres",

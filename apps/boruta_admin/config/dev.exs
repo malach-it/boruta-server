@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :boruta_admin, BorutaAdmin.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
