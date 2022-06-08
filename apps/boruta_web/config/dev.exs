@@ -2,7 +2,7 @@
 # should only configure the :boruta_web application itself
 # and only for organization purposes. All other config goes to
 # the umbrella root.
-use Mix.Config
+import Config
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: 4001],

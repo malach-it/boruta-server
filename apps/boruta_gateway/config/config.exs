@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :boruta_gateway,
   ecto_repos: [BorutaGateway.Repo]

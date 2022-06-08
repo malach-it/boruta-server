@@ -1,7 +1,7 @@
-use Mix.Config
+import Config
 
 config :boruta_identity,
-  ecto_repos: [BorutaIdentity.Repo, BorutaAuth.Repo]
+  ecto_repos: [BorutaAuth.Repo, BorutaIdentity.Repo]
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   url: [host: "localhost"],
@@ -19,5 +19,11 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :swoosh, :api_client, Swoosh.ApiClient.Finch
+
+config :boruta, Boruta.Oauth,
+  repo: BorutaAuth.Repo,
+  contexts: [
+    resource_owners: BorutaIdentity.ResourceOwners
+  ]
 
 import_config "#{Mix.env()}.exs"

@@ -41,9 +41,7 @@ defmodule BorutaIdentity.ResourceOwners do
 
   @impl Boruta.Oauth.ResourceOwners
   def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do
-    scopes = Accounts.get_user_scopes(sub)
-
-    Enum.map(scopes, fn (%{id: id, name: name}) -> %Scope{id: id, name: name} end)
+    Accounts.get_user_scopes(sub)
   end
   # TODO investigate nil values
   def authorized_scopes(_), do: []

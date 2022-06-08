@@ -14,26 +14,28 @@ defmodule BorutaIdentity.AdminTest do
     test "returns an error on duplicates" do
       user = insert(:user)
 
-      {:error, %Ecto.Changeset{} = changeset} =
+      assert {:error, %Ecto.Changeset{}} =
         Admin.update_user_authorized_scopes(user, [%{"name" => "test"}, %{"name" => "test"}])
-
-      assert changeset
     end
 
     test "stores user scopes" do
+      scope = Boruta.Factory.insert(:scope, name: "test")
       user = insert(:user)
 
+      user_id = user.id
+      scope_id = scope.id
       {:ok,
        %User{
          authorized_scopes:
            [
              %UserAuthorizedScope{
-               name: "test"
+               scope_id: ^scope_id,
+               user_id: ^user_id
              }
            ]
-       }} = Admin.update_user_authorized_scopes(user, [%{"name" => "test"}])
+       }} = Admin.update_user_authorized_scopes(user, [%{"id" => scope.id}])
 
-      assert [%{name: "test"}] = Repo.all(UserAuthorizedScope)
+      assert [%{scope_id: ^scope_id, user_id: ^user_id}] = Repo.all(UserAuthorizedScope)
     end
   end
 
@@ -60,4 +62,7 @@ defmodule BorutaIdentity.AdminTest do
       refute Repo.get(Internal.User, user_uid)
     end
   end
+
+  @tag :skip
+  test "delete_user_authorized_scopes_by_id/1"
 end

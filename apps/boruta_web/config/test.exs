@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: 4002],

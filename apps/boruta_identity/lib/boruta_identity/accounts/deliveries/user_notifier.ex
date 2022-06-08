@@ -19,8 +19,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
       {:error, {_status, %{"Errors" => errors}}} ->
         reason =
           errors
-          |> Enum.map(fn %{"ErrorMessage" => message} -> message end)
-          |> Enum.join(", ")
+          |> Enum.map_join(", ", fn %{"ErrorMessage" => message} -> message end)
 
         {:error, reason}
 
