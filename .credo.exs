@@ -135,6 +135,7 @@
         {Credo.Check.Warning.UnusedRegexOperation, []},
         {Credo.Check.Warning.UnusedStringOperation, []},
         {Credo.Check.Warning.UnusedTupleOperation, []},
+        {Credo.Check.Warning.SpecWithStruct, false},
 
         #
         # Controversial and experimental checks (opt-in, just replace `false` with `[]`)
@@ -152,6 +153,7 @@
         {Credo.Check.Refactor.ModuleDependencies, false},
         {Credo.Check.Refactor.PipeChainStart, false},
         {Credo.Check.Refactor.VariableRebinding, false},
+        {Credo.Check.Refactor.Apply, false},
         {Credo.Check.Warning.MapGetUnsafePass, false},
         {Credo.Check.Warning.UnsafeToAtom, false}
 
