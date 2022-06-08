@@ -115,7 +115,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
           user: %{
-            "authorized_scopes" => [%{"name" => scope.name}]
+            "authorized_scopes" => [%{"id" => scope.id}]
           }
         )
 

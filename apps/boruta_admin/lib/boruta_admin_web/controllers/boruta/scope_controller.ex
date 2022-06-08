@@ -53,7 +53,7 @@ defmodule BorutaAdminWeb.ScopeController do
     scope = Admin.get_scope!(id)
 
     with :ok <- ensure_open_for_edition(scope),
-         {:ok, %Scope{}} <- Admin.delete_scope(scope) do
+         {:ok, _changes} <- BorutaAuth.Repo.transaction(delete_scope_multi(scope)) do
       send_resp(conn, :no_content, "")
     end
   end
@@ -63,5 +63,17 @@ defmodule BorutaAdminWeb.ScopeController do
       true -> {:error, :protected_resource}
       false -> :ok
     end
+  end
+
+  defp delete_scope_multi(scope) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:delete_user_scopes, fn _repo, _changes ->
+      with {_deleted, nil} <- BorutaIdentity.Admin.delete_user_authorized_scopes_by_id(scope.id) do
+        {:ok, nil}
+      end
+    end)
+    |> Ecto.Multi.run(:delete_scope, fn _repo, _changes ->
+      Admin.delete_scope(scope)
+    end)
   end
 end

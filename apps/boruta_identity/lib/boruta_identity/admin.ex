@@ -61,7 +61,10 @@ defmodule BorutaIdentity.Admin do
            changeset =
              UserAuthorizedScope.changeset(
                %UserAuthorizedScope{},
-               Map.put(attrs, "user_id", user_id)
+               %{
+                 "scope_id" => attrs["id"],
+                 "user_id" => user.id
+               }
              )
 
            Ecto.Multi.insert(multi, "scope_-#{SecureRandom.uuid()}", changeset)
@@ -87,5 +90,10 @@ defmodule BorutaIdentity.Admin do
         apply(String.to_atom(user.provider), :delete_user, [user.uid])
         Repo.delete(user)
     end
+  end
+
+  @spec delete_user_authorized_scopes_by_id(scope_id :: String.t()) :: {deleted :: integer(), nil}
+  def delete_user_authorized_scopes_by_id(scope_id) do
+    Repo.delete_all(from(s in UserAuthorizedScope, where: s.scope_id == ^scope_id))
   end
 end

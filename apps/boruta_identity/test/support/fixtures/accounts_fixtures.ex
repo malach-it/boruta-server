@@ -28,11 +28,12 @@ defmodule BorutaIdentity.AccountsFixtures do
   end
 
   def user_scopes_fixture(user, attrs \\ %{}) do
+    scope = Boruta.Factory.insert(:scope, name: "name")
     {:ok, scope} =
       Repo.insert(
         %UserAuthorizedScope{
           user_id: user.id,
-          name: "name"
+          scope_id: scope.id
         }
         |> Ecto.Changeset.change(attrs)
       )

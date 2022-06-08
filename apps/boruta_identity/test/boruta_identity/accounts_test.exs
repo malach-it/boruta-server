@@ -740,9 +740,10 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "returns authorized scopes" do
       user = user_fixture()
-      scope = user_scopes_fixture(user)
+      user_scope = user_scopes_fixture(user)
 
-      assert Accounts.get_user_scopes(user.id) == [scope]
+      scope_id = user_scope.scope_id
+      assert [%Boruta.Oauth.Scope{id: ^scope_id, name: "name"}] = Accounts.get_user_scopes(user.id)
     end
   end
 
