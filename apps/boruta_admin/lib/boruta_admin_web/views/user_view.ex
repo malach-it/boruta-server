@@ -4,8 +4,20 @@ defmodule BorutaAdminWeb.UserView do
   alias BorutaAdminWeb.UserView
   alias BorutaIdentity.Accounts
 
-  def render("index.json", %{users: users}) do
-    %{data: render_many(users, UserView, "user.json")}
+  def render("index.json", %{
+        users: users,
+        page_number: page_number,
+        page_size: page_size,
+        total_pages: total_pages,
+        total_entries: total_entries
+      }) do
+    %{
+      data: render_many(users, UserView, "user.json"),
+      page_number: page_number,
+      page_size: page_size,
+      total_pages: total_pages,
+      total_entries: total_entries
+    }
   end
 
   def render("show.json", %{user: user}) do

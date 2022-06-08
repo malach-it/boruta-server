@@ -17,16 +17,19 @@
                 <span class="header">Email</span>
                 <span class="description">{{ user.email }}</span>
               </div>
-              <div class="item" v-if="user.authorized_scopes.length">
-                <span class="header">Scopes</span>
-                <div class="description">
-                  <span v-for="scope in user.authorized_scopes" class="ui olive label" :key="scope.model.id">
-                    {{ scope.model.name }}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="ui center aligned segment">
+        <div class="ui pagination menu">
+          <a
+            class="item"
+            :class="{ 'active': currentPage == pageNumber }"
+            v-for="pageNumber in totalPages"
+            @click="goToPage(pageNumber)">
+            {{ pageNumber }}
+          </a>
         </div>
       </div>
     </div>
@@ -46,17 +49,26 @@ export default {
     return {
       users: [],
       deleted: false,
-      errorMessage: false
+      errorMessage: false,
+      currentPage: this.$route.query.page,
+      page_size: 12,
+      totalPages: 1,
+      total_entries: 0
     }
   },
   mounted () {
-    this.getUsers()
+    this.getUsers(this.currentPage)
   },
   methods: {
-    getUsers () {
-      User.all().then((users) => {
-        this.users = users
+    getUsers (pageNumber) {
+      User.all({ pageNumber }).then(({ data, currentPage, totalPages }) => {
+        this.users = data
+        this.totalPages = totalPages
+        this.currentPage = currentPage
       })
+    },
+    goToPage(pageNumber) {
+      this.$router.push({ name: 'user-list', query: { page: pageNumber } })
     },
     deleteUser (user) {
       if (!confirm('Are you sure ?')) return
@@ -68,6 +80,15 @@ export default {
       }).catch((error) => {
         this.errorMessage = error.response.data.message
       })
+    }
+  },
+  watch: {
+    '$route.query.page': {
+      handler(pageNumber) {
+        this.getUsers(pageNumber)
+      },
+      deep: true,
+      immediate: true
     }
   }
 }

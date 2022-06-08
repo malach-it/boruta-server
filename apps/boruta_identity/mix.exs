@@ -54,6 +54,7 @@ defmodule BorutaIdentity.MixProject do
       {:phx_gen_auth, "~> 0.6", only: [:dev], runtime: false},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
+      {:scrivener_ecto, "~> 2.7"},
       {:secure_random, "~> 0.5"},
       {:swoosh, "~> 1.5"},
       {:telemetry_metrics, "~> 0.4"},

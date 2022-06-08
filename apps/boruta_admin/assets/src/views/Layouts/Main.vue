@@ -496,6 +496,21 @@ export default {
   .ui.header {
     color: white;
   }
+  .ui.pagination.menu {
+    background: #1b1c1d;
+    border: none!important;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,.05);
+    .item {
+      color: white;
+      &.active {
+        background: rgba(255,255,255,.05);
+      }
+      &:hover {
+        background: rgba(255,255,255,.08);
+      }
+    }
+  }
   .olive {
     background: rgba(61, 61, 61, 1.0)!important;
     &.button:hover, &.label:hover {

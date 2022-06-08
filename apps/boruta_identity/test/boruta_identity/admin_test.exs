@@ -15,7 +15,10 @@ defmodule BorutaIdentity.AdminTest do
       user = insert(:user)
 
       assert {:error, %Ecto.Changeset{}} =
-        Admin.update_user_authorized_scopes(user, [%{"name" => "test"}, %{"name" => "test"}])
+               Admin.update_user_authorized_scopes(user, [
+                 %{"name" => "test"},
+                 %{"name" => "test"}
+               ])
     end
 
     test "stores user scopes" do
@@ -24,15 +27,15 @@ defmodule BorutaIdentity.AdminTest do
 
       user_id = user.id
       scope_id = scope.id
+
       {:ok,
        %User{
-         authorized_scopes:
-           [
-             %UserAuthorizedScope{
-               scope_id: ^scope_id,
-               user_id: ^user_id
-             }
-           ]
+         authorized_scopes: [
+           %UserAuthorizedScope{
+             scope_id: ^scope_id,
+             user_id: ^user_id
+           }
+         ]
        }} = Admin.update_user_authorized_scopes(user, [%{"id" => scope.id}])
 
       assert [%{scope_id: ^scope_id, user_id: ^user_id}] = Repo.all(UserAuthorizedScope)
@@ -41,12 +44,25 @@ defmodule BorutaIdentity.AdminTest do
 
   describe "list_users/0" do
     test "returns an empty list" do
-      assert Admin.list_users() == []
+      assert Admin.list_users() == %Scrivener.Page{
+               entries: [],
+               page_number: 1,
+               page_size: 24,
+               total_entries: 0,
+               total_pages: 1
+             }
     end
 
-    test "returns users" do
+    test "returns paginated users" do
       user = insert(:user) |> Repo.preload(:authorized_scopes)
-      assert Admin.list_users() == [user]
+
+      assert Admin.list_users() == %Scrivener.Page{
+               entries: [user],
+               page_number: 1,
+               page_size: 24,
+               total_entries: 1,
+               total_pages: 1
+             }
     end
   end
 

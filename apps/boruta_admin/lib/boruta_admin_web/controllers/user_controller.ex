@@ -13,9 +13,16 @@ defmodule BorutaAdminWeb.UserController do
 
   action_fallback(BorutaAdminWeb.FallbackController)
 
-  def index(conn, _params) do
-    users = Admin.list_users()
-    render(conn, "index.json", users: users)
+  def index(conn, params) do
+    users = Admin.list_users(params)
+
+    render(conn, "index.json",
+      users: users.entries,
+      page_number: users.page_number,
+      page_size: users.page_size,
+      total_pages: users.total_pages,
+      total_entries: users.total_entries
+    )
   end
 
   def show(conn, %{"id" => id}) do

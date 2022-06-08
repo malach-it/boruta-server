@@ -101,9 +101,20 @@ User.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-User.all = function () {
-  return this.api().get('/').then(({ data }) => {
-    return data.data.map((user) => new User(user))
+User.all = function ({ pageNumber }) {
+  return this.api().get(`/?page=${pageNumber}`).then(({
+    data: {
+      data,
+      page_number: currentPage,
+      total_pages: totalPages,
+    }
+  }) => {
+    return {
+      data: data.map((user) => new User(user)),
+      currentPage,
+      totalPages
+    }
+
   })
 }
 
