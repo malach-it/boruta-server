@@ -21,6 +21,7 @@ defmodule BorutaIdentity.Accounts.Consents do
   @moduledoc false
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+  import Ecto.Query, only: [from: 2]
 
   alias Boruta.Ecto.Admin
   alias Boruta.Oauth.Scope
@@ -83,13 +84,11 @@ defmodule BorutaIdentity.Accounts.Consents do
   @spec consented?(user :: User.t(), client_id :: String.t(), scopes :: list(String.t())) :: boolean()
   def consented?(%User{}, _client_id, []), do: true
 
-  def consented?(%User{} = user, client_id, scopes) do
-    %User{consents: consents} = Repo.preload(user, :consents)
-
-    Enum.any?(consents, fn %Consent{client_id: consent_client_id, scopes: consent_scopes} ->
-      consent_client_id == client_id &&
-        Enum.empty?(scopes -- consent_scopes)
-    end)
+  def consented?(%User{id: user_id}, client_id, scopes) do
+    case Repo.one(from c in Consent, where: c.user_id == ^user_id and c.client_id == ^client_id) do
+      nil -> false
+      consent -> Enum.empty?(scopes -- consent.scopes)
+    end
   end
 
   def consented?(_, _, _), do: false

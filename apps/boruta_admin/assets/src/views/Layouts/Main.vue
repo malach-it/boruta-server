@@ -227,6 +227,8 @@ export default {
             z-index: 1000;
             .subitem {
               text-align: left;
+              border: 1px solid #d4d4d5;
+              border-top: none;
             }
             @media screen and (max-width: 1127px) {
               display: none;
@@ -498,10 +500,9 @@ export default {
   }
   .ui.pagination.menu {
     background: #1b1c1d;
-    border: none!important;
-    border-radius: 5px;
-    border: 1px solid rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
     .item {
+      border: none!important;
       color: white;
       &.active {
         background: rgba(255,255,255,.05);
