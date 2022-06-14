@@ -418,7 +418,7 @@ export default {
         background: #1b1c1d;
         border-top: 1px solid rgba(255,255,255,.05);
         .subitem {
-          border: none;
+          border: none!important;
           a {
             color: white;
             font-weight: normal!important;

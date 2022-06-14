@@ -1,3 +1,4 @@
+import decode from 'jwt-decode'
 import { BorutaOauth } from 'boruta-client'
 import store from '../store'
 
@@ -13,14 +14,28 @@ class Oauth {
     this.implicitClient = new oauth.Implicit({
       clientId: window.env.VUE_APP_ADMIN_CLIENT_ID,
       redirectUri: `${window.env.VUE_APP_BORUTA_BASE_URL}/oauth-callback`,
-      scope: 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all relying-parties:manage:all',
+      scope: 'openid email scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all relying-parties:manage:all',
       silentRefresh: true,
-      silentRefreshCallback: this.authenticate.bind(this)
+      silentRefreshCallback: this.authenticate.bind(this),
+      responseType: 'id_token token'
     })
 
     this.revokeClient = new oauth.Revoke({
       clientId: window.env.VUE_APP_ADMIN_CLIENT_ID
     })
+  }
+
+  get idToken() {
+    return localStorage.getItem('id_token')
+  }
+
+  get currentUser() {
+    try {
+      const { email } = decode(this.idToken)
+      return { email }
+    } catch {
+      return {}
+    }
   }
 
   authenticate (response) {
@@ -30,10 +45,11 @@ class Oauth {
       this.login()
     }
 
-    const { access_token, expires_in } = response
+    const { access_token, id_token, expires_in } = response
     const expires_at = new Date().getTime() + expires_in * 1000
 
     localStorage.setItem('access_token', access_token)
+    localStorage.setItem('id_token', id_token)
     localStorage.setItem('token_expires_at', expires_at)
 
     const loggedIn = new Event('logged_in')

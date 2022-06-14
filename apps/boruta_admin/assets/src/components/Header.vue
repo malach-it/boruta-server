@@ -18,15 +18,16 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import oauth from '../services/oauth.service'
 
 export default {
   name: 'Header',
   props: ['darkMode'],
   computed: {
-    ...mapGetters(['currentUser', 'isAuthenticated'])
-  },
-  mounted () {
-    this.$store.dispatch('getCurrentUser')
+    currentUser() {
+      return oauth.currentUser
+    },
+    ...mapGetters(['isAuthenticated'])
   },
   methods: {
     logout () {
