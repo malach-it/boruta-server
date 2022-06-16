@@ -5,9 +5,9 @@
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
     <div class="ui segment">
-      <button v-on:click="update()" class="ui large violet right floated button">Save</button>
-      <button v-if="template.id" v-on:click="destroy()" class="ui large red right floated button">Reset</button>
-      <router-link :to="{ name: 'edit-relying-party', params: { relyingPartyId: relyingParty.id } }" class="ui large blue button">Back</router-link>
+      <button v-on:click="update()" class="ui violet right floated button">Save</button>
+      <button v-if="template.id" v-on:click="destroy()" class="ui red right floated button">Reset</button>
+      <router-link :to="{ name: 'edit-relying-party', params: { relyingPartyId: relyingParty.id } }" class="ui blue button">Back</router-link>
     </div>
   </div>
 </template>

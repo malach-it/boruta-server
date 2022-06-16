@@ -129,7 +129,8 @@ export default {
     margin: 0;
   }
   hr {
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: none;
+    border-bottom: 1px solid #d4d4d5;
     margin: 1rem 0;
   }
   .attribute.list {
@@ -162,6 +163,7 @@ export default {
     position: absolute;
     top: .5em;
     right: .5em;
+    font-size: .825rem;
     @media screen and (max-width: 1127px) {
       position: relative;
       display: block;
@@ -387,10 +389,12 @@ export default {
 #app.dark {
   background: #1b1c1d;
   color: white;
+  hr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
   .sidebar-menu {
     background: #1b1c1d;
     color: white;
-    border-top: 1px solid rgba(255,255,255,.05);
     .menu {
       border: none;
       .item {

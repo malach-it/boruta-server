@@ -51,8 +51,8 @@
           <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         </div>
         <hr />
-        <button class="ui large right floated violet button" type="submit">{{ action }}</button>
-        <a class="ui large button" v-on:click="back()">Back</a>
+        <button class="ui right floated violet button" type="submit">{{ action }}</button>
+        <a class="ui button" v-on:click="back()">Back</a>
       </form>
     </div>
   </div>

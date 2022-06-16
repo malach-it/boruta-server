@@ -1,17 +1,16 @@
 <template>
-  <div class="ui segment">
-    <div class="ui breadcrumb">
-      <span v-for="(item, index) in items" :key="item.path">
-        <span v-if="index + 1 < items.length">
-          <router-link :to="item.path" class="section">{{ item.label }}</router-link>
-          <i class="right angle icon divider"></i>
-        </span>
-        <span class="section" v-else>
-          {{ item.label }}
-        </span>
+  <div class="ui breadcrumb">
+    <span v-for="(item, index) in items" :key="item.path">
+      <span v-if="index + 1 < items.length">
+        <router-link :to="item.path" class="section">{{ item.label }}</router-link>
+        <i class="right angle icon divider"></i>
       </span>
-    </div>
+      <span class="section" v-else>
+        {{ item.label }}
+      </span>
+    </span>
   </div>
+  <hr />
 </template>
 
 <script>
@@ -68,6 +67,7 @@ export default {
 .ui.breadcrumb {
   font-size: 1em;
   line-height: 1em;
+  padding: 1rem 1rem 0 1rem;
   .section {
     display: inline;
   }

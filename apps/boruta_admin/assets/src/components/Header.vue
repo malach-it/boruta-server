@@ -48,7 +48,7 @@ export default {
   max-width: 100%;
   overflow: hidden;
   .item.logo {
-    min-width: 200px;
+    min-width: 199px;
     background: inherit!important;
   }
   .main.menu {

@@ -57,7 +57,7 @@
         </div>
       </div>
       <hr />
-      <button @click="addScope()" class="ui big teal add button">Add a scope</button>
+      <button @click="addScope()" class="ui teal add button">Add a scope</button>
     </div>
   </div>
 </template>
