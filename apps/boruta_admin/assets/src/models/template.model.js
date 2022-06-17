@@ -14,7 +14,7 @@ const assign = {
   id: function ({ id }) { this.id = id },
   type: function ({ type }) { this.type = type },
   content: function ({ content }) { this.content = content },
-  relying_party_id: function ({ relying_party_id }) { this.relying_party_id = relying_party_id },
+  identity_provider_id: function ({ identity_provider_id }) { this.identity_provider_id = identity_provider_id },
 }
 
 class Template {
@@ -30,9 +30,9 @@ class Template {
   save () {
     this.errors = null
     // TODO trigger validate
-    const { type, relying_party_id: relyingPartyId, serialized } = this
+    const { type, identity_provider_id: identityProviderId, serialized } = this
 
-    return this.constructor.api().patch(`/${relyingPartyId}/templates/${type}`, { template: serialized })
+    return this.constructor.api().patch(`/${identityProviderId}/templates/${type}`, { template: serialized })
       .then(({ data }) => {
         const params = data.data
 
@@ -50,9 +50,9 @@ class Template {
   }
 
   destroy () {
-    const { type, relying_party_id: relyingPartyId } = this
+    const { type, identity_provider_id: identityProviderId } = this
 
-    return this.constructor.api().delete(`/${relyingPartyId}/templates/${type}`)
+    return this.constructor.api().delete(`/${identityProviderId}/templates/${type}`)
       .then(({ data }) => {
         const params = data.data
 
@@ -81,15 +81,15 @@ class Template {
     const accessToken = localStorage.getItem('access_token')
 
     const instance = axios.create({
-      baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/relying-parties`,
+      baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/identity-providers`,
       headers: { 'Authorization': `Bearer ${accessToken}` }
     })
 
     return addClientErrorInterceptor(instance)
   }
 
-  static get (relyingPartyId, type) {
-    return this.api().get(`/${relyingPartyId}/templates/${type}`).then(({ data }) => {
+  static get (identityProviderId, type) {
+    return this.api().get(`/${identityProviderId}/templates/${type}`).then(({ data }) => {
       return new Template(data.data)
     })
   }

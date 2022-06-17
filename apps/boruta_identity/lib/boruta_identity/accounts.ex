@@ -1,21 +1,21 @@
 defmodule BorutaIdentity.Accounts.Utils do
   @moduledoc false
 
-  alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
 
-  @spec client_relying_party(client_id :: String.t() | nil) ::
-          {:ok, relying_party :: RelyingParty.t()} | {:error, reason :: String.t()}
-  def client_relying_party(nil), do: {:error, "Client identifier not provided."}
+  @spec client_identity_provider(client_id :: String.t() | nil) ::
+          {:ok, identity_provider :: IdentityProvider.t()} | {:error, reason :: String.t()}
+  def client_identity_provider(nil), do: {:error, "Client identifier not provided."}
 
-  def client_relying_party(client_id) do
-    case RelyingParties.get_relying_party_by_client_id(client_id) do
-      %RelyingParty{} = relying_party ->
-        {:ok, relying_party}
+  def client_identity_provider(client_id) do
+    case IdentityProviders.get_identity_provider_by_client_id(client_id) do
+      %IdentityProvider{} = identity_provider ->
+        {:ok, identity_provider}
 
       nil ->
         {:error,
-         "Relying Party not configured for given OAuth client. Please contact your administrator."}
+         "identity provider not configured for given OAuth client. Please contact your administrator."}
     end
   end
 
@@ -44,26 +44,26 @@ defmodule BorutaIdentity.Accounts.Utils do
           raise "`module` must be part of function parameters"
 
       def unquote({name, [line: __ENV__.line], params}) do
-        with {:ok, relying_party} <-
-               BorutaIdentity.Accounts.Utils.client_relying_party(unquote(client_id_param)),
+        with {:ok, identity_provider} <-
+               BorutaIdentity.Accounts.Utils.client_identity_provider(unquote(client_id_param)),
              :ok <-
-               BorutaIdentity.RelyingParties.RelyingParty.check_feature(
-                 relying_party,
+               BorutaIdentity.IdentityProviders.IdentityProvider.check_feature(
+                 identity_provider,
                  unquote(name)
                ) do
-          var!(client_rp) = relying_party
+          var!(client_rp) = identity_provider
 
           unquote(block)
         else
           {:error, reason} ->
-            raise BorutaIdentity.Accounts.RelyingPartyError, reason
+            raise BorutaIdentity.Accounts.IdentityProviderError, reason
         end
       end
     end
   end
 end
 
-defmodule BorutaIdentity.Accounts.RelyingPartyError do
+defmodule BorutaIdentity.Accounts.IdentityProviderError do
   @enforce_keys [:message]
   defexception [:message, plug_status: 400]
 

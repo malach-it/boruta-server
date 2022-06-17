@@ -7,7 +7,7 @@ defmodule BorutaIdentity.Accounts.ConsentApplication do
               context :: any(),
               client :: Boruta.Oauth.Client.t(),
               scopes :: list(Boruta.Oauth.Scope.t()),
-              template :: BorutaIdentity.RelyingParties.Template.t()
+              template :: BorutaIdentity.IdentityProviders.Template.t()
             ) :: any()
 
   @callback consent_not_required(context :: any()) :: any()
@@ -27,7 +27,7 @@ defmodule BorutaIdentity.Accounts.Consents do
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.RelyingParties
+  alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.Repo
 
   @spec initialize_consent(
@@ -93,7 +93,7 @@ defmodule BorutaIdentity.Accounts.Consents do
 
   def consented?(_, _, _), do: false
 
-  defp new_consent_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :new_consent)
+  defp new_consent_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_consent)
   end
 end

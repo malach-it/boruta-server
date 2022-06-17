@@ -45,11 +45,11 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
     setup %{conn: conn} do
       resource_owner = user_fixture()
       client = insert(:client)
-      relying_party = BorutaIdentity.Factory.insert(:relying_party, consentable: true)
+      identity_provider = BorutaIdentity.Factory.insert(:identity_provider, consentable: true)
 
-      BorutaIdentity.Factory.insert(:client_relying_party,
+      BorutaIdentity.Factory.insert(:client_identity_provider,
         client_id: client.id,
-        relying_party: relying_party
+        identity_provider: identity_provider
       )
 
       scope = insert(:scope, public: true)

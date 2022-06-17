@@ -13,13 +13,13 @@
 
 <script>
 const labels = {
-  'client_relying_parties': 'Client',
+  'client_identity_providers': 'Client',
   'access_token_ttl': 'Access token TTL',
   'authorization_code_ttl': 'Authorization code TTL',
   'refresh_token_ttl': 'Refresh token TTL',
   'id_token_ttl': 'ID token TTL',
   'authorized_scopes': 'Authorized scopes',
-  'relying_party_id': 'Relying party',
+  'identity_provider_id': 'identity provider',
   'redirect_uris': 'Redirect URIs',
   'id_token_signature_alg': 'ID token signature algorithm',
   'resource': 'Resource'

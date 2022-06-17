@@ -5,7 +5,7 @@ defmodule BorutaIdentity.Accounts.SessionError do
   @type t :: %__MODULE__{
           message: String.t(),
           changeset: Ecto.Changeset.t() | nil,
-          template: BorutaIdentity.RelyingParties.Template.t()
+          template: BorutaIdentity.IdentityProviders.Template.t()
         }
 
   def exception(message) when is_binary(message) do
@@ -24,7 +24,7 @@ defmodule BorutaIdentity.Accounts.SessionApplication do
 
   @callback session_initialized(
               context :: any(),
-              template :: BorutaIdentity.RelyingParties.Template.t()
+              template :: BorutaIdentity.IdentityProviders.Template.t()
             ) :: any()
 
   @callback user_authenticated(
@@ -51,8 +51,8 @@ defmodule BorutaIdentity.Accounts.Sessions do
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
-  alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.Repo
 
   @type user_params :: %{
@@ -92,7 +92,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientrp create_session(context, client_id, authentication_params, module) do
-    client_impl = RelyingParty.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_rp)
 
     with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
          {:ok, user} <-
@@ -144,21 +144,21 @@ defmodule BorutaIdentity.Accounts.Sessions do
     end
   end
 
-  defp ensure_user_confirmed(_user, %RelyingParty{confirmable: false}), do: :ok
+  defp ensure_user_confirmed(_user, %IdentityProvider{confirmable: false}), do: :ok
 
-  defp ensure_user_confirmed(user, %RelyingParty{confirmable: true}) do
+  defp ensure_user_confirmed(user, %IdentityProvider{confirmable: true}) do
     case User.confirmed?(user) do
       true -> :ok
       false -> {:user_not_confirmed, "Email confirmation is required to authenticate."}
     end
   end
 
-  defp new_session_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :new_session)
+  defp new_session_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_session)
   end
 
-  defp new_confirmation_instructions_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :new_confirmation_instructions)
+  defp new_confirmation_instructions_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_confirmation_instructions)
   end
 
   defp delete_session(nil), do: {:error, "Session not found."}

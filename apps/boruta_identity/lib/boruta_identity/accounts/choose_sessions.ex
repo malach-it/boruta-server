@@ -5,7 +5,7 @@ defmodule BorutaIdentity.Accounts.ChooseSessionApplication do
 
   @callback choose_session_initialized(
               context :: any(),
-              template :: BorutaIdentity.RelyingParties.Template.t()
+              template :: BorutaIdentity.IdentityProviders.Template.t()
             ) :: any()
 
   @callback choose_session_not_required(context :: any()) :: any()
@@ -16,7 +16,7 @@ defmodule BorutaIdentity.Accounts.ChooseSessions do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
-  alias BorutaIdentity.RelyingParties
+  alias BorutaIdentity.IdentityProviders
 
   @spec initialize_choose_session(context :: any(), client_id :: String.t(), module :: atom()) ::
           callback_result :: any()
@@ -29,7 +29,7 @@ defmodule BorutaIdentity.Accounts.ChooseSessions do
     end
   end
 
-  defp new_choose_session_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :choose_session)
+  defp new_choose_session_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :choose_session)
   end
 end

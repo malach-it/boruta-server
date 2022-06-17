@@ -6,7 +6,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswordError do
           message: String.t(),
           token: String.t(),
           changeset: Ecto.Changeset.t() | nil,
-          template: template :: BorutaIdentity.RelyingParties.Template.t()
+          template: template :: BorutaIdentity.IdentityProviders.Template.t()
         }
 
   def exception(message) when is_binary(message) do
@@ -25,7 +25,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswordApplication do
 
   @callback password_instructions_initialized(
               context :: any(),
-              template :: BorutaIdentity.RelyingParties.Template.t()
+              template :: BorutaIdentity.IdentityProviders.Template.t()
             ) :: any()
 
   @callback reset_password_instructions_delivered(context :: any()) ::
@@ -34,7 +34,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswordApplication do
   @callback password_reset_initialized(
               context :: any(),
               token :: String.t(),
-              template :: BorutaIdentity.RelyingParties.Template.t()
+              template :: BorutaIdentity.IdentityProviders.Template.t()
             ) ::
               any()
 
@@ -56,8 +56,8 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
   alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
-  alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @type reset_password_url_fun :: (token :: String.t() -> reset_password_url :: String.t())
 
@@ -109,7 +109,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                     reset_password_url_fun,
                     module
                   ) do
-    client_impl = RelyingParty.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_rp)
 
     with %User{} = user <- Users.get_user_by_email(reset_password_instructions_params[:email]) do
       apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
@@ -131,7 +131,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                     token,
                     module
                   ) do
-    client_impl = RelyingParty.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_rp)
 
     case apply(client_impl, :reset_password_changeset, [token]) do
       {:ok, _changeset} ->
@@ -158,7 +158,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                     reset_password_params,
                     module
                   ) do
-    client_impl = RelyingParty.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_rp)
     edit_template = edit_reset_password_template(client_rp)
 
     case apply(client_impl, :reset_password, [reset_password_params]) do
@@ -182,11 +182,11 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
     end
   end
 
-  defp new_reset_password_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :new_reset_password)
+  defp new_reset_password_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_reset_password)
   end
 
-  defp edit_reset_password_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :edit_reset_password)
+  defp edit_reset_password_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :edit_reset_password)
   end
 end

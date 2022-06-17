@@ -1,7 +1,7 @@
 import axios from 'axios'
 import router from '../router'
 import Scope from './scope.model'
-import RelyingParty from './relying-party.model'
+import IdentityProvider from './identity-provider.model'
 import { addClientErrorInterceptor } from './utils'
 
 const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit', 'revoke', 'introspect']
@@ -12,7 +12,7 @@ const defaults = {
   authorized_scopes: [],
   redirect_uris: [],
   id_token_signature_alg: 'RS512',
-  relying_party: { model: new RelyingParty() },
+  identity_provider: { model: new IdentityProvider() },
   grantTypes: allGrantTypes.map((label) => {
     return {
       value: true,
@@ -36,8 +36,8 @@ const assign = {
   },
   public_refresh_token: function ({ public_refresh_token }) { this.public_refresh_token = public_refresh_token },
   public_revoke: function ({ public_revoke }) { this.public_revoke = public_revoke },
-  relying_party: function ({ relying_party }) {
-    this.relying_party = { model: new RelyingParty(relying_party) }
+  identity_provider: function ({ identity_provider }) {
+    this.identity_provider = { model: new IdentityProvider(identity_provider) }
   },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
   authorized_scopes: function ({ authorized_scopes }) {
@@ -141,7 +141,7 @@ class Client {
       public_revoke,
       redirect_uris,
       refresh_token_ttl,
-      relying_party,
+      identity_provider,
       secret,
       id_token_signature_alg
     } = this
@@ -159,7 +159,7 @@ class Client {
       public_revoke,
       redirect_uris: redirect_uris.map(({ uri }) => uri),
       refresh_token_ttl,
-      relying_party: relying_party.model,
+      identity_provider: identity_provider.model,
       secret,
       supported_grant_types: grantTypes
         .filter(({ value }) => value)

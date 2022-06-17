@@ -6,9 +6,9 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.RelyingParties.ClientRelyingParty
-  alias BorutaIdentity.RelyingParties.RelyingParty
-  alias BorutaIdentity.RelyingParties.Template
+  alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
+  alias BorutaIdentity.IdentityProviders.Template
 
   # @password "hello world!"
   @hashed_password "$argon2id$v=19$m=131072,t=8,p=4$9lPv7KsJogno0FlnhaRQXA$TeTY9FYjR1HJtZzg+N1z0oDC+0Mn7buPpOMhDP+M2Ik"
@@ -35,16 +35,16 @@ defmodule BorutaIdentity.Factory do
     }
   end
 
-  def client_relying_party_factory do
-    %ClientRelyingParty{
+  def client_identity_provider_factory do
+    %ClientIdentityProvider{
       client_id: SecureRandom.uuid(),
-      relying_party: build(:relying_party)
+      identity_provider: build(:identity_provider)
     }
   end
 
-  def relying_party_factory do
-    %RelyingParty{
-      name: sequence(:name, &"Relying party #{&1}"),
+  def identity_provider_factory do
+    %IdentityProvider{
+      name: sequence(:name, &"identity provider #{&1}"),
       type: "internal"
     }
   end

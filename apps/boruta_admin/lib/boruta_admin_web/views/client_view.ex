@@ -2,8 +2,8 @@ defmodule BorutaAdminWeb.ClientView do
   use BorutaAdminWeb, :view
 
   alias BorutaAdminWeb.ClientView
-  alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   def render("index.json", %{clients: clients}) do
     %{data: render_many(clients, ClientView, "client.json")}
@@ -14,7 +14,7 @@ defmodule BorutaAdminWeb.ClientView do
   end
 
   def render("client.json", %{client: client}) do
-    relying_party = RelyingParties.get_relying_party_by_client_id(client.id) || %RelyingParty{}
+    identity_provider = IdentityProviders.get_identity_provider_by_client_id(client.id) || %IdentityProvider{}
 
     %{
       id: client.id,
@@ -30,10 +30,10 @@ defmodule BorutaAdminWeb.ClientView do
       id_token_ttl: client.id_token_ttl,
       pkce: client.pkce,
       public_key: client.public_key,
-      relying_party: %{
-        id: relying_party.id,
-        name: relying_party.name,
-        type: relying_party.type
+      identity_provider: %{
+        id: identity_provider.id,
+        name: identity_provider.name,
+        type: identity_provider.type
       },
       authorized_scopes: Enum.map(client.authorized_scopes, fn (scope) ->
         %{

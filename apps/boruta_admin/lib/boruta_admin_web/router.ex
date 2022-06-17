@@ -51,10 +51,10 @@ defmodule BorutaAdminWeb.Router do
     # resources "/users/:user_id/scopes, only: [:create, :delete]
     resources("/users", UserController, except: [:new, :edit, :create])
     resources("/upstreams", UpstreamController, except: [:new, :edit])
-    resources "/relying-parties", RelyingPartyController, except: [:new, :edit] do
-      get "/templates/:template_type", RelyingPartyController, :template, as: :template
-      patch "/templates/:template_type", RelyingPartyController, :update_template, as: :template
-      delete "/templates/:template_type", RelyingPartyController, :delete_template, as: :template
+    resources "/identity-providers", IdentityProviderController, except: [:new, :edit] do
+      get "/templates/:template_type", IdentityProviderController, :template, as: :template
+      patch "/templates/:template_type", IdentityProviderController, :update_template, as: :template
+      delete "/templates/:template_type", IdentityProviderController, :delete_template, as: :template
     end
   end
 

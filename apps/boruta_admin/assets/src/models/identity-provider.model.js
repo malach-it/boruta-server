@@ -22,7 +22,7 @@ const assign = {
   confirmable: function ({ confirmable }) { this.confirmable = confirmable }
 }
 
-class RelyingParty {
+class IdentityProvider {
   constructor (params = {}) {
     Object.assign(this, defaults)
 
@@ -42,9 +42,9 @@ class RelyingParty {
     let response
     const { id, serialized } = this
     if (this.isPersisted) {
-      response = this.constructor.api().patch(`/${id}`, { relying_party: serialized })
+      response = this.constructor.api().patch(`/${id}`, { identity_provider: serialized })
     } else {
-      response = this.constructor.api().post('/', { relying_party: serialized })
+      response = this.constructor.api().post('/', { identity_provider: serialized })
     }
 
     return response
@@ -92,7 +92,7 @@ class RelyingParty {
     const accessToken = localStorage.getItem('access_token')
 
     const instance = axios.create({
-      baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/relying-parties`,
+      baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/identity-providers`,
       headers: { 'Authorization': `Bearer ${accessToken}` }
     })
 
@@ -101,15 +101,15 @@ class RelyingParty {
 
   static all () {
     return this.api().get('/').then(({ data }) => {
-      return data.data.map((relyingParty) => new RelyingParty(relyingParty))
+      return data.data.map((identityProvider) => new IdentityProvider(identityProvider))
     })
   }
 
   static get (id) {
     return this.api().get(`/${id}`).then(({ data }) => {
-      return new RelyingParty(data.data)
+      return new IdentityProvider(data.data)
     })
   }
 }
 
-export default RelyingParty
+export default IdentityProvider

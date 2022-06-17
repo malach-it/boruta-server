@@ -22,7 +22,7 @@ defmodule BorutaIdentity.Accounts.ConfirmationApplication do
 
   @callback confirmation_instructions_initialized(
               context :: any(),
-              template :: BorutaIdentity.RelyingParties.Template.t()
+              template :: BorutaIdentity.IdentityProviders.Template.t()
             ) :: any()
 
   @callback confirmation_instructions_delivered(context :: any()) ::
@@ -46,8 +46,8 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.ConfirmationError
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @type confirmation_instructions_params :: %{
           email: String.t()
@@ -89,7 +89,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
                     confirmation_url_fun,
                     module
                   ) do
-    client_impl = RelyingParty.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_rp)
 
     with %User{} = user <- Accounts.get_user_by_email(confirmation_instructions_params[:email]) do
       apply(client_impl, :send_confirmation_instructions, [user, confirmation_url_fun])
@@ -112,7 +112,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientrp confirm_user(context, client_id, token, module) do
-    client_impl = RelyingParty.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_rp)
 
     case apply(client_impl, :confirm_user, [token]) do
       {:ok, user} ->
@@ -125,7 +125,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
     end
   end
 
-  defp new_confirmation_instructions_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :new_confirmation_instructions)
+  defp new_confirmation_instructions_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_confirmation_instructions)
   end
 end

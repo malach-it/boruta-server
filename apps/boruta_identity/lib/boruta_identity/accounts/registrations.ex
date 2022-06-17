@@ -5,7 +5,7 @@ defmodule BorutaIdentity.Accounts.RegistrationError do
   @type t :: %__MODULE__{
           message: String.t(),
           changeset: Ecto.Changeset.t() | nil,
-          template: BorutaIdentity.RelyingParties.Template.t()
+          template: BorutaIdentity.IdentityProviders.Template.t()
         }
 
   def exception(message) when is_binary(message) do
@@ -24,7 +24,7 @@ defmodule BorutaIdentity.Accounts.RegistrationApplication do
 
   @callback registration_initialized(
               context :: any(),
-              template :: BorutaIdentity.RelyingParties.Template.t()
+              template :: BorutaIdentity.IdentityProviders.Template.t()
             ) :: any()
 
   @callback user_registered(
@@ -48,8 +48,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.Sessions
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @type registration_params :: map()
 
@@ -82,7 +82,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
                     confirmation_url_fun,
                     module
                   ) do
-    client_impl = RelyingParty.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_rp)
 
     with {:ok, user} <-
            apply(client_impl, :register, [
@@ -110,7 +110,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
     end
   end
 
-  defp new_registration_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :new_registration)
+  defp new_registration_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_registration)
   end
 end

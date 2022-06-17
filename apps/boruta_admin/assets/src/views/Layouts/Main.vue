@@ -41,16 +41,16 @@
           </router-link>
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
-            :to="{ name: 'relying-parties' }">
-            <div class="relying-parties item" :class="{'active': isActive }">
+            :to="{ name: 'identity-providers' }">
+            <div class="identity-providers item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="users icon"></i>
-                <span>Relying parties</span>
+                <span>identity providers</span>
               </a>
               <div class="dropdown">
                 <div class="subitem">
-                  <router-link :to="{ name: 'relying-party-list' }">
-                    <span>relying party list</span>
+                  <router-link :to="{ name: 'identity-provider-list' }">
+                    <span>identity provider list</span>
                   </router-link>
                 </div>
                 <div class="subitem">

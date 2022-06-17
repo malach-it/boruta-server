@@ -21,23 +21,23 @@ import Upstream from './views/Upstreams/Upstream.vue'
 import NewUpstream from './views/Upstreams/NewUpstream.vue'
 import EditUpstream from './views/Upstreams/EditUpstream.vue'
 
-import RelyingParties from './views/RelyingParties.vue'
-import RelyingPartyList from './views/RelyingParties/RelyingPartyList.vue'
-import RelyingParty from './views/RelyingParties/RelyingParty.vue'
-import EditRelyingParty from './views/RelyingParties/EditRelyingParty.vue'
-import EditLayoutTemplate from './views/RelyingParties/EditLayoutTemplate.vue'
-import EditSessionTemplate from './views/RelyingParties/EditSessionTemplate.vue'
-import EditNewChooseSessionTemplate from './views/RelyingParties/EditNewChooseSessionTemplate.vue'
-import EditNewConsentTemplate from './views/RelyingParties/EditNewConsentTemplate.vue'
-import EditNewConfirmationTemplate from './views/RelyingParties/EditNewConfirmationTemplate.vue'
-import EditNewResetPasswordTemplate from './views/RelyingParties/EditNewResetPasswordTemplate.vue'
-import EditEditResetPasswordTemplate from './views/RelyingParties/EditEditResetPasswordTemplate.vue'
-import EditRegistrationTemplate from './views/RelyingParties/EditRegistrationTemplate.vue'
-import EditEditUserTemplate from './views/RelyingParties/EditEditUserTemplate.vue'
-import NewRelyingParty from './views/RelyingParties/NewRelyingParty.vue'
-import Users from './views/RelyingParties/Users.vue'
-import UserList from './views/RelyingParties/UserList.vue'
-import EditUser from './views/RelyingParties/EditUser.vue'
+import IdentityProviders from './views/IdentityProviders.vue'
+import IdentityProviderList from './views/IdentityProviders/IdentityProviderList.vue'
+import IdentityProvider from './views/IdentityProviders/IdentityProvider.vue'
+import EditIdentityProvider from './views/IdentityProviders/EditIdentityProvider.vue'
+import EditLayoutTemplate from './views/IdentityProviders/EditLayoutTemplate.vue'
+import EditSessionTemplate from './views/IdentityProviders/EditSessionTemplate.vue'
+import EditNewChooseSessionTemplate from './views/IdentityProviders/EditNewChooseSessionTemplate.vue'
+import EditNewConsentTemplate from './views/IdentityProviders/EditNewConsentTemplate.vue'
+import EditNewConfirmationTemplate from './views/IdentityProviders/EditNewConfirmationTemplate.vue'
+import EditNewResetPasswordTemplate from './views/IdentityProviders/EditNewResetPasswordTemplate.vue'
+import EditEditResetPasswordTemplate from './views/IdentityProviders/EditEditResetPasswordTemplate.vue'
+import EditRegistrationTemplate from './views/IdentityProviders/EditRegistrationTemplate.vue'
+import EditEditUserTemplate from './views/IdentityProviders/EditEditUserTemplate.vue'
+import NewIdentityProvider from './views/IdentityProviders/NewIdentityProvider.vue'
+import Users from './views/IdentityProviders/Users.vue'
+import UserList from './views/IdentityProviders/UserList.vue'
+import EditUser from './views/IdentityProviders/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/Scopes/ScopeList.vue'
@@ -75,32 +75,32 @@ const router = createRouter({
           name: 'dashboard',
           component: Dashboard
         }, {
-          path: '/relying-parties',
-          component: RelyingParties,
-          name: 'relying-parties',
-          redirect: '/relying-parties/',
+          path: '/identity-providers',
+          component: IdentityProviders,
+          name: 'identity-providers',
+          redirect: '/identity-providers/',
           children: [
             {
               path: '',
-              name: 'relying-party-list',
-              component: RelyingPartyList
+              name: 'identity-provider-list',
+              component: IdentityProviderList
             }, {
               path: 'new',
-              name: 'new-relying-party',
-              component: NewRelyingParty
+              name: 'new-identity-provider',
+              component: NewIdentityProvider
             }, {
-              path: '/relying-parties/:relyingPartyId',
-              name: 'relying-party',
-              component: RelyingParty,
+              path: '/identity-providers/:identityProviderId',
+              name: 'identity-provider',
+              component: IdentityProvider,
               redirect: to => ({
-                name: 'edit-relying-party',
-                params: { relyingPartyId: to.params.relyingPartyId }
+                name: 'edit-identity-provider',
+                params: { identityProviderId: to.params.identityProviderId }
               }),
               children: [
                 {
                   path: 'edit',
-                  name: 'edit-relying-party',
-                  component: EditRelyingParty
+                  name: 'edit-identity-provider',
+                  component: EditIdentityProvider
                 }, {
                   path: 'edit/choose-session-template',
                   name: 'edit-choose-session-template',
@@ -143,7 +143,7 @@ const router = createRouter({
               path: 'users',
               name: 'users',
               component: Users,
-              redirect: '/relying-parties/users/',
+              redirect: '/identity-providers/users/',
               children: [
                 {
                   path: '',

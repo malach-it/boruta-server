@@ -1,10 +1,10 @@
-defmodule BorutaIdentity.RelyingParties.Template do
+defmodule BorutaIdentity.IdentityProviders.Template do
   @moduledoc false
 
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @type t :: %__MODULE__{
           id: String.t() | nil,
@@ -79,14 +79,14 @@ defmodule BorutaIdentity.RelyingParties.Template do
 
   @foreign_key_type :binary_id
   @primary_key {:id, :binary_id, autogenerate: true}
-  schema "relying_party_templates" do
+  schema "identity_provider_templates" do
     field(:content, :string)
     field(:type, :string)
 
     field(:default, :boolean, virtual: true, default: false)
     field(:layout, :any, virtual: true, default: nil)
 
-    belongs_to(:relying_party, RelyingParty)
+    belongs_to(:identity_provider, IdentityProvider)
 
     timestamps()
   end
@@ -110,9 +110,9 @@ defmodule BorutaIdentity.RelyingParties.Template do
   @doc false
   def changeset(template, attrs) do
     template
-    |> cast(attrs, [:type, :content, :relying_party_id])
-    |> validate_required([:relying_party_id])
-    |> foreign_key_constraint(:relying_party_id)
+    |> cast(attrs, [:type, :content, :identity_provider_id])
+    |> validate_required([:identity_provider_id])
+    |> foreign_key_constraint(:identity_provider_id)
   end
 
   @doc false

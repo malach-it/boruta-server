@@ -4,13 +4,13 @@ defmodule BorutaAdminWeb.ClientControllerTest do
   use BorutaAdminWeb.ConnCase
 
   alias Boruta.Ecto.Client
-  alias BorutaIdentity.RelyingParties.ClientRelyingParty
+  alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
 
   @create_attrs %{
     redirect_uris: ["http://redirect.uri"],
     access_token_ttl: 10,
     authorization_code_ttl: 10,
-    relying_party: nil
+    identity_provider: nil
   }
   @update_attrs %{
     redirect_uris: ["http://updated.redirect.uri"]
@@ -46,9 +46,9 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
   describe "create client" do
     setup %{conn: conn} do
-      relying_party = BorutaIdentity.Factory.insert(:relying_party)
+      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
 
-      {:ok, conn: conn, relying_party: relying_party}
+      {:ok, conn: conn, identity_provider: identity_provider}
     end
 
     @tag authorized: ["clients:manage:all"]
@@ -58,24 +58,24 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
-    test "renders errors when relying party is missing", %{conn: conn} do
-      create_attrs = %{@create_attrs|relying_party: %{id: SecureRandom.uuid()}}
+    test "renders errors when identity provider is missing", %{conn: conn} do
+      create_attrs = %{@create_attrs|identity_provider: %{id: SecureRandom.uuid()}}
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
-      assert %{"relying_party_id" => ["does not exist"]} = json_response(create, 422)["errors"]
+      assert %{"identity_provider_id" => ["does not exist"]} = json_response(create, 422)["errors"]
     end
 
     @tag authorized: ["clients:manage:all"]
-    test "renders errors when relying party has invalid uuid", %{conn: conn} do
-      create_attrs = %{@create_attrs|relying_party: %{id: "bad_uuid"}}
+    test "renders errors when identity provider has invalid uuid", %{conn: conn} do
+      create_attrs = %{@create_attrs|identity_provider: %{id: "bad_uuid"}}
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
-      assert %{"relying_party_id" => ["has invalid format"]} = json_response(create, 422)["errors"]
+      assert %{"identity_provider_id" => ["has invalid format"]} = json_response(create, 422)["errors"]
     end
 
     @tag authorized: ["clients:manage:all"]
-    test "renders client when data is valid", %{conn: conn, relying_party: relying_party} do
-      create_attrs = %{@create_attrs|relying_party: %{id: relying_party.id}}
+    test "renders client when data is valid", %{conn: conn, identity_provider: identity_provider} do
+      create_attrs = %{@create_attrs|identity_provider: %{id: identity_provider.id}}
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
       assert %{"id" => _id} = json_response(create, 201)["data"]
@@ -85,8 +85,8 @@ defmodule BorutaAdminWeb.ClientControllerTest do
   describe "update client" do
     setup %{conn: conn} do
       client = insert(:client)
-      relying_party = BorutaIdentity.Factory.insert(:relying_party)
-      BorutaIdentity.Factory.insert(:client_relying_party, client_id: client.id, relying_party: relying_party)
+      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      BorutaIdentity.Factory.insert(:client_identity_provider, client_id: client.id, identity_provider: identity_provider)
 
       {:ok, conn: conn, client: client}
     end
@@ -98,11 +98,11 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
-    test "renders errors when relying party is invalid", %{conn: conn, client: client} do
-      update_attrs = Map.put(@update_attrs, "relying_party", %{"id" => SecureRandom.uuid()})
+    test "renders errors when identity provider is invalid", %{conn: conn, client: client} do
+      update_attrs = Map.put(@update_attrs, "identity_provider", %{"id" => SecureRandom.uuid()})
 
       conn = put(conn, Routes.admin_client_path(conn, :update, client), client: update_attrs)
-      assert %{"relying_party_id" => ["does not exist"]} = json_response(conn, 422)["errors"]
+      assert %{"identity_provider_id" => ["does not exist"]} = json_response(conn, 422)["errors"]
     end
 
     @tag authorized: ["clients:manage:all"]
@@ -117,14 +117,14 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
-    test "updates client relying party when data is valid", %{conn: conn, client: %Client{id: id} = client} do
-      relying_party = BorutaIdentity.Factory.insert(:relying_party)
-      update_attrs = Map.put(@update_attrs, "relying_party", %{"id" => relying_party.id})
+    test "updates client identity provider when data is valid", %{conn: conn, client: %Client{id: id} = client} do
+      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      update_attrs = Map.put(@update_attrs, "identity_provider", %{"id" => identity_provider.id})
 
       conn = put(conn, Routes.admin_client_path(conn, :update, client), client: update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      assert BorutaIdentity.Repo.get_by(ClientRelyingParty, client_id: id, relying_party_id: relying_party.id)
+      assert BorutaIdentity.Repo.get_by(ClientIdentityProvider, client_id: id, identity_provider_id: identity_provider.id)
     end
 
     @tag authorized: ["clients:manage:all"]
@@ -166,13 +166,13 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
-    test "deletes client relying party association", %{conn: conn, client: client} do
-      BorutaIdentity.Factory.insert(:client_relying_party, client_id: client.id)
+    test "deletes client identity provider association", %{conn: conn, client: client} do
+      BorutaIdentity.Factory.insert(:client_identity_provider, client_id: client.id)
 
       conn = delete(conn, Routes.admin_client_path(conn, :delete, client))
       assert response(conn, 204)
 
-      refute BorutaIdentity.Repo.get_by(ClientRelyingParty, client_id: client.id)
+      refute BorutaIdentity.Repo.get_by(ClientIdentityProvider, client_id: client.id)
     end
   end
 end

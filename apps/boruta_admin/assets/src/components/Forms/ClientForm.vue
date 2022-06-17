@@ -54,8 +54,8 @@
           </div>
         </div>
         <h3>Authentication</h3>
-        <div class="field" :class="{ 'error': client.errors?.relying_party_id }">
-          <RelyingPartyField :relyingParty="client.relying_party.model" @relyingPartyChange="setRelyingParty"/>
+        <div class="field" :class="{ 'error': client.errors?.identity_provider_id }">
+          <IdentityProviderField :identityProvider="client.identity_provider.model" @identityProviderChange="setIdentityProvider"/>
         </div>
         <h3>Authorization</h3>
         <div class="field">
@@ -107,7 +107,7 @@
 import Scope from '../../models/scope.model'
 import Client from '../../models/client.model'
 import ScopesField from './ScopesField.vue'
-import RelyingPartyField from './RelyingPartyField.vue'
+import IdentityProviderField from './IdentityProviderField.vue'
 import FormErrors from './FormErrors.vue'
 
 export default {
@@ -115,7 +115,7 @@ export default {
   props: ['client', 'action'],
   components: {
     ScopesField,
-    RelyingPartyField,
+    IdentityProviderField,
     FormErrors
   },
   data() {
@@ -136,8 +136,8 @@ export default {
         1
       )
     },
-    setRelyingParty (relyingParty) {
-      this.client.relying_party = { model: relyingParty }
+    setIdentityProvider (identityProvider) {
+      this.client.identity_provider = { model: identityProvider }
     },
     addScope () {
       this.client.authorized_scopes.push({ model: new Scope() })

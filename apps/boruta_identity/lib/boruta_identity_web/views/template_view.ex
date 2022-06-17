@@ -1,12 +1,12 @@
 defmodule BorutaIdentityWeb.TemplateView do
   use BorutaIdentityWeb, :view
 
-  alias BorutaIdentity.RelyingParties.Template
+  alias BorutaIdentity.IdentityProviders.Template
   alias BorutaIdentityWeb.ErrorHelpers
 
   def render("template.html", %{
         conn: conn,
-        template: %Template{layout: layout, content: content, relying_party: relying_party},
+        template: %Template{layout: layout, content: content, identity_provider: identity_provider},
         assigns: assigns
       }) do
     context =
@@ -15,7 +15,7 @@ defmodule BorutaIdentityWeb.TemplateView do
       |> Map.put(:_csrf_token, Plug.CSRFProtection.get_csrf_token())
       |> Map.merge(errors(assigns))
       |> Map.merge(paths(conn, assigns))
-      |> Map.merge(relying_party_configurations(relying_party))
+      |> Map.merge(identity_provider_configurations(identity_provider))
 
     {:safe, Mustachex.render(layout.content, context, partials: %{inner_content: content})}
   end
@@ -109,10 +109,10 @@ defmodule BorutaIdentityWeb.TemplateView do
     end)
   end
 
-  defp relying_party_configurations(relying_party) do
+  defp identity_provider_configurations(identity_provider) do
     %{
-      registrable?: relying_party.registrable,
-      user_editable?: relying_party.user_editable,
+      registrable?: identity_provider.registrable,
+      user_editable?: identity_provider.user_editable,
     }
   end
 end

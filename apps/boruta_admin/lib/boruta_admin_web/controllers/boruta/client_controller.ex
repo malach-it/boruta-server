@@ -8,7 +8,7 @@ defmodule BorutaAdminWeb.ClientController do
 
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Client
-  alias BorutaIdentity.RelyingParties
+  alias BorutaIdentity.IdentityProviders
 
   plug(:authorize, ["clients:manage:all"])
 
@@ -30,14 +30,14 @@ defmodule BorutaAdminWeb.ClientController do
   end
 
   defp create_client(client_params) do
-    relying_party_id = get_in(client_params, ["relying_party", "id"])
+    identity_provider_id = get_in(client_params, ["identity_provider", "id"])
 
     BorutaAuth.Repo.transaction(fn ->
       with {:ok, client} <- Admin.create_client(client_params),
-           {:ok, _client_relying_party} <-
-             RelyingParties.upsert_client_relying_party(
+           {:ok, _client_identity_provider} <-
+             IdentityProviders.upsert_client_identity_provider(
                client.id,
-               relying_party_id
+               identity_provider_id
              ) do
         client
       else
@@ -62,13 +62,13 @@ defmodule BorutaAdminWeb.ClientController do
     end
   end
 
-  defp update_client(client, %{"relying_party" => %{"id" => relying_party_id}} = client_params) do
+  defp update_client(client, %{"identity_provider" => %{"id" => identity_provider_id}} = client_params) do
     BorutaWeb.Repo.transaction(fn ->
       with {:ok, client} <- Admin.update_client(client, client_params),
-           {:ok, _client_relying_party} <-
-             RelyingParties.upsert_client_relying_party(
+           {:ok, _client_identity_provider} <-
+             IdentityProviders.upsert_client_identity_provider(
                client.id,
-               relying_party_id
+               identity_provider_id
              ) do
         client
       else
@@ -87,7 +87,7 @@ defmodule BorutaAdminWeb.ClientController do
 
     with :ok <- ensure_open_for_edition(client_id),
          {:ok, %Client{}} <- Admin.delete_client(client),
-         {:ok, _client_relying_party} <- RelyingParties.remove_client_relying_party(client_id) do
+         {:ok, _client_identity_provider} <- IdentityProviders.remove_client_identity_provider(client_id) do
       send_resp(conn, :no_content, "")
     end
   end

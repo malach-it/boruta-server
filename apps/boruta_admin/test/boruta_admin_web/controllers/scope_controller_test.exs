@@ -17,7 +17,7 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
   @protected_scopes [
     "users:manage:all",
     "clients:manage:all",
-    "relying-parties:manage:all",
+    "identity-providers:manage:all",
     "scopes:manage:all",
     "upstreams:manage:all"
   ]

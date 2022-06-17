@@ -5,13 +5,13 @@ defmodule BorutaIdentity.AccountsTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.IdentityProviderError
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.RegistrationError
-  alias BorutaIdentity.Accounts.RelyingPartyError
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.{User, UserToken}
-  alias BorutaIdentity.RelyingParties.ClientRelyingParty
-  alias BorutaIdentity.RelyingParties.Template
+  alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
+  alias BorutaIdentity.IdentityProviders.Template
   alias BorutaIdentity.Repo
 
   defmodule DummyRegistration do
@@ -57,52 +57,52 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "Utils.client_relying_party/1" do
+  describe "Utils.client_identity_provider/1" do
     test "returns an error when client_id is nil" do
       client_id = nil
 
-      assert Accounts.Utils.client_relying_party(client_id) ==
+      assert Accounts.Utils.client_identity_provider(client_id) ==
                {:error, "Client identifier not provided."}
     end
 
     test "returns an error when client_id is unknown" do
       client_id = SecureRandom.uuid()
 
-      assert Accounts.Utils.client_relying_party(client_id) ==
+      assert Accounts.Utils.client_identity_provider(client_id) ==
                {:error,
-                "Relying Party not configured for given OAuth client. " <>
+                "identity provider not configured for given OAuth client. " <>
                   "Please contact your administrator."}
     end
 
-    test "returns client relying_party" do
-      relying_party = BorutaIdentity.Factory.insert(:relying_party, type: "internal")
+    test "returns client identity_provider" do
+      identity_provider = BorutaIdentity.Factory.insert(:identity_provider, type: "internal")
 
-      %ClientRelyingParty{client_id: client_id} =
-        BorutaIdentity.Factory.insert(:client_relying_party, relying_party: relying_party)
+      %ClientIdentityProvider{client_id: client_id} =
+        BorutaIdentity.Factory.insert(:client_identity_provider, identity_provider: identity_provider)
 
-      assert Accounts.Utils.client_relying_party(client_id) == {:ok, relying_party}
+      assert Accounts.Utils.client_identity_provider(client_id) == {:ok, identity_provider}
     end
   end
 
   describe "initialize_registration/3" do
     setup do
-      client_relying_party =
-        BorutaIdentity.Factory.insert(:client_relying_party,
-          relying_party:
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider:
             build(
-              :relying_party,
+              :identity_provider,
               registrable: true
             )
         )
 
-      {:ok, client_id: client_relying_party.client_id}
+      {:ok, client_id: client_identity_provider.client_id}
     end
 
     test "returns an error with nil client_id" do
       client_id = nil
       context = :context
 
-      assert_raise RelyingPartyError, "Client identifier not provided.", fn ->
+      assert_raise IdentityProviderError, "Client identifier not provided.", fn ->
         Accounts.initialize_registration(context, client_id, DummyRegistration)
       end
     end
@@ -111,17 +111,17 @@ defmodule BorutaIdentity.AccountsTest do
       client_id = SecureRandom.uuid()
       context = :context
 
-      assert_raise RelyingPartyError, "Relying Party not configured for given OAuth client. Please contact your administrator.", fn ->
+      assert_raise IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator.", fn ->
         Accounts.initialize_registration(context, client_id, DummyRegistration)
       end
     end
 
-    test "returns an error if registration is not enabled for client relying party" do
-      %ClientRelyingParty{client_id: client_id} = insert(:client_relying_party)
+    test "returns an error if registration is not enabled for client identity provider" do
+      %ClientIdentityProvider{client_id: client_id} = insert(:client_identity_provider)
 
       context = :context
 
-      assert_raise RelyingPartyError, "Feature is not enabled for client relying party.", fn ->
+      assert_raise IdentityProviderError, "Feature is not enabled for client identity provider.", fn ->
         Accounts.initialize_registration(context, client_id, DummyRegistration)
       end
     end
@@ -136,16 +136,16 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "register/3" do
     setup do
-      client_relying_party =
-        BorutaIdentity.Factory.insert(:client_relying_party,
-          relying_party:
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider:
             build(
-              :relying_party,
+              :identity_provider,
               registrable: true
             )
         )
 
-      {:ok, client_id: client_relying_party.client_id}
+      {:ok, client_id: client_identity_provider.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -154,7 +154,7 @@ defmodule BorutaIdentity.AccountsTest do
       user_params = %{}
       confirmation_callback_fun = & &1
 
-      assert_raise RelyingPartyError, "Client identifier not provided.", fn ->
+      assert_raise IdentityProviderError, "Client identifier not provided.", fn ->
         Accounts.register(
           context,
           client_id,
@@ -171,7 +171,7 @@ defmodule BorutaIdentity.AccountsTest do
       user_params = %{}
       confirmation_callback_fun = & &1
 
-      assert_raise RelyingPartyError, "Relying Party not configured for given OAuth client. Please contact your administrator.", fn ->
+      assert_raise IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator.", fn ->
         Accounts.register(
           context,
           client_id,
@@ -182,13 +182,13 @@ defmodule BorutaIdentity.AccountsTest do
       end
     end
 
-    test "returns an error if registrations is disabled for client relying party" do
-      %ClientRelyingParty{client_id: client_id} = insert(:client_relying_party)
+    test "returns an error if registrations is disabled for client identity provider" do
+      %ClientIdentityProvider{client_id: client_id} = insert(:client_identity_provider)
       context = :context
       user_params = %{}
       confirmation_callback_fun = & &1
 
-      assert_raise RelyingPartyError, "Feature is not enabled for client relying party.", fn ->
+      assert_raise IdentityProviderError, "Feature is not enabled for client identity provider.", fn ->
         Accounts.register(
           context,
           client_id,
@@ -328,24 +328,24 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     @tag :skip
-    test "delivers a confirmation mail when relying party confirmable"
+    test "delivers a confirmation mail when identity provider confirmable"
 
     @tag :skip
-    test "does not deliver a confirmation mail when relying party not confirmable"
+    test "does not deliver a confirmation mail when identity provider not confirmable"
   end
 
   describe "initialize_session/3" do
     setup do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_identity_provider = BorutaIdentity.Factory.insert(:client_identity_provider)
 
-      {:ok, client_id: client_relying_party.client_id}
+      {:ok, client_id: client_identity_provider.client_id}
     end
 
     test "returns an error with nil client_id" do
       context = :context
       client_id = nil
 
-      assert_raise RelyingPartyError, "Client identifier not provided.", fn ->
+      assert_raise IdentityProviderError, "Client identifier not provided.", fn ->
         Accounts.initialize_session(
           context,
           client_id,
@@ -358,7 +358,7 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       client_id = SecureRandom.uuid()
 
-      assert_raise RelyingPartyError, "Relying Party not configured for given OAuth client. Please contact your administrator.", fn ->
+      assert_raise IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator.", fn ->
         Accounts.initialize_session(
           context,
           client_id,
@@ -367,7 +367,7 @@ defmodule BorutaIdentity.AccountsTest do
       end
     end
 
-    test "returns relying party and a template", %{client_id: client_id} do
+    test "returns identity provider and a template", %{client_id: client_id} do
       context = :context
 
       assert {:session_initialized, ^context, %Template{type: "new_session"}} =
@@ -381,17 +381,17 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "create_session/4" do
     setup do
-      confirmable_client_relying_party =
+      confirmable_client_identity_provider =
         BorutaIdentity.Factory.insert(
-          :client_relying_party,
-          relying_party: insert(:relying_party, confirmable: true)
+          :client_identity_provider,
+          identity_provider: insert(:identity_provider, confirmable: true)
         )
 
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_identity_provider = BorutaIdentity.Factory.insert(:client_identity_provider)
 
       {:ok,
-       client_id: client_relying_party.client_id,
-       confirmable_client_id: confirmable_client_relying_party.client_id}
+       client_id: client_identity_provider.client_id,
+       confirmable_client_id: confirmable_client_identity_provider.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -399,7 +399,7 @@ defmodule BorutaIdentity.AccountsTest do
       client_id = nil
       authentication_params = %{}
 
-      assert_raise RelyingPartyError, "Client identifier not provided.", fn ->
+      assert_raise IdentityProviderError, "Client identifier not provided.", fn ->
         Accounts.create_session(
           context,
           client_id,
@@ -414,7 +414,7 @@ defmodule BorutaIdentity.AccountsTest do
       client_id = SecureRandom.uuid()
       authentication_params = %{}
 
-      assert_raise RelyingPartyError, "Relying Party not configured for given OAuth client. Please contact your administrator.", fn ->
+      assert_raise IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator.", fn ->
         Accounts.create_session(
           context,
           client_id,
@@ -589,9 +589,9 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "delete_session/4" do
     setup do
-      client_relying_party = BorutaIdentity.Factory.insert(:client_relying_party)
+      client_identity_provider = BorutaIdentity.Factory.insert(:client_identity_provider)
 
-      {:ok, client_id: client_relying_party.client_id}
+      {:ok, client_id: client_identity_provider.client_id}
     end
 
     test "return a success when session does not exist", %{client_id: client_id} do

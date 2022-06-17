@@ -5,7 +5,7 @@ defmodule BorutaIdentity.Accounts.SettingsError do
   @type t :: %__MODULE__{
           message: String.t(),
           changeset: Ecto.Changeset.t() | nil,
-          template: BorutaIdentity.RelyingParties.Template.t()
+          template: BorutaIdentity.IdentityProviders.Template.t()
         }
 
   def exception(message) when is_binary(message) do
@@ -23,7 +23,7 @@ defmodule BorutaIdentity.Accounts.SettingsApplication do
   @callback edit_user_initialized(
               context :: any(),
               user :: BorutaIdentity.Accounts.User.t(),
-              template :: BorutaIdentity.RelyingParties.Template.t()
+              template :: BorutaIdentity.IdentityProviders.Template.t()
             ) :: any()
 
   @callback user_updated(
@@ -44,8 +44,8 @@ defmodule BorutaIdentity.Accounts.Settings do
 
   alias BorutaIdentity.Accounts.SettingsError
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @type user_update_params :: map()
 
@@ -60,7 +60,7 @@ defmodule BorutaIdentity.Accounts.Settings do
   # @callback check_user_against(
   #             user :: User.t(),
   #             authentication_params :: authentication_params(),
-  #             relying_party :: RelyingParty.t()
+  #             identity_provider :: IdentityProvider.t()
   #           ) ::
   #             {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
@@ -83,7 +83,7 @@ defmodule BorutaIdentity.Accounts.Settings do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientrp update_user(context, client_id, user, user_update_params, module) do
-    client_impl = RelyingParty.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_rp)
 
     with {:ok, implementation_user} <- apply(client_impl, :get_user, [%{id: user.uid}]),
          {:ok, _user} <-
@@ -110,7 +110,7 @@ defmodule BorutaIdentity.Accounts.Settings do
     end
   end
 
-  defp edit_user_template(relying_party) do
-    RelyingParties.get_relying_party_template!(relying_party.id, :edit_user)
+  defp edit_user_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :edit_user)
   end
 end

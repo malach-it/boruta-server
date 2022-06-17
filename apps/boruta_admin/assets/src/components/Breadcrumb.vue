@@ -17,9 +17,9 @@
 const labels = {
   'root': 'Home',
   'dashboard': 'Dashboard',
-  'relying-parties': "Relying parties",
-  'new-relying-party': 'Create',
-  'relying-party': ({ params }) => params.relyingPartyId,
+  'identity-providers': "identity providers",
+  'new-identity-provider': 'Create',
+  'identity-provider': ({ params }) => params.identityProviderId,
   'edit-layout-template': 'Edit layout template',
   'edit-session-template': 'Edit login template',
   'edit-choose-session-template': 'Edit choose session template',

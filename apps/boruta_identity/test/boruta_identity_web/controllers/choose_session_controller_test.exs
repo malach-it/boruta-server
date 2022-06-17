@@ -17,12 +17,12 @@ defmodule BorutaIdentityWeb.ChooseSessionControllerTest do
       assert html_response(conn, 200) =~ "Continue ?"
     end
 
-    test "redirect to log in if relying party disabled choose_session", %{
+    test "redirect to log in if identity provider disabled choose_session", %{
       conn: conn,
-      relying_party: relying_party,
+      identity_provider: identity_provider,
       request: request
     } do
-      relying_party |> Ecto.Changeset.change(choose_session: false) |> Repo.update()
+      identity_provider |> Ecto.Changeset.change(choose_session: false) |> Repo.update()
       conn =
         conn
         |> log_in(user_fixture())

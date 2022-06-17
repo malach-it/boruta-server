@@ -30,7 +30,7 @@ BorutaAuth.Repo.insert(
 
 BorutaAuth.Repo.insert(
   %Boruta.Ecto.Scope{
-    name: "relying-parties:manage:all"
+    name: "identity-providers:manage:all"
   },
   on_conflict: :nothing
 )
@@ -66,12 +66,12 @@ BorutaGateway.Repo.insert(
   on_conflict: :nothing
 )
 
-{:ok, relying_party} = BorutaIdentity.RelyingParties.create_relying_party(%{
+{:ok, identity_provider} = BorutaIdentity.IdentityProviders.create_identity_provider(%{
   name: "Default",
   registrable: true
 })
 
-BorutaIdentity.RelyingParties.upsert_client_relying_party(client.id, relying_party.id)
+BorutaIdentity.IdentityProviders.upsert_client_identity_provider(client.id, identity_provider.id)
 
 {:ok, user} = BorutaIdentity.Accounts.Internal.User.registration_changeset(%BorutaIdentity.Accounts.Internal.User{}, %{
   email: System.get_env("ADMIN_EMAIL", "test@test.test"),
@@ -84,7 +84,7 @@ scopes =
     "clients:manage:all",
     "scopes:manage:all",
     "upstreams:manage:all",
-    "relying-parties:manage:all",
+    "identity-providers:manage:all",
     "instances:manage:user"
   ]
   |> Enum.map(fn scope_name ->

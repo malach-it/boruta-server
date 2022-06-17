@@ -1,10 +1,10 @@
-defmodule BorutaAdminWeb.RelyingPartyControllerTest do
+defmodule BorutaAdminWeb.IdentityProviderControllerTest do
   use BorutaAdminWeb.ConnCase
 
   import BorutaIdentity.Factory
 
-  alias BorutaIdentity.RelyingParties
-  alias BorutaIdentity.RelyingParties.RelyingParty
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @create_attrs %{
     name: "some name",
@@ -18,9 +18,9 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
   }
   @invalid_attrs %{name: nil, type: "other"}
 
-  def fixture(:relying_party) do
-    {:ok, relying_party} = RelyingParties.create_relying_party(@create_attrs)
-    relying_party
+  def fixture(:identity_provider) do
+    {:ok, identity_provider} = IdentityProviders.create_identity_provider(@create_attrs)
+    identity_provider
   end
 
   setup %{conn: conn} do
@@ -29,7 +29,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
 
   test "returns a 401", %{conn: conn} do
     assert conn
-           |> get(Routes.admin_relying_party_path(conn, :index))
+           |> get(Routes.admin_identity_provider_path(conn, :index))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
              "message" => "You are unauthorized to access this resource.",
@@ -39,7 +39,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
            }
 
     assert conn
-           |> post(Routes.admin_relying_party_path(conn, :create))
+           |> post(Routes.admin_identity_provider_path(conn, :create))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
              "message" => "You are unauthorized to access this resource.",
@@ -49,7 +49,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
            }
 
     assert conn
-           |> patch(Routes.admin_relying_party_path(conn, :update, "id"))
+           |> patch(Routes.admin_identity_provider_path(conn, :update, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
              "message" => "You are unauthorized to access this resource.",
@@ -59,7 +59,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
            }
 
     assert conn
-           |> delete(Routes.admin_relying_party_path(conn, :delete, "id"))
+           |> delete(Routes.admin_identity_provider_path(conn, :delete, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
              "message" => "You are unauthorized to access this resource.",
@@ -70,10 +70,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
 
     assert conn
            |> get(
-             Routes.admin_relying_party_template_path(
+             Routes.admin_identity_provider_template_path(
                conn,
                :template,
-               "relying_party_id",
+               "identity_provider_id",
                "template_type"
              )
            )
@@ -87,10 +87,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
 
     assert conn
            |> patch(
-             Routes.admin_relying_party_template_path(
+             Routes.admin_identity_provider_template_path(
                conn,
                :update_template,
-               "relying_party_id",
+               "identity_provider_id",
                "template_type"
              )
            )
@@ -104,10 +104,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
 
     assert conn
            |> delete(
-             Routes.admin_relying_party_template_path(
+             Routes.admin_identity_provider_template_path(
                conn,
                :delete_template,
-               "relying_party_id",
+               "identity_provider_id",
                "template_type"
              )
            )
@@ -124,7 +124,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
     @tag authorized: ["bad:scope"]
     test "returns a 403", %{conn: conn} do
       assert conn
-             |> get(Routes.admin_relying_party_path(conn, :index))
+             |> get(Routes.admin_identity_provider_path(conn, :index))
              |> json_response(403) == %{
                "code" =>"FORBIDDEN",
                "message" =>"You are forbidden to access this resource.",
@@ -134,7 +134,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
              }
 
       assert conn
-             |> post(Routes.admin_relying_party_path(conn, :create))
+             |> post(Routes.admin_identity_provider_path(conn, :create))
              |> json_response(403) == %{
                "code" =>"FORBIDDEN",
                "message" =>"You are forbidden to access this resource.",
@@ -144,7 +144,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
              }
 
       assert conn
-             |> patch(Routes.admin_relying_party_path(conn, :update, "id"))
+             |> patch(Routes.admin_identity_provider_path(conn, :update, "id"))
              |> json_response(403) == %{
                "code" =>"FORBIDDEN",
                "message" =>"You are forbidden to access this resource.",
@@ -154,7 +154,7 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
              }
 
       assert conn
-             |> delete(Routes.admin_relying_party_path(conn, :delete, "id"))
+             |> delete(Routes.admin_identity_provider_path(conn, :delete, "id"))
              |> json_response(403) == %{
                "code" =>"FORBIDDEN",
                "message" =>"You are forbidden to access this resource.",
@@ -165,10 +165,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
 
       assert conn
              |> get(
-               Routes.admin_relying_party_template_path(
+               Routes.admin_identity_provider_template_path(
                  conn,
                  :template,
-                 "relying_party_id",
+                 "identity_provider_id",
                  "template_type"
                )
              )
@@ -182,10 +182,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
 
       assert conn
              |> patch(
-               Routes.admin_relying_party_template_path(
+               Routes.admin_identity_provider_template_path(
                  conn,
                  :update_template,
-                 "relying_party_id",
+                 "identity_provider_id",
                  "template_type"
                )
              )
@@ -199,10 +199,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
 
       assert conn
              |> delete(
-               Routes.admin_relying_party_template_path(
+               Routes.admin_identity_provider_template_path(
                  conn,
                  :delete_template,
-                 "relying_party_id",
+                 "identity_provider_id",
                  "template_type"
                )
              )
@@ -217,62 +217,62 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
   end
 
   describe "index" do
-    @tag authorized: ["relying-parties:manage:all"]
-    test "lists all relying_parties", %{conn: conn} do
-      conn = get(conn, Routes.admin_relying_party_path(conn, :index))
+    @tag authorized: ["identity-providers:manage:all"]
+    test "lists all identity_providers", %{conn: conn} do
+      conn = get(conn, Routes.admin_identity_provider_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
   end
 
   describe "show" do
-    setup [:create_relying_party]
+    setup [:create_identity_provider]
 
-    @tag authorized: ["relying-parties:manage:all"]
+    @tag authorized: ["identity-providers:manage:all"]
     test "renders not found", %{conn: conn} do
       assert_raise Ecto.NoResultsError, fn ->
-        get(conn, Routes.admin_relying_party_path(conn, :show, SecureRandom.uuid()))
+        get(conn, Routes.admin_identity_provider_path(conn, :show, SecureRandom.uuid()))
       end
     end
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "renders a relying party", %{
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders a identity provider", %{
       conn: conn,
-      relying_party: %RelyingParty{id: id} = relying_party
+      identity_provider: %IdentityProvider{id: id} = identity_provider
     } do
-      conn = get(conn, Routes.admin_relying_party_path(conn, :show, relying_party))
+      conn = get(conn, Routes.admin_identity_provider_path(conn, :show, identity_provider))
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
     end
   end
 
   describe "show template" do
-    setup [:create_relying_party]
+    setup [:create_identity_provider]
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "renders not found", %{conn: conn, relying_party: %RelyingParty{id: id}} do
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders not found", %{conn: conn, identity_provider: %IdentityProvider{id: id}} do
       assert_raise Ecto.NoResultsError, fn ->
-        get(conn, Routes.admin_relying_party_template_path(conn, :template, id, "unexisting"))
+        get(conn, Routes.admin_identity_provider_template_path(conn, :template, id, "unexisting"))
       end
     end
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "renders a relying party template", %{
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders a identity provider template", %{
       conn: conn,
-      relying_party: %RelyingParty{id: id}
+      identity_provider: %IdentityProvider{id: id}
     } do
-      conn = get(conn, Routes.admin_relying_party_template_path(conn, :template, id, "new_registration"))
-      assert %{"relying_party_id" => ^id, "type" => "new_registration"} = json_response(conn, 200)["data"]
+      conn = get(conn, Routes.admin_identity_provider_template_path(conn, :template, id, "new_registration"))
+      assert %{"identity_provider_id" => ^id, "type" => "new_registration"} = json_response(conn, 200)["data"]
     end
   end
 
-  describe "create relying_party" do
-    @tag authorized: ["relying-parties:manage:all"]
-    test "renders relying_party when data is valid", %{conn: conn} do
+  describe "create identity_provider" do
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders identity_provider when data is valid", %{conn: conn} do
       conn =
-        post(conn, Routes.admin_relying_party_path(conn, :create), relying_party: @create_attrs)
+        post(conn, Routes.admin_identity_provider_path(conn, :create), identity_provider: @create_attrs)
 
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get(conn, Routes.admin_relying_party_path(conn, :show, id))
+      conn = get(conn, Routes.admin_identity_provider_path(conn, :show, id))
 
       assert %{
                "id" => ^id,
@@ -281,30 +281,30 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
              } = json_response(conn, 200)["data"]
     end
 
-    @tag authorized: ["relying-parties:manage:all"]
+    @tag authorized: ["identity-providers:manage:all"]
     test "renders errors when data is invalid", %{conn: conn} do
       conn =
-        post(conn, Routes.admin_relying_party_path(conn, :create), relying_party: @invalid_attrs)
+        post(conn, Routes.admin_identity_provider_path(conn, :create), identity_provider: @invalid_attrs)
 
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
-  describe "update relying_party template" do
-    setup [:create_relying_party]
+  describe "update identity_provider template" do
+    setup [:create_identity_provider]
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "renders relying_party when data is valid", %{
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders identity_provider when data is valid", %{
       conn: conn,
-      relying_party: %RelyingParty{id: relying_party_id}
+      identity_provider: %IdentityProvider{id: identity_provider_id}
     } do
       conn =
         patch(
           conn,
-          Routes.admin_relying_party_template_path(
+          Routes.admin_identity_provider_template_path(
             conn,
             :update_template,
-            relying_party_id,
+            identity_provider_id,
             "new_registration"
           ),
           template: @update_template_attrs
@@ -316,10 +316,10 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
       conn =
         get(
           conn,
-          Routes.admin_relying_party_template_path(
+          Routes.admin_identity_provider_template_path(
             conn,
             :template,
-            relying_party_id,
+            identity_provider_id,
             "new_registration"
           )
         )
@@ -328,79 +328,79 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
                "id" => ^template_id,
                "content" => "some updated content",
                "type" => "new_registration",
-               "relying_party_id" => ^relying_party_id
+               "identity_provider_id" => ^identity_provider_id
              } = json_response(conn, 200)["data"]
     end
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "renders errors when data is invalid", %{conn: conn, relying_party: relying_party} do
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders errors when data is invalid", %{conn: conn, identity_provider: identity_provider} do
       conn =
-        put(conn, Routes.admin_relying_party_path(conn, :update, relying_party),
-          relying_party: @invalid_attrs
+        put(conn, Routes.admin_identity_provider_path(conn, :update, identity_provider),
+          identity_provider: @invalid_attrs
         )
 
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
-  describe "delete relying_party template" do
-    setup [:create_relying_party]
+  describe "delete identity_provider template" do
+    setup [:create_identity_provider]
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "respond a 404 when relying party does not exist", %{
+    @tag authorized: ["identity-providers:manage:all"]
+    test "respond a 404 when identity provider does not exist", %{
       conn: conn
     } do
-      relying_party_id = SecureRandom.uuid()
+      identity_provider_id = SecureRandom.uuid()
       type = "new_registration"
 
       assert_error_sent(404, fn ->
         delete(
           conn,
-          Routes.admin_relying_party_template_path(
+          Routes.admin_identity_provider_template_path(
             conn,
             :delete_template,
-            relying_party_id,
+            identity_provider_id,
             type
           )
         )
       end)
     end
 
-    @tag authorized: ["relying-parties:manage:all"]
+    @tag authorized: ["identity-providers:manage:all"]
     test "respond a 404 when template does not exist", %{
       conn: conn,
-      relying_party: %RelyingParty{id: relying_party_id}
+      identity_provider: %IdentityProvider{id: identity_provider_id}
     } do
       type = "new_registration"
 
       assert_error_sent(404, fn ->
         delete(
           conn,
-          Routes.admin_relying_party_template_path(
+          Routes.admin_identity_provider_template_path(
             conn,
             :delete_template,
-            relying_party_id,
+            identity_provider_id,
             type
           )
         )
       end)
     end
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "deletes relying_party template when template exists", %{
+    @tag authorized: ["identity-providers:manage:all"]
+    test "deletes identity_provider template when template exists", %{
       conn: conn,
-      relying_party: %RelyingParty{id: relying_party_id} = relying_party
+      identity_provider: %IdentityProvider{id: identity_provider_id} = identity_provider
     } do
       type = "new_registration"
-      insert(:template, type: type, relying_party: relying_party)
+      insert(:template, type: type, identity_provider: identity_provider)
 
       conn =
         delete(
           conn,
-          Routes.admin_relying_party_template_path(
+          Routes.admin_identity_provider_template_path(
             conn,
             :delete_template,
-            relying_party_id,
+            identity_provider_id,
             type
           )
         )
@@ -410,22 +410,22 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
     end
   end
 
-  describe "update relying_party" do
-    setup [:create_relying_party]
+  describe "update identity_provider" do
+    setup [:create_identity_provider]
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "renders relying_party when data is valid", %{
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders identity_provider when data is valid", %{
       conn: conn,
-      relying_party: %RelyingParty{id: id} = relying_party
+      identity_provider: %IdentityProvider{id: id} = identity_provider
     } do
       conn =
-        put(conn, Routes.admin_relying_party_path(conn, :update, relying_party),
-          relying_party: @update_attrs
+        put(conn, Routes.admin_identity_provider_path(conn, :update, identity_provider),
+          identity_provider: @update_attrs
         )
 
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = get(conn, Routes.admin_relying_party_path(conn, :show, id))
+      conn = get(conn, Routes.admin_identity_provider_path(conn, :show, id))
 
       assert %{
                "id" => ^id,
@@ -434,45 +434,48 @@ defmodule BorutaAdminWeb.RelyingPartyControllerTest do
              } = json_response(conn, 200)["data"]
     end
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "renders errors when data is invalid", %{conn: conn, relying_party: relying_party} do
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders errors when data is invalid", %{conn: conn, identity_provider: identity_provider} do
       conn =
-        put(conn, Routes.admin_relying_party_path(conn, :update, relying_party),
-          relying_party: @invalid_attrs
+        put(conn, Routes.admin_identity_provider_path(conn, :update, identity_provider),
+          identity_provider: @invalid_attrs
         )
 
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
-  describe "delete relying_party" do
-    setup [:create_relying_party]
+  describe "delete identity_provider" do
+    setup [:create_identity_provider]
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "cannot delete admin ui relying_party", %{conn: conn} do
-      client_relying_party = insert(:client_relying_party)
+    @tag authorized: ["identity-providers:manage:all"]
+    test "cannot delete admin ui identity_provider", %{conn: conn} do
+      client_identity_provider = insert(:client_identity_provider)
       current_admin_ui_client_id = System.get_env("VUE_APP_ADMIN_CLIENT_ID", "")
-      System.put_env("VUE_APP_ADMIN_CLIENT_ID", client_relying_party.client_id)
+      System.put_env("VUE_APP_ADMIN_CLIENT_ID", client_identity_provider.client_id)
 
-      conn = delete(conn, Routes.admin_relying_party_path(conn, :delete, client_relying_party.relying_party))
+      conn = delete(
+        conn,
+        Routes.admin_identity_provider_path(conn, :delete, client_identity_provider.identity_provider)
+      )
       assert response(conn, 403)
 
       System.put_env("VUE_APP_ADMIN_CLIENT_ID", current_admin_ui_client_id)
     end
 
-    @tag authorized: ["relying-parties:manage:all"]
-    test "deletes chosen relying_party", %{conn: conn, relying_party: relying_party} do
-      conn = delete(conn, Routes.admin_relying_party_path(conn, :delete, relying_party))
+    @tag authorized: ["identity-providers:manage:all"]
+    test "deletes chosen identity_provider", %{conn: conn, identity_provider: identity_provider} do
+      conn = delete(conn, Routes.admin_identity_provider_path(conn, :delete, identity_provider))
       assert response(conn, 204)
 
       assert_error_sent(404, fn ->
-        get(conn, Routes.admin_relying_party_path(conn, :show, relying_party))
+        get(conn, Routes.admin_identity_provider_path(conn, :show, identity_provider))
       end)
     end
   end
 
-  defp create_relying_party(_) do
-    relying_party = fixture(:relying_party)
-    %{relying_party: relying_party}
+  defp create_identity_provider(_) do
+    identity_provider = fixture(:identity_provider)
+    %{identity_provider: identity_provider}
   end
 end

@@ -91,8 +91,8 @@ defmodule BorutaIdentityWeb.ConnCase do
   end
 
   def with_a_request(_params) do
-    relying_party =
-      BorutaIdentity.Factory.insert(:relying_party,
+    identity_provider =
+      BorutaIdentity.Factory.insert(:identity_provider,
         registrable: true,
         consentable: true,
         confirmable: true,
@@ -102,22 +102,22 @@ defmodule BorutaIdentityWeb.ConnCase do
     client = Boruta.Factory.insert(:client)
     scope = Boruta.Factory.insert(:scope, name: "request:scope", label: "Scope from request")
 
-    client_relying_party =
-      BorutaIdentity.Factory.insert(:client_relying_party,
-        relying_party: relying_party,
+    client_identity_provider =
+      BorutaIdentity.Factory.insert(:client_identity_provider,
+        identity_provider: identity_provider,
         client_id: client.id
       )
 
     {:ok, jwt, _payload} =
       Joken.encode_and_sign(
         %{
-          client_id: client_relying_party.client_id,
+          client_id: client_identity_provider.client_id,
           scope: scope.name,
           user_return_to: "/user_return_to"
         },
         BorutaIdentityWeb.Token.application_signer()
       )
 
-    %{request: jwt, relying_party: relying_party, client: client}
+    %{request: jwt, identity_provider: identity_provider, client: client}
   end
 end

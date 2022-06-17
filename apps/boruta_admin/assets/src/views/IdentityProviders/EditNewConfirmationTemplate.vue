@@ -1,5 +1,5 @@
 <template>
-  <div class="container edit-edit-reset-password-template">
+  <div class="container edit-new-confirmation-template">
     <Toaster :active="success" message="Template has been updated" type="success" />
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
@@ -7,29 +7,30 @@
     <div class="ui segment">
       <button v-on:click="update()" class="ui violet right floated button">Save</button>
       <button v-if="template.id" v-on:click="destroy()" class="ui red right floated button">Reset</button>
-      <router-link :to="{ name: 'edit-relying-party', params: { relyingPartyId: relyingParty.id } }" class="ui blue button">Back</router-link>
+      <router-link :to="{ name: 'edit-identity-provider', params: { identityProviderId: identityProvider.id } }" class="ui blue button">Back</router-link>
     </div>
   </div>
 </template>
 
 <script>
 import Template from '../../models/template.model'
-import RelyingParty from '../../models/relying-party.model'
+import IdentityProvider from '../../models/identity-provider.model'
 import TextEditor from '../../components/Forms/TextEditor.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
-  name: 'edit-edit-reset-password-template',
+  name: 'edit-new-confirmation-template',
   components: {
     TextEditor,
     Toaster
   },
   mounted () {
-    const { relyingPartyId } = this.$route.params
-    RelyingParty.get(relyingPartyId).then((relyingParty) => {
-      this.relyingParty = relyingParty
+    const { identityProviderId } = this.$route.params
+
+    IdentityProvider.get(identityProviderId).then((identityProvider) => {
+      this.identityProvider = identityProvider
     })
-    Template.get(relyingPartyId, 'edit_reset_password').then((template) => {
+    Template.get(identityProviderId, 'new_confirmation_instructions').then((template) => {
       this.template = template
       this.content = template.content
     })
@@ -37,7 +38,7 @@ export default {
   data () {
     return {
       content: '',
-      relyingParty: new RelyingParty(),
+      identityProvider: new IdentityProvider(),
       template: new Template(),
       success: false
     }
@@ -65,7 +66,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.edit-edit-reset-password-template {
+.edit-new-confirmation-template {
   height: 100%;
   display: flex;
   flex-direction: column;
