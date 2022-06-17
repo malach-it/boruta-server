@@ -250,5 +250,8 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       assert access_token
       assert expires_in
     end
+
+    @tag :skip
+    test "preauthorize error case"
   end
 end

@@ -158,7 +158,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
-  # TODO test it
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_error(conn, error) do
     session_chosen? = get_session(conn, :session_chosen) || false
@@ -187,29 +186,26 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   @impl Boruta.Oauth.AuthorizeApplication
   def authorize_error(
-        %Plug.Conn{query_params: query_params} = conn,
-        %Error{status: :unauthorized, error: :invalid_resource_owner} = error
+        %Plug.Conn{} = conn,
+        %Error{status: :unauthorized, error: :login_required} = error
       ) do
-    case query_params["prompt"] do
-      "none" ->
-        # TODO move this to boruta_auth
-        authorize_error(conn, %{
-          error
-          | error: :login_required,
-            format: :fragment,
-            redirect_uri: query_params["redirect_uri"]
-        })
+    conn
+    |> delete_session(:session_chosen)
+    |> redirect(external: Error.redirect_to_url(error))
+  end
 
-      _ ->
-        conn
-        |> delete_session(:session_chosen)
-        |> redirect(
-          to:
-            IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
-              request: request_param(conn)
-            })
-        )
-    end
+  def authorize_error(
+        %Plug.Conn{} = conn,
+        %Error{status: :unauthorized, error: :invalid_resource_owner}
+      ) do
+     conn
+     |> delete_session(:session_chosen)
+     |> redirect(
+       to:
+         IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
+           request: request_param(conn)
+         })
+     )
   end
 
   def authorize_error(conn, %Error{format: format} = error)

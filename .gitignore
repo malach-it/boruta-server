@@ -13,6 +13,6 @@ erl_crash.dump
 *.swp
 *.swo
 *.orig
-tags
+tags*
 
 .vscode

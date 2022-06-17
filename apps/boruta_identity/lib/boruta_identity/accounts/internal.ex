@@ -88,16 +88,6 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  @impl BorutaIdentity.Accounts.Sessions
-  def delete_session(nil), do: {:error, "Session not found."}
-
-  def delete_session(session_token) do
-    case Repo.delete_all(UserToken.token_and_context_query(session_token, "session")) do
-      {1, _} -> :ok
-      {_, _} -> {:error, "Session not found."}
-    end
-  end
-
   @impl BorutaIdentity.Accounts.ResetPasswords
   def send_reset_password_instructions(user, reset_password_url_fun) do
     with {:ok, _email} <-
@@ -141,7 +131,6 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.Confirmations
-  # TODO move confirmation token in internal or move out to domain
   def confirm_user(token) do
     with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
          %User{confirmed_at: nil} = user <- Repo.one(query),

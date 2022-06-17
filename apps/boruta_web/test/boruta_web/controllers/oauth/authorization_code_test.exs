@@ -42,7 +42,6 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
   end
 
   describe "authorization code grant" do
-    # TODO test token delivrance with code
     setup %{conn: conn} do
       resource_owner = user_fixture()
       client = insert(:client)
@@ -258,5 +257,11 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
 
       assert code
     end
+
+    @tag :skip
+    test "delivers a token inexchange of a code"
+
+    @tag :skip
+    test "preauthorize error case"
   end
 end

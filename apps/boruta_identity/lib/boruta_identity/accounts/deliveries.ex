@@ -48,7 +48,6 @@ defmodule BorutaIdentity.Accounts.Deliveries do
         ) :: any()
   def deliver_user_confirmation_instructions(%User{} = user, confirmation_url_fun)
       when is_function(confirmation_url_fun, 1) do
-    # TODO move logic to BorutaIdentity.Accounts.Internal
     if user.confirmed_at do
       {:error, :already_confirmed}
     else

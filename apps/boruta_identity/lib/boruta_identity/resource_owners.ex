@@ -26,7 +26,6 @@ defmodule BorutaIdentity.ResourceOwners do
       _ -> {:error, "User not found."}
     end
   end
-  # TODO investigate nil values
   def get_by(_), do: {:error, "User not found."}
 
   @impl Boruta.Oauth.ResourceOwners
@@ -43,7 +42,6 @@ defmodule BorutaIdentity.ResourceOwners do
   def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do
     Accounts.get_user_scopes(sub)
   end
-  # TODO investigate nil values
   def authorized_scopes(_), do: []
 
   @impl Boruta.Oauth.ResourceOwners

@@ -594,36 +594,6 @@ defmodule BorutaIdentity.AccountsTest do
       {:ok, client_id: client_relying_party.client_id}
     end
 
-    test "returns an error with nil client_id" do
-      context = :context
-      client_id = nil
-      session_token = ""
-
-      assert_raise RelyingPartyError, "Client identifier not provided.", fn ->
-        Accounts.delete_session(
-          context,
-          client_id,
-          session_token,
-          DummySession
-        )
-      end
-    end
-
-    test "returns an error with unknown client_id" do
-      context = :context
-      client_id = SecureRandom.uuid()
-      session_token = ""
-
-      assert_raise RelyingPartyError, "Relying Party not configured for given OAuth client. Please contact your administrator.", fn ->
-        Accounts.delete_session(
-          context,
-          client_id,
-          session_token,
-          DummySession
-        )
-      end
-    end
-
     test "return a success when session does not exist", %{client_id: client_id} do
       context = :context
       session_token = "unexisting sessino"

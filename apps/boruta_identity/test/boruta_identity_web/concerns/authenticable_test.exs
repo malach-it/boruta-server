@@ -32,4 +32,13 @@ defmodule BorutaIdentityWeb.AuthenticableTest do
 
   @tag :skip
   test "store_user_session/2"
+
+  @tag :skip
+  test "after_sign_in_path/2"
+
+  @tag :skip
+  test "after_registration_path/2"
+
+  @tag :skip
+  test "after_sign_out_path/2"
 end

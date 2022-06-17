@@ -46,15 +46,12 @@ defmodule BorutaIdentityWeb.Authenticable do
     conn
   end
 
-  # TODO test it
   @spec after_sign_in_path(conn :: Plug.Conn.t()) :: String.t()
   def after_sign_in_path(conn), do: user_return_to_from_request(conn) || "/"
 
-  # TODO test it
   @spec after_registration_path(conn :: Plug.Conn.t()) :: String.t()
   def after_registration_path(conn), do: user_return_to_from_request(conn) || "/"
 
-  # TODO test it
   @spec after_sign_out_path(conn :: Plug.Conn.t()) :: String.t()
   def after_sign_out_path(%Plug.Conn{query_params: query_params} = conn) do
     Routes.user_session_path(conn, :new, query_params)

@@ -76,9 +76,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
             ) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
-  # TODO move that function out of internal secondary port (bor-156)
-  @callback delete_session(session_token :: String.t()) :: :ok | {:error, String.t()}
-
   @spec initialize_session(
           context :: any(),
           client_id :: String.t(),
@@ -119,6 +116,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
     end
   end
 
+  # TODO have a look to OpenID logout profile
   @spec delete_session(
           context :: any(),
           client_id :: String.t(),
@@ -126,10 +124,8 @@ defmodule BorutaIdentity.Accounts.Sessions do
           module :: atom()
         ) ::
           callback_result :: any()
-  defwithclientrp delete_session(context, client_id, session_token, module) do
-    client_impl = RelyingParty.implementation(client_rp)
-
-    case apply(client_impl, :delete_session, [session_token]) do
+  def delete_session(context, _client_id, session_token, module) do
+    case delete_session(session_token) do
       :ok ->
         module.session_deleted(context)
 
@@ -163,5 +159,14 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
   defp new_confirmation_instructions_template(relying_party) do
     RelyingParties.get_relying_party_template!(relying_party.id, :new_confirmation_instructions)
+  end
+
+  defp delete_session(nil), do: {:error, "Session not found."}
+
+  defp delete_session(session_token) do
+    case Repo.delete_all(UserToken.token_and_context_query(session_token, "session")) do
+      {1, _} -> :ok
+      {_, _} -> {:error, "Session not found."}
+    end
   end
 end
