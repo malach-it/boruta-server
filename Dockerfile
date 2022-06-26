@@ -1,5 +1,6 @@
 FROM node:17.4.0 AS assets
 
+# For packages not compatible with OpenSSL 3.0 https://nodejs.org/en/blog/release/v17.0.0/
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
 WORKDIR /app
@@ -9,11 +10,12 @@ COPY ./apps/boruta_admin/assets /app
 RUN npm ci
 RUN npm run build
 
-FROM elixir:1.12.2 AS builder
+FROM elixir:1.13.4-slim AS builder
+
+RUN apt-get update
+RUN apt-get install -y git build-essential
 
 ENV MIX_ENV=prod
-
-RUN apt-get install -y libcurl4-openssl-dev libssl-dev libevent-dev
 
 RUN mix local.hex --force
 RUN mix local.rebar --force
@@ -33,9 +35,7 @@ RUN mix phx.digest
 WORKDIR /app
 RUN mix release --force --overwrite
 
-FROM elixir:1.12.2
-
-RUN apt-get install -y libcurl4-openssl-dev libssl-dev libevent-dev
+FROM elixir:1.13.4-slim
 
 WORKDIR /app
 
