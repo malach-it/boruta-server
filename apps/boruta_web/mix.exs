@@ -47,12 +47,14 @@ defmodule BorutaWeb.MixProject do
       {:jason, "~> 1.0"},
       {:joken, "~> 2.3"},
       {:libcluster, "~> 3.2.1"},
-      {:phoenix, "~> 1.5.9"},
+      {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.1"},
-      {:phoenix_html, "~> 2.11"},
+      {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_pubsub, "~> 2.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_poller, "~> 0.5"}
     ]
   end
 

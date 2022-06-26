@@ -46,19 +46,18 @@ defmodule BorutaIdentity.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},
-      {:phoenix, "~> 1.5.3"},
+      {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.1"},
-      {:phoenix_html, "~> 2.11"},
+      {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_pubsub, "~> 2.0"},
-      {:phx_gen_auth, "~> 0.6", only: [:dev], runtime: false},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
       {:scrivener_ecto, "~> 2.7"},
       {:secure_random, "~> 0.5"},
       {:swoosh, "~> 1.5"},
-      {:telemetry_metrics, "~> 0.4"},
-      {:telemetry_poller, "~> 0.4"}
+      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_poller, "~> 0.5"}
     ]
   end
 
