@@ -453,6 +453,9 @@ export default {
       border: 1px solid rgba(255, 255, 255, 0.15);
       background: #393939;
       color: white;
+      &:focus {
+        border: 1px solid #85b7d9!important;
+      }
     }
     label {
       color: white!important;

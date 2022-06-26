@@ -17,7 +17,7 @@ defmodule BorutaWeb.Authorization do
       |> assign(:introspected_token, payload)
     else
       e ->
-        Logger.info("User unauthorized : #{inspect(e)}")
+        Logger.debug("User unauthorized : #{inspect(e)}")
 
         conn
         |> put_status(:unauthorized)

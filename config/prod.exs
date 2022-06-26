@@ -1,7 +1,8 @@
 import Config
 
-# Do not print debug messages in production
 config :logger, level: :info
+
+config :phoenix, :filter_parameters, ["password", "client_secret"]
 
 config :boruta_web, BorutaWeb.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",

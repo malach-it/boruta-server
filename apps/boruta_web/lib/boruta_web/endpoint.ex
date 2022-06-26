@@ -22,7 +22,9 @@ defmodule BorutaWeb.Endpoint do
   end
 
   plug Plug.RequestId
-  plug Plug.Telemetry, event_prefix: [:boruta_web, :endpoint]
+  plug Plug.Telemetry,
+    event_prefix: [:boruta_web, :endpoint],
+    log: {__MODULE__, :log_level, []}
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
@@ -38,4 +40,8 @@ defmodule BorutaWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug BorutaWeb.Router
+
+  def log_level(%{path_info: ["healthcheck" | _]}), do: false
+  def log_level(%{private: %{BorutaIdentityWeb.Router => {["accounts"], _}}}), do: false # logs are handled by boruta_identity
+  def log_level(_), do: :info
 end

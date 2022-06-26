@@ -18,11 +18,6 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
   pubsub_server: BorutaAdmin.PubSub,
   live_view: [signing_salt: "mtlt3we/"]
 
-# Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
-
 config :boruta, Boruta.Oauth,
   repo: BorutaWeb.Repo,
   contexts: [

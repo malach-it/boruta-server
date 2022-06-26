@@ -27,7 +27,9 @@ defmodule BorutaAdminWeb.Endpoint do
   end
 
   plug Plug.RequestId
-  plug Plug.Telemetry, event_prefix: [:boruta_admin, :endpoint]
+  plug Plug.Telemetry,
+    event_prefix: [:boruta_admin, :endpoint],
+    log: {__MODULE__, :log_level, []}
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
@@ -38,4 +40,8 @@ defmodule BorutaAdminWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug BorutaAdminWeb.Router
+
+  def log_level(%{path_info: ["healthcheck" | _]}), do: false
+  def log_level(%{path_info: ["favicon.ico" | _]}), do: false
+  def log_level(_), do: :info
 end

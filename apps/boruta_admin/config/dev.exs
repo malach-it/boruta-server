@@ -28,7 +28,7 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
     ]
   ]
 
-config :logger, :console, format: "[$level] $message\n"
+config :logger, :console, level: :debug
 
 config :phoenix, :stacktrace_depth, 20
 
