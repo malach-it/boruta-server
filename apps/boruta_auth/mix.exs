@@ -26,7 +26,7 @@ defmodule BorutaAuth.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:boruta, "~> 2.1.4"}
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"}
     ]
   end
 end

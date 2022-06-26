@@ -53,12 +53,6 @@ defmodule BorutaAdminWeb.UserController do
     end
   end
 
-  def current(conn, _) do
-    %{"sub" => sub, "username" => username} = conn.assigns[:introspected_token]
-    user = %User{id: sub, username: username}
-    render(conn, "current.json", user: user)
-  end
-
   defp ensure_open_for_edition(user_id, conn) do
     %{"sub" => sub} = conn.assigns[:introspected_token]
 

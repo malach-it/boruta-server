@@ -21,7 +21,5 @@ defmodule BorutaIdentity.Repo.Migrations.RenameRelyingParties do
     end
 
     create index(:identity_providers, [:name], unique: true)
-
-    # TODO rename constraints
   end
 end

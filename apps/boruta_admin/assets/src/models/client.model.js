@@ -24,6 +24,7 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
+  confidential: function ({ confidential }) { this.confidential = confidential },
   pkce: function ({ pkce }) { this.pkce = pkce },
   public_key: function ({ public_key }) { this.public_key = public_key },
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
@@ -132,6 +133,7 @@ class Client {
       authorization_code_ttl,
       authorize_scope,
       authorized_scopes,
+      confidential,
       grantTypes,
       id,
       id_token_ttl,
@@ -151,6 +153,7 @@ class Client {
       authorization_code_ttl,
       authorize_scope,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
+      confidential,
       id,
       id_token_ttl,
       name,

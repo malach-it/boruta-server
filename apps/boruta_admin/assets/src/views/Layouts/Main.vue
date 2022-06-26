@@ -161,7 +161,7 @@ export default {
   min-height: calc(100% - 41px);
   .main.create.button {
     position: absolute;
-    top: .5em;
+    top: .6em;
     right: .5em;
     font-size: .825rem;
     @media screen and (max-width: 1127px) {
@@ -462,9 +462,6 @@ export default {
     }
     .error-message {
       color: #e09494!important;
-      position: absolute;
-      bottom: -.2em;
-      left: 1em;
     }
     .error.field {
       label {

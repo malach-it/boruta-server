@@ -20,6 +20,7 @@ defmodule BorutaAdminWeb.ClientView do
       id: client.id,
       name: client.name,
       secret: client.secret,
+      confidential: client.confidential,
       redirect_uris: client.redirect_uris,
       public_refresh_token: client.public_refresh_token,
       public_revoke: client.public_revoke,

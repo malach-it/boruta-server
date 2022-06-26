@@ -53,6 +53,12 @@
             </div>
           </div>
         </div>
+        <div class="ui segment">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="client.confidential">
+            <label>Confidential</label>
+          </div>
+        </div>
         <h3>Authentication</h3>
         <div class="field" :class="{ 'error': client.errors?.identity_provider_id }">
           <IdentityProviderField :identityProvider="client.identity_provider.model" @identityProviderChange="setIdentityProvider"/>

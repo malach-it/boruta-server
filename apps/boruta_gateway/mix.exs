@@ -36,7 +36,7 @@ defmodule BorutaGateway.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:boruta, "~> 2.1.4"},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
       {:ecto_sql, "~> 3.0"},
       {:ex_json_schema, "~> 0.7.3"},
       {:finch, "~> 0.10"},
