@@ -27,7 +27,7 @@
           <label>URIs</label>
           <div v-for="(upstreamUri, index) in upstream.uris" class="field" :key="index">
             <div class="ui right icon input">
-              <input type="text" v-model="upstreamUri.uri" placeholder="/matching" />
+              <input type="text" v-model="upstreamUri.uri" placeholder="/matching (without trailing slash)" />
               <i v-on:click="deleteUpstreamUri(upstreamUri)" class="close icon"></i>
             </div>
           </div>

@@ -4,8 +4,7 @@ defmodule BorutaWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_boruta_web_key",
-    signing_salt: "OCKBuS86",
-    extra: "SameSite=None; Secure"
+    signing_salt: "OCKBuS86"
   ]
 
   plug Plug.Static,

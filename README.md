@@ -66,7 +66,22 @@ Once done, you can run the release as follow:
 env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta start
 ```
 
+## Run an instance from docker-compose
 
-## Troubleshooting
-### Secure connections
-Boruta Identity use session cookies flagged as secure. If you move from localhost to a custom domain, it has to use https protocol.
+1. build the docker images
+
+```bash
+docker-compose build
+```
+
+2. run database migrations
+
+```bash
+docker-compose run boruta ./bin/boruta eval "Boruta.Release.setup()"
+```
+
+Once done, you can run the docker images as follow:
+
+```bash
+docker-compose up
+```
