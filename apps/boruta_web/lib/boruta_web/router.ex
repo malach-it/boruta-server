@@ -45,12 +45,6 @@ defmodule BorutaWeb.Router do
     get("/.well-known/openid-configuration", OpenidController, :well_known)
   end
 
-  scope "/", BorutaWeb do
-    pipe_through(:browser)
-
-    get("/", PageController, :index)
-  end
-
   get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck, log: false)
 
   forward("/accounts", BorutaIdentityWeb.Endpoint)
