@@ -95,3 +95,7 @@ The applications will be available on different ports (depending on the docker c
 - http://localhost:8080 for the authorization server
 - http://localhost:8081 for the admin interface
 - http://localhost:8082 for the gateway
+
+## Default admin credentials
+
+In order to authenticate to the administration interface you will be asked for credentials that are by default (seeded from environment variables) admin@test.test / imaynotknowthat
