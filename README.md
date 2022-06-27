@@ -37,3 +37,8 @@ mix phx.server
 
 ## Secure connections
 Boruta Identity use session cookies flagged as secure. If you move from localhost to a custom domain, it has to use https protocol.
+
+## Release preparation steps
+```bash
+./scripts/prepare_assets.sh
+```
