@@ -17,7 +17,7 @@ mix phx.server
 
 | Variable name                      | description         |
 | ---------------------------------- | ------------------- |
-| `SECRET_KEY_BASE`                  | Will be used a phoenix secret key base, it is defined as an at least 64 cheracters long string. |
+| `SECRET_KEY_BASE`                  | Will be used as phoenix secret key base, it is defined as an at least 64 cheracters long string. |
 | `POSTGRES_USER`                    | Will be the user provided as credentials in postgreSQL connections. |
 | `POSTGRES_PASSWORD`                | Will be the password provided as credentials in postgreSQL connections. |
 | `POSTGRES_DATABASE`                | Will be the database provided in postgreSQL connections. |
@@ -66,6 +66,11 @@ Once done, you can run the release as follow:
 env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta start
 ```
 
+The applications will be available on different ports (depending on the values provided in `.env.example`):
+- http://localhost:8080 for the authorization server
+- http://localhost:8081 for the admin interface
+- http://localhost:8082 for the gateway
+
 ## Run an instance from docker-compose
 
 1. build the docker images
@@ -85,3 +90,8 @@ Once done, you can run the docker images as follow:
 ```bash
 docker-compose up
 ```
+
+The applications will be available on different ports (depending on the docker compose environment configuration):
+- http://localhost:8080 for the authorization server
+- http://localhost:8081 for the admin interface
+- http://localhost:8082 for the gateway
