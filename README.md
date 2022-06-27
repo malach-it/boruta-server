@@ -34,3 +34,6 @@ mix phx.server
 | `BORUTA_OAUTH_BASE_URL`            | The URL that represent the base URL where boruta oauth server http endpoint will be deployed to (without trailing slash). |
 | `MAILJET_API_KEY`                  | TODO Have the ability to choose emailing provider. |
 | `MAILJET_SECRET`                   | TODO Have the ability to choose emailing provider. |
+
+## Secure connections
+Boruta Identity use session cookies flagged as secure. If you move from localhost to a custom domain, it has to use https protocol.

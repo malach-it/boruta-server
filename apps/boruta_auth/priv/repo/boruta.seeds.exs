@@ -2,6 +2,22 @@ import Ecto.Changeset
 
 BorutaAuth.Repo.insert(
   %Boruta.Ecto.Scope{
+    name: "openid",
+    public: true
+  },
+  on_conflict: :nothing
+)
+
+BorutaAuth.Repo.insert(
+  %Boruta.Ecto.Scope{
+    name: "email",
+    public: true
+  },
+  on_conflict: :nothing
+)
+
+BorutaAuth.Repo.insert(
+  %Boruta.Ecto.Scope{
     name: "scopes:manage:all"
   },
   on_conflict: :nothing
@@ -35,13 +51,6 @@ BorutaAuth.Repo.insert(
   on_conflict: :nothing
 )
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "instances:manage:user"
-  },
-  on_conflict: :nothing
-)
-
 {:ok, client} = Boruta.Ecto.Admin.create_client(%{
   secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "777"),
   id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
@@ -62,9 +71,9 @@ BorutaAuth.Repo.insert(
 BorutaIdentity.IdentityProviders.upsert_client_identity_provider(client.id, identity_provider.id)
 
 {:ok, user} = BorutaIdentity.Accounts.Internal.User.registration_changeset(%BorutaIdentity.Accounts.Internal.User{}, %{
-  email: System.get_env("BORUTA_ADMIN_EMAIL", "test@test.test"),
-  password: System.get_env("BORUTA_ADMIN_PASSWORD", "passwordesat"),
-  password_confirmation: System.get_env("BORUTA_ADMIN_PASSWORD", "passwordesat")
+  email: System.get_env("BORUTA_ADMIN_EMAIL"),
+  password: System.get_env("BORUTA_ADMIN_PASSWORD"),
+  password_confirmation: System.get_env("BORUTA_ADMIN_PASSWORD")
 }) |> BorutaIdentity.Repo.insert()
 
 user = BorutaIdentity.Accounts.Internal.domain_user!(user)
@@ -74,8 +83,7 @@ Boruta.Ecto.Admin.get_scopes_by_names([
   "clients:manage:all",
   "scopes:manage:all",
   "upstreams:manage:all",
-  "identity-providers:manage:all",
-  "instances:manage:user"
+  "identity-providers:manage:all"
 ])
 |> Enum.map(fn %{id: scope_id} ->
   BorutaIdentity.Repo.insert(%BorutaIdentity.Accounts.UserAuthorizedScope{

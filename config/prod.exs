@@ -44,5 +44,5 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 config :boruta_identity, BorutaIdentity.Endpoint,
-  server: true,
+  server: false,
   cache_static_manifest: "priv/static/cache_manifest.json"

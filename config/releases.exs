@@ -50,20 +50,15 @@ config :boruta_gateway,
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer()],
   url: [host: System.get_env("BORUTA_OAUTH_HOST")],
-  server: true,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  server: false,
   url: [host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts"],
-  cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [port: System.get_env("BORUTA_ADMIN_PORT") |> String.to_integer()],
   url: [host: System.get_env("BORUTA_ADMIN_HOST")],
-  server: true,
-  cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_web, BorutaWeb.Authorization,
