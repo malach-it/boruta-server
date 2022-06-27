@@ -44,7 +44,7 @@ config :boruta_identity, BorutaIdentity.Mailer,
   api_key: System.get_env("MAILJET_API_KEY")
 
 config :boruta_gateway,
-  port: String.to_integer(System.get_env("PORT") || "4000"),
+  port: System.get_env("BORUTA_GATEWAY_PORT") |> String.to_integer(),
   server: true
 
 config :boruta_web, BorutaWeb.Endpoint,

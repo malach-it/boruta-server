@@ -231,6 +231,7 @@
             BORUTA_OAUTH_HOST: "{{ oauth_host }}"
             BORUTA_OAUTH_PORT: "4001"
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
+            BORUTA_GATEWAY_PORT: "4000"
             MAILJET_API_KEY: "{{ mailjet_api_key }}"
             MAILJET_SECRET: "{{ mailjet_secret }}"
             POOL_SIZE: "10"
