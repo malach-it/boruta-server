@@ -7,7 +7,7 @@ gateway_host: gateway.boruta.local
 
 admin_client_id: 6a2f41a3-c54c-fce8-32d2-0324e1c32e20
 admin_client_secret: "777"
-admin_oauth_host: https://oauth.boruta.patatoid.fr
+oauth_base_url: https://oauth.boruta.patatoid.fr
 admin_email: io.pascal.knoth@gmail.com
 admin_password: !vault |
           $ANSIBLE_VAULT;1.1;AES256

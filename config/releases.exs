@@ -49,19 +49,19 @@ config :boruta_gateway,
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: 4001],
-  url: [host: System.get_env("BORUTA_OAUTH_HOST")],
+  http: [port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer()],
   server: true,
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   server: false,
-  url: [host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts"],
+  url: [host: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer(), path: "/accounts"],
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
-  http: [port: 4002],
+  http: [port: System.get_env("BORUTA_ADMIN_PORT") |> String.to_integer()],
   url: [host: System.get_env("BORUTA_ADMIN_HOST")],
   server: true,
   cache_static_manifest: "priv/static/cache_manifest.json",
@@ -69,9 +69,9 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
 
 config :boruta_web, BorutaWeb.Authorization,
   oauth2: [
-    client_id: System.get_env("ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
-    client_secret: System.get_env("ADMIN_OAUTH_CLIENT_SECRET", "777"),
-    site: System.get_env("ADMIN_OAUTH_BASE_URL", "http://oauth.boruta.patatoid.fr")
+    client_id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID"),
+    client_secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET"),
+    site: System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL")
   ]
 
 config :boruta, Boruta.Oauth,
@@ -79,19 +79,32 @@ config :boruta, Boruta.Oauth,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
   ],
-  issuer: "https://oauth.boruta.patatoid.fr"
+  issuer: System.get_env("BORUTA_OAUTH_BASE_URL")
 
-config :libcluster,
-  topologies: [
-    k8s: [
-      strategy: Cluster.Strategy.Kubernetes,
-      config: [
-        mode: :ip,
-        kubernetes_ip_lookup_mode: :pods,
-        kubernetes_node_basename: "boruta",
-        kubernetes_selector: "app=boruta",
-        kubernetes_namespace: System.get_env("K8S_NAMESPACE"),
-        polling_interval: 10_000
+if System.get_env("K8S_NAMESPACE") && System.get_env("K8S_SELECTOR") do
+  config :libcluster,
+    topologies: [
+      k8s: [
+        strategy: Cluster.Strategy.Kubernetes,
+        config: [
+          mode: :ip,
+          kubernetes_ip_lookup_mode: :pods,
+          kubernetes_node_basename: "boruta",
+          kubernetes_selector: System.get_env("K8S_SELECTOR"),
+          kubernetes_namespace: System.get_env("K8S_NAMESPACE"),
+          polling_interval: 10_000
+        ]
       ]
     ]
-  ]
+else
+  config :libcluster,
+    topologies: [
+      example: [
+        strategy: Cluster.Strategy.Epmd,
+        config: [hosts: []],
+        connect: {:net_kernel, :connect_node, []},
+        disconnect: {:erlang, :disconnect_node, []},
+        list_nodes: {:erlang, :nodes, [:connected]},
+      ]
+    ]
+end

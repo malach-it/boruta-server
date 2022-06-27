@@ -94,7 +94,7 @@ User.api = function () {
   const accessToken = localStorage.getItem('access_token')
 
   const instance = axios.create({
-    baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/users`,
+    baseURL: `${window.env.BORUTA_ADMIN_BASE_URL}/api/users`,
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 

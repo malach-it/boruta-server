@@ -6,14 +6,14 @@ class Oauth {
   constructor () {
     const oauth = new BorutaOauth({
       window,
-      host: window.env.VUE_APP_OAUTH_BASE_URL,
+      host: window.env.BORUTA_ADMIN_OAUTH_BASE_URL,
       authorizePath: '/oauth/authorize',
       revokePath: '/oauth/revoke'
     })
 
     this.implicitClient = new oauth.Implicit({
-      clientId: window.env.VUE_APP_ADMIN_CLIENT_ID,
-      redirectUri: `${window.env.VUE_APP_BORUTA_BASE_URL}/oauth-callback`,
+      clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID,
+      redirectUri: `${window.env.BORUTA_ADMIN_BASE_URL}/oauth-callback`,
       scope: 'openid email scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all',
       silentRefresh: true,
       silentRefreshCallback: this.authenticate.bind(this),
@@ -21,7 +21,7 @@ class Oauth {
     })
 
     this.revokeClient = new oauth.Revoke({
-      clientId: window.env.VUE_APP_ADMIN_CLIENT_ID
+      clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID
     })
   }
 

@@ -451,8 +451,8 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
     @tag authorized: ["identity-providers:manage:all"]
     test "cannot delete admin ui identity_provider", %{conn: conn} do
       client_identity_provider = insert(:client_identity_provider)
-      current_admin_ui_client_id = System.get_env("VUE_APP_ADMIN_CLIENT_ID", "")
-      System.put_env("VUE_APP_ADMIN_CLIENT_ID", client_identity_provider.client_id)
+      current_admin_ui_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "")
+      System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client_identity_provider.client_id)
 
       conn = delete(
         conn,
@@ -460,7 +460,7 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
       )
       assert response(conn, 403)
 
-      System.put_env("VUE_APP_ADMIN_CLIENT_ID", current_admin_ui_client_id)
+      System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", current_admin_ui_client_id)
     end
 
     @tag authorized: ["identity-providers:manage:all"]

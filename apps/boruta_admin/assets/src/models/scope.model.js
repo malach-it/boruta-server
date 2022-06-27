@@ -81,7 +81,7 @@ Scope.api = function () {
   const accessToken = localStorage.getItem('access_token')
 
   const instance = axios.create({
-    baseURL: `${window.env.VUE_APP_BORUTA_BASE_URL}/api/scopes`,
+    baseURL: `${window.env.BORUTA_ADMIN_BASE_URL}/api/scopes`,
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 

@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.26.0/themes/prism-dark.min.css" integrity="sha512-Njdz7T/p6Ud1FiTMqH87bzDxaZBsVNebOWmacBjMdgWyeIhUSFU4V52oGwo3sT+ud+lyIE98sS291/zxBfozKw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script>
       window.env = {
-        VUE_APP_ADMIN_CLIENT_ID: '<%= System.get_env("VUE_APP_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20") %>',
-        VUE_APP_OAUTH_BASE_URL: '<%= System.get_env("VUE_APP_OAUTH_BASE_URL", "http://localhost:4001") %>',
-        VUE_APP_BORUTA_BASE_URL: '<%= System.get_env("VUE_APP_BORUTA_BASE_URL", "http://localhost:4002") %>',
-        VUE_APP_BORUTA_BASE_SOCKET_URL: '<%= System.get_env("VUE_APP_BORUTA_BASE_SOCKET_URL", "ws://localhost:4002") %>'
+        BORUTA_ADMIN_OAUTH_CLIENT_ID: '<%= System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20") %>',
+        BORUTA_ADMIN_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL", "http://localhost:4001") %>',
+        BORUTA_ADMIN_BASE_URL: '<%= System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4002") %>',
+        BORUTA_ADMIN_BASE_SOCKET_URL: '<%= System.get_env("BORUTA_ADMIN_BASE_SOCKET_URL", "ws://localhost:4002") %>'
       }
     </script>
     <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/assets/style.css") %>" media="all"/>

@@ -28,7 +28,7 @@ export default createStore({
     async socketConnection ({ commit, state }) {
       if (state.socket) return state.socket
 
-      const socket = new Socket(`${window.env.VUE_APP_BORUTA_BASE_SOCKET_URL}/socket`, { params: { token: oauth.accessToken } })
+      const socket = new Socket(`${window.env.BORUTA_ADMIN_BASE_SOCKET_URL}/socket`, { params: { token: oauth.accessToken } })
       commit('SET_SOCKET', socket)
       await socket.connect()
 

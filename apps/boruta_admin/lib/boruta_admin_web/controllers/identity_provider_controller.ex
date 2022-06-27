@@ -77,7 +77,7 @@ defmodule BorutaAdminWeb.IdentityProviderController do
 
   defp ensure_open_for_edition(identity_provider_id) do
     admin_ui_client_id =
-      System.get_env("VUE_APP_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
+      System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
 
     case IdentityProviders.get_identity_provider_by_client_id(admin_ui_client_id) do
       %IdentityProvider{id: ^identity_provider_id} ->

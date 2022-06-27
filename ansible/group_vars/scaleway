@@ -26,7 +26,7 @@ admin_client_secret: !vault |
           30303537326139636362643437613062343539653165653762303561333164653536346439616561
           38666261366532653761363432633963313038363438373436303661653739323838636435366164
           6331
-admin_oauth_host: https://oauth.boruta.patatoid.fr
+oauth_base_url: https://oauth.boruta.patatoid.fr
 admin_email: io.pascal.knoth@gmail.com
 admin_password: !vault |
           $ANSIBLE_VAULT;1.1;AES256

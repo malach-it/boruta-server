@@ -44,10 +44,10 @@ BorutaAuth.Repo.insert(
 
 {:ok, client} = %Boruta.Ecto.Client{}
 |> Boruta.Ecto.Client.create_changeset(%{
-  secret: System.get_env("BORUTA_ADMIN_CLIENT_SECRET", "777"),
-  id: System.get_env("BORUTA_ADMIN_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
+  secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "777"),
+  id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
   redirect_uris: [
-    "#{System.get_env("VUE_APP_BORUTA_BASE_URL", "http://localhost:4002")}/oauth-callback"
+    "#{System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4002")}/oauth-callback"
   ],
   access_token_ttl: 3600,
   authorization_code_ttl: 60,
@@ -74,8 +74,8 @@ BorutaGateway.Repo.insert(
 BorutaIdentity.IdentityProviders.upsert_client_identity_provider(client.id, identity_provider.id)
 
 {:ok, user} = BorutaIdentity.Accounts.Internal.User.registration_changeset(%BorutaIdentity.Accounts.Internal.User{}, %{
-  email: System.get_env("ADMIN_EMAIL", "test@test.test"),
-  password: System.get_env("ADMIN_PASSWORD", "passwordesat")
+  email: System.get_env("BORUTA_ADMIN_EMAIL", "test@test.test"),
+  password: System.get_env("BORUTA_ADMIN_PASSWORD", "passwordesat")
 }) |> BorutaIdentity.Repo.insert()
 
 scopes =
