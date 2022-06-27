@@ -336,6 +336,11 @@ export default {
       display: block;
       width: 100%;
     }
+    .ui.icon.input>i.icon {
+      cursor: pointer;
+      pointer-events: all;
+      position: absolute;
+    }
   }
   .ui.segments {
     margin: 0;

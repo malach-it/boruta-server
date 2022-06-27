@@ -14,7 +14,10 @@
         </div>
         <div class="field" :class="{ 'error': client.errors?.secret }">
           <label>Client secret</label>
-          <input v-model="client.secret" placeholder="Leave blank to autogenerate" />
+          <div class="ui left icon input">
+            <input :type="passwordVisible ? 'text' : 'password'" v-model="client.secret" placeholder="Leave blank to autogenerate" />
+            <i class="eye icon" :class="{ 'slash': passwordVisible }" @click="passwordVisibilityToggle()"></i>
+          </div>
         </div>
         <div class="field" :class="{ 'error': client.errors?.access_token_ttl }">
           <label>Access token TTL (seconds)</label>
@@ -126,7 +129,8 @@ export default {
   },
   data() {
     return {
-      idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms
+      idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
+      passwordVisible: false
     }
   },
   methods: {
@@ -153,6 +157,9 @@ export default {
         this.client.authorized_scopes.indexOf(scope),
         1
       )
+    },
+    passwordVisibilityToggle () {
+      this.passwordVisible = !this.passwordVisible
     }
   }
 }
@@ -162,11 +169,6 @@ export default {
 .client-form {
   .field {
     position: relative;
-  }
-  .ui.icon.input>i.icon.close {
-    cursor: pointer;
-    pointer-events: all;
-    position: absolute;
   }
   .authorized-scopes-select {
     margin-right: 3em;

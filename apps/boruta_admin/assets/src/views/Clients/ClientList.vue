@@ -24,7 +24,14 @@
               </div>
               <div class="item">
                 <span class="header">Client secret</span>
-                <span class="description">{{ client.secret }}</span>
+                <span class="description">
+                  <div class="ui form field">
+                    <div class="ui left icon input">
+                      <input disabled :type="client.passwordVisible ? 'text' : 'password'" v-model="client.secret" />
+                      <i class="eye icon" :class="{ 'slash': client.passwordVisible }" @click="passwordVisibilityToggle(client)"></i>
+                    </div>
+                  </div>
+                </span>
               </div>
               <div class="item">
                 <span class="header">Public key</span>
@@ -87,10 +94,21 @@ export default {
       }).catch((error) => {
         this.errorMessage = error.message
       })
+    },
+    passwordVisibilityToggle (client) {
+      client.passwordVisible = !client.passwordVisible
     }
   }
 }
 </script>
 
 <style scoped lang="scss">
+.input {
+  display: flex;
+  input[disabled] {
+    opacity: 1!important;
+    border: none;
+    padding: 0;
+  }
+}
 </style>

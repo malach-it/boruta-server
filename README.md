@@ -98,4 +98,4 @@ The applications will be available on different ports (depending on the docker c
 
 ## Default admin credentials
 
-In order to authenticate to the administration interface you will be asked for credentials that are by default (seeded from environment variables) admin@test.test / imaynotknowthat
+In order to authenticate to the administration interface you will be asked for credentials that are by default (seeded from environment variables) `admin@test.test` / `imaynotknowthat`.

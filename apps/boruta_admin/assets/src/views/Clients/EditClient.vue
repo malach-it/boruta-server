@@ -8,10 +8,6 @@
             <span class="header">Client ID</span>
             <span class="description">{{ client.id }}</span>
           </div>
-          <div class="item">
-            <span class="header">Client secret</span>
-            <span class="description">{{ client.secret }}</span>
-          </div>
         </div>
       </div>
       <ClientForm :client="client" @submit="updateClient()" @back="back()" action="Update" />
