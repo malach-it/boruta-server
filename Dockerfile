@@ -31,6 +31,8 @@ WORKDIR /app/apps/boruta_admin
 RUN mix phx.digest
 WORKDIR /app/apps/boruta_identity
 RUN mix phx.digest
+WORKDIR /app/apps/boruta_web
+RUN mix phx.digest
 
 WORKDIR /app
 RUN mix release --force --overwrite
