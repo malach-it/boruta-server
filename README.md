@@ -1,5 +1,10 @@
 # Boruta.Umbrella
 
+## Requirements
+- Elixir >= 1.13
+- postgreSQL >= 13
+- node ~> 16.5 (if you need to prepare assets)
+
 ## Install
 ```
 git clone git@gitlab.com:patatoid/boruta.git
@@ -35,10 +40,33 @@ mix phx.server
 | `MAILJET_API_KEY`                  | TODO Have the ability to choose emailing provider. |
 | `MAILJET_SECRET`                   | TODO Have the ability to choose emailing provider. |
 
-## Secure connections
-Boruta Identity use session cookies flagged as secure. If you move from localhost to a custom domain, it has to use https protocol.
+## Run a release from scratch
 
-## Release preparation steps
+1. first you need to prepare assets in order for them to be included in the release
+
 ```bash
 ./scripts/prepare_assets.sh
 ```
+
+2. then you can craft the release
+
+```bash
+MIX_ENV=prod mix release
+```
+
+3. finally setup database
+
+```bash
+env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta eval "Boruta.Release.setup()"
+```
+
+Once done, you can run the release as follow:
+
+```bash
+env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta start
+```
+
+
+## Troubleshooting
+### Secure connections
+Boruta Identity use session cookies flagged as secure. If you move from localhost to a custom domain, it has to use https protocol.
