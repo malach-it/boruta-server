@@ -302,6 +302,9 @@
             namespace: boruta-staging
           spec:
             replicas: 2
+            strategy:
+              type: Recreate
+              rollingUpdate: null
             selector:
               matchLabels:
                 app: boruta
