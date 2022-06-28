@@ -2,7 +2,7 @@
   <div class="client-list">
     <Toaster :active="deleted" message="Client has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
-    <router-link :to="{ name: 'new-client' }" class="ui teal main create button">Add a client</router-link>
+    <router-link :to="{ name: 'new-client' }" class="ui violet main create button">Add a client</router-link>
     <div class="container">
       <div class="ui two column clients stackable grid" v-if="clients.length">
         <div v-for="client in clients" class="ui column" :key="client.id">
@@ -46,7 +46,7 @@
               <div class="item" v-if="client.authorize_scope">
                 <span class="header">Authorized scopes</span>
                 <span class="description">
-                  <span v-for="scope in client.authorized_scopes" class="ui olive label" :key="scope.model.id">
+                  <span v-for="scope in client.authorized_scopes" class="ui teal label" :key="scope.model.id">
                     {{ scope.model.name }}
                   </span>
                 </span>

@@ -4,7 +4,6 @@
 - Elixir >= 1.13
 - postgreSQL >= 13
 - node ~> 16.5 (if you need to prepare assets)
-```
 
 ## Environment variables
 

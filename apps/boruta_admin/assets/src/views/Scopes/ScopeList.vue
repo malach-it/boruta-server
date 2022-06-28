@@ -37,7 +37,7 @@
           <div v-else>
             <div class="ui stackable grid">
               <div class="four wide column">
-                <span class="ui olive label">{{ scope.name }}</span>
+                <span class="ui teal label">{{ scope.name }}</span>
               </div>
               <div class="four wide column">
                 <strong>{{ scope.label }}</strong>
@@ -57,7 +57,7 @@
         </div>
       </div>
       <hr />
-      <button @click="addScope()" class="ui teal add button">Add a scope</button>
+      <button @click="addScope()" class="ui violet add button">Add a scope</button>
     </div>
   </div>
 </template>
