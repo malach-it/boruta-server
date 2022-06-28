@@ -69,7 +69,7 @@ defmodule BorutaIdentityWeb.Router do
     reason = %{
       message: reason.message
     }
-    %ErrorTemplate{content: template} = Configuration.get_error_template(conn.status)
+    %ErrorTemplate{content: template} = Configuration.get_error_template!(conn.status)
 
     content = Mustachex.render(template, %{reason: reason})
     conn

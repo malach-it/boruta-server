@@ -6,6 +6,7 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Configuration.ErrorTemplate
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
@@ -60,6 +61,13 @@ defmodule BorutaIdentity.Factory do
     %Template{
       type: "new_registration",
       content: Template.default_content(:new_registration)
+    }
+  end
+
+  def error_template_factory do
+    %ErrorTemplate{
+      type: "400",
+      content: "error template content"
     }
   end
 end

@@ -71,6 +71,7 @@ defmodule BorutaIdentity.Configuration.ErrorTemplate do
   def changeset(template, attrs) do
     template
     |> cast(attrs, [:type, :content])
+    |> validate_inclusion(:type, Enum.map(@template_types, &Integer.to_string/1))
     |> validate_required([:type, :content])
     |> put_default()
   end

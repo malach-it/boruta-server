@@ -14,7 +14,7 @@ defmodule BorutaAdminWeb.ConfigurationController do
   plug(:authorize, ["configuration:manage:all"])
 
   def error_template(conn, %{"template_type" => template_type}) do
-    template = Configuration.get_error_template(String.to_integer(template_type))
+    template = Configuration.get_error_template!(String.to_integer(template_type))
     render(conn, "show_error_template.json", template: template)
   end
 
@@ -22,7 +22,7 @@ defmodule BorutaAdminWeb.ConfigurationController do
         "template_type" => template_type,
         "template" => template_params
       }) do
-    template = Configuration.get_error_template(String.to_integer(template_type))
+    template = Configuration.get_error_template!(String.to_integer(template_type))
 
     with {:ok, %ErrorTemplate{} = template} <-
            Configuration.upsert_error_template(template, template_params) do

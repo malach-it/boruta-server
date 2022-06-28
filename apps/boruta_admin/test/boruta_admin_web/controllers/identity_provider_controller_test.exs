@@ -16,7 +16,7 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
   @update_template_attrs %{
     content: "some updated content"
   }
-  @invalid_attrs %{name: nil, type: "other"}
+  @invalid_attrs %{content: nil, type: "other"}
 
   def fixture(:identity_provider) do
     {:ok, identity_provider} = IdentityProviders.create_identity_provider(@create_attrs)
@@ -290,6 +290,9 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
     end
   end
 
+  @tag :skip
+  test "get an identity_provider template"
+
   describe "update identity_provider template" do
     setup [:create_identity_provider]
 
@@ -335,8 +338,8 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
     @tag authorized: ["identity-providers:manage:all"]
     test "renders errors when data is invalid", %{conn: conn, identity_provider: identity_provider} do
       conn =
-        put(conn, Routes.admin_identity_provider_path(conn, :update, identity_provider),
-          identity_provider: @invalid_attrs
+        patch(conn, Routes.admin_identity_provider_template_path(conn, :update_template, identity_provider, "new_registration"),
+          template: @invalid_attrs
         )
 
       assert json_response(conn, 422)["errors"] != %{}
