@@ -38,6 +38,11 @@ defmodule BorutaAdminWeb.Router do
     # resources "/users/:user_id/scopes, only: [:create, :delete]
     resources("/users", UserController, except: [:new, :edit, :create])
     resources("/upstreams", UpstreamController, except: [:new, :edit])
+    scope "/configuration", as: :configuration do
+      get "/error-templates/:template_type", ConfigurationController, :error_template, as: :template
+      patch "/error-templates/:template_type", ConfigurationController, :update_error_template, as: :template
+      delete "/error-templates/:template_type", ConfigurationController, :delete_error_template, as: :template
+    end
     resources "/identity-providers", IdentityProviderController, except: [:new, :edit] do
       get "/templates/:template_type", IdentityProviderController, :template, as: :template
       patch "/templates/:template_type", IdentityProviderController, :update_template, as: :template

@@ -8,6 +8,9 @@ defmodule BorutaIdentityWeb.Router do
     require_authenticated_user: 2
   ]
 
+  alias BorutaIdentity.Configuration
+  alias BorutaIdentity.Configuration.ErrorTemplate
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -61,32 +64,16 @@ defmodule BorutaIdentityWeb.Router do
     put "/users/reset_password/:token", UserResetPasswordController, :update
   end
 
-  @error_templates %{
-    400 =>
-      :code.priv_dir(:boruta_identity)
-      |> Path.join("templates/errors/400.mustache")
-      |> File.read!(),
-    403 =>
-      :code.priv_dir(:boruta_identity)
-      |> Path.join("templates/errors/403.mustache")
-      |> File.read!(),
-    404 =>
-      :code.priv_dir(:boruta_identity)
-      |> Path.join("templates/errors/404.mustache")
-      |> File.read!(),
-    500 =>
-      :code.priv_dir(:boruta_identity)
-      |> Path.join("templates/errors/500.mustache")
-      |> File.read!()
-  }
-
   @impl Plug.ErrorHandler
   def handle_errors(conn, %{reason: reason}) do
     reason = %{
       message: reason.message
     }
+    %ErrorTemplate{content: template} = Configuration.get_error_template(conn.status)
 
-    content = Mustachex.render(@error_templates[conn.status], %{reason: reason})
-    send_resp(conn, conn.status, content)
+    content = Mustachex.render(template, %{reason: reason})
+    conn
+    |> put_resp_content_type("text/html")
+    |> send_resp(conn.status, content)
   end
 end

@@ -51,6 +51,13 @@ BorutaAuth.Repo.insert(
   on_conflict: :nothing
 )
 
+BorutaAuth.Repo.insert(
+  %Boruta.Ecto.Scope{
+    name: "configuration:manage:all"
+  },
+  on_conflict: :nothing
+)
+
 {:ok, client} = Boruta.Ecto.Admin.create_client(%{
   secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "777"),
   id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
@@ -83,7 +90,8 @@ Boruta.Ecto.Admin.get_scopes_by_names([
   "clients:manage:all",
   "scopes:manage:all",
   "upstreams:manage:all",
-  "identity-providers:manage:all"
+  "identity-providers:manage:all",
+  "configuration:manage:all"
 ])
 |> Enum.map(fn %{id: scope_id} ->
   BorutaIdentity.Repo.insert(%BorutaIdentity.Accounts.UserAuthorizedScope{

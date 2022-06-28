@@ -4,13 +4,6 @@
 - Elixir >= 1.13
 - postgreSQL >= 13
 - node ~> 16.5 (if you need to prepare assets)
-
-## Install
-```
-git clone git@gitlab.com:patatoid/boruta.git
-mix deps.get
-mix ecto.setup
-mix phx.server
 ```
 
 ## Environment variables

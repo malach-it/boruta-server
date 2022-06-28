@@ -42,6 +42,13 @@ import EditUser from './views/IdentityProviders/EditUser.vue'
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/Scopes/ScopeList.vue'
 
+import Configuration from './views/Configuration.vue'
+import ErrorTemplateList from './views/Configuration/ErrorTemplateList.vue'
+import EditBadRequestTemplate from './views/Configuration/EditBadRequestTemplate.vue'
+import EditNotFoundTemplate from './views/Configuration/EditNotFoundTemplate.vue'
+import EditForbiddenTemplate from './views/Configuration/EditForbiddenTemplate.vue'
+import EditInternalServerErrorTemplate from './views/Configuration/EditInternalServerErrorTemplate.vue'
+
 import Dashboard from './views/Dashboard.vue'
 
 const router = createRouter({
@@ -229,6 +236,38 @@ const router = createRouter({
               path: '',
               name: '',
               component: ScopeList
+            }
+          ]
+        }, {
+          path: '/configuration',
+          component: Configuration,
+          name: 'configuration',
+          redirect: '/configuration/error-template-list',
+          children: [
+            {
+              path: '',
+              name: '',
+              component: Configuration
+            }, {
+              path: 'error-template-list',
+              name: 'error-template-list',
+              component: ErrorTemplateList
+            }, {
+              path: 'edit-bad-request-template',
+              name: 'edit-bad-request-template',
+              component: EditBadRequestTemplate
+            }, {
+              path: 'edit-forbidden-template',
+              name: 'edit-forbidden-template',
+              component: EditForbiddenTemplate
+            }, {
+              path: 'edit-not-found-template',
+              name: 'edit-not-found-template',
+              component: EditNotFoundTemplate
+            }, {
+              path: 'edit-internal-server-error-template',
+              name: 'edit-internal-server-error-template',
+              component: EditInternalServerErrorTemplate
             }
           ]
         }, {

@@ -71,6 +71,23 @@
               </a>
             </div>
           </router-link>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'configuration' }">
+            <div class="configuration item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="columns icon"></i>
+                <span>Configuration</span>
+              </a>
+              <div class="dropdown">
+                <div class="subitem">
+                  <router-link :to="{ name: 'error-template-list' }">
+                    <span>Error templates</span>
+                  </router-link>
+                </div>
+              </div>
+            </div>
+          </router-link>
         </div>
       </div>
       <div class="content-wrapper">

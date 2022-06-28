@@ -96,7 +96,7 @@ defmodule BorutaIdentity.IdentityProviders.Template do
   @spec default_content(type :: template_type()) :: template_content :: String.t()
   def default_content(type) when type in @template_types, do: @default_templates[type]
 
-  @spec default_template(type :: atom()) :: %__MODULE__{} | nil
+  @spec default_template(type :: template_type()) :: %__MODULE__{} | nil
   def default_template(type) when type in @template_types do
     %__MODULE__{
       default: true,
@@ -113,6 +113,7 @@ defmodule BorutaIdentity.IdentityProviders.Template do
     |> cast(attrs, [:type, :content, :identity_provider_id])
     |> validate_required([:identity_provider_id])
     |> foreign_key_constraint(:identity_provider_id)
+    |> put_default()
   end
 
   @doc false
