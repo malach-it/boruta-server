@@ -37,7 +37,12 @@ const labels = {
   'upstreams': 'Upstreams',
   'new-upstream': 'Create',
   'upstream': ({ params }) => params.upstreamId,
-  'scopes': 'Scopes'
+  'scopes': 'Scopes',
+  'configuration': 'Configuration',
+  'edit-bad-request-template': 'Edit bad request template',
+  'edit-forbidden-template': 'Edit forbidden template',
+  'edit-not-found-template': 'Edit not found template',
+  'edit-internal-server-error-template': 'Edit internal server error template'
 }
 
 export default {

@@ -309,6 +309,9 @@ export default {
       }
     }
   }
+  .ui.button {
+    font-size: .9em;
+  }
   .ui.list {
     & .item:last-child {
       margin: 0;

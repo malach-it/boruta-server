@@ -107,7 +107,8 @@ export default {
   display: flex;
   input[disabled] {
     opacity: 1!important;
-    border: none;
+    border: none!important;
+    background: inherit!important;
     padding: 0;
   }
 }
