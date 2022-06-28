@@ -551,6 +551,17 @@ export default {
       }
     }
   }
+  .text-editor {
+    .codejar-wrap {
+      height: 100%;
+      .codejar-linenumbers {
+        color: white;
+      }
+    }
+    .editor {
+      background: rgba(255,255,255,.05);
+    }
+  }
   .olive {
     background: rgba(61, 61, 61, 1.0)!important;
     &.button:hover, &.label:hover {

@@ -50,9 +50,11 @@ export default {
   .codejar-wrap {
     height: 100%;
     .codejar-linenumbers {
+      color: inherit;
       height: 100%;
     }
     .editor {
+      background: #f5f2f0;
       cursor: text;
       height: 100%;
       border-radius: 6px;
@@ -62,6 +64,9 @@ export default {
       letter-spacing: normal;
       line-height: 20px;
       tab-size: 4;
+      .token.attr-name {
+        color: #690;
+      }
     }
   }
 }
