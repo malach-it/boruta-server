@@ -1,5 +1,6 @@
 defmodule BorutaWeb.Router do
   use BorutaWeb, :router
+  use Plug.ErrorHandler
 
   import BorutaIdentityWeb.Sessions,
     only: [
@@ -77,5 +78,10 @@ defmodule BorutaWeb.Router do
     pipe_through([:browser, :fetch_current_user])
 
     get("/authorize", AuthorizeController, :authorize)
+  end
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, error) do
+    BorutaIdentityWeb.Router.handle_errors(conn, error)
   end
 end

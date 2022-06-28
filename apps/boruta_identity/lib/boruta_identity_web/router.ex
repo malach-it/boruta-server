@@ -1,5 +1,6 @@
 defmodule BorutaIdentityWeb.Router do
   use BorutaIdentityWeb, :router
+  use Plug.ErrorHandler
 
   import BorutaIdentityWeb.Sessions, only: [
     fetch_current_user: 2,
@@ -58,5 +59,34 @@ defmodule BorutaIdentityWeb.Router do
     get "/users/confirm/:token", UserConfirmationController, :confirm
     get "/users/reset_password/:token", UserResetPasswordController, :edit
     put "/users/reset_password/:token", UserResetPasswordController, :update
+  end
+
+  @error_templates %{
+    400 =>
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/errors/400.mustache")
+      |> File.read!(),
+    403 =>
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/errors/403.mustache")
+      |> File.read!(),
+    404 =>
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/errors/404.mustache")
+      |> File.read!(),
+    500 =>
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/errors/500.mustache")
+      |> File.read!()
+  }
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, %{reason: reason}) do
+    reason = %{
+      message: reason.message
+    }
+
+    content = Mustachex.render(@error_templates[conn.status], %{reason: reason})
+    send_resp(conn, conn.status, content)
   end
 end
