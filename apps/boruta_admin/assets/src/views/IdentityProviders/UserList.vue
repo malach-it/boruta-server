@@ -23,13 +23,25 @@
       </div>
       <div class="ui center aligned segment">
         <div class="ui pagination menu">
-          <a
+          <button
+            :disabled="disableFirstPage"
+            class="item"
+            @click="goToPage(1)">
+            &lt;
+          </button>
+          <button
             class="item"
             :class="{ 'active': currentPage == pageNumber }"
-            v-for="pageNumber in totalPages"
+            v-for="pageNumber in meanPages"
             @click="goToPage(pageNumber)">
             {{ pageNumber }}
-          </a>
+          </button>
+          <button
+            :disabled="disableLastPage"
+            class="item"
+            @click="goToPage(this.totalPages)">
+            &gt;
+          </button>
         </div>
       </div>
     </div>
@@ -51,10 +63,32 @@ export default {
       deleted: false,
       errorMessage: false,
       currentPage: this.$route.query.page,
-      page_size: 12,
       totalPages: 1,
       total_entries: 0
     }
+  },
+  computed: {
+    meanPages () {
+      const meanPages = []
+
+      let firstPage = this.currentPage - 1
+      if (firstPage < 1) firstPage = 1
+      let lastPage = firstPage + 2
+      if (lastPage > this.totalPages) {
+        lastPage = this.totalPages
+        firstPage = lastPage - 2
+      }
+
+      for (let i = firstPage; i <= lastPage; i++) { meanPages.push(i) }
+
+      return meanPages
+    },
+    disableFirstPage () {
+      return this.meanPages[0] == 1
+    },
+    disableLastPage () {
+      return this.meanPages.slice(-1) == this.totalPages
+    },
   },
   mounted () {
     this.getUsers(this.currentPage)

@@ -372,6 +372,22 @@ export default {
       margin: 0;
     }
   }
+  .ui.pagination {
+    .item {
+      border: none;
+      cursor: pointer;
+      &:hover {
+        font-weight: bold;
+      }
+      &:disabled {
+        opacity: .5;
+        cursor: inherit;
+        &:hover {
+          font-weight: normal;
+        }
+      }
+    }
+  }
   .content-wrapper {
     flex: 1;
     width: calc(100vw - 250px);
@@ -532,9 +548,6 @@ export default {
       color: white;
       &.active {
         background: rgba(255,255,255,.05);
-      }
-      &:hover {
-        background: rgba(255,255,255,.08);
       }
     }
   }
