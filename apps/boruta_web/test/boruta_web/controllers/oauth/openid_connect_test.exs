@@ -229,25 +229,15 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
   describe "discovery 1.0" do
     test "returns required keys", %{conn: conn} do
-      required_keys = [
-        "authorization_endpoint",
-        "id_token_signing_alg_values_supported",
-        "issuer",
-        "jwks_uri",
-        "response_types_supported",
-        "subject_types_supported",
-        "token_endpoint"
-      ]
-
       conn = get(conn, Routes.openid_path(conn, :well_known))
 
-      assert json_response(conn, 200) |> Map.keys() == required_keys
       assert json_response(conn, 200) == %{
         "authorization_endpoint" => "boruta/oauth/authorize",
         "id_token_signing_alg_values_supported" => ["RS256", "RS384", "RS512", "HS256", "HS384", "HS512"],
         "issuer" => "boruta",
         "jwks_uri" => "boruta/openid/jwks",
-        "response_types_supported" => ["client_credentials", "password", "authorization_code", "refresh_token", "implicit", "revoke", "introspect"],
+        "response_types_supported" => ["code", "token", "id_token", "code token", "code id_token", "code id_token token"],
+        "response_modes_supported" => ["query", "fragment"],
         "subject_types_supported" => ["public"],
         "token_endpoint" => "boruta/oauth/token"
       }
