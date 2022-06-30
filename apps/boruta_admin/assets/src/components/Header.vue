@@ -6,7 +6,7 @@
         <img src="../assets/images/logo.png" v-else />
       </router-link>
       <div class="right menu">
-        <span class="ui item">
+        <span class="ui email item">
           {{ currentUser.email }}
         </span>
         <a v-on:click.prevent="logout()" class="ui item">
@@ -65,8 +65,8 @@ export default {
     border-radius: 0;
   }
 
-  @media screen and (max-width: 1127px) {
-    .item.logo {
+  @media screen and (max-width: 768px) {
+    .item.email {
       display: none;
     }
   }
