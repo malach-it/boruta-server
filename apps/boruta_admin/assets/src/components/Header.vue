@@ -2,7 +2,8 @@
   <div class="header" :class="{ 'dark': darkMode }">
     <div class="ui main menu" :class="{ 'inverted': darkMode }">
       <router-link :to="{ name: 'home' }" class="logo item">
-        Boruta
+        <img src="../assets/images/logo-inverted.png" v-if="darkMode" />
+        <img src="../assets/images/logo.png" v-else />
       </router-link>
       <div class="right menu">
         <span class="ui item">
@@ -50,6 +51,15 @@ export default {
   .item.logo {
     min-width: 199px;
     background: inherit!important;
+    padding: 0 1rem 0 1.5rem;
+    &:before {
+      display: none;
+    }
+    img {
+      max-width: calc(199px - 2.5rem);
+      max-height: 22px;
+      width: auto;
+    }
   }
   .main.menu {
     border-radius: 0;

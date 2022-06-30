@@ -1,4 +1,6 @@
-# Boruta.Umbrella
+![logo-yellow](images/logo-yellow.png)
+
+Boruta is an authorization server implementing OAuth 2.0 and Openid Connect specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also a gateway to apply access rules to incoming traffic.
 
 ## Requirements
 - Elixir >= 1.13
@@ -15,8 +17,8 @@
 | `POSTGRES_DATABASE`                | Will be the database provided in postgreSQL connections. |
 | `POSTGRES_HOST`                    | Will be the host provided in postgreSQL connections. |
 | `POOL_SIZE`                        | Will be postgreSQL pool size of each application, the real connection count will be 4 times that value. |
-| `K8S_NAMESPACE`                    | If set along with K8S_SELECTOR setup libcluster in order to connect boruta kubernetes nodes together. |
-| `K8S_SELECTOR`                     | If set along with K8S_NAMESPACE setup libcluster in order to connect boruta kubernetes nodes together. |
+| `K8S_NAMESPACE`                    | If set along with K8S_SELECTOR setup libcluster in order to connect boruta erlang nodes in kubernetes together. |
+| `K8S_SELECTOR`                     | If set along with K8S_NAMESPACE setup libcluster in order to connect boruta erlang nodes in kubernetes together. |
 | `BORUTA_ADMIN_OAUTH_CLIENT_ID`     | An uuidv4 string that will be the admin oauth client id. It will be part of the client seeded in the setup task. |
 | `BORUTA_ADMIN_OAUTH_CLIENT_SECRET` | A string that will be the admin oauth client secret. It will be part of the client seeded in the setup task. |
 | `BORUTA_ADMIN_OAUTH_BASE_URL`      | The URL that represent the base URL of the authorization server admin will use (linked to above client_id and secret, without trailing slash). |
