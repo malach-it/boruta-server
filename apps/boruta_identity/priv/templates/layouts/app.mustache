@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
-    <title>BorutaIdentity · Phoenix Framework</title>
+    <title>Boruta · Identity provider</title>
     <style>
     html, body {
       height: 100%;
@@ -46,6 +46,18 @@
       max-width: 500px;
     }
 
+    .credits {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      display: flex;
+    }
+
+    .credits img {
+      height: 1.5em;
+      margin-left: .5em;
+    }
+
     @media (max-width: 768px) {
       header {
         display: none;
@@ -64,6 +76,9 @@
           </div>
           {{/messages}}
           {{> inner_content }}
+        </div>
+        <div class="credits">
+          Powered by <img src="{{ boruta_logo_path }}" />
         </div>
       </main>
     </div>

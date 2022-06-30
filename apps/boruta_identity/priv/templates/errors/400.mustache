@@ -4,8 +4,21 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Boruta · Phoenix Framework</title>
+    <title>Boruta · Authorization server</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha256-9mbkOfVho3ZPXfM7W8sV2SndrGDuh7wuyLjtsWeTI1Q=" crossorigin="anonymous" />
+    <style>
+    .credits {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      display: flex;
+    }
+
+    .credits img {
+      height: 1.5em;
+      margin-left: .5em;
+    }
+    </style>
   </head>
   <body style="height: 100%;">
     <div class="ui placeholder segment" style="height: 100%;">
@@ -20,6 +33,8 @@
         </div>
       </h1>
     </div>
-    </main>
+    <div class="credits">
+      Powered by <img src="{{ boruta_logo_path }}" />
+    </div>
   </body>
 </html>

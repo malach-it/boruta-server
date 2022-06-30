@@ -51,6 +51,7 @@ defmodule BorutaIdentityWeb.TemplateView do
     request = Map.get(query_params, "request")
 
     %{
+      boruta_logo_path: Routes.static_path(BorutaIdentityWeb.Endpoint, "/images/logo-yellow.png"),
       choose_session_path:
         Routes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{request: request}),
       create_user_reset_password_path:

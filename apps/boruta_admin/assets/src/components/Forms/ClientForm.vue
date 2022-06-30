@@ -6,7 +6,7 @@
         <h3>General configuration</h3>
         <div class="field" :class="{ 'error': client.errors?.name }">
           <label>Name</label>
-          <input v-model="client.name" placeholder="Super client" />
+          <input v-model="client.name" placeholder="Super client" autocomplete="off" />
         </div>
         <div class="field" :class="{ 'error': client.errors?.id }" v-if="!client.isPersisted">
           <label>Client ID</label>
