@@ -6,16 +6,16 @@
         <h3>General configuration</h3>
         <div class="field" :class="{ 'error': client.errors?.name }">
           <label>Name</label>
-          <input v-model="client.name" placeholder="Super client" autocomplete="off" />
+          <input v-model="client.name" placeholder="Super client" autocomplete="new-password" />
         </div>
         <div class="field" :class="{ 'error': client.errors?.id }" v-if="!client.isPersisted">
           <label>Client ID</label>
-          <input v-model="client.id" placeholder="Must be an UUIDv4 - Leave blank to autogenerate" />
+          <input v-model="client.id" autocomplete="new-password" placeholder="Must be an UUIDv4 - Leave blank to autogenerate" />
         </div>
         <div class="field" :class="{ 'error': client.errors?.secret }">
           <label>Client secret</label>
           <div class="ui left icon input">
-            <input :type="passwordVisible ? 'text' : 'password'" v-model="client.secret" placeholder="Leave blank to autogenerate" />
+            <input :type="passwordVisible ? 'text' : 'password'" autocomplete="new-password" v-model="client.secret" placeholder="Leave blank to autogenerate" />
             <i class="eye icon" :class="{ 'slash': passwordVisible }" @click="passwordVisibilityToggle()"></i>
           </div>
         </div>
