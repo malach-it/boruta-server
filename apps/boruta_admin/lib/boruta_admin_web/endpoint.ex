@@ -12,7 +12,7 @@ defmodule BorutaAdminWeb.Endpoint do
     at: "/",
     from: :boruta_admin,
     gzip: false,
-    only: ~w(assets)
+    only: ~w(assets favicon.ico)
 
   socket "/socket", BorutaAdminWeb.UserSocket,
     websocket: true,
