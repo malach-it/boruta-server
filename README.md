@@ -31,6 +31,7 @@ Boruta is an authorization server implementing OAuth 2.0 and Openid Connect spec
 | `BORUTA_OAUTH_HOST`                | The host that represent the host where boruta oauth server will be deployed to. |
 | `BORUTA_OAUTH_PORT`                | The port that represent the port where boruta oauth server will be exposed on. |
 | `BORUTA_OAUTH_BASE_URL`            | The URL that represent the base URL where boruta oauth server http endpoint will be deployed to (without trailing slash). |
+| `BORUTA_GATEWAY_PORT`                | The port that represent the port where boruta gateway will be exposed on. |
 | `MAILJET_API_KEY`                  | TODO Have the ability to choose emailing provider. |
 | `MAILJET_SECRET`                   | TODO Have the ability to choose emailing provider. |
 
