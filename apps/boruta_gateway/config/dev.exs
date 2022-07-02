@@ -8,4 +8,4 @@ config :boruta_gateway, BorutaGateway.Repo,
   pool_size: 5
 
 config :boruta_gateway,
-  port: 4000
+  port: System.get_env("BORUTA_GATEWAY_PORT", "4002") |> String.to_integer()

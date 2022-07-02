@@ -97,6 +97,43 @@ The applications will be available on different ports (depending on the docker c
 - http://localhost:8081 for the admin interface
 - http://localhost:8082 for the gateway
 
+## Run a development server
+
+1. first you need to get project dependencies
+
+```bash
+mix deps.get
+```
+
+2. create, migrate and seed database
+
+```bash
+env $(cat .env.dev | xargs) mix ecto.create
+env $(cat .env.dev | xargs) mix ecto.migrate
+env $(cat .env.dev | xargs) mix run apps/boruta_auth/priv/repo/boruta.seeds.exs
+```
+
+3. because of the forwarding of requests between web and identity modules, you need to add the `/accounts` path prefix in configuration
+
+```diff
+  --- a/apps/boruta_identity/config/config.exs
++++ b/apps/boruta_identity/config/config.exs
+@@ -4,8 +4,8 @@ config :boruta_identity,
+   ecto_repos: [BorutaAuth.Repo, BorutaIdentity.Repo]
+
+ config :boruta_identity, BorutaIdentityWeb.Endpoint,
+-  url: [host: "localhost"],
+-  # url: [host: "localhost", path: "/accounts"],
++  # url: [host: "localhost"],
++  url: [host: "localhost", path: "/accounts"],
+```
+
+You now should be able to start the development server
+
+```bash
+env $(cat .env.dev | xargs) MIX_ENV=dev mix boruta.server
+```
+
 ## Default admin credentials
 
 In order to authenticate to the administration interface you will be asked for credentials that are by default (seeded from environment variables) `admin@test.test` / `imaynotknowthat`.

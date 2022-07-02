@@ -5,7 +5,7 @@
 import Config
 
 config :boruta_web, BorutaWeb.Endpoint,
-  http: [port: 4001],
+  http: [port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer()],
   debug_errors: true,
   code_reloader: true,
   check_origin: false
@@ -80,7 +80,7 @@ config :libcluster,
 
 config :boruta_web, BorutaWeb.Authorization,
   oauth2: [
-    client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e20",
-    client_secret: "777",
-    site: "http://localhost:4001"
+    client_id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
+    client_secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "777"),
+    site: System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL", "http://localhost:4000")
   ]

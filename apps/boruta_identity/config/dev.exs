@@ -9,7 +9,7 @@ config :boruta_identity, BorutaIdentity.Repo,
   pool_size: 5
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  http: [port: 4001, path: "/accounts"],
+  http: [port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer(), path: "/accounts"],
   url: [host: "localhost"],
   debug_errors: true,
   code_reloader: true,

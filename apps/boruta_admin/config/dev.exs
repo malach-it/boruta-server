@@ -8,7 +8,7 @@ config :boruta_admin, BorutaAdmin.Repo,
   pool_size: 1
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
-  http: [port: 4002],
+  http: [port: System.get_env("BORUTA_ADMIN_PORT", "4001") |> String.to_integer()],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,

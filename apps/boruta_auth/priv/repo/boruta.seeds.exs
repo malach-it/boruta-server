@@ -1,5 +1,3 @@
-import Ecto.Changeset
-
 BorutaAuth.Repo.insert(
   %Boruta.Ecto.Scope{
     name: "openid",
