@@ -51,12 +51,12 @@ export default {
   .item.logo {
     min-width: 199px;
     background: inherit!important;
-    padding: 0 1rem 0 1.5rem;
+    padding: 0 1rem 0 .7rem;
     &:before {
       display: none;
     }
     img {
-      max-width: calc(199px - 2.5rem);
+      max-width: calc(199px - 1.7rem);
       max-height: 22px;
       width: auto;
     }

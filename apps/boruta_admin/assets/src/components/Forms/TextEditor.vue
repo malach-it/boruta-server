@@ -67,6 +67,9 @@ export default {
       .token.attr-name {
         color: #690;
       }
+      .token.selector {
+        color: #c90;
+      }
     }
   }
 }
