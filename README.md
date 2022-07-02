@@ -105,7 +105,13 @@ The applications will be available on different ports (depending on the docker c
 mix deps.get
 ```
 
-2. create, migrate and seed database
+2. you need to prepare assets in order to fetch javascript dependencies
+
+```bash
+./scripts/prepare_assets.sh
+```
+
+3. create, migrate and seed database
 
 ```bash
 env $(cat .env.dev | xargs) mix ecto.create
@@ -113,7 +119,7 @@ env $(cat .env.dev | xargs) mix ecto.migrate
 env $(cat .env.dev | xargs) mix run apps/boruta_auth/priv/repo/boruta.seeds.exs
 ```
 
-3. because of the forwarding of requests between web and identity modules, you need to add the `/accounts` path prefix in configuration
+4. because of the forwarding of requests between web and identity modules, you need to add the `/accounts` path prefix in configuration
 
 ```diff
   --- a/apps/boruta_identity/config/config.exs
@@ -133,6 +139,11 @@ You now should be able to start the development server
 ```bash
 env $(cat .env.dev | xargs) MIX_ENV=dev mix boruta.server
 ```
+
+The applications will be available on different ports (depending on the values provided in `.env.dev`):
+- http://localhost:4000 for the authorization server
+- http://localhost:4001 for the admin interface
+- http://localhost:4002 for the gateway
 
 ## Default admin credentials
 

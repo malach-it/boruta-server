@@ -57,6 +57,7 @@ BorutaAuth.Repo.insert(
 )
 
 {:ok, client} = Boruta.Ecto.Admin.create_client(%{
+  name: "Boruta administration panel",
   secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "777"),
   id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
   redirect_uris: [
@@ -64,8 +65,7 @@ BorutaAuth.Repo.insert(
   ],
   access_token_ttl: 3600,
   authorization_code_ttl: 60,
-  authorize_scope: true,
-  authorized_scopes: BorutaAuth.Repo.all(Boruta.Ecto.Scope) |> Enum.map(&Map.from_struct/1)
+  public_revoke: true
 })
 
 {:ok, identity_provider} = BorutaIdentity.IdentityProviders.create_identity_provider(%{
