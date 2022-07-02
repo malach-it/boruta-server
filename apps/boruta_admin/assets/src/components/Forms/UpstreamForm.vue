@@ -31,7 +31,7 @@
               <i v-on:click="deleteUpstreamUri(upstreamUri)" class="close icon"></i>
             </div>
           </div>
-          <button v-on:click.prevent="addUpstreamUri()" class="ui blue fluid button">Add an upstream uri</button>
+          <a v-on:click.prevent="addUpstreamUri()" class="ui blue fluid button">Add an upstream uri</a>
         </div>
         <div class="field">
           <div class="ui toggle checkbox">
