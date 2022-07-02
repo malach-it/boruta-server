@@ -37,19 +37,25 @@ Boruta is an authorization server implementing OAuth 2.0 and Openid Connect spec
 
 ## Run a release from scratch
 
-1. first you need to prepare assets in order for them to be included in the release
+1. first you need to get project dependencies
+
+```bash
+mix deps.get
+```
+
+2. you need to prepare assets in order for them to be included in the release
 
 ```bash
 ./scripts/prepare_assets.sh
 ```
 
-2. then you can craft the release
+3. then you can craft the release
 
 ```bash
 MIX_ENV=prod mix release
 ```
 
-3. finally setup database
+4. finally setup database
 
 ```bash
 env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta eval "Boruta.Release.setup()"
