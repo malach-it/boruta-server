@@ -109,8 +109,7 @@ export default {
       this.errorMessage = false
       this.deleted = false
       user.destroy().then(() => {
-        this.deleted = true
-        this.users.splice(this.users.indexOf(user), 1)
+        this.getUsers(this.currentPage)
       }).catch((error) => {
         this.errorMessage = error.response.data.message
       })

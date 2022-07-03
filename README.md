@@ -5,7 +5,7 @@ Boruta is an authorization server implementing OAuth 2.0 and Openid Connect spec
 ## Requirements
 - Elixir >= 1.13
 - postgreSQL >= 13
-- node ~> 16.5 (if you need to prepare assets)
+- node >= 16.5 (if you need to prepare assets)
 
 ## Environment variables
 
@@ -34,6 +34,31 @@ Boruta is an authorization server implementing OAuth 2.0 and Openid Connect spec
 | `BORUTA_GATEWAY_PORT`                | The port that represent the port where boruta gateway will be exposed on. |
 | `MAILJET_API_KEY`                  | TODO Have the ability to choose emailing provider. |
 | `MAILJET_SECRET`                   | TODO Have the ability to choose emailing provider. |
+
+## Run an instance from docker-compose
+
+1. build the docker images
+
+```bash
+docker-compose build
+```
+
+2. run database migrations
+
+```bash
+docker-compose run boruta ./bin/boruta eval "Boruta.Release.setup()"
+```
+
+Once done, you can run the docker images as follow:
+
+```bash
+docker-compose up
+```
+
+The applications will be available on different ports (depending on the docker compose environment configuration):
+- http://localhost:8080 for the authorization server
+- http://localhost:8081 for the admin interface
+- http://localhost:8082 for the gateway
 
 ## Run a release from scratch
 
@@ -72,31 +97,6 @@ The applications will be available on different ports (depending on the values p
 - http://localhost:8081 for the admin interface
 - http://localhost:8082 for the gateway
 
-## Run an instance from docker-compose
-
-1. build the docker images
-
-```bash
-docker-compose build
-```
-
-2. run database migrations
-
-```bash
-docker-compose run boruta ./bin/boruta eval "Boruta.Release.setup()"
-```
-
-Once done, you can run the docker images as follow:
-
-```bash
-docker-compose up
-```
-
-The applications will be available on different ports (depending on the docker compose environment configuration):
-- http://localhost:8080 for the authorization server
-- http://localhost:8081 for the admin interface
-- http://localhost:8082 for the gateway
-
 ## Run a development server
 
 1. first you need to get project dependencies
@@ -122,7 +122,7 @@ env $(cat .env.dev | xargs) mix run apps/boruta_auth/priv/repo/boruta.seeds.exs
 4. because of the forwarding of requests between web and identity modules, you need to add the `/accounts` path prefix in configuration
 
 ```diff
-  --- a/apps/boruta_identity/config/config.exs
+--- a/apps/boruta_identity/config/config.exs
 +++ b/apps/boruta_identity/config/config.exs
 @@ -4,8 +4,8 @@ config :boruta_identity,
    ecto_repos: [BorutaAuth.Repo, BorutaIdentity.Repo]

@@ -4,7 +4,7 @@
       <div class="ui placeholder segment">
         <div class="ui icon header">
           <i class="sign language icon"></i>
-          Administration of boruta OAuth / OpenID Connect server
+          Administration of boruta authorization server
         </div>
       </div>
     </div>
