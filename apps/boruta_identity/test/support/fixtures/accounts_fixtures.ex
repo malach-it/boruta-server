@@ -6,6 +6,7 @@ defmodule BorutaIdentity.AccountsFixtures do
 
   import BorutaIdentity.Factory
 
+  alias Boruta.Ecto.Admin
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Repo
@@ -28,7 +29,7 @@ defmodule BorutaIdentity.AccountsFixtures do
   end
 
   def user_scopes_fixture(user, attrs \\ %{}) do
-    scope = Boruta.Factory.insert(:scope, name: "name")
+    {:ok, scope} = Admin.create_scope(%{name: "name"})
     {:ok, scope} =
       Repo.insert(
         %UserAuthorizedScope{

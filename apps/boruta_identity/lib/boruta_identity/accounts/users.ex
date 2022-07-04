@@ -3,7 +3,7 @@ defmodule BorutaIdentity.Accounts.Users do
 
   import Ecto.Query
 
-  alias Boruta.Ecto.Admin
+  alias Boruta.Ecto.Scopes
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
@@ -92,7 +92,7 @@ defmodule BorutaIdentity.Accounts.Users do
 
   @spec get_user_scopes(user_id :: String.t()) :: user :: list(UserAuthorizedScope.t()) | nil
   def get_user_scopes(user_id) do
-    scopes = Admin.list_scopes()
+    scopes = Scopes.all()
 
     Repo.all(from(u in UserAuthorizedScope, where: u.user_id == ^user_id))
     |> Enum.map(fn user_scope ->
