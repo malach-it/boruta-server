@@ -364,8 +364,11 @@ export default {
   }
   .ui.segments {
     margin: 0;
-    .segment:last-child {
-      margin: 0;
+    .segment{
+      border: 1px solid rgba(34,36,38,.15)!important;
+      &:last-child {
+        margin: 0;
+      }
     }
   }
   .ui.segment {
@@ -523,7 +526,7 @@ export default {
   .ui.segment {
     background: rgba(255,255,255,.05);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1)!important;
     &.highlightable:hover {
       background: rgba(255,255,255,.08);
     }
