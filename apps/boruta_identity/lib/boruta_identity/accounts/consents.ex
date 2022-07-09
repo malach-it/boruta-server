@@ -24,6 +24,7 @@ defmodule BorutaIdentity.Accounts.Consents do
   import Ecto.Query, only: [from: 2]
 
   alias Boruta.Ecto.Admin
+  alias Boruta.Ecto.Clients
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.User
@@ -44,7 +45,7 @@ defmodule BorutaIdentity.Accounts.Consents do
                     scope,
                     module
                   ) do
-    client = Admin.get_client!(client_id)
+    client = Clients.get_client(client_id)
     scopes = Scope.split(scope)
 
     case {client_rp.consentable, consented?(user, client_id, scopes)} do
