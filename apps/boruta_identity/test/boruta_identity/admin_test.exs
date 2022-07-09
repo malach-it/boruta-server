@@ -47,7 +47,7 @@ defmodule BorutaIdentity.AdminTest do
       assert Admin.list_users() == %Scrivener.Page{
                entries: [],
                page_number: 1,
-               page_size: 24,
+               page_size: 21,
                total_entries: 0,
                total_pages: 1
              }
@@ -59,7 +59,7 @@ defmodule BorutaIdentity.AdminTest do
       assert Admin.list_users() == %Scrivener.Page{
                entries: [user],
                page_number: 1,
-               page_size: 24,
+               page_size: 21,
                total_entries: 1,
                total_pages: 1
              }

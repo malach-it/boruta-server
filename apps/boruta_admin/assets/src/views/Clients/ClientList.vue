@@ -4,6 +4,9 @@
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <router-link :to="{ name: 'new-client' }" class="ui violet main create button">Add a client</router-link>
     <div class="container">
+      <div class="ui info message">
+        Clients are here are relying parties as defined in <a target="_blank" href="https://datatracker.ietf.org/doc/html/rfc6749#section-1.1">Auth 2.0 RFC</a>. They are tha applications that require a priviledge access to a HTTP service secured by the Boruta authorization server.
+      </div>
       <div class="ui two column clients stackable grid" v-if="clients.length">
         <div v-for="client in clients" class="ui column" :key="client.id">
           <div class="ui client highlightable segment">

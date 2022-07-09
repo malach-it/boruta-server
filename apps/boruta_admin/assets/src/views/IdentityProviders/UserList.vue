@@ -3,6 +3,9 @@
     <Toaster :active="deleted" message="User has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <div class="container">
+      <div class="ui info message">
+        Users are here the ones that can login to Boruta mirroring the backend to give the ability for the server to add security traits (confirmation, consent, or scope access).
+      </div>
       <div class="ui three column stackable grid" v-if="users.length">
         <div v-for="user in users" class="column" :key="user.id">
           <div class="ui user highlightable segment">

@@ -126,10 +126,4 @@ User.get = function (id) {
 
 User.default = defaults
 
-User.current = function () {
-  return this.api().get(`/current`).then(({ data }) => {
-    return new User(data.data)
-  })
-}
-
 export default User

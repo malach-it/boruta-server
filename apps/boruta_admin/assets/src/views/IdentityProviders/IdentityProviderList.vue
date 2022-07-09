@@ -4,6 +4,9 @@
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <router-link :to="{ name: 'new-identity-provider' }" class="ui violet main create button">Add a identity provider</router-link>
     <div class="container">
+      <div class="ui info message">
+        Identity providers are here the pages along with the backend the users will navigate to during authentication, management of their identity, and security.
+      </div>
       <div class="ui three column identityProviders stackable grid" v-if="identityProviders.length">
         <div v-for="identityProvider in identityProviders" :key="identityProvider.id" class="column">
           <FormErrors v-if="identityProvider.errors" :errors="identityProvider.errors" />

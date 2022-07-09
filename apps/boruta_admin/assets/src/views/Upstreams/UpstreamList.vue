@@ -3,6 +3,9 @@
     <Toaster :active="deleted" message="Upstream has been updated" type="warning" />
     <router-link :to="{ name: 'new-upstream' }" class="ui violet main create button">Add an upstream</router-link>
     <div class="container">
+      <div class="ui info message">
+        Upstreams are here the configuration of the flow the gateway will apply for requests to be forwarded to backends. Corresponding to given paths, the gateway will route the request to the configured server.
+      </div>
       <div class="ui three column upstreams stackable grid" v-if="upstreams.length">
         <div v-for="upstream in upstreams" :key="upstream.id" class="column">
         <div class="ui upstream highlightable segment">
