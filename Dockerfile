@@ -43,5 +43,4 @@ WORKDIR /app
 
 COPY --from=builder /app/_build/prod/rel/boruta ./
 
-EXPOSE 4000
 CMD ["/bin/sh", "-c", "/app/bin/boruta start"]
