@@ -22,9 +22,6 @@
   </head>
   <body style="height: 100%;">
     <div class="ui placeholder segment" style="height: 100%;">
-      <div class="ui error message" style="position: absolute; top: 1em; right: 1em; left: 1em; text-align: center">
-        {{ reason.message }}
-      </div>
       <h1 class="ui icon header">
         <i class="ban icon"></i>
         <div class="content">
@@ -32,6 +29,9 @@
           <div class="sub header">You are forbidden to access this resource.</div>
         </div>
       </h1>
+    </div>
+    <div class="ui error message" style="position: absolute; top: 1em; right: 1em; left: 1em; text-align: center">
+      {{ reason.message }}
     </div>
     <div class="credits">
       Powered by <img src="{{ boruta_logo_path }}" />
