@@ -175,6 +175,7 @@ export default {
     cursor: default;
   }
   footer {
+    z-index: 200;
     text-align: right;
     padding: 1rem;
     border-top: 1px solid rgba(34,36,38,.15);
@@ -220,6 +221,7 @@ export default {
   .sidebar-menu {
     position: relative;
     min-width: 200px;
+    border-right: 1px solid #d4d4d5;
     .menu {
       height: 100%;
       border: none;
@@ -228,20 +230,20 @@ export default {
         padding: 0;
         min-width: 3em;
         min-height: 3em;
-        border: 1px solid #d4d4d5;
-        border-top: none;
+        border: none;
         cursor: pointer;
         span {
-          margin-left: 1.5em;
-          margin-right: 3em;
+          margin-left: 3.5em;
+          margin-right: 1em;
           line-height: 3rem;
         }
         i {
           position: absolute;
           top: 1em;
-          right: 1em;
+          left: 1em;
         }
         &.active {
+          background: inherit;
           .dropdown {
             display: block;
             .subitem {
@@ -256,13 +258,16 @@ export default {
             display: block;
             position: absolute;
             left: 100%;
-            top: -1px;
+            top: 0px;
             width: 200px;
             z-index: 1000;
             .subitem {
               text-align: left;
               border: 1px solid #d4d4d5;
               border-top: none;
+              span {
+                margin-left: 1em;
+              }
             }
             @media screen and (max-width: 1127px) {
               display: none;
@@ -270,7 +275,7 @@ export default {
           }
         }
         &:hover {
-          background: rgba(255,255,255,.08);
+          background: #d4d4d5;
         }
       }
       a {
@@ -297,7 +302,7 @@ export default {
               font-weight: bold!important;
             }
             &:hover {
-              font-weight: bold!important;
+              background: #d4d4d5;
             }
           }
         }
@@ -312,6 +317,7 @@ export default {
         left: 0;
         top: 0;
         z-index: 100;
+        height: 100%;
       }
     }
   }
@@ -444,12 +450,12 @@ export default {
   }
   .sidebar-menu {
     background: #1b1c1d;
+    border-right: 1px solid rgba(255,255,255,.05);
     color: white;
     .menu {
       border: none;
       .item {
-        border: 1px solid rgba(255,255,255,.05);
-        border-top: none;
+        border: none;
         &.active {
           border: none;
           background: rgba(255,255,255,.05);
@@ -461,7 +467,7 @@ export default {
           }
         }
         &:hover {
-          color: white;
+          background: rgba(255,255,255,.08);
         }
         a {
           color: white;
@@ -478,9 +484,6 @@ export default {
             font-weight: normal!important;
             &.active {
               background: inherit;
-              &:hover {
-                background: rgba(255,255,255,.08);
-              }
             }
             &.router-link-exact-active {
               background: rgba(255,255,255,.05);
@@ -490,7 +493,7 @@ export default {
               }
             }
             &:hover {
-              background: rgba(255,255,255,.08);
+              background: rgba(255,255,255,.08)!important;
             }
           }
         }
@@ -605,6 +608,7 @@ export default {
     }
   }
   footer {
+    background: #1b1c1d;
     border-top: 1px solid rgba(255,255,255,.08);
     .dark-mode {
       color: white;
