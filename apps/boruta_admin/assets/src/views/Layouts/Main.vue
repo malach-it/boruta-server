@@ -4,11 +4,6 @@
     <div id="main" ref="main">
       <div class="sidebar-menu">
         <div class="ui vertical fluid tabular menu" :class="{ 'inverted': currentMode }">
-          <a @click="toggleDarkMode()">
-            <div class="dark-mode item">
-              <i class="sun icon" :class="{ 'outline': currentMode }"></i>
-            </div>
-          </a>
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'dashboard' }">
@@ -95,6 +90,12 @@
         <router-view class="content" />
       </div>
     </div>
+    <footer>
+      <a @click="toggleDarkMode()" class="dark-mode">
+        <i class="sun icon" :class="{ 'outline': currentMode }"></i>
+      </a>
+      &copy; 2022 patatoid
+    </footer>
   </div>
 </template>
 
@@ -139,6 +140,8 @@ export default {
 #app {
   min-height: 100vh;
   position: relative;
+  display: flex;
+  flex-direction: column;
   .ui.label {
     margin: 5px;
   }
@@ -171,9 +174,20 @@ export default {
   .label {
     cursor: default;
   }
+  footer {
+    text-align: right;
+    padding: 1rem;
+    border-top: 1px solid rgba(34,36,38,.15);
+    .dark-mode {
+      cursor: pointer;
+      float: left;
+      color: rgba(0,0,0,.87);
+    }
+  }
 }
 #main {
   position: relative;
+  flex: 1;
   display: flex;
   min-height: calc(100% - 41px);
   .main.create.button {
@@ -204,6 +218,7 @@ export default {
     }
   }
   .sidebar-menu {
+    position: relative;
     min-width: 200px;
     .menu {
       height: 100%;
@@ -286,15 +301,6 @@ export default {
             }
           }
         }
-      }
-    }
-    .dark-mode {
-      text-align: center;
-      @media screen and (min-width: 1127px) {
-        border: none!important;
-        position: fixed!important;
-        bottom: 0;
-        left: 0;
       }
     }
   }
@@ -598,9 +604,13 @@ export default {
       background: rgba(33, 140, 116,0.7)!important;
     }
   }
-  .dark-mode {
-    &:hover {
-      background: inherit!important;
+  footer {
+    border-top: 1px solid rgba(255,255,255,.08);
+    .dark-mode {
+      color: white;
+      &:hover {
+        background: inherit!important;
+      }
     }
   }
 }
