@@ -1,3 +1,8 @@
+defmodule BorutaWeb.AuthorizeError do
+  @enforce_keys [:message]
+  defexception [:message, :plug_status]
+end
+
 defmodule BorutaWeb.Oauth.AuthorizeController do
   @dialyzer :no_match
   @behaviour Boruta.Oauth.AuthorizeApplication
@@ -97,7 +102,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp prompt_redirection(conn, _current_user), do: {:unchanged, conn}
 
-  defp preauthorize(conn, %User{} = current_user) do
+  defp preauthorize(conn, current_user) do
+    current_user = current_user || %User{}
     resource_owner = %ResourceOwner{
       sub: current_user.id,
       username: current_user.username,
@@ -112,8 +118,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     {:preauthorize, conn}
   end
-
-  defp preauthorize(conn, _current_user), do: {:unchanged, conn}
 
   defp do_authorize(conn, current_user) do
     current_user = current_user || %User{}
@@ -162,11 +166,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   def preauthorize_error(conn, error) do
     session_chosen? = get_session(conn, :session_chosen) || false
 
-    case session_chosen? do
-      true ->
+    case {session_chosen?, conn.assigns[:current_user]} do
+      {true, _current_user} ->
         authorize_error(conn, error)
 
-      false ->
+      {false, nil} ->
+        authorize_error(conn, error)
+
+      {false, _current_user} ->
         conn
         |> redirect(
           to:
@@ -217,13 +224,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def authorize_error(
         conn,
-        %Error{status: status, error: error, error_description: error_description}
+        %Error{status: status, error_description: error_description}
       ) do
     conn
     |> delete_session(:session_chosen)
     |> put_status(status)
-    |> put_view(BorutaWeb.OauthView)
-    |> render("error." <> get_format(conn), error: error, error_description: error_description)
+
+    raise %BorutaWeb.AuthorizeError{message: error_description, plug_status: status}
   end
 
   defp login_expired?(current_user, max_age) do

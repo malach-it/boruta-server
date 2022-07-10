@@ -15,6 +15,7 @@ defmodule BorutaIdentity.Configuration.ErrorTemplate do
 
   @template_types [
     400,
+    401,
     403,
     404,
     500
@@ -25,6 +26,10 @@ defmodule BorutaIdentity.Configuration.ErrorTemplate do
     400 =>
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/errors/400.mustache")
+      |> File.read!(),
+    401 =>
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/errors/401.mustache")
       |> File.read!(),
     403 =>
       :code.priv_dir(:boruta_identity)

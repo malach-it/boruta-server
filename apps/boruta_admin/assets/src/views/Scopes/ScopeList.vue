@@ -5,7 +5,7 @@
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <div class="container">
       <div class="ui info message">
-        Scopes are here the ones that are to be requested by the client. They are to be public, accessible to everyone, or private whose are granted only having a priviledge user or client.
+        Scopes are here the ones that are to be requested by the client. They are to be public, accessible to everyone, or private, granted only having a priviledge user or client.
       </div>
       <div class="ui segments" v-if="scopes.length">
         <div v-for="(scope, index) in scopes" class="ui mini highlightable segment" :key="index">

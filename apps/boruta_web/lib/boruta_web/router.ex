@@ -35,7 +35,7 @@ defmodule BorutaWeb.Router do
   end
 
   pipeline :api do
-    plug CORSPlug
+    plug(CORSPlug)
 
     plug(:accepts, ["json", "jwt"])
   end

@@ -39,5 +39,8 @@ defmodule BorutaWeb.AuthorizeControllerTest do
 
       assert redirected_to(conn) =~ IdentityRoutes.choose_session_path(conn, :index)
     end
+
+    @tag :skip
+    test "error renders and redirections"
   end
 end

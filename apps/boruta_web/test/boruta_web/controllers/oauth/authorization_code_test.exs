@@ -109,7 +109,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         |> log_in(resource_owner)
         |> init_test_session(session_chosen: true)
 
-      conn =
+      assert_raise BorutaWeb.AuthorizeError, "Invalid client_id or redirect_uri.", fn ->
         get(
           conn,
           Routes.authorize_path(conn, :authorize, %{
@@ -119,8 +119,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
             state: "state"
           })
         )
-
-      assert html_response(conn, 401) =~ "Invalid client"
+      end
     end
 
     test "redirects to redirect_uri with token if current_user is set", %{

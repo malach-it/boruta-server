@@ -16,7 +16,12 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
       identity_provider = BorutaIdentity.Factory.insert(:identity_provider, consentable: true)
-      BorutaIdentity.Factory.insert(:client_identity_provider, client_id: client.id, identity_provider: identity_provider)
+
+      BorutaIdentity.Factory.insert(:client_identity_provider,
+        client_id: client.id,
+        identity_provider: identity_provider
+      )
+
       scope = insert(:scope, public: true)
 
       {:ok,
@@ -37,12 +42,11 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
         |> log_in(resource_owner)
         |> init_test_session(session_chosen: true)
 
-      conn = get(conn, "/oauth/authorize")
-
-      assert response_content_type(conn, :html)
-
-      assert response(conn, 400) =~
-               "Request is not a valid OAuth request. Need a response_type param."
+      assert_raise BorutaWeb.AuthorizeError,
+                   "Request is not a valid OAuth request. Need a response_type param.",
+                   fn ->
+                     get(conn, "/oauth/authorize")
+                   end
     end
 
     test "returns an error if client_id is invalid", %{
@@ -55,7 +59,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
         |> log_in(resource_owner)
         |> init_test_session(session_chosen: true)
 
-      conn =
+      assert_raise BorutaWeb.AuthorizeError, "Invalid client_id or redirect_uri.", fn ->
         get(
           conn,
           Routes.authorize_path(conn, :authorize, %{
@@ -65,8 +69,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
             state: "state"
           })
         )
-
-      assert html_response(conn, 401) =~ ~r/Invalid client_id or redirect_uri./
+      end
     end
 
     test "redirect to user authentication page", %{
@@ -94,16 +97,18 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
-      request_param = Authenticable.request_param(
-        get(
-          conn,
-          Routes.authorize_path(conn, :authorize, %{
-            response_type: "token",
-            client_id: client.id,
-            redirect_uri: redirect_uri
-          })
+      request_param =
+        Authenticable.request_param(
+          get(
+            conn,
+            Routes.authorize_path(conn, :authorize, %{
+              response_type: "token",
+              client_id: client.id,
+              redirect_uri: redirect_uri
+            })
+          )
         )
-      )
+
       conn =
         conn
         |> log_in(resource_owner)
@@ -136,17 +141,20 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       resource_owner: resource_owner
     } do
       given_state = "state"
-      request_param = Authenticable.request_param(
-        get(
-          conn,
-          Routes.authorize_path(conn, :authorize, %{
-            response_type: "token",
-            client_id: client.id,
-            redirect_uri: redirect_uri,
-            state: given_state
-          })
+
+      request_param =
+        Authenticable.request_param(
+          get(
+            conn,
+            Routes.authorize_path(conn, :authorize, %{
+              response_type: "token",
+              client_id: client.id,
+              redirect_uri: redirect_uri,
+              state: given_state
+            })
+          )
         )
-      )
+
       conn =
         conn
         |> log_in(resource_owner)
@@ -208,17 +216,19 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       resource_owner: resource_owner,
       scope: scope
     } do
-      request_param = Authenticable.request_param(
-        get(
-          conn,
-          Routes.authorize_path(conn, :authorize, %{
-            response_type: "token",
-            client_id: client.id,
-            redirect_uri: redirect_uri,
-            scope: scope.name
-          })
+      request_param =
+        Authenticable.request_param(
+          get(
+            conn,
+            Routes.authorize_path(conn, :authorize, %{
+              response_type: "token",
+              client_id: client.id,
+              redirect_uri: redirect_uri,
+              scope: scope.name
+            })
+          )
         )
-      )
+
       conn =
         conn
         |> log_in(resource_owner)
