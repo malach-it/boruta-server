@@ -3,6 +3,8 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
 
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentity.Repo
+
   describe "GET /users/register" do
     setup :with_a_request
 
@@ -26,7 +28,22 @@ defmodule BorutaIdentityWeb.UserRegistrationControllerTest do
     setup :with_a_request
 
     @tag :capture_log
-    test "creates account and logs the user in", %{conn: conn, request: request} do
+    test "creates account and ask for confirmation in if confirmable", %{conn: conn, request: request} do
+      email = unique_user_email()
+
+      conn =
+        post(conn, Routes.user_registration_path(conn, :create, request: request), %{
+          "user" => %{"email" => email, "password" => valid_user_password()}
+        })
+
+      response = html_response(conn, 200)
+      assert response =~ "<h1>Resend confirmation instructions</h1>"
+      assert response =~ "Email confirmation is required to authenticate."
+    end
+
+    @tag :capture_log
+    test "creates account and logs the user in if not confirmable", %{identity_provider: identity_provider, conn: conn, request: request} do
+      Ecto.Changeset.change(identity_provider, confirmable: false) |> Repo.update()
       email = unique_user_email()
 
       conn =
