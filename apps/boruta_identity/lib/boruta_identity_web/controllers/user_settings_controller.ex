@@ -3,9 +3,10 @@ defmodule BorutaIdentityWeb.UserSettingsController do
 
   use BorutaIdentityWeb, :controller
 
-  import BorutaIdentityWeb.Authenticable, only: [
-    client_id_from_request: 1
-  ]
+  import BorutaIdentityWeb.Authenticable,
+    only: [
+      client_id_from_request: 1
+    ]
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.SettingsError
@@ -26,16 +27,25 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     |> render("template.html", template: template, assigns: %{current_user: user})
   end
 
-  def update(conn, %{"user" => user_params}) do
+  def update(%Plug.Conn{query_params: query_params} = conn, %{"user" => user_params}) do
+    request = query_params["request"]
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
+
     user_update_params = %{
       email: user_params["email"],
       password: user_params["password"],
       current_password: user_params["current_password"]
     }
 
-    Accounts.update_user(conn, client_id, current_user, user_update_params, __MODULE__)
+    Accounts.update_user(
+      conn,
+      client_id,
+      current_user,
+      user_update_params,
+      &Routes.user_confirmation_url(conn, :confirm, &1, %{request: request}),
+      __MODULE__
+    )
   end
 
   @impl BorutaIdentity.Accounts.SettingsApplication

@@ -146,7 +146,7 @@ defmodule BorutaIdentity.Accounts do
   ## User settings
 
   defdelegate initialize_edit_user(context, client_id, user, module), to: Settings
-  defdelegate update_user(context, client_id, user, params, module), to: Settings
+  defdelegate update_user(context, client_id, user, params, confirmation_url_fun, module), to: Settings
 
   ## Deprecated Database getters
 

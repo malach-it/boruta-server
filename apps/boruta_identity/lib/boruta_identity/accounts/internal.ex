@@ -123,9 +123,12 @@ defmodule BorutaIdentity.Accounts.Internal do
   @impl BorutaIdentity.Accounts.Settings
   def update_user(user, params) do
     # TODO manage email confirmation
-    user
-    |> Internal.User.update_changeset(params)
-    |> Repo.update()
+    with {:ok, user} <-
+           user
+           |> Internal.User.update_changeset(params)
+           |> Repo.update() do
+      {:ok, domain_user!(user)}
+    end
   end
 
   @impl BorutaIdentity.Admin

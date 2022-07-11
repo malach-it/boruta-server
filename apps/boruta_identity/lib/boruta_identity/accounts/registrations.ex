@@ -120,7 +120,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
     end
   end
 
-  defp maybe_create_session(user, %IdentityProvider{confirmable: true}) do
+  defp maybe_create_session(_user, %IdentityProvider{confirmable: true}) do
     {:user_not_confirmed, "Email confirmation is required to authenticate."}
   end
 

@@ -42,12 +42,18 @@ defmodule BorutaIdentity.Accounts.Settings do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.SettingsError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
+  alias BorutaIdentity.Repo
 
-  @type user_update_params :: map()
+  @type user_update_params :: %{
+          :current_password => String.t(),
+          optional(:email) => String.t(),
+          optional(:password) => String.t()
+        }
 
   @type authentication_params :: %{
           password: String.t()
@@ -80,19 +86,37 @@ defmodule BorutaIdentity.Accounts.Settings do
           client_id :: String.t(),
           user :: User.t(),
           user_update_params :: user_update_params(),
+          confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp update_user(context, client_id, user, user_update_params, module) do
+  defwithclientrp update_user(
+                    context,
+                    client_id,
+                    user,
+                    user_update_params,
+                    confirmation_url_fun,
+                    module
+                  ) do
     client_impl = IdentityProvider.implementation(client_rp)
 
-    with {:ok, implementation_user} <- apply(client_impl, :get_user, [%{id: user.uid}]),
+    # TODO remove implementation_user from domain
+    with {:ok, old_user} <- apply(client_impl, :get_user, [%{id: user.uid}]),
          {:ok, _user} <-
            apply(client_impl, :check_user_against, [
-             implementation_user,
+             old_user,
              %{password: user_update_params[:current_password]}
            ]),
-         {:ok, implementation_user} <- apply(client_impl, :update_user, [implementation_user, user_update_params]) do
-      user = apply(client_impl, :domain_user!, [implementation_user])
+         # TODO wrap user update and confirmation email sending in a transaction
+         {:ok, user} <-
+           apply(client_impl, :update_user, [old_user, user_update_params]),
+         {:ok, user} <- maybe_unconfirm_user(old_user, user, client_rp),
+         :ok <-
+           maybe_deliver_email_confirmation_instructions(
+             old_user,
+             user,
+             confirmation_url_fun,
+             client_rp
+           ) do
       module.user_updated(context, user)
     else
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -109,6 +133,51 @@ defmodule BorutaIdentity.Accounts.Settings do
         })
     end
   end
+
+  defp maybe_unconfirm_user(old_user, user, %IdentityProvider{confirmable: true}) do
+    case email_changed?(old_user, user) do
+      true -> User.unconfirm_changeset(user) |> Repo.update()
+      false -> {:ok, user}
+    end
+  end
+
+  defp maybe_unconfirm_user(_old_user, user, %IdentityProvider{confirmable: false}) do
+    {:ok, user}
+  end
+
+  defp maybe_deliver_email_confirmation_instructions(
+         _old_user,
+         _user,
+         _confirmation_url_fun,
+         %IdentityProvider{confirmable: false}
+       ) do
+    :ok
+  end
+
+  defp maybe_deliver_email_confirmation_instructions(
+         old_user,
+         user,
+         confirmation_url_fun,
+         %IdentityProvider{confirmable: true}
+       ) do
+         case email_changed?(old_user, user) do
+      true ->
+        with {:ok, _confirmation_token} <-
+               Deliveries.deliver_user_confirmation_instructions(
+                 user,
+                 confirmation_url_fun
+               ) do
+          :ok
+        end
+
+      false ->
+        :ok
+    end
+  end
+
+  defp email_changed?(%{email: email}, %User{username: email}), do: false
+  defp email_changed?(%{email: _email}, %User{username: nil}), do: false
+  defp email_changed?(_user, _user_update_params), do: true
 
   defp edit_user_template(identity_provider) do
     IdentityProviders.get_identity_provider_template!(identity_provider.id, :edit_user)
