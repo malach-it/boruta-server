@@ -45,6 +45,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
 
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.Sessions
   alias BorutaIdentity.Accounts.User
@@ -53,13 +54,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   @type registration_params :: map()
 
-  @callback register(
-              registration_params :: registration_params(),
-              confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
-              opts :: Keyword.t()
-            ) ::
+  @callback register(registration_params :: registration_params()) ::
               {:ok, user :: User.t()}
-              | {:error, reason :: String.t()}
               | {:error, changeset :: Ecto.Changeset.t()}
 
   @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
@@ -85,13 +81,9 @@ defmodule BorutaIdentity.Accounts.Registrations do
     client_impl = IdentityProvider.implementation(client_rp)
 
     with {:ok, user} <-
-           apply(client_impl, :register, [
-             registration_params,
-             confirmation_url_fun,
-             [confirmable?: client_rp.confirmable]
-           ]),
-         %User{} = user <- apply(client_impl, :domain_user!, [user]),
-         {:ok, user, session_token} <- Sessions.create_user_session(user) do
+           apply(client_impl, :register, [registration_params]),
+         :ok <- maybe_deliver_confirmation_email(user, confirmation_url_fun, client_rp),
+         {:ok, user, session_token} <- maybe_create_session(user, client_rp) do
       # TODO do not log in user if confirmable is set
       module.user_registered(context, user, session_token)
     else
@@ -102,15 +94,45 @@ defmodule BorutaIdentity.Accounts.Registrations do
           template: new_registration_template(client_rp)
         })
 
-      {:error, reason} ->
+      {:user_not_confirmed, reason} ->
         module.registration_failure(context, %RegistrationError{
           message: reason,
-          template: new_registration_template(client_rp)
+          template: new_confirmation_instructions_template(client_rp)
         })
     end
   end
 
+  defp maybe_deliver_confirmation_email(_user, _confirmation_url_fun, %IdentityProvider{
+         confirmable: false
+       }) do
+    :ok
+  end
+
+  defp maybe_deliver_confirmation_email(user, confirmation_url_fun, %IdentityProvider{
+         confirmable: true
+       }) do
+    with {:ok, _confirmation_token} <-
+           Deliveries.deliver_user_confirmation_instructions(
+             user,
+             confirmation_url_fun
+           ) do
+      :ok
+    end
+  end
+
+  defp maybe_create_session(_user, %IdentityProvider{confirmable: true}) do
+    {:user_not_confirmed, "Email confirmation is required to authenticate."}
+  end
+
+  defp maybe_create_session(user, %IdentityProvider{confirmable: false}) do
+    Sessions.create_user_session(user)
+  end
+
   defp new_registration_template(identity_provider) do
     IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_registration)
+  end
+
+  defp new_confirmation_instructions_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_confirmation_instructions)
   end
 end

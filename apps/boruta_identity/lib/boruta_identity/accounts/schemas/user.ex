@@ -57,6 +57,13 @@ defmodule BorutaIdentity.Accounts.User do
     change(user, confirmed_at: now)
   end
 
+  @doc """
+  Reset confirmation of the account by unsetting `confirmed_at`.
+  """
+  def unconfirm_changeset(user) do
+    change(user, confirmed_at: nil)
+  end
+
   def consent_changeset(user, attrs) do
     user
     |> Repo.preload(:consents)

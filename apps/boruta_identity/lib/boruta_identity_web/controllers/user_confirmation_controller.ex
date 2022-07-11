@@ -17,7 +17,6 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
 
   def create(%Plug.Conn{query_params: query_params} = conn, %{"user" => %{"email" => email}}) do
     request = Map.get(query_params, "request")
-    client_id = client_id_from_request(conn)
 
     confirmation_params = %{
       email: email
@@ -25,7 +24,6 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
 
     Accounts.send_confirmation_instructions(
       conn,
-      client_id,
       confirmation_params,
       &Routes.user_confirmation_url(conn, :confirm, &1, %{request: request}),
       __MODULE__

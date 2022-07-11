@@ -39,21 +39,21 @@ defmodule BorutaIdentity.Accounts.Deliveries do
       {:ok, %{to: ..., body: ...}}
 
       iex> deliver_user_confirmation_instructions(confirmed_user, &Routes.user_confirmation_url(conn, :confirm, &1))
-      {:error, :already_confirmed}
+      {:error, "User is already confirmed."}
 
   """
   @spec deliver_user_confirmation_instructions(
           user :: User.t(),
           confirmation_url_fun :: callback_function()
-        ) :: any()
+        ) :: {:ok, confirmation_token :: String.t()} | {:error, reason :: String.t() | Ecto.Changeset.t()}
   def deliver_user_confirmation_instructions(%User{} = user, confirmation_url_fun)
       when is_function(confirmation_url_fun, 1) do
     if user.confirmed_at do
-      {:error, :already_confirmed}
+      {:error, "User is already confirmed."}
     else
-      {encoded_token, user_token} = UserToken.build_email_token(user, "confirm")
+      {encoded_token, confirmation_token} = UserToken.build_email_token(user, "confirm")
 
-      with {:ok, _user_token} <- Repo.insert(user_token),
+      with {:ok, _confirmation_token} <- Repo.insert(confirmation_token),
            {:ok, _email} <-
              UserNotifier.deliver_confirmation_instructions(
                user,

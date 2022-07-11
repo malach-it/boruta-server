@@ -53,10 +53,26 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
     )
   end
 
+  def registration_failure(%Plug.Conn{} = conn, %RegistrationError{
+        message: message,
+        template: template
+      }) do
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        errors: [message]
+      }
+    )
+  end
+
   @impl BorutaIdentity.Accounts.RegistrationApplication
   def user_registered(conn, _user, session_token) do
     conn
     |> store_user_session(session_token)
+    |> put_session(:session_chosen, true)
     |> redirect(to: after_registration_path(conn))
   end
 end

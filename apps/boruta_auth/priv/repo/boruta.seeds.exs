@@ -78,7 +78,8 @@ BorutaIdentity.IdentityProviders.upsert_client_identity_provider(client.id, iden
 {:ok, user} = BorutaIdentity.Accounts.Internal.User.registration_changeset(%BorutaIdentity.Accounts.Internal.User{}, %{
   email: System.get_env("BORUTA_ADMIN_EMAIL"),
   password: System.get_env("BORUTA_ADMIN_PASSWORD"),
-  password_confirmation: System.get_env("BORUTA_ADMIN_PASSWORD")
+  password_confirmation: System.get_env("BORUTA_ADMIN_PASSWORD"),
+  confirmed_at: DateTime.utc_now()
 }) |> BorutaIdentity.Repo.insert()
 
 user = BorutaIdentity.Accounts.Internal.domain_user!(user)

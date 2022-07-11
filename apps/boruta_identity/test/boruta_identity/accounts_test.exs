@@ -57,6 +57,30 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
+  defmodule DummyConfirmation do
+    @behaviour Accounts.ConfirmationApplication
+
+    @impl Accounts.ConfirmationApplication
+    def confirmation_instructions_initialized(context, template) do
+      {:confirmation_instructions_initialized, context, template}
+    end
+
+    @impl Accounts.ConfirmationApplication
+    def confirmation_instructions_delivered(context) do
+      {:confirmation_instructions_delivered, context}
+    end
+
+    @impl Accounts.ConfirmationApplication
+    def user_confirmed(context, user) do
+      {:user_confirmed, context, user}
+    end
+
+    @impl Accounts.ConfirmationApplication
+    def user_confirmation_failure(context, error) do
+      {:user_confirmation_failure, context, error}
+    end
+  end
+
   describe "Utils.client_identity_provider/1" do
     test "returns an error when client_id is nil" do
       client_id = nil
@@ -78,7 +102,9 @@ defmodule BorutaIdentity.AccountsTest do
       identity_provider = BorutaIdentity.Factory.insert(:identity_provider, type: "internal")
 
       %ClientIdentityProvider{client_id: client_id} =
-        BorutaIdentity.Factory.insert(:client_identity_provider, identity_provider: identity_provider)
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider: identity_provider
+        )
 
       assert Accounts.Utils.client_identity_provider(client_id) == {:ok, identity_provider}
     end
@@ -111,9 +137,11 @@ defmodule BorutaIdentity.AccountsTest do
       client_id = SecureRandom.uuid()
       context = :context
 
-      assert_raise IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator.", fn ->
-        Accounts.initialize_registration(context, client_id, DummyRegistration)
-      end
+      assert_raise IdentityProviderError,
+                   "identity provider not configured for given OAuth client. Please contact your administrator.",
+                   fn ->
+                     Accounts.initialize_registration(context, client_id, DummyRegistration)
+                   end
     end
 
     test "returns an error if registration is not enabled for client identity provider" do
@@ -121,9 +149,11 @@ defmodule BorutaIdentity.AccountsTest do
 
       context = :context
 
-      assert_raise IdentityProviderError, "Feature is not enabled for client identity provider.", fn ->
-        Accounts.initialize_registration(context, client_id, DummyRegistration)
-      end
+      assert_raise IdentityProviderError,
+                   "Feature is not enabled for client identity provider.",
+                   fn ->
+                     Accounts.initialize_registration(context, client_id, DummyRegistration)
+                   end
     end
 
     test "returns a template", %{client_id: client_id} do
@@ -171,15 +201,17 @@ defmodule BorutaIdentity.AccountsTest do
       user_params = %{}
       confirmation_callback_fun = & &1
 
-      assert_raise IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator.", fn ->
-        Accounts.register(
-          context,
-          client_id,
-          user_params,
-          confirmation_callback_fun,
-          DummyRegistration
-        )
-      end
+      assert_raise IdentityProviderError,
+                   "identity provider not configured for given OAuth client. Please contact your administrator.",
+                   fn ->
+                     Accounts.register(
+                       context,
+                       client_id,
+                       user_params,
+                       confirmation_callback_fun,
+                       DummyRegistration
+                     )
+                   end
     end
 
     test "returns an error if registrations is disabled for client identity provider" do
@@ -188,15 +220,17 @@ defmodule BorutaIdentity.AccountsTest do
       user_params = %{}
       confirmation_callback_fun = & &1
 
-      assert_raise IdentityProviderError, "Feature is not enabled for client identity provider.", fn ->
-        Accounts.register(
-          context,
-          client_id,
-          user_params,
-          confirmation_callback_fun,
-          DummyRegistration
-        )
-      end
+      assert_raise IdentityProviderError,
+                   "Feature is not enabled for client identity provider.",
+                   fn ->
+                     Accounts.register(
+                       context,
+                       client_id,
+                       user_params,
+                       confirmation_callback_fun,
+                       DummyRegistration
+                     )
+                   end
     end
 
     test "returns a template on error", %{client_id: client_id} do
@@ -358,13 +392,15 @@ defmodule BorutaIdentity.AccountsTest do
       context = :context
       client_id = SecureRandom.uuid()
 
-      assert_raise IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator.", fn ->
-        Accounts.initialize_session(
-          context,
-          client_id,
-          DummySession
-        )
-      end
+      assert_raise IdentityProviderError,
+                   "identity provider not configured for given OAuth client. Please contact your administrator.",
+                   fn ->
+                     Accounts.initialize_session(
+                       context,
+                       client_id,
+                       DummySession
+                     )
+                   end
     end
 
     test "returns identity provider and a template", %{client_id: client_id} do
@@ -414,14 +450,16 @@ defmodule BorutaIdentity.AccountsTest do
       client_id = SecureRandom.uuid()
       authentication_params = %{}
 
-      assert_raise IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator.", fn ->
-        Accounts.create_session(
-          context,
-          client_id,
-          authentication_params,
-          DummySession
-        )
-      end
+      assert_raise IdentityProviderError,
+                   "identity provider not configured for given OAuth client. Please contact your administrator.",
+                   fn ->
+                     Accounts.create_session(
+                       context,
+                       client_id,
+                       authentication_params,
+                       DummySession
+                     )
+                   end
     end
 
     test "returns an error with empty authentication params", %{client_id: client_id} do
@@ -538,6 +576,7 @@ defmodule BorutaIdentity.AccountsTest do
       authentication_params = %{email: username, password: valid_user_password()}
 
       provider = to_string(Internal)
+
       assert {:user_authenticated, ^context,
               %User{username: ^username, provider: ^provider, uid: ^uid},
               session_token} =
@@ -551,12 +590,15 @@ defmodule BorutaIdentity.AccountsTest do
       assert session_token
     end
 
-    test "does not create multiple users accross multiple authentications", %{client_id: client_id} do
+    test "does not create multiple users accross multiple authentications", %{
+      client_id: client_id
+    } do
       %Internal.User{id: uid, email: username} = insert(:internal_user)
       context = :context
       authentication_params = %{email: username, password: valid_user_password()}
 
       provider = to_string(Internal)
+
       assert {:user_authenticated, ^context,
               %User{id: user_id, username: ^username, provider: ^provider, uid: ^uid},
               session_token} =
@@ -686,8 +728,30 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  @tag :skip
-  test "send_confirmation_instructions/5"
+  describe "send_confirmation_instructions/4" do
+    test "returns a success" do
+      context = :context
+
+      confirmation_params = %{
+        email: "unknown@test.test"
+      }
+
+      confirmation_url_fun = & &1
+
+      assert Accounts.send_confirmation_instructions(
+               context,
+               confirmation_params,
+               confirmation_url_fun,
+               DummyConfirmation
+             ) == {
+               :confirmation_instructions_delivered,
+               context
+             }
+    end
+
+    @tag :skip
+    test "delivers confirmation instructions when user is known"
+  end
 
   @tag :skip
   test "confirm_user/4"
@@ -713,7 +777,9 @@ defmodule BorutaIdentity.AccountsTest do
       user_scope = user_scopes_fixture(user)
 
       scope_id = user_scope.scope_id
-      assert [%Boruta.Oauth.Scope{id: ^scope_id, name: "name"}] = Accounts.get_user_scopes(user.id)
+
+      assert [%Boruta.Oauth.Scope{id: ^scope_id, name: "name"}] =
+               Accounts.get_user_scopes(user.id)
     end
   end
 
