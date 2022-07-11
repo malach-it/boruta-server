@@ -55,8 +55,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
       preauthorizations ->
         case Map.get(preauthorizations, request_param(conn), false) do
-          false -> {:unchanged, conn}
-          true -> {:preauthorized, conn}
+          false ->
+            {:unchanged, conn}
+
+          true ->
+            preauthorizations = get_session(conn, :preauthorizations) || %{}
+
+            {:preauthorized,
+             conn
+             |> put_session(
+               :preauthorizations,
+               Map.delete(preauthorizations, request_param(conn))
+             )}
         end
     end
   end
@@ -104,17 +114,19 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp preauthorize(conn, current_user) do
     current_user = current_user || %User{}
+
     resource_owner = %ResourceOwner{
       sub: current_user.id,
       username: current_user.username,
       last_login_at: current_user.last_login_at
     }
 
-    conn = conn
-    |> Oauth.preauthorize(
-      resource_owner,
-      __MODULE__
-    )
+    conn =
+      conn
+      |> Oauth.preauthorize(
+        resource_owner,
+        __MODULE__
+      )
 
     {:preauthorize, conn}
   end
@@ -139,11 +151,15 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, _authorization) do
     session_chosen? = get_session(conn, :session_chosen) || false
+    preauthorizations = get_session(conn, :preauthorizations) || %{}
 
     case session_chosen? do
       true ->
         conn
-        |> put_session(:preauthorizations, %{request_param(conn) => true})
+        |> put_session(
+          :preauthorizations,
+          Map.merge(preauthorizations, %{request_param(conn) => true})
+        )
         |> redirect(
           to:
             IdentityRoutes.user_consent_path(BorutaIdentityWeb.Endpoint, :index, %{
@@ -164,24 +180,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_error(conn, error) do
-    session_chosen? = get_session(conn, :session_chosen) || false
-
-    case {session_chosen?, conn.assigns[:current_user]} do
-      {true, _current_user} ->
-        authorize_error(conn, error)
-
-      {false, nil} ->
-        authorize_error(conn, error)
-
-      {false, _current_user} ->
-        conn
-        |> redirect(
-          to:
-            IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
-              request: request_param(conn)
-            })
-        )
-    end
+    authorize_error(conn, error)
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
@@ -205,14 +204,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %Plug.Conn{} = conn,
         %Error{status: :unauthorized, error: :invalid_resource_owner}
       ) do
-     conn
-     |> delete_session(:session_chosen)
-     |> redirect(
-       to:
-         IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
-           request: request_param(conn)
-         })
-     )
+    conn
+    |> delete_session(:session_chosen)
+    |> redirect(
+      to:
+        IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
+          request: request_param(conn)
+        })
+    )
   end
 
   def authorize_error(conn, %Error{format: format} = error)
