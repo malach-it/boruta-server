@@ -127,7 +127,6 @@ defmodule BorutaIdentity.Accounts do
   defdelegate initialize_confirmation_instructions(context, client_id, module), to: Confirmations
   defdelegate send_confirmation_instructions(
                 context,
-                client_id,
                 confirmation_params,
                 confirmation_url_fun,
                 module

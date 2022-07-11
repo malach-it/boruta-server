@@ -120,17 +120,6 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.Confirmations
-  def send_confirmation_instructions(user, confirmation_url_fun) do
-    with {:ok, _email} <-
-           Deliveries.deliver_user_confirmation_instructions(
-             user,
-             confirmation_url_fun
-           ) do
-      :ok
-    end
-  end
-
-  @impl BorutaIdentity.Accounts.Confirmations
   def confirm_user(token) do
     with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
          %User{confirmed_at: nil} = user <- Repo.one(query),

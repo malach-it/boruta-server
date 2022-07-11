@@ -45,6 +45,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.ConfirmationError
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
@@ -53,12 +54,6 @@ defmodule BorutaIdentity.Accounts.Confirmations do
           email: String.t()
         }
   @type confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
-
-  @callback send_confirmation_instructions(
-              user :: User.t(),
-              confirmation_url_fun :: confirmation_url_fun()
-            ) ::
-              :ok | {:error, reason :: String.t()}
 
   @callback confirm_user(token :: String.t()) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
@@ -77,22 +72,18 @@ defmodule BorutaIdentity.Accounts.Confirmations do
 
   @spec send_confirmation_instructions(
           context :: any(),
-          client_id :: String.t(),
           confirmation_instructions_params :: confirmation_instructions_params(),
           confirmation_url_fun :: confirmation_url_fun(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp send_confirmation_instructions(
+  def send_confirmation_instructions(
                     context,
-                    client_id,
                     confirmation_instructions_params,
                     confirmation_url_fun,
                     module
                   ) do
-    client_impl = IdentityProvider.implementation(client_rp)
-
     with %User{} = user <- Accounts.get_user_by_email(confirmation_instructions_params[:email]) do
-      apply(client_impl, :send_confirmation_instructions, [user, confirmation_url_fun])
+      Deliveries.deliver_user_confirmation_instructions(user, confirmation_url_fun)
     end
 
     # NOTE return a success either confirmation instructions email sent or not
