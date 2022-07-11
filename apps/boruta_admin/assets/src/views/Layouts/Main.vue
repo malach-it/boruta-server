@@ -275,7 +275,7 @@ export default {
           }
         }
         &:hover {
-          background: #d4d4d5;
+          background: #e7e7e8;
         }
       }
       a {
@@ -302,7 +302,7 @@ export default {
               font-weight: bold!important;
             }
             &:hover {
-              background: #d4d4d5;
+              background: #e7e7e8;
             }
           }
         }
