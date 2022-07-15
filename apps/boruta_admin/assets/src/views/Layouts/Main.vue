@@ -246,6 +246,7 @@ export default {
           background: inherit;
           .dropdown {
             display: block;
+            border-right: 1px solid #d4d4d5;
             .subitem {
               &:last-child {
                 border-bottom: none;
