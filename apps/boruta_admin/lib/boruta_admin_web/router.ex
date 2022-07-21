@@ -32,6 +32,7 @@ defmodule BorutaAdminWeb.Router do
     pipe_through(:authenticated_api)
 
     get("/users/current", UserController, :current)
+    resources("/logs", LogsController, only: [:index])
     resources("/scopes", ScopeController, except: [:new, :edit])
     resources("/clients", ClientController, except: [:new, :edit])
     # TODO user scopes

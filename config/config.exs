@@ -9,6 +9,7 @@ config :logger,
 
 config :logger, :file_logger,
   path: "./log/test",
+  metadata: [:request_id],
   level: :info
 
 config :logger, :console,
@@ -16,5 +17,9 @@ config :logger, :console,
   metadata: [:request_id]
 
 config :phoenix, :json_library, Jason
+
+config :mime, :types, %{
+  "application/jwt" => ["jwt"]
+}
 
 import_config "#{Mix.env()}.exs"

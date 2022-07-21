@@ -38,9 +38,10 @@ defmodule BorutaAdmin.MixProject do
   defp deps do
     [
       {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
+      {:boruta_auth, in_umbrella: true},
       {:boruta_gateway, in_umbrella: true},
-      {:boruta_web, in_umbrella: true},
       {:boruta_identity, in_umbrella: true},
+      {:boruta_web, in_umbrella: true},
       {:bypass, "~> 2.1.0"},
       {:ecto_sql, "~> 3.4"},
       {:ex_machina, "~> 2.4", only: :test},

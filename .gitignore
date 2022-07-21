@@ -3,6 +3,7 @@
 /deps/
 /doc/
 /tmp/
+/log/
 /.fetch
 erl_crash.dump
 *.ez
