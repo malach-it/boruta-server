@@ -61,7 +61,7 @@ BorutaAuth.Repo.insert(
   secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "777"),
   id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
   redirect_uris: [
-    "#{System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4002")}/oauth-callback"
+    "#{System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4001")}/oauth-callback"
   ],
   access_token_ttl: 3600,
   authorization_code_ttl: 60,

@@ -9,4 +9,9 @@ config :boruta, Boruta.Oauth,
     resource_owners: BorutaIdentity.ResourceOwners
   ]
 
+config :boruta_auth, BorutaAuth.Scheduler,
+  jobs: [
+    {"@daily", {BorutaAuth.LogRotate, :rotate, []}}
+  ]
+
 import_config "#{Mix.env()}.exs"
