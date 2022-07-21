@@ -53,7 +53,7 @@ defmodule BorutaAdminWeb do
 
   def channel do
     quote do
-      use Phoenix.Channel
+      use Phoenix.Channel, log_join: false
       import BorutaAdminWeb.Gettext
     end
   end

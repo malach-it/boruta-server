@@ -1,5 +1,5 @@
 defmodule BorutaAdminWeb.UserSocket do
-  use Phoenix.Socket
+  use Phoenix.Socket, log: false
 
   alias Boruta.Oauth.Authorization
   alias BorutaAdminWeb.Authorization
