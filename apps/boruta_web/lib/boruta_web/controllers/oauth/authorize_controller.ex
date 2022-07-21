@@ -201,7 +201,25 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
-  def authorize_success(conn, response) do
+  def authorize_success(%Plug.Conn{query_params: query_params} = conn, response) do
+    # TODO get client and resource_owner from response
+    client_id = query_params["client_id"]
+    current_user = conn.assigns[:current_user]
+
+    :telemetry.execute(
+      [:authorization, :authorize, :success],
+      %{},
+      %{
+        access_token: response.access_token,
+        code: response.code,
+        type: response.type,
+        response_mode: response.response_mode,
+        expires_in: response.expires_in,
+        client_id: client_id,
+        current_user: current_user
+      }
+    )
+
     conn
     |> delete_session(:session_chosen)
     |> redirect(external: AuthorizeResponse.redirect_to_url(response))
@@ -210,17 +228,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   @impl Boruta.Oauth.AuthorizeApplication
   def authorize_error(
         %Plug.Conn{} = conn,
-        %Error{status: :unauthorized, error: :login_required} = error
+        %Error{status: :unauthorized, error: :invalid_resource_owner} = error
       ) do
-    conn
-    |> delete_session(:session_chosen)
-    |> redirect(external: Error.redirect_to_url(error))
-  end
+    emit_authorize_error_event(conn, error)
 
-  def authorize_error(
-        %Plug.Conn{} = conn,
-        %Error{status: :unauthorized, error: :invalid_resource_owner}
-      ) do
     conn
     |> delete_session(:session_chosen)
     |> redirect(
@@ -233,6 +244,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def authorize_error(conn, %Error{format: format} = error)
       when not is_nil(format) do
+    emit_authorize_error_event(conn, error)
+
     conn
     |> delete_session(:session_chosen)
     |> redirect(external: Error.redirect_to_url(error))
@@ -240,13 +253,33 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def authorize_error(
         conn,
-        %Error{status: status, error_description: error_description}
+        %Error{status: status, error_description: error_description} = error
       ) do
+    emit_authorize_error_event(conn, error)
+
     conn
     |> delete_session(:session_chosen)
     |> put_status(status)
 
     raise %BorutaWeb.AuthorizeError{message: error_description, plug_status: status}
+  end
+
+  defp emit_authorize_error_event(%Plug.Conn{query_params: query_params} = conn, error) do
+    # TODO get client_id from error
+    client_id = query_params["client_id"]
+    current_user = conn.assigns[:current_user]
+
+    :telemetry.execute(
+      [:authorization, :authorize, :failure],
+      %{},
+      %{
+        status: error.status,
+        error: error.error,
+        error_description: error.error_description,
+        client_id: client_id,
+        current_user: current_user
+      }
+    )
   end
 
   defp login_expired?(current_user, max_age) do
