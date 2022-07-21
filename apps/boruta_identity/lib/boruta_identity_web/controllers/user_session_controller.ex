@@ -53,7 +53,19 @@ defmodule BorutaIdentityWeb.UserSessionController do
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
-  def user_authenticated(conn, _user, session_token) do
+  def user_authenticated(conn, user, session_token) do
+    client_id = client_id_from_request(conn)
+
+    :telemetry.execute(
+      [:authentication, :log_in, :success],
+      %{},
+      %{
+        sub: user.uid,
+        provider: user.provider,
+        client_id: client_id
+      }
+    )
+
     conn
     |> store_user_session(session_token)
     |> put_session(:session_chosen, true)
@@ -65,6 +77,16 @@ defmodule BorutaIdentityWeb.UserSessionController do
         message: message,
         template: template
       }) do
+    client_id = client_id_from_request(conn)
+
+    :telemetry.execute(
+      [:authentication, :log_in, :failure],
+      %{},
+      %{
+        message: message,
+        client_id: client_id
+      }
+    )
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
@@ -78,6 +100,19 @@ defmodule BorutaIdentityWeb.UserSessionController do
 
   @impl BorutaIdentity.Accounts.SessionApplication
   def session_deleted(conn) do
+    client_id = client_id_from_request(conn)
+    user = conn.assigns[:current_user]
+
+    :telemetry.execute(
+      [:authentication, :log_out, :success],
+      %{},
+      %{
+        sub: user && user.uid,
+        provider: user && user.provider,
+        client_id: client_id
+      }
+    )
+
     conn
     |> remove_user_session()
     |> put_flash(:info, "Logged out successfully.")

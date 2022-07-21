@@ -12,7 +12,7 @@ defmodule BorutaIdentity.Accounts.ConsentApplication do
 
   @callback consent_not_required(context :: any()) :: any()
 
-  @callback consented(context :: any()) :: any()
+  @callback consented(context :: any(), scope :: String.t()) :: any()
 
   @callback consent_failed(context :: any(), changeset :: Ecto.Changeset.t()) :: any()
 end
@@ -75,7 +75,7 @@ defmodule BorutaIdentity.Accounts.Consents do
          |> User.consent_changeset(%{consents: [params]})
          |> Repo.update() do
       {:ok, _user} ->
-        module.consented(context)
+        module.consented(context, params[:scopes])
 
       {:error, changeset} ->
         module.consent_failed(context, changeset)

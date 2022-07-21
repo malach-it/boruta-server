@@ -39,7 +39,20 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
-  def user_confirmed(%Plug.Conn{query_params: query_params} = conn, _user) do
+  def user_confirmed(%Plug.Conn{query_params: query_params} = conn, user) do
+    client_id = client_id_from_request(conn)
+
+    :telemetry.execute(
+      [:registration, :confirm, :success],
+      %{},
+      %{
+        client_id: client_id,
+        sub: user.uid,
+        provider: user.provider,
+        token: query_params["token"]
+      }
+    )
+
     conn
     |> put_flash(:info, "Account confirmed successfully.")
     |> redirect(to: Routes.user_session_path(conn, :new, %{request: query_params["request"]}))
@@ -47,6 +60,18 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
   def user_confirmation_failure(%Plug.Conn{query_params: query_params} = conn, %ConfirmationError{message: message}) do
+    client_id = client_id_from_request(conn)
+
+    :telemetry.execute(
+      [:registration, :confirm, :failure],
+      %{},
+      %{
+        client_id: client_id,
+        message: message,
+        token: query_params["token"]
+      }
+    )
+
     case conn.assigns[:current_user] do
       %User{} ->
         conn

@@ -6,7 +6,6 @@
   <div class="ui large form">
     <form action="{{ create_user_consent_path }}" method="POST">
       <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
-      <input type="hidden" name="client_id" value="{{ client.id }}">
       {{#scopes}}
       <div class="field">
         <div class="ui checkbox">

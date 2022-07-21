@@ -118,6 +118,6 @@ defmodule BorutaIdentityWeb.ConnCase do
         BorutaIdentityWeb.Token.application_signer()
       )
 
-    %{request: jwt, identity_provider: identity_provider, client: client}
+    %{request: jwt, identity_provider: identity_provider, client: client, requested_scope: scope}
   end
 end

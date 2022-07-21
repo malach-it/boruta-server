@@ -1,8 +1,9 @@
 defmodule BorutaIdentity.Accounts.RegistrationError do
   @enforce_keys [:message]
-  defexception [:message, :changeset, :template]
+  defexception [:user, :message, :changeset, :template]
 
   @type t :: %__MODULE__{
+          user: BorutaIdentity.Accounts.User.t() | nil,
           message: String.t(),
           changeset: Ecto.Changeset.t() | nil,
           template: BorutaIdentity.IdentityProviders.Template.t()
@@ -94,8 +95,9 @@ defmodule BorutaIdentity.Accounts.Registrations do
           template: new_registration_template(client_rp)
         })
 
-      {:user_not_confirmed, reason} ->
+      {:user_not_confirmed, user, reason} ->
         module.registration_failure(context, %RegistrationError{
+          user: user,
           message: reason,
           template: new_confirmation_instructions_template(client_rp)
         })
@@ -120,8 +122,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
     end
   end
 
-  defp maybe_create_session(_user, %IdentityProvider{confirmable: true}) do
-    {:user_not_confirmed, "Email confirmation is required to authenticate."}
+  defp maybe_create_session(user, %IdentityProvider{confirmable: true}) do
+    {:user_not_confirmed, user, "Email confirmation is required to authenticate."}
   end
 
   defp maybe_create_session(user, %IdentityProvider{confirmable: false}) do

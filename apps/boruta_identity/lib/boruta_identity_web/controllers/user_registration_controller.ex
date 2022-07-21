@@ -42,6 +42,17 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
         changeset: %Ecto.Changeset{} = changeset,
         template: template
       }) do
+    client_id = client_id_from_request(conn)
+
+    :telemetry.execute(
+      [:registration, :create, :failure],
+      %{},
+      %{
+        client_id: client_id,
+        error: changeset
+      }
+    )
+
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
@@ -54,9 +65,24 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   end
 
   def registration_failure(%Plug.Conn{} = conn, %RegistrationError{
+        user: user,
         message: message,
         template: template
       }) do
+    client_id = client_id_from_request(conn)
+
+    # NOTE user is registered but his email is not confirmed
+    :telemetry.execute(
+      [:registration, :create, :success],
+      %{},
+      %{
+        client_id: client_id,
+        sub: user.uid,
+        provider: user.provider,
+        message: message
+      }
+    )
+
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
@@ -69,7 +95,19 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
   end
 
   @impl BorutaIdentity.Accounts.RegistrationApplication
-  def user_registered(conn, _user, session_token) do
+  def user_registered(conn, user, session_token) do
+    client_id = client_id_from_request(conn)
+
+    :telemetry.execute(
+      [:registration, :create, :success],
+      %{},
+      %{
+        client_id: client_id,
+        sub: user.uid,
+        provider: user.provider
+      }
+    )
+
     conn
     |> store_user_session(session_token)
     |> put_session(:session_chosen, true)

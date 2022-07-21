@@ -17,7 +17,15 @@ defmodule BorutaIdentityWeb.ErrorHelpers do
   end
 
   def error_message({field, messages}) do
-    Phoenix.Naming.humanize(field) <> ": " <> Enum.join(messages, ", ")
+    message = Enum.flat_map(messages, fn
+      errors when is_map(errors) ->
+        Enum.map(errors, &error_message/1)
+      message ->
+        [message]
+    end)
+    |> Enum.join(", ")
+
+    Phoenix.Naming.humanize(field) <> ": " <> message
   end
 
   def errors_tag(errors) do

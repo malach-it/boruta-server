@@ -6,10 +6,8 @@ defmodule BorutaIdentityWeb.UserConsentController do
   import BorutaIdentityWeb.Authenticable,
     only: [client_id_from_request: 1, scope_from_request: 1, after_sign_in_path: 1]
 
-  import BorutaIdentityWeb.ErrorHelpers
-
   alias BorutaIdentity.Accounts
-  alias BorutaIdentityWeb.ChangesetView
+  alias BorutaIdentityWeb.ErrorHelpers
   alias BorutaIdentityWeb.TemplateView
 
   action_fallback(BorutaIdentityWeb.FallbackController)
@@ -27,31 +25,11 @@ defmodule BorutaIdentityWeb.UserConsentController do
     current_user = conn.assigns[:current_user]
 
     consent_params = %{
-      client_id: params["client_id"],
-      scopes: params["scopes"]
+      client_id: client_id,
+      scopes: params["scopes"] || []
     }
 
     Accounts.consent(conn, client_id, current_user, consent_params, __MODULE__)
-  end
-
-  @impl BorutaIdentity.Accounts.ConsentApplication
-  def consent_not_required(conn) do
-    redirect(conn, to: after_sign_in_path(conn))
-  end
-
-  @impl BorutaIdentity.Accounts.ConsentApplication
-  def consented(conn) do
-    redirect(conn, to: after_sign_in_path(conn))
-  end
-
-  @impl BorutaIdentity.Accounts.ConsentApplication
-  def consent_failed(%Plug.Conn{query_params: query_params} = conn, changeset) do
-    error_messages = changeset |> ChangesetView.translate_errors() |> errors_tag()
-    request = query_params["request"]
-
-    conn
-    |> put_flash(:error, error_messages)
-    |> redirect(to: Routes.user_session_path(conn, :new, %{request: request}))
   end
 
   @impl BorutaIdentity.Accounts.ConsentApplication
@@ -66,5 +44,53 @@ defmodule BorutaIdentityWeb.UserConsentController do
         client: client
       }
     )
+  end
+
+  @impl BorutaIdentity.Accounts.ConsentApplication
+  def consent_not_required(conn) do
+    redirect(conn, to: after_sign_in_path(conn))
+  end
+
+  @impl BorutaIdentity.Accounts.ConsentApplication
+  def consented(conn, scopes) do
+    client_id = client_id_from_request(conn)
+    current_user = conn.assigns[:current_user]
+
+    :telemetry.execute(
+      [:authorization, :consent, :success],
+      %{},
+      %{
+        client_id: client_id,
+        sub: current_user.uid,
+        provider: current_user.provider,
+        scopes: scopes
+      }
+    )
+
+    redirect(conn, to: after_sign_in_path(conn))
+  end
+
+  @impl BorutaIdentity.Accounts.ConsentApplication
+  def consent_failed(%Plug.Conn{query_params: query_params} = conn, changeset) do
+    message = ErrorHelpers.error_messages(changeset) |> Enum.join(", ")
+    request = query_params["request"]
+    client_id = client_id_from_request(conn)
+    current_user = conn.assigns[:current_user]
+
+    :telemetry.execute(
+      [:authorization, :consent, :failure],
+      %{},
+      %{
+        client_id: client_id,
+        sub: current_user.uid,
+        provider: current_user.provider,
+        scopes: Ecto.Changeset.get_field(changeset, :scopes),
+        message: message
+      }
+    )
+
+    conn
+    |> put_flash(:error, message)
+    |> redirect(to: Routes.user_session_path(conn, :new, %{request: request}))
   end
 end
