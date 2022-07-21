@@ -2,9 +2,13 @@
   <div class="dashboard">
     <div class="container">
       <GatewayRequests />
-      <h2>Logs</h2>
+      <h2>Request logs</h2>
       <div class="ui logs segment">
-        <pre>{{ logs }}</pre>
+        <pre>{{ requestLogs }}</pre>
+      </div>
+      <h2>Business logs</h2>
+      <div class="ui logs segment">
+        <pre>{{ businessLogs }}</pre>
       </div>
     </div>
   </div>
@@ -14,6 +18,9 @@
 import Logs from '../services/logs.service'
 import GatewayRequests from '../components/GatewayRequests.vue'
 
+const REQUEST_REGEX = /([^\s]+) request_id=(\w+) \[info\] (\w+) (\w+) ([^\s]+) - (\w+) (\d{3}) in (\d+)(\w{2})/
+const BUSINESS_REGEX = /([^\s]+) request_id=(\w+) \[info\] (\w+) (\w+) - (\w+)( (\w+)=((\".+\")|([^\s]+)))+/
+
 export default {
   name: 'home',
   components: {
@@ -21,7 +28,9 @@ export default {
   },
   data() {
     return {
-      logs: ''
+      // logs: '',
+      requestLogs: '',
+      businessLogs: ''
     }
   },
   async mounted() {
@@ -32,7 +41,13 @@ export default {
 
       stream.read().then(({ done, value }) => {
         // decode Uint8Array to utf-8 string
-        this.logs += new TextDecoder().decode(value)
+        const data = new TextDecoder().decode(value)
+
+        // this.logs += data
+        data.split('\n').map(log => {
+          if (log.match(REQUEST_REGEX)) this.requestLogs += `${log}\n`
+          if (log.match(BUSINESS_REGEX)) this.businessLogs += `${log}\n`
+        })
 
         if (done) {
           stream.cancel()
@@ -54,7 +69,7 @@ export default {
     overflow: hidden;
     overflow-x: scroll;
     overflow-y: scroll;
-    max-height: 60vh;
+    max-height: 30vh;
   }
 }
 </style>

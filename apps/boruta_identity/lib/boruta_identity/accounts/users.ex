@@ -98,6 +98,9 @@ defmodule BorutaIdentity.Accounts.Users do
     |> Enum.map(fn user_scope ->
       Enum.find(scopes, fn %{id: id} -> id == user_scope.scope_id end)
     end)
-    |> Enum.map(fn %{id: id, name: name} -> %Scope{id: id, name: name} end)
+    |> Enum.flat_map(fn
+      %{id: id, name: name} -> [%Scope{id: id, name: name}]
+      _ -> []
+    end)
   end
 end
