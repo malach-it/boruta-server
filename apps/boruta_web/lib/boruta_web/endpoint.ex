@@ -40,7 +40,12 @@ defmodule BorutaWeb.Endpoint do
   plug Plug.Session, @session_options
   plug BorutaWeb.Router
 
-  def log_level(%{path_info: ["healthcheck" | _]}), do: false
   def log_level(%{private: %{BorutaIdentityWeb.Router => {["accounts"], _}}}), do: false # logs are handled by boruta_identity
-  def log_level(_), do: :info
+  def log_level(%{path_info: ["healthcheck" | _]}), do: false
+  def log_level(%{path_info: path_info}) do
+    case Enum.member?(path_info, "images") do
+      true -> false
+      false -> :info
+    end
+  end
 end
