@@ -3,20 +3,29 @@
     <div class="container">
     <div class="ui segment">
       <h2>Requests</h2>
+      <div class="ui requests form">
+        <div class="field">
+          <label>Application</label>
+          <select @change="filter()" v-model="requestsFilter.application">
+            <option value=''>All applications</option>
+            <option :value="application" v-for="application in requestsFiltersData.applications">{{ application }}</option>
+          </select>
+        </div>
+      </div>
       <div class="ui stackable grid">
         <div class="ten wide request-times column">
-          <LineChart :chartData="requestsPerMinute" :options="requestsPerMinuteOptions" height="500" />
+          <LineChart :chartData="requestsPerMinute" :options="requestsPerMinuteOptions" height="500" :key="graphRerenders" />
         </div>
         <div class="six wide status-codes column">
-          <PieChart :chart-data="statusCodes" :options="statusCodesOptions" />
+          <PieChart :chart-data="statusCodes" :options="statusCodesOptions" :key="graphRerenders" />
         </div>
         <div class="sixteen wide request-times column">
-          <LineChart :chartData="requestTimes" :options="requestTimesOptions" height="500" />
+          <LineChart :chartData="requestTimes" :options="requestTimesOptions" height="500" :key="graphRerenders" />
         </div>
       </div>
       <h3>Log trail</h3>
       <div class="ui logs segment">
-        <pre>{{ requestLogs.join('\n') }}</pre>
+        <pre>{{ (filteredRequestLogs || requestLogs).join('\n') }}</pre>
       </div>
       </div>
       <h2>Business logs</h2>
@@ -47,6 +56,13 @@ export default {
       // logs: '',
       requestLogs: [],
       businessLogs: '',
+      graphRerenders: 0,
+      requestsFiltersData: {
+        applications: []
+      },
+      requestsFilter: {
+        application: ''
+      },
       requestsPerMinute: {
         labels: [],
         datasets: []
@@ -125,23 +141,10 @@ export default {
 
         // this.logs += data
         data.split('\n').map(log => {
-          const requestMatches = log.match(REQUEST_REGEX)
-          if (requestMatches) {
+          if (log.match(REQUEST_REGEX)) {
             this.requestLogs.push(`${log}`)
-            const time = new Date(requestMatches[1])
-            time.setMilliseconds(0)
-            time.setSeconds(0)
-            const application = requestMatches[3]
-            if (application == 'boruta_admin') return
-            const method = requestMatches[4]
-            const path = requestMatches[5]
-            const statusCode = parseInt(requestMatches[7])
-            const requestTime = parseInt(requestMatches[8])
-            const requestTimeUnit = requestMatches[9]
-
-            this.populateRequestsPerMinute({ time, application, method, path })
-            this.populateStatusCodes({ statusCode, application, method, path })
-            this.populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path })
+            this.importRequestFilters(log)
+            this.importRequestLog(log)
           }
           if (log.match(BUSINESS_REGEX)) this.businessLogs += `${log}\n`
         })
@@ -157,6 +160,52 @@ export default {
     read(stream)
   },
   methods: {
+    filter() {
+      this.resetGraphs()
+      this.filteredRequestLogs = this.requestLogs.filter(log => {
+        const application = log.match(REQUEST_REGEX)[3]
+
+        if (this.requestsFilter.application === '') return true
+        return application === this.requestsFilter.application
+      })
+
+      this.filteredRequestLogs.forEach(this.importRequestLog.bind(this))
+    },
+    resetGraphs() {
+      this.requestsPerMinute = { labels: [], datasets: [] }
+      this.statusCodes = { labels: [], datasets: [] }
+      this.requestTimes = { labels: [], datasets: [] }
+      this.graphRerenders += 1
+    },
+    importRequestFilters(log) {
+      const requestMatches = log.match(REQUEST_REGEX)
+      if (!requestMatches) return
+
+      const application = requestMatches[3]
+
+      if (!this.requestsFiltersData.applications.includes(application)) {
+        this.requestsFiltersData.applications.push(application)
+      }
+    },
+    importRequestLog(log) {
+      const requestMatches = log.match(REQUEST_REGEX)
+      if (!requestMatches) return
+
+      const time = new Date(requestMatches[1])
+      time.setMilliseconds(0)
+      time.setSeconds(0)
+      const application = requestMatches[3]
+      if (application == 'boruta_admin') return
+      const method = requestMatches[4]
+      const path = requestMatches[5]
+      const statusCode = parseInt(requestMatches[7])
+      const requestTime = parseInt(requestMatches[8])
+      const requestTimeUnit = requestMatches[9]
+
+      this.populateRequestsPerMinute({ time, application, method, path })
+      this.populateStatusCodes({ statusCode, application, method, path })
+      this.populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path })
+    },
     populateRequestsPerMinute({ time, application, method, path }) {
       const currentLabel = `${application} - ${method} ${path}`.substring(0, 70)
 
@@ -220,7 +269,6 @@ export default {
       nextData.splice(labels.indexOf(statusCode), 1, nextData.slice(-1)[0] + 1)
 
       dataset.data = nextData.map(value => value === 0 ? NaN : value)
-      console.log(this.statusCodes)
     },
     populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path }) {
       const currentLabel = `${application} - ${method} ${path}`.substring(0, 70)
