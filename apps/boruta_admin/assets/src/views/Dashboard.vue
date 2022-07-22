@@ -2,15 +2,19 @@
   <div class="dashboard">
     <div class="container">
     <div class="ui segment">
-      <h2>Request logs</h2>
+      <h2>Requests</h2>
       <div class="ui stackable grid">
         <div class="ten wide request-times column">
-          <LineChart :chartData="requestTimes" :options="requestTimesOptions" height="500" />
+          <LineChart :chartData="requestsPerMinute" :options="requestsPerMinuteOptions" height="500" />
         </div>
         <div class="six wide status-codes column">
           <PieChart :chart-data="statusCodes" :options="statusCodesOptions" />
         </div>
+        <div class="sixteen wide request-times column">
+          <LineChart :chartData="requestTimes" :options="requestTimesOptions" height="500" />
+        </div>
       </div>
+      <h3>Log trail</h3>
       <div class="ui logs segment">
         <pre>{{ requestLogs.join('\n') }}</pre>
       </div>
@@ -43,7 +47,7 @@ export default {
       // logs: '',
       requestLogs: [],
       businessLogs: '',
-      requestTimes: {
+      requestsPerMinute: {
         labels: [],
         datasets: []
       },
@@ -51,11 +55,19 @@ export default {
         labels: [],
         datasets: []
       },
-      requestTimesOptions: {
+      requestTimes: {
+        labels: [],
+        datasets: []
+      },
+      requestsPerMinuteOptions: {
         plugins: {
           title: {
             display: true,
             text: 'Requests per minute'
+          },
+          legend: {
+            align: 'start',
+            position: 'bottom'
           }
         },
         scales: {
@@ -71,8 +83,33 @@ export default {
       statusCodesOptions: {
         cutout: '30%',
         plugins: {
+          title: {
+            display: true,
+            text: 'Status codes'
+          },
           legend: {
             display: false
+          }
+        }
+      },
+      requestTimesOptions: {
+        plugins: {
+          title: {
+            display: true,
+            text: 'Average request time (ms)'
+          },
+          legend: {
+            align: 'start',
+            position: 'bottom'
+          }
+        },
+        scales: {
+          x: {
+            type: 'timeseries',
+            time: {
+              unit: 'hour',
+              round: true
+            }
           }
         }
       }
@@ -99,9 +136,12 @@ export default {
             const method = requestMatches[4]
             const path = requestMatches[5]
             const statusCode = parseInt(requestMatches[7])
+            const requestTime = parseInt(requestMatches[8])
+            const requestTimeUnit = requestMatches[9]
 
-            this.populateRequestTimes({ time, application, method, path })
+            this.populateRequestsPerMinute({ time, application, method, path })
             this.populateStatusCodes({ statusCode, application, method, path })
+            this.populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path })
           }
           if (log.match(BUSINESS_REGEX)) this.businessLogs += `${log}\n`
         })
@@ -117,16 +157,16 @@ export default {
     read(stream)
   },
   methods: {
-    populateRequestTimes({ time, application, method, path }) {
+    populateRequestsPerMinute({ time, application, method, path }) {
       const currentLabel = `${application} - ${method} ${path}`.substring(0, 70)
 
-      const labels = this.requestTimes.labels
+      const labels = this.requestsPerMinute.labels
       const lastLabel = labels.slice(-1)[0]
       if (!lastLabel || !(lastLabel.getTime() == time.getTime())) {
         labels.push(time)
       }
 
-      let dataset = this.requestTimes.datasets.find(({ label }) => {
+      let dataset = this.requestsPerMinute.datasets.find(({ label }) => {
         return label === currentLabel
       })
       if (!dataset) {
@@ -138,7 +178,7 @@ export default {
           lineTension: 0,
           data: null
         }
-        this.requestTimes.datasets.push(dataset)
+        this.requestsPerMinute.datasets.push(dataset)
       }
 
       const currentData = dataset.data || new Array()
@@ -181,6 +221,45 @@ export default {
 
       dataset.data = nextData.map(value => value === 0 ? NaN : value)
       console.log(this.statusCodes)
+    },
+    populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path }) {
+      const currentLabel = `${application} - ${method} ${path}`.substring(0, 70)
+
+      const labels = this.requestTimes.labels
+      const lastLabel = labels.slice(-1)[0]
+      if (!lastLabel || !(lastLabel.getTime() == time.getTime())) {
+        labels.push(time)
+      }
+
+      let dataset = this.requestTimes.datasets.find(({ label }) => {
+        return label === currentLabel
+      })
+      if (!dataset) {
+        dataset = {
+          label: currentLabel,
+          borderColor: stringToColor(currentLabel),
+          backgroundColor: stringToColor(currentLabel),
+          fill: false,
+          lineTension: 0,
+          data: null
+        }
+        this.requestTimes.datasets.push(dataset)
+      }
+
+      const currentData = dataset.data || new Array()
+      const nextData = new Array(labels.length)
+      for (let i = 0; i < nextData.length; i++) {
+        nextData[i] = currentData[i] || 0
+      }
+      let requestTimeMilliseconds
+      if (requestTimeUnit === 'ms') {
+        requestTimeMilliseconds = requestTime
+      } else if (requestTimeUnit === 'µs') {
+        requestTimeMilliseconds = requestTime / 1000
+      }
+      nextData.splice(-1, 1, (nextData.slice(-1)[0] + requestTimeMilliseconds) / 2)
+
+      dataset.data = nextData.map(value => value === 0 ? NaN : value)
     }
   }
 }
