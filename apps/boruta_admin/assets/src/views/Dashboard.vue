@@ -1,14 +1,19 @@
 <template>
   <div class="dashboard">
     <div class="container">
+    <div class="ui segment">
       <h2>Request logs</h2>
+      <div class="ui stackable grid">
+        <div class="ten wide request-times column">
+          <LineChart :chartData="requestTimes" :options="requestTimesOptions" height="500" />
+        </div>
+        <div class="six wide status-codes column">
+          <PieChart :chart-data="statusCodes" :options="statusCodesOptions" />
+        </div>
+      </div>
       <div class="ui logs segment">
         <pre>{{ requestLogs.join('\n') }}</pre>
       </div>
-      <div class="ui one column stackable grid">
-        <div class="column request-time">
-          <LineChart :chartData="requestTimes" :options="requestTimesOptions" height="500" />
-        </div>
       </div>
       <h2>Business logs</h2>
       <div class="ui logs segment">
@@ -19,7 +24,8 @@
 </template>
 
 <script>
-import { LineChart } from "vue-chart-3";
+import { LineChart, PieChart } from "vue-chart-3"
+import 'chartjs-adapter-moment'
 import Logs from '../services/logs.service'
 import GatewayRequests from '../components/GatewayRequests.vue'
 
@@ -29,7 +35,8 @@ const BUSINESS_REGEX = /(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=(\w+) \[info\] (\
 export default {
   name: 'home',
   components: {
-    LineChart
+    LineChart,
+    PieChart
   },
   data() {
     return {
@@ -37,6 +44,10 @@ export default {
       requestLogs: [],
       businessLogs: '',
       requestTimes: {
+        labels: [],
+        datasets: []
+      },
+      statusCodes: {
         labels: [],
         datasets: []
       },
@@ -48,7 +59,19 @@ export default {
           }
         },
         scales: {
-          xAxis: {
+          x: {
+            type: 'timeseries',
+            time: {
+              unit: 'hour',
+              round: true
+            }
+          }
+        }
+      },
+      statusCodesOptions: {
+        cutout: '30%',
+        plugins: {
+          legend: {
             display: false
           }
         }
@@ -75,37 +98,10 @@ export default {
             if (application == 'boruta_admin') return
             const method = requestMatches[4]
             const path = requestMatches[5]
+            const statusCode = parseInt(requestMatches[7])
 
-            const currentLabel = `${application} - ${method} ${path}`
-
-            const labels = this.requestTimes.labels
-            const lastLabel = labels.slice(-1)[0]
-            if (!lastLabel || !(lastLabel.getTime() == time.getTime())) {
-              labels.push(time)
-            }
-
-            let dataset = this.requestTimes.datasets.find(({ label }) => {
-              return label === currentLabel
-            })
-            if (!dataset) {
-              dataset = {
-                label: currentLabel,
-                borderColor: stringToColor(currentLabel),
-                fill: false,
-                lineTension: 0,
-                data: null
-              }
-              this.requestTimes.datasets.push(dataset)
-            }
-
-            const currentData = dataset.data || new Array()
-            const nextData = new Array(labels.length)
-            for (let i = 0; i < nextData.length; i++) {
-              nextData[i] = currentData[i] || 0
-            }
-            nextData.splice(-1, 1, nextData.slice(-1)[0] + 1)
-
-            dataset.data = nextData.map(value => value === 0 ? NaN : value)
+            this.populateRequestTimes({ time, application, method, path })
+            this.populateStatusCodes({ statusCode, application, method, path })
           }
           if (log.match(BUSINESS_REGEX)) this.businessLogs += `${log}\n`
         })
@@ -119,6 +115,73 @@ export default {
     }
 
     read(stream)
+  },
+  methods: {
+    populateRequestTimes({ time, application, method, path }) {
+      const currentLabel = `${application} - ${method} ${path}`.substring(0, 70)
+
+      const labels = this.requestTimes.labels
+      const lastLabel = labels.slice(-1)[0]
+      if (!lastLabel || !(lastLabel.getTime() == time.getTime())) {
+        labels.push(time)
+      }
+
+      let dataset = this.requestTimes.datasets.find(({ label }) => {
+        return label === currentLabel
+      })
+      if (!dataset) {
+        dataset = {
+          label: currentLabel,
+          borderColor: stringToColor(currentLabel),
+          backgroundColor: stringToColor(currentLabel),
+          fill: false,
+          lineTension: 0,
+          data: null
+        }
+        this.requestTimes.datasets.push(dataset)
+      }
+
+      const currentData = dataset.data || new Array()
+      const nextData = new Array(labels.length)
+      for (let i = 0; i < nextData.length; i++) {
+        nextData[i] = currentData[i] || 0
+      }
+      nextData.splice(-1, 1, nextData.slice(-1)[0] + 1)
+
+      dataset.data = nextData.map(value => value === 0 ? NaN : value)
+    },
+    populateStatusCodes({ statusCode, application, method, path }) {
+      const currentLabel = statusCode
+
+      const label = statusCode
+      const labels = this.statusCodes.labels
+      if (!labels.includes(currentLabel)) {
+        labels.push(label)
+      }
+
+      const currentDatasetLabel = `${application} - ${method} ${path}`.substring(0, 70)
+      let dataset = this.statusCodes.datasets.find(({ label }) => {
+        return label === currentDatasetLabel
+      })
+      if (!dataset) {
+        dataset = {
+          label: currentDatasetLabel,
+          backgroundColor: stringToColor(currentDatasetLabel),
+          data: null
+        }
+        this.statusCodes.datasets.push(dataset)
+      }
+
+      const currentData = dataset.data || new Array()
+      const nextData = new Array(labels.length)
+      for (let i = 0; i < nextData.length; i++) {
+        nextData[i] = currentData[i] || 0
+      }
+      nextData.splice(labels.indexOf(statusCode), 1, nextData.slice(-1)[0] + 1)
+
+      dataset.data = nextData.map(value => value === 0 ? NaN : value)
+      console.log(this.statusCodes)
+    }
   }
 }
 
@@ -144,6 +207,11 @@ function stringToColor(str) {
     overflow-x: scroll;
     overflow-y: scroll;
     max-height: 30vh;
+  }
+  .status-codes {
+    display: flex!important;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>
