@@ -123,7 +123,7 @@ defmodule BorutaIdentity.Logger do
       [
         "authentication", ?\s,
         "log_in", " - ",
-        "success", ?\s,
+        "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
         log_attribute("provider", provider)
@@ -176,7 +176,7 @@ defmodule BorutaIdentity.Logger do
       [
         "registration", ?\s,
         "create", " - ",
-        "success", ?\s,
+        "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
         log_attribute("provider", provider),
@@ -197,7 +197,7 @@ defmodule BorutaIdentity.Logger do
       [
         "registration", ?\s,
         "create", " - ",
-        "failure", ?\s,
+        "failure",
         log_attribute("client_id", client_id),
         log_attribute("message", ~s{"#{message}"})
       ]
@@ -214,7 +214,7 @@ defmodule BorutaIdentity.Logger do
       [
         "registration", ?\s,
         "confirm", " - ",
-        "success", ?\s,
+        "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
         log_attribute("provider", provider),
@@ -233,7 +233,7 @@ defmodule BorutaIdentity.Logger do
       [
         "registration", ?\s,
         "confirm", " - ",
-        "failure", ?\s,
+        "failure",
         log_attribute("client_id", client_id),
         log_attribute("message", ~s{"#{message}"}),
         log_attribute("token", token)
@@ -251,7 +251,7 @@ defmodule BorutaIdentity.Logger do
       [
         "registration", ?\s,
         "update", " - ",
-        "success", ?\s,
+        "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
         log_attribute("provider", provider)
@@ -269,7 +269,7 @@ defmodule BorutaIdentity.Logger do
       [
         "registration", ?\s,
         "update", " - ",
-        "failure", ?\s,
+        "failure",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
         log_attribute("provider", provider),
@@ -290,7 +290,7 @@ defmodule BorutaIdentity.Logger do
       [
         "registration", ?\s,
         "update", " - ",
-        "failure", ?\s,
+        "failure",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
         log_attribute("provider", provider),
@@ -309,7 +309,7 @@ defmodule BorutaIdentity.Logger do
       [
         "authorization", ?\s,
         "consent", " - ",
-        "success", ?\s,
+        "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
         log_attribute("provider", provider),
@@ -328,7 +328,7 @@ defmodule BorutaIdentity.Logger do
       [
         "authorization", ?\s,
         "consent", " - ",
-        "success", ?\s,
+        "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
         log_attribute("provider", provider),
