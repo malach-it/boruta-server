@@ -79,7 +79,7 @@ export default {
       let lastPage = firstPage + 2
       if (lastPage > this.totalPages) {
         lastPage = this.totalPages
-        firstPage = lastPage - 2
+        firstPage = lastPage - 2 < 1 ? 1 : lastPage - 2
       }
 
       for (let i = firstPage; i <= lastPage; i++) { meanPages.push(i) }
