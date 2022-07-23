@@ -11,6 +11,13 @@
             <option :value="application" v-for="application in requestsFiltersData.applications">{{ application }}</option>
           </select>
         </div>
+        <div class="field">
+          <label>Request label</label>
+          <select @change="filter()" v-model="requestsFilter.requestLabel">
+            <option value=''>All request labels</option>
+            <option :value="requestLabel" v-for="requestLabel in requestsFiltersData.requestLabels">{{ requestLabel }}</option>
+          </select>
+        </div>
       </div>
       <div class="ui stackable grid">
         <div class="ten wide request-times column">
@@ -58,10 +65,12 @@ export default {
       businessLogs: '',
       graphRerenders: 0,
       requestsFiltersData: {
-        applications: []
+        applications: [],
+        requestLabels: []
       },
       requestsFilter: {
-        application: ''
+        application: '',
+        requestLabel: ''
       },
       requestsPerMinute: {
         labels: [],
@@ -163,10 +172,28 @@ export default {
     filter() {
       this.resetGraphs()
       this.filteredRequestLogs = this.requestLogs.filter(log => {
-        const application = log.match(REQUEST_REGEX)[3]
+        const requestMatches = log.match(REQUEST_REGEX)
+        if (!requestMatches) return
 
-        if (this.requestsFilter.application === '') return true
-        return application === this.requestsFilter.application
+        const application = requestMatches[3]
+        let isApplicationFiltered = false
+        if (this.requestsFilter.application === '') {
+          isApplicationFiltered = false
+        } else {
+          isApplicationFiltered = (this.requestsFilter.application !== application)
+        }
+
+        const method = requestMatches[4]
+        const path = requestMatches[5]
+        const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
+        let isRequestLabelFiltered = false
+        if (this.requestsFilter.requestLabel === '') {
+          isRequestLabelFiltered = false
+        } else {
+          isRequestLabelFiltered = (this.requestsFilter.requestLabel !== requestLabel)
+        }
+
+        return !(isApplicationFiltered || isRequestLabelFiltered)
       })
 
       this.filteredRequestLogs.forEach(this.importRequestLog.bind(this))
@@ -185,6 +212,14 @@ export default {
 
       if (!this.requestsFiltersData.applications.includes(application)) {
         this.requestsFiltersData.applications.push(application)
+      }
+
+      const method = requestMatches[4]
+      const path = requestMatches[5]
+      const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
+
+      if (!this.requestsFiltersData.requestLabels.includes(requestLabel)) {
+        this.requestsFiltersData.requestLabels.push(requestLabel)
       }
     },
     importRequestLog(log) {
