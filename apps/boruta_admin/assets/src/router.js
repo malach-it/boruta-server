@@ -50,6 +50,8 @@ import EditForbiddenTemplate from './views/Configuration/EditForbiddenTemplate.v
 import EditInternalServerErrorTemplate from './views/Configuration/EditInternalServerErrorTemplate.vue'
 
 import Dashboard from './views/Dashboard.vue'
+import Requests from './views/Dashboard/Requests.vue'
+import BusinessEvents from './views/Dashboard/BusinessEvents.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -80,7 +82,19 @@ const router = createRouter({
         }, {
           path: '/dashboard',
           name: 'dashboard',
-          component: Dashboard
+          component: Dashboard,
+          redirect: '/dashboard/requests',
+          children: [
+            {
+              path: 'requests',
+              name: 'request-logs',
+              component: Requests
+            }, {
+              path: 'business-events',
+              name: 'business-event-logs',
+              component: BusinessEvents
+            }
+          ]
         }, {
           path: '/identity-providers',
           component: IdentityProviders,

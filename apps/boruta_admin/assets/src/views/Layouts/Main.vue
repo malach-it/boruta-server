@@ -12,6 +12,18 @@
                 <i class="chart area icon"></i>
                 <span>Dashboard</span>
               </a>
+              <div class="dropdown">
+                <div class="subitem">
+                  <router-link :to="{ name: 'request-logs' }">
+                    <span>Requests</span>
+                  </router-link>
+                </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'business-event-logs' }">
+                    <span>Business events</span>
+                  </router-link>
+                </div>
+              </div>
             </div>
           </router-link>
           <router-link
