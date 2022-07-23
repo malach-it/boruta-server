@@ -389,7 +389,7 @@ export default {
       } else if (requestTimeUnit === 'µs') {
         requestTimeMilliseconds = requestTime / 1000
       }
-      nextData.splice(-1, 1, (nextData.slice(-1)[0] + requestTimeMilliseconds) / 2)
+      nextData.splice(-1, 1, nextData.slice(-1)[0] === 0 ? requestTimeMilliseconds : (nextData.slice(-1)[0] + requestTimeMilliseconds) / 2)
 
       dataset.data = nextData.map(value => value === 0 ? NaN : value)
     }

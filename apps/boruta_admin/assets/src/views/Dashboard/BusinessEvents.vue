@@ -18,6 +18,17 @@
         </div>
       </div>
       <div class="ui segment">
+        <div class="ui requests form">
+          <div class="ui stackable grid">
+            <div class="ten wide filter-form column">
+            </div>
+            <div class="six wide log-count column">
+              <div class="counts">
+                <label>Log count <span>{{ logCount }}</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
         <h3>Log trail</h3>
         <div class="ui logs segment">
           <pre>{{ (businessEventLogs).join('\n') }}</pre>
@@ -42,6 +53,11 @@ export default {
         startAt: this.$route.query.startAt || moment().startOf('day').format("yyyy-MM-DDTHH:mm"),
         endAt: this.$route.query.endAt || moment().endOf('day').format("yyyy-MM-DDTHH:mm"),
       }
+    }
+  },
+  computed: {
+    logCount() {
+      return this.businessEventLogs.length
     }
   },
   async mounted() {
@@ -102,6 +118,26 @@ export default {
   .dates.form {
     button {
       font-size: 1.08rem!important;
+    }
+  }
+  .log-count {
+    display: flex!important;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    .counts {
+      padding: 1rem;
+      text-align: center;
+    }
+    label {
+      display: block;
+      font-size: 1.3rem;
+      margin: .5rem;
+      span {
+        font-weight: bold;
+        display: block;
+        font-size: 1.5rem;
+      }
     }
   }
 }
