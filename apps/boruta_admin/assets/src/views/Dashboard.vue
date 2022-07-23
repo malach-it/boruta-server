@@ -1,13 +1,27 @@
 <template>
   <div class="dashboard">
     <div class="container">
+    <div class="ui dates form">
+      <div class="ui stackable grid">
+        <div class="four wide request-times column">
+        </div>
+        <div class="five wide request-times column">
+          <input type="datetime-local" v-model="requestsFilter.startAt" />
+        </div>
+        <div class="five wide request-times column">
+          <input type="datetime-local" v-model="requestsFilter.endAt" />
+        </div>
+        <div class="two wide request-times column">
+          <button class="ui fluid blue button">Filter</button>
+        </div>
+      </div>
+    </div>
     <div class="ui segment">
       <h2>Requests</h2>
       <div class="ui requests form">
         <div class="field">
           <label>Application</label>
           <select @change="filter()" v-model="requestsFilter.application">
-            <option value=''>All applications</option>
             <option :value="application" v-for="application in requestsFiltersData.applications">{{ application }}</option>
           </select>
         </div>
@@ -45,6 +59,7 @@
 
 <script>
 import { LineChart, PieChart } from "vue-chart-3"
+import moment from 'moment'
 import 'chartjs-adapter-moment'
 import Logs from '../services/logs.service'
 import GatewayRequests from '../components/GatewayRequests.vue'
@@ -69,7 +84,9 @@ export default {
         requestLabels: []
       },
       requestsFilter: {
-        application: this.$route.query.application || '',
+        startAt: this.$route.query.startAt || moment().startOf('day').format("yyyy-MM-DDTHH:mm"),
+        endAt: this.$route.query.endAt || moment().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        application: this.$route.query.application || 'boruta_web',
         requestLabel: this.$route.query.requestLabel || ''
       },
       requestsPerMinute: {
@@ -141,6 +158,7 @@ export default {
     }
   },
   async mounted() {
+    this.resetFilters()
     const stream = await Logs.stream()
 
     const read = (stream) => {
@@ -152,14 +170,12 @@ export default {
         data.split('\n').map(log => {
           if (log.match(REQUEST_REGEX)) {
             this.requestLogs.push(`${log}`)
-            this.importRequestFilters(log)
             this.importRequestLog(log)
           }
           if (log.match(BUSINESS_REGEX)) this.businessLogs += `${log}\n`
         })
 
         if (done) {
-          this.filter()
           stream.cancel()
           } else {
           read(stream)
@@ -172,38 +188,20 @@ export default {
   methods: {
     filter() {
       this.resetGraphs()
-      this.filteredRequestLogs = this.requestLogs.filter(log => {
-        const requestMatches = log.match(REQUEST_REGEX)
-        if (!requestMatches) return
-
-        const application = requestMatches[3]
-        let isApplicationFiltered = false
-        if (this.requestsFilter.application === '') {
-          isApplicationFiltered = false
-        } else {
-          isApplicationFiltered = (this.requestsFilter.application !== application)
-        }
-
-        const method = requestMatches[4]
-        const path = requestMatches[5]
-        const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
-        let isRequestLabelFiltered = false
-        if (this.requestsFilter.requestLabel === '') {
-          isRequestLabelFiltered = false
-        } else {
-          isRequestLabelFiltered = (this.requestsFilter.requestLabel !== requestLabel)
-        }
-
-        return !(isApplicationFiltered || isRequestLabelFiltered)
-      })
-
-      this.filteredRequestLogs.forEach(this.importRequestLog.bind(this))
+      this.resetFilters()
+      this.requestLogs.map(this.importRequestLog.bind(this))
     },
     resetGraphs() {
       this.requestsPerMinute = { labels: [], datasets: [] }
       this.statusCodes = { labels: [], datasets: [] }
       this.requestTimes = { labels: [], datasets: [] }
       this.graphRerenders += 1
+    },
+    resetFilters() {
+      this.requestsFiltersData.requestLabels = []
+      if (!this.requestsFilter.requestLabel.match(this.requestsFilter.application)) {
+        this.requestsFilter.requestLabel = ''
+      }
     },
     importRequestFilters(log) {
       const requestMatches = log.match(REQUEST_REGEX)
@@ -214,7 +212,12 @@ export default {
       if (!this.requestsFiltersData.applications.includes(application)) {
         this.requestsFiltersData.applications.push(application)
       }
+    },
+    importRequestLabels(log) {
+      const requestMatches = log.match(REQUEST_REGEX)
+      if (!requestMatches) return
 
+      const application = requestMatches[3]
       const method = requestMatches[4]
       const path = requestMatches[5]
       const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
@@ -226,21 +229,21 @@ export default {
     importRequestLog(log) {
       const requestMatches = log.match(REQUEST_REGEX)
       if (!requestMatches) return
+      this.importRequestFilters(log)
+
+      if (this.isLogApplicationFiltered(log)) {
+        return
+      } else {
+        this.importRequestLabels(log)
+      }
+      if (this.isLogRequestLabelFiltered(log)) {
+        return
+      }
 
       const time = new Date(requestMatches[1])
       time.setMilliseconds(0)
       time.setSeconds(0)
       const application = requestMatches[3]
-      if (application === 'boruta_admin' &&
-        !(
-          (
-            this.requestsFilter.application === 'boruta_admin' &&
-              (this.requestsFilter.requestLabel.match(/boruta_admin/) ||
-                this.requestsFilter.requestLabel == '')
-          ) || // application boruta_admin selected
-            this.requestsFilter.requestLabel.match(/boruta_admin/) // requestLabel from boruta_admin
-        )
-      ) return
       const method = requestMatches[4]
       const path = requestMatches[5]
       const statusCode = parseInt(requestMatches[7])
@@ -250,6 +253,29 @@ export default {
       this.populateRequestsPerMinute({ time, application, method, path })
       this.populateStatusCodes({ statusCode, application, method, path })
       this.populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path })
+    },
+    isLogApplicationFiltered(log) {
+      const requestMatches = log.match(REQUEST_REGEX)
+      if (!requestMatches) return
+
+      const application = requestMatches[3]
+      return (this.requestsFilter.application !== application)
+    },
+    isLogRequestLabelFiltered(log) {
+      const requestMatches = log.match(REQUEST_REGEX)
+      if (!requestMatches) return
+
+      const application = requestMatches[3]
+
+      const method = requestMatches[4]
+      const path = requestMatches[5]
+      const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
+      if (this.requestsFilter.requestLabel === '') {
+        return false
+      } else {
+        return (this.requestsFilter.requestLabel !== requestLabel)
+      }
+
     },
     populateRequestsPerMinute({ time, application, method, path }) {
       const currentLabel = `${application} - ${method} ${path}`.substring(0, 70)
@@ -357,8 +383,8 @@ export default {
   },
   watch: {
     requestsFilter: {
-      handler({ application, requestLabel }) {
-        const query = {}
+      handler({ startAt, endAt, application, requestLabel }) {
+        const query = { startAt, endAt }
 
         if (application !== '') query.application = application
         if (requestLabel !== '') query.requestLabel = requestLabel
@@ -370,6 +396,8 @@ export default {
     $route: {
       handler(route) {
         this.requestsFilter = {
+          startAt: route.query.startAt || moment().startOf('day').format("yyyy-MM-DDTHH:mm"),
+          endAt: route.query.endAt || moment().endOf('day').format("yyyy-MM-DDTHH:mm"),
           application: route.query.application || '',
           requestLabel: route.query.requestLabel || ''
         }
@@ -402,6 +430,11 @@ function stringToColor(str) {
     overflow-x: scroll;
     overflow-y: scroll;
     max-height: 30vh;
+  }
+  .dates.form {
+    button {
+      font-size: 1.08rem!important;
+    }
   }
   .status-codes {
     display: flex!important;
