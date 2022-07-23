@@ -82,15 +82,17 @@ class Oauth {
     })
   }
 
-  storeLocationName (name, params) {
+  storeLocationName ({ name, params, query }) {
     localStorage.setItem('stored_location_name', name)
     localStorage.setItem('stored_location_params', JSON.stringify(params))
+    localStorage.setItem('stored_location_query', JSON.stringify(query))
   }
 
   get storedLocation () {
     const name = localStorage.getItem('stored_location_name') || 'home'
     const params = JSON.parse(localStorage.getItem('stored_location_params') || '{}')
-    return { name, params }
+    const query = JSON.parse(localStorage.getItem('stored_location_query') || '{}')
+    return { name, params, query }
   }
 
   get accessToken () {

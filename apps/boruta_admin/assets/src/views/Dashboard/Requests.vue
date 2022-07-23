@@ -402,7 +402,7 @@ export default {
         if (application !== '') query.application = application
         if (requestLabel !== '') query.requestLabel = requestLabel
 
-        this.$router.push({path: this.$route.path, query });
+        this.$router.push({path: this.$route.path, query })
       },
       deep: true
     },

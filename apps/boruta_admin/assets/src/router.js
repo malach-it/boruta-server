@@ -296,7 +296,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   if (to.name === 'oauth-callback') return next()
 
-  if (to.name) oauth.storeLocationName(to.name, to.params)
+  if (to.name) oauth.storeLocationName(to)
 
   if (!oauth.isAuthenticated) {
     // TODO find a way to remove event listener once triggered
