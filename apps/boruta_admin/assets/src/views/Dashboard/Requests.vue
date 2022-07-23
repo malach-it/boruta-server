@@ -240,7 +240,7 @@ export default {
       const application = requestMatches[3]
       const method = requestMatches[4]
       const path = requestMatches[5]
-      const statusCode = parseInt(requestMatches[7])
+      const statusCode = requestMatches[7]
       const requestTime = parseInt(requestMatches[8])
       const requestTimeUnit = requestMatches[9]
 
@@ -350,7 +350,7 @@ export default {
       for (let i = 0; i < labels.length; i++) {
         nextData.push(currentData[i] || 0)
       }
-      nextData.splice(labels.indexOf(statusCode), 1, nextData.slice(-1)[0] + 1)
+      nextData.splice(labels.indexOf(statusCode), 1, nextData[labels.indexOf(statusCode)] + 1)
 
       dataset.data = nextData.map(value => value === 0 ? NaN : value)
     },
