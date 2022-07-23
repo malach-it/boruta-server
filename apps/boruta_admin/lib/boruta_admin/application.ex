@@ -9,7 +9,6 @@ defmodule BorutaAdmin.Application do
     children = [
       BorutaAdmin.Repo,
       BorutaAdminWeb.Telemetry,
-      BorutaAdminWeb.Metrics,
       {Phoenix.PubSub, name: BorutaAdmin.PubSub},
       BorutaAdminWeb.Endpoint
     ]
