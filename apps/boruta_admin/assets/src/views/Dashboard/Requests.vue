@@ -408,6 +408,7 @@ export default {
     },
     $route: {
       handler(route) {
+        if (route.name !== 'request-logs') return
         this.requestsFilter = {
           startAt: route.query.startAt || moment().startOf('day').format("yyyy-MM-DDTHH:mm"),
           endAt: route.query.endAt || moment().endOf('day').format("yyyy-MM-DDTHH:mm"),
