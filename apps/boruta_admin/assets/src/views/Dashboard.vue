@@ -230,7 +230,17 @@ export default {
       time.setMilliseconds(0)
       time.setSeconds(0)
       const application = requestMatches[3]
-      if (application == 'boruta_admin') return
+      console.log(this.requestsFilter)
+      if (application === 'boruta_admin' &&
+        !(
+          (
+            this.requestsFilter.application === 'boruta_admin' &&
+              (this.requestsFilter.requestLabel.match(/boruta_admin/) ||
+                this.requestsFilter.requestLabel == '')
+          ) || // application boruta_admin selected
+            this.requestsFilter.requestLabel.match(/boruta_admin/) // requestLabel from boruta_admin
+        )
+      ) return
       const method = requestMatches[4]
       const path = requestMatches[5]
       const statusCode = parseInt(requestMatches[7])
