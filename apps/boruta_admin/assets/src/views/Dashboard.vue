@@ -69,8 +69,8 @@ export default {
         requestLabels: []
       },
       requestsFilter: {
-        application: '',
-        requestLabel: ''
+        application: this.$route.query.application || '',
+        requestLabel: this.$route.query.requestLabel || ''
       },
       requestsPerMinute: {
         labels: [],
@@ -159,6 +159,7 @@ export default {
         })
 
         if (done) {
+          this.filter()
           stream.cancel()
           } else {
           read(stream)
@@ -230,7 +231,6 @@ export default {
       time.setMilliseconds(0)
       time.setSeconds(0)
       const application = requestMatches[3]
-      console.log(this.requestsFilter)
       if (application === 'boruta_admin' &&
         !(
           (
@@ -353,6 +353,29 @@ export default {
       nextData.splice(-1, 1, (nextData.slice(-1)[0] + requestTimeMilliseconds) / 2)
 
       dataset.data = nextData.map(value => value === 0 ? NaN : value)
+    }
+  },
+  watch: {
+    requestsFilter: {
+      handler({ application, requestLabel }) {
+        const query = {}
+
+        if (application !== '') query.application = application
+        if (requestLabel !== '') query.requestLabel = requestLabel
+
+        this.$router.push({path: this.$route.path, query });
+      },
+      deep: true
+    },
+    $route: {
+      handler(route) {
+        this.requestsFilter = {
+          application: route.query.application || '',
+          requestLabel: route.query.requestLabel || ''
+        }
+        this.filter()
+      },
+      deep: true
     }
   }
 }
