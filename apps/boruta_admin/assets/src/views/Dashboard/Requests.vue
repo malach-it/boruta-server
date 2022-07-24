@@ -13,7 +13,7 @@
             <input type="datetime-local" v-model="requestsFilter.endAt" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button">Filter</button>
+            <button class="ui fluid blue button" @click="getLogs()">Filter</button>
           </div>
         </div>
       </div>
@@ -89,8 +89,8 @@ export default {
         requestLabels: []
       },
       requestsFilter: {
-        startAt: this.$route.query.startAt || moment().startOf('day').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        startAt: this.$route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
+        endAt: this.$route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
         application: this.$route.query.application || 'boruta_web',
         requestLabel: this.$route.query.requestLabel || ''
       },
@@ -174,10 +174,20 @@ export default {
     }
   },
   async mounted() {
-    this.resetFilters()
-    const stream = await Logs.stream()
+    this.getLogs()
+  },
+  methods: {
+    async getLogs() {
+      this.resetFilters()
+      this.resetGraphs()
+      this.requestLogs = []
+      this.filteredRequestLogs = []
+      this.stream && this.stream.cancel
+      this.stream = await Logs.stream(this.requestsFilter)
 
-    const read = (stream) => {
+      this.readLogStream(this.stream)
+    },
+    readLogStream(stream) {
       stream.read().then(({ done, value }) => {
         // decode Uint8Array to utf-8 string
         const data = new TextDecoder().decode(value)
@@ -193,14 +203,10 @@ export default {
         if (done) {
           stream.cancel()
           } else {
-          read(stream)
+          this.readLogStream(stream)
         }
       })
-    }
-
-    read(stream)
-  },
-  methods: {
+    },
     filter() {
       this.resetGraphs()
       this.resetFilters()
@@ -406,18 +412,18 @@ export default {
       },
       deep: true
     },
-    $route: {
-      handler(route) {
-        if (route.name !== 'request-logs') return
-        this.requestsFilter = {
-          startAt: route.query.startAt || moment().startOf('day').format("yyyy-MM-DDTHH:mm"),
-          endAt: route.query.endAt || moment().endOf('day').format("yyyy-MM-DDTHH:mm"),
-          application: route.query.application || 'boruta_web',
-          requestLabel: route.query.requestLabel || ''
-        }
-        this.filter()
-      },
-      deep: true
+    $route(to, from) {
+      if (to.name !== 'request-logs') return
+
+      this.requestsFilter = {
+        startAt: to.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
+        endAt: to.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        application: to.query.application || 'boruta_web',
+        requestLabel: to.query.requestLabel || ''
+      }
+
+      if (!(to.query.application === from.query.application &&
+        to.query.requestLabel === from.requestLabel)) this.filter()
     }
   }
 }

@@ -13,7 +13,7 @@
             <input type="datetime-local" v-model="requestsFilter.endAt" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button">Filter</button>
+            <button class="ui fluid blue button" @click="getLogs()">Filter</button>
           </div>
         </div>
       </div>
@@ -50,8 +50,8 @@ export default {
     return {
       businessEventLogs: [],
       requestsFilter: {
-        startAt: this.$route.query.startAt || moment().startOf('day').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        startAt: this.$route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
+        endAt: this.$route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
       }
     }
   },
@@ -61,27 +61,34 @@ export default {
     }
   },
   async mounted() {
-    const stream = await Logs.stream()
+    this.getLogs()
+  },
+  methods: {
+    async getLogs() {
+      this.businessEventLogs = []
+      this.stream && this.stream.cancel()
+      this.stream = await Logs.stream(this.requestsFilter)
 
-    const read = (stream) => {
-      stream.read().then(({ done, value }) => {
-        // decode Uint8Array to utf-8 string
-        const data = new TextDecoder().decode(value)
+      const read = (stream) => {
+        stream.read().then(({ done, value }) => {
+          // decode Uint8Array to utf-8 string
+          const data = new TextDecoder().decode(value)
 
-        // this.logs += data
-        data.split('\n').map(log => {
-          if (log.match(BUSINESS_REGEX)) this.businessEventLogs.push(`${log}`)
+          // this.logs += data
+          data.split('\n').map(log => {
+            if (log.match(BUSINESS_REGEX)) this.businessEventLogs.push(`${log}`)
+          })
+
+          if (done) {
+            stream.cancel()
+            } else {
+            read(stream)
+          }
         })
+      }
 
-        if (done) {
-          stream.cancel()
-          } else {
-          read(stream)
-        }
-      })
+      read(this.stream)
     }
-
-    read(stream)
   },
   watch: {
     requestsFilter: {
@@ -94,11 +101,12 @@ export default {
     },
     $route: {
       handler(route) {
+        if (to.name !== 'business-event-logs') return
+
         this.requestsFilter = {
-          startAt: route.query.startAt || moment().startOf('day').format("yyyy-MM-DDTHH:mm"),
-          endAt: route.query.endAt || moment().endOf('day').format("yyyy-MM-DDTHH:mm")
+          startAt: route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
+          endAt: route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm")
         }
-        // this.filter()
       },
       deep: true
     }

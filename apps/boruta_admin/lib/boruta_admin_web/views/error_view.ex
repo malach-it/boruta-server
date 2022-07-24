@@ -1,6 +1,16 @@
 defmodule BorutaAdminWeb.ErrorView do
   use BorutaAdminWeb, :view
 
+  def render("400.json", _assigns) do
+    %{
+      code: "BAD_REQUEST",
+      message: "The requested with given parameters cannot be processed.",
+      errors: %{
+        resource: ["the requested with given parameters cannot be processed."]
+      }
+    }
+  end
+
   def render("404.json", _assigns) do
     %{
       code: "NOT_FOUND",
