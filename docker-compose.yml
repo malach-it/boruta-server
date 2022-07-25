@@ -1,5 +1,8 @@
 version: "3"
 
+volumes:
+  boruta-logs:
+
 services:
   postgres:
     image: postgres:14
@@ -14,6 +17,8 @@ services:
       - "8080:8080"
       - "8081:8081"
       - "8082:8082"
+    volumes:
+      - "boruta-logs:/app/log"
     environment:
       MIX_ENV: "prod"
       SECRET_KEY_BASE: "5j5St23466R8mTvdfp67vROMqUlNfMxSGzFILSupM1ZcM+0mdql58+R+bhby9Aou"
