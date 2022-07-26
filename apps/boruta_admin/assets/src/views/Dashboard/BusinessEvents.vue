@@ -32,6 +32,7 @@
         </div>
         <div class="ui stackable grid">
           <div class="ten wide filter-form column">
+            <LineChart :chartData="businessEventCountsPerMinute" :options="businessEventCountsPerMinuteOptions" height="500" :key="graphRerenders" />
           </div>
           <div class="six wide filter-form column">
             <h3>Success counts</h3>
@@ -39,7 +40,7 @@
               <div class="item" v-for="(count, label) in counts">
                 <div class="content">
                   <div class="header">{{ count }}</div>
-                  {{ label }}
+                  <span class="count">{{ label }}</span>
                 </div>
               </div>
             </div>
@@ -56,12 +57,16 @@
 
 <script>
 import moment from 'moment'
+import { LineChart } from "vue-chart-3"
 import Logs from '../../services/logs.service'
 
 const BUSINESS_REGEX = /(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=(\w+) \[info\] (\w+) (\w+) - (\w+)( (\w+)=((\".+\")|([^\s]+)))+/
 
 export default {
   name: 'business-events',
+  components: {
+    LineChart
+  },
   data() {
     return {
       graphRenders: 0,
@@ -71,7 +76,33 @@ export default {
         startAt: this.$route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
         endAt: this.$route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
       },
-      counts: {}
+      counts: {},
+      businessEventCountsPerMinute: {
+        labels: [],
+        datasets: []
+      },
+      businessEventCountsPerMinuteOptions: {
+        animation: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Business event counts per minute'
+          },
+          legend: {
+            align: 'start',
+            position: 'bottom'
+          }
+        },
+        scales: {
+          x: {
+            type: 'timeseries',
+            time: {
+              unit: 'hour',
+              round: true
+            }
+          }
+        }
+      },
     }
   },
   computed: {
@@ -131,6 +162,7 @@ export default {
       const result = businessEventMatches[5]
 
       this.populateCounts({ domain, action, result })
+      this.populateBusinessEventCountsPerMinute({ time, domain, action })
     },
     populateCounts({ domain, action, result }) {
       if (result !== 'success') return
@@ -140,7 +172,40 @@ export default {
       this.counts[label] = this.counts[label] || 0
 
       this.counts[label] += 1
-    }
+    },
+    populateBusinessEventCountsPerMinute({ time, domain, action }) {
+      const currentLabel = `${domain} - ${action}`
+
+      const labels = this.businessEventCountsPerMinute.labels
+      const lastLabel = labels.slice(-1)[0]
+      if (!lastLabel || !(lastLabel.getTime() == time.getTime())) {
+        labels.push(time)
+      }
+
+      let dataset = this.businessEventCountsPerMinute.datasets.find(({ label }) => {
+        return label === currentLabel
+      })
+      if (!dataset) {
+        dataset = {
+          label: currentLabel,
+          borderColor: stringToColor(currentLabel),
+          backgroundColor: stringToColor(currentLabel),
+          fill: false,
+          lineTension: 0,
+          data: null
+        }
+        this.businessEventCountsPerMinute.datasets.push(dataset)
+      }
+
+      const currentData = dataset.data || new Array()
+      const nextData = new Array()
+      for (let i = 0; i < labels.length; i++) {
+        nextData.push(currentData[i] || 0)
+      }
+      nextData.splice(-1, 1, nextData.slice(-1)[0] + 1)
+
+      dataset.data = nextData.map(value => value === 0 ? NaN : value)
+    },
   },
   watch: {
     requestsFilter: {
@@ -163,6 +228,19 @@ export default {
       deep: true
     }
   }
+}
+
+function stringToColor(str) {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  let colour = '#'
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xFF
+    colour += ('00' + value.toString(16)).substr(-2)
+  }
+  return colour
 }
 </script>
 
@@ -203,7 +281,10 @@ export default {
   .business-event-counts.list {
     font-size: 1.1em;
     .header {
-      float: right;
+      position: absolute;
+    }
+    .count {
+      padding-left: 5em;
     }
   }
 }
