@@ -35,11 +35,12 @@
             <LineChart :chartData="businessEventCountsPerMinute" :options="businessEventCountsPerMinuteOptions" height="500" :key="graphRerenders" />
           </div>
           <div class="six wide filter-form column">
-            <h3>Success counts</h3>
             <div class="ui business-event-counts celled list">
-              <div class="item" v-for="(count, label) in counts">
+              <div class="item" v-for="(count, label) in counts" :key="label">
                 <div class="content">
-                  <div class="header">{{ count }}</div>
+                  <div class="header">
+                    <span v-for="(count, result) in count" :key="result" :class="result">{{ count }}</span>
+                  </div>
                   <span class="count">{{ label }}</span>
                 </div>
               </div>
@@ -165,13 +166,12 @@ export default {
       this.populateBusinessEventCountsPerMinute({ time, domain, action })
     },
     populateCounts({ domain, action, result }) {
-      if (result !== 'success') return
-
       const label = `${domain} - ${action}`
 
-      this.counts[label] = this.counts[label] || 0
+      this.counts[label] = this.counts[label] || {}
+      this.counts[label][result] = this.counts[label][result] || 0
 
-      this.counts[label] += 1
+      this.counts[label][result] += 1
     },
     populateBusinessEventCountsPerMinute({ time, domain, action }) {
       const currentLabel = `${domain} - ${action}`
@@ -281,10 +281,16 @@ function stringToColor(str) {
   .business-event-counts.list {
     font-size: 1.1em;
     .header {
-      position: absolute;
-    }
-    .count {
-      padding-left: 5em;
+      float: right;
+      span {
+        margin-right: 1em;
+        &.success {
+          color: green;
+        }
+        &.failure {
+          color: red;
+        }
+      }
     }
   }
 }
