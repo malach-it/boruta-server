@@ -25,6 +25,22 @@
             <div class="six wide log-count column">
               <div class="counts">
                 <label>Log count <span>{{ logCount }}</span></label>
+                <label>Filtered log count <span>{{ filteredLogCount }}</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ui stackable grid">
+          <div class="ten wide filter-form column">
+          </div>
+          <div class="six wide filter-form column">
+            <h3>Success counts</h3>
+            <div class="ui business-event-counts celled list">
+              <div class="item" v-for="(count, label) in counts">
+                <div class="content">
+                  <div class="header">{{ count }}</div>
+                  {{ label }}
+                </div>
               </div>
             </div>
           </div>
@@ -48,16 +64,22 @@ export default {
   name: 'business-events',
   data() {
     return {
+      graphRenders: 0,
       businessEventLogs: [],
+      filteredBusinessEventLogs: [],
       requestsFilter: {
         startAt: this.$route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
         endAt: this.$route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
-      }
+      },
+      counts: {}
     }
   },
   computed: {
     logCount() {
       return this.businessEventLogs.length
+    },
+    filteredLogCount() {
+      return (this.filteredBusinessEventLogs || this.businessEventLogs).length
     }
   },
   async mounted() {
@@ -66,28 +88,58 @@ export default {
   methods: {
     async getLogs() {
       this.businessEventLogs = []
+      this.filteredBusinessEventLogs = []
+      this.resetGraphs()
       this.stream && this.stream.cancel()
       this.stream = await Logs.stream(this.requestsFilter)
 
-      const read = (stream) => {
-        stream.read().then(({ done, value }) => {
-          // decode Uint8Array to utf-8 string
-          const data = new TextDecoder().decode(value)
+      this.readLogStream(this.stream)
+    },
+    resetGraphs() {
+      this.counts = {}
+      this.graphRerenders += 1
+    },
+    readLogStream(stream) {
+      stream.read().then(({ done, value }) => {
+        // decode Uint8Array to utf-8 string
+        const data = new TextDecoder().decode(value)
 
-          // this.logs += data
-          data.split('\n').map(log => {
-            if (log.match(BUSINESS_REGEX)) this.businessEventLogs.push(`${log}`)
-          })
-
-          if (done) {
-            stream.cancel()
-            } else {
-            read(stream)
+        // this.logs += data
+        data.split('\n').map(log => {
+          if (log.match(BUSINESS_REGEX)) {
+            this.businessEventLogs.push(`${log}`)
+            this.importBusinessEventLog(log)
           }
         })
-      }
 
-      read(this.stream)
+        if (done) {
+          stream.cancel()
+          } else {
+          this.readLogStream(stream)
+        }
+      })
+    },
+    importBusinessEventLog(log) {
+      const businessEventMatches = log.match(BUSINESS_REGEX)
+      if (!businessEventMatches) return
+
+      this.filteredBusinessEventLogs.push(log)
+
+      const time = new Date(businessEventMatches[1])
+      const domain = businessEventMatches[3]
+      const action = businessEventMatches[4]
+      const result = businessEventMatches[5]
+
+      this.populateCounts({ domain, action, result })
+    },
+    populateCounts({ domain, action, result }) {
+      if (result !== 'success') return
+
+      const label = `${domain} - ${action}`
+
+      this.counts[label] = this.counts[label] || 0
+
+      this.counts[label] += 1
     }
   },
   watch: {
@@ -146,6 +198,12 @@ export default {
         display: block;
         font-size: 1.5rem;
       }
+    }
+  }
+  .business-event-counts.list {
+    font-size: 1.1em;
+    .header {
+      float: right;
     }
   }
 }

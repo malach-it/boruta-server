@@ -187,6 +187,18 @@ export default {
 
       this.readLogStream(this.stream)
     },
+    resetFilters() {
+      this.requestsFiltersData.requestLabels = []
+      if (!this.requestsFilter.requestLabel.match(this.requestsFilter.application)) {
+        this.requestsFilter.requestLabel = ''
+      }
+    },
+    resetGraphs() {
+      this.requestsPerMinute = { labels: [], datasets: [] }
+      this.statusCodes = { labels: [], datasets: [] }
+      this.requestTimes = { labels: [], datasets: [] }
+      this.graphRerenders += 1
+    },
     readLogStream(stream) {
       stream.read().then(({ done, value }) => {
         // decode Uint8Array to utf-8 string
@@ -212,18 +224,6 @@ export default {
       this.resetFilters()
       this.filteredRequestLogs = []
       this.requestLogs.map(this.importRequestLog.bind(this))
-    },
-    resetGraphs() {
-      this.requestsPerMinute = { labels: [], datasets: [] }
-      this.statusCodes = { labels: [], datasets: [] }
-      this.requestTimes = { labels: [], datasets: [] }
-      this.graphRerenders += 1
-    },
-    resetFilters() {
-      this.requestsFiltersData.requestLabels = []
-      if (!this.requestsFilter.requestLabel.match(this.requestsFilter.application)) {
-        this.requestsFilter.requestLabel = ''
-      }
     },
     importRequestLog(log) {
       const requestMatches = log.match(REQUEST_REGEX)

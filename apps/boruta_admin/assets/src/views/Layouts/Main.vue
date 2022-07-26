@@ -568,6 +568,16 @@ export default {
   .ui.header {
     color: white;
   }
+  .ui.list {
+    &>.item .header {
+      color: white;
+    }
+    &.celled {
+      &>.item {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
   .ui.pagination.menu {
     background: #1b1c1d;
     border: 1px solid rgba(255,255,255,.08);
