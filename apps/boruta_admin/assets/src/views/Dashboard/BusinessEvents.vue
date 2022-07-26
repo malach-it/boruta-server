@@ -158,6 +158,8 @@ export default {
       this.filteredBusinessEventLogs.push(log)
 
       const time = new Date(businessEventMatches[1])
+      time.setMilliseconds(0)
+      time.setSeconds(0)
       const domain = businessEventMatches[3]
       const action = businessEventMatches[4]
       const result = businessEventMatches[5]
