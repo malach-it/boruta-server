@@ -7,10 +7,10 @@
             <h1>Business events</h1>
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="requestsFilter.startAt" />
+            <input type="datetime-local" v-model="businessEventFilter.startAt" />
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="requestsFilter.endAt" />
+            <input type="datetime-local" v-model="businessEventFilter.endAt" />
           </div>
           <div class="two wide request-times column">
             <button class="ui fluid blue button" @click="getLogs()">Filter</button>
@@ -21,6 +21,20 @@
         <div class="ui requests form">
           <div class="ui stackable grid">
             <div class="ten wide filter-form column">
+              <div class="field">
+                <label>Domain</label>
+                <select @change="filter()" v-model="businessEventFilter.domain">
+                  <option value=''>All domains</option>
+                  <option :value="domain" v-for="domain in businessEventFiltersData.domains">{{ domain }}</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Action</label>
+                <select @change="filter()" v-model="businessEventFilter.action">
+                  <option value=''>All actions</option>
+                  <option :value="action" v-for="action in businessEventFiltersData.actions">{{ action }}</option>
+                </select>
+              </div>
             </div>
             <div class="six wide log-count column">
               <div class="counts">
@@ -49,7 +63,7 @@
         </div>
         <h3>Log trail</h3>
         <div class="ui logs segment">
-          <pre>{{ (businessEventLogs).join('\n') }}</pre>
+          <pre>{{ (filteredBusinessEventLogs || businessEventLogs).join('\n') }}</pre>
         </div>
       </div>
     </div>
@@ -73,9 +87,15 @@ export default {
       graphRenders: 0,
       businessEventLogs: [],
       filteredBusinessEventLogs: [],
-      requestsFilter: {
+      businessEventFiltersData: {
+        domains: [],
+        actions: []
+      },
+      businessEventFilter: {
         startAt: this.$route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
         endAt: this.$route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        domain: this.$route.query.domain || '',
+        action: this.$route.query.action || ''
       },
       counts: {},
       businessEventCountsPerMinute: {
@@ -119,16 +139,27 @@ export default {
   },
   methods: {
     async getLogs() {
+      this.stream && this.stream.cancel()
+      this.resetFilters()
+      this.resetGraphs()
       this.businessEventLogs = []
       this.filteredBusinessEventLogs = []
-      this.resetGraphs()
-      this.stream && this.stream.cancel()
-      this.stream = await Logs.stream(this.requestsFilter)
+      this.stream = await Logs.stream(this.businessEventFilter)
 
       this.readLogStream(this.stream)
     },
+    resetFilters() {
+      this.businessEventFiltersData.actions = []
+      if (!this.businessEventFilter.action.match(this.businessEventFilter.domain)) {
+        this.businessEventFilter.action = ''
+      }
+    },
     resetGraphs() {
       this.counts = {}
+      this.businessEventCountsPerMinute = {
+        labels: [],
+        datasets: []
+      }
       this.graphRerenders += 1
     },
     readLogStream(stream) {
@@ -155,6 +186,18 @@ export default {
       const businessEventMatches = log.match(BUSINESS_REGEX)
       if (!businessEventMatches) return
 
+      this.importBusinessEventFilters(businessEventMatches)
+
+      if (this.isLogDomainFiltered(businessEventMatches)) {
+        return
+      } else {
+        this.importActions(businessEventMatches)
+      }
+
+      if (this.isLogActionFiltered(businessEventMatches)) {
+        return
+      }
+
       this.filteredBusinessEventLogs.push(log)
 
       const time = new Date(businessEventMatches[1])
@@ -166,6 +209,49 @@ export default {
 
       this.populateCounts({ domain, action, result })
       this.populateBusinessEventCountsPerMinute({ time, domain, action })
+    },
+    importBusinessEventFilters(businessEventMatches) {
+      if (!businessEventMatches) return
+
+      const domain = businessEventMatches[3]
+
+      if (!this.businessEventFiltersData.domains.includes(domain)) {
+        this.businessEventFiltersData.domains.push(domain)
+      }
+    },
+    importActions(businessEventMatches) {
+      if (!businessEventMatches) return
+
+      const domain = businessEventMatches[3]
+      const action = businessEventMatches[4]
+
+      const label = `${domain} - ${action}`
+
+      if (!this.businessEventFiltersData.actions.includes(label)) {
+        this.businessEventFiltersData.actions.push(label)
+      }
+    },
+    isLogDomainFiltered(businessEventMatches) {
+      if (!businessEventMatches) return
+
+      const domain = businessEventMatches[3]
+      if (this.businessEventFilter.domain === '') {
+        return false
+      }
+      return (this.businessEventFilter.domain !== domain)
+    },
+    isLogActionFiltered(businessEventMatches) {
+      if (!businessEventMatches) return
+
+      const domain = businessEventMatches[3]
+      const action = businessEventMatches[4]
+
+      const label = `${domain} - ${action}`
+
+      if (this.businessEventFilter.action === '') {
+        return false
+      }
+      return (this.businessEventFilter.action !== label)
     },
     populateCounts({ domain, action, result }) {
       const label = `${domain} - ${action}`
@@ -208,26 +294,37 @@ export default {
 
       dataset.data = nextData.map(value => value === 0 ? NaN : value)
     },
+    filter() {
+      this.resetGraphs()
+      this.resetFilters()
+      this.filteredBusinessEventLogs = []
+      this.businessEventLogs.map(this.importBusinessEventLog.bind(this))
+    },
   },
   watch: {
-    requestsFilter: {
-      handler({ startAt, endAt }) {
+    businessEventFilter: {
+      handler({ startAt, endAt, domain, action }) {
         const query = { startAt, endAt }
+
+        if (domain !== '') query.domain = domain
+        if (action !== '') query.action = action
 
         this.$router.push({path: this.$route.path, query });
       },
       deep: true
     },
-    $route: {
-      handler(route) {
-        if (to.name !== 'business-event-logs') return
+    $route(to, from) {
+      if (to.name !== 'business-event-logs') return
 
-        this.requestsFilter = {
-          startAt: route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
-          endAt: route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm")
-        }
-      },
-      deep: true
+      this.businessEventFilter = {
+        startAt: to.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
+        endAt: to.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        domain: to.query.domain || '',
+        action: to.query.action || ''
+      }
+
+      if (!(to.query.domain === from.query.domain &&
+        to.query.action === from.query.action)) this.filter()
     }
   }
 }
@@ -281,7 +378,7 @@ function stringToColor(str) {
     }
   }
   .business-event-counts.list {
-    font-size: 1.1em;
+    font-size: 1.2em;
     .header {
       float: right;
       span {

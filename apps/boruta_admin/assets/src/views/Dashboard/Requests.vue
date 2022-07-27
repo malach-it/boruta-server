@@ -178,11 +178,11 @@ export default {
   },
   methods: {
     async getLogs() {
+      this.stream && this.stream.cancel
       this.resetFilters()
       this.resetGraphs()
       this.requestLogs = []
       this.filteredRequestLogs = []
-      this.stream && this.stream.cancel
       this.stream = await Logs.stream(this.requestsFilter)
 
       this.readLogStream(this.stream)
@@ -218,12 +218,6 @@ export default {
           this.readLogStream(stream)
         }
       })
-    },
-    filter() {
-      this.resetGraphs()
-      this.resetFilters()
-      this.filteredRequestLogs = []
-      this.requestLogs.map(this.importRequestLog.bind(this))
     },
     importRequestLog(log) {
       const requestMatches = log.match(REQUEST_REGEX)
@@ -398,6 +392,12 @@ export default {
       nextData.splice(-1, 1, nextData.slice(-1)[0] === 0 ? requestTimeMilliseconds : (nextData.slice(-1)[0] + requestTimeMilliseconds) / 2)
 
       dataset.data = nextData.map(value => value === 0 ? NaN : value)
+    },
+    filter() {
+      this.resetGraphs()
+      this.resetFilters()
+      this.filteredRequestLogs = []
+      this.requestLogs.map(this.importRequestLog.bind(this))
     }
   },
   watch: {
@@ -423,7 +423,7 @@ export default {
       }
 
       if (!(to.query.application === from.query.application &&
-        to.query.requestLabel === from.requestLabel)) this.filter()
+        to.query.requestLabel === from.query.requestLabel)) this.filter()
     }
   }
 }
