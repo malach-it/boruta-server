@@ -202,7 +202,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   @impl Boruta.Oauth.AuthorizeApplication
   def authorize_success(%Plug.Conn{query_params: query_params} = conn, response) do
-    # TODO get client and resource_owner from response
+    # TODO get client_id, grant_type and resource_owner from response
     client_id = query_params["client_id"]
     current_user = conn.assigns[:current_user]
 
@@ -265,7 +265,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp emit_authorize_error_event(%Plug.Conn{query_params: query_params} = conn, error) do
-    # TODO get client_id from error
+    # TODO get client_id and grant_type from error
     client_id = query_params["client_id"]
     current_user = conn.assigns[:current_user]
 

@@ -26,6 +26,20 @@ defmodule BorutaWeb.Logger do
     )
 
     :telemetry.attach(
+      :authorization_token_success,
+      [:authorization, :token, :success],
+      &__MODULE__.authorization_token_success_handler/4,
+      :ok
+    )
+
+    :telemetry.attach(
+      :authorization_token_failure,
+      [:authorization, :token, :failure],
+      &__MODULE__.authorization_token_failure_handler/4,
+      :ok
+    )
+
+    :telemetry.attach(
       :authorization_introspect_success,
       [:authorization, :introspect, :success],
       &__MODULE__.authorization_introspect_success_handler/4,
@@ -123,6 +137,52 @@ defmodule BorutaWeb.Logger do
       "failure",
       log_attribute("client_id", client_id),
       log_attribute("sub", current_user && current_user.uid),
+      log_attribute("status", status),
+      log_attribute("error", error),
+      log_attribute("error_description", ~s{"#{error_description}"})
+    ]
+
+    Logger.log(:info, fn -> log_line end)
+  end
+
+  def authorization_token_success_handler(
+        _,
+        _measurements,
+        %{
+          access_token: access_token,
+          token_type: token_type,
+          expires_in: expires_in,
+          refresh_token: refresh_token
+        },
+        _
+      ) do
+    log_line = [
+      "authorization", ?\s,
+      "token", " - ",
+      "success",
+      log_attribute("access_token", access_token),
+      log_attribute("token_type", token_type),
+      log_attribute("expires_in", expires_in),
+      log_attribute("refresh_token", refresh_token)
+    ]
+
+    Logger.log(:info, fn -> log_line end)
+  end
+
+  def authorization_token_failure_handler(
+        _,
+        _measurements,
+        %{
+          status: status,
+          error: error,
+          error_description: error_description
+        },
+        _
+      ) do
+    log_line = [
+      "authorization", ?\s,
+      "token", " - ",
+      "failure",
       log_attribute("status", status),
       log_attribute("error", error),
       log_attribute("error_description", ~s{"#{error_description}"})
