@@ -149,6 +149,8 @@ defmodule BorutaWeb.Logger do
         _,
         _measurements,
         %{
+          client_id: client_id,
+          sub: sub,
           access_token: access_token,
           token_type: token_type,
           expires_in: expires_in,
@@ -160,6 +162,8 @@ defmodule BorutaWeb.Logger do
       "authorization", ?\s,
       "token", " - ",
       "success",
+      log_attribute("client_id", client_id),
+      log_attribute("sub", sub),
       log_attribute("access_token", access_token),
       log_attribute("token_type", token_type),
       log_attribute("expires_in", expires_in),

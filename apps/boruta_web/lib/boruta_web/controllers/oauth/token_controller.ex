@@ -14,11 +14,13 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   @impl Boruta.Oauth.TokenApplication
   def token_success(conn, %TokenResponse{} = response) do
-    # TODO get client_id and grant_type from response
+    # TODO get grant_type from response
     :telemetry.execute(
       [:authorization, :token, :success],
       %{},
       %{
+        client_id: response.token.client.id,
+        sub: response.token.sub,
         access_token: response.access_token,
         token_type: response.token_type,
         expires_in: response.expires_in,
