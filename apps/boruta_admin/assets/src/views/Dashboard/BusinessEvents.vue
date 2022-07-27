@@ -53,7 +53,8 @@
               <div class="item" v-for="(count, label) in counts" :key="label">
                 <div class="content">
                   <div class="header">
-                    <span v-for="(count, result) in count" :key="result" :class="result">{{ count }}</span>
+                    <span class="success">{{ count.success }}</span>
+                    <span class="failure">{{ count.failure }}</span>
                   </div>
                   <span class="count">{{ label }}</span>
                 </div>
@@ -73,7 +74,10 @@
 <script>
 import moment from 'moment'
 import { LineChart } from "vue-chart-3"
+import { Chart, registerables } from 'chart.js'
 import Logs from '../../services/logs.service'
+
+Chart.register(...registerables)
 
 const BUSINESS_REGEX = /(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=(\w+) \[info\] (\w+) (\w+) - (\w+)( (\w+)=((\".+\")|([^\s]+)))+/
 
@@ -217,6 +221,7 @@ export default {
 
       if (!this.businessEventFiltersData.domains.includes(domain)) {
         this.businessEventFiltersData.domains.push(domain)
+        this.businessEventFiltersData.domains.sort()
       }
     },
     importActions(businessEventMatches) {
@@ -229,6 +234,7 @@ export default {
 
       if (!this.businessEventFiltersData.actions.includes(label)) {
         this.businessEventFiltersData.actions.push(label)
+        this.businessEventFiltersData.actions.sort()
       }
     },
     isLogDomainFiltered(businessEventMatches) {
@@ -382,7 +388,7 @@ function stringToColor(str) {
     .header {
       float: right;
       span {
-        margin-right: 1em;
+        margin-right: .5em;
         &.success {
           color: green;
         }

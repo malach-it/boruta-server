@@ -65,10 +65,12 @@
 
 <script>
 import { LineChart, PieChart } from "vue-chart-3"
+import { Chart, registerables } from 'chart.js'
 import moment from 'moment'
 import 'chartjs-adapter-moment'
 import Logs from '../../services/logs.service'
-import GatewayRequests from '../../components/GatewayRequests.vue'
+
+Chart.register(...registerables)
 
 const REQUEST_REGEX = /(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=(\w+) \[info\] (\w+) (\w+) ([^\s]+) - (\w+) (\d{3}) in (\d+)(\w{2})/
 
@@ -255,6 +257,7 @@ export default {
 
       if (!this.requestsFiltersData.applications.includes(application)) {
         this.requestsFiltersData.applications.push(application)
+        this.requestsFiltersData.applications.sort()
       }
     },
     importRequestLabels(requestMatches) {
@@ -267,6 +270,7 @@ export default {
 
       if (!this.requestsFiltersData.requestLabels.includes(requestLabel)) {
         this.requestsFiltersData.requestLabels.push(requestLabel)
+        this.requestsFiltersData.requestLabels.sort()
       }
     },
     isLogApplicationFiltered(requestMatches) {
