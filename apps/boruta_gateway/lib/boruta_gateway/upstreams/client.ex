@@ -35,7 +35,8 @@ defmodule BorutaGateway.Upstreams.Client do
         name: name,
         pools: %{
           :default => [size: upstream.pool_size]
-        }
+        },
+        conn_max_idle_time: upstream.max_idle_time
       )
 
     {:ok, %{upstream: upstream, http_client: name}}

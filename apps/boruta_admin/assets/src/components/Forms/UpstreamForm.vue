@@ -23,6 +23,10 @@
           <label>Pool size</label>
           <input type="number" v-model="upstream.pool_size" placeholder="10">
         </div>
+        <div class="field" :class="{ 'error': upstream.errors?.max_idle_time }">
+          <label>Max idle time</label>
+          <input type="number" v-model="upstream.max_idle_time" placeholder="10">
+        </div>
         <div class="upstreams field" :class="{ 'error': upstream.errors?.uris }">
           <label>URIs</label>
           <div v-for="(upstreamUri, index) in upstream.uris" class="field" :key="index">
