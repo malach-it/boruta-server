@@ -34,7 +34,7 @@ defmodule BorutaGateway.Upstreams.Client do
       Finch.start_link(
         name: name,
         pools: %{
-          :default => [size: upstream.pool_size]
+          :default => [size: upstream.pool_size, count: upstream.pool_count]
         },
         conn_max_idle_time: upstream.max_idle_time
       )

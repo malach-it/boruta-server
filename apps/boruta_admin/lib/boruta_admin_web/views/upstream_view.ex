@@ -21,6 +21,7 @@ defmodule BorutaAdminWeb.UpstreamView do
       authorize: upstream.authorize,
       required_scopes: upstream.required_scopes,
       pool_size: upstream.pool_size,
+      pool_count: upstream.pool_count,
       max_idle_time: upstream.max_idle_time
     }
   end

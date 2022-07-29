@@ -19,6 +19,10 @@
           <label>Port</label>
           <input type="text" v-model="upstream.port" placeholder="443">
         </div>
+        <div class="field" :class="{ 'error': upstream.errors?.pool_count }">
+          <label>Pool count</label>
+          <input type="number" v-model="upstream.pool_count" placeholder="10">
+        </div>
         <div class="field" :class="{ 'error': upstream.errors?.pool_size }">
           <label>Pool size</label>
           <input type="number" v-model="upstream.pool_size" placeholder="10">

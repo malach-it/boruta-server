@@ -44,6 +44,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
     field(:pool_size, :integer, default: 10)
+    field(:pool_count, :integer, default: 1)
     field(:max_idle_time, :integer, default: 10)
 
     field(:http_client, :any, virtual: true)
@@ -90,10 +91,13 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :authorize,
       :required_scopes,
       :pool_size,
+      :pool_count,
       :max_idle_time
     ])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
+    |> validate_inclusion(:pool_size, 1..100)
+    |> validate_inclusion(:pool_count, 1..10)
     |> validate_uris()
     |> validate_required_scopes_format()
   end

@@ -8,6 +8,7 @@ const defaults = {
   uris: [],
   required_scopes: [],
   pool_size: 10,
+  pool_count: 1,
   max_idle_time: 10
 }
 
@@ -17,6 +18,7 @@ const assign = {
   host: function ({ host }) { this.host = host },
   port: function ({ port }) { this.port = port },
   pool_size: function ({ pool_size }) { this.pool_size = pool_size },
+  pool_count: function ({ pool_count }) { this.pool_count = pool_count },
   max_idle_time: function ({ max_idle_time }) { this.max_idle_time = max_idle_time },
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
   uris: function ({ uris }) {
@@ -90,6 +92,7 @@ class Upstream {
       host,
       port,
       pool_size,
+      pool_count,
       max_idle_time,
       uris,
       strip_uri,
@@ -103,6 +106,7 @@ class Upstream {
       host,
       port,
       pool_size,
+      pool_count,
       max_idle_time,
       uris: uris.map(({ uri }) => uri),
       required_scopes: required_scopes.reduce((acc, { model: { name }, method }) => {
