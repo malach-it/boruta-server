@@ -39,28 +39,28 @@ config :boruta_web, BorutaWeb.Endpoint,
 config :boruta_web, BorutaWeb.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DATABASE") || "boruta_web",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 5
 
 config :boruta_auth, BorutaAuth.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DATABASE") || "boruta_web",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 5
 
 config :boruta_identity, BorutaIdentity.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_dev",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
 config :boruta_admin, BorutaAdmin.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DATABASE") || "boruta_admin_dev",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_dev",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 

@@ -3,7 +3,7 @@ import Config
 config :boruta_identity, BorutaIdentity.Repo,
   username: "postgres",
   password: "postgres",
-  database: "boruta_identity_dev",
+  database: "boruta_dev",
   hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
   pool_size: 5
