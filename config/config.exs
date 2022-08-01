@@ -6,12 +6,27 @@ end
 
 config :logger,
   utc_log: true,
-  backends: [{LoggerFileBackend, :file_logger}, :console]
+  backends: [{LoggerFileBackend, :web_logger}, {LoggerFileBackend, :identity_logger}, {LoggerFileBackend, :admin_logger}, :console]
 
-config :logger, :file_logger,
+config :logger, :web_logger,
   format: "$dateT$timeZ $metadata[$level] $message\n",
   path: "./log/test",
   metadata: [:request_id],
+  metadata_filter: [application: :boruta_web],
+  level: :info
+
+config :logger, :identity_logger,
+  format: "$dateT$timeZ $metadata[$level] $message\n",
+  path: "./log/test",
+  metadata: [:request_id],
+  metadata_filter: [application: :boruta_identity],
+  level: :info
+
+config :logger, :admin_logger,
+  format: "$dateT$timeZ $metadata[$level] $message\n",
+  path: "./log/test",
+  metadata: [:request_id],
+  metadata_filter: [application: :boruta_admin],
   level: :info
 
 config :logger, :console,

@@ -4,7 +4,9 @@ defmodule BorutaAuth.LogRotate do
   def rotate do
     # TODO setup a configuration that help deleting older files
 
-    Logger.configure_backend({LoggerFileBackend, :file_logger}, [path: path(Date.utc_today())])
+    Logger.configure_backend({LoggerFileBackend, :web_logger}, [path: path(Date.utc_today())])
+    Logger.configure_backend({LoggerFileBackend, :identity_logger}, [path: path(Date.utc_today())])
+    Logger.configure_backend({LoggerFileBackend, :admin_logger}, [path: path(Date.utc_today())])
   end
 
   @spec path(date :: Date.t()) :: path :: String.t()
