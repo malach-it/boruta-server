@@ -75,7 +75,7 @@ defmodule BorutaGateway.Logger do
             "upstream",
             " - ",
             "success",
-            log_attribute("duration", duration),
+            log_attribute("duration", duration(duration)),
             log_attribute("upstream_host", upstream_host),
             log_attribute("upstream_port", upstream_port),
             log_attribute("upstream_scheme", upstream_scheme),
@@ -115,10 +115,6 @@ defmodule BorutaGateway.Logger do
   defp duration(duration) do
     duration = System.convert_time_unit(duration, :native, :microsecond)
 
-    if duration > 1000 do
-      [duration |> div(1000) |> Integer.to_string(), "ms"]
-    else
-      [Integer.to_string(duration), "µs"]
-    end
+    [Integer.to_string(duration), "µs"]
   end
 end
