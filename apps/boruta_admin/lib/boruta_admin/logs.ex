@@ -28,7 +28,7 @@ defmodule BorutaAdmin.Logs do
   end
 
   defp log_dates(start_date, end_date) do
-    if start_date > end_date do
+    if Date.compare(start_date, end_date) == :gt do
       []
     else
       [start_date|log_dates(Date.add(start_date, 1), end_date)]
