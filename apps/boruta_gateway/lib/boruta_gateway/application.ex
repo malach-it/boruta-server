@@ -5,6 +5,7 @@ defmodule BorutaGateway.Application do
 
   use Application
 
+  alias BorutaGateway.Logger
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.ClientSupervisor
 
@@ -17,6 +18,8 @@ defmodule BorutaGateway.Application do
       },
       {ClientSupervisor, strategy: :one_for_one}
     ]
+
+    Logger.start()
 
     children =
       case Application.get_env(:boruta_gateway, :server) do
