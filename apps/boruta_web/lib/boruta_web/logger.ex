@@ -4,68 +4,57 @@ defmodule BorutaWeb.Logger do
   require Logger
 
   def start do
-    :telemetry.attach(
-      :boruta_web_requests,
-      [:boruta_web, :endpoint, :stop],
-      &__MODULE__.boruta_web_request_handler/4,
-      :ok
-    )
+    handlers = [
+      {
+        :boruta_web_requests,
+        [:boruta_web, :endpoint, :stop],
+        &__MODULE__.boruta_web_request_handler/4
+      },
+      {
+        :authorization_authorize_success,
+        [:authorization, :authorize, :success],
+        &__MODULE__.authorization_authorize_success_handler/4
+      },
+      {
+        :authorization_authorize_failure,
+        [:authorization, :authorize, :failure],
+        &__MODULE__.authorization_authorize_failure_handler/4
+      },
+      {
+        :authorization_token_success,
+        [:authorization, :token, :success],
+        &__MODULE__.authorization_token_success_handler/4
+      },
+      {
+        :authorization_token_failure,
+        [:authorization, :token, :failure],
+        &__MODULE__.authorization_token_failure_handler/4
+      },
+      {
+        :authorization_introspect_success,
+        [:authorization, :introspect, :success],
+        &__MODULE__.authorization_introspect_success_handler/4
+      },
+      {
+        :authorization_introspect_failure,
+        [:authorization, :introspect, :failure],
+        &__MODULE__.authorization_introspect_failure_handler/4
+      },
+      {
+        :authorization_revoke_success,
+        [:authorization, :revoke, :success],
+        &__MODULE__.authorization_revoke_success_handler/4
+      },
+      {
+        :authorization_revoke_failure,
+        [:authorization, :revoke, :failure],
+        &__MODULE__.authorization_revoke_failure_handler/4
+      }
+    ]
 
-    :telemetry.attach(
-      :authorization_authorize_success,
-      [:authorization, :authorize, :success],
-      &__MODULE__.authorization_authorize_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_authorize_failure,
-      [:authorization, :authorize, :failure],
-      &__MODULE__.authorization_authorize_failure_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_token_success,
-      [:authorization, :token, :success],
-      &__MODULE__.authorization_token_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_token_failure,
-      [:authorization, :token, :failure],
-      &__MODULE__.authorization_token_failure_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_introspect_success,
-      [:authorization, :introspect, :success],
-      &__MODULE__.authorization_introspect_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_introspect_failure,
-      [:authorization, :introspect, :failure],
-      &__MODULE__.authorization_introspect_failure_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_revoke_success,
-      [:authorization, :revoke, :success],
-      &__MODULE__.authorization_revoke_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_revoke_failure,
-      [:authorization, :revoke, :failure],
-      &__MODULE__.authorization_revoke_failure_handler/4,
-      :ok
-    )
+    for {handler_id, event_name, fun} <- handlers do
+      :telemetry.attach(handler_id, event_name, fun, :ok)
+    end
   end
 
   def boruta_web_request_handler(_, %{duration: duration}, %{conn: conn} = metadata, _) do
@@ -77,12 +66,18 @@ defmodule BorutaWeb.Logger do
         Logger.log(level, fn ->
           %{method: method, request_path: path, status: status, state: state} = conn
           status = Integer.to_string(status)
+
           [
-            "boruta_web", ?\s,
-            method, ?\s,
-            path, " - ",
-            connection_type(state), ?\s,
-            status, " in ",
+            "boruta_web",
+            ?\s,
+            method,
+            ?\s,
+            path,
+            " - ",
+            connection_type(state),
+            ?\s,
+            status,
+            " in ",
             duration(duration)
           ]
         end)
@@ -104,8 +99,10 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
-      "authorization", ?\s,
-      "authorize", " - ",
+      "authorization",
+      ?\s,
+      "authorize",
+      " - ",
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", current_user && current_user.uid),
@@ -132,8 +129,10 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
-      "authorization", ?\s,
-      "authorize", " - ",
+      "authorization",
+      ?\s,
+      "authorize",
+      " - ",
       "failure",
       log_attribute("client_id", client_id),
       log_attribute("sub", current_user && current_user.uid),
@@ -159,8 +158,10 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
-      "authorization", ?\s,
-      "token", " - ",
+      "authorization",
+      ?\s,
+      "token",
+      " - ",
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
@@ -184,8 +185,10 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
-      "authorization", ?\s,
-      "token", " - ",
+      "authorization",
+      ?\s,
+      "token",
+      " - ",
       "failure",
       log_attribute("status", status),
       log_attribute("error", error),
@@ -207,8 +210,10 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
-      "authorization", ?\s,
-      "introspect", " - ",
+      "authorization",
+      ?\s,
+      "introspect",
+      " - ",
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
@@ -231,8 +236,10 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
-      "authorization", ?\s,
-      "introspect", " - ",
+      "authorization",
+      ?\s,
+      "introspect",
+      " - ",
       "failure",
       log_attribute("access_token", token),
       log_attribute("status", status),
@@ -252,8 +259,10 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
-      "authorization", ?\s,
-      "revoke", " - ",
+      "authorization",
+      ?\s,
+      "revoke",
+      " - ",
       "success",
       log_attribute("access_token", token)
     ]
@@ -273,8 +282,10 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
-      "authorization", ?\s,
-      "revoke", " - ",
+      "authorization",
+      ?\s,
+      "revoke",
+      " - ",
       "failure",
       log_attribute("access_token", token),
       log_attribute("status", status),
@@ -291,6 +302,7 @@ defmodule BorutaWeb.Logger do
   # From Phoenix.Logger
   defp log_level(nil, _conn), do: :info
   defp log_level(level, _conn) when is_atom(level), do: level
+
   defp log_level({mod, fun, args}, conn) when is_atom(mod) and is_atom(fun) and is_list(args) do
     apply(mod, fun, [conn | args])
   end

@@ -6,89 +6,72 @@ defmodule BorutaIdentity.Logger do
   alias BorutaIdentityWeb.ErrorHelpers
 
   def start do
-    :telemetry.attach(
-      :boruta_identity_requests,
-      [:boruta_identity, :endpoint, :stop],
-      &__MODULE__.boruta_identity_request_handler/4,
-      :ok
-    )
+    handlers = [
+      {
+        :boruta_identity_requests,
+        [:boruta_identity, :endpoint, :stop],
+        &__MODULE__.boruta_identity_request_handler/4
+      },
+      {
+        :authentication_log_in_success,
+        [:authentication, :log_in, :success],
+        &__MODULE__.authentication_log_in_success_handler/4
+      },
+      {
+        :authentication_log_in_failure,
+        [:authentication, :log_in, :failure],
+        &__MODULE__.authentication_log_in_failure_handler/4
+      },
+      {
+        :authentication_log_out_success,
+        [:authentication, :log_out, :success],
+        &__MODULE__.authentication_log_out_success_handler/4
+      },
+      {
+        :registration_create_success,
+        [:registration, :create, :success],
+        &__MODULE__.registration_create_success_handler/4
+      },
+      {
+        :registration_create_failure,
+        [:registration, :create, :failure],
+        &__MODULE__.registration_create_failure_handler/4
+      },
+      {
+        :registration_confirm_success,
+        [:registration, :confirm, :success],
+        &__MODULE__.registration_confirm_success_handler/4
+      },
+      {
+        :registration_confirm_failure,
+        [:registration, :confirm, :failure],
+        &__MODULE__.registration_confirm_failure_handler/4
+      },
+      {
+        :registration_update_success,
+        [:registration, :update, :success],
+        &__MODULE__.registration_update_success_handler/4
+      },
+      {
+        :registration_update_failure,
+        [:registration, :update, :failure],
+        &__MODULE__.registration_update_failure_handler/4
+      },
+      {
+        :authorization_consent_success,
+        [:authorization, :consent, :success],
+        &__MODULE__.authorization_consent_success_handler/4
+      },
+      {
+        :authorization_consent_failure,
+        [:authorization, :consent, :failure],
+        &__MODULE__.authorization_consent_failure_handler/4
+      }
+    ]
 
-    :telemetry.attach(
-      :authentication_log_in_success,
-      [:authentication, :log_in, :success],
-      &__MODULE__.authentication_log_in_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authentication_log_in_failure,
-      [:authentication, :log_in, :failure],
-      &__MODULE__.authentication_log_in_failure_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authentication_log_out_success,
-      [:authentication, :log_out, :success],
-      &__MODULE__.authentication_log_out_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :registration_create_success,
-      [:registration, :create, :success],
-      &__MODULE__.registration_create_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :registration_create_failure,
-      [:registration, :create, :failure],
-      &__MODULE__.registration_create_failure_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :registration_confirm_success,
-      [:registration, :confirm, :success],
-      &__MODULE__.registration_confirm_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :registration_confirm_failure,
-      [:registration, :confirm, :failure],
-      &__MODULE__.registration_confirm_failure_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :registration_update_success,
-      [:registration, :update, :success],
-      &__MODULE__.registration_update_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :registration_update_failure,
-      [:registration, :update, :failure],
-      &__MODULE__.registration_update_failure_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_consent_success,
-      [:authorization, :consent, :success],
-      &__MODULE__.authorization_consent_success_handler/4,
-      :ok
-    )
-
-    :telemetry.attach(
-      :authorization_consent_failure,
-      [:authorization, :consent, :failure],
-      &__MODULE__.authorization_consent_failure_handler/4,
-      :ok
-    )
+    for {handler_id, event_name, fun} <- handlers do
+      :telemetry.attach(handler_id, event_name, fun, :ok)
+    end
   end
 
   def boruta_identity_request_handler(_, %{duration: duration}, %{conn: conn} = metadata, _) do
@@ -102,11 +85,16 @@ defmodule BorutaIdentity.Logger do
           status = Integer.to_string(status)
 
           [
-            "boruta_identity", ?\s,
-            method, ?\s,
-            path, " - ",
-            connection_type(state), ?\s,
-            status, " in ",
+            "boruta_identity",
+            ?\s,
+            method,
+            ?\s,
+            path,
+            " - ",
+            connection_type(state),
+            ?\s,
+            status,
+            " in ",
             duration(duration)
           ]
         end)
@@ -121,8 +109,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "authentication", ?\s,
-        "log_in", " - ",
+        "authentication",
+        ?\s,
+        "log_in",
+        " - ",
         "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
@@ -139,8 +129,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "authentication", ?\s,
-        "log_in", " - ",
+        "authentication",
+        ?\s,
+        "log_in",
+        " - ",
         "failure",
         log_attribute("client_id", client_id),
         log_attribute("message", ~s{"#{message}"})
@@ -156,8 +148,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "authentication", ?\s,
-        "log_out", " - ",
+        "authentication",
+        ?\s,
+        "log_out",
+        " - ",
         "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
@@ -174,8 +168,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "registration", ?\s,
-        "create", " - ",
+        "registration",
+        ?\s,
+        "create",
+        " - ",
         "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
@@ -195,8 +191,10 @@ defmodule BorutaIdentity.Logger do
 
     Logger.log(:info, fn ->
       [
-        "registration", ?\s,
-        "create", " - ",
+        "registration",
+        ?\s,
+        "create",
+        " - ",
         "failure",
         log_attribute("client_id", client_id),
         log_attribute("message", ~s{"#{message}"})
@@ -212,8 +210,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "registration", ?\s,
-        "confirm", " - ",
+        "registration",
+        ?\s,
+        "confirm",
+        " - ",
         "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
@@ -231,8 +231,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "registration", ?\s,
-        "confirm", " - ",
+        "registration",
+        ?\s,
+        "confirm",
+        " - ",
         "failure",
         log_attribute("client_id", client_id),
         log_attribute("message", ~s{"#{message}"}),
@@ -249,8 +251,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "registration", ?\s,
-        "update", " - ",
+        "registration",
+        ?\s,
+        "update",
+        " - ",
         "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
@@ -264,11 +268,14 @@ defmodule BorutaIdentity.Logger do
         _measurements,
         %{sub: sub, provider: provider, client_id: client_id, error: message},
         _
-      ) when is_binary(message) do
+      )
+      when is_binary(message) do
     Logger.log(:info, fn ->
       [
-        "registration", ?\s,
-        "update", " - ",
+        "registration",
+        ?\s,
+        "update",
+        " - ",
         "failure",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
@@ -281,15 +288,22 @@ defmodule BorutaIdentity.Logger do
   def registration_update_failure_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id, error: %Ecto.Changeset{} = changeset},
+        %{
+          sub: sub,
+          provider: provider,
+          client_id: client_id,
+          error: %Ecto.Changeset{} = changeset
+        },
         _
       ) do
     message = ErrorHelpers.error_messages(changeset) |> Enum.join(", ")
 
     Logger.log(:info, fn ->
       [
-        "registration", ?\s,
-        "update", " - ",
+        "registration",
+        ?\s,
+        "update",
+        " - ",
         "failure",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
@@ -307,8 +321,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "authorization", ?\s,
-        "consent", " - ",
+        "authorization",
+        ?\s,
+        "consent",
+        " - ",
         "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
@@ -326,8 +342,10 @@ defmodule BorutaIdentity.Logger do
       ) do
     Logger.log(:info, fn ->
       [
-        "authorization", ?\s,
-        "consent", " - ",
+        "authorization",
+        ?\s,
+        "consent",
+        " - ",
         "success",
         log_attribute("client_id", client_id),
         log_attribute("sub", sub),
