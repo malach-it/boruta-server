@@ -62,7 +62,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
           "user" => %{"email" => user.username, "password" => valid_user_password()}
         })
 
-      response = html_response(conn, 200)
+      response = html_response(conn, 401)
       assert response =~ "<h1>Resend confirmation instructions</h1>"
       assert response =~ "Email confirmation is required to authenticate."
     end
@@ -77,7 +77,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
           "user" => %{"email" => user.username, "password" => "invalid_password"}
         })
 
-      response = html_response(conn, 200)
+      response = html_response(conn, 401)
       assert response =~ "<h1>Log in</h1>"
       assert response =~ "Invalid email or password"
     end

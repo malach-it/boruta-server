@@ -89,6 +89,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
     )
     conn
     |> put_layout(false)
+    |> put_status(:unauthorized)
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,

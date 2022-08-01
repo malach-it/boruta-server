@@ -52,7 +52,7 @@
             <div class="identity-providers item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="users icon"></i>
-                <span>identity providers</span>
+                <span>Identity providers</span>
               </a>
               <div class="dropdown">
                 <div class="subitem">
