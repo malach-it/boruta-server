@@ -9,6 +9,11 @@ defmodule BorutaGateway.Logger do
         :boruta_gateway_requests,
         [:boruta_gateway, :endpoint, :stop],
         &__MODULE__.boruta_gateway_request_handler/4
+      },
+      {
+        :boruta_gateway_upstream_requests,
+        [:finch, :request, :stop],
+        &__MODULE__.boruta_gateway_upstream_request_handler/4
       }
     ]
 
@@ -43,6 +48,58 @@ defmodule BorutaGateway.Logger do
         end)
     end
   end
+
+  def boruta_gateway_upstream_request_handler(
+        _,
+        %{duration: duration},
+        %{request: request, result: result},
+        _
+      ) do
+    Logger.log(:info, fn ->
+      %Finch.Request{
+        host: upstream_host,
+        method: upstream_method,
+        path: upstream_path,
+        port: upstream_port,
+        scheme: upstream_scheme
+      } = request
+
+      case result do
+        {:ok,
+         %Finch.Response{
+           status: upstream_status
+         }} ->
+          [
+            "gateway",
+            ?\s,
+            "upstream",
+            " - ",
+            "success",
+            log_attribute("duration", duration),
+            log_attribute("upstream_host", upstream_host),
+            log_attribute("upstream_port", upstream_port),
+            log_attribute("upstream_scheme", upstream_scheme),
+            log_attribute("upstream_method", upstream_method),
+            log_attribute("upstream_path", upstream_path),
+            log_attribute("upstream_status", upstream_status)
+          ]
+
+        {:error, exception} ->
+          [
+            "gateway",
+            ?\s,
+            "upstream",
+            " - ",
+            "failure",
+            log_attribute("duration", duration),
+            log_attribute("error", ~s{"#{inspect(exception)}"})
+          ]
+      end
+    end)
+  end
+
+  defp log_attribute(_key, nil), do: ""
+  defp log_attribute(key, attribute), do: " #{key}=#{attribute}"
 
   # From Phoenix.Logger
   defp log_level(nil, _conn), do: :info

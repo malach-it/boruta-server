@@ -6,6 +6,7 @@ defmodule BorutaGateway.GatewayPipeline do
   plug BorutaGateway.Plug.Metrics
   plug BorutaGateway.Plug.AssignUpstream
   plug BorutaGateway.Plug.Authorize
+  plug Plug.RequestId
   plug Plug.Telemetry,
     event_prefix: [:boruta_gateway, :endpoint]
 
