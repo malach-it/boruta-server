@@ -241,18 +241,18 @@ export default {
         position: relative;
         padding: 0;
         min-width: 3em;
-        min-height: 3em;
+        min-height: 2.5em;
         border: none;
         cursor: pointer;
         span {
-          margin-left: 3.5em;
+          margin-left: 2.5em;
           margin-right: 1em;
-          line-height: 3rem;
+          line-height: 2.5rem;
         }
         i {
           position: absolute;
-          top: 1em;
-          left: 1em;
+          top: .625em;
+          left: .75em;
         }
         &.active {
           background: inherit;
