@@ -3,7 +3,7 @@ defmodule BorutaAdmin.Logs do
 
   alias BorutaAuth.LogRotate
 
-  @max_log_lines 20_000
+  @max_log_lines 10_000
   @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=([^\s]+) \[info\] (\w+) (\w+) ([^\s]+) - (\w+) (\d{3}) in (\d+)(\w+)/
 
   @spec read(start_at :: DateTime.t(), end_at :: DateTime.t()) :: Enumerable.t()
@@ -14,15 +14,15 @@ defmodule BorutaAdmin.Logs do
     |> Stream.map(&parse_request_log/1)
     |> Stream.reject(&is_nil/1)
     |> Enum.reduce(
-        %{
-          time_scale_unit: time_scale_unit,
-          overflow: false,
-          log_lines: [],
-          log_count: 0,
-          status_codes: %{},
-          request_counts: %{},
-          request_times: %{},
-        },
+      %{
+        time_scale_unit: time_scale_unit,
+        overflow: false,
+        log_lines: [],
+        log_count: 0,
+        status_codes: %{},
+        request_counts: %{},
+        request_times: %{}
+      },
       fn %{
            label: label,
            log_line: log_line,
@@ -40,28 +40,29 @@ defmodule BorutaAdmin.Logs do
            request_counts: request_counts,
            request_times: request_times
          } ->
-        overflow = overflow || log_count > @max_log_lines
+        overflow = overflow || log_count >= @max_log_lines
         truncated_time = DateTime.truncate(time, :second)
 
         truncated_time =
           case time_scale_unit do
-            :minute -> truncated_time
-            :hour -> %{truncated_time | minute: 0}
+            :minute -> %{truncated_time | second: 0}
+            :hour -> %{truncated_time | second: 0, minute: 0}
           end
 
         normalized_duration =
           case duration_unit do
             "ms" -> duration
-            _ -> duration * 1000
+            "µs" -> duration / 1000
           end
 
         %{
           time_scale_unit: time_scale_unit,
           overflow: overflow,
-          log_lines: case overflow do
-            true -> log_lines
-            false -> log_lines ++ [log_line]
-          end,
+          log_lines:
+            case overflow do
+              true -> log_lines
+              false -> log_lines ++ [log_line]
+            end,
           log_count: log_count + 1,
           status_codes:
             Map.merge(status_codes, %{label => %{status_code => 1}}, fn _, a, b ->

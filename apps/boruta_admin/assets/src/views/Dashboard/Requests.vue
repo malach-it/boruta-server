@@ -7,15 +7,21 @@
             <h1>Requests</h1>
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="requestsFilter.startAt" />
+            <input type="datetime-local" v-model="requestsFilter.startAt" :disabled="pending" />
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="requestsFilter.endAt" />
+            <input type="datetime-local" v-model="requestsFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button" @click="getLogs()">Filter</button>
+            <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
         </div>
+      </div>
+      <div class="ui error message" v-if="fetchError">
+        An error has occured when fetching logs, message: {{ fetchError }}.
+      </div>
+      <div class="ui error message" v-if="overflow">
+        This interface is limited to read at most {{ maxLogLines }} log lines, earlier logs are skipped.
       </div>
       <div class="ui segment">
         <div class="ui requests form">
@@ -23,13 +29,13 @@
             <div class="ten wide filter-form column">
               <div class="field">
                 <label>Application</label>
-                <select @change="filter()" v-model="requestsFilter.application">
+                <select @change="filter()" v-model="requestsFilter.application" :disabled="pending">
                   <option :value="application" v-for="application in requestsFiltersData.applications">{{ application }}</option>
                 </select>
               </div>
               <div class="field">
                 <label>Request label</label>
-                <select @change="filter()" v-model="requestsFilter.requestLabel">
+                <select @change="filter()" v-model="requestsFilter.requestLabel" :disabled="pending">
                   <option value=''>All request labels</option>
                   <option :value="requestLabel" v-for="requestLabel in requestsFiltersData.requestLabels">{{ requestLabel }}</option>
                 </select>
@@ -45,7 +51,7 @@
         </div>
         <div class="ui stackable grid">
           <div class="ten wide request-times column">
-            <LineChart :chartData="requestsPerMinute" :options="requestsPerMinuteOptions" height="500" :key="graphRerenders" />
+            <LineChart :chartData="requestCounts" :options="requestCountsOptions" height="500" :key="graphRerenders" />
           </div>
           <div class="six wide status-codes column">
             <PieChart :chart-data="statusCodes" :options="statusCodesOptions" :key="graphRerenders" />
@@ -64,15 +70,16 @@
 </template>
 
 <script>
+import { cloneDeep, uniq } from 'lodash'
 import { LineChart, PieChart } from "vue-chart-3"
 import { Chart, registerables } from 'chart.js'
 import moment from 'moment'
 import 'chartjs-adapter-moment'
-import Logs from '../../services/logs.service'
+import LogStats from '../../models/log-stats.model'
 
 Chart.register(...registerables)
 
-const REQUEST_REGEX = /(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=(\w+) \[info\] (\w+) (\w+) ([^\s]+) - (\w+) (\d{3}) in (\d+)(\w{2})/
+const MAX_LOG_LINES = 10000 // from backend limit
 
 export default {
   name: 'requests',
@@ -82,23 +89,23 @@ export default {
   },
   data() {
     return {
-      // logs: '',
+      overflow: false,
+      pending: false,
+      maxLogLines: MAX_LOG_LINES,
+      timeScaleUnit: '',
       requestLogs: [],
       filteredRequestLogs: [],
+      logCount: 0,
       graphRerenders: 0,
       requestsFiltersData: {
         applications: [],
         requestLabels: []
       },
       requestsFilter: {
-        startAt: this.$route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm"),
         application: this.$route.query.application || 'boruta_web',
         requestLabel: this.$route.query.requestLabel || ''
-      },
-      requestsPerMinute: {
-        labels: [],
-        datasets: []
       },
       statusCodes: {
         labels: [],
@@ -108,27 +115,9 @@ export default {
         labels: [],
         datasets: []
       },
-      requestsPerMinuteOptions: {
-        animation: false,
-        plugins: {
-          title: {
-            display: true,
-            text: 'Requests per minute'
-          },
-          legend: {
-            align: 'start',
-            position: 'bottom'
-          }
-        },
-        scales: {
-          x: {
-            type: 'timeseries',
-            time: {
-              unit: 'hour',
-              round: true
-            }
-          }
-        }
+      requestCounts: {
+        labels: [],
+        datasets: []
       },
       statusCodesOptions: {
         animation: false,
@@ -168,11 +157,32 @@ export default {
     }
   },
   computed: {
-    logCount() {
-      return this.requestLogs.length
-    },
     filteredLogCount() {
       return (this.filteredRequestLogs || this.requestLogs).length
+    },
+    requestCountsOptions() {
+      return {
+        animation: false,
+        plugins: {
+          title: {
+            display: true,
+            text: `Requests count per ${this.timeScaleUnit}`
+          },
+          legend: {
+            align: 'start',
+            position: 'bottom'
+          }
+        },
+        scales: {
+          x: {
+            type: 'timeseries',
+            time: {
+              unit: 'hour',
+              round: true
+            }
+          }
+        }
+      }
     }
   },
   async mounted() {
@@ -180,14 +190,13 @@ export default {
   },
   methods: {
     async getLogs() {
-      this.stream && this.stream.cancel
-      this.resetFilters()
+      this.pending = true
+      this.overflow = false
       this.resetGraphs()
-      this.requestLogs = []
-      this.filteredRequestLogs = []
-      this.stream = await Logs.stream(this.requestsFilter)
+      this.resetFilters()
 
-      this.readLogStream(this.stream)
+      this.getLogStats()
+      this.render()
     },
     resetFilters() {
       this.requestsFiltersData.requestLabels = []
@@ -196,212 +205,197 @@ export default {
       }
     },
     resetGraphs() {
-      this.requestsPerMinute = { labels: [], datasets: [] }
+      this.requestCounts = { labels: [], datasets: [] }
       this.statusCodes = { labels: [], datasets: [] }
       this.requestTimes = { labels: [], datasets: [] }
+    },
+    render() {
       this.graphRerenders += 1
     },
-    readLogStream(stream) {
-      stream.read().then(({ done, value }) => {
-        // decode Uint8Array to utf-8 string
-        const data = new TextDecoder().decode(value)
+    getLogStats() {
+      LogStats.all(this.requestsFilter).then(({
+        time_scale_unit,
+        overflow,
+        log_lines,
+        log_count,
+        request_counts,
+        status_codes,
+        request_times
+      }) => {
+        this.timeScaleUnit = time_scale_unit
+        this.overflow = overflow
+        this.requestLogs = log_lines
+        this.filteredRequestLogs = log_lines
+        // TODO filter
+        this.logCount = log_count
+        this.populateRequestCounts(request_counts)
+        this.populateStatusCodes(status_codes)
+        this.populateRequestTimes(request_times)
+        this.pending = false
+      })
+    },
+    // importRequestLog(log) {
+    //   const requestMatches = log.match(REQUEST_REGEX)
+    //   if (!requestMatches) return
+    //   this.importRequestFilters(requestMatches)
 
-        // this.logs += data
-        data.split('\n').map(log => {
-          if (log.match(REQUEST_REGEX)) {
-            this.requestLogs.push(`${log}`)
-            this.importRequestLog(log)
+    //   if (this.isLogApplicationFiltered(requestMatches)) {
+    //     return
+    //   } else {
+    //     this.importRequestLabels(requestMatches)
+    //   }
+    //   if (this.isLogRequestLabelFiltered(requestMatches)) {
+    //     return
+    //   }
+    //   filteredRequestLogs.push(log)
+
+    //   const time = new Date(requestMatches[1])
+    //   time.setMilliseconds(0)
+    //   time.setSeconds(0)
+    //   if (this.isHourScale) time.setMinutes(0)
+    //   const application = requestMatches[3]
+    //   const method = requestMatches[4]
+    //   const path = requestMatches[5]
+    //   const statusCode = requestMatches[7]
+    //   const requestTime = parseInt(requestMatches[8])
+    //   const requestTimeUnit = requestMatches[9]
+
+    //   this.populateRequestsCount({ time, application, method, path })
+    //   this.populateStatusCodes({ statusCode, application, method, path })
+    //   this.populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path })
+    // },
+    // importRequestFilters(requestMatches) {
+    //   if (!requestMatches) return
+
+    //   const application = requestMatches[3]
+
+    //   if (!this.requestsFiltersData.applications.includes(application)) {
+    //     this.requestsFiltersData.applications.push(application)
+    //     this.requestsFiltersData.applications.sort()
+    //   }
+    // },
+    // importRequestLabels(requestMatches) {
+    //   if (!requestMatches) return
+
+    //   const application = requestMatches[3]
+    //   const method = requestMatches[4]
+    //   const path = requestMatches[5]
+    //   const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
+
+    //   if (!this.requestsFiltersData.requestLabels.includes(requestLabel)) {
+    //     this.requestsFiltersData.requestLabels.push(requestLabel)
+    //     this.requestsFiltersData.requestLabels.sort()
+    //   }
+    // },
+    // isLogApplicationFiltered(requestMatches) {
+    //   if (!requestMatches) return
+
+    //   const application = requestMatches[3]
+    //   return (this.requestsFilter.application !== application)
+    // },
+    // isLogRequestLabelFiltered(requestMatches) {
+    //   if (!requestMatches) return
+
+    //   const application = requestMatches[3]
+
+    //   const method = requestMatches[4]
+    //   const path = requestMatches[5]
+    //   const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
+    //   if (this.requestsFilter.requestLabel === '') {
+    //     return false
+    //   } else {
+    //     return (this.requestsFilter.requestLabel !== requestLabel)
+    //   }
+
+    // },
+    populateRequestCounts(stats) {
+      Object.keys(stats).forEach(currentLabel => {
+        const labels = uniq(Object.values(stats).flatMap(Object.keys)).sort()
+        this.requestCounts.labels = labels
+
+        let dataset = this.requestCounts.datasets.find(({ label }) => {
+          return label === currentLabel
+        })
+        if (!dataset) {
+          dataset = {
+            label: currentLabel,
+            borderColor: stringToColor(currentLabel),
+            backgroundColor: stringToColor(currentLabel),
+            fill: false,
+            lineTension: 0,
+            data: []
           }
+          this.requestCounts.datasets.push(dataset)
+        }
+
+        Object.keys(stats[currentLabel]).map(timestamp => {
+          dataset.data[labels.indexOf(timestamp)] = stats[currentLabel][timestamp]
         })
 
-        if (done) {
-          stream.cancel()
-          } else {
-          this.readLogStream(stream)
-        }
+        this.requestCounts.datasets.forEach(dataset => {
+          dataset.data = dataset.data.map(value => value === 0 ? NaN : value)
+        })
       })
     },
-    importRequestLog(log) {
-      const requestMatches = log.match(REQUEST_REGEX)
-      if (!requestMatches) return
-      this.importRequestFilters(requestMatches)
+    populateStatusCodes(stats) {
+      const labels = uniq(Object.values(stats).flatMap(Object.keys))
+      this.statusCodes.labels = labels
 
-      if (this.isLogApplicationFiltered(requestMatches)) {
-        return
-      } else {
-        this.importRequestLabels(requestMatches)
-      }
-      if (this.isLogRequestLabelFiltered(requestMatches)) {
-        return
-      }
-      this.filteredRequestLogs.push(log)
-
-      const time = new Date(requestMatches[1])
-      time.setMilliseconds(0)
-      time.setSeconds(0)
-      const application = requestMatches[3]
-      const method = requestMatches[4]
-      const path = requestMatches[5]
-      const statusCode = requestMatches[7]
-      const requestTime = parseInt(requestMatches[8])
-      const requestTimeUnit = requestMatches[9]
-
-      this.populateRequestsPerMinute({ time, application, method, path })
-      this.populateStatusCodes({ statusCode, application, method, path })
-      this.populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path })
-    },
-    importRequestFilters(requestMatches) {
-      if (!requestMatches) return
-
-      const application = requestMatches[3]
-
-      if (!this.requestsFiltersData.applications.includes(application)) {
-        this.requestsFiltersData.applications.push(application)
-        this.requestsFiltersData.applications.sort()
-      }
-    },
-    importRequestLabels(requestMatches) {
-      if (!requestMatches) return
-
-      const application = requestMatches[3]
-      const method = requestMatches[4]
-      const path = requestMatches[5]
-      const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
-
-      if (!this.requestsFiltersData.requestLabels.includes(requestLabel)) {
-        this.requestsFiltersData.requestLabels.push(requestLabel)
-        this.requestsFiltersData.requestLabels.sort()
-      }
-    },
-    isLogApplicationFiltered(requestMatches) {
-      if (!requestMatches) return
-
-      const application = requestMatches[3]
-      return (this.requestsFilter.application !== application)
-    },
-    isLogRequestLabelFiltered(requestMatches) {
-      if (!requestMatches) return
-
-      const application = requestMatches[3]
-
-      const method = requestMatches[4]
-      const path = requestMatches[5]
-      const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
-      if (this.requestsFilter.requestLabel === '') {
-        return false
-      } else {
-        return (this.requestsFilter.requestLabel !== requestLabel)
-      }
-
-    },
-    populateRequestsPerMinute({ time, application, method, path }) {
-      const currentLabel = `${application} - ${method} ${path}`.substring(0, 70)
-
-      const labels = this.requestsPerMinute.labels
-      const lastLabel = labels.slice(-1)[0]
-      if (!lastLabel || !(lastLabel.getTime() == time.getTime())) {
-        labels.push(time)
-      }
-
-      let dataset = this.requestsPerMinute.datasets.find(({ label }) => {
-        return label === currentLabel
-      })
-      if (!dataset) {
-        dataset = {
-          label: currentLabel,
-          borderColor: stringToColor(currentLabel),
-          backgroundColor: stringToColor(currentLabel),
-          fill: false,
-          lineTension: 0,
-          data: null
+      Object.keys(stats).forEach(currentLabel => {
+        let dataset = this.statusCodes.datasets.find(({ label }) => {
+          return label === currentLabel
+        })
+        if (!dataset) {
+          dataset = {
+            label: currentLabel,
+            backgroundColor: stringToColor(currentLabel),
+            data: []
+          }
+          this.statusCodes.datasets.push(dataset)
         }
-        this.requestsPerMinute.datasets.push(dataset)
-      }
 
-      const currentData = dataset.data || new Array()
-      const nextData = new Array()
-      for (let i = 0; i < labels.length; i++) {
-        nextData.push(currentData[i] || 0)
-      }
-      nextData.splice(-1, 1, nextData.slice(-1)[0] + 1)
+        Object.keys(stats[currentLabel]).map(statusCode => {
+          dataset.data[labels.indexOf(statusCode)] = stats[currentLabel][statusCode]
+        })
 
-      dataset.data = nextData.map(value => value === 0 ? NaN : value)
-    },
-    populateStatusCodes({ statusCode, application, method, path }) {
-      const currentLabel = statusCode
-
-      const label = statusCode
-      const labels = this.statusCodes.labels
-      if (!labels.includes(currentLabel)) {
-        labels.push(label)
-      }
-
-      const currentDatasetLabel = `${application} - ${method} ${path}`.substring(0, 70)
-      let dataset = this.statusCodes.datasets.find(({ label }) => {
-        return label === currentDatasetLabel
+        dataset.data = dataset.data.map(value => value === 0 ? NaN : value)
       })
-      if (!dataset) {
-        dataset = {
-          label: currentDatasetLabel,
-          backgroundColor: stringToColor(currentDatasetLabel),
-          data: null
-        }
-        this.statusCodes.datasets.push(dataset)
-      }
-
-      const currentData = dataset.data || new Array()
-      const nextData = new Array()
-      for (let i = 0; i < labels.length; i++) {
-        nextData.push(currentData[i] || 0)
-      }
-      nextData.splice(labels.indexOf(statusCode), 1, nextData[labels.indexOf(statusCode)] + 1)
-
-      dataset.data = nextData.map(value => value === 0 ? NaN : value)
     },
-    populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path }) {
-      const currentLabel = `${application} - ${method} ${path}`.substring(0, 70)
+    populateRequestTimes(stats) {
+      Object.keys(stats).forEach(currentLabel => {
+        const labels = uniq(Object.values(stats).flatMap(Object.keys)).sort()
+        this.requestTimes.labels = labels
 
-      const labels = this.requestTimes.labels
-      const lastLabel = labels.slice(-1)[0]
-      if (!lastLabel || !(lastLabel.getTime() == time.getTime())) {
-        labels.push(time)
-      }
-
-      let dataset = this.requestTimes.datasets.find(({ label }) => {
-        return label === currentLabel
-      })
-      if (!dataset) {
-        dataset = {
-          label: currentLabel,
-          borderColor: stringToColor(currentLabel),
-          backgroundColor: stringToColor(currentLabel),
-          fill: false,
-          lineTension: 0,
-          data: null
+        let dataset = this.requestTimes.datasets.find(({ label }) => {
+          return label === currentLabel
+        })
+        if (!dataset) {
+          dataset = {
+            label: currentLabel,
+            borderColor: stringToColor(currentLabel),
+            backgroundColor: stringToColor(currentLabel),
+            fill: false,
+            lineTension: 0,
+            data: []
+          }
+          this.requestTimes.datasets.push(dataset)
         }
-        this.requestTimes.datasets.push(dataset)
-      }
 
-      const currentData = dataset.data || new Array()
-      const nextData = new Array()
-      for (let i = 0; i < labels.length; i++) {
-        nextData.push(currentData[i] || 0)
-      }
-      let requestTimeMilliseconds
-      if (requestTimeUnit === 'ms') {
-        requestTimeMilliseconds = requestTime
-      } else if (requestTimeUnit === 'µs') {
-        requestTimeMilliseconds = requestTime / 1000
-      }
-      nextData.splice(-1, 1, nextData.slice(-1)[0] === 0 ? requestTimeMilliseconds : (nextData.slice(-1)[0] + requestTimeMilliseconds) / 2)
+        Object.keys(stats[currentLabel]).map(timestamp => {
+          dataset.data[labels.indexOf(timestamp)] = stats[currentLabel][timestamp]
+        })
 
-      dataset.data = nextData.map(value => value === 0 ? NaN : value)
+        this.requestTimes.datasets.forEach(dataset => {
+          dataset.data = dataset.data.map(value => value === 0 ? NaN : value)
+        })
+      })
     },
     filter() {
       this.resetGraphs()
       this.resetFilters()
-      this.filteredRequestLogs = []
+      this.filteredRequestLogs.splice(0, 0)
       this.requestLogs.map(this.importRequestLog.bind(this))
+      this.render()
     }
   },
   watch: {
@@ -420,8 +414,8 @@ export default {
       if (to.name !== 'request-logs') return
 
       this.requestsFilter = {
-        startAt: to.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
-        endAt: to.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        startAt: to.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+        endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm"),
         application: to.query.application || 'boruta_web',
         requestLabel: to.query.requestLabel || ''
       }
@@ -429,6 +423,9 @@ export default {
       if (!(to.query.application === from.query.application &&
         to.query.requestLabel === from.query.requestLabel)) this.filter()
     }
+  },
+  beforeRouteLeave() {
+    this.resetGraphs()
   }
 }
 
