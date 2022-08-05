@@ -4,19 +4,17 @@ defmodule BorutaAuth.LogRotate do
   def rotate do
     # TODO setup a configuration that help deleting older files
 
-    Logger.configure_backend({LoggerFileBackend, :web_logger}, [path: path(Date.utc_today())])
-    Logger.configure_backend({LoggerFileBackend, :identity_logger}, [path: path(Date.utc_today())])
-    Logger.configure_backend({LoggerFileBackend, :admin_logger}, [path: path(Date.utc_today())])
-    Logger.configure_backend({LoggerFileBackend, :gateway_logger}, [path: gateway_path(Date.utc_today())])
+    Enum.map([:request, :business], fn type ->
+      Enum.map([:boruta_web, :boruta_identity, :boruta_admin, :boruta_gateway], fn application ->
+        Logger.configure_backend({LoggerFileBackend, :"#{application}_#{type}_logger"},
+          path: path(application, type, Date.utc_today())
+        )
+      end)
+    end)
   end
 
-  @spec path(date :: Date.t()) :: path :: String.t()
-  def path(date) do
-    "./log/#{Date.to_string(date)}_boruta.log"
-  end
-
-  @spec gateway_path(date :: Date.t()) :: path :: String.t()
-  def gateway_path(date) do
-    "./log/#{Date.to_string(date)}_boruta_gateway.log"
+  @spec path(application :: atom(), type :: atom(), date :: Date.t()) :: path :: String.t()
+  def path(application, type, date) do
+    "./log/#{Date.to_string(date)}_#{application}_#{type}.log"
   end
 end

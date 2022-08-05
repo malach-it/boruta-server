@@ -7,44 +7,30 @@ end
 config :logger,
   utc_log: true,
   backends: [
-    {LoggerFileBackend, :web_logger},
-    {LoggerFileBackend, :identity_logger},
-    {LoggerFileBackend, :admin_logger},
-    {LoggerFileBackend, :gateway_logger},
+    {LoggerFileBackend, :boruta_web_business_logger},
+    {LoggerFileBackend, :boruta_web_request_logger},
+    {LoggerFileBackend, :boruta_identity_business_logger},
+    {LoggerFileBackend, :boruta_identity_request_logger},
+    {LoggerFileBackend, :boruta_admin_request_logger},
+    {LoggerFileBackend, :boruta_gateway_business_logger},
+    {LoggerFileBackend, :boruta_gateway_request_logger},
     :console
   ]
-
-config :logger, :web_logger,
-  format: "$dateT$timeZ $metadata[$level] $message\n",
-  path: "./log/test",
-  metadata: [:request_id],
-  metadata_filter: [application: :boruta_web],
-  level: :info
-
-config :logger, :identity_logger,
-  format: "$dateT$timeZ $metadata[$level] $message\n",
-  path: "./log/test",
-  metadata: [:request_id],
-  metadata_filter: [application: :boruta_identity],
-  level: :info
-
-config :logger, :admin_logger,
-  format: "$dateT$timeZ $metadata[$level] $message\n",
-  path: "./log/test",
-  metadata: [:request_id],
-  metadata_filter: [application: :boruta_admin],
-  level: :info
-
-config :logger, :gateway_logger,
-  format: "$dateT$timeZ $metadata[$level] $message\n",
-  path: "./log/test",
-  metadata: [:request_id],
-  metadata_filter: [application: :boruta_gateway],
-  level: :info
+Enum.map([:request, :business], fn (type) ->
+  Enum.map([:boruta_web, :boruta_identity, :boruta_admin, :boruta_gateway], fn (application) ->
+    config :logger, :"#{application}_#{type}_logger",
+      format: "$dateT$timeZ $metadata[$level] $message\n",
+      path: "./log/test",
+      metadata: [:request_id],
+      metadata_filter: [application: application, type: type],
+      level: :info
+  end)
+end)
 
 config :logger, :console,
   format: "$dateT$timeZ $metadata[$level] $message\n",
-  metadata: [:request_id]
+  metadata: [:request_id],
+  level: :info
 
 config :phoenix, :json_library, Jason
 

@@ -80,24 +80,28 @@ defmodule BorutaIdentity.Logger do
         :ok
 
       level ->
-        Logger.log(level, fn ->
-          %{method: method, request_path: path, status: status, state: state} = conn
-          status = Integer.to_string(status)
+        Logger.log(
+          level,
+          fn ->
+            %{method: method, request_path: path, status: status, state: state} = conn
+            status = Integer.to_string(status)
 
-          [
-            "boruta_identity",
-            ?\s,
-            method,
-            ?\s,
-            path,
-            " - ",
-            connection_type(state),
-            ?\s,
-            status,
-            " in ",
-            duration(duration)
-          ]
-        end)
+            [
+              "boruta_identity",
+              ?\s,
+              method,
+              ?\s,
+              path,
+              " - ",
+              connection_type(state),
+              ?\s,
+              status,
+              " in ",
+              duration(duration)
+            ]
+          end,
+          type: :request
+        )
     end
   end
 
@@ -107,18 +111,22 @@ defmodule BorutaIdentity.Logger do
         %{sub: sub, provider: provider, client_id: client_id},
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "authentication",
-        ?\s,
-        "log_in",
-        " - ",
-        "success",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider)
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "authentication",
+          ?\s,
+          "log_in",
+          " - ",
+          "success",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider)
+        ]
+      end,
+      type: :business
+    )
   end
 
   def authentication_log_in_failure_handler(
@@ -127,17 +135,21 @@ defmodule BorutaIdentity.Logger do
         %{message: message, client_id: client_id},
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "authentication",
-        ?\s,
-        "log_in",
-        " - ",
-        "failure",
-        log_attribute("client_id", client_id),
-        log_attribute("message", ~s{"#{message}"})
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "authentication",
+          ?\s,
+          "log_in",
+          " - ",
+          "failure",
+          log_attribute("client_id", client_id),
+          log_attribute("message", ~s{"#{message}"})
+        ]
+      end,
+      type: :business
+    )
   end
 
   def authentication_log_out_success_handler(
@@ -146,18 +158,22 @@ defmodule BorutaIdentity.Logger do
         %{sub: sub, provider: provider, client_id: client_id},
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "authentication",
-        ?\s,
-        "log_out",
-        " - ",
-        "success",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider)
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "authentication",
+          ?\s,
+          "log_out",
+          " - ",
+          "success",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider)
+        ]
+      end,
+      type: :business
+    )
   end
 
   def registration_create_success_handler(
@@ -166,19 +182,23 @@ defmodule BorutaIdentity.Logger do
         %{sub: sub, provider: provider, client_id: client_id} = metadata,
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "registration",
-        ?\s,
-        "create",
-        " - ",
-        "success",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider),
-        log_attribute("message", metadata[:message])
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "registration",
+          ?\s,
+          "create",
+          " - ",
+          "success",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider),
+          log_attribute("message", metadata[:message])
+        ]
+      end,
+      type: :business
+    )
   end
 
   def registration_create_failure_handler(
@@ -189,17 +209,21 @@ defmodule BorutaIdentity.Logger do
       ) do
     message = ErrorHelpers.error_messages(changeset) |> Enum.join(", ")
 
-    Logger.log(:info, fn ->
-      [
-        "registration",
-        ?\s,
-        "create",
-        " - ",
-        "failure",
-        log_attribute("client_id", client_id),
-        log_attribute("message", ~s{"#{message}"})
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "registration",
+          ?\s,
+          "create",
+          " - ",
+          "failure",
+          log_attribute("client_id", client_id),
+          log_attribute("message", ~s{"#{message}"})
+        ]
+      end,
+      type: :business
+    )
   end
 
   def registration_confirm_success_handler(
@@ -208,19 +232,23 @@ defmodule BorutaIdentity.Logger do
         %{sub: sub, provider: provider, client_id: client_id, token: token},
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "registration",
-        ?\s,
-        "confirm",
-        " - ",
-        "success",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider),
-        log_attribute("token", token)
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "registration",
+          ?\s,
+          "confirm",
+          " - ",
+          "success",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider),
+          log_attribute("token", token)
+        ]
+      end,
+      type: :business
+    )
   end
 
   def registration_confirm_failure_handler(
@@ -229,18 +257,22 @@ defmodule BorutaIdentity.Logger do
         %{client_id: client_id, message: message, token: token},
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "registration",
-        ?\s,
-        "confirm",
-        " - ",
-        "failure",
-        log_attribute("client_id", client_id),
-        log_attribute("message", ~s{"#{message}"}),
-        log_attribute("token", token)
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "registration",
+          ?\s,
+          "confirm",
+          " - ",
+          "failure",
+          log_attribute("client_id", client_id),
+          log_attribute("message", ~s{"#{message}"}),
+          log_attribute("token", token)
+        ]
+      end,
+      type: :business
+    )
   end
 
   def registration_update_success_handler(
@@ -249,18 +281,22 @@ defmodule BorutaIdentity.Logger do
         %{sub: sub, provider: provider, client_id: client_id},
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "registration",
-        ?\s,
-        "update",
-        " - ",
-        "success",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider)
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "registration",
+          ?\s,
+          "update",
+          " - ",
+          "success",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider)
+        ]
+      end,
+      type: :business
+    )
   end
 
   def registration_update_failure_handler(
@@ -270,19 +306,23 @@ defmodule BorutaIdentity.Logger do
         _
       )
       when is_binary(message) do
-    Logger.log(:info, fn ->
-      [
-        "registration",
-        ?\s,
-        "update",
-        " - ",
-        "failure",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider),
-        log_attribute("message", ~s{"#{message}"})
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "registration",
+          ?\s,
+          "update",
+          " - ",
+          "failure",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider),
+          log_attribute("message", ~s{"#{message}"})
+        ]
+      end,
+      type: :business
+    )
   end
 
   def registration_update_failure_handler(
@@ -298,19 +338,23 @@ defmodule BorutaIdentity.Logger do
       ) do
     message = ErrorHelpers.error_messages(changeset) |> Enum.join(", ")
 
-    Logger.log(:info, fn ->
-      [
-        "registration",
-        ?\s,
-        "update",
-        " - ",
-        "failure",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider),
-        log_attribute("message", ~s{"#{message}"})
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "registration",
+          ?\s,
+          "update",
+          " - ",
+          "failure",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider),
+          log_attribute("message", ~s{"#{message}"})
+        ]
+      end,
+      type: :business
+    )
   end
 
   def authorization_consent_success_handler(
@@ -319,19 +363,23 @@ defmodule BorutaIdentity.Logger do
         %{sub: sub, provider: provider, client_id: client_id, scopes: scopes},
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "authorization",
-        ?\s,
-        "consent",
-        " - ",
-        "success",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider),
-        log_attribute("scope", ~s{"#{Enum.join(scopes, " ")}"})
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "authorization",
+          ?\s,
+          "consent",
+          " - ",
+          "success",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider),
+          log_attribute("scope", ~s{"#{Enum.join(scopes, " ")}"})
+        ]
+      end,
+      type: :business
+    )
   end
 
   def authorization_consent_failure_handler(
@@ -340,20 +388,24 @@ defmodule BorutaIdentity.Logger do
         %{sub: sub, provider: provider, client_id: client_id, scopes: scopes, message: message},
         _
       ) do
-    Logger.log(:info, fn ->
-      [
-        "authorization",
-        ?\s,
-        "consent",
-        " - ",
-        "success",
-        log_attribute("client_id", client_id),
-        log_attribute("sub", sub),
-        log_attribute("provider", provider),
-        log_attribute("scope", ~s{"#{Enum.join(scopes, " ")}"}),
-        log_attribute("message", ~s{"#{message}"})
-      ]
-    end)
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "authorization",
+          ?\s,
+          "consent",
+          " - ",
+          "success",
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("provider", provider),
+          log_attribute("scope", ~s{"#{Enum.join(scopes, " ")}"}),
+          log_attribute("message", ~s{"#{message}"})
+        ]
+      end,
+      type: :business
+    )
   end
 
   defp log_attribute(_key, nil), do: ""

@@ -19,17 +19,19 @@ defmodule BorutaGateway.Upstreams.Client do
   end
 
   def name(%Upstream{id: upstream_id}) when is_binary(upstream_id) do
-    "client_#{upstream_id}" |> String.replace("-", "") |> String.to_atom()
+    "gateway_client_#{upstream_id}" |> String.replace("-", "") |> String.to_atom()
   end
 
-  def name(_), do: nil
+  def finch_name(%Upstream{id: upstream_id}) when is_binary(upstream_id) do
+    "finch_gateway_client_#{upstream_id}" |> String.replace("-", "") |> String.to_atom()
+  end
 
   def start_link(upstream) do
     GenServer.start_link(__MODULE__, upstream, name: name(upstream))
   end
 
   def init(upstream) do
-    name = SecureRandom.hex() |> String.to_atom()
+    name = finch_name(upstream)
     {:ok, _pid} =
       Finch.start_link(
         name: name,

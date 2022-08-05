@@ -5,8 +5,8 @@ defmodule BorutaAdminWeb.LogsControllerTest do
 
   @log_lines [
     "request_id=Fwd0KILP8T4HsB4AAA3h [info] boruta_web POST /oauth/introspect - sent 200 in 2ms",
-    "request_id=FweNn-2vW71XZiUAAljD [info] boruta_admin GET /api/upstreams/ - sent 200 in 55ms",
-    "request_id=FweINeYU7G053agAAApG [info] boruta_identity GET /accounts/users/log_in - sent 302 in 952µs"
+    "request_id=FweNn-2vW71XZiUAAljD [info] boruta_web GET /oauth/authorize - sent 200 in 16ms",
+    "request_id=FweINeYU7G053agAAApG [info] boruta_web POST /oauth/token - sent 401 in 952µs"
   ]
 
   setup %{conn: conn} do
@@ -44,7 +44,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     @tag authorized: ["logs:read:all"]
     test "return today's logs", %{conn: conn} do
       File.mkdir("./log")
-      File.rm(LogRotate.path(Date.utc_today()))
+      File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
 
       before_lines =
         log_line_serie(fn i ->
@@ -64,7 +64,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         log_line_serie(fn i -> DateTime.utc_now() |> DateTime.add(i * 60, :second) end)
 
       File.write!(
-        LogRotate.path(Date.utc_today()),
+        LogRotate.path(:boruta_web, :request, Date.utc_today()),
         Enum.map_join([before_lines, log_lines, after_lines], fn serie ->
           Enum.join(serie, "\n") <> "\n"
         end) <> "\n"
@@ -76,7 +76,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       end_at = DateTime.utc_now() |> DateTime.to_iso8601()
 
       conn =
-        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
+        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at, application: "boruta_web", type: "request"})
 
       assert %{
                "time_scale_unit" => "minute",
@@ -85,7 +85,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
                "log_count" => 30
              } = json_response(conn, 200)
 
-      File.rm!(LogRotate.path(Date.utc_today()))
+      File.rm!(LogRotate.path(:boruta_web, :request, Date.utc_today()))
     end
 
     @tag :skip
@@ -100,7 +100,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     @tag authorized: ["logs:read:all"]
     test "skips lines before start_at", %{conn: conn} do
       File.mkdir("./log")
-      File.rm(LogRotate.path(Date.utc_today()))
+      File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
 
       before_lines =
         log_line_serie(fn i ->
@@ -117,7 +117,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         end)
 
       File.write!(
-        LogRotate.path(Date.utc_today()),
+        LogRotate.path(:boruta_web, :request, Date.utc_today()),
         Enum.map_join([before_lines, log_lines], fn serie ->
           Enum.join(serie, "\n") <> "\n"
         end) <> "\n"
@@ -129,7 +129,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       end_at = DateTime.utc_now() |> DateTime.to_iso8601()
 
       conn =
-        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
+        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at, application: "boruta_web", type: "request"})
 
       assert %{
                "time_scale_unit" => "minute",
@@ -138,13 +138,13 @@ defmodule BorutaAdminWeb.LogsControllerTest do
                "log_count" => 30
              } = json_response(conn, 200)
 
-      File.rm!(LogRotate.path(Date.utc_today()))
+      File.rm!(LogRotate.path(:boruta_web, :request, Date.utc_today()))
     end
 
     @tag authorized: ["logs:read:all"]
     test "skips lines after end_at", %{conn: conn} do
       File.mkdir("./log")
-      File.rm(LogRotate.path(Date.utc_today()))
+      File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
 
       log_lines =
         log_line_serie(fn i ->
@@ -159,7 +159,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         end)
 
       File.write!(
-        LogRotate.path(Date.utc_today()),
+        LogRotate.path(:boruta_web, :request, Date.utc_today()),
         Enum.map_join([log_lines, after_lines], fn serie ->
           Enum.join(serie, "\n") <> "\n"
         end) <> "\n"
@@ -171,7 +171,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       end_at = DateTime.utc_now() |> DateTime.to_iso8601()
 
       conn =
-        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
+        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at, application: "boruta_web", type: "request"})
 
       assert %{
                "time_scale_unit" => "minute",
@@ -180,7 +180,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
                "log_count" => 30
              } = json_response(conn, 200)
 
-      File.rm!(LogRotate.path(Date.utc_today()))
+      File.rm!(LogRotate.path(:boruta_web, :request, Date.utc_today()))
     end
 
     @tag authorized: ["logs:read:all"]
@@ -189,8 +189,8 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       second_day = Date.utc_today() |> Date.add(-8)
 
       File.mkdir("./log")
-      File.rm(LogRotate.path(first_day))
-      File.rm(LogRotate.path(second_day))
+      File.rm(LogRotate.path(:boruta_web, :request, first_day))
+      File.rm(LogRotate.path(:boruta_web, :request, second_day))
 
       [first_day_log_lines, second_day_log_lines] =
         Enum.map([10, 8], fn day_shift ->
@@ -201,8 +201,8 @@ defmodule BorutaAdminWeb.LogsControllerTest do
           end)
         end)
 
-      File.write!(LogRotate.path(first_day), Enum.join(first_day_log_lines, "\n"))
-      File.write!(LogRotate.path(second_day), Enum.join(second_day_log_lines, "\n"))
+      File.write!(LogRotate.path(:boruta_web, :request, first_day), Enum.join(first_day_log_lines, "\n"))
+      File.write!(LogRotate.path(:boruta_web, :request, second_day), Enum.join(second_day_log_lines, "\n"))
 
       start_at =
         DateTime.utc_now()
@@ -212,7 +212,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       end_at = DateTime.utc_now() |> DateTime.to_iso8601()
 
       conn =
-        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
+        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at, application: "boruta_web", type: "request"})
 
       log_lines = first_day_log_lines ++ second_day_log_lines
       assert %{
@@ -222,8 +222,8 @@ defmodule BorutaAdminWeb.LogsControllerTest do
                "log_count" => 60
              } = json_response(conn, 200)
 
-      File.rm(LogRotate.path(first_day))
-      File.rm(LogRotate.path(second_day))
+      File.rm(LogRotate.path(:boruta_web, :request, first_day))
+      File.rm(LogRotate.path(:boruta_web, :request, second_day))
     end
   end
 

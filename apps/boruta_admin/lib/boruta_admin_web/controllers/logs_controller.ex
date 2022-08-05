@@ -1,20 +1,26 @@
 defmodule BorutaAdminWeb.LogsController do
   use BorutaAdminWeb, :controller
 
-  import BorutaAdminWeb.Authorization, only: [
-    authorize: 2
-  ]
+  import BorutaAdminWeb.Authorization,
+    only: [
+      authorize: 2
+    ]
 
   alias BorutaAdmin.Logs
 
-  action_fallback BorutaAdminWeb.FallbackController
+  action_fallback(BorutaAdminWeb.FallbackController)
 
-  plug :authorize, ["logs:read:all"]
+  plug(:authorize, ["logs:read:all"])
 
-  def index(conn, %{"start_at" => start_at, "end_at" => end_at}) do
+  def index(conn, %{
+        "start_at" => start_at,
+        "end_at" => end_at,
+        "application" => application,
+        "type" => type
+      }) do
     with {:ok, start_at, _offset} <- DateTime.from_iso8601(start_at),
          {:ok, end_at, _offset} <- DateTime.from_iso8601(end_at) do
-      log_stream = Logs.read(start_at, end_at)
+      log_stream = Logs.read(start_at, end_at, application, type)
 
       conn
       |> render("index.json", stats: Enum.into(log_stream, %{}))

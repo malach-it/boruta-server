@@ -28,74 +28,84 @@ defmodule BorutaGateway.Logger do
         :ok
 
       level ->
-        Logger.log(level, fn ->
-          %{method: method, request_path: path, status: status, state: state} = conn
-          status = Integer.to_string(status)
+        Logger.log(
+          level,
+          fn ->
+            %{method: method, request_path: path, status: status, state: state} = conn
+            status = Integer.to_string(status)
 
-          [
-            "boruta_gateway",
-            ?\s,
-            method,
-            ?\s,
-            path,
-            " - ",
-            connection_type(state),
-            ?\s,
-            status,
-            " in ",
-            duration(duration)
-          ]
-        end)
+            [
+              "boruta_gateway",
+              ?\s,
+              method,
+              ?\s,
+              path,
+              " - ",
+              connection_type(state),
+              ?\s,
+              status,
+              " in ",
+              duration(duration)
+            ]
+          end,
+          type: :request
+        )
     end
   end
 
   def boruta_gateway_upstream_request_handler(
         _,
         %{duration: duration},
-        %{request: request, result: result},
+        %{request: request, result: result, name: name},
         _
       ) do
-    Logger.log(:info, fn ->
-      %Finch.Request{
-        host: upstream_host,
-        method: upstream_method,
-        path: upstream_path,
-        port: upstream_port,
-        scheme: upstream_scheme
-      } = request
+    with "finch_gateway_client_" <> _upstream_id <- to_string(name) do
+      Logger.log(
+        :info,
+        fn ->
+          %Finch.Request{
+            host: upstream_host,
+            method: upstream_method,
+            path: upstream_path,
+            port: upstream_port,
+            scheme: upstream_scheme
+          } = request
 
-      case result do
-        {:ok,
-         %Finch.Response{
-           status: upstream_status
-         }} ->
-          [
-            "gateway",
-            ?\s,
-            "upstream",
-            " - ",
-            "success",
-            log_attribute("duration", duration(duration)),
-            log_attribute("upstream_host", upstream_host),
-            log_attribute("upstream_port", upstream_port),
-            log_attribute("upstream_scheme", upstream_scheme),
-            log_attribute("upstream_method", upstream_method),
-            log_attribute("upstream_path", upstream_path),
-            log_attribute("upstream_status", upstream_status)
-          ]
+          case result do
+            {:ok,
+             %Finch.Response{
+               status: upstream_status
+             }} ->
+              [
+                "gateway",
+                ?\s,
+                "upstream",
+                " - ",
+                "success",
+                log_attribute("duration", duration(duration)),
+                log_attribute("upstream_host", upstream_host),
+                log_attribute("upstream_port", upstream_port),
+                log_attribute("upstream_scheme", upstream_scheme),
+                log_attribute("upstream_method", upstream_method),
+                log_attribute("upstream_path", upstream_path),
+                log_attribute("upstream_status", upstream_status)
+              ]
 
-        {:error, exception} ->
-          [
-            "gateway",
-            ?\s,
-            "upstream",
-            " - ",
-            "failure",
-            log_attribute("duration", duration),
-            log_attribute("error", ~s{"#{inspect(exception)}"})
-          ]
-      end
-    end)
+            {:error, exception} ->
+              [
+                "gateway",
+                ?\s,
+                "upstream",
+                " - ",
+                "failure",
+                log_attribute("duration", duration),
+                log_attribute("error", ~s{"#{inspect(exception)}"})
+              ]
+          end
+        end,
+        type: :business
+      )
+    end
   end
 
   defp log_attribute(_key, nil), do: ""

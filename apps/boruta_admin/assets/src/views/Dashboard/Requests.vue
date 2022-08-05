@@ -213,7 +213,7 @@ export default {
       this.graphRerenders += 1
     },
     getLogStats() {
-      LogStats.all(this.requestsFilter).then(({
+      LogStats.all({ type: 'request', ...this.requestsFilter }).then(({
         time_scale_unit,
         overflow,
         log_lines,

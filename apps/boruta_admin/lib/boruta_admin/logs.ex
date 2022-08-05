@@ -6,11 +6,11 @@ defmodule BorutaAdmin.Logs do
   @max_log_lines 10_000
   @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=([^\s]+) \[info\] (\w+) (\w+) ([^\s]+) - (\w+) (\d{3}) in (\d+)(\w+)/
 
-  @spec read(start_at :: DateTime.t(), end_at :: DateTime.t()) :: Enumerable.t()
-  def read(start_at, end_at) do
+  @spec read(start_at :: DateTime.t(), end_at :: DateTime.t(), application :: atom(), type :: atom()) :: Enumerable.t()
+  def read(start_at, end_at, application, "request" = type) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
-    log_stream(start_at, end_at)
+    log_stream(start_at, end_at, application, type)
     |> Stream.map(&parse_request_log/1)
     |> Stream.reject(&is_nil/1)
     |> Enum.reduce(
@@ -87,9 +87,9 @@ defmodule BorutaAdmin.Logs do
 
   def read(_start_at, _end_at, _application, _type), do: %{}
 
-  defp log_stream(start_at, end_at) do
+  defp log_stream(start_at, end_at, application, type) do
     log_dates(DateTime.to_date(start_at), DateTime.to_date(end_at))
-    |> Enum.map(&LogRotate.path/1)
+    |> Enum.map(&LogRotate.path(application, type, &1))
     |> Enum.filter(fn path -> File.exists?(path) end)
     |> Enum.map(&File.stream!/1)
     |> Stream.concat()
