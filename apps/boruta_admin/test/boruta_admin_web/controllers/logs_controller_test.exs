@@ -3,6 +3,12 @@ defmodule BorutaAdminWeb.LogsControllerTest do
 
   alias BorutaAuth.LogRotate
 
+  @log_lines [
+    "request_id=Fwd0KILP8T4HsB4AAA3h [info] boruta_web POST /oauth/introspect - sent 200 in 2ms",
+    "request_id=FweNn-2vW71XZiUAAljD [info] boruta_admin GET /api/upstreams/ - sent 200 in 55ms",
+    "request_id=FweINeYU7G053agAAApG [info] boruta_identity GET /accounts/users/log_in - sent 302 in 952µs"
+  ]
+
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -25,10 +31,10 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       assert conn
              |> get(Routes.admin_logs_path(conn, :index))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
     end
@@ -40,54 +46,97 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       File.mkdir("./log")
       File.rm(LogRotate.path(Date.utc_today()))
 
-      before_lines = Enum.map_join(1..10, "", fn i ->
-        log_time = DateTime.utc_now() |> DateTime.add(-1 * 20 * 60, :second) |> DateTime.add(i * 60, :second)
+      before_lines =
+        log_line_serie(fn i ->
+          DateTime.utc_now()
+          |> DateTime.add(-1 * 20 * 60, :second)
+          |> DateTime.add(i * 60, :second)
+        end)
 
-        "#{DateTime.to_iso8601(log_time)} test log line\n"
-      end)
-      log_lines = Enum.map_join(1..10, "", fn i ->
-        log_time = DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.add(i * 60, :second)
+      log_lines =
+        log_line_serie(fn i ->
+          DateTime.utc_now()
+          |> DateTime.add(-1 * 10 * 60, :second)
+          |> DateTime.add(i * 60, :second)
+        end)
 
-        "#{DateTime.to_iso8601(log_time)} test log line\n"
-      end)
-      after_lines = Enum.map_join(1..10, "", fn i ->
-        log_time = DateTime.utc_now() |> DateTime.add(i * 60, :second)
+      after_lines =
+        log_line_serie(fn i -> DateTime.utc_now() |> DateTime.add(i * 60, :second) end)
 
-        "#{DateTime.to_iso8601(log_time)} test log line\n"
-      end)
-      File.write!(LogRotate.path(Date.utc_today()), Enum.join([before_lines, log_lines, after_lines]))
+      File.write!(
+        LogRotate.path(Date.utc_today()),
+        Enum.map_join([before_lines, log_lines, after_lines], fn serie ->
+          Enum.join(serie, "\n") <> "\n"
+        end) <> "\n"
+      )
 
-      start_at = DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.to_iso8601()
+      start_at =
+        DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.to_iso8601()
+
       end_at = DateTime.utc_now() |> DateTime.to_iso8601()
-      conn = get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
 
-      assert response(conn, 200) == log_lines
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
+
+      assert %{
+               "time_scale_unit" => "minute",
+               "overflow" => false,
+               "log_lines" => ^log_lines,
+               "log_count" => 30
+             } = json_response(conn, 200)
 
       File.rm!(LogRotate.path(Date.utc_today()))
     end
+
+    @tag :skip
+    test "compute request times"
+
+    @tag :skip
+    test "compute request counts"
+
+    @tag :skip
+    test "compute status codes"
 
     @tag authorized: ["logs:read:all"]
     test "skips lines before start_at", %{conn: conn} do
       File.mkdir("./log")
       File.rm(LogRotate.path(Date.utc_today()))
 
-      before_lines = Enum.map_join(1..10, "", fn i ->
-        log_time = DateTime.utc_now() |> DateTime.add(-1 * 20 * 60, :second) |> DateTime.add(i * 60, :second)
+      before_lines =
+        log_line_serie(fn i ->
+          DateTime.utc_now()
+          |> DateTime.add(-1 * 20 * 60, :second)
+          |> DateTime.add(i * 60, :second)
+        end)
 
-        "#{DateTime.to_iso8601(log_time)} test log line\n"
-      end)
-      log_lines = Enum.map_join(1..10, "", fn i ->
-        log_time = DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.add(i * 60, :second)
+      log_lines =
+        log_line_serie(fn i ->
+          DateTime.utc_now()
+          |> DateTime.add(-1 * 10 * 60, :second)
+          |> DateTime.add(i * 60, :second)
+        end)
 
-        "#{DateTime.to_iso8601(log_time)} test log line\n"
-      end)
-      File.write!(LogRotate.path(Date.utc_today()), Enum.join([before_lines, log_lines]))
+      File.write!(
+        LogRotate.path(Date.utc_today()),
+        Enum.map_join([before_lines, log_lines], fn serie ->
+          Enum.join(serie, "\n") <> "\n"
+        end) <> "\n"
+      )
 
-      start_at = DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.to_iso8601()
+      start_at =
+        DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.to_iso8601()
+
       end_at = DateTime.utc_now() |> DateTime.to_iso8601()
-      conn = get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
 
-      assert response(conn, 200) == log_lines
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
+
+      assert %{
+               "time_scale_unit" => "minute",
+               "overflow" => false,
+               "log_lines" => ^log_lines,
+               "log_count" => 30
+             } = json_response(conn, 200)
 
       File.rm!(LogRotate.path(Date.utc_today()))
     end
@@ -97,23 +146,39 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       File.mkdir("./log")
       File.rm(LogRotate.path(Date.utc_today()))
 
-      log_lines = Enum.map_join(1..10, "", fn i ->
-        log_time = DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.add(i * 60, :second)
+      log_lines =
+        log_line_serie(fn i ->
+          DateTime.utc_now()
+          |> DateTime.add(-1 * 10 * 60, :second)
+          |> DateTime.add(i * 60, :second)
+        end)
 
-        "#{DateTime.to_iso8601(log_time)} test log line\n"
-      end)
-      after_lines = Enum.map_join(1..10, "", fn i ->
-        log_time = DateTime.utc_now() |> DateTime.add(i * 60, :second)
+      after_lines =
+        log_line_serie(fn i ->
+          DateTime.utc_now() |> DateTime.add(i * 60, :second)
+        end)
 
-        "#{DateTime.to_iso8601(log_time)} test log line\n"
-      end)
-      File.write!(LogRotate.path(Date.utc_today()), Enum.join([log_lines, after_lines]))
+      File.write!(
+        LogRotate.path(Date.utc_today()),
+        Enum.map_join([log_lines, after_lines], fn serie ->
+          Enum.join(serie, "\n") <> "\n"
+        end) <> "\n"
+      )
 
-      start_at = DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.to_iso8601()
+      start_at =
+        DateTime.utc_now() |> DateTime.add(-1 * 10 * 60, :second) |> DateTime.to_iso8601()
+
       end_at = DateTime.utc_now() |> DateTime.to_iso8601()
-      conn = get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
 
-      assert response(conn, 200) == log_lines
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
+
+      assert %{
+               "time_scale_unit" => "minute",
+               "overflow" => false,
+               "log_lines" => ^log_lines,
+               "log_count" => 30
+             } = json_response(conn, 200)
 
       File.rm!(LogRotate.path(Date.utc_today()))
     end
@@ -127,23 +192,46 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       File.rm(LogRotate.path(first_day))
       File.rm(LogRotate.path(second_day))
 
-      [first_day_log_lines, second_day_log_lines] = Enum.map([10, 8], fn day_shift ->
-        Enum.map_join(1..10, "", fn i ->
-          log_time = DateTime.utc_now() |> DateTime.add(-1 * 24 * 3600 * day_shift, :second) |> DateTime.add(i * 60, :second)
-          "#{DateTime.to_iso8601(log_time)} test log line\n"
+      [first_day_log_lines, second_day_log_lines] =
+        Enum.map([10, 8], fn day_shift ->
+          log_line_serie(fn i ->
+            DateTime.utc_now()
+            |> DateTime.add(-1 * 24 * 3600 * day_shift, :second)
+            |> DateTime.add(i * 60, :second)
+          end)
         end)
-      end)
-      File.write!(LogRotate.path(first_day), first_day_log_lines)
-      File.write!(LogRotate.path(second_day), second_day_log_lines)
 
-      start_at = DateTime.utc_now() |> DateTime.add(-1 * 10 * 24 * 3600, :second) |> DateTime.to_iso8601()
+      File.write!(LogRotate.path(first_day), Enum.join(first_day_log_lines, "\n"))
+      File.write!(LogRotate.path(second_day), Enum.join(second_day_log_lines, "\n"))
+
+      start_at =
+        DateTime.utc_now()
+        |> DateTime.add(-1 * 10 * 24 * 3600 - 1, :second)
+        |> DateTime.to_iso8601()
+
       end_at = DateTime.utc_now() |> DateTime.to_iso8601()
-      conn = get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
 
-      assert response(conn, 200) == Enum.join([first_day_log_lines, second_day_log_lines], "")
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{start_at: start_at, end_at: end_at})
+
+      log_lines = first_day_log_lines ++ second_day_log_lines
+      assert %{
+               "time_scale_unit" => "hour",
+               "overflow" => false,
+               "log_lines" => ^log_lines,
+               "log_count" => 60
+             } = json_response(conn, 200)
 
       File.rm(LogRotate.path(first_day))
       File.rm(LogRotate.path(second_day))
     end
+  end
+
+  defp log_line_serie(fun) do
+    Enum.flat_map(1..10, fn i ->
+      log_time = fun.(i)
+
+      Enum.map(@log_lines, fn log -> "#{DateTime.to_iso8601(log_time)} #{log}" end)
+    end)
   end
 end
