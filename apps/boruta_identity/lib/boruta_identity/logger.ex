@@ -115,6 +115,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "authentication",
           ?\s,
           "log_in",
@@ -139,6 +141,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "authentication",
           ?\s,
           "log_in",
@@ -162,6 +166,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "authentication",
           ?\s,
           "log_out",
@@ -186,6 +192,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "registration",
           ?\s,
           "create",
@@ -213,6 +221,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "registration",
           ?\s,
           "create",
@@ -236,6 +246,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "registration",
           ?\s,
           "confirm",
@@ -261,6 +273,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "registration",
           ?\s,
           "confirm",
@@ -285,6 +299,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "registration",
           ?\s,
           "update",
@@ -310,6 +326,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "registration",
           ?\s,
           "update",
@@ -342,6 +360,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "registration",
           ?\s,
           "update",
@@ -367,6 +387,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "authorization",
           ?\s,
           "consent",
@@ -392,6 +414,8 @@ defmodule BorutaIdentity.Logger do
       :info,
       fn ->
         [
+          "boruta_identity",
+          ?\s,
           "authorization",
           ?\s,
           "consent",

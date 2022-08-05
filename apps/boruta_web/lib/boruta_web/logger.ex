@@ -103,6 +103,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "authorize",
@@ -133,6 +135,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "authorize",
@@ -162,6 +166,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "token",
@@ -189,6 +195,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "token",
@@ -214,6 +222,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "introspect",
@@ -240,6 +250,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "introspect",
@@ -263,6 +275,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "revoke",
@@ -286,6 +300,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "revoke",

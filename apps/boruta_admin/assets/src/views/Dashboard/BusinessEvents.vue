@@ -7,30 +7,39 @@
             <h1>Business events</h1>
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="businessEventFilter.startAt" />
+            <input type="datetime-local" v-model="businessEventFilter.startAt" :disabled="pending" />
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="businessEventFilter.endAt" />
+            <input type="datetime-local" v-model="businessEventFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button" @click="getLogs()">Filter</button>
+            <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
         </div>
+      </div>
+      <div class="ui error message" v-if="overflow">
+        This interface is limited to read at most {{ maxLogLines }} log lines, earlier logs are skipped
       </div>
       <div class="ui segment">
         <div class="ui requests form">
           <div class="ui stackable grid">
             <div class="ten wide filter-form column">
               <div class="field">
+                <label>Application</label>
+                <select v-model="businessEventFilter.application" :disabled="pending">
+                  <option :value="application" v-for="application in businessEventFiltersData.applications">{{ application }}</option>
+                </select>
+              </div>
+              <div class="field">
                 <label>Domain</label>
-                <select @change="filter()" v-model="businessEventFilter.domain">
+                <select v-model="businessEventFilter.domain" :disabled="pending">
                   <option value=''>All domains</option>
                   <option :value="domain" v-for="domain in businessEventFiltersData.domains">{{ domain }}</option>
                 </select>
               </div>
               <div class="field">
                 <label>Action</label>
-                <select @change="filter()" v-model="businessEventFilter.action">
+                <select v-model="businessEventFilter.action" :disabled="pending">
                   <option value=''>All actions</option>
                   <option :value="action" v-for="action in businessEventFiltersData.actions">{{ action }}</option>
                 </select>
@@ -39,14 +48,13 @@
             <div class="six wide log-count column">
               <div class="counts">
                 <label>Log count <span>{{ logCount }}</span></label>
-                <label>Filtered log count <span>{{ filteredLogCount }}</span></label>
               </div>
             </div>
           </div>
         </div>
         <div class="ui stackable grid">
           <div class="ten wide filter-form column">
-            <LineChart :chartData="businessEventCountsPerMinute" :options="businessEventCountsPerMinuteOptions" height="500" :key="graphRerenders" />
+            <LineChart :chartData="businessEventCounts" :options="businessEventCountsOptions" height="500" :key="graphRerenders" />
           </div>
           <div class="six wide filter-form column">
             <div class="ui business-event-counts celled list">
@@ -64,7 +72,7 @@
         </div>
         <h3>Log trail</h3>
         <div class="ui logs segment">
-          <pre>{{ (filteredBusinessEventLogs || businessEventLogs).join('\n') }}</pre>
+          <pre>{{ businessEventLogs.join('\n') }}</pre>
         </div>
       </div>
     </div>
@@ -72,14 +80,16 @@
 </template>
 
 <script>
+import { uniq } from 'lodash'
 import moment from 'moment'
 import { LineChart } from "vue-chart-3"
 import { Chart, registerables } from 'chart.js'
-import Logs from '../../services/logs.service'
+import BusinessLogStats from '../../models/business-log-stats.model.js'
+import 'chartjs-adapter-moment'
 
 Chart.register(...registerables)
 
-const BUSINESS_REGEX = /(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=(\w+) \[info\] (\w+) (\w+) - (\w+)( (\w+)=((\".+\")|([^\s]+)))+/
+const MAX_LOG_LINES = 10000 // from backend limit
 
 export default {
   name: 'business-events',
@@ -88,30 +98,40 @@ export default {
   },
   data() {
     return {
-      graphRenders: 0,
+      overflow: false,
+      pending: false,
+      maxLogLines: MAX_LOG_LINES,
+      timeScaleUnit: '',
       businessEventLogs: [],
-      filteredBusinessEventLogs: [],
+      logCount: 0,
+      graphRerenders: 0,
       businessEventFiltersData: {
+        applications: ['boruta_web', 'boruta_identity', 'boruta_gateway'],
         domains: [],
         actions: []
       },
       businessEventFilter: {
-        startAt: this.$route.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm"),
+        application: this.$route.query.application || 'boruta_web',
         domain: this.$route.query.domain || '',
         action: this.$route.query.action || ''
       },
       counts: {},
-      businessEventCountsPerMinute: {
+      businessEventCounts: {
         labels: [],
         datasets: []
-      },
-      businessEventCountsPerMinuteOptions: {
+      }
+    }
+  },
+  computed: {
+    businessEventCountsOptions() {
+      return {
         animation: false,
         plugins: {
           title: {
             display: true,
-            text: 'Business event counts per minute'
+            text: `Business event counts per ${this.timeScaleUnit}`
           },
           legend: {
             align: 'start',
@@ -127,15 +147,7 @@ export default {
             }
           }
         }
-      },
-    }
-  },
-  computed: {
-    logCount() {
-      return this.businessEventLogs.length
-    },
-    filteredLogCount() {
-      return (this.filteredBusinessEventLogs || this.businessEventLogs).length
+      }
     }
   },
   async mounted() {
@@ -143,14 +155,20 @@ export default {
   },
   methods: {
     async getLogs() {
-      this.stream && this.stream.cancel()
-      this.resetFilters()
+      this.pending = true
+      this.overflow = false
       this.resetGraphs()
-      this.businessEventLogs = []
-      this.filteredBusinessEventLogs = []
-      this.stream = await Logs.stream(this.businessEventFilter)
+      this.resetFilters()
 
-      this.readLogStream(this.stream)
+      this.getLogStats()
+      this.render()
+    },
+    resetGraphs() {
+      this.counts = {}
+      this.businessEventCounts = {
+        labels: [],
+        datasets: []
+      }
     },
     resetFilters() {
       this.businessEventFiltersData.actions = []
@@ -158,159 +176,70 @@ export default {
         this.businessEventFilter.action = ''
       }
     },
-    resetGraphs() {
-      this.counts = {}
-      this.businessEventCountsPerMinute = {
-        labels: [],
-        datasets: []
-      }
+    getLogStats() {
+      BusinessLogStats.all(this.businessEventFilter).then(({
+        time_scale_unit,
+        overflow,
+        log_lines,
+        log_count,
+        counts,
+        business_event_counts
+      }) => {
+        this.timeScaleUnit = time_scale_unit
+        this.overflow = overflow
+        this.businessEventLogs = log_lines
+        this.logCount = log_count
+        this.populateCounts(counts)
+        this.populateBusinessEventCounts(business_event_counts)
+        this.pending = false
+      })
+    },
+    render() {
       this.graphRerenders += 1
     },
-    readLogStream(stream) {
-      stream.read().then(({ done, value }) => {
-        // decode Uint8Array to utf-8 string
-        const data = new TextDecoder().decode(value)
+    populateCounts(stats) {
+      Object.keys(stats).forEach(currentLabel => {
+        this.counts[currentLabel] = this.counts[currentLabel] || {}
 
-        // this.logs += data
-        data.split('\n').map(log => {
-          if (log.match(BUSINESS_REGEX)) {
-            this.businessEventLogs.push(`${log}`)
-            this.importBusinessEventLog(log)
+        Object.keys(stats[currentLabel]).forEach(result => {
+          this.counts[currentLabel][result] = stats[currentLabel][result]
+        })
+      })
+    },
+    populateBusinessEventCounts(stats) {
+      Object.keys(stats).forEach(currentLabel => {
+        const labels = uniq(Object.values(stats).flatMap(Object.keys)).sort()
+        this.businessEventCounts.labels = labels
+
+        let dataset = this.businessEventCounts.datasets.find(({ label }) => {
+          return label === currentLabel
+        })
+        if (!dataset) {
+          dataset = {
+            label: currentLabel,
+            borderColor: stringToColor(currentLabel),
+            backgroundColor: stringToColor(currentLabel),
+            fill: false,
+            lineTension: 0,
+            data: []
           }
+          this.businessEventCounts.datasets.push(dataset)
+        }
+
+        Object.keys(stats[currentLabel]).map(timestamp => {
+          dataset.data[labels.indexOf(timestamp)] = stats[currentLabel][timestamp]
         })
 
-        if (done) {
-          stream.cancel()
-          } else {
-          this.readLogStream(stream)
-        }
+        this.businessEventCounts.datasets.forEach(dataset => {
+          dataset.data = dataset.data.map(value => value === 0 ? NaN : value)
+        })
       })
-    },
-    importBusinessEventLog(log) {
-      const businessEventMatches = log.match(BUSINESS_REGEX)
-      if (!businessEventMatches) return
-
-      this.importBusinessEventFilters(businessEventMatches)
-
-      if (this.isLogDomainFiltered(businessEventMatches)) {
-        return
-      } else {
-        this.importActions(businessEventMatches)
-      }
-
-      if (this.isLogActionFiltered(businessEventMatches)) {
-        return
-      }
-
-      this.filteredBusinessEventLogs.push(log)
-
-      const time = new Date(businessEventMatches[1])
-      time.setMilliseconds(0)
-      time.setSeconds(0)
-      const domain = businessEventMatches[3]
-      const action = businessEventMatches[4]
-      const result = businessEventMatches[5]
-
-      this.populateCounts({ domain, action, result })
-      this.populateBusinessEventCountsPerMinute({ time, domain, action })
-    },
-    importBusinessEventFilters(businessEventMatches) {
-      if (!businessEventMatches) return
-
-      const domain = businessEventMatches[3]
-
-      if (!this.businessEventFiltersData.domains.includes(domain)) {
-        this.businessEventFiltersData.domains.push(domain)
-        this.businessEventFiltersData.domains.sort()
-      }
-    },
-    importActions(businessEventMatches) {
-      if (!businessEventMatches) return
-
-      const domain = businessEventMatches[3]
-      const action = businessEventMatches[4]
-
-      const label = `${domain} - ${action}`
-
-      if (!this.businessEventFiltersData.actions.includes(label)) {
-        this.businessEventFiltersData.actions.push(label)
-        this.businessEventFiltersData.actions.sort()
-      }
-    },
-    isLogDomainFiltered(businessEventMatches) {
-      if (!businessEventMatches) return
-
-      const domain = businessEventMatches[3]
-      if (this.businessEventFilter.domain === '') {
-        return false
-      }
-      return (this.businessEventFilter.domain !== domain)
-    },
-    isLogActionFiltered(businessEventMatches) {
-      if (!businessEventMatches) return
-
-      const domain = businessEventMatches[3]
-      const action = businessEventMatches[4]
-
-      const label = `${domain} - ${action}`
-
-      if (this.businessEventFilter.action === '') {
-        return false
-      }
-      return (this.businessEventFilter.action !== label)
-    },
-    populateCounts({ domain, action, result }) {
-      const label = `${domain} - ${action}`
-
-      this.counts[label] = this.counts[label] || {}
-      this.counts[label][result] = this.counts[label][result] || 0
-
-      this.counts[label][result] += 1
-    },
-    populateBusinessEventCountsPerMinute({ time, domain, action }) {
-      const currentLabel = `${domain} - ${action}`
-
-      const labels = this.businessEventCountsPerMinute.labels
-      const lastLabel = labels.slice(-1)[0]
-      if (!lastLabel || !(lastLabel.getTime() == time.getTime())) {
-        labels.push(time)
-      }
-
-      let dataset = this.businessEventCountsPerMinute.datasets.find(({ label }) => {
-        return label === currentLabel
-      })
-      if (!dataset) {
-        dataset = {
-          label: currentLabel,
-          borderColor: stringToColor(currentLabel),
-          backgroundColor: stringToColor(currentLabel),
-          fill: false,
-          lineTension: 0,
-          data: null
-        }
-        this.businessEventCountsPerMinute.datasets.push(dataset)
-      }
-
-      const currentData = dataset.data || new Array()
-      const nextData = new Array()
-      for (let i = 0; i < labels.length; i++) {
-        nextData.push(currentData[i] || 0)
-      }
-      nextData.splice(-1, 1, nextData.slice(-1)[0] + 1)
-
-      dataset.data = nextData.map(value => value === 0 ? NaN : value)
-    },
-    filter() {
-      this.resetGraphs()
-      this.resetFilters()
-      this.filteredBusinessEventLogs = []
-      this.businessEventLogs.map(this.importBusinessEventLog.bind(this))
     },
   },
   watch: {
     businessEventFilter: {
-      handler({ startAt, endAt, domain, action }) {
-        const query = { startAt, endAt }
+      handler({ startAt, endAt, application, domain, action }) {
+        const query = { startAt, endAt, application }
 
         if (domain !== '') query.domain = domain
         if (action !== '') query.action = action
@@ -325,13 +254,16 @@ export default {
       this.businessEventFilter = {
         startAt: to.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
         endAt: to.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
+        application: to.query.application || 'boruta_web',
         domain: to.query.domain || '',
         action: to.query.action || ''
       }
 
-      if (!(to.query.domain === from.query.domain &&
-        to.query.action === from.query.action)) this.filter()
+      this.getLogs()
     }
+  },
+  beforeRouteLeave() {
+    this.resetGraphs()
   }
 }
 

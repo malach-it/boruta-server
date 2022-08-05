@@ -38,12 +38,12 @@ LogStats.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-LogStats.all = function ({ startAt, endAt, application, type }) {
+LogStats.all = function ({ startAt, endAt, application }) {
   const params = new URLSearchParams()
   params.append('start_at', moment.utc(startAt).toISOString())
   params.append('end_at', moment.utc(endAt).toISOString())
   params.append('application', application)
-  params.append('type', type)
+  params.append('type', 'request')
 
   return this.api().get(`?${params.toString()}`).then(({ data }) => {
     return new LogStats(data)

@@ -29,13 +29,13 @@
             <div class="ten wide filter-form column">
               <div class="field">
                 <label>Application</label>
-                <select @change="filter()" v-model="requestsFilter.application" :disabled="pending">
+                <select v-model="requestsFilter.application" :disabled="pending">
                   <option :value="application" v-for="application in requestsFiltersData.applications">{{ application }}</option>
                 </select>
               </div>
               <div class="field">
                 <label>Request label</label>
-                <select @change="filter()" v-model="requestsFilter.requestLabel" :disabled="pending">
+                <select v-model="requestsFilter.requestLabel" :disabled="pending">
                   <option value=''>All request labels</option>
                   <option :value="requestLabel" v-for="requestLabel in requestsFiltersData.requestLabels">{{ requestLabel }}</option>
                 </select>
@@ -44,7 +44,6 @@
             <div class="six wide log-count column">
               <div class="counts">
                 <label>Log count <span>{{ logCount }}</span></label>
-                <label>Filtered Log count: <span>{{ filteredLogCount }}</span></label>
               </div>
             </div>
           </div>
@@ -62,7 +61,7 @@
         </div>
         <h3>Log trail</h3>
         <div class="ui logs segment">
-          <pre>{{ (filteredRequestLogs || requestLogs).join('\n') }}</pre>
+          <pre>{{ requestLogs.join('\n') }}</pre>
         </div>
       </div>
     </div>
@@ -70,12 +69,12 @@
 </template>
 
 <script>
-import { cloneDeep, uniq } from 'lodash'
+import { uniq } from 'lodash'
 import { LineChart, PieChart } from "vue-chart-3"
 import { Chart, registerables } from 'chart.js'
 import moment from 'moment'
 import 'chartjs-adapter-moment'
-import LogStats from '../../models/log-stats.model'
+import RequestLogStats from '../../models/request-log-stats.model'
 
 Chart.register(...registerables)
 
@@ -94,11 +93,10 @@ export default {
       maxLogLines: MAX_LOG_LINES,
       timeScaleUnit: '',
       requestLogs: [],
-      filteredRequestLogs: [],
       logCount: 0,
       graphRerenders: 0,
       requestsFiltersData: {
-        applications: [],
+        applications: ['boruta_web', 'boruta_identity', 'boruta_gateway', 'boruta_admin'],
         requestLabels: []
       },
       requestsFilter: {
@@ -157,9 +155,6 @@ export default {
     }
   },
   computed: {
-    filteredLogCount() {
-      return (this.filteredRequestLogs || this.requestLogs).length
-    },
     requestCountsOptions() {
       return {
         animation: false,
@@ -198,22 +193,19 @@ export default {
       this.getLogStats()
       this.render()
     },
+    resetGraphs() {
+      this.requestCounts = { labels: [], datasets: [] }
+      this.statusCodes = { labels: [], datasets: [] }
+      this.requestTimes = { labels: [], datasets: [] }
+    },
     resetFilters() {
       this.requestsFiltersData.requestLabels = []
       if (!this.requestsFilter.requestLabel.match(this.requestsFilter.application)) {
         this.requestsFilter.requestLabel = ''
       }
     },
-    resetGraphs() {
-      this.requestCounts = { labels: [], datasets: [] }
-      this.statusCodes = { labels: [], datasets: [] }
-      this.requestTimes = { labels: [], datasets: [] }
-    },
-    render() {
-      this.graphRerenders += 1
-    },
     getLogStats() {
-      LogStats.all({ type: 'request', ...this.requestsFilter }).then(({
+      RequestLogStats.all(this.requestsFilter).then(({
         time_scale_unit,
         overflow,
         log_lines,
@@ -225,8 +217,6 @@ export default {
         this.timeScaleUnit = time_scale_unit
         this.overflow = overflow
         this.requestLogs = log_lines
-        this.filteredRequestLogs = log_lines
-        // TODO filter
         this.logCount = log_count
         this.populateRequestCounts(request_counts)
         this.populateStatusCodes(status_codes)
@@ -234,80 +224,9 @@ export default {
         this.pending = false
       })
     },
-    // importRequestLog(log) {
-    //   const requestMatches = log.match(REQUEST_REGEX)
-    //   if (!requestMatches) return
-    //   this.importRequestFilters(requestMatches)
-
-    //   if (this.isLogApplicationFiltered(requestMatches)) {
-    //     return
-    //   } else {
-    //     this.importRequestLabels(requestMatches)
-    //   }
-    //   if (this.isLogRequestLabelFiltered(requestMatches)) {
-    //     return
-    //   }
-    //   filteredRequestLogs.push(log)
-
-    //   const time = new Date(requestMatches[1])
-    //   time.setMilliseconds(0)
-    //   time.setSeconds(0)
-    //   if (this.isHourScale) time.setMinutes(0)
-    //   const application = requestMatches[3]
-    //   const method = requestMatches[4]
-    //   const path = requestMatches[5]
-    //   const statusCode = requestMatches[7]
-    //   const requestTime = parseInt(requestMatches[8])
-    //   const requestTimeUnit = requestMatches[9]
-
-    //   this.populateRequestsCount({ time, application, method, path })
-    //   this.populateStatusCodes({ statusCode, application, method, path })
-    //   this.populateRequestTimes({ time, requestTime, requestTimeUnit, application, method, path })
-    // },
-    // importRequestFilters(requestMatches) {
-    //   if (!requestMatches) return
-
-    //   const application = requestMatches[3]
-
-    //   if (!this.requestsFiltersData.applications.includes(application)) {
-    //     this.requestsFiltersData.applications.push(application)
-    //     this.requestsFiltersData.applications.sort()
-    //   }
-    // },
-    // importRequestLabels(requestMatches) {
-    //   if (!requestMatches) return
-
-    //   const application = requestMatches[3]
-    //   const method = requestMatches[4]
-    //   const path = requestMatches[5]
-    //   const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
-
-    //   if (!this.requestsFiltersData.requestLabels.includes(requestLabel)) {
-    //     this.requestsFiltersData.requestLabels.push(requestLabel)
-    //     this.requestsFiltersData.requestLabels.sort()
-    //   }
-    // },
-    // isLogApplicationFiltered(requestMatches) {
-    //   if (!requestMatches) return
-
-    //   const application = requestMatches[3]
-    //   return (this.requestsFilter.application !== application)
-    // },
-    // isLogRequestLabelFiltered(requestMatches) {
-    //   if (!requestMatches) return
-
-    //   const application = requestMatches[3]
-
-    //   const method = requestMatches[4]
-    //   const path = requestMatches[5]
-    //   const requestLabel = `${application} - ${method} ${path}`.substring(0, 70)
-    //   if (this.requestsFilter.requestLabel === '') {
-    //     return false
-    //   } else {
-    //     return (this.requestsFilter.requestLabel !== requestLabel)
-    //   }
-
-    // },
+    render() {
+      this.graphRerenders += 1
+    },
     populateRequestCounts(stats) {
       Object.keys(stats).forEach(currentLabel => {
         const labels = uniq(Object.values(stats).flatMap(Object.keys)).sort()
@@ -389,21 +308,13 @@ export default {
           dataset.data = dataset.data.map(value => value === 0 ? NaN : value)
         })
       })
-    },
-    filter() {
-      this.resetGraphs()
-      this.resetFilters()
-      this.filteredRequestLogs.splice(0, 0)
-      this.requestLogs.map(this.importRequestLog.bind(this))
-      this.render()
     }
   },
   watch: {
     requestsFilter: {
       handler({ startAt, endAt, application, requestLabel }) {
-        const query = { startAt, endAt }
+        const query = { startAt, endAt, application }
 
-        if (application !== '') query.application = application
         if (requestLabel !== '') query.requestLabel = requestLabel
 
         this.$router.push({path: this.$route.path, query })
@@ -420,8 +331,7 @@ export default {
         requestLabel: to.query.requestLabel || ''
       }
 
-      if (!(to.query.application === from.query.application &&
-        to.query.requestLabel === from.query.requestLabel)) this.filter()
+      this.getLogs()
     }
   },
   beforeRouteLeave() {

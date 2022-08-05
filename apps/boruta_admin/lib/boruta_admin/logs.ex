@@ -4,10 +4,16 @@ defmodule BorutaAdmin.Logs do
   alias BorutaAuth.LogRotate
 
   @max_log_lines 10_000
-  @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^\s]+Z) request_id=([^\s]+) \[info\] (\w+) (\w+) ([^\s]+) - (\w+) (\d{3}) in (\d+)(\w+)/
+  @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) in (\d+)(\w+)/
+  @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(( ([^\=]+)\=((\".+\")|([^\s]+)))+)/
 
-  @spec read(start_at :: DateTime.t(), end_at :: DateTime.t(), application :: atom(), type :: atom()) :: Enumerable.t()
-  def read(start_at, end_at, application, "request" = type) do
+  @spec read(
+          start_at :: DateTime.t(),
+          end_at :: DateTime.t(),
+          application :: atom(),
+          type :: atom()
+        ) :: Enumerable.t()
+  def read(start_at, end_at, application, :request = type) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
     log_stream(start_at, end_at, application, type)
@@ -85,6 +91,66 @@ defmodule BorutaAdmin.Logs do
     )
   end
 
+  def read(start_at, end_at, application, :business = type) do
+    time_scale_unit = time_scale_unit(start_at, end_at)
+
+    log_stream(start_at, end_at, application, type)
+    |> Stream.map(&parse_business_log/1)
+    |> Stream.reject(&is_nil/1)
+    |> Enum.reduce(
+      %{
+        time_scale_unit: time_scale_unit,
+        overflow: false,
+        log_lines: [],
+        log_count: 0,
+        counts: %{},
+        business_event_counts: %{}
+      },
+      fn %{
+           log_line: log_line,
+           time: time,
+           label: label,
+           status: status
+         },
+         %{
+           time_scale_unit: time_scale_unit,
+           overflow: overflow,
+           log_lines: log_lines,
+           log_count: log_count,
+           counts: counts,
+           business_event_counts: business_event_counts
+         } ->
+        overflow = overflow || log_count >= @max_log_lines
+        truncated_time = DateTime.truncate(time, :second)
+
+        truncated_time =
+          case time_scale_unit do
+            :minute -> %{truncated_time | second: 0}
+            :hour -> %{truncated_time | second: 0, minute: 0}
+          end
+
+        %{
+          time_scale_unit: time_scale_unit,
+          overflow: overflow,
+          log_lines:
+            case overflow do
+              true -> log_lines
+              false -> log_lines ++ [log_line]
+            end,
+          log_count: log_count + 1,
+          business_event_counts:
+            Map.merge(business_event_counts, %{label => %{truncated_time => 1}}, fn _, a, b ->
+              Map.merge(a, b, fn _, i, j -> i + j end)
+            end),
+          counts:
+            Map.merge(counts, %{label => %{status => 1}}, fn _, a, b ->
+              Map.merge(a, b, fn _, i, j -> i + j end)
+            end)
+        }
+      end
+    )
+  end
+
   def read(_start_at, _end_at, _application, _type), do: %{}
 
   defp log_stream(start_at, end_at, application, type) do
@@ -145,6 +211,36 @@ defmodule BorutaAdmin.Logs do
           }
         end
     end
+  end
+
+  defp parse_business_log(log_line) do
+      case Regex.run(@business_event_log_regex, log_line) do
+        nil ->
+          nil
+
+        [
+          log_line,
+          raw_time,
+          request_id,
+          application,
+          domain,
+          action,
+          status | _raw_attributes
+        ] ->
+
+          with {:ok, time, _offset} <- DateTime.from_iso8601(raw_time) do
+            %{
+              log_line: log_line,
+              time: time,
+              request_id: request_id,
+              label: String.slice("#{application} - #{domain} #{action}", 0..70),
+              application: application,
+              domain: domain,
+              action: action,
+              status: status
+            }
+          end
+      end
   end
 
   defp log_dates(start_date, end_date) do

@@ -20,7 +20,7 @@ defmodule BorutaAdminWeb.LogsController do
       }) do
     with {:ok, start_at, _offset} <- DateTime.from_iso8601(start_at),
          {:ok, end_at, _offset} <- DateTime.from_iso8601(end_at) do
-      log_stream = Logs.read(start_at, end_at, application, type)
+      log_stream = Logs.read(start_at, end_at, String.to_atom(application), String.to_atom(type))
 
       conn
       |> render("index.json", stats: Enum.into(log_stream, %{}))

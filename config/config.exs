@@ -16,8 +16,9 @@ config :logger,
     {LoggerFileBackend, :boruta_gateway_request_logger},
     :console
   ]
-Enum.map([:request, :business], fn (type) ->
-  Enum.map([:boruta_web, :boruta_identity, :boruta_admin, :boruta_gateway], fn (application) ->
+
+Enum.map([:request, :business], fn type ->
+  Enum.map([:boruta_web, :boruta_identity, :boruta_admin, :boruta_gateway], fn application ->
     config :logger, :"#{application}_#{type}_logger",
       format: "$dateT$timeZ $metadata[$level] $message\n",
       path: "./log/test",

@@ -77,6 +77,8 @@ defmodule BorutaGateway.Logger do
                status: upstream_status
              }} ->
               [
+                "boruta_gateway",
+                ?\s,
                 "gateway",
                 ?\s,
                 "upstream",
