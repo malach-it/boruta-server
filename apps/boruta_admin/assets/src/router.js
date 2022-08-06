@@ -248,7 +248,7 @@ const router = createRouter({
           children: [
             {
               path: '',
-              name: '',
+              name: 'scope-list',
               component: ScopeList
             }
           ]
@@ -296,13 +296,18 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   if (to.name === 'oauth-callback') return next()
 
-  if (to.name) oauth.storeLocationName(to)
+  oauth.storeLocationName(to)
 
   if (!oauth.isAuthenticated) {
     // TODO find a way to remove event listener once triggered
-    window.addEventListener('logged_in', () => { next() })
+    const continueNavigation = () => {
+      router.push(oauth.storedLocation)
+      window.removeEventListener('logged_in', continueNavigation)
+    }
+    window.addEventListener('logged_in', continueNavigation)
 
     oauth.silentRefresh()
+    return next(false)
   } else {
     return next()
   }

@@ -16,7 +16,7 @@ export default {
       if (window.frameElement) return
 
       next(oauth.storedLocation)
-    })
+    }).catch(error => next(false))
   }
 }
 </script>

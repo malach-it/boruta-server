@@ -54,8 +54,6 @@ class Oauth {
 
     const loggedIn = new Event('logged_in')
     window.dispatchEvent(loggedIn)
-
-    store.dispatch('getCurrentUser')
   }
 
   login () {
@@ -70,8 +68,8 @@ class Oauth {
     return this.implicitClient.callback().then(response => {
       this.authenticate(response)
     }).catch((error) => {
-      alert(error.message)
       this.login()
+      throw error
     })
   }
 
