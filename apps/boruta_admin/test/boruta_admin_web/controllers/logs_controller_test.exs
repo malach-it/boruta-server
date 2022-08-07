@@ -90,7 +90,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         })
 
       assert %{
-               "time_scale_unit" => "minute",
+               "time_scale_unit" => "second",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 30
@@ -148,7 +148,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         })
 
       assert %{
-               "time_scale_unit" => "minute",
+               "time_scale_unit" => "second",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 30
@@ -195,7 +195,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         })
 
       assert %{
-               "time_scale_unit" => "minute",
+               "time_scale_unit" => "second",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 30
@@ -305,7 +305,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         })
 
       assert %{
-               "time_scale_unit" => "minute",
+               "time_scale_unit" => "second",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 30
@@ -360,7 +360,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         })
 
       assert %{
-               "time_scale_unit" => "minute",
+               "time_scale_unit" => "second",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 30
@@ -407,7 +407,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         })
 
       assert %{
-               "time_scale_unit" => "minute",
+               "time_scale_unit" => "second",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 30

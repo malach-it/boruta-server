@@ -51,6 +51,7 @@ defmodule BorutaAdmin.Logs do
 
         truncated_time =
           case time_scale_unit do
+            :second -> truncated_time
             :minute -> %{truncated_time | second: 0}
             :hour -> %{truncated_time | second: 0, minute: 0}
           end
@@ -125,6 +126,7 @@ defmodule BorutaAdmin.Logs do
 
         truncated_time =
           case time_scale_unit do
+            :second -> truncated_time
             :minute -> %{truncated_time | second: 0}
             :hour -> %{truncated_time | second: 0, minute: 0}
           end
@@ -252,9 +254,10 @@ defmodule BorutaAdmin.Logs do
   end
 
   defp time_scale_unit(start_at, end_at) do
-    case DateTime.diff(end_at, start_at, :second) > 60 * 60 * 24 do
-      true -> :hour
-      false -> :minute
+    case DateTime.diff(end_at, start_at, :second) do
+      duration when duration < 60 * 60 -> :second
+      duration when duration < 60 * 60 * 24 -> :minute
+      _duration -> :hour
     end
   end
 end

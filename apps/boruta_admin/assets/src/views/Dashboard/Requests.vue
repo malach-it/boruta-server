@@ -161,7 +161,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: `Requests count per ${this.timeScaleUnit}`
+            text: `Requests per ${this.timeScaleUnit}`
           },
           legend: {
             align: 'start',
