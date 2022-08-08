@@ -20,9 +20,6 @@
       <div class="ui error message" v-if="fetchError">
         An error has occured when fetching logs, message: {{ fetchError }}.
       </div>
-      <div class="ui error message" v-if="overflow">
-        This interface is limited to read at most {{ maxLogLines }} log lines, earlier logs are skipped.
-      </div>
       <div class="ui segment">
         <div class="ui requests form">
           <div class="ui stackable grid">
@@ -60,6 +57,9 @@
           </div>
         </div>
         <h3>Log trail</h3>
+        <div class="ui error message" v-if="overflow">
+          This interface is limited to read at most {{ maxLogLines }} log lines, later log lines are skipped.
+        </div>
         <div class="ui logs segment">
           <pre>{{ requestLogs.join('\n') }}</pre>
         </div>
