@@ -10,10 +10,10 @@
             <h1>Business events</h1>
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="businessEventFilter.startAt" :disabled="pending" />
+            <input type="datetime-local" v-model="dateFilter.startAt" :disabled="pending" />
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="businessEventFilter.endAt" :disabled="pending" />
+            <input type="datetime-local" v-model="dateFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
             <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
@@ -26,20 +26,20 @@
             <div class="ten wide filter-form column">
               <div class="field">
                 <label>Application</label>
-                <select v-model="businessEventFilter.application" :disabled="pending">
+                <select @change="getLogs()" v-model="businessEventFilter.application" :disabled="pending">
                   <option :value="application" v-for="application in businessEventFiltersData.applications">{{ application }}</option>
                 </select>
               </div>
               <div class="field">
                 <label>Domain</label>
-                <select v-model="businessEventFilter.domain" :disabled="pending">
+                <select @change="getLogs()" v-model="businessEventFilter.domain" :disabled="pending">
                   <option value=''>All domains</option>
                   <option :value="domain" v-for="domain in businessEventFiltersData.domains">{{ domain }}</option>
                 </select>
               </div>
               <div class="field">
                 <label>Action</label>
-                <select v-model="businessEventFilter.action" :disabled="pending">
+                <select @change="getLogs()" v-model="businessEventFilter.action" :disabled="pending">
                   <option value=''>All actions</option>
                   <option :value="action" v-for="action in businessEventFiltersData.actions">{{ action }}</option>
                 </select>
@@ -114,9 +114,11 @@ export default {
         domains: [],
         actions: []
       },
-      businessEventFilter: {
+      dateFilter: {
         startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm"),
+        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+      },
+      businessEventFilter: {
         application: this.$route.query.application || 'boruta_web',
         domain: this.$route.query.domain || '',
         action: this.$route.query.action || ''
@@ -155,16 +157,24 @@ export default {
     }
   },
   async mounted() {
-    this.getLogs()
+    this.overflow = false
+    this.resetGraphs()
+    this.resetFilters()
+    this.getLogStats()
+    this.render()
   },
   methods: {
-    async getLogs() {
-      this.overflow = false
-      this.resetGraphs()
-      this.resetFilters()
+    getLogs() {
+      this.applyFilters()
+    },
+    applyFilters() {
+      const query = {
+        ...this.$route.query,
+        ...this.dateFilter,
+        ...this.businessEventFilter
+      }
 
-      this.getLogStats()
-      this.render()
+      this.$router.push({ path: this.$route.path, query })
     },
     resetGraphs() {
       this.counts = {}
@@ -187,7 +197,10 @@ export default {
     getLogStats() {
       this.pending = true
       this.error = false
-      BusinessLogStats.all(this.businessEventFilter).then(({
+      BusinessLogStats.all({
+        ...this.businessEventFilter,
+        ...this.dateFilter
+      }).then(({
         time_scale_unit,
         overflow,
         log_lines,
@@ -251,29 +264,25 @@ export default {
     },
   },
   watch: {
-    businessEventFilter: {
-      handler({ startAt, endAt, application, domain, action }) {
-        const query = { startAt, endAt, application }
-
-        if (domain !== '') query.domain = domain
-        if (action !== '') query.action = action
-
-        this.$router.push({path: this.$route.path, query });
-      },
-      deep: true
-    },
     $route(to, from) {
       if (to.name !== 'business-event-logs') return
 
-      this.businessEventFilter = {
-        startAt: to.query.startAt || moment().utc().startOf('day').format("yyyy-MM-DDTHH:mm"),
-        endAt: to.query.endAt || moment().utc().endOf('day').format("yyyy-MM-DDTHH:mm"),
-        application: to.query.application || 'boruta_web',
-        domain: to.query.domain || '',
-        action: to.query.action || ''
+      this.dateFilter = {
+        startAt: to.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+        endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
       }
 
-      this.getLogs()
+      this.businessEventFilter = {
+        application: to.query.application || 'boruta_web',
+        domain: to.query.domain || '',
+        action: to.query.action || '',
+      }
+
+      this.overflow = false
+      this.resetGraphs()
+      this.resetFilters()
+      this.getLogStats()
+      this.render()
     }
   },
   beforeRouteLeave() {

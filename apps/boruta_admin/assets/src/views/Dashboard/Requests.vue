@@ -10,10 +10,10 @@
             <h1>Requests</h1>
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="requestsFilter.startAt" :disabled="pending" />
+            <input type="datetime-local" v-model="dateFilter.startAt" :disabled="pending" />
           </div>
           <div class="five wide request-times column">
-            <input type="datetime-local" v-model="requestsFilter.endAt" :disabled="pending" />
+            <input type="datetime-local" v-model="dateFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
             <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
@@ -29,13 +29,13 @@
             <div class="ten wide filter-form column">
               <div class="field">
                 <label>Application</label>
-                <select v-model="requestsFilter.application" :disabled="pending">
+                <select @change="getLogs()" v-model="requestsFilter.application" :disabled="pending">
                   <option :value="application" v-for="application in requestsFiltersData.applications">{{ application }}</option>
                 </select>
               </div>
               <div class="field">
                 <label>Request label</label>
-                <select v-model="requestsFilter.label" :disabled="pending">
+                <select @change="getLogs()" v-model="requestsFilter.label" :disabled="pending">
                   <option value="">All request labels</option>
                   <option :value="label" v-for="label in requestsFiltersData.labels">{{ label }}</option>
                 </select>
@@ -103,9 +103,11 @@ export default {
         applications: ['boruta_web', 'boruta_identity', 'boruta_gateway', 'boruta_admin'],
         labels: []
       },
-      requestsFilter: {
+      dateFilter: {
         startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm"),
+        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+      },
+      requestsFilter: {
         application: this.$route.query.application || 'boruta_web',
         label: this.$route.query.label || ''
       },
@@ -185,16 +187,24 @@ export default {
     }
   },
   async mounted() {
-    this.getLogs()
+    this.overflow = false
+    this.resetGraphs()
+    this.resetFilters()
+    this.getLogStats()
+    this.render()
   },
   methods: {
-    async getLogs() {
-      this.overflow = false
-      this.resetGraphs()
-      this.resetFilters()
+    getLogs() {
+      this.applyFilters()
+    },
+    applyFilters() {
+      const query = {
+        ...this.$route.query,
+        ...this.dateFilter,
+        ...this.requestsFilter
+      }
 
-      this.getLogStats()
-      this.render()
+      this.$router.push({ path: this.$route.path, query })
     },
     resetGraphs() {
       this.requestCounts = { labels: [], datasets: [] }
@@ -210,7 +220,10 @@ export default {
     getLogStats() {
       this.pending = true
       this.error = false
-      RequestLogStats.all(this.requestsFilter).then(({
+      RequestLogStats.all({
+        ...this.requestsFilter,
+        ...this.dateFilter
+      }).then(({
         time_scale_unit,
         overflow,
         log_lines,
@@ -318,27 +331,24 @@ export default {
     }
   },
   watch: {
-    requestsFilter: {
-      handler({ startAt, endAt, application, label }) {
-        const query = { startAt, endAt, application }
-
-        if (label !== '') query.label = label
-
-        this.$router.push({path: this.$route.path, query })
-      },
-      deep: true
-    },
     $route(to, from) {
       if (to.name !== 'request-logs') return
 
-      this.requestsFilter = {
+      this.dateFilter = {
         startAt: to.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm"),
+        endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+      }
+
+      this.requestsFilter = {
         application: to.query.application || 'boruta_web',
         label: to.query.label || ''
       }
 
-      this.getLogs()
+      this.overflow = false
+      this.resetGraphs()
+      this.resetFilters()
+      this.getLogStats()
+      this.render()
     }
   },
   beforeRouteLeave() {
