@@ -8,8 +8,6 @@ defmodule BorutaGateway.Plug.Authorize do
   alias Boruta.Oauth.Token
   alias BorutaGateway.Upstreams.Upstream
 
-  require Logger
-
   def init(options), do: options
 
   def call(%Plug.Conn{

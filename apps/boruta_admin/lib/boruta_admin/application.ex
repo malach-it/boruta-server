@@ -37,24 +37,35 @@ defmodule BorutaAdmin.Application do
         :ok
 
       level ->
-        Logger.log(level, fn ->
-          %{method: method, request_path: path, status: status, state: state} = conn
-          status = Integer.to_string(status)
-          [
-            "boruta_admin", ?\s,
-            method, ?\s,
-            path, " - ",
-            connection_type(state), ?\s,
-            status, " in ",
-            duration(duration)
-          ]
-        end)
+        Logger.log(
+          level,
+          fn ->
+            %{method: method, request_path: path, status: status, state: state} = conn
+            status = Integer.to_string(status)
+
+            [
+              "boruta_admin",
+              ?\s,
+              method,
+              ?\s,
+              path,
+              " - ",
+              connection_type(state),
+              ?\s,
+              status,
+              " in ",
+              duration(duration)
+            ]
+          end,
+          type: :request
+        )
     end
   end
 
   # From Phoenix.Logger
   defp log_level(nil, _conn), do: :info
   defp log_level(level, _conn) when is_atom(level), do: level
+
   defp log_level({mod, fun, args}, conn) when is_atom(mod) and is_atom(fun) and is_list(args) do
     apply(mod, fun, [conn | args])
   end

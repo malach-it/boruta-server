@@ -63,24 +63,28 @@ defmodule BorutaWeb.Logger do
         :ok
 
       level ->
-        Logger.log(level, fn ->
-          %{method: method, request_path: path, status: status, state: state} = conn
-          status = Integer.to_string(status)
+        Logger.log(
+          level,
+          fn ->
+            %{method: method, request_path: path, status: status, state: state} = conn
+            status = Integer.to_string(status)
 
-          [
-            "boruta_web",
-            ?\s,
-            method,
-            ?\s,
-            path,
-            " - ",
-            connection_type(state),
-            ?\s,
-            status,
-            " in ",
-            duration(duration)
-          ]
-        end)
+            [
+              "boruta_web",
+              ?\s,
+              method,
+              ?\s,
+              path,
+              " - ",
+              connection_type(state),
+              ?\s,
+              status,
+              " in ",
+              duration(duration)
+            ]
+          end,
+          type: :request
+        )
     end
   end
 
@@ -99,6 +103,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "authorize",
@@ -113,7 +119,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("expires_in", expires_in)
     ]
 
-    Logger.log(:info, fn -> log_line end)
+    Logger.log(:info, fn -> log_line end, type: :business)
   end
 
   def authorization_authorize_failure_handler(
@@ -129,6 +135,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "authorize",
@@ -141,7 +149,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("error_description", ~s{"#{error_description}"})
     ]
 
-    Logger.log(:info, fn -> log_line end)
+    Logger.log(:info, fn -> log_line end, type: :business)
   end
 
   def authorization_token_success_handler(
@@ -158,6 +166,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "token",
@@ -171,7 +181,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("refresh_token", refresh_token)
     ]
 
-    Logger.log(:info, fn -> log_line end)
+    Logger.log(:info, fn -> log_line end, type: :business)
   end
 
   def authorization_token_failure_handler(
@@ -185,6 +195,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "token",
@@ -195,7 +207,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("error_description", ~s{"#{error_description}"})
     ]
 
-    Logger.log(:info, fn -> log_line end)
+    Logger.log(:info, fn -> log_line end, type: :business)
   end
 
   def authorization_introspect_success_handler(
@@ -210,6 +222,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "introspect",
@@ -221,7 +235,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("active", active)
     ]
 
-    Logger.log(:info, fn -> log_line end)
+    Logger.log(:info, fn -> log_line end, type: :business)
   end
 
   def authorization_introspect_failure_handler(
@@ -236,6 +250,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "introspect",
@@ -247,7 +263,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("error_description", ~s{"#{error_description}"})
     ]
 
-    Logger.log(:info, fn -> log_line end)
+    Logger.log(:info, fn -> log_line end, type: :business)
   end
 
   def authorization_revoke_success_handler(
@@ -259,6 +275,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "revoke",
@@ -267,7 +285,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("access_token", token)
     ]
 
-    Logger.log(:info, fn -> log_line end)
+    Logger.log(:info, fn -> log_line end, type: :business)
   end
 
   def authorization_revoke_failure_handler(
@@ -282,6 +300,8 @@ defmodule BorutaWeb.Logger do
         _
       ) do
     log_line = [
+      "boruta_web",
+      ?\s,
       "authorization",
       ?\s,
       "revoke",
@@ -293,7 +313,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("error_description", ~s{"#{error_description}"})
     ]
 
-    Logger.log(:info, fn -> log_line end)
+    Logger.log(:info, fn -> log_line end, type: :business)
   end
 
   defp log_attribute(_key, nil), do: ""

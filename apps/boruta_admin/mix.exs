@@ -46,7 +46,6 @@ defmodule BorutaAdmin.MixProject do
       {:ecto_sql, "~> 3.4"},
       {:ex_machina, "~> 2.4", only: :test},
       {:finch, "~> 0.8"},
-      {:flow, "~> 1.0.0"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.6"},
