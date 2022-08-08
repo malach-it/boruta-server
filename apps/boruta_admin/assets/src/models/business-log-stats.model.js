@@ -51,6 +51,8 @@ LogStats.all = function ({ startAt, endAt, application, domain, action }) {
 
   return this.api().get(`?${params.toString()}`).then(({ data }) => {
     return new LogStats(data)
+  }).catch(error => {
+    throw error.response.data
   })
 }
 

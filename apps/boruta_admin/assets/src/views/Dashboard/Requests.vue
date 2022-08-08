@@ -1,6 +1,9 @@
 <template>
   <div class="dashboard">
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui dates form">
         <div class="ui stackable grid">
           <div class="four wide request-times column">
@@ -90,6 +93,7 @@ export default {
     return {
       overflow: false,
       pending: false,
+      error: false,
       maxLogLines: MAX_LOG_LINES,
       timeScaleUnit: '',
       requestLogs: [],
@@ -185,7 +189,6 @@ export default {
   },
   methods: {
     async getLogs() {
-      this.pending = true
       this.overflow = false
       this.resetGraphs()
       this.resetFilters()
@@ -205,6 +208,8 @@ export default {
       }
     },
     getLogStats() {
+      this.pending = true
+      this.error = false
       RequestLogStats.all(this.requestsFilter).then(({
         time_scale_unit,
         overflow,
@@ -224,7 +229,7 @@ export default {
         this.populateStatusCodes(status_codes)
         this.populateRequestTimes(request_times)
         this.pending = false
-      })
+      }).catch(error => this.error = error.message)
     },
     render() {
       this.graphRerenders += 1

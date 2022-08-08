@@ -1,5 +1,8 @@
 defmodule BorutaAdminWeb.Router do
   use BorutaAdminWeb, :router
+  use Plug.ErrorHandler
+
+  alias Plug.Conn.Status
 
   import BorutaAdminWeb.Authorization, only: [
     require_authenticated: 2
@@ -55,5 +58,14 @@ defmodule BorutaAdminWeb.Router do
     pipe_through(:browser)
 
     match(:get, "/*path", PageController, :index)
+  end
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, %{kind: _kind, reason: reason, stack: _stack}) do
+    message = %{
+      code: Status.reason_atom(conn.status) |> Atom.to_string() |> String.upcase(),
+      message: reason.message
+    }
+    send_resp(conn, conn.status, Jason.encode!(message))
   end
 end

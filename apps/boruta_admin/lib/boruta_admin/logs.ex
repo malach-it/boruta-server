@@ -1,8 +1,26 @@
+defmodule BorutaAdmin.Logs.FileTooLargeError do
+  @enforce_keys [:message]
+  defexception [:message, plug_status: 422]
+
+  @type t :: %__MODULE__{
+          message: String.t()
+        }
+
+  def exception(message) when is_binary(message) do
+    %__MODULE__{message: message}
+  end
+
+  def message(exception) do
+    exception.message
+  end
+end
+
 defmodule BorutaAdmin.Logs do
   @moduledoc false
 
   alias BorutaAuth.LogRotate
 
+  @max_file_size 100_000_000
   @max_log_lines 10_000
   @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) in (\d+)(\w+)/
   @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(( ([^\=]+)\=((\".+\")|([^\s]+)))+)/
@@ -184,9 +202,15 @@ defmodule BorutaAdmin.Logs do
   def read(_start_at, _end_at, _application, _type), do: %{}
 
   defp log_stream(start_at, end_at, application, type) do
-    log_dates(DateTime.to_date(start_at), DateTime.to_date(end_at))
+    paths = log_dates(DateTime.to_date(start_at), DateTime.to_date(end_at))
     |> Enum.map(&LogRotate.path(application, type, &1))
     |> Enum.filter(fn path -> File.exists?(path) end)
+
+    if Enum.reduce(paths, 0, fn path, acc -> File.stat!(path).size end) > @max_file_size do
+      raise BorutaAdmin.Logs.FileTooLargeError, "Requested for more than #{@max_file_size} bytes of logs, could not perform the request."
+    end
+
+    paths
     |> Enum.map(&File.stream!/1)
     |> Stream.concat()
     |> Stream.drop_while(fn log ->
