@@ -108,6 +108,9 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     @tag :skip
     test "compute status codes"
 
+    @tag :skip
+    test "filter logs"
+
     @tag authorized: ["logs:read:all"]
     test "skips lines before start_at", %{conn: conn} do
       File.mkdir("./log")
@@ -319,6 +322,9 @@ defmodule BorutaAdminWeb.LogsControllerTest do
 
     @tag :skip
     test "compute counts"
+
+    @tag :skip
+    test "filter logs"
 
     @tag authorized: ["logs:read:all"]
     test "skips lines before start_at", %{conn: conn} do

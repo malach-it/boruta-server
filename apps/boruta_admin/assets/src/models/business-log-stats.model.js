@@ -12,7 +12,10 @@ const assign = {
   log_lines: function ({ log_lines }) { this.log_lines = log_lines },
   log_count: function ({ log_count }) { this.log_count = log_count },
   counts: function ({ counts }) { this.counts = counts },
-  business_event_counts: function ({ business_event_counts }) { this.business_event_counts = business_event_counts }
+  business_event_counts: function ({ business_event_counts }) { this.business_event_counts = business_event_counts },
+  domains: function ({ domains }) { this.domains = domains },
+  actions: function ({ actions }) { this.actions = actions }
+
 }
 
 class LogStats {
@@ -37,11 +40,13 @@ LogStats.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-LogStats.all = function ({ startAt, endAt, application }) {
+LogStats.all = function ({ startAt, endAt, application, domain, action }) {
   const params = new URLSearchParams()
   params.append('start_at', moment.utc(startAt).toISOString())
   params.append('end_at', moment.utc(endAt).toISOString())
   params.append('application', application)
+  domain && params.append('query[domain]', domain)
+  action && params.append('query[action]', action)
   params.append('type', 'business')
 
   return this.api().get(`?${params.toString()}`).then(({ data }) => {

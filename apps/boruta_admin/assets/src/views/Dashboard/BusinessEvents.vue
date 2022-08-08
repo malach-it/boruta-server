@@ -172,7 +172,12 @@ export default {
     },
     resetFilters() {
       this.businessEventFiltersData.actions = []
-      if (!this.businessEventFilter.action.match(this.businessEventFilter.domain)) {
+      this.businessEventFiltersData.domains = []
+      if (!this.businessEventFilter.domain.match(this.businessEventFilter.application)) {
+        this.businessEventFilter.domain = ''
+      }
+      if (!this.businessEventFilter.action.match(this.businessEventFilter.application) ||
+        !this.businessEventFilter.action.match(this.businessEventFilter.domain)) {
         this.businessEventFilter.action = ''
       }
     },
@@ -183,7 +188,9 @@ export default {
         log_lines,
         log_count,
         counts,
-        business_event_counts
+        business_event_counts,
+        domains,
+        actions
       }) => {
         this.timeScaleUnit = time_scale_unit
         this.overflow = overflow
@@ -191,6 +198,8 @@ export default {
         this.logCount = log_count
         this.populateCounts(counts)
         this.populateBusinessEventCounts(business_event_counts)
+        this.businessEventFiltersData.domains = domains
+        this.businessEventFiltersData.actions = actions
         this.pending = false
       })
     },

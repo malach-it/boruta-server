@@ -14,6 +14,7 @@ defmodule BorutaAdmin.Logs do
           type :: atom(),
           query :: map()
         ) :: Enumerable.t()
+  # credo:disable-for-next-line
   def read(start_at, end_at, application, :request = type, query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
@@ -101,12 +102,14 @@ defmodule BorutaAdmin.Logs do
     )
   end
 
-  def read(start_at, end_at, application, :business = type, _query) do
+  # credo:disable-for-next-line
+  def read(start_at, end_at, application, :business = type, query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
     log_stream(start_at, end_at, application, type)
     |> Stream.map(&parse_business_log/1)
     |> Stream.reject(&is_nil/1)
+    |> apply_business_filters(query)
     |> Enum.reduce(
       %{
         time_scale_unit: time_scale_unit,
@@ -114,13 +117,17 @@ defmodule BorutaAdmin.Logs do
         log_lines: [],
         log_count: 0,
         counts: %{},
-        business_event_counts: %{}
+        business_event_counts: %{},
+        domains: [],
+        actions: []
       },
       fn %{
            log_line: log_line,
            time: time,
            label: label,
-           status: status
+           status: status,
+           domain: domain,
+           action: action
          },
          %{
            time_scale_unit: time_scale_unit,
@@ -128,7 +135,9 @@ defmodule BorutaAdmin.Logs do
            log_lines: log_lines,
            log_count: log_count,
            counts: counts,
-           business_event_counts: business_event_counts
+           business_event_counts: business_event_counts,
+           domains: domains,
+           actions: actions
          } ->
         overflow = overflow || log_count >= @max_log_lines
         truncated_time = DateTime.truncate(time, :second)
@@ -156,7 +165,17 @@ defmodule BorutaAdmin.Logs do
           counts:
             Map.merge(counts, %{label => %{status => 1}}, fn _, a, b ->
               Map.merge(a, b, fn _, i, j -> i + j end)
-            end)
+            end),
+          domains:
+            case Enum.member?(domains, domain) do
+              false -> [domain | domains] |> Enum.sort()
+              true -> domains
+            end,
+          actions:
+            case Enum.member?(actions, action) do
+              false -> [action | actions] |> Enum.sort()
+              true -> actions
+            end
         }
       end
     )
@@ -225,19 +244,41 @@ defmodule BorutaAdmin.Logs do
   end
 
   def apply_request_filters(request_stream, query) do
-    case(query[:label]) do
-      nil ->
-        request_stream
+    Enum.reduce(query, request_stream, fn
+      {_key, nil}, stream ->
+        stream
 
-      "" ->
-        request_stream
+      {_key, ""}, stream ->
+        stream
 
-      requested_label ->
-        Stream.filter(request_stream, fn
-          %{label: ^requested_label} -> true
+      {key, value}, stream when key in [:label] ->
+        Stream.filter(stream, fn
+          %{^key => ^value} -> true
           _ -> false
         end)
-    end
+
+      _, stream ->
+        stream
+    end)
+  end
+
+  def apply_business_filters(request_stream, query) do
+    Enum.reduce(query, request_stream, fn
+      {_key, nil}, stream ->
+        stream
+
+      {_key, ""}, stream ->
+        stream
+
+      {key, value}, stream when key in [:domain, :action] ->
+        Stream.filter(stream, fn
+          %{^key => ^value} -> true
+          _ -> false
+        end)
+
+      _, stream ->
+        stream
+    end)
   end
 
   defp parse_business_log(log_line) do
@@ -261,8 +302,8 @@ defmodule BorutaAdmin.Logs do
             request_id: request_id,
             label: String.slice("#{application} - #{domain} #{action}", 0..70),
             application: application,
-            domain: domain,
-            action: action,
+            domain: String.slice("#{application} - #{domain}", 0..70),
+            action: String.slice("#{application} - #{domain} #{action}", 0..70),
             status: status
           }
         end
