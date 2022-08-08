@@ -32,9 +32,9 @@
               </div>
               <div class="field">
                 <label>Request label</label>
-                <select v-model="requestsFilter.requestLabel" :disabled="pending">
-                  <option value=''>All request labels</option>
-                  <option :value="requestLabel" v-for="requestLabel in requestsFiltersData.requestLabels">{{ requestLabel }}</option>
+                <select v-model="requestsFilter.label" :disabled="pending">
+                  <option value="">All request labels</option>
+                  <option :value="label" v-for="label in requestsFiltersData.labels">{{ label }}</option>
                 </select>
               </div>
             </div>
@@ -97,13 +97,13 @@ export default {
       graphRerenders: 0,
       requestsFiltersData: {
         applications: ['boruta_web', 'boruta_identity', 'boruta_gateway', 'boruta_admin'],
-        requestLabels: []
+        labels: []
       },
       requestsFilter: {
         startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
         endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm"),
         application: this.$route.query.application || 'boruta_web',
-        requestLabel: this.$route.query.requestLabel || ''
+        label: this.$route.query.label || ''
       },
       statusCodes: {
         labels: [],
@@ -199,9 +199,9 @@ export default {
       this.requestTimes = { labels: [], datasets: [] }
     },
     resetFilters() {
-      this.requestsFiltersData.requestLabels = []
-      if (!this.requestsFilter.requestLabel.match(this.requestsFilter.application)) {
-        this.requestsFilter.requestLabel = ''
+      this.requestsFiltersData.labels = []
+      if (!this.requestsFilter.label.match(this.requestsFilter.application)) {
+        this.requestsFilter.label = ''
       }
     },
     getLogStats() {
@@ -212,12 +212,14 @@ export default {
         log_count,
         request_counts,
         status_codes,
-        request_times
+        request_times,
+        labels
       }) => {
         this.timeScaleUnit = time_scale_unit
         this.overflow = overflow
         this.requestLogs = log_lines
         this.logCount = log_count
+        this.requestsFiltersData.labels = labels
         this.populateRequestCounts(request_counts)
         this.populateStatusCodes(status_codes)
         this.populateRequestTimes(request_times)
@@ -312,10 +314,10 @@ export default {
   },
   watch: {
     requestsFilter: {
-      handler({ startAt, endAt, application, requestLabel }) {
+      handler({ startAt, endAt, application, label }) {
         const query = { startAt, endAt, application }
 
-        if (requestLabel !== '') query.requestLabel = requestLabel
+        if (label !== '') query.label = label
 
         this.$router.push({path: this.$route.path, query })
       },
@@ -328,7 +330,7 @@ export default {
         startAt: to.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
         endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm"),
         application: to.query.application || 'boruta_web',
-        requestLabel: to.query.requestLabel || ''
+        label: to.query.label || ''
       }
 
       this.getLogs()

@@ -11,14 +11,16 @@ defmodule BorutaAdmin.Logs do
           start_at :: DateTime.t(),
           end_at :: DateTime.t(),
           application :: atom(),
-          type :: atom()
+          type :: atom(),
+          query :: map()
         ) :: Enumerable.t()
-  def read(start_at, end_at, application, :request = type) do
+  def read(start_at, end_at, application, :request = type, query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
     log_stream(start_at, end_at, application, type)
     |> Stream.map(&parse_request_log/1)
     |> Stream.reject(&is_nil/1)
+    |> apply_request_filters(query)
     |> Enum.reduce(
       %{
         time_scale_unit: time_scale_unit,
@@ -27,7 +29,8 @@ defmodule BorutaAdmin.Logs do
         log_count: 0,
         status_codes: %{},
         request_counts: %{},
-        request_times: %{}
+        request_times: %{},
+        labels: []
       },
       fn %{
            label: label,
@@ -44,7 +47,8 @@ defmodule BorutaAdmin.Logs do
            log_count: log_count,
            status_codes: status_codes,
            request_counts: request_counts,
-           request_times: request_times
+           request_times: request_times,
+           labels: labels
          } ->
         overflow = overflow || log_count >= @max_log_lines
         truncated_time = DateTime.truncate(time, :second)
@@ -86,13 +90,18 @@ defmodule BorutaAdmin.Logs do
               fn _, a, b ->
                 Map.merge(a, b, fn _, i, j -> (i + j) / 2 end)
               end
-            )
+            ),
+          labels:
+            case Enum.member?(labels, label) do
+              false -> [label | labels] |> Enum.sort()
+              true -> labels
+            end
         }
       end
     )
   end
 
-  def read(start_at, end_at, application, :business = type) do
+  def read(start_at, end_at, application, :business = type, _query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
     log_stream(start_at, end_at, application, type)
@@ -215,34 +224,49 @@ defmodule BorutaAdmin.Logs do
     end
   end
 
+  def apply_request_filters(request_stream, query) do
+    case(query[:label]) do
+      nil ->
+        request_stream
+
+      "" ->
+        request_stream
+
+      requested_label ->
+        Stream.filter(request_stream, fn
+          %{label: ^requested_label} -> true
+          _ -> false
+        end)
+    end
+  end
+
   defp parse_business_log(log_line) do
-      case Regex.run(@business_event_log_regex, log_line) do
-        nil ->
-          nil
+    case Regex.run(@business_event_log_regex, log_line) do
+      nil ->
+        nil
 
-        [
-          log_line,
-          raw_time,
-          request_id,
-          application,
-          domain,
-          action,
-          status | _raw_attributes
-        ] ->
-
-          with {:ok, time, _offset} <- DateTime.from_iso8601(raw_time) do
-            %{
-              log_line: log_line,
-              time: time,
-              request_id: request_id,
-              label: String.slice("#{application} - #{domain} #{action}", 0..70),
-              application: application,
-              domain: domain,
-              action: action,
-              status: status
-            }
-          end
-      end
+      [
+        log_line,
+        raw_time,
+        request_id,
+        application,
+        domain,
+        action,
+        status | _raw_attributes
+      ] ->
+        with {:ok, time, _offset} <- DateTime.from_iso8601(raw_time) do
+          %{
+            log_line: log_line,
+            time: time,
+            request_id: request_id,
+            label: String.slice("#{application} - #{domain} #{action}", 0..70),
+            application: application,
+            domain: domain,
+            action: action,
+            status: status
+          }
+        end
+    end
   end
 
   defp log_dates(start_date, end_date) do
