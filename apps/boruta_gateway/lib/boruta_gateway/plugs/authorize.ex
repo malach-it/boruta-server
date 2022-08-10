@@ -8,33 +8,62 @@ defmodule BorutaGateway.Plug.Authorize do
   alias Boruta.Oauth.Token
   alias BorutaGateway.Upstreams.Upstream
 
+  @default_error_content_type "application/json"
+  @default_forbidden_response Jason.encode!(%{
+                                error: "FORBIDDEN",
+                                message: "You are forbidden to access this resource."
+                              })
+  @default_unauthorized_response Jason.encode!(%{
+                                   error: "UNAUTHORIZED",
+                                   message: "You are unauthorized to access this resource."
+                                 })
+
   def init(options), do: options
 
-  def call(%Plug.Conn{
-    method: method,
-    assigns: %{upstream: upstream}
-  } = conn, _options) do
-    with %Upstream{authorize: true, required_scopes: required_scopes} <- upstream,
-         ["Bearer " <> value] <- get_req_header(conn, "authorization"),
+  def call(
+        %Plug.Conn{
+          method: method,
+          assigns: %{
+            upstream: %Upstream{authorize: true, required_scopes: required_scopes} = upstream
+          }
+        } = conn,
+        _options
+      ) do
+    with ["Bearer " <> value] <- get_req_header(conn, "authorization"),
          {:ok, %Token{scope: scope} = token} <- Authorization.AccessToken.authorize(value: value),
-         {:ok, _} <- validate_scopes(scope, required_scopes, method)
-    do
+         {:ok, _} <- validate_scopes(scope, required_scopes, method) do
       assign(conn, :token, token)
     else
-      %Upstream{authorize: false} ->
-        conn
       {:error, "required scopes are not present."} ->
         conn
-        |> send_resp(:forbidden, "")
+        |> put_resp_content_type(upstream.error_content_type || @default_error_content_type)
+        |> send_resp(:forbidden, upstream.forbidden_response || @default_forbidden_response)
         |> halt()
+
       _error ->
         conn
-        |> send_resp(:unauthorized, "")
+        |> put_resp_content_type(upstream.error_content_type || @default_error_content_type)
+        |> send_resp(
+          :unauthorized,
+          upstream.unauthorized_response || @default_unauthorized_response
+        )
         |> halt()
     end
   end
 
-  defp validate_scopes(_scope, required_scopes, _method) when required_scopes == %{}, do: {:ok, []}
+  def call(
+        %Plug.Conn{
+          assigns: %{
+            upstream: %Upstream{authorize: false}
+          }
+        } = conn,
+        _options
+      ),
+      do: conn
+
+  defp validate_scopes(_scope, required_scopes, _method) when required_scopes == %{},
+    do: {:ok, []}
+
   defp validate_scopes(scope, required_scopes, method) do
     scopes = Scope.split(scope)
     default_scopes = Map.get(required_scopes, "*", [:not_authorized])

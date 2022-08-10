@@ -29,6 +29,9 @@ defmodule BorutaGateway.Upstreams.Upstream do
           required_scopes: list(String.t()),
           strip_uri: boolean(),
           authorize: boolean(),
+          error_content_type: String.t() | nil,
+          forbidden_response: String.t() | nil,
+          unauthorized_response: String.t() | nil,
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -46,6 +49,9 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:pool_size, :integer, default: 10)
     field(:pool_count, :integer, default: 1)
     field(:max_idle_time, :integer, default: 10)
+    field(:error_content_type, :string)
+    field(:forbidden_response, :string)
+    field(:unauthorized_response, :string)
 
     field(:http_client, :any, virtual: true)
 
