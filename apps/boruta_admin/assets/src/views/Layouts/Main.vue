@@ -515,7 +515,7 @@ export default {
   }
   .ui.form {
     position: relative;
-    select, input {
+    select, input, textarea {
       border: 1px solid rgba(255, 255, 255, 0.15);
       background: #393939;
       color: white;
