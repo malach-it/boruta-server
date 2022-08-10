@@ -91,6 +91,12 @@ BorutaAuth.Repo.insert(
     registrable: true
   })
 
+{:ok, identity_provider} =
+  BorutaIdentity.IdentityProviders.create_identity_provider(%{
+    name: "Boruta administration interface",
+    registrable: false
+  })
+
 BorutaIdentity.IdentityProviders.upsert_client_identity_provider(client.id, identity_provider.id)
 
 {:ok, user} =
