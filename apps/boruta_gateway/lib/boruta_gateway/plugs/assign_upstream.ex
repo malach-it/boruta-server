@@ -18,7 +18,7 @@ defmodule BorutaGateway.Plug.AssignUpstream do
         assign(conn, :upstream, upstream)
       nil ->
         conn
-        |> send_resp(404, "no upstream found")
+        |> send_resp(404, "No upstream has been found corresponding to the given request.")
         |> halt()
     end
   end
