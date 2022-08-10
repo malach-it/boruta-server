@@ -29,7 +29,10 @@ const assign = {
     this.required_scopes = Object.keys(required_scopes).flatMap((method) => {
       return required_scopes[method].map(name => ({ model: new Scope({ name }), method: method }))
     }, {})
-  }
+  },
+  error_content_type: function ({ error_content_type }) { this.error_content_type = error_content_type },
+  forbidden_response: function ({ forbidden_response }) { this.forbidden_response = forbidden_response },
+  unauthorized_response: function ({ unauthorized_response }) { this.unauthorized_response = unauthorized_response }
 }
 
 class Upstream {
@@ -97,7 +100,10 @@ class Upstream {
       uris,
       strip_uri,
       authorize,
-      required_scopes
+      required_scopes,
+      error_content_type,
+      forbidden_response,
+      unauthorized_response
     } = this
 
     return {
@@ -115,7 +121,10 @@ class Upstream {
         return acc
       }, {}),
       strip_uri,
-      authorize
+      authorize,
+      error_content_type,
+      forbidden_response,
+      unauthorized_response
     }
   }
 }

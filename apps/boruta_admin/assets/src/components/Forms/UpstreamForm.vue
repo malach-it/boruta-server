@@ -58,6 +58,21 @@
           <label>Required scopes <i>(leave empty to not filter)</i></label>
           <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         </div>
+        <div v-if="upstream.authorize">
+          <h4>Error templates</h4>
+          <div class="field" :class="{ 'error': upstream.errors?.error_content_type }">
+            <label>Error content type</label>
+            <input type="text" v-model="upstream.error_content_type" placeholder="text">
+          </div>
+          <div class="field" :class="{ 'error': upstream.errors?.forbidden_response }">
+            <label>Forbidden response</label>
+            <textarea v-model="upstream.forbidden_response" placeholder="You are forbidden to access this resource."></textarea>
+          </div>
+          <div class="field" :class="{ 'error': upstream.errors?.unauthorized_response }">
+            <label>Unauthorized response</label>
+            <textarea v-model="upstream.unauthorized_response" placeholder="You are unauthorized to access this resource."></textarea>
+          </div>
+        </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a class="ui button" v-on:click="back()">Back</a>

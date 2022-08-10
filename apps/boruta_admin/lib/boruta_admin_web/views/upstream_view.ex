@@ -22,7 +22,10 @@ defmodule BorutaAdminWeb.UpstreamView do
       required_scopes: upstream.required_scopes,
       pool_size: upstream.pool_size,
       pool_count: upstream.pool_count,
-      max_idle_time: upstream.max_idle_time
+      max_idle_time: upstream.max_idle_time,
+      error_content_type: upstream.error_content_type,
+      forbidden_response: upstream.forbidden_response,
+      unauthorized_response: upstream.unauthorized_response
     }
   end
 end

@@ -98,7 +98,10 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :required_scopes,
       :pool_size,
       :pool_count,
-      :max_idle_time
+      :max_idle_time,
+      :error_content_type,
+      :forbidden_response,
+      :unauthorized_response
     ])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
