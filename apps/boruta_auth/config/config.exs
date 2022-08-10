@@ -14,4 +14,7 @@ config :boruta_auth, BorutaAuth.Scheduler,
     {"@daily", {BorutaAuth.LogRotate, :rotate, []}}
   ]
 
+config :boruta_auth, BorutaAuth.LogRotate,
+  max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60"))
+
 import_config "#{Mix.env()}.exs"

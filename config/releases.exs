@@ -75,6 +75,9 @@ config :boruta, Boruta.Oauth,
   ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL")
 
+config :boruta_auth, BorutaAuth.LogRotate,
+  max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60"))
+
 if System.get_env("K8S_NAMESPACE") && System.get_env("K8S_SELECTOR") do
   config :libcluster,
     topologies: [

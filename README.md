@@ -17,6 +17,7 @@ Boruta is an authorization server implementing OAuth 2.0 and Openid Connect spec
 | `POSTGRES_DATABASE`                | The database name provided in postgreSQL connections. |
 | `POSTGRES_HOST`                    | The database host provided in postgreSQL connections. |
 | `POOL_SIZE`                        | The postgreSQL pool size of each application, the real connection count will be 4 times that value. |
+| `MAX_LOG_RETENTION_DAYS`           | The number of days the logs are kept to the server. This value defaults to 60. |
 | `K8S_NAMESPACE`                    | If set along with K8S_SELECTOR, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
 | `K8S_SELECTOR`                     | If set along with K8S_NAMESPACE, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
 | `BORUTA_ADMIN_OAUTH_CLIENT_ID`     | An uuidv4 string representing the admin oauth client id. It will be part of the client seeded in the setup task. |

@@ -218,6 +218,7 @@
             POSTGRES_PASSWORD: "{{ postgresql_password }}"
             POSTGRES_DATABASE: boruta
             POSTGRES_HOST: postgres-postgresql
+            MAX_LOG_RETENTION_DAYS: "5"
             K8S_NAMESPACE: boruta-staging
             K8S_SELECTOR: app=boruta
             BORUTA_ADMIN_OAUTH_CLIENT_ID: "{{ admin_client_id }}"
