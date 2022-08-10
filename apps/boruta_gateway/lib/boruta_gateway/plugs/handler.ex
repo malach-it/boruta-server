@@ -19,8 +19,9 @@ defmodule BorutaGateway.Plug.Handler do
       {:ok, %Finch.Response{status: status, headers: headers, body: body}} ->
         conn =
           Enum.reduce(headers, conn, fn
-            {"Connection", _value}, conn -> conn
-            {"Strict-Transport-Security", _value}, conn -> conn
+            {"connection", _value}, conn -> conn
+            {"strict-transport-security", _value}, conn -> conn
+            {"host", _value}, conn -> put_resp_header(conn, "host", conn.host)
             {key, value}, conn -> put_resp_header(conn, String.downcase(key), value)
           end)
 

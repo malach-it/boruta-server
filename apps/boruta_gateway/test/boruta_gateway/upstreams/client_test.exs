@@ -47,9 +47,7 @@ defmodule BorutaGateway.Upstreams.ClientTest do
           {:ok, upstream} = Upstreams.create_upstream(%{scheme: "http", host: "httpbin.patatoid.fr", port: 80})
           :timer.sleep(100)
 
-          conn =
-            conn("GET", "/status/418")
-            |> put_req_header("authorization", "Bearer test")
+          conn = conn("GET", "/status/418")
 
           {:ok,
            %{
