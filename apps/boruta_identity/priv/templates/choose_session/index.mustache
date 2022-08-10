@@ -7,5 +7,5 @@
       <a href="{{ new_user_session_path }}" class="ui large fluid basic button">Continue as {{ current_user.username }}</a>
     </div>
   </div>
-  {{#user_editable?}}<a href="{{ edit_user_path }}">Edit your information</a>{{/user_editable?}}
+  <a href="{{ delete_user_path }}">Log out</a>{{#user_editable?}} | <a href="{{ edit_user_path }}">Edit your information</a>{{/user_editable?}}
 </div>
