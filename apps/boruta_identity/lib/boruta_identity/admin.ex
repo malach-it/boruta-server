@@ -58,14 +58,23 @@ defmodule BorutaIdentity.Admin do
 
   @spec create_user(provider :: atom(), params :: user_params()) ::
           {:ok, User.t()} | {:error, Ecto.Changeset.t()}
-  def create_user(provider, params) do
+  def create_user(provider, params) when provider in [BorutaIdentity.Accounts.Internal] do
     # TODO give the ability to provide authorized scopes at user creation
     apply(provider, :create_user, [params])
+  end
+
+  def create_user(_provider, _params) do
+    changeset =
+      Ecto.Changeset.change(%User{})
+      |> Ecto.Changeset.add_error(:provider, "is invalid")
+
+    {:error, changeset}
   end
 
   @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::
           {:ok, %User{}} | {:error, Ecto.Changeset.t()}
   def update_user_authorized_scopes(%User{id: user_id} = user, scopes) do
+    # TODO update user email and password
     Repo.delete_all(from(s in UserAuthorizedScope, where: s.user_id == ^user_id))
 
     case Enum.reduce(scopes, Ecto.Multi.new(), fn attrs, multi ->

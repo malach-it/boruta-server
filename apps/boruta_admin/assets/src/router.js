@@ -37,6 +37,7 @@ import EditEditUserTemplate from './views/IdentityProviders/EditEditUserTemplate
 import NewIdentityProvider from './views/IdentityProviders/NewIdentityProvider.vue'
 import Users from './views/IdentityProviders/Users.vue'
 import UserList from './views/IdentityProviders/UserList.vue'
+import NewUser from './views/IdentityProviders/NewUser.vue'
 import EditUser from './views/IdentityProviders/EditUser.vue'
 
 import Scopes from './views/Scopes.vue'
@@ -170,6 +171,10 @@ const router = createRouter({
                   path: '',
                   name: 'user-list',
                   component: UserList
+                }, {
+                  path: '/users/new',
+                  name: 'new-user',
+                  component: NewUser
                 }, {
                   path: '/users/:userId/edit',
                   name: 'edit-user',

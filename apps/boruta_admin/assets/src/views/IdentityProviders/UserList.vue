@@ -2,6 +2,7 @@
   <div class="user-list">
     <Toaster :active="deleted" message="User has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
+    <router-link :to="{ name: 'new-user' }" class="ui violet main create button">Add a user</router-link>
     <div class="container">
       <div class="ui info message">
         Users are here the ones that can login to Boruta mirroring the backend to give the ability for the server to add security traits (confirmation, consent, or scope access).

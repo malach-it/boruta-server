@@ -32,6 +32,7 @@ const labels = {
   'edit-new-confirmation-template': 'Edit send confirmation instructions template',
   'edit-new-consent-template': 'Edit consent template',
   'users': 'Users',
+  'new-user': 'Create',
   'edit-user': ({ params }) => params.userId,
   'clients': 'Clients',
   'new-client': 'Create',
