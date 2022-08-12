@@ -61,6 +61,11 @@
                   </router-link>
                 </div>
                 <div class="subitem">
+                  <router-link :to="{ name: 'backend-list' }">
+                    <span>backend list</span>
+                  </router-link>
+                </div>
+                <div class="subitem">
                   <router-link :to="{ name: 'user-list' }">
                     <span>user list</span>
                   </router-link>

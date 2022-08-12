@@ -40,6 +40,9 @@ import UserList from './views/IdentityProviders/UserList.vue'
 import NewUser from './views/IdentityProviders/NewUser.vue'
 import EditUser from './views/IdentityProviders/EditUser.vue'
 
+import Backends from './views/IdentityProviders/Backends.vue'
+import BackendList from './views/IdentityProviders/BackendList.vue'
+
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/Scopes/ScopeList.vue'
 
@@ -161,6 +164,22 @@ const router = createRouter({
                   component: EditNewConfirmationTemplate
                 }
               ],
+            }, {
+              path: 'backends',
+              name: 'backends',
+              component: Backends,
+              redirect: '/identity-providers/backends/',
+              children: [
+                {
+                  path: '',
+                  name: 'backend-list',
+                  component: BackendList
+                }, {
+                  path: '/backends/new',
+                  name: 'new-backend',
+                  component: BackendList
+                }
+              ]
             }, {
               path: 'users',
               name: 'users',

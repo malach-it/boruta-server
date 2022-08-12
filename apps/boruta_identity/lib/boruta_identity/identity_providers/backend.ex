@@ -6,9 +6,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "backends" do
-    field :password_hashing_alg, :string
-    field :password_hashing_salt, :string
     field :type, :string
+    field :name, :string
+    field :password_hashing_alg, :string, default: "argon2"
+    field :password_hashing_salt, :string, default: ""
 
     timestamps()
   end
@@ -16,7 +17,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @doc false
   def changeset(backend, attrs) do
     backend
-    |> cast(attrs, [:type, :password_hashing_alg, :password_hashing_salt])
-    |> validate_required([:type, :password_hashing_alg, :password_hashing_salt])
+    |> cast(attrs, [:type, :name])
+    |> validate_required([:type, :name])
   end
 end

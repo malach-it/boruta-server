@@ -11,9 +11,8 @@ defmodule BorutaIdentity.IdentityProvidersFixtures do
     {:ok, backend} =
       attrs
       |> Enum.into(%{
-        password_hashing_alg: "some password_hashing_alg",
-        password_hashing_salt: "some password_hashing_salt",
-        type: "some type"
+        type: "some type",
+        name: "some name"
       })
       |> BorutaIdentity.IdentityProviders.create_backend()
 
