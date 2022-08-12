@@ -9,7 +9,14 @@ defmodule BorutaIdentity.Admin do
   alias BorutaIdentity.Accounts.{UserAuthorizedScope}
   alias BorutaIdentity.Repo
 
+  @type user_params :: %{
+          username: String.t(),
+          password: String.t()
+        }
+
   @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: any()}
+  @callback create_user(params :: user_params()) ::
+              {:ok, User.t()} | {:error, changeset :: Ecto.Changeset.t()}
 
   @doc """
   List all users
@@ -47,6 +54,13 @@ defmodule BorutaIdentity.Admin do
         where: u.id == ^id
       )
     )
+  end
+
+  @spec create_user(provider :: atom(), params :: user_params()) ::
+          {:ok, User.t()} | {:error, Ecto.Changeset.t()}
+  def create_user(provider, params) do
+    # TODO give the ability to provide authorized scopes at user creation
+    apply(provider, :create_user, [params])
   end
 
   @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::

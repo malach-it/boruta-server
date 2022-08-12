@@ -4,13 +4,14 @@ defmodule BorutaAdminWeb.Router do
 
   alias Plug.Conn.Status
 
-  import BorutaAdminWeb.Authorization, only: [
-    require_authenticated: 2
-  ]
+  import BorutaAdminWeb.Authorization,
+    only: [
+      require_authenticated: 2
+    ]
 
   pipeline :authenticated_api do
     plug(:accepts, ["json"])
-    plug :require_authenticated
+    plug(:require_authenticated)
   end
 
   pipeline :browser do
@@ -34,23 +35,38 @@ defmodule BorutaAdminWeb.Router do
   scope "/api", BorutaAdminWeb, as: :admin do
     pipe_through(:authenticated_api)
 
-    get("/users/current", UserController, :current)
     resources("/logs", LogsController, only: [:index])
     resources("/scopes", ScopeController, except: [:new, :edit])
     resources("/clients", ClientController, except: [:new, :edit])
     # TODO user scopes
     # resources "/users/:user_id/scopes, only: [:create, :delete]
-    resources("/users", UserController, except: [:new, :edit, :create])
+    resources("/users", UserController, except: [:new, :edit])
     resources("/upstreams", UpstreamController, except: [:new, :edit])
+
     scope "/configuration", as: :configuration do
-      get "/error-templates/:template_type", ConfigurationController, :error_template, as: :error_template
-      patch "/error-templates/:template_type", ConfigurationController, :update_error_template, as: :error_template
-      delete "/error-templates/:template_type", ConfigurationController, :delete_error_template, as: :error_template
+      get("/error-templates/:template_type", ConfigurationController, :error_template,
+        as: :error_template
+      )
+
+      patch("/error-templates/:template_type", ConfigurationController, :update_error_template,
+        as: :error_template
+      )
+
+      delete("/error-templates/:template_type", ConfigurationController, :delete_error_template,
+        as: :error_template
+      )
     end
+
     resources "/identity-providers", IdentityProviderController, except: [:new, :edit] do
-      get "/templates/:template_type", IdentityProviderController, :template, as: :template
-      patch "/templates/:template_type", IdentityProviderController, :update_template, as: :template
-      delete "/templates/:template_type", IdentityProviderController, :delete_template, as: :template
+      get("/templates/:template_type", IdentityProviderController, :template, as: :template)
+
+      patch("/templates/:template_type", IdentityProviderController, :update_template,
+        as: :template
+      )
+
+      delete("/templates/:template_type", IdentityProviderController, :delete_template,
+        as: :template
+      )
     end
   end
 
@@ -64,8 +80,11 @@ defmodule BorutaAdminWeb.Router do
   def handle_errors(conn, %{kind: _kind, reason: reason, stack: _stack}) do
     message = %{
       code: Status.reason_atom(conn.status) |> Atom.to_string() |> String.upcase(),
-      message: reason.message
+      message: reason.__struct__.message(reason)
     }
-    send_resp(conn, conn.status, Jason.encode!(message))
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(conn.status, Jason.encode!(message))
   end
 end

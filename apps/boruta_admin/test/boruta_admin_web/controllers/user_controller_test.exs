@@ -22,6 +22,16 @@ defmodule BorutaAdminWeb.UserControllerTest do
            }
 
     assert conn
+           |> post(Routes.admin_user_path(conn, :create))
+           |> json_response(401) == %{
+             "code" => "UNAUTHORIZED",
+             "message" => "You are unauthorized to access this resource.",
+             "errors" => %{
+               "resource" => ["you are unauthorized to access this resource."]
+             }
+           }
+
+    assert conn
            |> patch(Routes.admin_user_path(conn, :update, "id"))
            |> json_response(401) == %{
              "code" => "UNAUTHORIZED",
@@ -48,30 +58,40 @@ defmodule BorutaAdminWeb.UserControllerTest do
       assert conn
              |> get(Routes.admin_user_path(conn, :index))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
+               }
+             }
+
+      assert conn
+             |> post(Routes.admin_user_path(conn, :create))
+             |> json_response(403) == %{
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> patch(Routes.admin_user_path(conn, :update, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> delete(Routes.admin_user_path(conn, :delete, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
     end
@@ -85,16 +105,53 @@ defmodule BorutaAdminWeb.UserControllerTest do
     end
   end
 
-  describe "current" do
-    @tag :skip
+  describe "create user" do
     @tag authorized: ["users:manage:all"]
-    test "get current user", %{conn: conn, introspected_token: introspected_token} do
-      conn = get(conn, Routes.admin_user_path(conn, :current))
+    test "renders bad request", %{
+      conn: conn
+    } do
+      conn = post(conn, Routes.admin_user_path(conn, :create), %{})
 
-      assert json_response(conn, 200)["data"] == %{
-               "id" => introspected_token["sub"],
-               "email" => introspected_token["username"]
+      assert json_response(conn, 400)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "renders an error when data is invalid", %{
+      conn: conn
+    } do
+      email = unique_user_email()
+
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "provider" => "Elixir.BorutaIdentity.Accounts.Internal",
+          "user" => %{
+            "email" => email
+          }
+        })
+
+      assert json_response(conn, 422) == %{
+               "code" => "UNPROCESSABLE_ENTITY",
+               "errors" => %{"password" => ["can't be blank"]},
+               "message" => "Your request could not be processed."
              }
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "renders user when data is valid", %{
+      conn: conn
+    } do
+      email = unique_user_email()
+
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "provider" => "Elixir.BorutaIdentity.Accounts.Internal",
+          "user" => %{
+            "email" => email,
+            "password" => valid_user_password()
+          }
+        })
+
+      assert %{"id" => _id, "email" => ^email} = json_response(conn, 200)["data"]
     end
   end
 
@@ -104,6 +161,16 @@ defmodule BorutaAdminWeb.UserControllerTest do
       scope = Boruta.Factory.insert(:scope)
 
       {:ok, conn: conn, user: user, existing_scope: scope}
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "renders an error when bad request", %{
+      conn: conn,
+      user: user
+    } do
+      conn = put(conn, Routes.admin_user_path(conn, :update, user), %{})
+
+      assert json_response(conn, 400)
     end
 
     @tag authorized: ["users:manage:all"]
@@ -123,7 +190,11 @@ defmodule BorutaAdminWeb.UserControllerTest do
     end
 
     @tag user_authorized: ["users:manage:all"]
-    test "cannot update current user", %{conn: conn, existing_scope: scope, resource_owner: resource_owner} do
+    test "cannot update current user", %{
+      conn: conn,
+      existing_scope: scope,
+      resource_owner: resource_owner
+    } do
       conn =
         put(conn, Routes.admin_user_path(conn, :update, resource_owner.sub),
           user: %{

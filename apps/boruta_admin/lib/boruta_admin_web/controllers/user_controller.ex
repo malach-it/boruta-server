@@ -35,6 +35,18 @@ defmodule BorutaAdminWeb.UserController do
     end
   end
 
+  def create(conn, %{"provider" => provider, "user" => user_params}) do
+    create_params = %{
+      username: user_params["email"],
+      password: user_params["password"]
+    }
+    with {:ok, user} <- Admin.create_user(String.to_atom(provider), create_params) do
+      render(conn, "show.json", user: user)
+    end
+  end
+
+  def create(_conn, _params), do: {:error, :bad_request}
+
   def update(conn, %{"id" => id, "user" => %{"authorized_scopes" => scopes}}) do
     with :ok <- ensure_open_for_edition(id, conn),
          %User{} = user <- Admin.get_user(id),
@@ -45,6 +57,8 @@ defmodule BorutaAdminWeb.UserController do
       error -> error
     end
   end
+
+  def update(_conn, _params), do: {:error, :bad_request}
 
   def delete(conn, %{"id" => user_id}) do
     with :ok <- ensure_open_for_edition(user_id, conn),
