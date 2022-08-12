@@ -20,7 +20,7 @@ end
 defmodule BorutaIdentity.Accounts.Consents do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
   import Ecto.Query, only: [from: 2]
 
   alias Boruta.Ecto.Admin
@@ -38,7 +38,7 @@ defmodule BorutaIdentity.Accounts.Consents do
           scope :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp initialize_consent(
+  defwithclientidp initialize_consent(
                     context,
                     client_id,
                     user,
@@ -48,11 +48,11 @@ defmodule BorutaIdentity.Accounts.Consents do
     client = Clients.get_client(client_id)
     scopes = Scope.split(scope)
 
-    case {client_rp.consentable, consented?(user, client_id, scopes)} do
+    case {client_idp.consentable, consented?(user, client_id, scopes)} do
       {true, false} ->
         scopes = Admin.get_scopes_by_names(scopes)
 
-        module.consent_initialized(context, client, scopes, new_consent_template(client_rp))
+        module.consent_initialized(context, client, scopes, new_consent_template(client_idp))
       _ ->
         module.consent_not_required(context)
     end

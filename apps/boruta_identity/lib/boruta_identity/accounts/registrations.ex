@@ -44,7 +44,7 @@ end
 defmodule BorutaIdentity.Accounts.Registrations do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.RegistrationError
@@ -61,8 +61,8 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   @spec initialize_registration(context :: any(), client_id :: String.t(), module :: atom()) ::
           callback_result :: any()
-  defwithclientrp initialize_registration(context, client_id, module) do
-    module.registration_initialized(context, new_registration_template(client_rp))
+  defwithclientidp initialize_registration(context, client_id, module) do
+    module.registration_initialized(context, new_registration_template(client_idp))
   end
 
   @spec register(
@@ -72,19 +72,19 @@ defmodule BorutaIdentity.Accounts.Registrations do
           confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
           module :: atom()
         ) :: calback_result :: any()
-  defwithclientrp register(
+  defwithclientidp register(
                     context,
                     client_id,
                     registration_params,
                     confirmation_url_fun,
                     module
                   ) do
-    client_impl = IdentityProvider.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_idp)
 
     with {:ok, user} <-
            apply(client_impl, :register, [registration_params]),
-         :ok <- maybe_deliver_confirmation_email(user, confirmation_url_fun, client_rp),
-         {:ok, user, session_token} <- maybe_create_session(user, client_rp) do
+         :ok <- maybe_deliver_confirmation_email(user, confirmation_url_fun, client_idp),
+         {:ok, user, session_token} <- maybe_create_session(user, client_idp) do
       # TODO do not log in user if confirmable is set
       module.user_registered(context, user, session_token)
     else
@@ -92,14 +92,14 @@ defmodule BorutaIdentity.Accounts.Registrations do
         module.registration_failure(context, %RegistrationError{
           changeset: changeset,
           message: "Could not create user with given params.",
-          template: new_registration_template(client_rp)
+          template: new_registration_template(client_idp)
         })
 
       {:user_not_confirmed, user, reason} ->
         module.registration_failure(context, %RegistrationError{
           user: user,
           message: reason,
-          template: new_confirmation_instructions_template(client_rp)
+          template: new_confirmation_instructions_template(client_idp)
         })
     end
   end

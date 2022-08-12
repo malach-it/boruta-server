@@ -40,7 +40,7 @@ end
 defmodule BorutaIdentity.Accounts.Settings do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.SettingsError
@@ -77,8 +77,8 @@ defmodule BorutaIdentity.Accounts.Settings do
           module :: atom()
         ) ::
           callback_result :: any()
-  defwithclientrp initialize_edit_user(context, client_id, user, module) do
-    module.edit_user_initialized(context, user, edit_user_template(client_rp))
+  defwithclientidp initialize_edit_user(context, client_id, user, module) do
+    module.edit_user_initialized(context, user, edit_user_template(client_idp))
   end
 
   @spec update_user(
@@ -89,7 +89,7 @@ defmodule BorutaIdentity.Accounts.Settings do
           confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t()),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp update_user(
+  defwithclientidp update_user(
                     context,
                     client_id,
                     user,
@@ -97,7 +97,7 @@ defmodule BorutaIdentity.Accounts.Settings do
                     confirmation_url_fun,
                     module
                   ) do
-    client_impl = IdentityProvider.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_idp)
 
     # TODO remove implementation_user from domain
     with {:ok, old_user} <- apply(client_impl, :get_user, [%{id: user.uid}]),
@@ -109,26 +109,26 @@ defmodule BorutaIdentity.Accounts.Settings do
          # TODO wrap user update and confirmation email sending in a transaction
          {:ok, user} <-
            apply(client_impl, :update_user, [old_user, user_update_params]),
-         {:ok, user} <- maybe_unconfirm_user(old_user, user, client_rp),
+         {:ok, user} <- maybe_unconfirm_user(old_user, user, client_idp),
          :ok <-
            maybe_deliver_email_confirmation_instructions(
              old_user,
              user,
              confirmation_url_fun,
-             client_rp
+             client_idp
            ) do
       module.user_updated(context, user)
     else
       {:error, %Ecto.Changeset{} = changeset} ->
         module.user_update_failure(context, %SettingsError{
-          template: edit_user_template(client_rp),
+          template: edit_user_template(client_idp),
           message: "Could not update user with given params.",
           changeset: changeset
         })
 
       {:error, reason} ->
         module.user_update_failure(context, %SettingsError{
-          template: edit_user_template(client_rp),
+          template: edit_user_template(client_idp),
           message: reason
         })
     end

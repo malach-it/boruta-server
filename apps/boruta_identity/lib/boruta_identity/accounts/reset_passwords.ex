@@ -51,7 +51,7 @@ end
 defmodule BorutaIdentity.Accounts.ResetPasswords do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
   alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentity.Accounts.User
@@ -88,10 +88,10 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           client_id :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp initialize_password_instructions(context, client_id, module) do
+  defwithclientidp initialize_password_instructions(context, client_id, module) do
     module.password_instructions_initialized(
       context,
-      new_reset_password_template(client_rp)
+      new_reset_password_template(client_idp)
     )
   end
 
@@ -102,14 +102,14 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           reset_password_url_fun :: reset_password_url_fun(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp send_reset_password_instructions(
+  defwithclientidp send_reset_password_instructions(
                     context,
                     client_id,
                     reset_password_instructions_params,
                     reset_password_url_fun,
                     module
                   ) do
-    client_impl = IdentityProvider.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_idp)
 
     with %User{} = user <- Users.get_user_by_email(reset_password_instructions_params[:email]) do
       apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
@@ -125,20 +125,20 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           token :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp initialize_password_reset(
+  defwithclientidp initialize_password_reset(
                     context,
                     client_id,
                     token,
                     module
                   ) do
-    client_impl = IdentityProvider.implementation(client_rp)
+    client_impl = IdentityProvider.implementation(client_idp)
 
     case apply(client_impl, :reset_password_changeset, [token]) do
       {:ok, _changeset} ->
         module.password_reset_initialized(
           context,
           token,
-          edit_reset_password_template(client_rp)
+          edit_reset_password_template(client_idp)
         )
 
       {:error, reason} ->
@@ -152,14 +152,14 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           reset_password_params :: reset_password_params(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp reset_password(
+  defwithclientidp reset_password(
                     context,
                     client_id,
                     reset_password_params,
                     module
                   ) do
-    client_impl = IdentityProvider.implementation(client_rp)
-    edit_template = edit_reset_password_template(client_rp)
+    client_impl = IdentityProvider.implementation(client_idp)
+    edit_template = edit_reset_password_template(client_idp)
 
     case apply(client_impl, :reset_password, [reset_password_params]) do
       {:ok, user} ->

@@ -41,7 +41,7 @@ end
 defmodule BorutaIdentity.Accounts.Confirmations do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.ConfirmationError
@@ -63,10 +63,10 @@ defmodule BorutaIdentity.Accounts.Confirmations do
           client_id :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp initialize_confirmation_instructions(context, client_id, module) do
+  defwithclientidp initialize_confirmation_instructions(context, client_id, module) do
     module.confirmation_instructions_initialized(
       context,
-      new_confirmation_instructions_template(client_rp)
+      new_confirmation_instructions_template(client_idp)
     )
   end
 
@@ -102,8 +102,8 @@ defmodule BorutaIdentity.Accounts.Confirmations do
           token :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp confirm_user(context, client_id, token, module) do
-    client_impl = IdentityProvider.implementation(client_rp)
+  defwithclientidp confirm_user(context, client_id, token, module) do
+    client_impl = IdentityProvider.implementation(client_idp)
 
     case apply(client_impl, :confirm_user, [token]) do
       {:ok, user} ->

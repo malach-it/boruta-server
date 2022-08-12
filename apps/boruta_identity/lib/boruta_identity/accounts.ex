@@ -24,7 +24,7 @@ defmodule BorutaIdentity.Accounts.Utils do
   `context`, `client_id` and `module' as parameters.
   """
   # TODO find a better way to delegate to the given client impl
-  defmacro defwithclientrp(fun, do: block) do
+  defmacro defwithclientidp(fun, do: block) do
     fun = Macro.escape(fun, unquote: true)
     block = Macro.escape(block, unquote: true)
 
@@ -51,7 +51,7 @@ defmodule BorutaIdentity.Accounts.Utils do
                  identity_provider,
                  unquote(name)
                ) do
-          var!(client_rp) = identity_provider
+          var!(client_idp) = identity_provider
 
           unquote(block)
         else

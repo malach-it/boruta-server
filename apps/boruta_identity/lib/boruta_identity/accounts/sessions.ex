@@ -46,7 +46,7 @@ end
 defmodule BorutaIdentity.Accounts.Sessions do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
@@ -81,8 +81,8 @@ defmodule BorutaIdentity.Accounts.Sessions do
           client_id :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp initialize_session(context, client_id, module) do
-    module.session_initialized(context, new_session_template(client_rp))
+  defwithclientidp initialize_session(context, client_id, module) do
+    module.session_initialized(context, new_session_template(client_idp))
   end
 
   @spec create_session(
@@ -91,26 +91,26 @@ defmodule BorutaIdentity.Accounts.Sessions do
           authentication_params :: authentication_params(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientrp create_session(context, client_id, authentication_params, module) do
-    client_impl = IdentityProvider.implementation(client_rp)
+  defwithclientidp create_session(context, client_id, authentication_params, module) do
+    client_impl = IdentityProvider.implementation(client_idp)
 
     with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
          {:ok, user} <-
            apply(client_impl, :check_user_against, [user, authentication_params]),
          %User{} = user <- apply(client_impl, :domain_user!, [user]),
-         :ok <- ensure_user_confirmed(user, client_rp),
+         :ok <- ensure_user_confirmed(user, client_idp),
          {:ok, user, session_token} <- create_user_session(user) do
       module.user_authenticated(context, user, session_token)
     else
       {:error, _reason} ->
         module.authentication_failure(context, %SessionError{
-          template: new_session_template(client_rp),
+          template: new_session_template(client_idp),
           message: "Invalid email or password."
         })
 
       {:user_not_confirmed, reason} ->
         module.authentication_failure(context, %SessionError{
-          template: new_confirmation_instructions_template(client_rp),
+          template: new_confirmation_instructions_template(client_idp),
           message: reason
         })
     end

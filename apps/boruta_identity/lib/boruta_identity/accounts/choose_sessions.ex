@@ -14,16 +14,16 @@ end
 defmodule BorutaIdentity.Accounts.ChooseSessions do
   @moduledoc false
 
-  import BorutaIdentity.Accounts.Utils, only: [defwithclientrp: 2]
+  import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
   alias BorutaIdentity.IdentityProviders
 
   @spec initialize_choose_session(context :: any(), client_id :: String.t(), module :: atom()) ::
           callback_result :: any()
-  defwithclientrp initialize_choose_session(context, client_id, module) do
-    case client_rp.choose_session do
+  defwithclientidp initialize_choose_session(context, client_id, module) do
+    case client_idp.choose_session do
       true ->
-        module.choose_session_initialized(context, new_choose_session_template(client_rp))
+        module.choose_session_initialized(context, new_choose_session_template(client_idp))
       false ->
         module.choose_session_not_required(context)
     end
