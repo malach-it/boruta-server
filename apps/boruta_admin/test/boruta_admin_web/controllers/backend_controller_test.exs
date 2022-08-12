@@ -1,11 +1,6 @@
 defmodule BorutaAdminWeb.BackendControllerTest do
   use BorutaAdminWeb.ConnCase
 
-  import BorutaIdentity.Factory
-
-  alias BorutaIdentity.Backends
-  alias BorutaIdentity.Backends.Backend
-
   @create_attrs %{
     name: "some name",
     type: "internal"

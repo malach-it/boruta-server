@@ -42,6 +42,7 @@ import EditUser from './views/IdentityProviders/EditUser.vue'
 
 import Backends from './views/IdentityProviders/Backends.vue'
 import BackendList from './views/IdentityProviders/BackendList.vue'
+import NewBackend from './views/IdentityProviders/NewBackend.vue'
 
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/Scopes/ScopeList.vue'
@@ -177,7 +178,7 @@ const router = createRouter({
                 }, {
                   path: '/backends/new',
                   name: 'new-backend',
-                  component: BackendList
+                  component: NewBackend
                 }
               ]
             }, {

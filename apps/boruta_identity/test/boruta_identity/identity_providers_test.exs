@@ -355,7 +355,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
 
     import BorutaIdentity.IdentityProvidersFixtures
 
-    @invalid_attrs %{name: nil, type: nil}
+    @invalid_attrs %{name: nil, type: "bad type"}
 
     test "list_backends/0 returns all backends" do
       backend = backend_fixture()
@@ -368,11 +368,11 @@ defmodule BorutaIdentity.IdentityProvidersTest do
     end
 
     test "create_backend/1 with valid data creates a backend" do
-      valid_attrs = %{name: "some name", type: "some type"}
+      valid_attrs = %{name: "some name", type: "Elixir.BorutaIdentity.Accounts.Internal"}
 
       assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
       assert backend.name == "some name"
-      assert backend.type == "some type"
+      assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
     end
 
     test "create_backend/1 with invalid data returns error changeset" do
@@ -381,11 +381,10 @@ defmodule BorutaIdentity.IdentityProvidersTest do
 
     test "update_backend/2 with valid data updates the backend" do
       backend = backend_fixture()
-      update_attrs = %{name: "some updated name", type: "some updated type"}
+      update_attrs = %{name: "some updated name"}
 
       assert {:ok, %Backend{} = backend} = IdentityProviders.update_backend(backend, update_attrs)
       assert backend.name == "some updated name"
-      assert backend.type == "some updated type"
     end
 
     test "update_backend/2 with invalid data returns error changeset" do

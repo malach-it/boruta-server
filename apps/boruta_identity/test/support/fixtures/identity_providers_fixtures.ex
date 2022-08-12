@@ -11,7 +11,7 @@ defmodule BorutaIdentity.IdentityProvidersFixtures do
     {:ok, backend} =
       attrs
       |> Enum.into(%{
-        type: "some type",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
         name: "some name"
       })
       |> BorutaIdentity.IdentityProviders.create_backend()

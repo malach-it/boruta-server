@@ -4,6 +4,13 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @backend_types [
+    BorutaIdentity.Accounts.Internal
+  ]
+
+  @spec backend_types() :: list(atom)
+  def backend_types, do: @backend_types
+
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "backends" do
     field :type, :string
@@ -18,6 +25,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   def changeset(backend, attrs) do
     backend
     |> cast(attrs, [:type, :name])
-    |> validate_required([:type, :name])
+    |> validate_required([:name])
+    |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
   end
 end
