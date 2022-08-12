@@ -28,6 +28,8 @@ defmodule BorutaAdminWeb.BackendController do
     end
   end
 
+  def create(_conn, _params), do: {:error, :bad_request}
+
   def show(conn, %{"id" => id}) do
     backend = IdentityProviders.get_backend!(id)
     render(conn, "show.json", backend: backend)
@@ -41,6 +43,8 @@ defmodule BorutaAdminWeb.BackendController do
       render(conn, "show.json", backend: backend)
     end
   end
+
+  def update(_conn, _params), do: {:error, :bad_request}
 
   def delete(conn, %{"id" => id}) do
     backend = IdentityProviders.get_backend!(id)

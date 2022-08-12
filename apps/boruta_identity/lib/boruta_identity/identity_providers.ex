@@ -36,7 +36,12 @@ defmodule BorutaIdentity.IdentityProviders do
       ** (Ecto.NoResultsError)
 
   """
-  def get_identity_provider!(id), do: Repo.get!(IdentityProvider, id)
+  def get_identity_provider!(id) do
+    case Ecto.UUID.cast(id) do
+     {:ok, id} -> Repo.get!(IdentityProvider, id)
+      _ -> raise Ecto.NoResultsError, queryable: IdentityProvider
+    end
+  end
 
   @doc """
   Creates a identity_provider.
@@ -258,7 +263,12 @@ defmodule BorutaIdentity.IdentityProviders do
       ** (Ecto.NoResultsError)
 
   """
-  def get_backend!(id), do: Repo.get!(Backend, id)
+  def get_backend!(id) do
+    case Ecto.UUID.cast(id) do
+     {:ok, id} -> Repo.get!(Backend, id)
+      _ -> raise Ecto.NoResultsError, queryable: Backend
+    end
+  end
 
   # TODO client backend association
   # def get_backend_by_client_id(client_id) do
@@ -290,7 +300,7 @@ defmodule BorutaIdentity.IdentityProviders do
 
   """
   def create_backend(attrs \\ %{}) do
-    %Backend{}
+    %Backend{type: "Elixir.BorutaIdentity.Accounts.Internal"}
     |> Backend.changeset(attrs)
     |> Repo.insert()
   end

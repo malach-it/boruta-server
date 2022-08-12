@@ -33,6 +33,7 @@ const labels = {
   'edit-new-consent-template': 'Edit consent template',
   'backends': 'Backends',
   'new-backend': 'Create',
+  'edit-backend': ({ params }) => params.backendId,
   'users': 'Users',
   'new-user': 'Create',
   'edit-user': ({ params }) => params.userId,

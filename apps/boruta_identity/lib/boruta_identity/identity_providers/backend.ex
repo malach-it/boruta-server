@@ -11,7 +11,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @spec backend_types() :: list(atom)
   def backend_types, do: @backend_types
 
-  @primary_key {:id, :binary_id, autogenerate: true}
+  @primary_key {:id, Ecto.UUID, autogenerate: true}
   schema "backends" do
     field :type, :string
     field :name, :string
