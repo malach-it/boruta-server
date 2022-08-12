@@ -134,9 +134,9 @@ defmodule BorutaIdentity.IdentityProviders do
     case Ecto.UUID.cast(client_id) do
       {:ok, client_id} ->
         Repo.one(
-          from(r in IdentityProvider,
-            join: crp in assoc(r, :client_identity_providers),
-            where: crp.client_id == ^client_id
+          from(idp in IdentityProvider,
+            join: cidp in assoc(idp, :client_identity_providers),
+            where: cidp.client_id == ^client_id
           )
         )
 
@@ -227,5 +227,118 @@ defmodule BorutaIdentity.IdentityProviders do
     else
       {0, nil} -> raise Ecto.NoResultsError, queryable: Template
     end
+  end
+
+  alias BorutaIdentity.IdentityProviders.Backend
+
+  @doc """
+  Returns the list of backends.
+
+  ## Examples
+
+      iex> list_backends()
+      [%Backend{}, ...]
+
+  """
+  def list_backends do
+    Repo.all(Backend)
+  end
+
+  @doc """
+  Gets a single backend.
+
+  Raises `Ecto.NoResultsError` if the Backend does not exist.
+
+  ## Examples
+
+      iex> get_backend!(123)
+      %Backend{}
+
+      iex> get_backend!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_backend!(id), do: Repo.get!(Backend, id)
+
+  # TODO client backend association
+  # def get_backend_by_client_id(client_id) do
+  #   case Ecto.UUID.cast(client_id) do
+  #     {:ok, client_id} ->
+  #       Repo.one(
+  #         from(b in Backend,
+  #           join: idp in assoc(b, :identity_providers),
+  #           join: cidp in assoc(idp, :client_identity_providers),
+  #           where: cidp.client_id == ^client_id
+  #         )
+  #       )
+
+  #     :error ->
+  #       nil
+  #   end
+  # end
+
+  @doc """
+  Creates a backend.
+
+  ## Examples
+
+      iex> create_backend(%{field: value})
+      {:ok, %Backend{}}
+
+      iex> create_backend(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_backend(attrs \\ %{}) do
+    %Backend{}
+    |> Backend.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a backend.
+
+  ## Examples
+
+      iex> update_backend(backend, %{field: new_value})
+      {:ok, %Backend{}}
+
+      iex> update_backend(backend, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_backend(%Backend{} = backend, attrs) do
+    backend
+    |> Backend.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a backend.
+
+  ## Examples
+
+      iex> delete_backend(backend)
+      {:ok, %Backend{}}
+
+      iex> delete_backend(backend)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_backend(%Backend{} = backend) do
+    Repo.delete(backend)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking backend changes.
+
+  ## Examples
+
+      iex> change_backend(backend)
+      %Ecto.Changeset{data: %Backend{}}
+
+  """
+  def change_backend(%Backend{} = backend, attrs \\ %{}) do
+    Backend.changeset(backend, attrs)
   end
 end
