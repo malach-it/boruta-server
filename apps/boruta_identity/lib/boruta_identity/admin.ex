@@ -74,7 +74,6 @@ defmodule BorutaIdentity.Admin do
   @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::
           {:ok, %User{}} | {:error, Ecto.Changeset.t()}
   def update_user_authorized_scopes(%User{id: user_id} = user, scopes) do
-    # TODO update user email and password
     Repo.delete_all(from(s in UserAuthorizedScope, where: s.user_id == ^user_id))
 
     case Enum.reduce(scopes, Ecto.Multi.new(), fn attrs, multi ->

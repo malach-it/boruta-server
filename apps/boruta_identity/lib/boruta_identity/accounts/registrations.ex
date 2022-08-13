@@ -85,7 +85,6 @@ defmodule BorutaIdentity.Accounts.Registrations do
            apply(client_impl, :register, [registration_params]),
          :ok <- maybe_deliver_confirmation_email(user, confirmation_url_fun, client_idp),
          {:ok, user, session_token} <- maybe_create_session(user, client_idp) do
-      # TODO do not log in user if confirmable is set
       module.user_registered(context, user, session_token)
     else
       {:error, %Ecto.Changeset{} = changeset} ->

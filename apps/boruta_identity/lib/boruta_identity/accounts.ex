@@ -23,7 +23,7 @@ defmodule BorutaIdentity.Accounts.Utils do
   Adds `client_impl` variable in function body context. The function definition must have
   `context`, `client_id` and `module' as parameters.
   """
-  # TODO find a better way to delegate to the given client impl
+  # TODO find a better way to delegate to the given client idp
   defmacro defwithclientidp(fun, do: block) do
     fun = Macro.escape(fun, unquote: true)
     block = Macro.escape(block, unquote: true)

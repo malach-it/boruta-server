@@ -95,7 +95,6 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
           })
         )
 
-      # TODO test request query param
       assert redirected_to(conn) == IdentityRoutes.user_consent_path(conn, :index, request: request_param)
     end
 

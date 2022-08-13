@@ -50,6 +50,7 @@ defmodule BorutaAdminWeb.UserController do
   def update(conn, %{"id" => id, "user" => %{"authorized_scopes" => scopes}}) do
     with :ok <- ensure_open_for_edition(id, conn),
          %User{} = user <- Admin.get_user(id),
+         # TODO update user email and password
          {:ok, %User{} = user} <- Admin.update_user_authorized_scopes(user, scopes) do
       render(conn, "show.json", user: user)
     else

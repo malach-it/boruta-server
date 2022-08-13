@@ -56,7 +56,6 @@ defmodule BorutaIdentityWeb.ConnCase do
   It stores an updated connection and a registered user in the
   test context.
   """
-  # TODO typespec
   def register_and_log_in(%{conn: conn}) do
     user = BorutaIdentity.AccountsFixtures.user_fixture()
     %{conn: log_in(conn, user), user: user}
@@ -80,7 +79,6 @@ defmodule BorutaIdentityWeb.ConnCase do
 
   It returns an updated `conn`.
   """
-  # TODO typespec
   def log_in(conn, user, params \\ %{}) do
     token = generate_user_session_token(user)
 

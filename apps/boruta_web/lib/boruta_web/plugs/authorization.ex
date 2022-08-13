@@ -1,4 +1,3 @@
-# TODO have an admin specific authorization module
 defmodule BorutaWeb.Authorization do
   @moduledoc false
 

@@ -38,8 +38,6 @@ defmodule BorutaAdminWeb.Router do
     resources("/logs", LogsController, only: [:index])
     resources("/scopes", ScopeController, except: [:new, :edit])
     resources("/clients", ClientController, except: [:new, :edit])
-    # TODO user scopes
-    # resources "/users/:user_id/scopes, only: [:create, :delete]
     resources("/users", UserController, except: [:new, :edit])
     resources("/upstreams", UpstreamController, except: [:new, :edit])
 

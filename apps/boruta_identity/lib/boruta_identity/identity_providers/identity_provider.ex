@@ -107,7 +107,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     end
   end
 
-  # TODO rename to providers
+  # TODO rename to backend
   @spec implementation(client_identity_provider :: %__MODULE__{}) :: implementation :: atom()
   def implementation(%__MODULE__{type: type}) do
     Map.fetch!(@implementations, type)

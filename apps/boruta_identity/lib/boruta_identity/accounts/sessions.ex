@@ -116,7 +116,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
     end
   end
 
-  # TODO have a look to OpenID logout profile
   @spec delete_session(
           context :: any(),
           client_id :: String.t(),

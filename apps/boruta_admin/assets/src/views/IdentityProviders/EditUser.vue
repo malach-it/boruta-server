@@ -34,23 +34,23 @@ export default {
     UserForm,
     Toaster
   },
-  mounted () {
+  mounted() {
     const { userId } = this.$route.params
     User.get(userId).then((user) => {
       this.user = user
     })
   },
-  data () {
+  data() {
     return {
       user: new User(),
       success: false
     }
   },
   methods: {
-    back () {
+    back() {
       this.$router.push({ name: 'user-list' })
     },
-    updateUser () {
+    async updateUser () {
       this.success = false
       return this.user.save().then(() => {
         this.success = true

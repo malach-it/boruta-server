@@ -1,5 +1,4 @@
 import axios from 'axios'
-import router from '../router'
 import Scope from './scope.model'
 import IdentityProvider from './identity-provider.model'
 import { addClientErrorInterceptor } from './utils'

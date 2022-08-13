@@ -2,7 +2,6 @@ defmodule BorutaAuth.LogRotate do
   @moduledoc false
 
   def rotate do
-    # TODO setup a configuration that help deleting older files
     today = Date.utc_today()
     max_retention_days = Application.get_env(:boruta_auth, BorutaAuth.LogRotate)[:max_retention_days]
     log_dates = log_dates(
