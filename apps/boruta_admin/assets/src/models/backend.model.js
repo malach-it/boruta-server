@@ -16,7 +16,7 @@ const assign = {
   type: function ({ type }) { this.type = type }
 }
 
-class IdentityProvider {
+class Backend {
   constructor (params = {}) {
     Object.assign(this, defaults)
 
@@ -90,15 +90,15 @@ class IdentityProvider {
 
   static all () {
     return this.api().get('/').then(({ data }) => {
-      return data.data.map((identityProvider) => new IdentityProvider(identityProvider))
+      return data.data.map((identityProvider) => new Backend(identityProvider))
     })
   }
 
   static get (id) {
     return this.api().get(`/${id}`).then(({ data }) => {
-      return new IdentityProvider(data.data)
+      return new Backend(data.data)
     })
   }
 }
 
-export default IdentityProvider
+export default Backend

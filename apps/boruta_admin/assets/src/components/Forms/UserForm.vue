@@ -4,9 +4,9 @@
       <FormErrors :errors="user.errors" v-if="user.errors" />
       <form class="ui form" @submit.prevent="submit">
         <div class="field" v-if="!user.isPersisted">
-          <label>Provider</label>
-          <select v-model="user.provider">
-            <option value="Elixir.BorutaIdentity.Accounts.Internal">internal</option>
+          <label>Backend</label>
+          <select v-model="user.backend_id">
+            <option :value="backend.id" v-for="backend in backends" :key="backend.id">{{ backend.name }}</option>
           </select>
         </div>
         <div class="field" v-if="!user.isPersisted">
@@ -31,6 +31,7 @@
 
 <script>
 import Scope from '../../models/scope.model'
+import Backend from '../../models/backend.model'
 import ScopesField from './ScopesField.vue'
 import FormErrors from './FormErrors.vue'
 
@@ -41,15 +42,20 @@ export default {
     ScopesField,
     FormErrors
   },
+  data () {
+    return {
+      scopes: [],
+      backends: []
+    }
+  },
   mounted () {
     Scope.all().then((scopes) => {
       this.scopes = scopes
     })
-  },
-  data () {
-    return {
-      scopes: []
-    }
+    Backend.all().then((backends) => {
+      this.backends = backends
+      console.log(this.backends)
+    })
   },
   methods: {
     back () {

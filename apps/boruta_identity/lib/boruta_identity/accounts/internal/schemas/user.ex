@@ -5,6 +5,8 @@ defmodule BorutaIdentity.Accounts.Internal.User do
 
   import Ecto.Changeset
 
+  alias BorutaIdentity.IdentityProviders.Backend
+
   @type t :: %__MODULE__{
           email: String.t(),
           password: String.t(),
@@ -41,7 +43,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
   """
-  def registration_changeset(user, attrs, opts \\ []) do
+  def registration_changeset(user, attrs, %{backend: _backend} = opts) do
     user
     |> cast(attrs, [:email, :password])
     |> validate_required([:email, :password])
@@ -67,19 +69,26 @@ defmodule BorutaIdentity.Accounts.Internal.User do
   end
 
   defp maybe_hash_password(changeset, opts) do
-    hash_password? = Keyword.get(opts, :hash_password, true)
+    hash_password? = Map.get(opts, :hash_password, true)
+    backend = Map.get(opts, :backend)
     password = get_change(changeset, :password)
 
     if hash_password? && password && changeset.valid? do
       changeset
-      |> put_change(:hashed_password, Argon2.hash_pwd_salt(password))
+      |> put_change(
+        :hashed_password,
+        apply(Backend.password_hashing_module(backend), :hash_pwd_salt, [
+          password,
+          Backend.password_hashing_opts(backend)
+        ])
+      )
       |> delete_change(:password)
     else
       changeset
     end
   end
 
-  def update_changeset(user, attrs, opts \\ []) do
+  def update_changeset(user, attrs, opts \\ %{}) do
     user
     |> cast(attrs, [:email, :password])
     |> validate_email()
@@ -98,7 +107,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
   """
-  def password_changeset(user, attrs, opts \\ []) do
+  def password_changeset(user, attrs, opts \\ %{}) do
     user
     |> cast(attrs, [:password])
     |> validate_confirmation(:password, message: "does not match password")

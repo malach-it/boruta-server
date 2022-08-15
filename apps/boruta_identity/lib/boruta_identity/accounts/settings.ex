@@ -59,7 +59,11 @@ defmodule BorutaIdentity.Accounts.Settings do
           password: String.t()
         }
 
-  @callback update_user(user :: User.t(), user_update_params :: user_update_params()) ::
+  @callback update_user(
+              backend :: BorutaIdentity.IdentityProviders.Backend.t(),
+              user :: User.t(),
+              user_update_params :: user_update_params()
+            ) ::
               {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}
 
   # NOTE emits a compilation warning since callback is already defined in BorutaIdentity.Accounts.Sessions
@@ -90,13 +94,13 @@ defmodule BorutaIdentity.Accounts.Settings do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientidp update_user(
-                    context,
-                    client_id,
-                    user,
-                    user_update_params,
-                    confirmation_url_fun,
-                    module
-                  ) do
+                     context,
+                     client_id,
+                     user,
+                     user_update_params,
+                     confirmation_url_fun,
+                     module
+                   ) do
     client_impl = IdentityProvider.implementation(client_idp)
 
     # TODO remove implementation_user from domain
@@ -108,7 +112,7 @@ defmodule BorutaIdentity.Accounts.Settings do
            ]),
          # TODO wrap user update and confirmation email sending in a transaction
          {:ok, user} <-
-           apply(client_impl, :update_user, [old_user, user_update_params]),
+           apply(client_impl, :update_user, [client_idp.backend, old_user, user_update_params]),
          {:ok, user} <- maybe_unconfirm_user(old_user, user, client_idp),
          :ok <-
            maybe_deliver_email_confirmation_instructions(
@@ -160,7 +164,7 @@ defmodule BorutaIdentity.Accounts.Settings do
          confirmation_url_fun,
          %IdentityProvider{confirmable: true}
        ) do
-         case email_changed?(old_user, user) do
+    case email_changed?(old_user, user) do
       true ->
         with {:ok, _confirmation_token} <-
                Deliveries.deliver_user_confirmation_instructions(
