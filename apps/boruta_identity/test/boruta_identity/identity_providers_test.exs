@@ -16,9 +16,9 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       {:ok, backend: backend}
     end
 
-    @valid_attrs %{name: "some name", type: "internal", backend_id: nil}
+    @valid_attrs %{name: "some name", backend_id: nil}
     @update_attrs %{name: "some updated name"}
-    @invalid_attrs %{name: nil, type: "other"}
+    @invalid_attrs %{name: nil}
 
     def identity_provider_fixture(attrs \\ %{}) do
       insert(:identity_provider, Map.merge(@valid_attrs, attrs))
@@ -41,7 +41,6 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                IdentityProviders.create_identity_provider(%{@valid_attrs | backend_id: backend.id})
 
       assert identity_provider.name == "some name"
-      assert identity_provider.type == "internal"
     end
 
     test "create_identity_provider/1 with valid data (with a new template) creates a identity_provider",
@@ -61,7 +60,6 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:error,
               %Ecto.Changeset{
                 errors: [
-                  type: {"is invalid", [validation: :inclusion, enum: ["internal"]]},
                   name: {"can't be blank", [validation: :required]},
                   backend_id: {"can't be blank", [validation: :required]}
                 ]

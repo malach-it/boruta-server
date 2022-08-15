@@ -26,6 +26,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     timestamps()
   end
 
+  @spec implementation(t()) :: atom()
+  def implementation(%__MODULE__{type: type}) do
+    String.to_atom(type)
+  end
+
   @doc false
   def changeset(backend, attrs) do
     backend

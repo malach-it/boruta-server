@@ -11,7 +11,6 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
 
   @type t :: %__MODULE__{
           name: String.t(),
-          type: String.t(),
           backend_id: String.t(),
           backend: Backend.t(),
           registrable: boolean(),
@@ -23,14 +22,6 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
-
-  @types [
-    "internal"
-  ]
-
-  @implementations %{
-    "internal" => BorutaIdentity.Accounts.Internal
-  }
 
   @features %{
     registrable: [
@@ -85,7 +76,6 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
   @foreign_key_type :binary_id
   schema "identity_providers" do
     field(:name, :string)
-    field(:type, :string, default: "internal")
     field(:choose_session, :boolean, default: true)
     field(:registrable, :boolean, default: false)
     field(:user_editable, :boolean, default: false)
@@ -124,8 +114,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
 
   # TODO rename to backend
   @spec implementation(client_identity_provider :: %__MODULE__{}) :: implementation :: atom()
-  def implementation(%__MODULE__{type: type}) do
-    Map.fetch!(@implementations, type)
+  def implementation(%__MODULE__{backend: backend}) do
+    Backend.implementation(backend)
   end
 
   @spec check_feature(identity_provider :: t(), action_name :: atom()) ::
@@ -149,7 +139,6 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     |> Repo.preload(:templates)
     |> cast(attrs, [
       :name,
-      :type,
       :choose_session,
       :registrable,
       :user_editable,
@@ -157,8 +146,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
       :confirmable,
       :backend_id
     ])
-    |> validate_required([:name, :type, :backend_id])
-    |> validate_inclusion(:type, @types)
+    |> validate_required([:name, :backend_id])
     |> unique_constraint(:name)
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)
   end

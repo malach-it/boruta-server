@@ -6,8 +6,7 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
   alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @create_attrs %{
-    name: "some name",
-    type: "internal"
+    name: "some name"
   }
   @update_attrs %{
     name: "some updated name"
@@ -15,7 +14,8 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
   @update_template_attrs %{
     content: "some updated content"
   }
-  @invalid_attrs %{content: nil, type: "other"}
+  @invalid_attrs %{name: nil}
+  @invalid_template_attrs %{content: nil}
 
   def fixture(:identity_provider) do
     insert(:identity_provider, @create_attrs)
@@ -285,7 +285,6 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
       assert %{
                "id" => ^id,
                "name" => "some name",
-               "type" => "internal",
                "backend" => %{"id" => ^backend_id}
              } = json_response(conn, 200)["data"]
     end
@@ -360,7 +359,7 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
             identity_provider,
             "new_registration"
           ),
-          template: @invalid_attrs
+          template: @invalid_template_attrs
         )
 
       assert json_response(conn, 422)["errors"] != %{}
@@ -453,7 +452,6 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
       assert %{
                "id" => ^id,
                "name" => "some updated name",
-               "type" => "internal"
              } = json_response(conn, 200)["data"]
     end
 

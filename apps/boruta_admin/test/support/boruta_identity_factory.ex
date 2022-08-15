@@ -47,7 +47,6 @@ defmodule BorutaIdentity.Factory do
   def identity_provider_factory do
     %IdentityProvider{
       name: sequence(:name, &"identity provider #{&1}"),
-      type: "internal",
       backend: build(:backend)
     }
   end
