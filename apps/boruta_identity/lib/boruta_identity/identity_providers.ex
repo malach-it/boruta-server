@@ -19,7 +19,11 @@ defmodule BorutaIdentity.IdentityProviders do
 
   """
   def list_identity_providers do
-    Repo.all(IdentityProvider)
+    Repo.all(
+      from idp in IdentityProvider,
+        join: b in assoc(idp, :backend),
+        preload: [backend: b]
+    )
   end
 
   @doc """
@@ -38,8 +42,16 @@ defmodule BorutaIdentity.IdentityProviders do
   """
   def get_identity_provider!(id) do
     case Ecto.UUID.cast(id) do
-     {:ok, id} -> Repo.get!(IdentityProvider, id)
-      _ -> raise Ecto.NoResultsError, queryable: IdentityProvider
+      {:ok, id} ->
+        Repo.one!(
+          from idp in IdentityProvider,
+            join: b in assoc(idp, :backend),
+            where: idp.id == ^id,
+            preload: [backend: b]
+        )
+
+      _ ->
+        raise Ecto.NoResultsError, queryable: IdentityProvider
     end
   end
 
@@ -56,9 +68,12 @@ defmodule BorutaIdentity.IdentityProviders do
 
   """
   def create_identity_provider(attrs \\ %{}) do
-    %IdentityProvider{}
-    |> IdentityProvider.changeset(attrs)
-    |> Repo.insert()
+    with {:ok, identity_provider} <-
+           %IdentityProvider{}
+           |> IdentityProvider.changeset(attrs)
+           |> Repo.insert() do
+      {:ok, Repo.preload(identity_provider, :backend)}
+    end
   end
 
   @doc """
@@ -112,7 +127,10 @@ defmodule BorutaIdentity.IdentityProviders do
 
   def upsert_client_identity_provider(client_id, identity_provider_id) do
     %ClientIdentityProvider{}
-    |> ClientIdentityProvider.changeset(%{client_id: client_id, identity_provider_id: identity_provider_id})
+    |> ClientIdentityProvider.changeset(%{
+      client_id: client_id,
+      identity_provider_id: identity_provider_id
+    })
     |> Repo.insert(
       on_conflict: [set: [identity_provider_id: identity_provider_id]],
       conflict_target: :client_id
@@ -140,8 +158,10 @@ defmodule BorutaIdentity.IdentityProviders do
       {:ok, client_id} ->
         Repo.one(
           from(idp in IdentityProvider,
+            join: b in assoc(idp, :backend),
             join: cidp in assoc(idp, :client_identity_providers),
-            where: cidp.client_id == ^client_id
+            where: cidp.client_id == ^client_id,
+            preload: [backend: b]
           )
         )
 
@@ -169,10 +189,11 @@ defmodule BorutaIdentity.IdentityProviders do
   def get_identity_provider_template!(identity_provider_id, type) do
     with %IdentityProvider{} = identity_provider <-
            Repo.one(
-             from(rp in IdentityProvider,
-               left_join: t in assoc(rp, :templates),
-               where: rp.id == ^identity_provider_id,
-               preload: [templates: t]
+             from(idp in IdentityProvider,
+               left_join: t in assoc(idp, :templates),
+               join: b in assoc(idp, :backend),
+               where: idp.id == ^identity_provider_id,
+               preload: [backend: b, templates: t]
              )
            ),
          %Template{} = template <- IdentityProvider.template(identity_provider, type) do
@@ -265,7 +286,7 @@ defmodule BorutaIdentity.IdentityProviders do
   """
   def get_backend!(id) do
     case Ecto.UUID.cast(id) do
-     {:ok, id} -> Repo.get!(Backend, id)
+      {:ok, id} -> Repo.get!(Backend, id)
       _ -> raise Ecto.NoResultsError, queryable: Backend
     end
   end

@@ -33,7 +33,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProviderTest do
 
     test "returns identity provider template", %{identity_provider_with_template: identity_provider} do
       assert IdentityProvider.template(identity_provider, :new_registration) ==
-        List.first(identity_provider.templates) |> Repo.preload(identity_provider: :templates)
+        List.first(identity_provider.templates) |> Repo.preload(identity_provider: [:backend, :templates])
     end
   end
 end

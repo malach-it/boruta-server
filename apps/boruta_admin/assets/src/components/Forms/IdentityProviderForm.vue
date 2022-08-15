@@ -10,9 +10,9 @@
             <input type="text" v-model="identityProvider.name" placeholder="Super identity provider">
           </div>
           <div class="field">
-            <label>Type</label>
-            <select v-model="identityProvider.type">
-              <option value="internal">internal</option>
+            <label>Backend</label>
+            <select v-model="identityProvider.backend_id">
+              <option :value="backend.id" v-for="backend in backends">{{ backend.name }}</option>
             </select>
           </div>
           <div v-if="identityProvider.isPersisted" class="ui segment">
@@ -137,6 +137,7 @@
 </template>
 
 <script>
+import Backend from '../../models/backend.model'
 import FormErrors from './FormErrors.vue'
 
 export default {
@@ -144,6 +145,14 @@ export default {
   props: ['identityProvider', 'action'],
   components: {
     FormErrors
+  },
+  data() {
+    return {
+      backends: []
+    }
+  },
+  mounted () {
+    Backend.all().then(backends => this.backends = backends)
   },
   methods: {
     back () {

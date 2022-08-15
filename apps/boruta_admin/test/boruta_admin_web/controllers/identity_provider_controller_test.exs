@@ -3,7 +3,6 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
 
   import BorutaIdentity.Factory
 
-  alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @create_attrs %{
@@ -19,8 +18,7 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
   @invalid_attrs %{content: nil, type: "other"}
 
   def fixture(:identity_provider) do
-    {:ok, identity_provider} = IdentityProviders.create_identity_provider(@create_attrs)
-    identity_provider
+    insert(:identity_provider, @create_attrs)
   end
 
   setup %{conn: conn} do
@@ -126,40 +124,40 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
       assert conn
              |> get(Routes.admin_identity_provider_path(conn, :index))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> post(Routes.admin_identity_provider_path(conn, :create))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> patch(Routes.admin_identity_provider_path(conn, :update, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> delete(Routes.admin_identity_provider_path(conn, :delete, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
@@ -173,10 +171,10 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
@@ -190,10 +188,10 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
@@ -207,10 +205,10 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
     end
@@ -259,16 +257,26 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
       conn: conn,
       identity_provider: %IdentityProvider{id: id}
     } do
-      conn = get(conn, Routes.admin_identity_provider_template_path(conn, :template, id, "new_registration"))
-      assert %{"identity_provider_id" => ^id, "type" => "new_registration"} = json_response(conn, 200)["data"]
+      conn =
+        get(
+          conn,
+          Routes.admin_identity_provider_template_path(conn, :template, id, "new_registration")
+        )
+
+      assert %{"identity_provider_id" => ^id, "type" => "new_registration"} =
+               json_response(conn, 200)["data"]
     end
   end
 
   describe "create identity_provider" do
     @tag authorized: ["identity-providers:manage:all"]
     test "renders identity_provider when data is valid", %{conn: conn} do
+      backend_id = insert(:backend).id
+
       conn =
-        post(conn, Routes.admin_identity_provider_path(conn, :create), identity_provider: @create_attrs)
+        post(conn, Routes.admin_identity_provider_path(conn, :create),
+          identity_provider: Map.put(@create_attrs, :backend_id, backend_id)
+        )
 
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
@@ -277,14 +285,17 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
       assert %{
                "id" => ^id,
                "name" => "some name",
-               "type" => "internal"
+               "type" => "internal",
+               "backend" => %{"id" => ^backend_id}
              } = json_response(conn, 200)["data"]
     end
 
     @tag authorized: ["identity-providers:manage:all"]
     test "renders errors when data is invalid", %{conn: conn} do
       conn =
-        post(conn, Routes.admin_identity_provider_path(conn, :create), identity_provider: @invalid_attrs)
+        post(conn, Routes.admin_identity_provider_path(conn, :create),
+          identity_provider: @invalid_attrs
+        )
 
       assert json_response(conn, 422)["errors"] != %{}
     end
@@ -336,9 +347,19 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
     end
 
     @tag authorized: ["identity-providers:manage:all"]
-    test "renders errors when data is invalid", %{conn: conn, identity_provider: identity_provider} do
+    test "renders errors when data is invalid", %{
+      conn: conn,
+      identity_provider: identity_provider
+    } do
       conn =
-        patch(conn, Routes.admin_identity_provider_template_path(conn, :update_template, identity_provider, "new_registration"),
+        patch(
+          conn,
+          Routes.admin_identity_provider_template_path(
+            conn,
+            :update_template,
+            identity_provider,
+            "new_registration"
+          ),
           template: @invalid_attrs
         )
 
@@ -408,8 +429,7 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
           )
         )
 
-      assert %{"id" => nil, "type" => "new_registration"} =
-               json_response(conn, 200)["data"]
+      assert %{"id" => nil, "type" => "new_registration"} = json_response(conn, 200)["data"]
     end
   end
 
@@ -438,7 +458,10 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
     end
 
     @tag authorized: ["identity-providers:manage:all"]
-    test "renders errors when data is invalid", %{conn: conn, identity_provider: identity_provider} do
+    test "renders errors when data is invalid", %{
+      conn: conn,
+      identity_provider: identity_provider
+    } do
       conn =
         put(conn, Routes.admin_identity_provider_path(conn, :update, identity_provider),
           identity_provider: @invalid_attrs
@@ -457,10 +480,16 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
       current_admin_ui_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "")
       System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client_identity_provider.client_id)
 
-      conn = delete(
-        conn,
-        Routes.admin_identity_provider_path(conn, :delete, client_identity_provider.identity_provider)
-      )
+      conn =
+        delete(
+          conn,
+          Routes.admin_identity_provider_path(
+            conn,
+            :delete,
+            client_identity_provider.identity_provider
+          )
+        )
+
       assert response(conn, 403)
 
       System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", current_admin_ui_client_id)

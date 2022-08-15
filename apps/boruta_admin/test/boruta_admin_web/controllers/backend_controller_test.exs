@@ -124,7 +124,7 @@ defmodule BorutaAdminWeb.BackendControllerTest do
     @tag authorized: ["identity-providers:manage:all"]
     test "lists all backends", %{conn: conn} do
       conn = get(conn, Routes.admin_backend_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert is_list(json_response(conn, 200)["data"])
     end
   end
 
