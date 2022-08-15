@@ -22,6 +22,12 @@
         <div class="ui info message">
           Default backend will be used in case of resource owner password credentials requests.
         </div>
+        <div class="field">
+          <label>Password_hashing algorithm</label>
+          <select v-model="backend.password_hashing_alg">
+            <option :value="alg.name" v-for="alg in passwordHashingAlgorithms">{{ alg.label }}</option>
+          </select>
+        </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a v-on:click="back()" class="ui button">Back</a>
@@ -31,6 +37,7 @@
 </template>
 
 <script>
+import Backend from '../../models/backend.model'
 import FormErrors from './FormErrors.vue'
 
 export default {
@@ -38,6 +45,11 @@ export default {
   props: ['backend', 'action'],
   components: {
     FormErrors
+  },
+  data () {
+    return {
+      passwordHashingAlgorithms: Backend.passwordHashingAlgorithms
+    }
   },
   methods: {
     back () {

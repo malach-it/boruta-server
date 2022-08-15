@@ -16,7 +16,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   ]
 
   @password_hashing_modules %{
-    "argon2" => Argon2
+    "argon2" => Argon2,
+    "bcrypt" => Bcrypt,
+    "pbkdf2" => Pbkdf2
   }
 
   @spec backend_types() :: list(atom)
@@ -56,10 +58,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @doc false
   def changeset(backend, attrs) do
     backend
-    |> cast(attrs, [:type, :name, :is_default])
+    |> cast(attrs, [:type, :name, :is_default, :password_hashing_alg])
     |> validate_required([:name])
     |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
     |> validate_inclusion(:password_hashing_alg, Map.keys(@password_hashing_modules))
+    |> foreign_key_constraint(:identity_provider, name: :identity_providers_backend_id_fkey)
     |> set_default()
   end
 

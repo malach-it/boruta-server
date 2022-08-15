@@ -121,6 +121,8 @@ defmodule BorutaIdentity.Accounts.Internal.User do
       :verify_pass,
       [password, hashed_password]
     )
+  rescue
+    _ -> false
   end
 
   def valid_password?(backend, _, _) do
@@ -130,6 +132,8 @@ defmodule BorutaIdentity.Accounts.Internal.User do
       []
     )
     false
+  rescue
+    _ -> false
   end
 
   @doc """

@@ -14,7 +14,8 @@ const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
-  is_default: function ({ is_default }) { this.is_default = is_default }
+  is_default: function ({ is_default }) { this.is_default = is_default },
+  password_hashing_alg: function ({ password_hashing_alg }) { this.password_hashing_alg = password_hashing_alg }
 }
 
 class Backend {
@@ -69,14 +70,23 @@ class Backend {
   }
 
   get serialized () {
-    const { id, name, type, is_default } = this
+    const { id, name, type, is_default, password_hashing_alg } = this
 
     return {
       id,
       name,
       type,
-      is_default
+      is_default,
+      password_hashing_alg
     }
+  }
+
+  static get passwordHashingAlgorithms() {
+    return [
+      { name: 'argon2', label: 'Argon2' },
+      { name: 'bcrypt', label: 'Bcrypt' },
+      { name: 'pbkdf2', label: 'Pbkdf2' }
+    ]
   }
 
   static api () {

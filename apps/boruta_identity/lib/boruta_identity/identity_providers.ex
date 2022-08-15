@@ -357,7 +357,9 @@ defmodule BorutaIdentity.IdentityProviders do
 
   """
   def delete_backend(%Backend{} = backend) do
-    Repo.delete(backend)
+    backend
+    |> change_backend()
+    |> Repo.delete()
   end
 
   @doc """
