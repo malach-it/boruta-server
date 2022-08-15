@@ -31,6 +31,7 @@
                 <span class="description">{{ backend.id }}</span>
               </div>
             </div>
+            <div class="ui default label" v-if="backend.is_default">default</div>
           </div>
         </div>
       </div>
@@ -79,4 +80,14 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.backend-list {
+  .backend.segment {
+    padding-bottom: 1.7em;
+    .default.label {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+  }
+}
 </style>

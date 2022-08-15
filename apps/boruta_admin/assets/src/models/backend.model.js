@@ -13,7 +13,8 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
-  type: function ({ type }) { this.type = type }
+  type: function ({ type }) { this.type = type },
+  is_default: function ({ is_default }) { this.is_default = is_default }
 }
 
 class Backend {
@@ -68,12 +69,13 @@ class Backend {
   }
 
   get serialized () {
-    const { id, name, type } = this
+    const { id, name, type, is_default } = this
 
     return {
       id,
       name,
-      type
+      type,
+      is_default
     }
   }
 

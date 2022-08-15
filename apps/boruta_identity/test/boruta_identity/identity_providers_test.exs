@@ -66,7 +66,9 @@ defmodule BorutaIdentity.IdentityProvidersTest do
               }} = IdentityProviders.create_identity_provider(@invalid_attrs)
     end
 
-    test "create_identity_provider/1 with invalid data (unique name) returns error changeset", %{backend: backend} do
+    test "create_identity_provider/1 with invalid data (unique name) returns error changeset", %{
+      backend: backend
+    } do
       identity_provider_fixture()
 
       assert {:error,
@@ -76,7 +78,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                     {"has already been taken",
                      [constraint: :unique, constraint_name: "identity_providers_name_index"]}
                 ]
-              }} = IdentityProviders.create_identity_provider(%{@valid_attrs | backend_id: backend.id})
+              }} =
+               IdentityProviders.create_identity_provider(%{@valid_attrs | backend_id: backend.id})
     end
 
     test "update_identity_provider/2 with valid data updates the identity_provider" do
@@ -138,7 +141,9 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert identity_provider == IdentityProviders.get_identity_provider!(identity_provider.id)
     end
 
-    test "update_identity_provider/2 with invalid data (unique name) returns error changeset", %{backend: backend} do
+    test "update_identity_provider/2 with invalid data (unique name) returns error changeset", %{
+      backend: backend
+    } do
       identity_provider_fixture()
       identity_provider = identity_provider_fixture(%{name: "other"})
 
@@ -149,7 +154,11 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                     {"has already been taken",
                      [constraint: :unique, constraint_name: "identity_providers_name_index"]}
                 ]
-              }} = IdentityProviders.update_identity_provider(identity_provider, %{@valid_attrs | backend_id: backend.id})
+              }} =
+               IdentityProviders.update_identity_provider(identity_provider, %{
+                 @valid_attrs
+                 | backend_id: backend.id
+               })
 
       assert identity_provider == IdentityProviders.get_identity_provider!(identity_provider.id)
     end
@@ -409,6 +418,20 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
     end
 
+    test "create_backend/1 set as default will override other backends default attribute" do
+      other_backend = backend_fixture(%{is_default: true})
+
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        is_default: true
+      }
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
+      assert backend.is_default
+      refute Repo.reload!(other_backend).is_default
+    end
+
     test "create_backend/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = IdentityProviders.create_backend(@invalid_attrs)
     end
@@ -419,6 +442,26 @@ defmodule BorutaIdentity.IdentityProvidersTest do
 
       assert {:ok, %Backend{} = backend} = IdentityProviders.update_backend(backend, update_attrs)
       assert backend.name == "some updated name"
+    end
+
+    test "update_backend/2 cannot remove default" do
+      backend = backend_fixture(%{is_default: true})
+      update_attrs = %{name: "some updated name", is_default: false}
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [is_default: {"There must be at least one default backend.", []}]
+              }} = IdentityProviders.update_backend(backend, update_attrs)
+    end
+
+    test "update_backend/2 other backends default attribute" do
+      other_backend = backend_fixture(%{is_default: true})
+      backend = backend_fixture()
+      update_attrs = %{name: "some updated name", is_default: true}
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.update_backend(backend, update_attrs)
+      assert backend.is_default
+      refute Repo.reload!(other_backend).is_default
     end
 
     test "update_backend/2 with invalid data returns error changeset" do

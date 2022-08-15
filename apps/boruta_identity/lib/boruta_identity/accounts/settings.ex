@@ -68,6 +68,7 @@ defmodule BorutaIdentity.Accounts.Settings do
 
   # NOTE emits a compilation warning since callback is already defined in BorutaIdentity.Accounts.Sessions
   # @callback check_user_against(
+  #             backend :: Backend.t(),
   #             user :: User.t(),
   #             authentication_params :: authentication_params(),
   #             identity_provider :: IdentityProvider.t()
@@ -107,6 +108,7 @@ defmodule BorutaIdentity.Accounts.Settings do
     with {:ok, old_user} <- apply(client_impl, :get_user, [%{id: user.uid}]),
          {:ok, _user} <-
            apply(client_impl, :check_user_against, [
+             client_idp.backend,
              old_user,
              %{password: user_update_params[:current_password]}
            ]),

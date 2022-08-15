@@ -114,24 +114,29 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     |> validate_password(opts)
   end
 
-  @doc """
-  Verifies the password.
-  """
-  def valid_password?(%__MODULE__{hashed_password: hashed_password}, password)
+  def valid_password?(backend, %__MODULE__{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
-    Argon2.verify_pass(password, hashed_password)
+    apply(
+      Backend.password_hashing_module(backend),
+      :verify_pass,
+      [password, hashed_password]
+    )
   end
 
-  def valid_password?(_, _) do
-    Argon2.no_user_verify()
+  def valid_password?(backend, _, _) do
+    apply(
+      Backend.password_hashing_module(backend),
+      :no_user_verify,
+      []
+    )
     false
   end
 
   @doc """
   Validates the current password otherwise adds an error to the changeset.
   """
-  def validate_current_password(changeset, password) do
-    if valid_password?(changeset.data, password) do
+  def validate_current_password(backend, changeset, password) do
+    if valid_password?(backend, changeset.data, password) do
       changeset
     else
       add_error(changeset, :current_password, "is not valid")

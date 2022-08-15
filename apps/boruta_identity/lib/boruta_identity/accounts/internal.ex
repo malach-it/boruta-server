@@ -68,12 +68,12 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings
   @impl true
-  def check_user_against(user, authentication_params) do
-    check_user_password(user, authentication_params[:password])
+  def check_user_against(backend, user, authentication_params) do
+    check_user_password(backend, user, authentication_params[:password])
   end
 
-  defp check_user_password(user, password) do
-    case Internal.User.valid_password?(user, password) do
+  defp check_user_password(backend, user, password) do
+    case Internal.User.valid_password?(backend, user, password) do
       true -> {:ok, user}
       false -> {:error, "Invalid user password."}
     end

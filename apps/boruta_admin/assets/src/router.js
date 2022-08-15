@@ -181,7 +181,7 @@ const router = createRouter({
                   name: 'new-backend',
                   component: NewBackend
                 }, {
-                  path: '/backends/edit',
+                  path: '/backends/edit/:backendId',
                   name: 'edit-backend',
                   component: EditBackend
                 }

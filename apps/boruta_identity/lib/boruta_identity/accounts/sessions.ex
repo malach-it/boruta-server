@@ -52,6 +52,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.Repo
 
@@ -71,6 +72,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
               user :: User.t()
 
   @callback check_user_against(
+              backend :: Backend.t(),
               user :: User.t(),
               authentication_params :: authentication_params()
             ) ::
@@ -96,7 +98,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
     with {:ok, user} <- apply(client_impl, :get_user, [authentication_params]),
          {:ok, user} <-
-           apply(client_impl, :check_user_against, [user, authentication_params]),
+           apply(client_impl, :check_user_against, [client_idp.backend, user, authentication_params]),
          %User{} = user <- apply(client_impl, :domain_user!, [user]),
          :ok <- ensure_user_confirmed(user, client_idp),
          {:ok, user, session_token} <- create_user_session(user) do

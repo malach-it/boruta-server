@@ -13,6 +13,15 @@
           <label>Name</label>
           <input type="text" v-model="backend.name" placeholder="Shiny new backend">
         </div>
+        <div class="field">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="backend.is_default" placeholder="Shiny new backend">
+            <label>Default</label>
+          </div>
+        </div>
+        <div class="ui info message">
+          Default backend will be used in case of resource owner password credentials requests.
+        </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a v-on:click="back()" class="ui button">Back</a>
