@@ -92,7 +92,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       {:ok, token: token}
     end
 
-    test "resets password once", %{conn: conn, user: user, token: token, request: request} do
+    test "resets password once", %{conn: conn, user: user, token: token, request: request, identity_provider: identity_provider} do
       conn =
         put(conn, Routes.user_reset_password_path(conn, :update, token, request: request), %{
           "user" => %{
@@ -108,6 +108,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
       assert {:ok, _user} =
                Accounts.Internal.check_user_against(
+                 identity_provider.backend,
                  user,
                  %{password: "new valid password"}
                )

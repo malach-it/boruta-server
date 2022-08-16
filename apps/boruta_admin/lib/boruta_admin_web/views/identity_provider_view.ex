@@ -18,7 +18,8 @@ defmodule BorutaAdminWeb.IdentityProviderView do
     %{
       id: identity_provider.id,
       name: identity_provider.name,
-      type: identity_provider.type,
+      backend: render_one(identity_provider.backend, IdentityProviderView, "backend.json", backend: identity_provider.backend),
+      backend_id: identity_provider.backend_id,
       choose_session: identity_provider.choose_session,
       registrable: identity_provider.registrable,
       user_editable: identity_provider.user_editable,
@@ -33,6 +34,14 @@ defmodule BorutaAdminWeb.IdentityProviderView do
       content: template.content,
       type: template.type,
       identity_provider_id: template.identity_provider_id
+    }
+  end
+
+  def render("backend.json", %{backend: backend}) do
+    %{
+      id: backend.id,
+      type: backend.type,
+      name: backend.name
     }
   end
 end

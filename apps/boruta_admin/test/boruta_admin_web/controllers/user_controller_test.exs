@@ -2,6 +2,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
   use BorutaAdminWeb.ConnCase
 
   import BorutaIdentity.AccountsFixtures
+  import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
@@ -123,7 +124,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
       conn =
         post(conn, Routes.admin_user_path(conn, :create), %{
-          "provider" => "Elixir.BorutaIdentity.Accounts.Internal",
+          "backend_id" => insert(:backend).id,
           "user" => %{
             "email" => email
           }
@@ -144,7 +145,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
       conn =
         post(conn, Routes.admin_user_path(conn, :create), %{
-          "provider" => "Elixir.BorutaIdentity.Accounts.Internal",
+          "backend_id" => insert(:backend).id,
           "user" => %{
             "email" => email,
             "password" => valid_user_password()

@@ -20,9 +20,11 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Repo
 
   @impl BorutaIdentity.Accounts.Registrations
-  def register(registration_params) do
+  def register(backend, registration_params) do
     with {:ok, user} <-
-           Internal.User.registration_changeset(%Internal.User{}, registration_params)
+           Internal.User.registration_changeset(%Internal.User{}, registration_params, %{
+             backend: backend
+           })
            |> Repo.insert() do
       {:ok, domain_user!(user)}
     end
@@ -66,12 +68,12 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings
   @impl true
-  def check_user_against(user, authentication_params) do
-    check_user_password(user, authentication_params[:password])
+  def check_user_against(backend, user, authentication_params) do
+    check_user_password(backend, user, authentication_params[:password])
   end
 
-  defp check_user_password(user, password) do
-    case Internal.User.valid_password?(user, password) do
+  defp check_user_password(backend, user, password) do
+    case Internal.User.valid_password?(backend, user, password) do
       true -> {:ok, user}
       false -> {:error, "Invalid user password."}
     end
@@ -97,10 +99,10 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.ResetPasswords
-  def reset_password(reset_password_params) do
+  def reset_password(backend, reset_password_params) do
     with {:ok, user} <-
            get_user_by_reset_password_token(reset_password_params.reset_password_token),
-         {:ok, %{user: user}} <- reset_user_password_multi(user, reset_password_params) do
+         {:ok, %{user: user}} <- reset_user_password_multi(backend, user, reset_password_params) do
       {:ok, user}
     else
       {:error, :user, changeset, _} -> {:error, changeset}
@@ -121,22 +123,27 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.Settings
-  def update_user(user, params) do
+  def update_user(backend, user, params) do
     with {:ok, user} <-
            user
-           |> Internal.User.update_changeset(params)
+           |> Internal.User.update_changeset(params, %{backend: backend})
            |> Repo.update() do
       {:ok, domain_user!(user)}
     end
   end
 
   @impl BorutaIdentity.Admin
-  def create_user(params) do
+  def create_user(backend, params) do
     with {:ok, user} <-
-           Internal.User.registration_changeset(%Internal.User{}, %{
-             email: params[:username],
-             password: params[:password]
-           }) |> Repo.insert() do
+           Internal.User.registration_changeset(
+             %Internal.User{},
+             %{
+               email: params[:username],
+               password: params[:password]
+             },
+             %{backend: backend}
+           )
+           |> Repo.insert() do
       {:ok, domain_user!(user)}
     end
   end
@@ -159,9 +166,9 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  defp reset_user_password_multi(user, reset_password_params) do
+  defp reset_user_password_multi(backend, user, reset_password_params) do
     Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, Internal.User.password_changeset(user, reset_password_params))
+    |> Ecto.Multi.update(:user, Internal.User.password_changeset(user, reset_password_params, %{backend: backend}))
     |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
     |> Repo.transaction()
   end

@@ -6,7 +6,8 @@ const defaults = {
   errors: null,
   provider: 'Elixir.BorutaIdentity.Accounts.Internal',
   authorize_scopes: false,
-  authorized_scopes: []
+  authorized_scopes: [],
+  backend_id: ''
 }
 
 const assign = {
@@ -57,12 +58,12 @@ class User {
     this.errors = null
     await this.validate()
 
-    const { id, provider, serialized } = this
+    const { id, backend_id, serialized } = this
     let response
-    if (id) {
+    if (this.isPersisted) {
       response = this.constructor.api().patch(`/${id}`, { user: serialized })
     } else {
-      response = this.constructor.api().post('/', { provider, user: serialized })
+      response = this.constructor.api().post('/', { backend_id, user: serialized })
     }
     return response
       .then(({ data }) => {

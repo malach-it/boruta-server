@@ -7,6 +7,7 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Configuration.ErrorTemplate
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
@@ -46,7 +47,14 @@ defmodule BorutaIdentity.Factory do
   def identity_provider_factory do
     %IdentityProvider{
       name: sequence(:name, &"identity provider #{&1}"),
-      type: "internal"
+      backend: build(:backend)
+    }
+  end
+
+  def backend_factory do
+    %Backend{
+      name: "backend name",
+      type: "Elixir.BorutaIdentity.Accounts.Internal"
     }
   end
 

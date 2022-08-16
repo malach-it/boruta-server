@@ -38,14 +38,17 @@ defmodule BorutaIdentity.MixProject do
   defp deps do
     [
       {:argon2_elixir, "~> 2.0"},
+      {:bcrypt_elixir, "~> 3.0"},
       {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
       {:boruta_auth, in_umbrella: true},
       {:ecto_sql, "~> 3.4"},
+      {:ex_json_schema, "~> 0.9"},
       {:ex_machina, "~> 2.4", only: :test},
       {:finch, "~> 0.8"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},
+      {:pbkdf2_elixir, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 3.0"},

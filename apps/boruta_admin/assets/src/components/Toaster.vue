@@ -32,7 +32,7 @@ export default {
 
       clearTimeout(this.timer)
       this.timer = setTimeout(() => {
-        this.$refs.success.classList.add('hidden')
+        this.$refs.success?.classList.add('hidden')
       }, 5000)
     }
   }

@@ -8,6 +8,7 @@ defmodule BorutaAdminWeb.UserController do
 
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Admin
+  alias BorutaIdentity.IdentityProviders
 
   plug(:authorize, ["users:manage:all"])
 
@@ -35,12 +36,13 @@ defmodule BorutaAdminWeb.UserController do
     end
   end
 
-  def create(conn, %{"provider" => provider, "user" => user_params}) do
+  def create(conn, %{"backend_id" => backend_id, "user" => user_params}) do
     create_params = %{
       username: user_params["email"],
       password: user_params["password"]
     }
-    with {:ok, user} <- Admin.create_user(String.to_atom(provider), create_params) do
+    backend = IdentityProviders.get_backend!(backend_id)
+    with {:ok, user} <- Admin.create_user(backend, create_params) do
       render(conn, "show.json", user: user)
     end
   end

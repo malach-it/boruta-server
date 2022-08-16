@@ -4,29 +4,24 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
   alias BorutaIdentity.Repo
 
   @type t :: %__MODULE__{
           name: String.t(),
-          type: String.t(),
+          backend_id: String.t(),
+          backend: Backend.t(),
           registrable: boolean(),
           confirmable: boolean(),
           authenticable: boolean(),
           reset_password: boolean(),
-          client_identity_providers: list(ClientIdentityProvider.t()) | Ecto.Association.NotLoaded.t(),
+          client_identity_providers:
+            list(ClientIdentityProvider.t()) | Ecto.Association.NotLoaded.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
-
-  @types [
-    "internal"
-  ]
-
-  @implementations %{
-    "internal" => BorutaIdentity.Accounts.Internal
-  }
 
   @features %{
     registrable: [
@@ -78,9 +73,9 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
   }
 
   @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
   schema "identity_providers" do
     field(:name, :string)
-    field(:type, :string, default: "internal")
     field(:choose_session, :boolean, default: true)
     field(:registrable, :boolean, default: false)
     field(:user_editable, :boolean, default: false)
@@ -91,26 +86,36 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
 
     has_many(:client_identity_providers, ClientIdentityProvider)
     has_many(:templates, Template, on_replace: :delete_if_exists)
+    belongs_to(:backend, Backend)
 
     timestamps()
   end
 
   @spec template(identity_provider :: t(), type :: atom()) :: Template.t() | nil
-  def template(%__MODULE__{templates: templates} = identity_provider, type) when is_list(templates) do
+  def template(%__MODULE__{templates: templates} = identity_provider, type)
+      when is_list(templates) do
     case Enum.find(templates, fn
-      %Template{type: template_type} -> Atom.to_string(type) == template_type
-    end) do
+           %Template{type: template_type} -> Atom.to_string(type) == template_type
+         end) do
       nil ->
         template = Template.default_template(type)
-        template && %{template|identity_provider_id: identity_provider.id, identity_provider: identity_provider}
-      template -> %{template|identity_provider: identity_provider}
+
+        template &&
+          %{
+            template
+            | identity_provider_id: identity_provider.id,
+              identity_provider: identity_provider
+          }
+
+      template ->
+        %{template | identity_provider: identity_provider}
     end
   end
 
   # TODO rename to backend
   @spec implementation(client_identity_provider :: %__MODULE__{}) :: implementation :: atom()
-  def implementation(%__MODULE__{type: type}) do
-    Map.fetch!(@implementations, type)
+  def implementation(%__MODULE__{backend: backend}) do
+    Backend.implementation(backend)
   end
 
   @spec check_feature(identity_provider :: t(), action_name :: atom()) ::
@@ -132,9 +137,16 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
   def changeset(identity_provider, attrs) do
     identity_provider
     |> Repo.preload(:templates)
-    |> cast(attrs, [:name, :type, :choose_session, :registrable, :user_editable, :consentable, :confirmable])
-    |> validate_required([:name, :type])
-    |> validate_inclusion(:type, @types)
+    |> cast(attrs, [
+      :name,
+      :choose_session,
+      :registrable,
+      :user_editable,
+      :consentable,
+      :confirmable,
+      :backend_id
+    ])
+    |> validate_required([:name, :backend_id])
     |> unique_constraint(:name)
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)
   end
@@ -146,9 +158,18 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     case Repo.preload(identity_provider, :client_identity_providers) do
       %__MODULE__{client_identity_providers: []} ->
         changeset
+
       %__MODULE__{client_identity_providers: client_identity_providers} ->
-        client_ids = Enum.map(client_identity_providers, fn %ClientIdentityProvider{client_id: client_id} -> client_id end)
-        add_error(changeset, :client_identity_providers, "identity provider is associated with client(s) #{Enum.join(client_ids, ", ")}")
+        client_ids =
+          Enum.map(client_identity_providers, fn %ClientIdentityProvider{client_id: client_id} ->
+            client_id
+          end)
+
+        add_error(
+          changeset,
+          :client_identity_providers,
+          "identity provider is associated with client(s) #{Enum.join(client_ids, ", ")}"
+        )
     end
   end
 end

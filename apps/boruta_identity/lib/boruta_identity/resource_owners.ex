@@ -10,6 +10,7 @@ defmodule BorutaIdentity.ResourceOwners do
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.IdentityProviders.Backend
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
@@ -30,8 +31,9 @@ defmodule BorutaIdentity.ResourceOwners do
 
   @impl Boruta.Oauth.ResourceOwners
   def check_password(%ResourceOwner{username: username}, password) do
+    backend = Backend.default!()
     with {:ok, user} <- Accounts.Internal.get_user(%{email: username}),
-         true <- Internal.User.valid_password?(user, password) do
+         true <- Internal.User.valid_password?(backend, user, password) do
       :ok
     else
       _ -> {:error, "Invalid password."}

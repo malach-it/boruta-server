@@ -6,7 +6,8 @@ defmodule BorutaIdentity.Admin do
   import Ecto.Query
 
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.{UserAuthorizedScope}
+  alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
 
   @type user_params :: %{
@@ -15,7 +16,10 @@ defmodule BorutaIdentity.Admin do
         }
 
   @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: any()}
-  @callback create_user(params :: user_params()) ::
+  @callback create_user(
+              backend :: Backend.t(),
+              params :: user_params()
+            ) ::
               {:ok, User.t()} | {:error, changeset :: Ecto.Changeset.t()}
 
   @doc """
@@ -56,19 +60,15 @@ defmodule BorutaIdentity.Admin do
     )
   end
 
-  @spec create_user(provider :: atom(), params :: user_params()) ::
+  @spec create_user(backend :: Backend.t(), params :: user_params()) ::
           {:ok, User.t()} | {:error, Ecto.Changeset.t()}
-  def create_user(provider, params) when provider in [BorutaIdentity.Accounts.Internal] do
+  def create_user(backend, params) do
     # TODO give the ability to provide authorized scopes at user creation
-    apply(provider, :create_user, [params])
-  end
-
-  def create_user(_provider, _params) do
-    changeset =
-      Ecto.Changeset.change(%User{})
-      |> Ecto.Changeset.add_error(:provider, "is invalid")
-
-    {:error, changeset}
+    apply(
+      Backend.implementation(backend),
+      :create_user,
+      [backend, params]
+    )
   end
 
   @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::

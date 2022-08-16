@@ -55,7 +55,10 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
   @type registration_params :: map()
 
-  @callback register(registration_params :: registration_params()) ::
+  @callback register(
+              backend :: BorutaIdentity.IdentityProviders.Backend.t(),
+              registration_params :: registration_params()
+            ) ::
               {:ok, user :: User.t()}
               | {:error, changeset :: Ecto.Changeset.t()}
 
@@ -73,16 +76,16 @@ defmodule BorutaIdentity.Accounts.Registrations do
           module :: atom()
         ) :: calback_result :: any()
   defwithclientidp register(
-                    context,
-                    client_id,
-                    registration_params,
-                    confirmation_url_fun,
-                    module
-                  ) do
+                     context,
+                     client_id,
+                     registration_params,
+                     confirmation_url_fun,
+                     module
+                   ) do
     client_impl = IdentityProvider.implementation(client_idp)
 
     with {:ok, user} <-
-           apply(client_impl, :register, [registration_params]),
+           apply(client_impl, :register, [client_idp.backend, registration_params]),
          :ok <- maybe_deliver_confirmation_email(user, confirmation_url_fun, client_idp),
          {:ok, user, session_token} <- maybe_create_session(user, client_idp) do
       module.user_registered(context, user, session_token)
@@ -134,6 +137,9 @@ defmodule BorutaIdentity.Accounts.Registrations do
   end
 
   defp new_confirmation_instructions_template(identity_provider) do
-    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_confirmation_instructions)
+    IdentityProviders.get_identity_provider_template!(
+      identity_provider.id,
+      :new_confirmation_instructions
+    )
   end
 end

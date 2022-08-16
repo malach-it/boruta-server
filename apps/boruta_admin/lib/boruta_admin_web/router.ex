@@ -66,6 +66,7 @@ defmodule BorutaAdminWeb.Router do
         as: :template
       )
     end
+    resources "/backends", BackendController, except: [:new, :edit]
   end
 
   scope "/", BorutaAdminWeb do

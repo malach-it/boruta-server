@@ -19,7 +19,11 @@ defmodule BorutaIdentity.IdentityProviders do
 
   """
   def list_identity_providers do
-    Repo.all(IdentityProvider)
+    Repo.all(
+      from idp in IdentityProvider,
+        join: b in assoc(idp, :backend),
+        preload: [backend: b]
+    )
   end
 
   @doc """
@@ -36,7 +40,20 @@ defmodule BorutaIdentity.IdentityProviders do
       ** (Ecto.NoResultsError)
 
   """
-  def get_identity_provider!(id), do: Repo.get!(IdentityProvider, id)
+  def get_identity_provider!(id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, id} ->
+        Repo.one!(
+          from idp in IdentityProvider,
+            join: b in assoc(idp, :backend),
+            where: idp.id == ^id,
+            preload: [backend: b]
+        )
+
+      _ ->
+        raise Ecto.NoResultsError, queryable: IdentityProvider
+    end
+  end
 
   @doc """
   Creates a identity_provider.
@@ -51,9 +68,12 @@ defmodule BorutaIdentity.IdentityProviders do
 
   """
   def create_identity_provider(attrs \\ %{}) do
-    %IdentityProvider{}
-    |> IdentityProvider.changeset(attrs)
-    |> Repo.insert()
+    with {:ok, identity_provider} <-
+           %IdentityProvider{}
+           |> IdentityProvider.changeset(attrs)
+           |> Repo.insert() do
+      {:ok, Repo.preload(identity_provider, :backend)}
+    end
   end
 
   @doc """
@@ -107,7 +127,10 @@ defmodule BorutaIdentity.IdentityProviders do
 
   def upsert_client_identity_provider(client_id, identity_provider_id) do
     %ClientIdentityProvider{}
-    |> ClientIdentityProvider.changeset(%{client_id: client_id, identity_provider_id: identity_provider_id})
+    |> ClientIdentityProvider.changeset(%{
+      client_id: client_id,
+      identity_provider_id: identity_provider_id
+    })
     |> Repo.insert(
       on_conflict: [set: [identity_provider_id: identity_provider_id]],
       conflict_target: :client_id
@@ -134,9 +157,11 @@ defmodule BorutaIdentity.IdentityProviders do
     case Ecto.UUID.cast(client_id) do
       {:ok, client_id} ->
         Repo.one(
-          from(r in IdentityProvider,
-            join: crp in assoc(r, :client_identity_providers),
-            where: crp.client_id == ^client_id
+          from(idp in IdentityProvider,
+            join: b in assoc(idp, :backend),
+            join: cidp in assoc(idp, :client_identity_providers),
+            where: cidp.client_id == ^client_id,
+            preload: [backend: b]
           )
         )
 
@@ -164,10 +189,11 @@ defmodule BorutaIdentity.IdentityProviders do
   def get_identity_provider_template!(identity_provider_id, type) do
     with %IdentityProvider{} = identity_provider <-
            Repo.one(
-             from(rp in IdentityProvider,
-               left_join: t in assoc(rp, :templates),
-               where: rp.id == ^identity_provider_id,
-               preload: [templates: t]
+             from(idp in IdentityProvider,
+               left_join: t in assoc(idp, :templates),
+               join: b in assoc(idp, :backend),
+               where: idp.id == ^identity_provider_id,
+               preload: [backend: b, templates: t]
              )
            ),
          %Template{} = template <- IdentityProvider.template(identity_provider, type) do
@@ -227,5 +253,125 @@ defmodule BorutaIdentity.IdentityProviders do
     else
       {0, nil} -> raise Ecto.NoResultsError, queryable: Template
     end
+  end
+
+  alias BorutaIdentity.IdentityProviders.Backend
+
+  @doc """
+  Returns the list of backends.
+
+  ## Examples
+
+      iex> list_backends()
+      [%Backend{}, ...]
+
+  """
+  def list_backends do
+    Repo.all(Backend)
+  end
+
+  @doc """
+  Gets a single backend.
+
+  Raises `Ecto.NoResultsError` if the Backend does not exist.
+
+  ## Examples
+
+      iex> get_backend!(123)
+      %Backend{}
+
+      iex> get_backend!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_backend!(id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, id} -> Repo.get!(Backend, id)
+      _ -> raise Ecto.NoResultsError, queryable: Backend
+    end
+  end
+
+  # TODO client backend association
+  # def get_backend_by_client_id(client_id) do
+  #   case Ecto.UUID.cast(client_id) do
+  #     {:ok, client_id} ->
+  #       Repo.one(
+  #         from(b in Backend,
+  #           join: idp in assoc(b, :identity_providers),
+  #           join: cidp in assoc(idp, :client_identity_providers),
+  #           where: cidp.client_id == ^client_id
+  #         )
+  #       )
+
+  #     :error ->
+  #       nil
+  #   end
+  # end
+
+  @doc """
+  Creates a backend.
+
+  ## Examples
+
+      iex> create_backend(%{field: value})
+      {:ok, %Backend{}}
+
+      iex> create_backend(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_backend(attrs \\ %{}) do
+    %Backend{type: "Elixir.BorutaIdentity.Accounts.Internal"}
+    |> Backend.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a backend.
+
+  ## Examples
+
+      iex> update_backend(backend, %{field: new_value})
+      {:ok, %Backend{}}
+
+      iex> update_backend(backend, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_backend(%Backend{} = backend, attrs) do
+    backend
+    |> Backend.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a backend.
+
+  ## Examples
+
+      iex> delete_backend(backend)
+      {:ok, %Backend{}}
+
+      iex> delete_backend(backend)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_backend(%Backend{} = backend) do
+    backend
+    |> change_backend()
+    |> Repo.delete()
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking backend changes.
+
+  ## Examples
+
+      iex> change_backend(backend)
+      %Ecto.Changeset{data: %Backend{}}
+
+  """
+  def change_backend(%Backend{} = backend, attrs \\ %{}) do
+    Backend.changeset(backend, attrs)
   end
 end

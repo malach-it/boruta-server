@@ -10,9 +10,15 @@ defmodule BorutaIdentity.IdentityProvidersTest do
   alias BorutaIdentity.Repo
 
   describe "identity_providers" do
-    @valid_attrs %{name: "some name", type: "internal"}
+    setup do
+      backend = insert(:backend)
+
+      {:ok, backend: backend}
+    end
+
+    @valid_attrs %{name: "some name", backend_id: nil}
     @update_attrs %{name: "some updated name"}
-    @invalid_attrs %{name: nil, type: "other"}
+    @invalid_attrs %{name: nil}
 
     def identity_provider_fixture(attrs \\ %{}) do
       insert(:identity_provider, Map.merge(@valid_attrs, attrs))
@@ -28,19 +34,23 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert IdentityProviders.get_identity_provider!(identity_provider.id) == identity_provider
     end
 
-    test "create_identity_provider/1 with valid data creates a identity_provider" do
+    test "create_identity_provider/1 with valid data creates a identity_provider", %{
+      backend: backend
+    } do
       assert {:ok, %IdentityProvider{} = identity_provider} =
-               IdentityProviders.create_identity_provider(@valid_attrs)
+               IdentityProviders.create_identity_provider(%{@valid_attrs | backend_id: backend.id})
 
       assert identity_provider.name == "some name"
-      assert identity_provider.type == "internal"
     end
 
-    test "create_identity_provider/1 with valid data (with a new template) creates a identity_provider" do
+    test "create_identity_provider/1 with valid data (with a new template) creates a identity_provider",
+         %{backend: backend} do
       templates_attrs = %{templates: [%{type: "new_registration", content: "test content"}]}
 
       assert {:ok, %IdentityProvider{} = identity_provider} =
-               IdentityProviders.create_identity_provider(Map.merge(@valid_attrs, templates_attrs))
+               IdentityProviders.create_identity_provider(
+                 Map.merge(%{@valid_attrs | backend_id: backend.id}, templates_attrs)
+               )
 
       assert [%Template{type: "new_registration", content: "test content"}] =
                identity_provider.templates
@@ -50,13 +60,15 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:error,
               %Ecto.Changeset{
                 errors: [
-                  type: {"is invalid", [validation: :inclusion, enum: ["internal"]]},
-                  name: {"can't be blank", [validation: :required]}
+                  name: {"can't be blank", [validation: :required]},
+                  backend_id: {"can't be blank", [validation: :required]}
                 ]
               }} = IdentityProviders.create_identity_provider(@invalid_attrs)
     end
 
-    test "create_identity_provider/1 with invalid data (unique name) returns error changeset" do
+    test "create_identity_provider/1 with invalid data (unique name) returns error changeset", %{
+      backend: backend
+    } do
       identity_provider_fixture()
 
       assert {:error,
@@ -66,7 +78,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                     {"has already been taken",
                      [constraint: :unique, constraint_name: "identity_providers_name_index"]}
                 ]
-              }} = IdentityProviders.create_identity_provider(@valid_attrs)
+              }} =
+               IdentityProviders.create_identity_provider(%{@valid_attrs | backend_id: backend.id})
     end
 
     test "update_identity_provider/2 with valid data updates the identity_provider" do
@@ -78,7 +91,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert identity_provider.name == "some updated name"
     end
 
-    test "create_identity_provider/1 with valid data (with an existing template) creates a identity_provider" do
+    test "update_identity_provider/1 with valid data (with an existing template) creates a identity_provider" do
       identity_provider = identity_provider_fixture()
       template = insert(:template, identity_provider: identity_provider)
 
@@ -100,7 +113,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
              ] = identity_provider.templates
     end
 
-    test "create_identity_provider/1 with valid data (with an existing template, delete_if_exists) creates a identity_provider" do
+    test "update_identity_provider/1 with valid data (with an existing template, delete_if_exists) creates a identity_provider" do
       identity_provider = identity_provider_fixture()
       insert(:template, identity_provider: identity_provider)
 
@@ -128,7 +141,9 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert identity_provider == IdentityProviders.get_identity_provider!(identity_provider.id)
     end
 
-    test "update_identity_provider/2 with invalid data (unique name) returns error changeset" do
+    test "update_identity_provider/2 with invalid data (unique name) returns error changeset", %{
+      backend: backend
+    } do
       identity_provider_fixture()
       identity_provider = identity_provider_fixture(%{name: "other"})
 
@@ -139,14 +154,20 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                     {"has already been taken",
                      [constraint: :unique, constraint_name: "identity_providers_name_index"]}
                 ]
-              }} = IdentityProviders.update_identity_provider(identity_provider, @valid_attrs)
+              }} =
+               IdentityProviders.update_identity_provider(identity_provider, %{
+                 @valid_attrs
+                 | backend_id: backend.id
+               })
 
       assert identity_provider == IdentityProviders.get_identity_provider!(identity_provider.id)
     end
 
     test "delete_identity_provider/1 deletes the identity_provider" do
       identity_provider = identity_provider_fixture()
-      assert {:ok, %IdentityProvider{}} = IdentityProviders.delete_identity_provider(identity_provider)
+
+      assert {:ok, %IdentityProvider{}} =
+               IdentityProviders.delete_identity_provider(identity_provider)
 
       assert_raise Ecto.NoResultsError, fn ->
         IdentityProviders.get_identity_provider!(identity_provider.id)
@@ -176,7 +197,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
               %ClientIdentityProvider{
                 client_id: ^client_id,
                 identity_provider_id: ^identity_provider_id
-              }} = IdentityProviders.upsert_client_identity_provider(client_id, identity_provider_id)
+              }} =
+               IdentityProviders.upsert_client_identity_provider(client_id, identity_provider_id)
     end
 
     test "updates client identity provider" do
@@ -188,16 +210,23 @@ defmodule BorutaIdentity.IdentityProvidersTest do
               %ClientIdentityProvider{
                 client_id: ^client_id,
                 identity_provider_id: ^new_identity_provider_id
-              }} = IdentityProviders.upsert_client_identity_provider(client_id, new_identity_provider_id)
+              }} =
+               IdentityProviders.upsert_client_identity_provider(
+                 client_id,
+                 new_identity_provider_id
+               )
     end
   end
 
   describe "remove_client_identity_provider/2" do
     test "remove client identity provider" do
       client_id = SecureRandom.uuid()
-      client_identity_provider = insert(:client_identity_provider, client_id: client_id) |> Repo.reload()
 
-      assert {:ok, ^client_identity_provider} = IdentityProviders.remove_client_identity_provider(client_id)
+      client_identity_provider =
+        insert(:client_identity_provider, client_id: client_id) |> Repo.reload()
+
+      assert {:ok, ^client_identity_provider} =
+               IdentityProviders.remove_client_identity_provider(client_id)
 
       assert_raise Ecto.NoResultsError, fn ->
         Repo.get!(ClientIdentityProvider, client_identity_provider.id)
@@ -252,7 +281,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
     test "returns default template" do
       identity_provider = insert(:identity_provider, templates: [])
 
-      template = IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_registration)
+      template =
+        IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_registration)
 
       assert template == %{
                Template.default_template(:new_registration)
@@ -271,7 +301,10 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       %IdentityProvider{templates: [template]} =
         identity_provider = insert(:identity_provider, templates: [template])
 
-      assert IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_registration) ==
+      assert IdentityProviders.get_identity_provider_template!(
+               identity_provider.id,
+               :new_registration
+             ) ==
                %{
                  template
                  | layout: IdentityProvider.template(identity_provider, :layout),
@@ -283,9 +316,12 @@ defmodule BorutaIdentity.IdentityProvidersTest do
   describe "upsert_template/2" do
     test "inserts with a default template" do
       identity_provider = insert(:identity_provider)
-      template = IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_registration)
 
-      assert {:ok, template} = IdentityProviders.upsert_template(template, %{content: "new content"})
+      template =
+        IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_registration)
+
+      assert {:ok, template} =
+               IdentityProviders.upsert_template(template, %{content: "new content"})
 
       assert Repo.reload(template)
     end
@@ -294,7 +330,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       identity_provider = insert(:identity_provider)
       template = insert(:new_registration_template, identity_provider: identity_provider)
 
-      assert {:ok, template} = IdentityProviders.upsert_template(template, %{content: "new content"})
+      assert {:ok, template} =
+               IdentityProviders.upsert_template(template, %{content: "new content"})
 
       assert Repo.reload(template)
     end
@@ -321,7 +358,10 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       identity_provider = insert(:identity_provider, templates: [])
 
       assert_raise Ecto.NoResultsError, fn ->
-        IdentityProviders.delete_identity_provider_template!(identity_provider.id, :new_registration)
+        IdentityProviders.delete_identity_provider_template!(
+          identity_provider.id,
+          :new_registration
+        )
       end
     end
 
@@ -340,13 +380,245 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       }
 
       reseted_template =
-        IdentityProviders.delete_identity_provider_template!(identity_provider.id, :new_registration)
+        IdentityProviders.delete_identity_provider_template!(
+          identity_provider.id,
+          :new_registration
+        )
 
       assert reseted_template.default == true
       assert reseted_template.type == "new_registration"
       assert reseted_template.content == default_template.content
 
       assert Repo.get_by(Template, id: template.id) == nil
+    end
+  end
+
+  describe "backends" do
+    alias BorutaIdentity.IdentityProviders.Backend
+
+    import BorutaIdentity.IdentityProvidersFixtures
+
+    @invalid_attrs %{name: nil, type: "bad type"}
+
+    test "list_backends/0 returns all backends" do
+      backend = backend_fixture()
+      assert IdentityProviders.list_backends() |> Enum.member?(backend)
+    end
+
+    test "get_backend!/1 returns the backend with given id" do
+      backend = backend_fixture()
+      assert IdentityProviders.get_backend!(backend.id) == backend
+    end
+
+    test "create_backend/1 with valid data creates a backend" do
+      valid_attrs = %{name: "some name", type: "Elixir.BorutaIdentity.Accounts.Internal"}
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
+      assert backend.name == "some name"
+      assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
+    end
+
+    test "create_backend/1 with valid argon2 password hashing opts creates a backend" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "argon2",
+        password_hashing_opts: %{
+          "salt_len" => 16,
+          "t_cost" => 8,
+          "m_cost" => 16,
+          "parallelism" => 2,
+          "format" => "encoded",
+          "hashlen" => 32,
+          "argon2_type" => 2
+        }
+      }
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
+      assert backend.name == "some name"
+      assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
+      assert backend.password_hashing_alg == "argon2"
+
+      assert backend.password_hashing_opts == %{
+               "argon2_type" => 2,
+               "format" => "encoded",
+               "hashlen" => 32,
+               "m_cost" => 16,
+               "parallelism" => 2,
+               "salt_len" => 16,
+               "t_cost" => 8
+             }
+    end
+
+    test "create_backend/1 with valid bcrypt password hashing opts creates a backend" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "bcrypt",
+        password_hashing_opts: %{
+          "log_rounds" => 12,
+          "legacy" => false
+        }
+      }
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
+      assert backend.name == "some name"
+      assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
+      assert backend.password_hashing_alg == "bcrypt"
+      assert backend.password_hashing_opts == %{"legacy" => false, "log_rounds" => 12}
+    end
+
+    test "create_backend/1 set as default will override other backends default attribute" do
+      other_backend = backend_fixture(%{is_default: true})
+
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        is_default: true
+      }
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
+      assert backend.is_default
+      refute Repo.reload!(other_backend).is_default
+    end
+
+    test "create_backend/1 with invalid argon2 password hashing opts returns an error changeset" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "argon2",
+        password_hashing_opts: %{
+          "salt_len" => true,
+          "t_cost" => true,
+          "m_cost" => true,
+          "parallelism" => true,
+          "format" => true,
+          "hashlen" => true,
+          "argon2_type" => true
+        }
+      }
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/t_cost", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/salt_len", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/parallelism", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/m_cost", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/hashlen", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected String but got Boolean. at #/format", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/argon2_type", []}
+                ]
+              }} = IdentityProviders.create_backend(valid_attrs)
+    end
+
+    test "create_backend/1 with invalid pbkdf2 password hashing opts returns an error changeset" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "pbkdf2",
+        password_hashing_opts: %{
+          "salt_len" => true,
+          "format" => true,
+          "digest" => true,
+          "length" => true
+        }
+      }
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/salt_len", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/length", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected String but got Boolean. at #/format", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected String but got Boolean. at #/digest", []}
+                ]
+              }} = IdentityProviders.create_backend(valid_attrs)
+    end
+
+    test "create_backend/1 with invalid bcrypt password hashing opts returns an error changeset" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "bcrypt",
+        password_hashing_opts: %{
+          "log_rounds" => true,
+          "legacy" => "invalid"
+        }
+      }
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/log_rounds", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Boolean but got String. at #/legacy", []}
+                ]
+              }} = IdentityProviders.create_backend(valid_attrs)
+    end
+
+    test "create_backend/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = IdentityProviders.create_backend(@invalid_attrs)
+    end
+
+    test "update_backend/2 with valid data updates the backend" do
+      backend = backend_fixture()
+      update_attrs = %{name: "some updated name"}
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.update_backend(backend, update_attrs)
+      assert backend.name == "some updated name"
+    end
+
+    test "update_backend/2 cannot remove default" do
+      backend = backend_fixture(%{is_default: true})
+      update_attrs = %{name: "some updated name", is_default: false}
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [is_default: {"There must be at least one default backend.", []}]
+              }} = IdentityProviders.update_backend(backend, update_attrs)
+    end
+
+    test "update_backend/2 other backends default attribute" do
+      other_backend = backend_fixture(%{is_default: true})
+      backend = backend_fixture()
+      update_attrs = %{name: "some updated name", is_default: true}
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.update_backend(backend, update_attrs)
+      assert backend.is_default
+      refute Repo.reload!(other_backend).is_default
+    end
+
+    test "update_backend/2 with invalid data returns error changeset" do
+      backend = backend_fixture()
+
+      assert {:error, %Ecto.Changeset{}} =
+               IdentityProviders.update_backend(backend, @invalid_attrs)
+
+      assert backend == IdentityProviders.get_backend!(backend.id)
+    end
+
+    test "delete_backend/1 deletes the backend" do
+      backend = backend_fixture()
+      assert {:ok, %Backend{}} = IdentityProviders.delete_backend(backend)
+      assert_raise Ecto.NoResultsError, fn -> IdentityProviders.get_backend!(backend.id) end
+    end
+
+    test "change_backend/1 returns a backend changeset" do
+      backend = backend_fixture()
+      assert %Ecto.Changeset{} = IdentityProviders.change_backend(backend)
     end
   end
 end

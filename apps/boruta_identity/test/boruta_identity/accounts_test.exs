@@ -99,7 +99,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "returns client identity_provider" do
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider, type: "internal")
+      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
 
       %ClientIdentityProvider{client_id: client_id} =
         BorutaIdentity.Factory.insert(:client_identity_provider,

@@ -14,6 +14,8 @@ const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
+  backend: function ({ backend }) { this.backend = backend },
+  backend_id: function ({ backend_id }) { this.backend_id = backend_id },
   choose_session: function ({ choose_session }) { this.choose_session = choose_session },
   registrable: function ({ registrable }) { this.registrable = registrable },
   user_editable: function ({ user_editable }) { this.user_editable = user_editable },
@@ -73,12 +75,21 @@ class IdentityProvider {
   }
 
   get serialized () {
-    const { id, name, type, choose_session, registrable, user_editable, consentable, confirmable } = this
+    const {
+      id,
+      name,
+      backend_id,
+      choose_session,
+      registrable,
+      user_editable,
+      consentable,
+      confirmable
+    } = this
 
     return {
       id,
       name,
-      type,
+      backend_id,
       choose_session,
       user_editable,
       registrable,

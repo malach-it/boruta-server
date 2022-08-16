@@ -33,8 +33,7 @@ defmodule BorutaAdminWeb.ClientView do
       public_key: client.public_key,
       identity_provider: %{
         id: identity_provider.id,
-        name: identity_provider.name,
-        type: identity_provider.type
+        name: identity_provider.name
       },
       authorized_scopes: Enum.map(client.authorized_scopes, fn (scope) ->
         %{
