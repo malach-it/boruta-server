@@ -23,7 +23,8 @@ const labels = {
   'redirect_uris': 'Redirect URIs',
   'id_token_signature_alg': 'ID token signature algorithm',
   'resource': 'Resource',
-  'is_default': 'Default'
+  'is_default': 'Default',
+  'password_hashing_opts': 'Password hashing options'
 }
 
 export default {

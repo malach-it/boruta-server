@@ -92,6 +92,10 @@ class Backend {
     }
   }
 
+  resetPasswordAlgorithmOpts () {
+    this.password_hashing_opts = {}
+  }
+
   static get passwordHashingAlgorithms() {
     return [
       { name: 'argon2', label: 'Argon2' },
@@ -108,11 +112,19 @@ class Backend {
         { name: 'm_cost', type: 'number', label: 'Memory usage', default: 16 },
         { name: 'parallelism', type: 'number', label: 'Number of parralel threads', default: 2 },
         { name: 'format', type: 'text', label: 'Output format (encoded, raw_hash, or report)', default: 'encoded' },
-        { name: 'hash_len', type: 'number', label: 'Length of the hash (in bytes)', default: 32 },
+        { name: 'hashlen', type: 'number', label: 'Length of the hash (in bytes)', default: 32 },
         { name: 'argon2_type', type: 'number', label: 'Argon2 type (0 argon2d, 1 argon2i, 2 argon2id)', default: 2 }
       ],
-      'bcrypt': [],
-      'pbkdf2': []
+      'bcrypt': [
+        { name: 'log_rounds', type: 'number', label: 'The computational cost as number of log rounds', default: 12 },
+        { name: 'legacy', type: 'checkbox', label: 'Generate salts with the old "$2a$" prefix', default: false }
+      ],
+      'pbkdf2': [
+        { name: 'salt_len', type: 'number', label: 'The length of the random salt', default: 16 },
+        { name: 'format', type: 'text', label: 'The output format of the hash (modular, django, or hex)', default: 'modular' },
+        { name: 'digest', type: 'text', label: 'The sha algorithm that pbkdf2 will use', default: 'sha512' },
+        { name: 'length', type: 'number', label: 'The length of the hash (in bytes)', default: 64 }
+      ]
     }
   }
 

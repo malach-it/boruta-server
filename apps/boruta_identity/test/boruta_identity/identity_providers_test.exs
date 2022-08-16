@@ -422,13 +422,14 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       valid_attrs = %{
         name: "some name",
         type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "argon2",
         password_hashing_opts: %{
           "salt_len" => 16,
           "t_cost" => 8,
           "m_cost" => 16,
           "parallelism" => 2,
           "format" => "encoded",
-          "hash_len" => 32,
+          "hashlen" => 32,
           "argon2_type" => 2
         }
       }
@@ -436,6 +437,35 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
       assert backend.name == "some name"
       assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
+      assert backend.password_hashing_alg == "argon2"
+
+      assert backend.password_hashing_opts == %{
+               "argon2_type" => 2,
+               "format" => "encoded",
+               "hashlen" => 32,
+               "m_cost" => 16,
+               "parallelism" => 2,
+               "salt_len" => 16,
+               "t_cost" => 8
+             }
+    end
+
+    test "create_backend/1 with valid bcrypt password hashing opts creates a backend" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "bcrypt",
+        password_hashing_opts: %{
+          "log_rounds" => 12,
+          "legacy" => false
+        }
+      }
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
+      assert backend.name == "some name"
+      assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
+      assert backend.password_hashing_alg == "bcrypt"
+      assert backend.password_hashing_opts == %{"legacy" => false, "log_rounds" => 12}
     end
 
     test "create_backend/1 set as default will override other backends default attribute" do
@@ -456,13 +486,14 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       valid_attrs = %{
         name: "some name",
         type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "argon2",
         password_hashing_opts: %{
           "salt_len" => true,
           "t_cost" => true,
           "m_cost" => true,
           "parallelism" => true,
           "format" => true,
-          "hash_len" => true,
+          "hashlen" => true,
           "argon2_type" => true
         }
       }
@@ -479,9 +510,61 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                   password_hashing_opts:
                     {"Type mismatch. Expected Number but got Boolean. at #/m_cost", []},
                   password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/hashlen", []},
+                  password_hashing_opts:
                     {"Type mismatch. Expected String but got Boolean. at #/format", []},
                   password_hashing_opts:
                     {"Type mismatch. Expected Number but got Boolean. at #/argon2_type", []}
+                ]
+              }} = IdentityProviders.create_backend(valid_attrs)
+    end
+
+    test "create_backend/1 with invalid pbkdf2 password hashing opts returns an error changeset" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "pbkdf2",
+        password_hashing_opts: %{
+          "salt_len" => true,
+          "format" => true,
+          "digest" => true,
+          "length" => true
+        }
+      }
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/salt_len", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/length", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected String but got Boolean. at #/format", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected String but got Boolean. at #/digest", []}
+                ]
+              }} = IdentityProviders.create_backend(valid_attrs)
+    end
+
+    test "create_backend/1 with invalid bcrypt password hashing opts returns an error changeset" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_alg: "bcrypt",
+        password_hashing_opts: %{
+          "log_rounds" => true,
+          "legacy" => "invalid"
+        }
+      }
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/log_rounds", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Boolean but got String. at #/legacy", []}
                 ]
               }} = IdentityProviders.create_backend(valid_attrs)
     end

@@ -32,7 +32,26 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
         "format" => %{"type" => "string", "pattern" => "^(encoded|raw_hash|report)$"},
         "hashlen" => %{"type" => "number"},
         "argon2_type" => %{"type" => "number", "minimum" => 0, "maximum" => 2}
-      }
+      },
+      "additionalProperties" => false
+    },
+    "bcrypt" => %{
+      "type" => "object",
+      "properties" => %{
+        "log_rounds" => %{"type" => "number"},
+        "legacy" => %{"type" => "boolean"}
+      },
+      "additionalProperties" => false
+    },
+    "pbkdf2" => %{
+      "type" => "object",
+      "properties" => %{
+        "salt_len" => %{"type" => "number"},
+        "format" => %{"type" => "string", "pattern" => "^(modular|django|hex)$"},
+        "digest" => %{"type" => "string", "pattern" => "^(sha224|sha256|sha384|sha512)$"},
+        "length" => %{"type" => "number", "minimum" => 1, "maximum" => 64}
+      },
+      "additionalProperties" => false
     }
   }
 
