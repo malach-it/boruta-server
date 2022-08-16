@@ -7,7 +7,9 @@ const defaults = {
   id: DEFAULT_ID,
   name: null,
   type: 'Elixir.BorutaIdentity.Accounts.Internal',
-  errors: null
+  errors: null,
+  password_hashing_alg: 'argon2',
+  password_hashing_opts: {}
 }
 
 const assign = {
@@ -15,7 +17,8 @@ const assign = {
   name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
   is_default: function ({ is_default }) { this.is_default = is_default },
-  password_hashing_alg: function ({ password_hashing_alg }) { this.password_hashing_alg = password_hashing_alg }
+  password_hashing_alg: function ({ password_hashing_alg }) { this.password_hashing_alg = password_hashing_alg },
+  password_hashing_opts: function ({ password_hashing_opts }) { this.password_hashing_opts = password_hashing_opts }
 }
 
 class Backend {
@@ -70,14 +73,22 @@ class Backend {
   }
 
   get serialized () {
-    const { id, name, type, is_default, password_hashing_alg } = this
+    const { id, name, type, is_default, password_hashing_alg, password_hashing_opts } = this
+    const formattedPasswordHashingOpts = {}
+    Object.keys(password_hashing_opts).forEach(key => {
+      const value = password_hashing_opts[key]
+      if (value !== '') {
+        formattedPasswordHashingOpts[key] = value
+      }
+    })
 
     return {
       id,
       name,
       type,
       is_default,
-      password_hashing_alg
+      password_hashing_alg,
+      password_hashing_opts: formattedPasswordHashingOpts
     }
   }
 
@@ -87,6 +98,22 @@ class Backend {
       { name: 'bcrypt', label: 'Bcrypt' },
       { name: 'pbkdf2', label: 'Pbkdf2' }
     ]
+  }
+
+  static get passwordHashingOpts() {
+    return {
+      'argon2': [
+        { name: 'salt_len', type: 'number', label: 'Length of the random salt (in bytes)', default: 16 },
+        { name: 't_cost', type: 'number', label: 'Time cost', default: 8 },
+        { name: 'm_cost', type: 'number', label: 'Memory usage', default: 16 },
+        { name: 'parallelism', type: 'number', label: 'Number of parralel threads', default: 2 },
+        { name: 'format', type: 'text', label: 'Output format (encoded, raw_hash, or report)', default: 'encoded' },
+        { name: 'hash_len', type: 'number', label: 'Length of the hash (in bytes)', default: 32 },
+        { name: 'argon2_type', type: 'number', label: 'Argon2 type (0 argon2d, 1 argon2i, 2 argon2id)', default: 2 }
+      ],
+      'bcrypt': [],
+      'pbkdf2': []
+    }
   }
 
   static api () {

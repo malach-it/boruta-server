@@ -39,7 +39,7 @@ defmodule BorutaGateway.MixProject do
       {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
       {:boruta_auth, in_umbrella: true},
       {:ecto_sql, "~> 3.0"},
-      {:ex_json_schema, "~> 0.7.3"},
+      {:ex_json_schema, "~> 0.9"},
       {:finch, "~> 0.10"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},

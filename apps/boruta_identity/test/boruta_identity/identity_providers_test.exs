@@ -418,6 +418,26 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
     end
 
+    test "create_backend/1 with valid argon2 password hashing opts creates a backend" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_opts: %{
+          "salt_len" => 16,
+          "t_cost" => 8,
+          "m_cost" => 16,
+          "parallelism" => 2,
+          "format" => "encoded",
+          "hash_len" => 32,
+          "argon2_type" => 2
+        }
+      }
+
+      assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
+      assert backend.name == "some name"
+      assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
+    end
+
     test "create_backend/1 set as default will override other backends default attribute" do
       other_backend = backend_fixture(%{is_default: true})
 
@@ -430,6 +450,40 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:ok, %Backend{} = backend} = IdentityProviders.create_backend(valid_attrs)
       assert backend.is_default
       refute Repo.reload!(other_backend).is_default
+    end
+
+    test "create_backend/1 with invalid argon2 password hashing opts returns an error changeset" do
+      valid_attrs = %{
+        name: "some name",
+        type: "Elixir.BorutaIdentity.Accounts.Internal",
+        password_hashing_opts: %{
+          "salt_len" => true,
+          "t_cost" => true,
+          "m_cost" => true,
+          "parallelism" => true,
+          "format" => true,
+          "hash_len" => true,
+          "argon2_type" => true
+        }
+      }
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/t_cost", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/salt_len", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/parallelism", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/m_cost", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected String but got Boolean. at #/format", []},
+                  password_hashing_opts:
+                    {"Type mismatch. Expected Number but got Boolean. at #/argon2_type", []}
+                ]
+              }} = IdentityProviders.create_backend(valid_attrs)
     end
 
     test "create_backend/1 with invalid data returns error changeset" do

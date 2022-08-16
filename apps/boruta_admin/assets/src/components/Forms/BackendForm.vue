@@ -22,11 +22,17 @@
         <div class="ui info message">
           Default backend will be used in case of resource owner password credentials requests.
         </div>
+        <h3>Password hashing</h3>
         <div class="field">
-          <label>Password_hashing algorithm</label>
-          <select v-model="backend.password_hashing_alg">
-            <option :value="alg.name" v-for="alg in passwordHashingAlgorithms">{{ alg.label }}</option>
+          <label>Password hashing algorithm</label>
+          <select v-model="backend.password_hashing_alg" @change="algorithmChangeWarning">
+            <option :value="alg.name" v-for="alg in passwordHashingAlgorithms" :key="alg">{{ alg.label }}</option>
           </select>
+        </div>
+        <h4>Password hashing algorithm options</h4>
+        <div class="field" v-for="opt in passwordHashingOpts" :key="opt.name">
+          <label>{{ opt.label }}</label>
+          <input :type="opt.type" v-model="backend.password_hashing_opts[opt.name]" :placeholder="opt.default">
         </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
@@ -48,10 +54,20 @@ export default {
   },
   data () {
     return {
-      passwordHashingAlgorithms: Backend.passwordHashingAlgorithms
+      passwordHashingAlgorithms: Backend.passwordHashingAlgorithms,
+    }
+  },
+  computed: {
+    passwordHashingOpts () {
+      return Backend.passwordHashingOpts[this.backend.password_hashing_alg]
     }
   },
   methods: {
+    algorithmChangeWarning () {
+      if (this.backend.isPersisted) {
+        alert('Changing the password hashing algorithm may invalidate already saved passwords. Use this feature with care.')
+      }
+    },
     back () {
       this.$emit('back')
     }

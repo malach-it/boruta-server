@@ -16,7 +16,8 @@ defmodule BorutaAdminWeb.BackendView do
       name: backend.name,
       type: backend.type,
       is_default: backend.is_default,
-      password_hashing_alg: backend.password_hashing_alg
+      password_hashing_alg: backend.password_hashing_alg,
+      password_hashing_opts: backend.password_hashing_opts
     }
   end
 end
