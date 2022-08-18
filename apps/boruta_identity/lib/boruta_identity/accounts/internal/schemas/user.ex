@@ -23,6 +23,8 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     field(:password, :string, virtual: true)
     field(:hashed_password, :string)
 
+    belongs_to(:backend, Backend)
+
     timestamps()
   end
 
@@ -43,10 +45,11 @@ defmodule BorutaIdentity.Accounts.Internal.User do
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
   """
-  def registration_changeset(user, attrs, %{backend: _backend} = opts) do
+  def registration_changeset(user, attrs, %{backend: backend} = opts) do
     user
     |> cast(attrs, [:email, :password])
     |> validate_required([:email, :password])
+    |> change(backend_id: backend.id)
     |> validate_email()
     |> validate_password(opts)
   end

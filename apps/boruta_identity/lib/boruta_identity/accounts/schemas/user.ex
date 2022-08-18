@@ -6,6 +6,7 @@ defmodule BorutaIdentity.Accounts.User do
 
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
 
   @type t :: %__MODULE__{
@@ -25,7 +26,6 @@ defmodule BorutaIdentity.Accounts.User do
   schema "users" do
     # TODO add email field
     field(:username, :string)
-    field(:provider, :string)
     field(:uid, :string)
     field(:password, :string, virtual: true)
     field(:confirmed_at, :utc_datetime_usec)
@@ -33,20 +33,21 @@ defmodule BorutaIdentity.Accounts.User do
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:consents, Consent, on_replace: :delete)
+    belongs_to(:backend, Backend)
 
     timestamps()
   end
 
   def implementation_changeset(attrs) do
     %__MODULE__{}
-    |> cast(attrs, [:provider, :uid, :username])
-    |> validate_required([:provider, :uid, :username])
+    |> cast(attrs, [:backend_id, :uid, :username])
+    |> validate_required([:backend_id, :uid, :username])
   end
 
   def login_changeset(user) do
     user
     |> change(last_login_at: DateTime.utc_now())
-    |> validate_required([:provider])
+    |> validate_required([:backend_id])
   end
 
   @doc """

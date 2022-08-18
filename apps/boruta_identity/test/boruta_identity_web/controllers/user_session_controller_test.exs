@@ -5,16 +5,15 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
 
   alias BorutaIdentity.Repo
 
-  setup do
+  setup :with_a_request
+  setup %{identity_provider: identity_provider} do
     {:ok, user} =
-      user_fixture() |> Ecto.Changeset.change(confirmed_at: DateTime.utc_now()) |> Repo.update()
+      user_fixture(%{backend: identity_provider.backend}) |> Ecto.Changeset.change(confirmed_at: DateTime.utc_now()) |> Repo.update()
 
     %{user: user}
   end
 
   describe "GET /users/log_in" do
-    setup :with_a_request
-
     test "renders log in page", %{conn: conn, request: request} do
       conn = get(conn, Routes.user_session_path(conn, :new, request: request))
       response = html_response(conn, 200)
@@ -28,8 +27,6 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   end
 
   describe "POST /users/log_in" do
-    setup :with_a_request
-
     test "logs the user in", %{conn: conn, user: user, request: request} do
       conn =
         post(conn, Routes.user_session_path(conn, :create, request: request), %{
@@ -54,8 +51,12 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
       assert redirected_to(conn) =~ "/"
     end
 
-    test "returns an error when not confirmed", %{conn: conn, request: request} do
-      user = user_fixture()
+    test "returns an error when not confirmed", %{
+      conn: conn,
+      request: request,
+      identity_provider: identity_provider
+    } do
+      user = user_fixture(%{backend: identity_provider.backend})
 
       conn =
         post(conn, Routes.user_session_path(conn, :create, request: request), %{
@@ -84,8 +85,6 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   end
 
   describe "GET /users/log_out" do
-    setup :with_a_request
-
     test "logs the user out", %{conn: conn, user: user, request: request} do
       conn =
         conn |> log_in(user) |> get(Routes.user_session_path(conn, :delete, request: request))

@@ -10,6 +10,7 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.{User, UserToken}
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
   alias BorutaIdentity.Repo
@@ -426,7 +427,9 @@ defmodule BorutaIdentity.AccountsTest do
       client_identity_provider = BorutaIdentity.Factory.insert(:client_identity_provider)
 
       {:ok,
+       backend: client_identity_provider.identity_provider.backend,
        client_id: client_identity_provider.client_id,
+       confirmable_backend: confirmable_client_identity_provider.identity_provider.backend,
        confirmable_client_id: confirmable_client_identity_provider.client_id}
     end
 
@@ -462,9 +465,9 @@ defmodule BorutaIdentity.AccountsTest do
                    end
     end
 
-    test "returns an error with empty authentication params", %{client_id: client_id} do
+    test "returns an error with empty email", %{client_id: client_id} do
       context = :context
-      authentication_params = %{}
+      authentication_params = %{email: ""}
 
       assert {:authentication_failure, ^context,
               %SessionError{template: %Template{type: "new_session"}} = error} =
@@ -552,8 +555,11 @@ defmodule BorutaIdentity.AccountsTest do
                "Invalid email or password."
     end
 
-    test "returns an error if not confirmed", %{confirmable_client_id: client_id} do
-      %Internal.User{email: email} = insert(:internal_user)
+    test "returns an error if not confirmed", %{
+      confirmable_backend: backend,
+      confirmable_client_id: client_id
+    } do
+      %Internal.User{email: email} = insert(:internal_user, backend: backend)
       context = :context
       authentication_params = %{email: email, password: valid_user_password()}
 
@@ -570,15 +576,13 @@ defmodule BorutaIdentity.AccountsTest do
                "Email confirmation is required to authenticate."
     end
 
-    test "authenticates the user", %{client_id: client_id} do
-      %Internal.User{id: uid, email: username} = insert(:internal_user)
+    test "authenticates the user", %{client_id: client_id, backend: backend} do
+      %Internal.User{id: uid, email: username} = insert(:internal_user, backend: backend)
       context = :context
       authentication_params = %{email: username, password: valid_user_password()}
 
-      provider = to_string(Internal)
-
       assert {:user_authenticated, ^context,
-              %User{username: ^username, provider: ^provider, uid: ^uid},
+              %User{username: ^username, backend: ^backend, uid: ^uid},
               session_token} =
                Accounts.create_session(
                  context,
@@ -591,16 +595,15 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "does not create multiple users accross multiple authentications", %{
-      client_id: client_id
+      client_id: client_id,
+      backend: backend
     } do
-      %Internal.User{id: uid, email: username} = insert(:internal_user)
+      %Internal.User{id: uid, email: username} = insert(:internal_user, backend: backend)
       context = :context
       authentication_params = %{email: username, password: valid_user_password()}
 
-      provider = to_string(Internal)
-
       assert {:user_authenticated, ^context,
-              %User{id: user_id, username: ^username, provider: ^provider, uid: ^uid},
+              %User{id: user_id, username: ^username, backend: ^backend, uid: ^uid},
               session_token} =
                Accounts.create_session(
                  context,
@@ -612,7 +615,7 @@ defmodule BorutaIdentity.AccountsTest do
       assert session_token
 
       assert {:user_authenticated, ^context,
-              %User{id: new_user_id, username: ^username, provider: ^provider, uid: ^uid},
+              %User{id: new_user_id, username: ^username, backend: ^backend, uid: ^uid},
               session_token} =
                Accounts.create_session(
                  context,
@@ -633,7 +636,9 @@ defmodule BorutaIdentity.AccountsTest do
     setup do
       client_identity_provider = BorutaIdentity.Factory.insert(:client_identity_provider)
 
-      {:ok, client_id: client_identity_provider.client_id}
+      {:ok,
+       backend: client_identity_provider.identity_provider.backend,
+       client_id: client_identity_provider.client_id}
     end
 
     test "return a success when session does not exist", %{client_id: client_id} do
@@ -649,9 +654,9 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "deletes session", %{client_id: client_id} do
+    test "deletes session", %{client_id: client_id, backend: backend} do
       context = :context
-      %User{id: user_id, username: email} = user_fixture()
+      %User{id: user_id, username: email} = user_fixture(%{backend: backend})
       authentication_params = %{email: email, password: valid_user_password()}
 
       assert {:user_authenticated, ^context, %User{id: ^user_id}, session_token} =
@@ -697,12 +702,12 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do
-      refute Accounts.get_user_by_email("unknown@example.com")
+      refute Accounts.get_user_by_email(Backend.default!(), "unknown@example.com")
     end
 
     test "returns the user if the email exists" do
       %{id: id} = user = user_fixture()
-      assert %User{id: ^id} = Accounts.get_user_by_email(user.username)
+      assert %User{id: ^id} = Accounts.get_user_by_email(user.backend, user.username)
     end
   end
 
@@ -728,8 +733,15 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "send_confirmation_instructions/4" do
+  describe "send_confirmation_instructions/5" do
     test "returns a success" do
+      identity_provider = BorutaIdentity.Factory.insert(:identity_provider, confirmable: true)
+
+      %ClientIdentityProvider{client_id: client_id} =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider: identity_provider
+        )
+
       context = :context
 
       confirmation_params = %{
@@ -740,6 +752,7 @@ defmodule BorutaIdentity.AccountsTest do
 
       assert Accounts.send_confirmation_instructions(
                context,
+               client_id,
                confirmation_params,
                confirmation_url_fun,
                DummyConfirmation

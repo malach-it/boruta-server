@@ -21,6 +21,10 @@
                 <span class="header">Email</span>
                 <span class="description">{{ user.email }}</span>
               </div>
+              <div class="item">
+                <span class="header">Backend</span>
+                <span class="description"><router-link :to="{ name: 'edit-backend', params: { backendId: user.backend.id } }">{{ user.backend.name }}</router-link></span>
+              </div>
             </div>
           </div>
         </div>
@@ -37,6 +41,7 @@
             class="item"
             :class="{ 'active': currentPage == pageNumber }"
             v-for="pageNumber in meanPages"
+            :key="pageNumber"
             @click="goToPage(pageNumber)">
             {{ pageNumber }}
           </button>

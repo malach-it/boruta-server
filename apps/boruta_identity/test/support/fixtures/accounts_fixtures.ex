@@ -7,7 +7,6 @@ defmodule BorutaIdentity.AccountsFixtures do
   import BorutaIdentity.Factory
 
   alias Boruta.Ecto.Admin
-  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Repo
 
@@ -18,12 +17,13 @@ defmodule BorutaIdentity.AccountsFixtures do
   def valid_user_password, do: @password
 
   def user_fixture(attrs \\ %{}) do
-    user = insert(:internal_user, attrs)
+    backend = attrs[:backend] || insert(:backend)
+    user = insert(:internal_user, Map.merge(%{backend: backend}, attrs))
 
     insert(:user,
       username: user.email,
       uid: user.id,
-      provider: to_string(Internal)
+      backend: backend
     )
     |> Repo.preload(:authorized_scopes)
   end

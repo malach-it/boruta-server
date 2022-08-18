@@ -7,13 +7,12 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
 
   import BorutaIdentity.AccountsFixtures
 
-  setup do
-    %{user: user_fixture()}
+  setup :with_a_request
+  setup %{identity_provider: identity_provider}do
+    %{user: user_fixture(%{backend: identity_provider.backend})}
   end
 
   describe "GET /users/confirm" do
-    setup :with_a_request
-
     test "renders the confirmation page", %{conn: conn, request: request} do
       conn = get(conn, Routes.user_confirmation_path(conn, :new, request: request))
       response = html_response(conn, 200)
@@ -22,8 +21,6 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   end
 
   describe "POST /users/confirm" do
-    setup :with_a_request
-
     @tag :capture_log
     test "sends a new confirmation token", %{conn: conn, user: user, request: request} do
       conn =
@@ -65,8 +62,6 @@ defmodule BorutaIdentityWeb.UserConfirmationControllerTest do
   end
 
   describe "GET /users/confirm/:token" do
-    setup :with_a_request
-
     test "confirms the given token once", %{conn: conn, user: user, request: request} do
       confirmation_url_fun = fn _ -> "http://test.host" end
       {:ok, token} = Deliveries.deliver_user_confirmation_instructions(user, confirmation_url_fun)

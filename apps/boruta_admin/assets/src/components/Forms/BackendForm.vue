@@ -22,14 +22,14 @@
         <div class="ui info message">
           Default backend will be used in case of resource owner password credentials requests.
         </div>
-        <h3>Password hashing</h3>
+        <h2>Password hashing</h2>
         <div class="field" :class="{ 'error': backend.errors?.password_hashing_alg }">
           <label>Password hashing algorithm</label>
           <select v-model="backend.password_hashing_alg" @change="onAlgorithmChange">
             <option :value="alg.name" v-for="alg in passwordHashingAlgorithms" :key="alg">{{ alg.label }}</option>
           </select>
         </div>
-        <h4>Password hashing algorithm options</h4>
+        <h3>Password hashing algorithm options</h3>
         <div class="field" v-for="opt in passwordHashingOpts" :key="opt.name" :class="{ 'error': backend.errors?.password_hashing_opts }">
           <label>{{ opt.label }}</label>
           <input :type="opt.type" v-model="backend.password_hashing_opts[opt.name]" :placeholder="opt.default">

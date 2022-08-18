@@ -30,7 +30,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
         "m_cost" => %{"type" => "number"},
         "parallelism" => %{"type" => "number"},
         "format" => %{"type" => "string", "pattern" => "^(encoded|raw_hash|report)$"},
-        "hashlen" => %{"type" => "number"},
+        "hashlen" => %{"type" => "number", "minimum" => 1, "maximum" => 128},
         "argon2_type" => %{"type" => "number", "minimum" => 0, "maximum" => 2}
       },
       "additionalProperties" => false
@@ -105,6 +105,14 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     |> validate_password_hashing_opts()
   end
 
+  @doc false
+  def delete_changeset(%__MODULE__{id: backend_id} = backend) do
+    case default!().id == backend_id do
+      true -> change(backend) |> add_error(:is_default, "Deleting a default backend is prohibited.")
+      false -> change(backend)
+    end
+  end
+
   defp set_default(%Ecto.Changeset{changes: %{is_default: false}} = changeset) do
     Ecto.Changeset.add_error(
       changeset,
@@ -114,6 +122,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: _is_default}} = changeset) do
+    # TODO use a transaction to change default backend
     case Ecto.Changeset.change(default!(), %{is_default: false}) |> Repo.update() do
       {:ok, _backend} ->
         changeset

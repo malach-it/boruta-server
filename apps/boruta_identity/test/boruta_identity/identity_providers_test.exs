@@ -616,6 +616,15 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert_raise Ecto.NoResultsError, fn -> IdentityProviders.get_backend!(backend.id) end
     end
 
+    test "delete_backend/1 can't delete a default backend" do
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [is_default: {"Deleting a default backend is prohibited.", []}]
+              }} = IdentityProviders.delete_backend(Backend.default!())
+
+      assert Backend.default!()
+    end
+
     test "change_backend/1 returns a backend changeset" do
       backend = backend_fixture()
       assert %Ecto.Changeset{} = IdentityProviders.change_backend(backend)

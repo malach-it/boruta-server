@@ -108,7 +108,7 @@ defmodule BorutaIdentity.Logger do
   def authentication_log_in_success_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id},
+        %{sub: sub, backend: backend, client_id: client_id},
         _
       ) do
     Logger.log(
@@ -124,7 +124,8 @@ defmodule BorutaIdentity.Logger do
           "success",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider)
+          log_attribute("backend_id", backend.id),
+          log_attribute("provider", backend.type)
         ]
       end,
       type: :business
@@ -159,7 +160,7 @@ defmodule BorutaIdentity.Logger do
   def authentication_log_out_success_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id},
+        %{sub: sub, backend: backend, client_id: client_id},
         _
       ) do
     Logger.log(
@@ -175,7 +176,8 @@ defmodule BorutaIdentity.Logger do
           "success",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider)
+          log_attribute("backend_id", backend.id),
+          log_attribute("provider", backend.type)
         ]
       end,
       type: :business
@@ -185,7 +187,7 @@ defmodule BorutaIdentity.Logger do
   def registration_create_success_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id} = metadata,
+        %{sub: sub, backend: backend, client_id: client_id} = metadata,
         _
       ) do
     Logger.log(
@@ -201,7 +203,7 @@ defmodule BorutaIdentity.Logger do
           "success",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider),
+          log_attribute("backend", backend),
           log_attribute("message", metadata[:message])
         ]
       end,
@@ -239,7 +241,7 @@ defmodule BorutaIdentity.Logger do
   def registration_confirm_success_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id, token: token},
+        %{sub: sub, backend: backend, client_id: client_id, token: token},
         _
       ) do
     Logger.log(
@@ -255,7 +257,7 @@ defmodule BorutaIdentity.Logger do
           "success",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider),
+          log_attribute("backend", backend),
           log_attribute("token", token)
         ]
       end,
@@ -292,7 +294,7 @@ defmodule BorutaIdentity.Logger do
   def registration_update_success_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id},
+        %{sub: sub, backend: backend, client_id: client_id},
         _
       ) do
     Logger.log(
@@ -308,7 +310,8 @@ defmodule BorutaIdentity.Logger do
           "success",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider)
+          log_attribute("provider", backend.type),
+          log_attribute("backend_id", backend.id),
         ]
       end,
       type: :business
@@ -318,7 +321,7 @@ defmodule BorutaIdentity.Logger do
   def registration_update_failure_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id, error: message},
+        %{sub: sub, backend: backend, client_id: client_id, error: message},
         _
       )
       when is_binary(message) do
@@ -335,7 +338,8 @@ defmodule BorutaIdentity.Logger do
           "failure",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider),
+          log_attribute("provider", backend.type),
+          log_attribute("backend_id", backend.id),
           log_attribute("message", ~s{"#{message}"})
         ]
       end,
@@ -348,7 +352,7 @@ defmodule BorutaIdentity.Logger do
         _measurements,
         %{
           sub: sub,
-          provider: provider,
+          backend: backend,
           client_id: client_id,
           error: %Ecto.Changeset{} = changeset
         },
@@ -369,7 +373,8 @@ defmodule BorutaIdentity.Logger do
           "failure",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider),
+          log_attribute("provider", backend.type),
+          log_attribute("backend_id", backend.id),
           log_attribute("message", ~s{"#{message}"})
         ]
       end,
@@ -380,7 +385,7 @@ defmodule BorutaIdentity.Logger do
   def authorization_consent_success_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id, scopes: scopes},
+        %{sub: sub, backend: backend, client_id: client_id, scopes: scopes},
         _
       ) do
     Logger.log(
@@ -396,7 +401,8 @@ defmodule BorutaIdentity.Logger do
           "success",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider),
+          log_attribute("provider", backend.type),
+          log_attribute("backend_id", backend.id),
           log_attribute("scope", ~s{"#{Enum.join(scopes, " ")}"})
         ]
       end,
@@ -407,7 +413,7 @@ defmodule BorutaIdentity.Logger do
   def authorization_consent_failure_handler(
         _,
         _measurements,
-        %{sub: sub, provider: provider, client_id: client_id, scopes: scopes, message: message},
+        %{sub: sub, backend: backend, client_id: client_id, scopes: scopes, message: message},
         _
       ) do
     Logger.log(
@@ -423,7 +429,8 @@ defmodule BorutaIdentity.Logger do
           "success",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("provider", provider),
+          log_attribute("provider", backend.type),
+          log_attribute("backend_id", backend.id),
           log_attribute("scope", ~s{"#{Enum.join(scopes, " ")}"}),
           log_attribute("message", ~s{"#{message}"})
         ]

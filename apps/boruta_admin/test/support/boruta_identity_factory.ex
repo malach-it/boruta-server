@@ -19,14 +19,15 @@ defmodule BorutaIdentity.Factory do
     %User{
       username: "user#{System.unique_integer()}@example.com",
       uid: SecureRandom.hex(),
-      provider: to_string(Internal)
+      backend: build(:backend)
     }
   end
 
   def internal_user_factory do
     %Internal.User{
       email: "user#{System.unique_integer()}@example.com",
-      hashed_password: @hashed_password
+      hashed_password: @hashed_password,
+      backend: build(:backend)
     }
   end
 
@@ -55,6 +56,14 @@ defmodule BorutaIdentity.Factory do
     %Backend{
       name: "backend name",
       type: "Elixir.BorutaIdentity.Accounts.Internal"
+    }
+  end
+
+  def default_backend_factory do
+    %Backend{
+      name: "backend name",
+      type: "Elixir.BorutaIdentity.Accounts.Internal",
+      is_default: true
     }
   end
 

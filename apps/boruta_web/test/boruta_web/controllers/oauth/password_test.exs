@@ -4,6 +4,8 @@ defmodule BorutaWeb.Oauth.PasswordTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentity.IdentityProviders.Backend
+
   setup %{conn: conn} do
     {:ok, conn: conn}
   end
@@ -11,7 +13,7 @@ defmodule BorutaWeb.Oauth.PasswordTest do
   describe "password grant" do
     setup %{conn: conn} do
       password = valid_user_password()
-      resource_owner = user_fixture(password: password)
+      resource_owner = user_fixture(%{password: password, backend: Backend.default!()})
       client = insert(:client)
 
       {:ok,

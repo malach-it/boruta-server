@@ -59,7 +59,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       %{
         client_id: client_id,
         sub: user.uid,
-        provider: user.provider
+        backend: user.backend
       }
     )
 
@@ -82,7 +82,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       %{
         client_id: client_id,
         sub: user.uid,
-        provider: user.provider,
+        backend: user.backend,
         error: changeset
       }
     )
@@ -111,7 +111,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       %{
         client_id: client_id,
         sub: user.uid,
-        provider: user.provider,
+        backend: user.backend,
         error: message
       }
     )

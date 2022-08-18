@@ -14,7 +14,8 @@ defmodule BorutaIdentity.ResourceOwners do
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
-    case Accounts.get_user_by_email(username) do
+    backend = Backend.default!()
+    case Accounts.get_user_by_email(backend, username) do
       %User{id: id, username: email, last_login_at: last_login_at} ->
         {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
       _ -> {:error, "User not found."}
@@ -32,7 +33,7 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def check_password(%ResourceOwner{username: username}, password) do
     backend = Backend.default!()
-    with {:ok, user} <- Accounts.Internal.get_user(%{email: username}),
+    with {:ok, user} <- Accounts.Internal.get_user(backend, %{email: username || ""}),
          true <- Internal.User.valid_password?(backend, user, password) do
       :ok
     else

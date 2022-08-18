@@ -32,8 +32,11 @@ defmodule BorutaIdentity.Admin do
   """
   @spec list_users() :: Scrivener.Page.t()
   def list_users(params \\ %{}) do
-    User
-    |> preload(:authorized_scopes)
+    from(u in User,
+      left_join: uas in assoc(u, :authorized_scopes),
+      join: b in assoc(u, :backend),
+      preload: [authorized_scopes: uas, backend: b]
+    )
     |> Repo.paginate(params)
   end
 
@@ -54,7 +57,8 @@ defmodule BorutaIdentity.Admin do
     Repo.one(
       from(u in User,
         left_join: as in assoc(u, :authorized_scopes),
-        preload: [authorized_scopes: as],
+        join: b in assoc(u, :backend),
+        preload: [authorized_scopes: as, backend: b],
         where: u.id == ^id
       )
     )
@@ -90,7 +94,7 @@ defmodule BorutaIdentity.Admin do
          end)
          |> Repo.transaction() do
       {:ok, _result} ->
-        {:ok, user |> Repo.reload() |> Repo.preload(:authorized_scopes)}
+        {:ok, user |> Repo.reload() |> Repo.preload([:backend, :authorized_scopes])}
 
       {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
         {:error, changeset}
@@ -106,7 +110,7 @@ defmodule BorutaIdentity.Admin do
 
       user ->
         # TODO delete both provider and domain users in a transaction
-        apply(String.to_atom(user.provider), :delete_user, [user.uid])
+        apply(Backend.implementation(user.backend), :delete_user, [user.uid])
         Repo.delete(user)
     end
   end

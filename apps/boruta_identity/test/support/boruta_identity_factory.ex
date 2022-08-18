@@ -19,14 +19,15 @@ defmodule BorutaIdentity.Factory do
     %User{
       username: "user#{System.unique_integer()}@example.com",
       uid: SecureRandom.hex(),
-      provider: to_string(Internal)
+      backend: insert(:backend)
     }
   end
 
   def internal_user_factory do
     %Internal.User{
       email: "user#{System.unique_integer()}@example.com",
-      hashed_password: @hashed_password
+      hashed_password: @hashed_password,
+      backend: build(:backend)
     }
   end
 

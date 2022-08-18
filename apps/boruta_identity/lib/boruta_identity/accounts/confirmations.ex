@@ -72,17 +72,23 @@ defmodule BorutaIdentity.Accounts.Confirmations do
 
   @spec send_confirmation_instructions(
           context :: any(),
+          client_id :: String.t(),
           confirmation_instructions_params :: confirmation_instructions_params(),
           confirmation_url_fun :: confirmation_url_fun(),
           module :: atom()
         ) :: callback_result :: any()
-  def send_confirmation_instructions(
-                    context,
-                    confirmation_instructions_params,
-                    confirmation_url_fun,
-                    module
-                  ) do
-    with %User{} = user <- Accounts.get_user_by_email(confirmation_instructions_params[:email]) do
+  defwithclientidp send_confirmation_instructions(
+                     context,
+                     client_id,
+                     confirmation_instructions_params,
+                     confirmation_url_fun,
+                     module
+                   ) do
+    with %User{} = user <-
+           Accounts.get_user_by_email(
+             client_idp.backend,
+             confirmation_instructions_params[:email]
+           ) do
       Deliveries.deliver_user_confirmation_instructions(user, confirmation_url_fun)
     end
 
@@ -90,12 +96,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
     module.confirmation_instructions_delivered(context)
   end
 
-  @doc """
-  Confirms a user by the given token.
-
-  If the token matches, the user account is marked as confirmed
-  and the token is deleted.
-  """
+  # NOTE If the token matches, the user account is marked as confirmed and the token is deleted.
   @spec confirm_user(
           context :: any(),
           client_id :: String.t(),
@@ -117,6 +118,9 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   end
 
   defp new_confirmation_instructions_template(identity_provider) do
-    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_confirmation_instructions)
+    IdentityProviders.get_identity_provider_template!(
+      identity_provider.id,
+      :new_confirmation_instructions
+    )
   end
 end

@@ -17,6 +17,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
 
   @impl BorutaIdentity.Accounts.Registrations
@@ -26,13 +27,13 @@ defmodule BorutaIdentity.Accounts.Internal do
              backend: backend
            })
            |> Repo.insert() do
-      {:ok, domain_user!(user)}
+      {:ok, domain_user!(user, backend)}
     end
   end
 
   @impl BorutaIdentity.Accounts.Sessions
-  def get_user(%{id: id}) when is_binary(id) do
-    user = Repo.get_by!(Internal.User, id: id)
+  def get_user(backend, %{id: id}) when is_binary(id) do
+    user = Repo.get_by!(Internal.User, id: id, backend: backend.id)
 
     {:ok, user}
   rescue
@@ -40,8 +41,8 @@ defmodule BorutaIdentity.Accounts.Internal do
       {:error, "User not found."}
   end
 
-  def get_user(%{email: email}) when is_binary(email) do
-    user = Repo.get_by!(Internal.User, email: email)
+  def get_user(backend, %{email: email}) when is_binary(email) do
+    user = Repo.get_by!(Internal.User, email: email, backend_id: backend.id)
 
     {:ok, user}
   rescue
@@ -52,18 +53,18 @@ defmodule BorutaIdentity.Accounts.Internal do
   def get_user(_authentication_params), do: {:error, "Cannot find an user without an email."}
 
   @impl BorutaIdentity.Accounts.Sessions
-  def domain_user!(%Internal.User{id: id, email: email}) do
+  def domain_user!(%Internal.User{id: id, email: email}, %Backend{id: backend_id}) do
     User.implementation_changeset(%{
       uid: id,
       username: email,
-      provider: to_string(__MODULE__)
+      backend_id: backend_id
     })
     |> Repo.insert!(
       on_conflict: {:replace, [:username]},
       returning: true,
-      conflict_target: [:provider, :uid]
+      conflict_target: [:backend_id, :uid]
     )
-    |> Repo.preload([:authorized_scopes, :consents])
+    |> Repo.preload([:authorized_scopes, :consents, :backend])
   end
 
   # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings
@@ -128,7 +129,7 @@ defmodule BorutaIdentity.Accounts.Internal do
            user
            |> Internal.User.update_changeset(params, %{backend: backend})
            |> Repo.update() do
-      {:ok, domain_user!(user)}
+      {:ok, domain_user!(user, backend)}
     end
   end
 
@@ -144,7 +145,7 @@ defmodule BorutaIdentity.Accounts.Internal do
              %{backend: backend}
            )
            |> Repo.insert() do
-      {:ok, domain_user!(user)}
+      {:ok, domain_user!(user, backend)}
     end
   end
 

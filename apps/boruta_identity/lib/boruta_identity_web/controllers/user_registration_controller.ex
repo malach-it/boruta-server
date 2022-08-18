@@ -78,7 +78,7 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
       %{
         client_id: client_id,
         sub: user.uid,
-        provider: user.provider,
+        backend: user.backend,
         message: message
       }
     )
@@ -104,7 +104,7 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
       %{
         client_id: client_id,
         sub: user.uid,
-        provider: user.provider
+        backend: user.backend
       }
     )
 

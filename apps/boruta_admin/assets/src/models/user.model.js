@@ -4,7 +4,6 @@ import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
   errors: null,
-  provider: 'Elixir.BorutaIdentity.Accounts.Internal',
   authorize_scopes: false,
   authorized_scopes: [],
   backend_id: ''
@@ -12,7 +11,7 @@ const defaults = {
 
 const assign = {
   id: function ({ id }) { this.id = id },
-  provider: function ({ provider }) { this.provider = provider },
+  backend: function ({ backend }) { this.backend = backend },
   email: function ({ email }) { this.email = email },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {

@@ -61,7 +61,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
       %{},
       %{
         sub: user.uid,
-        provider: user.provider,
+        backend: user.backend,
         client_id: client_id
       }
     )
@@ -109,7 +109,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
       %{},
       %{
         sub: user && user.uid,
-        provider: user && user.provider,
+        backend: user && user.backend,
         client_id: client_id
       }
     )

@@ -9,14 +9,13 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   alias BorutaIdentity.Repo
 
   setup :set_swoosh_global
+  setup :with_a_request
 
-  setup do
-    {:ok, user: user_fixture()}
+  setup %{identity_provider: identity_provider} do
+    {:ok, user: user_fixture(%{backend: identity_provider.backend})}
   end
 
   describe "GET /users/reset_password" do
-    setup :with_a_request
-
     test "renders the reset password page", %{conn: conn, request: request} do
       conn = get(conn, Routes.user_reset_password_path(conn, :new, request: request))
       response = html_response(conn, 200)
@@ -25,8 +24,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "POST /users/reset_password" do
-    setup :with_a_request
-
     @tag :capture_log
     test "sends a new reset password token", %{conn: conn, user: user, request: request} do
       conn =
@@ -57,8 +54,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "GET /users/reset_password/:token" do
-    setup :with_a_request
-
     setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
 
@@ -81,8 +76,6 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   end
 
   describe "PUT /users/reset_password/:token" do
-    setup :with_a_request
-
     setup %{user: user} do
       reset_password_url_fun = fn _ -> "http://test.host" end
 
@@ -104,7 +97,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       refute get_session(conn, :user_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
-      assert {:ok, user} = Accounts.Internal.get_user(%{email: user.username})
+      assert {:ok, user} = Accounts.Internal.get_user(identity_provider.backend, %{email: user.username})
 
       assert {:ok, _user} =
                Accounts.Internal.check_user_against(

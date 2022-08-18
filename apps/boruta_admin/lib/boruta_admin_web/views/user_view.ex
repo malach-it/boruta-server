@@ -1,6 +1,7 @@
 defmodule BorutaAdminWeb.UserView do
   use BorutaAdminWeb, :view
 
+  alias BorutaAdminWeb.IdentityProviderView
   alias BorutaAdminWeb.UserView
   alias BorutaIdentity.Accounts
 
@@ -28,16 +29,8 @@ defmodule BorutaAdminWeb.UserView do
     %{
       id: user.id,
       email: user.username,
-      authorized_scopes: Accounts.get_user_scopes(user.id)
-    }
-  end
-
-  def render("current.json", %{user: user}) do
-    %{
-      data: %{
-        id: user.id,
-        email: user.username
-      }
+      authorized_scopes: Accounts.get_user_scopes(user.id),
+      backend: render_one(user.backend, IdentityProviderView, "backend.json", backend: user.backend)
     }
   end
 

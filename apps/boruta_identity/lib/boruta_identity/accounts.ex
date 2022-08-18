@@ -97,6 +97,7 @@ defmodule BorutaIdentity.Accounts do
   ## Registrations
 
   defdelegate initialize_registration(context, client_id, module), to: Registrations
+
   defdelegate register(context, client_id, registration_params, confirmation_url_fun, module),
     to: Registrations
 
@@ -109,6 +110,7 @@ defmodule BorutaIdentity.Accounts do
   ## Reset passwords
 
   defdelegate initialize_password_instructions(context, client_id, module), to: ResetPasswords
+
   defdelegate send_reset_password_instructions(
                 context,
                 client_id,
@@ -119,19 +121,23 @@ defmodule BorutaIdentity.Accounts do
               to: ResetPasswords
 
   defdelegate initialize_password_reset(context, client_id, token, module), to: ResetPasswords
+
   defdelegate reset_password(context, client_id, reset_password_params, module),
     to: ResetPasswords
 
   ## Confirmation
 
   defdelegate initialize_confirmation_instructions(context, client_id, module), to: Confirmations
+
   defdelegate send_confirmation_instructions(
                 context,
+                client_id,
                 confirmation_params,
                 confirmation_url_fun,
                 module
               ),
               to: Confirmations
+
   defdelegate confirm_user(context, client_id, token, module), to: Confirmations
 
   ## Consent
@@ -146,12 +152,14 @@ defmodule BorutaIdentity.Accounts do
   ## User settings
 
   defdelegate initialize_edit_user(context, client_id, user, module), to: Settings
-  defdelegate update_user(context, client_id, user, params, confirmation_url_fun, module), to: Settings
+
+  defdelegate update_user(context, client_id, user, params, confirmation_url_fun, module),
+    to: Settings
 
   ## Deprecated Database getters
 
+  defdelegate get_user_by_email(backend, email), to: Users
   defdelegate get_user(id), to: Users
-  defdelegate get_user_by_email(email), to: Users
   defdelegate get_user_by_session_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
 end

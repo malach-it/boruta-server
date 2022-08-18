@@ -8,69 +8,30 @@ defmodule BorutaIdentity.Accounts.Users do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
 
-  @doc """
-  Gets a user by uid.
+  @spec get_user_by_email(backend :: Backend.t(), email :: String.t()) :: user :: User.t() | nil
+  def get_user_by_email(backend, email) when is_binary(email) do
+    # TODO remove backend_user from domain
+    case apply(
+           Backend.implementation(backend),
+           :get_user,
+           [backend, %{email: email}]
+         ) do
+      {:ok, backend_user} ->
+        apply(
+          Backend.implementation(backend),
+          :domain_user!,
+          [backend_user, backend]
+        )
 
-  ## Examples
-
-      iex> get_user_by_uid("foo@example.com")
-      %User{}
-
-      iex> get_user_by_uid("unknown@example.com")
-      nil
-
-  """
-  @spec get_user_by_uid(provider :: atom(), uid :: String.t()) :: user :: User.t() | nil
-  def get_user_by_uid(provider, uid) when is_binary(uid) do
-    provider = to_string(provider)
-
-    Repo.one(
-      from(u in User,
-        left_join: as in assoc(u, :authorized_scopes),
-        preload: [authorized_scopes: as],
-        where: u.username == ^uid and u.provider == ^provider
-      )
-    )
+      _ ->
+        nil
+    end
   end
 
-  @doc """
-  Gets a user by email.
-
-  ## Examples
-
-      iex> get_user_by_email("foo@example.com")
-      %User{}
-
-      iex> get_user_by_email("unknown@example.com")
-      nil
-
-  """
-  @spec get_user_by_email(email :: String.t()) :: user :: User.t() | nil
-  def get_user_by_email(email) when is_binary(email) do
-    Repo.one(
-      from(u in User,
-        left_join: as in assoc(u, :authorized_scopes),
-        preload: [authorized_scopes: as],
-        where: u.username == ^email
-      )
-    )
-  end
-
-  @doc """
-  Gets a single user.
-
-  ## Examples
-
-      iex> get_user(123)
-      %User{}
-
-      iex> get_user(456)
-      nil
-
-  """
-  @spec get_user(id :: Ecto.UUID.t()) :: user :: User.t() | nil
+  @spec get_user(id :: String.t()) :: user :: User.t() | nil
   def get_user(id) do
     Repo.one(
       from(u in User,

@@ -114,7 +114,8 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                    ) do
     client_impl = IdentityProvider.implementation(client_idp)
 
-    with %User{} = user <- Users.get_user_by_email(reset_password_instructions_params[:email]) do
+    with %User{} = user <-
+           Users.get_user_by_email(client_idp.backend, reset_password_instructions_params[:email]) do
       apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
     end
 
