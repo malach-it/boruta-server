@@ -32,11 +32,8 @@ defmodule BorutaIdentity.Admin do
   """
   @spec list_users() :: Scrivener.Page.t()
   def list_users(params \\ %{}) do
-    from(u in User,
-      left_join: uas in assoc(u, :authorized_scopes),
-      join: b in assoc(u, :backend),
-      preload: [authorized_scopes: uas, backend: b]
-    )
+    from(u in User)
+    |> preload([:authorized_scopes, :backend])
     |> Repo.paginate(params)
   end
 
