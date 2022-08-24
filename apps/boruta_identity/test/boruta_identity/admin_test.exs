@@ -83,5 +83,11 @@ defmodule BorutaIdentity.AdminTest do
   test "create_user/2"
 
   @tag :skip
+  test "create_raw_user/2"
+
+  @tag :skip
+  test "import_users/3"
+
+  @tag :skip
   test "delete_user_authorized_scopes_by_id/1"
 end

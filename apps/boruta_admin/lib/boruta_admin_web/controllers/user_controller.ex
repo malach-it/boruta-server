@@ -57,6 +57,7 @@ defmodule BorutaAdminWeb.UserController do
       |> Enum.map(fn
         {"username_header" = k, v} -> {String.to_atom(k), v}
         {"password_header" = k, v} -> {String.to_atom(k), v}
+        {"hash_password" = k, v} when is_boolean(v) -> {String.to_atom(k), true}
         {"hash_password" = k, "true"} -> {String.to_atom(k), true}
         {"hash_password" = k, "false"} -> {String.to_atom(k), false}
         {_k, _v} -> nil
