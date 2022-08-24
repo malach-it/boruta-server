@@ -5,7 +5,7 @@
     <router-link :to="{ name: 'new-identity-provider' }" class="ui violet main create button">Add a identity provider</router-link>
     <div class="container">
       <div class="ui info message">
-        Identity providers are here the pages along with the backend the users will navigate to during authentication, management of their identity, and security.
+        Identity providers are here the pages the users will navigate to while authenticating, managing of their identity or security.
       </div>
       <div class="ui three column identityProviders stackable grid" v-if="identityProviders.length">
         <div v-for="identityProvider in identityProviders" :key="identityProvider.id" class="column">

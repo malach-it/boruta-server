@@ -108,9 +108,21 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @doc false
   def delete_changeset(%__MODULE__{id: backend_id} = backend) do
     case default!().id == backend_id do
-      true -> change(backend) |> add_error(:is_default, "Deleting a default backend is prohibited.")
-      false -> change(backend)
+      true ->
+        change(backend)
+        |> add_error(:is_default, "Deleting a default backend is prohibited.")
+
+      false ->
+        change(backend)
     end
+    |> foreign_key_constraint(:identity_provider,
+      name: :identity_providers_backend_id_fkey,
+      message: "This backend is linked to an identity provider. Please unlink it before continue."
+    )
+    |> foreign_key_constraint(:user,
+      name: :users_backend_id_fkey,
+      message: "This backend has existing users. Please delete them before continue"
+    )
   end
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: false}} = changeset) do

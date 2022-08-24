@@ -37,6 +37,7 @@ import EditEditUserTemplate from './views/IdentityProviders/EditEditUserTemplate
 import NewIdentityProvider from './views/IdentityProviders/NewIdentityProvider.vue'
 import Users from './views/IdentityProviders/Users.vue'
 import UserList from './views/IdentityProviders/UserList.vue'
+import UserImport from './views/IdentityProviders/UserImport.vue'
 import NewUser from './views/IdentityProviders/NewUser.vue'
 import EditUser from './views/IdentityProviders/EditUser.vue'
 
@@ -196,6 +197,10 @@ const router = createRouter({
                   path: '',
                   name: 'user-list',
                   component: UserList
+                }, {
+                  path: 'import',
+                  name: 'user-import',
+                  component: UserImport
                 }, {
                   path: '/users/new',
                   name: 'new-user',

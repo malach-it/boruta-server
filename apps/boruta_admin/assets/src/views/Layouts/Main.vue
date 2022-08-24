@@ -210,7 +210,7 @@ export default {
   min-height: calc(100% - 41px);
   .main.create.button {
     position: absolute;
-    top: .6em;
+    top: .53em;
     right: .5em;
     font-size: .825rem;
     @media screen and (max-width: 1127px) {
@@ -221,6 +221,15 @@ export default {
       margin: 0 1rem;
       margin-bottom: 1rem;
 
+    }
+  }
+  .main.buttons {
+    position: absolute;
+    top: .53em;
+    right: .5em;
+    .create.button {
+      position: relative;
+      top: 0;
     }
   }
   a {
@@ -348,7 +357,7 @@ export default {
     }
   }
   .ui.grid {
-    margin: -1rem 0 1rem 0;
+    margin: -1rem 0 0 0;
     .column {
       padding: 0;
       padding-top: 1rem;

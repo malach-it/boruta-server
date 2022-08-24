@@ -9,14 +9,26 @@ defmodule BorutaIdentity.Admin do
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
+  alias NimbleCSV.RFC4180, as: CSV
 
   @type user_params :: %{
           username: String.t(),
           password: String.t()
         }
 
+  @type raw_user_params :: %{
+          username: String.t(),
+          hashed_password: String.t()
+        }
+
   @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: any()}
   @callback create_user(
+              backend :: Backend.t(),
+              params :: user_params()
+            ) ::
+              {:ok, User.t()} | {:error, changeset :: Ecto.Changeset.t()}
+
+  @callback create_raw_user(
               backend :: Backend.t(),
               params :: user_params()
             ) ::
@@ -70,6 +82,103 @@ defmodule BorutaIdentity.Admin do
       :create_user,
       [backend, params]
     )
+  end
+
+  @spec create_raw_user(backend :: Backend.t(), params :: raw_user_params()) ::
+          {:ok, User.t()} | {:error, Ecto.Changeset.t()}
+  def create_raw_user(backend, params) do
+    # TODO give the ability to provide authorized scopes at user creation
+    apply(
+      Backend.implementation(backend),
+      :create_raw_user,
+      [backend, params]
+    )
+  end
+
+  @type import_users_opts :: %{
+          optional(:username_header) => String.t(),
+          optional(:password_header) => String.t(),
+          optional(:hash_password) => boolean()
+        }
+
+  @spec import_users(backend :: Backend.t(), csv_path :: String.t(), opts :: import_users_opts()) ::
+          import_result :: map()
+  def import_users(backend, csv_path, opts \\ %{}) do
+    opts =
+      Map.merge(
+        %{
+          username_header: "username",
+          password_header: "password",
+          hash_password: false
+        },
+        opts
+      )
+
+    headers =
+      File.stream!(csv_path)
+      |> CSV.parse_stream(skip_headers: false)
+      |> Enum.take(1)
+      |> Enum.reduce(%{}, fn headers, _acc ->
+        username_index =
+          Enum.find_index(headers, fn header -> header == opts[:username_header] end)
+
+        password_index =
+          Enum.find_index(headers, fn header -> header == opts[:password_header] end)
+
+        %{username: username_index, password: password_index}
+      end)
+
+    File.stream!(csv_path)
+    |> CSV.parse_stream(skip_headers: true)
+    |> Stream.map(fn row ->
+      case opts[:hash_password] do
+        true ->
+          create_params = %{
+            username: headers[:username] && Enum.at(row, headers[:username]),
+            password: headers[:password] && Enum.at(row, headers[:password])
+          }
+
+          create_user(backend, create_params)
+
+        false ->
+          create_params = %{
+            username: headers[:username] && Enum.at(row, headers[:username]),
+            hashed_password: headers[:password] && Enum.at(row, headers[:password])
+          }
+
+          create_raw_user(backend, create_params)
+      end
+    end)
+    |> Stream.with_index(1)
+    |> Enum.reduce(
+      %{success_count: 0, error_count: 0, errors: []},
+      fn
+        {{:ok, _user}, _line},
+        %{
+          success_count: success_count,
+          error_count: error_count,
+          errors: errors
+        } ->
+          %{
+            success_count: success_count + 1,
+            error_count: error_count,
+            errors: errors
+          }
+
+        {{:error, changeset}, line},
+        %{
+          success_count: success_count,
+          error_count: error_count,
+          errors: errors
+        } ->
+          %{
+            success_count: success_count,
+            error_count: error_count + 1,
+            errors: errors ++ [%{line: line, changeset: changeset}]
+          }
+      end
+    )
+    |> Enum.into(%{})
   end
 
   @spec update_user_authorized_scopes(user :: %User{}, scopes :: list(map())) ::

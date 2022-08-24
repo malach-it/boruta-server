@@ -41,10 +41,32 @@ defmodule BorutaAdminWeb.UserController do
       username: user_params["email"],
       password: user_params["password"]
     }
+
     backend = IdentityProviders.get_backend!(backend_id)
+
     with {:ok, user} <- Admin.create_user(backend, create_params) do
       render(conn, "show.json", user: user)
     end
+  end
+
+  def create(conn, %{"backend_id" => backend_id, "file" => file_params} = import_params) do
+    backend = IdentityProviders.get_backend!(backend_id)
+
+    import_users_opts =
+      (import_params["options"] || %{})
+      |> Enum.map(fn
+        {"username_header" = k, v} -> {String.to_atom(k), v}
+        {"password_header" = k, v} -> {String.to_atom(k), v}
+        {"hash_password" = k, "true"} -> {String.to_atom(k), true}
+        {"hash_password" = k, "false"} -> {String.to_atom(k), false}
+        {_k, _v} -> nil
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.into(%{})
+
+    result = Admin.import_users(backend, file_params.path, import_users_opts)
+
+    render(conn, "import_result.json", import_result: result)
   end
 
   def create(_conn, _params), do: {:error, :bad_request}

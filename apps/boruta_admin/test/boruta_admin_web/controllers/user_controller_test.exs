@@ -6,6 +6,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Repo
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -153,6 +154,154 @@ defmodule BorutaAdminWeb.UserControllerTest do
         })
 
       assert %{"id" => _id, "email" => ^email} = json_response(conn, 200)["data"]
+    end
+  end
+
+  describe "import users" do
+    @tag authorized: ["users:manage:all"]
+    test "renders bad request", %{
+      conn: conn
+    } do
+      conn = post(conn, Routes.admin_user_path(conn, :create), %{})
+
+      assert json_response(conn, 400)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "renders an error when data is invalid", %{
+      conn: conn
+    } do
+      email = unique_user_email()
+
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "backend_id" => insert(:backend).id,
+          "user" => %{
+            "email" => email
+          }
+        })
+
+      assert json_response(conn, 422) == %{
+               "code" => "UNPROCESSABLE_ENTITY",
+               "errors" => %{"password" => ["can't be blank"]},
+               "message" => "Your request could not be processed."
+             }
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "renders import result when data is valid", %{
+      conn: conn
+    } do
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "backend_id" => insert(:backend).id,
+          "file" => %Plug.Upload{
+            path: Path.join(__DIR__, "./../../data/import_users_password_valid.csv"),
+            filename: "users.csv"
+          },
+          "options" => %{
+            "hash_password" => "true"
+          }
+        })
+
+      assert json_response(conn, 200) == %{
+               "error_count" => 0,
+               "errors" => [],
+               "success_count" => 2
+             }
+
+      assert Repo.all(Internal.User) |> Enum.count() == 2
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "renders import result when data is valid with custom headers", %{
+      conn: conn
+    } do
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "backend_id" => insert(:backend).id,
+          "file" => %Plug.Upload{
+            path:
+              Path.join(__DIR__, "./../../data/import_users_password_custom_headers_valid.csv"),
+            filename: "users.csv"
+          },
+          "options" => %{
+            "hash_password" => "true",
+            "username_header" => "username_header",
+            "password_header" => "password_header"
+          }
+        })
+
+      assert json_response(conn, 200) == %{
+               "error_count" => 0,
+               "errors" => [],
+               "success_count" => 2
+             }
+
+      assert Repo.all(Internal.User) |> Enum.count() == 2
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "renders import result users when data is invalid", %{
+      conn: conn
+    } do
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "backend_id" => insert(:backend).id,
+          "file" => %Plug.Upload{
+            path: Path.join(__DIR__, "./../../data/import_users_password_invalid.csv"),
+            filename: "users.csv"
+          },
+          "options" => %{
+            "hash_password" => "true"
+          }
+        })
+
+      assert json_response(conn, 200) == %{
+               "error_count" => 3,
+               "errors" => [
+                 %{
+                   "changeset" => %{"password" => ["should be at least 12 character(s)"]},
+                   "line" => 1
+                 },
+                 %{
+                   "changeset" => %{
+                     "email" => ["can't be blank"],
+                     "password" => ["should be at least 12 character(s)"]
+                   },
+                   "line" => 2
+                 },
+                 %{"changeset" => %{"email" => ["can't be blank"]}, "line" => 3}
+               ],
+               "success_count" => 1
+             }
+
+      assert Repo.all(Internal.User) |> Enum.count() == 1
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "renders import result users when data is valid with hashed password", %{
+      conn: conn
+    } do
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "backend_id" => insert(:backend).id,
+          "file" => %Plug.Upload{
+            path: Path.join(__DIR__, "./../../data/import_users_hashed_password_valid.csv"),
+            filename: "users.csv"
+          },
+          "options" => %{
+            "hash_password" => "false"
+          }
+        })
+
+      assert json_response(conn, 200) == %{
+               "error_count" => 0,
+               "errors" => [],
+               "success_count" => 2
+             }
+
+      assert Repo.all(Internal.User) |> Enum.count() == 2
     end
   end
 

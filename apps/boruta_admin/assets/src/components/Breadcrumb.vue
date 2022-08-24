@@ -36,6 +36,7 @@ const labels = {
   'edit-backend': ({ params }) => params.backendId,
   'users': 'Users',
   'new-user': 'Create',
+  'user-import': 'Import',
   'edit-user': ({ params }) => params.userId,
   'clients': 'Clients',
   'new-client': 'Create',

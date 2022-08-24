@@ -54,7 +54,6 @@ export default {
     })
     Backend.all().then((backends) => {
       this.backends = backends
-      console.log(this.backends)
     })
   },
   methods: {

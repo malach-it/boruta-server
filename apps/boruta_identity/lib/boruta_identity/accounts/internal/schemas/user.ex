@@ -54,6 +54,14 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     |> validate_password(opts)
   end
 
+  def raw_registration_changeset(user, attrs, %{backend: backend}) do
+    user
+    |> cast(attrs, [:email, :hashed_password])
+    |> validate_required([:email, :hashed_password])
+    |> change(backend_id: backend.id)
+    |> validate_email()
+  end
+
   defp validate_email(changeset) do
     changeset
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")

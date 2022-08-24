@@ -150,6 +150,22 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Admin
+  def create_raw_user(backend, params) do
+    with {:ok, user} <-
+           Internal.User.raw_registration_changeset(
+             %Internal.User{},
+             %{
+               email: params[:username],
+               hashed_password: params[:hashed_password]
+             },
+             %{backend: backend}
+           )
+           |> Repo.insert() do
+      {:ok, domain_user!(user, backend)}
+    end
+  end
+
+  @impl BorutaIdentity.Admin
   def delete_user(user_id) do
     case Repo.delete_all(from(u in Internal.User, where: u.id == ^user_id)) do
       {1, nil} -> :ok

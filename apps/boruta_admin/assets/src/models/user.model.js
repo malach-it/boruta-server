@@ -125,6 +125,24 @@ User.all = function ({ pageNumber }) {
   })
 }
 
+User.upload = function ({ backendId, file, options }) {
+  const formData = new FormData()
+  formData.append("backend_id", backendId)
+  formData.append("file", file)
+  if (options.usernameHeader && options.usernameHeader !== '')
+    formData.append("options[username_header]", options.usernameHeader)
+  if (options.passwordHeader && options.passwordHeader !== '')
+    formData.append("options[password_header]", options.passwordHeader)
+  if (options.hashPassword && options.hashPassword !== '')
+    formData.append("options[hash_password]", options.hashPassword)
+
+  return this.api().post('/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }).then(({ data }) => data)
+}
+
 User.get = function (id) {
   return this.api().get(`/${id}`).then(({ data }) => {
     return new User(data.data)
