@@ -140,7 +140,13 @@ User.upload = function ({ backendId, file, options }) {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
-  }).then(({ data }) => data)
+  })
+    .then(({ data }) => data)
+    .catch((error) => {
+      const { errors } = error.response.data
+      this.errors = errors
+      throw errors
+    })
 }
 
 User.get = function (id) {

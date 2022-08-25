@@ -79,9 +79,8 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     |> maybe_hash_password(opts)
   end
 
-  defp maybe_hash_password(changeset, opts) do
+  defp maybe_hash_password(changeset, %{backend: backend} = opts) do
     hash_password? = Map.get(opts, :hash_password, true)
-    backend = Map.get(opts, :backend)
     password = get_change(changeset, :password)
 
     if hash_password? && password && changeset.valid? do
@@ -99,7 +98,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     end
   end
 
-  def update_changeset(user, attrs, opts \\ %{}) do
+  def update_changeset(user, attrs, opts) do
     user
     |> cast(attrs, [:email, :password])
     |> validate_email()
@@ -118,7 +117,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
   """
-  def password_changeset(user, attrs, opts \\ %{}) do
+  def password_changeset(user, attrs, opts) do
     user
     |> cast(attrs, [:password])
     |> validate_confirmation(:password, message: "does not match password")

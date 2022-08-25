@@ -2,6 +2,7 @@
   <div class="user-import">
     <div class="container">
       <div class="ui segment">
+        <FormErrors :errors="importErrors" v-if="importErrors" />
         <form class="ui form" @submit.prevent="upload()">
           <div class="field">
             <label>Backend</label>
@@ -71,9 +72,13 @@
 import User from '../../models/user.model'
 import Backend from '../../models/backend.model'
 import Toaster from '../../components/Toaster.vue'
+import FormErrors from '../../components/Forms/FormErrors.vue'
 
 export default {
   name: 'user-import',
+  components: {
+    FormErrors
+  },
   data () {
     return {
       file: null,
@@ -81,7 +86,8 @@ export default {
       backends: [],
       backendId: null,
       pending: false,
-      importResult: null
+      importResult: null,
+      importErrors: null
     }
   },
   mounted () {
@@ -100,12 +106,10 @@ export default {
       User.upload({ backendId, file, options }).then(result => {
         this.pending = false
         this.importResult = result
-      }).catch(() => this.pending = false)
-    }
-  },
-  watch: {
-    file (file) {
-      console.log(file)
+      }).catch((errors) => {
+        this.pending = false
+        this.importErrors = errors
+      })
     }
   }
 }

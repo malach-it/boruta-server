@@ -220,7 +220,6 @@ export default {
       right: 0;
       margin: 0 1rem;
       margin-bottom: 1rem;
-
     }
   }
   .main.buttons {
@@ -230,6 +229,12 @@ export default {
     .create.button {
       position: relative;
       top: 0;
+    }
+    @media screen and (max-width: 1127px) {
+      position: relative;
+      display: block;
+      top: 0;
+      right: 0;
     }
   }
   a {

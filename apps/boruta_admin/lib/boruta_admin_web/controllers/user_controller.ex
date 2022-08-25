@@ -47,6 +47,10 @@ defmodule BorutaAdminWeb.UserController do
     with {:ok, user} <- Admin.create_user(backend, create_params) do
       render(conn, "show.json", user: user)
     end
+  rescue
+    _e in Ecto.NoResultsError ->
+      {:error,
+       Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:backend, "does not exist")}
   end
 
   def create(conn, %{"backend_id" => backend_id, "file" => file_params} = import_params) do
@@ -68,6 +72,10 @@ defmodule BorutaAdminWeb.UserController do
     result = Admin.import_users(backend, file_params.path, import_users_opts)
 
     render(conn, "import_result.json", import_result: result)
+  rescue
+    _e in Ecto.NoResultsError ->
+      {:error,
+       Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:backend, "does not exist")}
   end
 
   def create(_conn, _params), do: {:error, :bad_request}
