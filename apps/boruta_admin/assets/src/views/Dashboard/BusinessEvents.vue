@@ -307,6 +307,9 @@ function stringToColor(str) {
 <style scoped lang="scss">
 .dashboard {
   position: relative;
+  .dates.form {
+    margin-bottom: 1em;
+  }
   .logs.segment {
     overflow: hidden;
     overflow-x: scroll;
