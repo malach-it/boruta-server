@@ -69,66 +69,6 @@
             name: libcluster-role
             apiGroup: rbac.authorization.k8s.io
 
-    - name: Create OAuth Service
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: boruta-oauth
-            namespace: boruta-staging
-            labels:
-              app: boruta
-          spec:
-            selector:
-              app: boruta
-            ports:
-            - protocol: TCP
-              targetPort: 4001
-              name: admin-tcp
-              port: 4001
-
-    - name: Create Admin Service
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: boruta-admin
-            namespace: boruta-staging
-            labels:
-              app: boruta
-          spec:
-            selector:
-              app: boruta
-            ports:
-            - protocol: TCP
-              targetPort: 4002
-              name: admin-tcp
-              port: 4002
-
-    - name: Create Gateway Service
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: boruta-gateway
-            namespace: boruta-staging
-            labels:
-              app: boruta
-          spec:
-            selector:
-              app: boruta
-            ports:
-            - protocol: TCP
-              targetPort: 4000
-              name: admin-tcp
-              port: 4000
-
     - name: Create SSL let's encrypt certificate
       kubernetes.core.k8s:
         state: present
@@ -320,14 +260,22 @@
               requests:
                 storage: 1Gi
 
-    - name: Create Boruta deployment
+    - name: Get blue/green deployment status
+      kubernetes.core.k8s_info:
+        kind: Service
+        namespace: boruta-staging
+        label_selectors:
+          - "app=boruta"
+      register: boruta_services
+
+    - name: Create Boruta blue/green deployment
       kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: apps/v1
           kind: Deployment
           metadata:
-            name: boruta
+            name: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
             namespace: boruta-staging
           spec:
             replicas: 2
@@ -336,12 +284,12 @@
               rollingUpdate: null
             selector:
               matchLabels:
-                app: boruta
+                app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
             template:
               metadata:
                 name: boruta
                 labels:
-                  app: boruta
+                  app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
               spec:
                 volumes:
                   - name: logs
@@ -363,3 +311,80 @@
                         name: logs
                 imagePullSecrets:
                 - name: regcred
+
+    - name: Wait for deployment readyness
+      shell: "kubectl -n boruta-staging wait --for=condition=Ready po --all -l app={{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+      retries: 6
+      delay: 5
+      register: result
+      until: result.rc == 0
+
+    - name: Create OAuth Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: boruta-oauth
+            namespace: boruta-staging
+            labels:
+              app: boruta
+          spec:
+            selector:
+              app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+            ports:
+            - protocol: TCP
+              targetPort: 4001
+              name: oauth-tcp
+              port: 4001
+
+    - name: Create Admin Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: boruta-admin
+            namespace: boruta-staging
+            labels:
+              app: boruta
+          spec:
+            selector:
+              app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+            ports:
+            - protocol: TCP
+              targetPort: 4002
+              name: admin-tcp
+              port: 4002
+
+    - name: Create Gateway Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: boruta-gateway
+            namespace: boruta-staging
+            labels:
+              app: boruta
+          spec:
+            selector:
+              app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+            ports:
+            - protocol: TCP
+              targetPort: 4000
+              name: gateway-tcp
+              port: 4000
+
+    - name: Delete Boruta blue/green deployment
+      kubernetes.core.k8s:
+        state: absent
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ 'boruta-blue' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-green' }}"
+            namespace: boruta-staging
