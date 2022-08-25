@@ -57,6 +57,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @type reset_password_url_fun :: (token :: String.t() -> reset_password_url :: String.t())
@@ -77,7 +78,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
             ) ::
               :ok | {:error, reason :: String.t()}
 
-  @callback reset_password_changeset(token :: String.t()) ::
+  @callback reset_password_changeset(backend :: Backend.t(), token :: String.t()) ::
               {:ok, changeset :: Ecto.Changeset.t()} | {:error, reason :: String.t()}
 
   @callback reset_password(
@@ -137,7 +138,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                    ) do
     client_impl = IdentityProvider.implementation(client_idp)
 
-    case apply(client_impl, :reset_password_changeset, [token]) do
+    case apply(client_impl, :reset_password_changeset, [client_idp.backend, token]) do
       {:ok, _changeset} ->
         module.password_reset_initialized(
           context,

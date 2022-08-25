@@ -92,10 +92,10 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.ResetPasswords
-  def reset_password_changeset(token) do
+  def reset_password_changeset(_backend, token) do
     with {:ok, user} <-
            get_user_by_reset_password_token(token) do
-      {:ok, Internal.User.password_changeset(user, %{})}
+      {:ok, Ecto.Changeset.change(user)}
     end
   end
 
