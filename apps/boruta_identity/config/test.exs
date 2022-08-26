@@ -16,7 +16,7 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
   http: [port: 4002],
   server: false
 
-config :boruta_identity, BorutaIdentity.Mailer,
+config :boruta_identity, BorutaIdentity.SMTP,
   adapter: Swoosh.Adapters.Test
 
 config :logger, level: :warn

@@ -73,6 +73,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
         }
 
   @callback send_reset_password_instructions(
+              backend :: Backend.t(),
               user :: User.t(),
               reset_password_url_fun :: reset_password_url_fun()
             ) ::
@@ -117,7 +118,11 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
 
     with %User{} = user <-
            Users.get_user_by_email(client_idp.backend, reset_password_instructions_params[:email]) do
-      apply(client_impl, :send_reset_password_instructions, [user, reset_password_url_fun])
+      apply(client_impl, :send_reset_password_instructions, [
+        client_idp.backend,
+        user,
+        reset_password_url_fun
+      ])
     end
 
     # NOTE return a success either reset passowrd instructions email sent or not

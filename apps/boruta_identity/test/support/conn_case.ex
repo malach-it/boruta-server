@@ -94,7 +94,8 @@ defmodule BorutaIdentityWeb.ConnCase do
         registrable: true,
         consentable: true,
         confirmable: true,
-        user_editable: true
+        user_editable: true,
+        backend: BorutaIdentity.Factory.build(:smtp_backend)
       )
 
     client = Boruta.Factory.insert(:client)
@@ -109,9 +110,9 @@ defmodule BorutaIdentityWeb.ConnCase do
     {:ok, jwt, _payload} =
       Joken.encode_and_sign(
         %{
-          client_id: client_identity_provider.client_id,
-          scope: scope.name,
-          user_return_to: "/user_return_to"
+          "client_id" => client_identity_provider.client_id,
+          "scope" => scope.name,
+          "user_return_to" => "/user_return_to"
         },
         BorutaIdentityWeb.Token.application_signer()
       )

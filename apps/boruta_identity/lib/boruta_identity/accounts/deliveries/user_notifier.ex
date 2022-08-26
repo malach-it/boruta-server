@@ -1,21 +1,40 @@
 defmodule BorutaIdentity.Accounts.UserNotifier do
-  # TODO replace from attribute in all mails
   @moduledoc false
 
   require Logger
 
   import Swoosh.Email
 
-  alias BorutaIdentity.Mailer
+  alias BorutaIdentity.IdentityProviders.Backend
+
+  def smtp_adapter do
+    Application.get_env(:boruta_identity, BorutaIdentity.SMTP)[:adapter]
+  end
 
   # TODO hide Swoosh from the rest of the world
-  @spec deliver(email :: %Swoosh.Email{}) ::
+  @spec deliver(email :: %Swoosh.Email{}, backend :: Backend.t()) ::
           {:ok, email :: %Swoosh.Email{}} | {:error, reason :: String.t()}
-  def deliver(email) do
-    case Mailer.deliver(email) do
-      {:ok, _} ->
-        {:ok, email}
+  def deliver(email, backend) do
+    config = [
+      relay: backend.smtp_relay,
+      username: backend.smtp_username,
+      password: backend.smtp_password,
+      ssl: false,
+      tls: backend.smtp_tls,
+      auth: :always,
+      port: backend.smtp_port,
+      # dkim: [
+      #   s: "default", d: "domain.com",
+      #   private_key: {:pem_plain, File.read!("priv/keys/domain.private")}
+      # ],
+      retries: 2,
+      no_mx_lookups: false
+    ]
 
+    with :ok <- smtp_adapter().validate_config(config),
+         {:ok, _} <- smtp_adapter().deliver(email, config) do
+      {:ok, email}
+    else
       {:error, {_status, %{"Errors" => errors}}} ->
         reason =
           errors
@@ -26,6 +45,9 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
       {:error, reason} ->
         {:error, inspect(reason)}
     end
+  rescue
+    _error ->
+      {:error, "Bad SMTP configuration."}
   end
 
   @doc """
@@ -48,10 +70,13 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     """
 
     new()
+    |> from(user.backend.smtp_from)
     |> to(user.username)
-    |> from("io.pascal.knoth@gmail.com")
     |> subject("Confirm your account.")
     |> text_body(body)
+  rescue
+    _error ->
+      {:error, "Bad SMTP configuration."}
   end
 
   @doc """
@@ -74,32 +99,12 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     """
 
     new()
+    |> from(user.backend.smtp_from)
     |> to(user.username)
-    |> from("io.pascal.knoth@gmail.com")
     |> subject("Reset your password.")
     |> text_body(body)
-  end
-
-  @doc """
-  Deliver instructions to update a user email.
-  """
-  def deliver_update_email_instructions(user, url) do
-    body = """
-
-    ==============================
-
-    Hi #{user.username},
-
-    You can change your email by visiting the URL below:
-
-    #{url}
-
-    If you didn't request this change, please ignore this.
-
-    ==============================
-    """
-
-    Logger.debug(body)
-    {:ok, %{to: user.username, body: body}}
+  rescue
+    _error ->
+      {:error, "Bad SMTP configuration."}
   end
 end

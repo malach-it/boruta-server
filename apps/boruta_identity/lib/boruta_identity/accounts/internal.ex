@@ -81,9 +81,10 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.ResetPasswords
-  def send_reset_password_instructions(user, reset_password_url_fun) do
+  def send_reset_password_instructions(backend, user, reset_password_url_fun) do
     with {:ok, _email} <-
            Deliveries.deliver_user_reset_password_instructions(
+             backend,
              user,
              reset_password_url_fun
            ) do

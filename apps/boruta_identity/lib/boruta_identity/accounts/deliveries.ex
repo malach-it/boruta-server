@@ -4,31 +4,10 @@ defmodule BorutaIdentity.Accounts.Deliveries do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserNotifier
   alias BorutaIdentity.Accounts.UserToken
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
 
   @type callback_function :: (token :: String.t() -> String.t())
-
-  @doc """
-  Delivers the update email instructions to the given user.
-
-  ## Examples
-
-      iex> deliver_update_email_instructions(user, current_email, &Routes.user_update_email_url(conn, :edit, &1))
-      {:ok, %{to: ..., body: ...}}
-
-  """
-  @spec deliver_update_email_instructions(
-          user :: User.t(),
-          current_email :: String.t(),
-          update_email_url_fun :: callback_function()
-        ) :: any()
-  def deliver_update_email_instructions(%User{} = user, current_email, update_email_url_fun)
-      when is_function(update_email_url_fun, 1) do
-    {encoded_token, user_token} = UserToken.build_email_token(user, "change:#{current_email}")
-
-    Repo.insert!(user_token)
-    UserNotifier.deliver_update_email_instructions(user, update_email_url_fun.(encoded_token))
-  end
 
   @doc """
   Delivers the confirmation email instructions to the given user.
@@ -43,10 +22,13 @@ defmodule BorutaIdentity.Accounts.Deliveries do
 
   """
   @spec deliver_user_confirmation_instructions(
+          backend :: Backend.t(),
           user :: User.t(),
           confirmation_url_fun :: callback_function()
-        ) :: {:ok, confirmation_token :: String.t()} | {:error, reason :: String.t() | Ecto.Changeset.t()}
-  def deliver_user_confirmation_instructions(%User{} = user, confirmation_url_fun)
+        ) ::
+          {:ok, confirmation_token :: String.t()}
+          | {:error, reason :: String.t() | Ecto.Changeset.t()}
+  def deliver_user_confirmation_instructions(backend, %User{} = user, confirmation_url_fun)
       when is_function(confirmation_url_fun, 1) do
     if user.confirmed_at do
       {:error, "User is already confirmed."}
@@ -58,7 +40,8 @@ defmodule BorutaIdentity.Accounts.Deliveries do
              UserNotifier.deliver_confirmation_instructions(
                user,
                confirmation_url_fun.(encoded_token)
-             ) |> UserNotifier.deliver() do
+             )
+             |> UserNotifier.deliver(backend) do
         {:ok, encoded_token}
       end
     end
@@ -74,10 +57,11 @@ defmodule BorutaIdentity.Accounts.Deliveries do
 
   """
   @spec deliver_user_reset_password_instructions(
+          backend :: Backend.t(),
           user :: User.t(),
           reset_password_url_fun :: callback_function()
         ) :: {:ok, %UserToken{}} | {:error, reason :: any()}
-  def deliver_user_reset_password_instructions(%User{} = user, reset_password_url_fun)
+  def deliver_user_reset_password_instructions(backend, %User{} = user, reset_password_url_fun)
       when is_function(reset_password_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
 
@@ -87,7 +71,7 @@ defmodule BorutaIdentity.Accounts.Deliveries do
              user,
              reset_password_url_fun.(encoded_token)
            )
-           |> UserNotifier.deliver() do
+           |> UserNotifier.deliver(backend) do
       {:ok, encoded_token}
     end
   end

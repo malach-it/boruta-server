@@ -25,10 +25,8 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
     ]
   ]
 
-config :boruta_identity, BorutaIdentity.Mailer,
-  adapter: Swoosh.Adapters.Mailjet,
-  secret: System.get_env("MAILJET_SECRET"),
-  api_key: System.get_env("MAILJET_API_KEY")
+config :boruta_identity, BorutaIdentity.SMTP,
+  adapter: Swoosh.Adapters.SMTP
 
 config :logger, :console, format: "[$level] $message\n"
 

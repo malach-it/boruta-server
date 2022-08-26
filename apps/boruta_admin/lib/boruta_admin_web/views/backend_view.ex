@@ -17,7 +17,13 @@ defmodule BorutaAdminWeb.BackendView do
       type: backend.type,
       is_default: backend.is_default,
       password_hashing_alg: backend.password_hashing_alg,
-      password_hashing_opts: backend.password_hashing_opts
+      password_hashing_opts: backend.password_hashing_opts,
+      smtp_from: backend.smtp_from,
+      smtp_relay: backend.smtp_relay,
+      smtp_username: backend.smtp_username,
+      smtp_password: backend.smtp_password,
+      smtp_tls: backend.smtp_tls,
+      smtp_port: backend.smtp_port
     }
   end
 end

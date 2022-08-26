@@ -86,7 +86,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
 
     with {:ok, user} <-
            apply(client_impl, :register, [client_idp.backend, registration_params]),
-         :ok <- maybe_deliver_confirmation_email(user, confirmation_url_fun, client_idp),
+         :ok <- maybe_deliver_confirmation_email(client_idp.backend, user, confirmation_url_fun, client_idp),
          {:ok, user, session_token} <- maybe_create_session(user, client_idp) do
       module.user_registered(context, user, session_token)
     else
@@ -106,17 +106,18 @@ defmodule BorutaIdentity.Accounts.Registrations do
     end
   end
 
-  defp maybe_deliver_confirmation_email(_user, _confirmation_url_fun, %IdentityProvider{
+  defp maybe_deliver_confirmation_email(_backend, _user, _confirmation_url_fun, %IdentityProvider{
          confirmable: false
        }) do
     :ok
   end
 
-  defp maybe_deliver_confirmation_email(user, confirmation_url_fun, %IdentityProvider{
+  defp maybe_deliver_confirmation_email(backend, user, confirmation_url_fun, %IdentityProvider{
          confirmable: true
        }) do
     with {:ok, _confirmation_token} <-
            Deliveries.deliver_user_confirmation_instructions(
+             backend,
              user,
              confirmation_url_fun
            ) do

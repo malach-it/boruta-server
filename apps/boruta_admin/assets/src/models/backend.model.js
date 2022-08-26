@@ -18,7 +18,13 @@ const assign = {
   type: function ({ type }) { this.type = type },
   is_default: function ({ is_default }) { this.is_default = is_default },
   password_hashing_alg: function ({ password_hashing_alg }) { this.password_hashing_alg = password_hashing_alg },
-  password_hashing_opts: function ({ password_hashing_opts }) { this.password_hashing_opts = password_hashing_opts }
+  password_hashing_opts: function ({ password_hashing_opts }) { this.password_hashing_opts = password_hashing_opts },
+  smtp_from: function ({ smtp_from }) { this.smtp_from = smtp_from },
+  smtp_relay: function ({ smtp_relay }) { this.smtp_relay = smtp_relay },
+  smtp_username: function ({ smtp_username }) { this.smtp_username = smtp_username },
+  smtp_password: function ({ smtp_password }) { this.smtp_password = smtp_password },
+  smtp_tls: function ({ smtp_tls }) { this.smtp_tls = smtp_tls },
+  smtp_port: function ({ smtp_port }) { this.smtp_port = smtp_port }
 }
 
 class Backend {
@@ -73,7 +79,20 @@ class Backend {
   }
 
   get serialized () {
-    const { id, name, type, is_default, password_hashing_alg, password_hashing_opts } = this
+    const {
+      id,
+      name,
+      type,
+      is_default,
+      password_hashing_alg,
+      password_hashing_opts,
+      smtp_from,
+      smtp_relay,
+      smtp_username,
+      smtp_password,
+      smtp_tls,
+      smtp_port
+    } = this
     const formattedPasswordHashingOpts = {}
     Object.keys(password_hashing_opts).forEach(key => {
       const value = password_hashing_opts[key]
@@ -88,7 +107,13 @@ class Backend {
       type,
       is_default,
       password_hashing_alg,
-      password_hashing_opts: formattedPasswordHashingOpts
+      password_hashing_opts: formattedPasswordHashingOpts,
+      smtp_from,
+      smtp_relay,
+      smtp_username,
+      smtp_password,
+      smtp_tls,
+      smtp_port
     }
   }
 

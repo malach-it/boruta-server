@@ -59,6 +59,18 @@ defmodule BorutaIdentity.Factory do
     }
   end
 
+  def smtp_backend_factory do
+    %Backend{
+      name: "backend name",
+      type: "Elixir.BorutaIdentity.Accounts.Internal",
+      smtp_from: "from@test.factory",
+      smtp_relay: "test.smtp.factory",
+      smtp_username: "factory_smtp_username",
+      smtp_password: "factory_smtp_password",
+      smtp_port: 25
+    }
+  end
+
   def template_factory do
     %Template{
       type: "template_type",

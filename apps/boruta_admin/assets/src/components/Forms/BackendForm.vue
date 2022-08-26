@@ -3,6 +3,7 @@
     <div class="ui segment">
       <FormErrors :errors="backend.errors" v-if="backend.errors" />
       <form class="ui form" @submit.prevent="submit">
+        <h2>General configuration</h2>
         <div class="field" :class="{ 'error': backend.errors?.type }">
           <label>Type</label>
           <select v-model="backend.type">
@@ -34,6 +35,38 @@
           <label>{{ opt.label }}</label>
           <input :type="opt.type" v-model="backend.password_hashing_opts[opt.name]" :placeholder="opt.default">
         </div>
+        <h2>Email configuration</h2>
+        <div class="field" :class="{ 'error': backend.errors?.smtp_from }">
+          <label>From</label>
+          <input type="email" v-model="backend.smtp_from" placeholder="from@mail.example">
+        </div>
+        <div class="field" :class="{ 'error': backend.errors?.smtp_relay }">
+          <label>Relay</label>
+          <input type="text" v-model="backend.smtp_relay" placeholder="smtp.example.com">
+        </div>
+        <div class="field" :class="{ 'error': backend.errors?.smtp_username }">
+          <label>Username</label>
+          <input type="text" v-model="backend.smtp_username" placeholder="username">
+        </div>
+        <div class="field" :class="{ 'error': backend.errors?.smtp_password }">
+          <label>Password</label>
+          <div class="ui left icon input">
+            <input :type="passwordVisible ? 'text' : 'password'" autocomplete="new-password" v-model="backend.smtp_password" />
+            <i class="eye icon" :class="{ 'slash': passwordVisible }" @click="passwordVisibilityToggle()"></i>
+          </div>
+        </div>
+        <div class="field" :class="{ 'error': backend.errors?.smtp_tls }">
+          <label>TLS</label>
+          <select v-model="backend.smtp_tls">
+            <option value="always">Always</option>
+            <option value="never">Never</option>
+            <option value="if_available">If available</option>
+          </select>
+        </div>
+        <div class="field" :class="{ 'error': backend.errors?.smtp_port }">
+          <label>Port</label>
+          <input type="number" v-model="backend.smtp_port" placeholder="smtp.example.com">
+        </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a v-on:click="back()" class="ui button">Back</a>
@@ -55,6 +88,7 @@ export default {
   data () {
     return {
       passwordHashingAlgorithms: Backend.passwordHashingAlgorithms,
+      passwordVisible: false
     }
   },
   computed: {
@@ -68,6 +102,9 @@ export default {
       if (this.backend.isPersisted) {
         alert('Changing the password hashing algorithm may invalidate already saved passwords. Use this feature with care.')
       }
+    },
+    passwordVisibilityToggle () {
+      this.passwordVisible = !this.passwordVisible
     },
     back () {
       this.$emit('back')

@@ -58,7 +58,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       reset_password_url_fun = fn _ -> "http://test.host" end
 
       {:ok, token} =
-        Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+        Deliveries.deliver_user_reset_password_instructions(user.backend, user, reset_password_url_fun)
 
       {:ok, token: token}
     end
@@ -80,7 +80,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
       reset_password_url_fun = fn _ -> "http://test.host" end
 
       {:ok, token} =
-        Deliveries.deliver_user_reset_password_instructions(user, reset_password_url_fun)
+        Deliveries.deliver_user_reset_password_instructions(user.backend, user, reset_password_url_fun)
 
       {:ok, token: token}
     end

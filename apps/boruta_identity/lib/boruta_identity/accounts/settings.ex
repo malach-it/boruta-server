@@ -118,6 +118,7 @@ defmodule BorutaIdentity.Accounts.Settings do
          {:ok, user} <- maybe_unconfirm_user(old_user, user, client_idp),
          :ok <-
            maybe_deliver_email_confirmation_instructions(
+             client_idp.backend,
              old_user,
              user,
              confirmation_url_fun,
@@ -152,6 +153,7 @@ defmodule BorutaIdentity.Accounts.Settings do
   end
 
   defp maybe_deliver_email_confirmation_instructions(
+         _backend,
          _old_user,
          _user,
          _confirmation_url_fun,
@@ -161,6 +163,7 @@ defmodule BorutaIdentity.Accounts.Settings do
   end
 
   defp maybe_deliver_email_confirmation_instructions(
+         backend,
          old_user,
          user,
          confirmation_url_fun,
@@ -170,6 +173,7 @@ defmodule BorutaIdentity.Accounts.Settings do
       true ->
         with {:ok, _confirmation_token} <-
                Deliveries.deliver_user_confirmation_instructions(
+                 backend,
                  user,
                  confirmation_url_fun
                ) do

@@ -8,11 +8,26 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
   @type t :: %__MODULE__{
           type: String.t(),
-          name: String.t()
+          name: String.t(),
+          is_default: boolean(),
+          password_hashing_alg: String.t(),
+          password_hashing_opts: map(),
+          smtp_from: String.t() | nil,
+          smtp_relay: String.t() | nil,
+          smtp_username: String.t() | nil,
+          smtp_password: String.t() | nil,
+          smtp_tls: String.t() | nil,
+          smtp_port: integer() | nil
         }
 
   @backend_types [
     BorutaIdentity.Accounts.Internal
+  ]
+
+  @smtp_tls_types [
+    :always,
+    :never,
+    :if_available
   ]
 
   @password_hashing_modules %{
@@ -65,6 +80,12 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     field(:name, :string)
     field(:password_hashing_alg, :string, default: "argon2")
     field(:password_hashing_opts, :map, default: %{})
+    field(:smtp_from, :string)
+    field(:smtp_relay, :string)
+    field(:smtp_username, :string)
+    field(:smtp_password, :string)
+    field(:smtp_tls, :string)
+    field(:smtp_port, :integer)
 
     timestamps()
   end
@@ -96,9 +117,22 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @doc false
   def changeset(backend, attrs) do
     backend
-    |> cast(attrs, [:type, :name, :is_default, :password_hashing_alg, :password_hashing_opts])
+    |> cast(attrs, [
+      :type,
+      :name,
+      :is_default,
+      :password_hashing_alg,
+      :password_hashing_opts,
+      :smtp_from,
+      :smtp_relay,
+      :smtp_username,
+      :smtp_password,
+      :smtp_tls,
+      :smtp_port
+    ])
     |> validate_required([:name, :password_hashing_alg])
     |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
+    |> validate_inclusion(:smtp_tls, Enum.map(@smtp_tls_types, &Atom.to_string/1))
     |> validate_inclusion(:password_hashing_alg, Map.keys(@password_hashing_modules))
     |> foreign_key_constraint(:identity_provider, name: :identity_providers_backend_id_fkey)
     |> set_default()

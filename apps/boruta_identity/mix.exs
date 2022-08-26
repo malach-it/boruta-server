@@ -45,6 +45,7 @@ defmodule BorutaIdentity.MixProject do
       {:ex_json_schema, "~> 0.9"},
       {:ex_machina, "~> 2.4", only: :test},
       {:finch, "~> 0.8"},
+      {:gen_smtp, "~> 1.1"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},

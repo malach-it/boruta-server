@@ -89,7 +89,7 @@ defmodule BorutaIdentity.Accounts.Confirmations do
              client_idp.backend,
              confirmation_instructions_params[:email]
            ) do
-      Deliveries.deliver_user_confirmation_instructions(user, confirmation_url_fun)
+      Deliveries.deliver_user_confirmation_instructions(client_idp.backend, user, confirmation_url_fun)
     end
 
     # NOTE return a success either confirmation instructions email sent or not
