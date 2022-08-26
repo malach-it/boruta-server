@@ -62,7 +62,10 @@ defmodule BorutaAdminWeb.ClientController do
     end
   end
 
-  defp update_client(client, %{"identity_provider" => %{"id" => identity_provider_id}} = client_params) do
+  defp update_client(
+         client,
+         %{"identity_provider" => %{"id" => identity_provider_id}} = client_params
+       ) do
     BorutaWeb.Repo.transaction(fn ->
       with {:ok, client} <- Admin.update_client(client, client_params),
            {:ok, _client_identity_provider} <-
@@ -83,12 +86,15 @@ defmodule BorutaAdminWeb.ClientController do
   end
 
   def delete(conn, %{"id" => client_id}) do
-    client = get_client(client_id)
-
     with :ok <- ensure_open_for_edition(client_id),
-         {:ok, %Client{}} <- Admin.delete_client(client),
-         {:ok, _client_identity_provider} <- IdentityProviders.remove_client_identity_provider(client_id) do
+         {:ok, _result} <- delete_client_multi(client_id) do
       send_resp(conn, :no_content, "")
+    else
+      {:error, :protected_resource} ->
+        {:error, :protected_resource}
+
+      {:error, _failed_operation, changeset, _changes} ->
+        {:error, changeset}
     end
   end
 
@@ -104,5 +110,17 @@ defmodule BorutaAdminWeb.ClientController do
       ^admin_ui_client_id -> {:error, :protected_resource}
       _ -> :ok
     end
+  end
+
+  defp delete_client_multi(client_id) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:delete_client, fn _repo, _changes ->
+      client = get_client(client_id)
+      Admin.delete_client(client)
+    end)
+    |> Ecto.Multi.run(:delete_client_identity_provider_association, fn _repo, _changes ->
+      IdentityProviders.remove_client_identity_provider(client_id)
+    end)
+    |> BorutaAuth.Repo.transaction()
   end
 end

@@ -156,6 +156,13 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
+    test "returns an error when client does not exist", %{conn: conn} do
+      assert_error_sent(404, fn ->
+        delete(conn, Routes.admin_client_path(conn, :delete, SecureRandom.uuid()))
+      end)
+    end
+
+    @tag authorized: ["clients:manage:all"]
     test "deletes chosen client", %{conn: conn, client: client} do
       conn = delete(conn, Routes.admin_client_path(conn, :delete, client))
       assert response(conn, 204)
