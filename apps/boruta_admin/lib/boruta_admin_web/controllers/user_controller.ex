@@ -15,7 +15,10 @@ defmodule BorutaAdminWeb.UserController do
   action_fallback(BorutaAdminWeb.FallbackController)
 
   def index(conn, params) do
-    users = Admin.list_users(params)
+    users = case params["q"] do
+      nil -> Admin.list_users(params)
+      query -> Admin.search_users(query, params)
+    end
 
     render(conn, "index.json",
       users: users.entries,

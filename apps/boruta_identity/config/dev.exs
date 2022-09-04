@@ -6,7 +6,8 @@ config :boruta_identity, BorutaIdentity.Repo,
   database: "boruta_dev",
   hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
-  pool_size: 5
+  pool_size: 5,
+  after_connect: {BorutaIdentity.Repo, :set_limit, []}
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   http: [port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer(), path: "/accounts"],

@@ -35,7 +35,7 @@
           <label>{{ opt.label }}</label>
           <input :type="opt.type" v-model="backend.password_hashing_opts[opt.name]" :placeholder="opt.default">
         </div>
-        <h2>Email configuration</h2>
+        <h2>SMTP configuration</h2>
         <div class="field" :class="{ 'error': backend.errors?.smtp_from }">
           <label>From</label>
           <input type="email" v-model="backend.smtp_from" placeholder="from@mail.example">

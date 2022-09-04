@@ -19,7 +19,8 @@ config :boruta_identity, BorutaIdentity.Repo,
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database: System.get_env("POSTGRES_DATABASE") || "boruta_identity",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
-  pool_size: String.to_integer(System.get_env("POOL_SIZE", "5"))
+  pool_size: String.to_integer(System.get_env("POOL_SIZE", "5")),
+  after_connect: {BorutaIdentity.Repo, :set_limit, []}
 
 config :boruta_gateway, BorutaGateway.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",

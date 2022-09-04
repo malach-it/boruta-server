@@ -10,6 +10,12 @@
       <div class="ui info message">
         Users are here the ones that can login to Boruta mirroring the backend to give the ability for the server to add security traits (confirmation, consent, or scope access).
       </div>
+      <form class="ui form" @submit.prevent="throttledSearch()">
+        <div class="field">
+          <input type="text" v-model="userQuery" @keyup="throttledSearch()" placeholder="search" />
+        </div>
+      </form>
+      <hr />
       <div class="ui three column stackable users grid" v-if="users.length">
         <div v-for="user in users" class="column" :key="user.id">
           <div class="ui user highlightable segment">
@@ -32,7 +38,9 @@
           </div>
         </div>
       </div>
+      <hr />
       <div class="ui center aligned segment">
+        <div class="total-entries">{{ totalEntries }} record(s)</div>
         <div class="ui pagination menu">
           <button
             :disabled="disableFirstPage"
@@ -61,6 +69,7 @@
 </template>
 
 <script>
+import { throttle } from 'lodash'
 import User from '../../models/user.model'
 import Toaster from '../../components/Toaster.vue'
 
@@ -75,11 +84,16 @@ export default {
       deleted: false,
       errorMessage: false,
       currentPage: this.$route.query.page,
+      userQuery: this.$route.query.q,
       totalPages: 1,
+      totalEntries: 0,
       total_entries: 0
     }
   },
   computed: {
+    throttledSearch () {
+      return throttle(this.search, 200)
+    },
     meanPages () {
       const meanPages = []
 
@@ -100,21 +114,27 @@ export default {
     },
     disableLastPage () {
       return this.meanPages.slice(-1) == this.totalPages
-    },
-  },
-  mounted () {
-    this.getUsers(this.currentPage)
+    }
   },
   methods: {
-    getUsers (pageNumber) {
-      User.all({ pageNumber }).then(({ data, currentPage, totalPages }) => {
+    getUsers (pageNumber, query) {
+      User.all({ query, pageNumber }).then(({ data, currentPage, totalPages, totalEntries }) => {
         this.users = data
         this.totalPages = totalPages
+        this.totalEntries = totalEntries
         this.currentPage = currentPage
       })
     },
-    goToPage(pageNumber) {
-      this.$router.push({ name: 'user-list', query: { page: pageNumber } })
+    goToPage (pageNumber) {
+      const query = { page: pageNumber }
+      if (this.userQuery) query.q = this.userQuery
+
+      this.$router.push({ name: 'user-list', query })
+    },
+    search () {
+      const { userQuery } = this
+
+      this.$router.push({ name: 'user-list', query: { q: userQuery } })
     },
     deleteUser (user) {
       if (!confirm('Are you sure ?')) return
@@ -128,9 +148,9 @@ export default {
     }
   },
   watch: {
-    '$route.query.page': {
-      handler(pageNumber) {
-        this.getUsers(pageNumber)
+    '$route.query': {
+      handler ({ page, q }) {
+        this.getUsers(page, q)
       },
       deep: true,
       immediate: true

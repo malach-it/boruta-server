@@ -108,10 +108,15 @@ User.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-User.all = function ({ pageNumber }) {
-  return this.api().get(`/?page=${pageNumber}`).then(({
+User.all = function ({ query, pageNumber }) {
+  const searchParams = new URLSearchParams()
+  pageNumber && searchParams.append('page', pageNumber)
+  query && searchParams.append('q', query)
+
+  return this.api().get(`/?${searchParams.toString()}`).then(({
     data: {
       data,
+      total_entries: totalEntries,
       page_number: currentPage,
       total_pages: totalPages,
     }
@@ -119,7 +124,8 @@ User.all = function ({ pageNumber }) {
     return {
       data: data.map((user) => new User(user)),
       currentPage,
-      totalPages
+      totalPages,
+      totalEntries
     }
 
   })

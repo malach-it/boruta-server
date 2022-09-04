@@ -10,7 +10,8 @@ config :boruta_identity, BorutaIdentity.Repo,
   password: "postgres",
   database: "boruta_identity_test#{System.get_env("MIX_TEST_PARTITION")}",
   hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox
+  pool: Ecto.Adapters.SQL.Sandbox,
+  after_connect: {BorutaIdentity.Repo, :set_limit, []}
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   http: [port: 4002],

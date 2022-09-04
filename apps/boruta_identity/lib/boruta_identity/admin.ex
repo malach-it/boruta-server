@@ -34,17 +34,18 @@ defmodule BorutaIdentity.Admin do
             ) ::
               {:ok, User.t()} | {:error, changeset :: Ecto.Changeset.t()}
 
-  @doc """
-  List all users
-
-  ## Examples
-
-      iex> list_users()
-      [...]
-  """
+  @spec list_users(params :: map()) :: Scrivener.Page.t()
   @spec list_users() :: Scrivener.Page.t()
   def list_users(params \\ %{}) do
     from(u in User)
+    |> preload([:authorized_scopes, :backend])
+    |> Repo.paginate(params)
+  end
+
+  @spec search_users(query :: String.t(), params :: map()) :: Scrivener.Page.t()
+  @spec search_users(query :: String.t()) :: Scrivener.Page.t()
+  def search_users(query, params \\ %{}) do
+    from(u in User, where: fragment("username % ?", ^query), order_by: fragment("word_similarity(username, ?) DESC", ^query))
     |> preload([:authorized_scopes, :backend])
     |> Repo.paginate(params)
   end

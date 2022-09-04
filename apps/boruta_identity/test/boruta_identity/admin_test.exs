@@ -47,7 +47,7 @@ defmodule BorutaIdentity.AdminTest do
       assert Admin.list_users() == %Scrivener.Page{
                entries: [],
                page_number: 1,
-               page_size: 21,
+               page_size: 12,
                total_entries: 0,
                total_pages: 1
              }
@@ -59,7 +59,32 @@ defmodule BorutaIdentity.AdminTest do
       assert Admin.list_users() == %Scrivener.Page{
                entries: [user],
                page_number: 1,
-               page_size: 21,
+               page_size: 12,
+               total_entries: 1,
+               total_pages: 1
+             }
+    end
+  end
+
+  describe "search_users/0" do
+    test "returns an empty search" do
+      assert Admin.search_users("query") == %Scrivener.Page{
+               entries: [],
+               page_number: 1,
+               page_size: 12,
+               total_entries: 0,
+               total_pages: 1
+             }
+    end
+
+    test "returns user search" do
+      _other = insert(:user) |> Repo.preload(:authorized_scopes)
+      user = insert(:user, username: "match") |> Repo.preload(:authorized_scopes)
+
+      assert Admin.search_users("match") == %Scrivener.Page{
+               entries: [user],
+               page_number: 1,
+               page_size: 12,
                total_entries: 1,
                total_pages: 1
              }

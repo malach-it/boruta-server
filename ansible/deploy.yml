@@ -205,34 +205,6 @@
                 imagePullSecrets:
                 - name: regcred
 
-    - name: Migrate boruta database
-      when: not database_setup.changed
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: batch/v1
-          kind: Job
-          metadata:
-            name: "boruta-migration-{{ release_tag }}"
-            namespace: boruta-staging
-          backoffLimit: 3
-          spec:
-            ttlSecondsAfterFinished: 864000
-            template:
-              spec:
-                containers:
-                  - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
-                    command: ["/app/bin/boruta"]
-                    args: ["eval", "Boruta.Release.migrate"]
-                    envFrom:
-                    - configMapRef:
-                        name: boruta-env
-                    imagePullPolicy: Always
-                    name: boruta
-                restartPolicy: OnFailure
-                imagePullSecrets:
-                - name: regcred
-
     - name: Create Boruta logs storage class
       kubernetes.core.k8s:
         state: present
@@ -309,6 +281,34 @@
                     volumeMounts:
                       - mountPath: "/app/log"
                         name: logs
+                imagePullSecrets:
+                - name: regcred
+
+    - name: Migrate boruta database
+      when: not database_setup.changed
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: "boruta-migration-{{ release_tag }}"
+            namespace: boruta-staging
+          backoffLimit: 3
+          spec:
+            ttlSecondsAfterFinished: 864000
+            template:
+              spec:
+                containers:
+                  - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
+                    command: ["/app/bin/boruta"]
+                    args: ["eval", "Boruta.Release.migrate"]
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
+                    imagePullPolicy: Always
+                    name: boruta
+                restartPolicy: OnFailure
                 imagePullSecrets:
                 - name: regcred
 
