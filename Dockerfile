@@ -10,7 +10,7 @@ COPY ./apps/boruta_admin/assets /app
 RUN npm ci
 RUN npm run build
 
-FROM elixir:1.13.4-slim AS builder
+FROM elixir:1.14-slim AS builder
 
 RUN apt-get update
 RUN apt-get install -y git build-essential
@@ -37,7 +37,7 @@ RUN mix phx.digest
 WORKDIR /app
 RUN mix release --force --overwrite
 
-FROM elixir:1.13.4-slim
+FROM elixir:1.14-slim
 
 WORKDIR /app
 
