@@ -92,7 +92,7 @@ export default {
   },
   computed: {
     throttledSearch () {
-      return throttle(this.search, 200)
+      return throttle(this.search, 500)
     },
     meanPages () {
       const meanPages = []
