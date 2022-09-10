@@ -5,7 +5,6 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   # TODO split into multiple submodule
   @behaviour BorutaIdentity.Admin
-  @behaviour BorutaIdentity.Accounts.Confirmations
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
@@ -112,18 +111,6 @@ defmodule BorutaIdentity.Accounts.Internal do
     end
   end
 
-  @impl BorutaIdentity.Accounts.Confirmations
-  def confirm_user(token) do
-    with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
-         %User{confirmed_at: nil} = user <- Repo.one(query),
-         {:ok, %{user: user}} <- Repo.transaction(confirm_user_multi(user)) do
-      {:ok, user}
-    else
-      _ ->
-        {:error, "Account confirmation token is invalid or it has expired."}
-    end
-  end
-
   @impl BorutaIdentity.Accounts.Settings
   def update_user(backend, user, params) do
     with {:ok, user} <-
@@ -189,11 +176,5 @@ defmodule BorutaIdentity.Accounts.Internal do
     |> Ecto.Multi.update(:user, Internal.User.password_changeset(user, reset_password_params, %{backend: backend}))
     |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
     |> Repo.transaction()
-  end
-
-  defp confirm_user_multi(user) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, User.confirm_changeset(user))
-    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, ["confirm"]))
   end
 end

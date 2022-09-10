@@ -47,16 +47,14 @@ defmodule BorutaIdentity.Accounts.Confirmations do
   alias BorutaIdentity.Accounts.ConfirmationError
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders
-  alias BorutaIdentity.IdentityProviders.IdentityProvider
+  alias BorutaIdentity.Repo
 
   @type confirmation_instructions_params :: %{
           email: String.t()
         }
   @type confirmation_url_fun :: (token :: String.t() -> confirmation_url :: String.t())
-
-  @callback confirm_user(token :: String.t()) ::
-              {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
   @spec initialize_confirmation_instructions(
           context :: any(),
@@ -103,10 +101,8 @@ defmodule BorutaIdentity.Accounts.Confirmations do
           token :: String.t(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientidp confirm_user(context, client_id, token, module) do
-    client_impl = IdentityProvider.implementation(client_idp)
-
-    case apply(client_impl, :confirm_user, [token]) do
+  def confirm_user(context, _client_id, token, module) do
+    case confirm_user(token) do
       {:ok, user} ->
         module.user_confirmed(context, user)
 
@@ -122,5 +118,22 @@ defmodule BorutaIdentity.Accounts.Confirmations do
       identity_provider.id,
       :new_confirmation_instructions
     )
+  end
+
+  defp confirm_user(token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "confirm"),
+         %User{confirmed_at: nil} = user <- Repo.one(query),
+         {:ok, %{user: user}} <- Repo.transaction(confirm_user_multi(user)) do
+      {:ok, user}
+    else
+      _ ->
+        {:error, "Account confirmation token is invalid or it has expired."}
+    end
+  end
+
+  defp confirm_user_multi(user) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, User.confirm_changeset(user))
+    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, ["confirm"]))
   end
 end
