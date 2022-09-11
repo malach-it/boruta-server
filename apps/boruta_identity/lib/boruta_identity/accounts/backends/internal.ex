@@ -3,7 +3,6 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
-  # TODO split into multiple submodule
   @behaviour BorutaIdentity.Admin
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
@@ -18,6 +17,17 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
+
+  @features [
+    :registrable,
+    :user_editable,
+    :confirmable,
+    :authenticable,
+    :reset_password,
+    :consentable
+  ]
+
+  def features, do: @features
 
   @impl BorutaIdentity.Accounts.Registrations
   def register(backend, registration_params) do

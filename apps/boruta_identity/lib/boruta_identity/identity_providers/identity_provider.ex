@@ -121,13 +121,17 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
   @spec check_feature(identity_provider :: t(), action_name :: atom()) ::
           :ok | {:error, reason :: String.t()}
   def check_feature(identity_provider, requested_action_name) do
+    backend_features = apply(Backend.implementation(identity_provider.backend), :features, [])
+
     with {feature_name, _actions} <-
            Enum.find(@features, fn {_feature_name, actions} ->
              Enum.member?(actions, requested_action_name)
            end),
-         {:ok, true} <- identity_provider |> Map.from_struct() |> Map.fetch(feature_name) do
+         {:ok, true} <- identity_provider |> Map.from_struct() |> Map.fetch(feature_name),
+         true <- Enum.member?(backend_features, feature_name) do
       :ok
     else
+      false -> {:error, "Feature is not enabled for identity provider backend implementation."}
       {:ok, false} -> {:error, "Feature is not enabled for client identity provider."}
       nil -> {:error, "This provider does not support this feature."}
     end
