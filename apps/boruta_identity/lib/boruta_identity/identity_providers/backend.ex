@@ -4,6 +4,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias BorutaIdentity.Accounts.Internal
+  alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Repo
 
   @type t :: %__MODULE__{
@@ -20,9 +22,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           smtp_port: integer() | nil
         }
 
-  @backend_types [
-    BorutaIdentity.Accounts.Internal
-  ]
+  @backend_types [Internal, Ldap]
 
   @smtp_tls_types [
     :always,
@@ -78,14 +78,23 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     field(:type, :string)
     field(:is_default, :boolean, default: false)
     field(:name, :string)
-    field(:password_hashing_alg, :string, default: "argon2")
-    field(:password_hashing_opts, :map, default: %{})
     field(:smtp_from, :string)
     field(:smtp_relay, :string)
     field(:smtp_username, :string)
     field(:smtp_password, :string)
     field(:smtp_tls, :string)
     field(:smtp_port, :integer)
+
+    # ldap config
+    field(:ldap_pool_size, :integer, default: 5)
+    field(:ldap_host, :string)
+    field(:ldap_password, :string)
+    field(:ldap_base_dn, :string)
+    field(:ldap_ou, :string)
+
+    # internal config
+    field(:password_hashing_alg, :string, default: "argon2")
+    field(:password_hashing_opts, :map, default: %{})
 
     timestamps()
   end
@@ -123,6 +132,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :is_default,
       :password_hashing_alg,
       :password_hashing_opts,
+      :ldap_pool_size,
+      :ldap_host,
+      :ldap_password,
+      :ldap_base_dn,
+      :ldap_ou,
       :smtp_from,
       :smtp_relay,
       :smtp_username,
@@ -133,10 +147,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     |> validate_required([:name, :password_hashing_alg])
     |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
     |> validate_inclusion(:smtp_tls, Enum.map(@smtp_tls_types, &Atom.to_string/1))
-    |> validate_inclusion(:password_hashing_alg, Map.keys(@password_hashing_modules))
     |> foreign_key_constraint(:identity_provider, name: :identity_providers_backend_id_fkey)
     |> set_default()
-    |> validate_password_hashing_opts()
+    |> validate_backend_by_type()
   end
 
   @doc false
@@ -185,6 +198,32 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   defp set_default(changeset), do: changeset
+
+  defp validate_backend_by_type(changeset) do
+    type = get_field(changeset, :type)
+
+    validate_backend(changeset, String.to_atom(type))
+  end
+
+  defp validate_backend(changeset, Internal) do
+    changeset
+    |> validate_inclusion(:password_hashing_alg, Map.keys(@password_hashing_modules))
+    |> validate_password_hashing_opts()
+  end
+
+  defp validate_backend(changeset, Ldap) do
+    changeset
+    |> validate_required([
+      :ldap_pool_size,
+      :ldap_host,
+      :ldap_password,
+      :ldap_base_dn,
+      :ldap_ou
+    ])
+    |> validate_inclusion(:ldap_pool_size, 1..50)
+  end
+
+  defp validate_backend(changeset, _implementation), do: changeset
 
   defp validate_password_hashing_opts(changeset) do
     alg = fetch_field!(changeset, :password_hashing_alg)
