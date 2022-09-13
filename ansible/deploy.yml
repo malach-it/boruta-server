@@ -247,7 +247,7 @@
           apiVersion: apps/v1
           kind: Deployment
           metadata:
-            name: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+            name: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
             namespace: boruta-staging
           spec:
             replicas: 2
@@ -256,12 +256,13 @@
               rollingUpdate: null
             selector:
               matchLabels:
-                app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+                deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
             template:
               metadata:
                 name: boruta
                 labels:
-                  app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+                  deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+                  app: boruta
               spec:
                 volumes:
                   - name: logs
@@ -313,7 +314,7 @@
                 - name: regcred
 
     - name: Wait for deployment readyness
-      shell: "kubectl -n boruta-staging wait --for=condition=Ready po --all -l app={{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+      shell: "kubectl -n boruta-staging wait --for=condition=Ready po --all -l deployment={{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
       retries: 6
       delay: 5
       register: result
@@ -332,7 +333,7 @@
               app: boruta
           spec:
             selector:
-              app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+              deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
             ports:
             - protocol: TCP
               targetPort: 4001
@@ -352,7 +353,7 @@
               app: boruta
           spec:
             selector:
-              app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+              deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
             ports:
             - protocol: TCP
               targetPort: 4002
@@ -372,7 +373,7 @@
               app: boruta
           spec:
             selector:
-              app: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-blue' }}"
+              deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
             ports:
             - protocol: TCP
               targetPort: 4000
@@ -386,5 +387,5 @@
           apiVersion: apps/v1
           kind: Deployment
           metadata:
-            name: "{{ 'boruta-blue' if boruta_services.resources[0].spec.selector.app == 'boruta-blue' else 'boruta-green' }}"
+            name: "{{ 'boruta-blue' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-green' }}"
             namespace: boruta-staging
