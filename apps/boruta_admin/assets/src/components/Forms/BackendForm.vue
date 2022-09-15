@@ -44,12 +44,9 @@
             <label>Host</label>
             <input type="text" v-model="backend.ldap_host" placeholder="example.com">
           </div>
-          <div class="field" :class="{ 'error': backend.errors?.ldap_password }">
-            <label>Master password</label>
-            <div class="ui left icon input">
-              <input :type="ldapPasswordVisible ? 'text' : 'password'" autocomplete="new-password" v-model="backend.ldap_password" />
-              <i class="eye icon" :class="{ 'slash': ldapPasswordVisible }" @click="ldapPasswordVisibilityToggle()"></i>
-            </div>
+          <div class="field" :class="{ 'error': backend.errors?.ldap_user_rdn_attribute }">
+            <label>User RDN attribute</label>
+            <input :type="text" autocomplete="new-password" v-model="backend.ldap_user_rdn_attribute" />
           </div>
           <div class="field" :class="{ 'error': backend.errors?.ldap_base_dn }">
             <label>Base distinguished name (dn)</label>
@@ -117,7 +114,6 @@ export default {
   data () {
     return {
       passwordHashingAlgorithms: Backend.passwordHashingAlgorithms,
-      ldapPasswordVisible: false,
       smtpPasswordVisible: false
     }
   },
@@ -132,9 +128,6 @@ export default {
       if (this.backend.isPersisted) {
         alert('Changing the password hashing algorithm may invalidate already saved passwords. Use this feature with care.')
       }
-    },
-    ldapPasswordVisibilityToggle () {
-      this.ldapPasswordVisible = !this.ldapPasswordVisible
     },
     smtpPasswordVisibilityToggle () {
       this.smtpPasswordVisible = !this.smtpPasswordVisible

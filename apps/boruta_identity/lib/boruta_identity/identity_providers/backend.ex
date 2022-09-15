@@ -19,7 +19,12 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           smtp_username: String.t() | nil,
           smtp_password: String.t() | nil,
           smtp_tls: String.t() | nil,
-          smtp_port: integer() | nil
+          smtp_port: integer() | nil,
+          ldap_pool_size: integer() | nil,
+          ldap_host: String.t() | nil,
+          ldap_user_rdn_attribute: String.t() | nil,
+          ldap_base_dn: String.t() | nil,
+          ldap_ou: String.t() | nil
         }
 
   @backend_types [Internal, Ldap]
@@ -88,7 +93,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     # ldap config
     field(:ldap_pool_size, :integer, default: 5)
     field(:ldap_host, :string)
-    field(:ldap_password, :string)
+    field(:ldap_user_rdn_attribute, :string)
     field(:ldap_base_dn, :string)
     field(:ldap_ou, :string)
 
@@ -134,7 +139,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :password_hashing_opts,
       :ldap_pool_size,
       :ldap_host,
-      :ldap_password,
+      :ldap_user_rdn_attribute,
       :ldap_base_dn,
       :ldap_ou,
       :smtp_from,
@@ -216,7 +221,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     |> validate_required([
       :ldap_pool_size,
       :ldap_host,
-      :ldap_password,
+      :ldap_user_rdn_attribute,
       :ldap_base_dn,
       :ldap_ou
     ])

@@ -24,7 +24,7 @@ defmodule BorutaIdentity.MixProject do
   def application do
     [
       mod: {BorutaIdentity.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :eldap]
     ]
   end
 

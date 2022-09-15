@@ -21,7 +21,7 @@ defmodule BorutaAdminWeb.BackendView do
       password_hashing_opts: backend.password_hashing_opts,
       ldap_pool_size: backend.ldap_pool_size,
       ldap_host: backend.ldap_host,
-      ldap_password: backend.ldap_password,
+      ldap_user_rdn_attribute: backend.ldap_user_rdn_attribute,
       ldap_base_dn: backend.ldap_base_dn,
       ldap_ou: backend.ldap_ou,
       smtp_from: backend.smtp_from,
