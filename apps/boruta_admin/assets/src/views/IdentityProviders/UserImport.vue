@@ -26,7 +26,7 @@
           </div>
           <div class="field">
             <label>CSV file</label>
-            <input type="file" @change="setFile" accept=".csv" />
+            <input type="file" @change="setFile" accept=".csv" :key="fileUpdates" />
           </div>
           <hr />
           <button class="ui right floated violet button" type="submit">upload</button>
@@ -81,6 +81,7 @@ export default {
   },
   data () {
     return {
+      fileUpdates: 0,
       file: null,
       options: {},
       backends: [],
@@ -104,12 +105,19 @@ export default {
 
       this.pending = true
       User.upload({ backendId, file, options }).then(result => {
+        this.fileUpdates++
         this.pending = false
         this.importResult = result
       }).catch((errors) => {
+        this.fileUpdates++
         this.pending = false
         this.importErrors = errors
       })
+    }
+  },
+  watch: {
+    fileUpdates() {
+      this.file = null
     }
   }
 }

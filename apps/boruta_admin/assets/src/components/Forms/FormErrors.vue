@@ -21,6 +21,7 @@ const labels = {
   'authorized_scopes': 'Authorized scopes',
   'identity_provider_id': 'identity provider',
   'redirect_uris': 'Redirect URIs',
+  'file': 'File',
   'id_token_signature_alg': 'ID token signature algorithm',
   'resource': 'Resource',
   'is_default': 'Default',

@@ -72,9 +72,15 @@ defmodule BorutaAdminWeb.UserController do
       |> Enum.reject(&is_nil/1)
       |> Enum.into(%{})
 
-    result = Admin.import_users(backend, file_params.path, import_users_opts)
+    case file_params do
+      %Plug.Upload{} ->
+        result = Admin.import_users(backend, file_params.path, import_users_opts)
 
-    render(conn, "import_result.json", import_result: result)
+        render(conn, "import_result.json", import_result: result)
+      _ ->
+      {:error,
+       Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:file, "is invalid")}
+    end
   rescue
     _e in Ecto.NoResultsError ->
       {:error,
