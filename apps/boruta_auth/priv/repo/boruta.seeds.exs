@@ -85,16 +85,23 @@ BorutaAuth.Repo.insert(
     public_revoke: true
   })
 
+{:ok, backend} = BorutaIdentity.IdentityProviders.create_backend(%{
+  name: "Default",
+  is_default: true
+})
+
 {:ok, identity_provider} =
   BorutaIdentity.IdentityProviders.create_identity_provider(%{
     name: "Default",
-    registrable: true
+    registrable: true,
+    backend_id: backend.id
   })
 
 {:ok, identity_provider} =
   BorutaIdentity.IdentityProviders.create_identity_provider(%{
     name: "Boruta administration interface",
-    registrable: false
+    registrable: false,
+    backend_id: backend.id
   })
 
 BorutaIdentity.IdentityProviders.upsert_client_identity_provider(client.id, identity_provider.id)
@@ -107,11 +114,12 @@ BorutaIdentity.IdentityProviders.upsert_client_identity_provider(client.id, iden
       password: System.get_env("BORUTA_ADMIN_PASSWORD"),
       password_confirmation: System.get_env("BORUTA_ADMIN_PASSWORD"),
       confirmed_at: DateTime.utc_now()
-    }
+    },
+    %{backend: backend}
   )
   |> BorutaIdentity.Repo.insert()
 
-user = BorutaIdentity.Accounts.Internal.domain_user!(user)
+user = BorutaIdentity.Accounts.Internal.domain_user!(user, backend)
 
 Boruta.Ecto.Admin.get_scopes_by_names([
   "users:manage:all",
