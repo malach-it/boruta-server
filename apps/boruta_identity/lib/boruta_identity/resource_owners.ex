@@ -8,12 +8,16 @@ defmodule BorutaIdentity.ResourceOwners do
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders.Backend
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
     backend = Backend.default!()
+
+    # TODO create a ldap connection pool
+    Backend.implementation(backend) == Ldap && Ldap.start_link(backend)
 
     with {:ok, impl_user} <-
            apply(Backend.implementation(backend), :get_user, [backend, %{email: username}]),
@@ -47,6 +51,9 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def check_password(%ResourceOwner{extra_claims: extra_claims}, password) do
     backend = Backend.default!()
+
+    # TODO create a ldap connection pool
+    Backend.implementation(backend) == Ldap && Ldap.start_link(backend)
 
     case apply(
            Backend.implementation(backend),

@@ -30,6 +30,7 @@ defmodule BorutaGateway.Upstreams.Client do
     GenServer.start_link(__MODULE__, upstream, name: name(upstream))
   end
 
+  @impl GenServer
   def init(upstream) do
     name = finch_name(upstream)
     {:ok, _pid} =
@@ -64,6 +65,7 @@ defmodule BorutaGateway.Upstreams.Client do
     |> Finch.request(http_client)
   end
 
+  @impl GenServer
   def handle_call({:get, :upstream}, _from, %{upstream: upstream} = state) do
     {:reply, upstream, state}
   end
