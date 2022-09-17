@@ -6,6 +6,7 @@ defmodule BorutaIdentity.Accounts.Ldap do
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.LdapRepo
   alias BorutaIdentity.Repo
 
   @behaviour BorutaIdentity.Accounts.Sessions
@@ -47,7 +48,8 @@ defmodule BorutaIdentity.Accounts.Ldap do
 
   @impl GenServer
   def init(backend) do
-    {:ok, ldap} = :eldap.open([String.to_charlist(backend.ldap_host)])
+    # TODO add ldap port configuration
+    {:ok, ldap} = LdapRepo.open(backend.ldap_host)
 
     {:ok, %{ldap: ldap}}
   end
@@ -58,12 +60,12 @@ defmodule BorutaIdentity.Accounts.Ldap do
   end
 
   def handle_call(
-        {:check_user_against, _backend, %Ldap.User{dn: dn} = user, %{password: password}},
+        {:check_user_against, _backend, %Ldap.User{dn: dn} = user, authentication_params},
         _from,
         %{ldap: ldap} = state
       ) do
     result =
-      with :ok <- :eldap.simple_bind(ldap, dn, password) do
+      with :ok <- LdapRepo.simple_bind(ldap, dn, authentication_params[:password]) do
         {:ok, user}
       end
 
@@ -71,11 +73,21 @@ defmodule BorutaIdentity.Accounts.Ldap do
   end
 
   defp get_user_from_ldap(ldap, backend, email) do
-    user_rdn_attribute = String.to_charlist(backend.ldap_user_rdn_attribute)
+    user_rdn_attribute = backend.ldap_user_rdn_attribute
 
-    with {:ok, {dn, user_properties}} <- search(ldap, backend, email),
-         {:ok, uid} <- fetch_from_user_properties(user_properties, 'uid'),
-         {:ok, username} <- fetch_from_user_properties(user_properties, user_rdn_attribute) do
+    with {:ok, {dn, user_properties}} <- LdapRepo.search(ldap, backend, email),
+         uid when is_binary(uid) <-
+           Map.get(
+             user_properties,
+             "uid",
+             {:error, "Could not get uid attribute"}
+           ),
+         username when is_binary(username) <-
+           Map.get(
+             user_properties,
+             user_rdn_attribute,
+             {:error, "Could not get #{user_rdn_attribute} attribute"}
+           ) do
       {:ok,
        %Ldap.User{
          uid: to_string(uid),
@@ -89,40 +101,6 @@ defmodule BorutaIdentity.Accounts.Ldap do
 
       {:error, error} ->
         {:error, inspect(error)}
-    end
-  end
-
-  defp search(ldap, backend, email) do
-    user_rdn_attribute = String.to_charlist(backend.ldap_user_rdn_attribute)
-
-    case :eldap.search(ldap,
-           base: backend.ldap_base_dn,
-           filter: :eldap.equalityMatch(user_rdn_attribute, String.to_charlist(email))
-         ) do
-      {:ok,
-       {:eldap_search_result,
-        [
-          {:eldap_entry, dn, user_properties}
-        ], _, _}} ->
-        {:ok, {dn, user_properties}}
-
-      {:ok, {:eldap_search_result, _results, _, _}} ->
-        {:error, "Multiple users matched the given #{user_rdn_attribute}."}
-    end
-  end
-
-  defp fetch_from_user_properties(user_properties, key) do
-    case Enum.find(
-           user_properties,
-           fn {property, _value} ->
-             property == key
-           end
-         ) do
-      nil ->
-        {:error, "Could not get uid attribute"}
-
-      {^key, [uid]} ->
-        {:ok, uid}
     end
   end
 end

@@ -48,6 +48,7 @@ defmodule BorutaIdentity.MixProject do
       {:gen_smtp, "~> 1.1"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
+      {:mox, "~> 1.0"},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},
       {:nimble_csv, "~> 1.2"},
       {:pbkdf2_elixir, "~> 2.0"},
