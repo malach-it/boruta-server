@@ -66,14 +66,14 @@ defmodule BorutaIdentity.Accounts.Sessions do
         }
 
   @callback get_user(backend :: Backend.t(), user_params :: user_params()) ::
-              {:ok, implmentation_user :: any()} | {:error, reason :: String.t()}
+              {:ok, impl_user :: any()} | {:error, reason :: String.t()}
 
   @callback domain_user!(implementation_user :: any(), backend :: Backend.t()) ::
               user :: User.t()
 
   @callback check_user_against(
               backend :: Backend.t(),
-              user :: User.t(),
+              impl_user :: any(),
               authentication_params :: authentication_params()
             ) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}

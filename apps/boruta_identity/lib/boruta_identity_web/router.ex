@@ -68,7 +68,7 @@ defmodule BorutaIdentityWeb.Router do
   @impl Plug.ErrorHandler
   def handle_errors(conn, %{reason: reason}) do
     reason = %{
-      message: reason.message
+      message: Map.get(reason, :message, inspect(reason))
     }
 
     %ErrorTemplate{content: template} = Configuration.get_error_template!(conn.status)
