@@ -51,6 +51,7 @@ defmodule BorutaIdentity.MixProject do
       {:mox, "~> 1.0"},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},
       {:nimble_csv, "~> 1.2"},
+      {:nimble_pool, "~> 0.2"},
       {:pbkdf2_elixir, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.1"},

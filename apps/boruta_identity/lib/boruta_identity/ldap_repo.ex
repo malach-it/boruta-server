@@ -7,14 +7,17 @@ defmodule BorutaIdentity.LdapRepo do
           String.t() => list(String.t())
         }
 
-  @callback open(host :: String.t()) :: {:ok, pid()}
-  @callback open(host :: String.t(), opts :: Keyword.t()) :: {:ok, pid()}
+  @callback open(host :: String.t()) :: {:ok, pid()} | {:error, reason :: any()}
+  @callback open(host :: String.t(), opts :: Keyword.t()) :: {:ok, pid()} | {:error, reason :: any()}
+  @callback close(handle :: pid()) :: :ok
   @callback simple_bind(handle :: pid(), dn :: String.t(), password :: String.t()) ::
               :ok | {:error, any()}
   @callback search(handle :: pid, backend :: Backend.t(), email :: String.t()) ::
               {:ok, {dn :: String.t(), user_properties :: user_properties()}} | {:error, any()}
 
   def open(host, opts \\ []), do: impl().open(host, opts)
+
+  def close(handle), do: impl().close(handle)
 
   def simple_bind(handle, dn, password), do: impl().simple_bind(handle, dn, password)
 
@@ -42,6 +45,11 @@ defmodule BorutaIdentity.LdapAdapter do
   end
 
   @impl BorutaIdentity.LdapRepo
+  def close(handle) do
+    :eldap.close(handle)
+  end
+
+  @impl BorutaIdentity.LdapRepo
   def simple_bind(handle, dn, password) do
     :eldap.simple_bind(handle, String.to_charlist(dn), password)
   end
@@ -50,8 +58,12 @@ defmodule BorutaIdentity.LdapAdapter do
   def search(handle, backend, email) do
     user_rdn_attribute = String.to_charlist(backend.ldap_user_rdn_attribute)
 
+    base_dn = [backend.ldap_ou, backend.ldap_base_dn]
+              |> Enum.reject(&is_nil/1)
+              |> Enum.join(",")
+
     case :eldap.search(handle,
-           base: backend.ldap_base_dn,
+           base: base_dn,
            filter: :eldap.equalityMatch(user_rdn_attribute, String.to_charlist(email))
          ) do
       {:ok,

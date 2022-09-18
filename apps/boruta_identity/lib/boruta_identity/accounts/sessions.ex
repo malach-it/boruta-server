@@ -48,7 +48,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
-  alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
@@ -66,6 +65,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
           password: String.t()
         }
 
+  # TODO rename to fetch_user
   @callback get_user(backend :: Backend.t(), user_params :: user_params()) ::
               {:ok, impl_user :: any()} | {:error, reason :: String.t()}
 
@@ -96,9 +96,6 @@ defmodule BorutaIdentity.Accounts.Sessions do
         ) :: callback_result :: any()
   defwithclientidp create_session(context, client_id, authentication_params, module) do
     client_impl = IdentityProvider.implementation(client_idp)
-
-    # TODO create a ldap connection pool
-    Backend.implementation(client_idp.backend) == Ldap && Ldap.start_link(client_idp.backend)
 
     with {:ok, user} <- apply(client_impl, :get_user, [client_idp.backend, authentication_params]),
          {:ok, user} <-

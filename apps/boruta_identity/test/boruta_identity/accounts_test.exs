@@ -658,6 +658,9 @@ defmodule BorutaIdentity.AccountsTest do
 
         {:ok, :ldap_pid}
       end)
+      |> stub(:close, fn _handle ->
+        :ok
+      end)
 
       {:ok,
        backend: backend,

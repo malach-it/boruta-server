@@ -2,12 +2,16 @@ defmodule BorutaIdentity.IdentityProvidersTest do
   use BorutaIdentity.DataCase
 
   import BorutaIdentity.Factory
+  import Mox
 
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
   alias BorutaIdentity.Repo
+
+  setup :set_mox_global
+  setup :verify_on_exit!
 
   describe "identity_providers" do
     setup do
@@ -394,6 +398,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
   end
 
   describe "backends" do
+    alias BorutaIdentity.Accounts.Ldap
     alias BorutaIdentity.IdentityProviders.Backend
 
     import BorutaIdentity.IdentityProvidersFixtures
@@ -581,6 +586,23 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert backend.name == "some updated name"
     end
 
+    test "update_backend/2 stop associated ldap connection pool" do
+      backend = insert(:ldap_backend)
+      update_attrs = %{ldap_pool_size: 3}
+
+      BorutaIdentity.LdapRepoMock
+      |> stub(:open, fn host, _opts ->
+        assert host == backend.ldap_host
+
+        {:ok, SecureRandom.uuid()}
+      end)
+
+      {:ok, ldap_pool_pid} = Ldap.start_link(backend)
+
+      assert {:ok, %Backend{}} = IdentityProviders.update_backend(backend, update_attrs)
+      refute Process.alive?(ldap_pool_pid)
+    end
+
     test "update_backend/2 cannot remove default" do
       backend = backend_fixture(%{is_default: true})
       update_attrs = %{name: "some updated name", is_default: false}
@@ -623,6 +645,23 @@ defmodule BorutaIdentity.IdentityProvidersTest do
               }} = IdentityProviders.delete_backend(Backend.default!())
 
       assert Backend.default!()
+    end
+
+    test "delete_backend/1 stop the associated ldap connection pool" do
+      backend = insert(:ldap_backend)
+
+      BorutaIdentity.LdapRepoMock
+      |> stub(:open, fn host, _opts ->
+        assert host == backend.ldap_host
+
+        {:ok, SecureRandom.uuid()}
+      end)
+
+      {:ok, ldap_pool_pid} = Ldap.start_link(backend)
+
+      assert {:ok, %Backend{}} = IdentityProviders.delete_backend(backend)
+      refute Process.alive?(ldap_pool_pid)
+      assert_raise Ecto.NoResultsError, fn -> IdentityProviders.get_backend!(backend.id) end
     end
 
     test "change_backend/1 returns a backend changeset" do

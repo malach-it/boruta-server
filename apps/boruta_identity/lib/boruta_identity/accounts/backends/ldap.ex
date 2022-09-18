@@ -1,7 +1,7 @@
 defmodule BorutaIdentity.Accounts.Ldap do
   @moduledoc false
 
-  use GenServer
+  @behaviour NimblePool
 
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Accounts.User
@@ -15,15 +15,22 @@ defmodule BorutaIdentity.Accounts.Ldap do
     :authenticable
   ]
 
+  @ldap_timeout 10_000
+
   def features, do: @features
 
-  def start_link(backend) do
-    GenServer.start_link(__MODULE__, backend, name: __MODULE__)
-  end
-
   @impl BorutaIdentity.Accounts.Sessions
-  def get_user(backend, user_params) do
-    GenServer.call(__MODULE__, {:get_user, backend, user_params})
+  def get_user(backend, %{email: email}) do
+    lazy_start(backend)
+
+    NimblePool.checkout!(
+      pool_name(backend),
+      :checkout,
+      fn _from, ldap ->
+        {fetch_user_from_ldap(ldap, backend, email), ldap}
+      end,
+      @ldap_timeout
+    )
   end
 
   @impl BorutaIdentity.Accounts.Sessions
@@ -43,36 +50,60 @@ defmodule BorutaIdentity.Accounts.Ldap do
 
   @impl BorutaIdentity.Accounts.Sessions
   def check_user_against(backend, ldap_user, authentication_params) do
-    GenServer.call(__MODULE__, {:check_user_against, backend, ldap_user, authentication_params})
+    lazy_start(backend)
+
+    NimblePool.checkout!(
+      pool_name(backend),
+      :checkout,
+      fn _from, ldap ->
+        result =
+          with :ok <- LdapRepo.simple_bind(ldap, ldap_user.dn, authentication_params[:password]) do
+            {:ok, ldap_user}
+          end
+
+        {result, ldap}
+      end,
+      @ldap_timeout
+    )
   end
 
-  @impl GenServer
-  def init(backend) do
-    # TODO add ldap port configuration
+  def start_link(backend) do
+    NimblePool.start_link(
+      pool_size: backend.ldap_pool_size,
+      worker: {__MODULE__, %{backend: backend}},
+      name: pool_name(backend)
+    )
+  end
+
+  @impl NimblePool
+  def init_worker(%{backend: backend}) do
+    # TODO add ldap port and ssl configurations
     {:ok, ldap} = LdapRepo.open(backend.ldap_host)
 
-    {:ok, %{ldap: ldap}}
+    {:ok, ldap, %{backend: backend}}
   end
 
-  @impl GenServer
-  def handle_call({:get_user, backend, %{email: email}}, _from, %{ldap: ldap} = state) do
-    {:reply, get_user_from_ldap(ldap, backend, email), state}
+  @impl NimblePool
+  def handle_checkout(:checkout, _from, ldap, pool_state) do
+    {:ok, ldap, ldap, pool_state}
   end
 
-  def handle_call(
-        {:check_user_against, _backend, %Ldap.User{dn: dn} = user, authentication_params},
-        _from,
-        %{ldap: ldap} = state
-      ) do
-    result =
-      with :ok <- LdapRepo.simple_bind(ldap, dn, authentication_params[:password]) do
-        {:ok, user}
-      end
-
-    {:reply, result, state}
+  @impl NimblePool
+  def handle_checkin(ldap, _from, ldap, pool_state) do
+    {:ok, ldap, pool_state}
   end
 
-  defp get_user_from_ldap(ldap, backend, email) do
+  @impl NimblePool
+  def terminate_worker(_reason, ldap, pool_state) do
+    LdapRepo.close(ldap)
+
+    {:ok, pool_state}
+  rescue
+    _ ->
+      {:ok, pool_state}
+  end
+
+  defp fetch_user_from_ldap(ldap, backend, email) do
     user_rdn_attribute = backend.ldap_user_rdn_attribute
 
     with {:ok, {dn, user_properties}} <- LdapRepo.search(ldap, backend, email),
@@ -101,6 +132,33 @@ defmodule BorutaIdentity.Accounts.Ldap do
 
       {:error, error} ->
         {:error, inspect(error)}
+    end
+  end
+
+  def pool_name(backend) do
+    signature =
+      backend
+      |> Map.from_struct()
+      |> Enum.map_join(fn
+        {key, value} ->
+          case Atom.to_string(key) do
+            "ldap_" <> _rest -> to_string(value)
+            _ -> nil
+          end
+      end)
+
+    signature = :crypto.hash(:sha256, signature)
+
+    signature
+    |> Base.encode16()
+    |> String.to_atom()
+  end
+
+  defp lazy_start(backend) do
+    case start_link(backend) do
+      {:ok, pid} -> {:ok, pid}
+      {:error, {:already_started, pid}} -> {:ok, pid}
+      error -> error
     end
   end
 end

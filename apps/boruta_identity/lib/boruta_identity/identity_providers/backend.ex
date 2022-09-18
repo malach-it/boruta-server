@@ -222,8 +222,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :ldap_pool_size,
       :ldap_host,
       :ldap_user_rdn_attribute,
-      :ldap_base_dn,
-      :ldap_ou
+      :ldap_base_dn
     ])
     |> validate_inclusion(:ldap_pool_size, 1..50)
   end
