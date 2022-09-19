@@ -3,7 +3,6 @@ defmodule BorutaIdentity.Accounts.Internal do
   Internal database `Accounts` implementation.
   """
 
-  # TODO split into multiple submodule
   @behaviour BorutaIdentity.Admin
   @behaviour BorutaIdentity.Accounts.Registrations
   @behaviour BorutaIdentity.Accounts.ResetPasswords
@@ -19,6 +18,17 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
 
+  @features [
+    :registrable,
+    :user_editable,
+    :confirmable,
+    :authenticable,
+    :reset_password,
+    :consentable
+  ]
+
+  def features, do: @features
+
   @impl BorutaIdentity.Accounts.Registrations
   def register(backend, registration_params) do
     with {:ok, user} <-
@@ -31,15 +41,6 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Accounts.Sessions
-  def get_user(backend, %{id: id}) when is_binary(id) do
-    user = Repo.get_by!(Internal.User, id: id, backend: backend.id)
-
-    {:ok, user}
-  rescue
-    Ecto.NoResultsError ->
-      {:error, "User not found."}
-  end
-
   def get_user(backend, %{email: email}) when is_binary(email) do
     user = Repo.get_by!(Internal.User, email: email, backend_id: backend.id)
 

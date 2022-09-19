@@ -24,7 +24,7 @@ defmodule BorutaIdentity.MixProject do
   def application do
     [
       mod: {BorutaIdentity.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :eldap]
     ]
   end
 
@@ -48,8 +48,10 @@ defmodule BorutaIdentity.MixProject do
       {:gen_smtp, "~> 1.1"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
+      {:mox, "~> 1.0"},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},
       {:nimble_csv, "~> 1.2"},
+      {:nimble_pool, "~> 0.2"},
       {:pbkdf2_elixir, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.1"},

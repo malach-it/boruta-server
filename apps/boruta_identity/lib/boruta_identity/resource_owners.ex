@@ -8,36 +8,56 @@ defmodule BorutaIdentity.ResourceOwners do
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders.Backend
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
     backend = Backend.default!()
-    case Accounts.get_user_by_email(backend, username) do
-      %User{id: id, username: email, last_login_at: last_login_at} ->
-        {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
-      _ -> {:error, "User not found."}
+
+    with {:ok, impl_user} <-
+           apply(Backend.implementation(backend), :get_user, [backend, %{email: username}]),
+         %User{id: id, username: email, last_login_at: last_login_at} <-
+           apply(Backend.implementation(backend), :domain_user!, [impl_user, backend]) do
+      {:ok,
+       %ResourceOwner{
+         sub: id,
+         username: email,
+         last_login_at: last_login_at,
+         extra_claims: %{user: impl_user}
+       }}
+    else
+      _ ->
+        {:error, "Invalid username or password."}
     end
   end
+
   def get_by(sub: sub) when not is_nil(sub) do
     case Accounts.get_user(sub) do
       %User{id: id, username: email, last_login_at: last_login_at} ->
         {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
-      _ -> {:error, "User not found."}
+
+      _ ->
+        {:error, "Invalid username or password."}
     end
   end
-  def get_by(_), do: {:error, "User not found."}
+
+  def get_by(_), do: {:error, "Invalid username or password."}
 
   @impl Boruta.Oauth.ResourceOwners
-  def check_password(%ResourceOwner{username: username}, password) do
+  def check_password(%ResourceOwner{extra_claims: extra_claims}, password) do
     backend = Backend.default!()
-    with {:ok, user} <- Accounts.Internal.get_user(backend, %{email: username || ""}),
-         true <- Internal.User.valid_password?(backend, user, password) do
-      :ok
-    else
-      _ -> {:error, "Invalid password."}
+
+    case apply(
+           Backend.implementation(backend),
+           :check_user_against,
+           [backend, extra_claims[:user], %{password: password}]
+         ) do
+      {:ok, _user} ->
+        :ok
+
+      _ ->
+        {:error, "Invalid username or password."}
     end
   end
 
@@ -45,19 +65,20 @@ defmodule BorutaIdentity.ResourceOwners do
   def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do
     Accounts.get_user_scopes(sub)
   end
+
   def authorized_scopes(_), do: []
 
   @impl Boruta.Oauth.ResourceOwners
   def claims(%ResourceOwner{sub: sub}, scope) do
     case Accounts.get_user(sub) do
-      %User{username: email} ->
+      %User{username: email, confirmed_at: confirmed_at} ->
         scope
         |> Scope.split()
         |> Enum.reduce(%{}, fn
           "email", acc ->
             Map.merge(acc, %{
               "email" => email,
-              "email_verified" => false
+              "email_verified" => !!confirmed_at
             })
 
           "phone", acc ->

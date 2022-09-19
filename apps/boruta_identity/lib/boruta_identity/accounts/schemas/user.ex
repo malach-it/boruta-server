@@ -12,7 +12,7 @@ defmodule BorutaIdentity.Accounts.User do
   @type t :: %__MODULE__{
           username: String.t(),
           password: String.t(),
-          confirmed_at: NaiveDateTime.t(),
+          confirmed_at: NaiveDateTime.t() | nil,
           authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
           consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
           last_login_at: DateTime.t(),

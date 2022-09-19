@@ -255,6 +255,7 @@ defmodule BorutaIdentity.IdentityProviders do
     end
   end
 
+  alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.IdentityProviders.Backend
 
   @doc """
@@ -339,9 +340,17 @@ defmodule BorutaIdentity.IdentityProviders do
 
   """
   def update_backend(%Backend{} = backend, attrs) do
-    backend
-    |> Backend.changeset(attrs)
-    |> Repo.update()
+    ldap_pool_name = Ldap.pool_name(backend)
+
+    with {:ok, backend} <-
+           backend
+           |> Backend.changeset(attrs)
+           |> Repo.update() do
+      Process.whereis(ldap_pool_name) &&
+        NimblePool.stop(ldap_pool_name)
+
+      {:ok, backend}
+    end
   end
 
   @doc """
@@ -357,9 +366,17 @@ defmodule BorutaIdentity.IdentityProviders do
 
   """
   def delete_backend(%Backend{} = backend) do
-    backend
-    |> Backend.delete_changeset()
-    |> Repo.delete()
+    ldap_pool_name = Ldap.pool_name(backend)
+
+    with {:ok, backend} <-
+           backend
+           |> Backend.delete_changeset()
+           |> Repo.delete() do
+      Process.whereis(ldap_pool_name) &&
+        NimblePool.stop(ldap_pool_name)
+
+      {:ok, backend}
+    end
   end
 
   @doc """

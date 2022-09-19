@@ -59,6 +59,18 @@ defmodule BorutaIdentity.Factory do
     }
   end
 
+  def ldap_backend_factory do
+    %Backend{
+      name: "backend name",
+      type: "Elixir.BorutaIdentity.Accounts.Ldap",
+      ldap_pool_size: 2,
+      ldap_host: "ldpa.test",
+      ldap_user_rdn_attribute: "sn",
+      ldap_base_dn: "dc=ldap,dc=test",
+      ldap_ou: ""
+    }
+  end
+
   def smtp_backend_factory do
     %Backend{
       name: "backend name",

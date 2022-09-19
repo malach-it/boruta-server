@@ -14,15 +14,18 @@ defmodule BorutaIdentity.ResourceOwnersTest do
 
   describe "get_by/1" do
     test "returns an user by username" do
+      username = @valid_username
       user =
         user_fixture(%{
-          email: @valid_username,
+          email: username,
           password: @valid_password,
           backend: Backend.default!()
         })
 
-      {:ok, result} = ResourceOwners.get_by(username: @valid_username)
-      assert result == %ResourceOwner{sub: user.id, username: user.username}
+      {:ok, result} = ResourceOwners.get_by(username: username)
+
+      user_id = user.id
+      assert %ResourceOwner{sub: ^user_id, username: ^username, extra_claims: %{user: _user}} = result
     end
 
     test "returns an user by sub" do
@@ -44,20 +47,24 @@ defmodule BorutaIdentity.ResourceOwnersTest do
         backend: Backend.default!()
       })
 
-      assert ResourceOwners.get_by(username: "other") == {:error, "User not found."}
+      assert ResourceOwners.get_by(username: "other") == {:error, "Invalid username or password."}
     end
   end
 
   describe "#check_password/2" do
     test "returns ok if password match" do
+      username = @valid_username
+      backend = Backend.default!()
       user =
         user_fixture(%{
-          email: @valid_username,
+          email: username,
           password: @valid_password,
-          backend: Backend.default!()
+          backend: backend
         })
 
-      resource_owner = %ResourceOwner{sub: user.id, username: user.username}
+      {:ok, impl_user} = apply(Backend.implementation(backend), :get_user, [backend, %{email: username}])
+      resource_owner = %ResourceOwner{sub: user.id, username: user.username, extra_claims: %{user: impl_user}}
+
       assert ResourceOwners.check_password(resource_owner, @valid_password) == :ok
     end
 
@@ -72,7 +79,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
       resource_owner = %ResourceOwner{sub: user.id}
 
       assert ResourceOwners.check_password(resource_owner, "wrong password") ==
-               {:error, "Invalid password."}
+               {:error, "Invalid username or password."}
     end
   end
 

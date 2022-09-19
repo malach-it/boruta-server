@@ -3,6 +3,7 @@ defmodule BorutaIdentity.AccountsTest do
 
   import BorutaIdentity.AccountsFixtures
   import BorutaIdentity.Factory
+  import Mox
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.IdentityProviderError
@@ -14,6 +15,9 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
   alias BorutaIdentity.Repo
+
+  setup :set_mox_from_context
+  setup :verify_on_exit!
 
   defmodule DummyRegistration do
     @behaviour Accounts.RegistrationApplication
@@ -416,7 +420,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "create_session/4" do
+  describe "create_session/4 with an internal backend" do
     setup do
       confirmable_client_identity_provider =
         BorutaIdentity.Factory.insert(
@@ -599,6 +603,322 @@ defmodule BorutaIdentity.AccountsTest do
       backend: backend
     } do
       %Internal.User{id: uid, email: username} = insert(:internal_user, backend: backend)
+      context = :context
+      authentication_params = %{email: username, password: valid_user_password()}
+
+      assert {:user_authenticated, ^context,
+              %User{id: user_id, username: ^username, backend: ^backend, uid: ^uid},
+              session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert session_token
+
+      assert {:user_authenticated, ^context,
+              %User{id: new_user_id, username: ^username, backend: ^backend, uid: ^uid},
+              session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert session_token
+      assert user_id == new_user_id
+    end
+
+    @tag :skip
+    test "returns a valid session token"
+  end
+
+  describe "create_session/4 with a ldap backend" do
+    setup do
+      backend = insert(:ldap_backend)
+
+      confirmable_client_identity_provider =
+        BorutaIdentity.Factory.insert(
+          :client_identity_provider,
+          identity_provider: insert(:identity_provider, confirmable: true, backend: backend)
+        )
+
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(
+          :client_identity_provider,
+          identity_provider: insert(:identity_provider, backend: backend)
+        )
+
+      BorutaIdentity.LdapRepoMock
+      |> stub(:open, fn host, _opts ->
+        assert host == backend.ldap_host
+
+        {:ok, :ldap_pid}
+      end)
+      |> stub(:close, fn _handle ->
+        :ok
+      end)
+
+      {:ok,
+       backend: backend,
+       client_id: client_identity_provider.client_id,
+       confirmable_backend: confirmable_client_identity_provider.identity_provider.backend,
+       confirmable_client_id: confirmable_client_identity_provider.client_id}
+    end
+
+    test "returns an error with nil client_id" do
+      context = :context
+      client_id = nil
+      authentication_params = %{}
+
+      assert_raise IdentityProviderError, "Client identifier not provided.", fn ->
+        Accounts.create_session(
+          context,
+          client_id,
+          authentication_params,
+          DummySession
+        )
+      end
+    end
+
+    test "returns an error with unknown client_id" do
+      context = :context
+      client_id = SecureRandom.uuid()
+      authentication_params = %{}
+
+      assert_raise IdentityProviderError,
+                   "identity provider not configured for given OAuth client. Please contact your administrator.",
+                   fn ->
+                     Accounts.create_session(
+                       context,
+                       client_id,
+                       authentication_params,
+                       DummySession
+                     )
+                   end
+    end
+
+    test "returns an error with empty email", %{client_id: client_id} do
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, email ->
+        assert email == ""
+
+        {:error, "user not found"}
+      end)
+      context = :context
+      authentication_params = %{email: ""}
+
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error with a wrong email", %{client_id: client_id} do
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, email ->
+        assert email == "does_not_exist"
+
+        {:error, "user not found"}
+      end)
+      context = :context
+      authentication_params = %{email: "does_not_exist"}
+
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error without password", %{client_id: client_id} do
+      uid = "ldap_uid"
+      username = "ldap_username"
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, email ->
+        {:ok, {"user_dn", %{"uid" => uid, "sn" => email}}}
+      end)
+      |> expect(:simple_bind, fn _handle, dn, password ->
+        assert dn == "user_dn"
+        assert password == nil
+
+        {:error, :boom}
+      end)
+      context = :context
+      authentication_params = %{email: username}
+
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error with a wrong password", %{client_id: client_id} do
+      uid = "ldap_uid"
+      username = "ldap_username"
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, email ->
+        {:ok, {"user_dn", %{"uid" => uid, "sn" => email}}}
+      end)
+      |> expect(:simple_bind, fn _handle, dn, password ->
+        assert dn == "user_dn"
+        assert password == "wrong password"
+
+        {:error, :boom}
+      end)
+      context = :context
+      authentication_params = %{email: username, password: "wrong password"}
+
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error with a wrong password (confirmable)", %{
+      confirmable_client_id: client_id
+    } do
+      uid = "ldap_uid"
+      username = "ldap_username"
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, email ->
+        {:ok, {"user_dn", %{"uid" => uid, "sn" => email}}}
+      end)
+      |> expect(:simple_bind, fn _handle, dn, password ->
+        assert dn == "user_dn"
+        assert password == "wrong password"
+
+        {:error, :boom}
+      end)
+      context = :context
+      authentication_params = %{email: username, password: "wrong password"}
+
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_session"}} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Invalid email or password."
+    end
+
+    test "returns an error if not confirmed", %{
+      confirmable_client_id: client_id
+    } do
+      uid = "ldap_uid"
+      username = "ldap_username"
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, email ->
+        {:ok, {"user_dn", %{"uid" => uid, "sn" => email}}}
+      end)
+      |> expect(:simple_bind, fn _handle, dn, password ->
+        assert dn == "user_dn"
+        assert password == valid_user_password()
+
+        :ok
+      end)
+      context = :context
+      authentication_params = %{email: username, password: valid_user_password()}
+
+      assert {:authentication_failure, ^context,
+              %SessionError{template: %Template{type: "new_confirmation_instructions"}} = error} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert error.message ==
+               "Email confirmation is required to authenticate."
+    end
+
+    test "authenticates the user", %{client_id: client_id, backend: backend} do
+      uid = "ldap_uid"
+      username = "ldap_username"
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, email ->
+        {:ok, {"user_dn", %{"uid" => uid, "sn" => email}}}
+      end)
+      |> expect(:simple_bind, fn _handle, dn, password ->
+        assert dn == "user_dn"
+        assert password == valid_user_password()
+
+        :ok
+      end)
+      context = :context
+      authentication_params = %{email: username, password: valid_user_password()}
+
+      assert {:user_authenticated, ^context,
+              %User{username: ^username, backend: ^backend, uid: ^uid},
+              session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert session_token
+    end
+
+    test "does not create multiple users accross multiple authentications", %{
+      client_id: client_id,
+      backend: backend
+    } do
+      uid = "ldap_uid"
+      username = "ldap_username"
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, 2, fn _handle, _backend, email ->
+        {:ok, {"user_dn", %{"uid" => uid, "sn" => email}}}
+      end)
+      |> expect(:simple_bind, 2, fn _handle, dn, password ->
+        assert dn == "user_dn"
+        assert password == valid_user_password()
+
+        :ok
+      end)
+
       context = :context
       authentication_params = %{email: username, password: valid_user_password()}
 
