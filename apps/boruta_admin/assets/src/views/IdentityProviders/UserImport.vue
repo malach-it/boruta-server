@@ -125,7 +125,7 @@ export default {
 
 <style scoped lang="scss">
 .loading.segment {
-  height: 36.35em;
+  height: 24.35em;
   color: inherit!important;
 }
 .import-counts {

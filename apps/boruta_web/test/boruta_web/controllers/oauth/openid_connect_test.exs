@@ -239,7 +239,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         "response_types_supported" => ["code", "token", "id_token", "code token", "code id_token", "code id_token token"],
         "response_modes_supported" => ["query", "fragment"],
         "subject_types_supported" => ["public"],
-        "token_endpoint" => "boruta/oauth/token"
+        "token_endpoint" => "boruta/oauth/token",
+        "userinfo_endpoint" => "boruta/oauth/userinfo"
       }
     end
   end

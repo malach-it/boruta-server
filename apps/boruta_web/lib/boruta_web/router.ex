@@ -68,7 +68,7 @@ defmodule BorutaWeb.Router do
   end
 
   scope "/oauth", BorutaWeb do
-    pipe_through(:protected_api)
+    pipe_through(:api)
 
     get("/userinfo", OpenidController, :userinfo)
     post("/userinfo", OpenidController, :userinfo)
