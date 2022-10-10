@@ -16,7 +16,19 @@ defmodule BorutaIdentity.LdapRepo do
               :ok | {:error, any()}
   @callback search(handle :: pid, backend :: Backend.t(), username :: String.t()) ::
               {:ok, {dn :: String.t(), user_properties :: user_properties()}} | {:error, any()}
-  @callback modify(handle :: pid, backend :: Backend.t(), user :: Ldap.User.t(), username :: String.t()) ::
+  @callback modify(
+              handle :: pid,
+              backend :: Backend.t(),
+              user :: Ldap.User.t(),
+              username :: String.t()
+            ) ::
+              :ok | {:error, any()}
+  @callback modify_password(
+              handle :: pid,
+              user :: Ldap.User.t(),
+              new_password :: String.t(),
+              old_password :: String.t()
+            ) ::
               :ok | {:error, any()}
 
   def open(host, opts \\ []), do: impl().open(host, opts)
@@ -28,6 +40,9 @@ defmodule BorutaIdentity.LdapRepo do
   def search(handle, backend, username), do: impl().search(handle, backend, username)
 
   def modify(handle, backend, user, username), do: impl().modify(handle, backend, user, username)
+
+  def modify_password(handle, user, new_password, old_password),
+    do: impl().modify_password(handle, user, new_password, old_password)
 
   defp impl do
     case Application.get_env(:boruta_identity, BorutaIdentity.LdapRepo) do
@@ -106,5 +121,16 @@ defmodule BorutaIdentity.LdapAdapter do
     :eldap.modify(handle, String.to_charlist(dn), [
       :eldap.mod_replace(user_rdn_attribute, [username])
     ])
+  end
+
+  @impl BorutaIdentity.LdapRepo
+  def modify_password(handle, %Ldap.User{dn: dn}, old_password, new_password)
+      when byte_size(new_password) > 0 do
+    :eldap.modify_password(
+      handle,
+      String.to_charlist(dn),
+      String.to_charlist(old_password),
+      String.to_charlist(new_password)
+    )
   end
 end

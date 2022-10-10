@@ -83,8 +83,11 @@ defmodule BorutaIdentity.Accounts.Ldap do
           {:ok, user} ->
             {{:ok, domain_user!(user, backend)}, ldap}
 
-          error ->
-            {error, ldap}
+          {:error, error, user} ->
+            # NOTE keep user synchronized from LDAP
+            domain_user!(user, backend)
+
+            {{:error, error}, ldap}
         end
       end
     )
@@ -185,14 +188,36 @@ defmodule BorutaIdentity.Accounts.Ldap do
            ldap_master_password: ldap_master_password
          } = backend,
          user,
-         %{email: email}
+         %{email: email} = params
        ) do
     with :ok <- LdapRepo.simple_bind(ldap, ldap_master_dn, ldap_master_password),
          :ok <-
            LdapRepo.modify(ldap, backend, user, email) do
-      {:ok, %{user | username: to_string(email)}}
+      user = %{user | username: to_string(email)}
+      update_user_in_ldap(ldap, backend, user, Map.delete(params, :email))
+    else
+      {:error, error} ->
+        {:error, error, user}
     end
   end
+
+  defp update_user_in_ldap(
+         ldap,
+         backend,
+         user,
+         %{password: password, current_password: current_password} = params
+       )
+       when byte_size(password) > 0 do
+    case LdapRepo.modify_password(ldap, user, password, current_password) do
+      :ok ->
+        update_user_in_ldap(ldap, backend, user, Map.delete(params, :password))
+
+      {:error, error} ->
+        {:error, error, user}
+    end
+  end
+
+  defp update_user_in_ldap(_ldap, _backend, user, _params), do: {:ok, user}
 
   defp lazy_start(backend) do
     case start_link(backend) do
