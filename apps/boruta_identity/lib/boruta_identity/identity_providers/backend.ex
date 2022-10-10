@@ -24,7 +24,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           ldap_host: String.t() | nil,
           ldap_user_rdn_attribute: String.t() | nil,
           ldap_base_dn: String.t() | nil,
-          ldap_ou: String.t() | nil
+          ldap_ou: String.t() | nil,
+          ldap_master_dn: String.t() | nil,
+          ldap_master_password: String.t() | nil
         }
 
   @backend_types [Internal, Ldap]
@@ -96,6 +98,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     field(:ldap_user_rdn_attribute, :string)
     field(:ldap_base_dn, :string)
     field(:ldap_ou, :string)
+    field(:ldap_master_dn, :string)
+    field(:ldap_master_password, :string)
 
     # internal config
     field(:password_hashing_alg, :string, default: "argon2")
@@ -142,6 +146,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :ldap_user_rdn_attribute,
       :ldap_base_dn,
       :ldap_ou,
+      :ldap_master_dn,
+      :ldap_master_password,
       :smtp_from,
       :smtp_relay,
       :smtp_username,

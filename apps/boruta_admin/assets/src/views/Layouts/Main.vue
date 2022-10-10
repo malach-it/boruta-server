@@ -388,6 +388,9 @@ export default {
   }
   .ui.form {
     position: relative;
+    label i {
+      font-weight: normal;
+    }
     .error-message {
       position: absolute;
       bottom: -.2em;

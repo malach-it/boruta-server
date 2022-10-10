@@ -1018,7 +1018,10 @@ defmodule BorutaIdentity.AccountsTest do
   test "initialize_edit_user/4"
 
   @tag :skip
-  test "edit_user/5"
+  test "edit_user/5 with internal backend"
+
+  @tag :skip
+  test "edit_user/5 with ldap backend"
 
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do
