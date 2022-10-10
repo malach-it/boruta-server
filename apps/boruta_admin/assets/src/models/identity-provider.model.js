@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { addClientErrorInterceptor } from './utils'
+import Backend from './backend.model'
 
 const DEFAULT_ID = 'non-existing'
 
@@ -14,7 +15,7 @@ const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
-  backend: function ({ backend }) { this.backend = backend },
+  backend: function ({ backend }) { this.backend = new Backend(backend) },
   backend_id: function ({ backend_id }) { this.backend_id = backend_id },
   choose_session: function ({ choose_session }) { this.choose_session = choose_session },
   registrable: function ({ registrable }) { this.registrable = registrable },

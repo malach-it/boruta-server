@@ -2,6 +2,7 @@ defmodule BorutaAdminWeb.BackendView do
   use BorutaAdminWeb, :view
 
   alias BorutaAdminWeb.BackendView
+  alias BorutaIdentity.IdentityProviders.Backend
 
   def render("index.json", %{backends: backends}) do
     %{data: render_many(backends, BackendView, "backend.json")}
@@ -31,7 +32,8 @@ defmodule BorutaAdminWeb.BackendView do
       smtp_username: backend.smtp_username,
       smtp_password: backend.smtp_password,
       smtp_tls: backend.smtp_tls,
-      smtp_port: backend.smtp_port
+      smtp_port: backend.smtp_port,
+      features: Backend.features(backend)
     }
   end
 end

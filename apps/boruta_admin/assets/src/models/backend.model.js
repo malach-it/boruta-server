@@ -17,6 +17,7 @@ const assign = {
   name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
   is_default: function ({ is_default }) { this.is_default = is_default },
+  features: function ({ features }) { this.features = features },
   password_hashing_alg: function ({ password_hashing_alg }) { this.password_hashing_alg = password_hashing_alg },
   password_hashing_opts: function ({ password_hashing_opts }) { this.password_hashing_opts = password_hashing_opts },
   ldap_pool_size: function ({ ldap_pool_size }) { this.ldap_pool_size = ldap_pool_size },
