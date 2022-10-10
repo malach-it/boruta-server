@@ -8,7 +8,8 @@ const defaults = {
   id: DEFAULT_ID,
   name: null,
   type: 'internal',
-  errors: null
+  errors: null,
+  backend: new Backend({})
 }
 
 const assign = {
