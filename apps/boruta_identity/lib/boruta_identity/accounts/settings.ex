@@ -61,7 +61,7 @@ defmodule BorutaIdentity.Accounts.Settings do
 
   @callback update_user(
               backend :: BorutaIdentity.IdentityProviders.Backend.t(),
-              user :: User.t(),
+              impl_user :: any(),
               user_update_params :: user_update_params()
             ) ::
               {:ok, user :: User.t()} | {:error, changeset :: Ecto.Changeset.t()}

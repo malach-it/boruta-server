@@ -46,7 +46,7 @@
           </div>
           <div class="field" :class="{ 'error': backend.errors?.ldap_user_rdn_attribute }">
             <label>User RDN attribute</label>
-            <input :type="text" autocomplete="new-password" v-model="backend.ldap_user_rdn_attribute" />
+            <input :type="text" v-model="backend.ldap_user_rdn_attribute" />
           </div>
           <div class="field" :class="{ 'error': backend.errors?.ldap_base_dn }">
             <label>Base distinguished name (dn)</label>
@@ -55,6 +55,17 @@
           <div class="field" :class="{ 'error': backend.errors?.ldap_ou }">
             <label>Users organization unit (ou)</label>
             <input type="text" v-model="backend.ldap_ou" placeholder="ou=People">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.ldap_master_dn }">
+            <label>Master distinguished name <i>(needed only for user edition)</i></label>
+            <input type="text" v-model="backend.ldap_master_dn" placeholder="cn=admin,dc=ldap,dc=test">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.ldap_master_password }">
+            <label>Master password <i>(needed only for user edition)</i></label>
+            <div class="ui left icon input">
+              <input :type="ldapMasterPasswordVisible ? 'text' : 'password'" autocomplete="new-password" v-model="backend.ldap_master_password" />
+              <i class="eye icon" :class="{ 'slash': ldapMasterPasswordVisible }" @click="ldapMasterPasswordVisibilityToggle()"></i>
+            </div>
           </div>
           <div class="field" :class="{ 'error': backend.errors?.ldap_pool_size }">
             <label>Pool size</label>
@@ -114,6 +125,7 @@ export default {
   data () {
     return {
       passwordHashingAlgorithms: Backend.passwordHashingAlgorithms,
+      ldapMasterPasswordVisible: false,
       smtpPasswordVisible: false
     }
   },
@@ -128,6 +140,9 @@ export default {
       if (this.backend.isPersisted) {
         alert('Changing the password hashing algorithm may invalidate already saved passwords. Use this feature with care.')
       }
+    },
+    ldapMasterPasswordVisibilityToggle () {
+      this.ldapMasterPasswordVisible = !this.ldapMasterPasswordVisible
     },
     smtpPasswordVisibilityToggle () {
       this.smtpPasswordVisible = !this.smtpPasswordVisible

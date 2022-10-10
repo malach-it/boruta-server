@@ -10,9 +10,12 @@ defmodule BorutaIdentity.Accounts.Ldap do
   alias BorutaIdentity.Repo
 
   @behaviour BorutaIdentity.Accounts.Sessions
+  @behaviour BorutaIdentity.Accounts.Settings
 
   @features [
-    :authenticable
+    :authenticable,
+    :consentable,
+    :user_editable
   ]
 
   @ldap_timeout 10_000
@@ -56,15 +59,58 @@ defmodule BorutaIdentity.Accounts.Ldap do
       pool_name(backend),
       :checkout,
       fn _from, ldap ->
-        result =
-          with :ok <- LdapRepo.simple_bind(ldap, ldap_user.dn, authentication_params[:password]) do
-            {:ok, ldap_user}
-          end
+        case LdapRepo.simple_bind(ldap, ldap_user.dn, authentication_params[:password]) do
+          :ok ->
+            {{:ok, ldap_user}, ldap}
 
-        {result, ldap}
+          _error ->
+            {{:error, "Authentication failure."}, ldap}
+        end
       end,
       @ldap_timeout
     )
+  end
+
+  @impl BorutaIdentity.Accounts.Settings
+  def update_user(backend, user, params) do
+    lazy_start(backend)
+
+    NimblePool.checkout!(
+      pool_name(backend),
+      :checkout,
+      fn _from, ldap ->
+        case update_user_in_ldap(ldap, backend, user, params) do
+          {:ok, user} ->
+            {{:ok, domain_user!(user, backend)}, ldap}
+
+          {:error, error, user} ->
+            # NOTE keep user synchronized from LDAP
+            domain_user!(user, backend)
+
+            {{:error, error}, ldap}
+        end
+      end
+    )
+  end
+
+  @spec pool_name(backend :: Backend.t()) :: pool_name :: atom()
+  def pool_name(backend) do
+    signature =
+      backend
+      |> Map.from_struct()
+      |> Enum.map_join(fn
+        {key, value} ->
+          case Atom.to_string(key) do
+            "ldap_" <> _rest -> to_string(value)
+            _ -> nil
+          end
+      end)
+
+    signature = :crypto.hash(:sha256, signature)
+
+    signature
+    |> Base.encode16()
+    |> String.to_atom()
   end
 
   def start_link(backend) do
@@ -90,7 +136,7 @@ defmodule BorutaIdentity.Accounts.Ldap do
 
   @impl NimblePool
   def handle_checkin(ldap, _from, ldap, pool_state) do
-    {:ok, ldap, pool_state}
+    {:remove, :closed, pool_state}
   end
 
   @impl NimblePool
@@ -135,24 +181,43 @@ defmodule BorutaIdentity.Accounts.Ldap do
     end
   end
 
-  def pool_name(backend) do
-    signature =
-      backend
-      |> Map.from_struct()
-      |> Enum.map_join(fn
-        {key, value} ->
-          case Atom.to_string(key) do
-            "ldap_" <> _rest -> to_string(value)
-            _ -> nil
-          end
-      end)
-
-    signature = :crypto.hash(:sha256, signature)
-
-    signature
-    |> Base.encode16()
-    |> String.to_atom()
+  defp update_user_in_ldap(
+         ldap,
+         %Backend{
+           ldap_master_dn: ldap_master_dn,
+           ldap_master_password: ldap_master_password
+         } = backend,
+         user,
+         %{email: email} = params
+       ) do
+    with :ok <- LdapRepo.simple_bind(ldap, ldap_master_dn, ldap_master_password),
+         :ok <-
+           LdapRepo.modify(ldap, backend, user, email) do
+      user = %{user | username: to_string(email)}
+      update_user_in_ldap(ldap, backend, user, Map.delete(params, :email))
+    else
+      {:error, error} ->
+        {:error, error, user}
+    end
   end
+
+  defp update_user_in_ldap(
+         ldap,
+         backend,
+         user,
+         %{password: password, current_password: current_password} = params
+       )
+       when byte_size(password) > 0 do
+    case LdapRepo.modify_password(ldap, user, password, current_password) do
+      :ok ->
+        update_user_in_ldap(ldap, backend, user, Map.delete(params, :password))
+
+      {:error, error} ->
+        {:error, error, user}
+    end
+  end
+
+  defp update_user_in_ldap(_ldap, _backend, user, _params), do: {:ok, user}
 
   defp lazy_start(backend) do
     case start_link(backend) do

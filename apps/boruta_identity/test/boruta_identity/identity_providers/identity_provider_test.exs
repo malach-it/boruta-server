@@ -72,11 +72,11 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProviderTest do
     } do
       identity_provider = %{
         identity_provider
-        | user_editable: true,
+        | registrable: true,
           backend: insert(:backend, type: Atom.to_string(Ldap))
       }
 
-      assert IdentityProvider.check_feature(identity_provider, :update_user) ==
+      assert IdentityProvider.check_feature(identity_provider, :register) ==
                {:error, "Feature is not enabled for identity provider backend implementation."}
     end
 

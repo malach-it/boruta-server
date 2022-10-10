@@ -24,6 +24,8 @@ defmodule BorutaAdminWeb.BackendView do
       ldap_user_rdn_attribute: backend.ldap_user_rdn_attribute,
       ldap_base_dn: backend.ldap_base_dn,
       ldap_ou: backend.ldap_ou,
+      ldap_master_dn: backend.ldap_master_dn,
+      ldap_master_password: backend.ldap_master_password,
       smtp_from: backend.smtp_from,
       smtp_relay: backend.smtp_relay,
       smtp_username: backend.smtp_username,
