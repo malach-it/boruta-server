@@ -70,7 +70,9 @@ defmodule BorutaIdentity.Accounts.Consents do
           params :: consent_params(),
           module :: atom()
         ) :: callback_result :: any()
-  def consent(context, _client_id, user, params, module) do
+  defwithclientidp consent(context, client_id, user, params, module) do
+    _client_idp = client_idp
+
     case user
          |> User.consent_changeset(%{consents: [params]})
          |> Repo.update() do
