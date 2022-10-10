@@ -118,6 +118,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     String.to_atom(type)
   end
 
+  @spec features(backend :: t()) :: list(atom())
+  def features(backend) do
+    apply(implementation(backend), :features, [])
+  end
+
   @spec password_hashing_module(t()) :: atom()
   def password_hashing_module(%__MODULE__{password_hashing_alg: password_hashing_alg}) do
     @password_hashing_modules[password_hashing_alg]

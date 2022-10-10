@@ -1,8 +1,8 @@
 defmodule BorutaAdminWeb.UserView do
   use BorutaAdminWeb, :view
 
+  alias BorutaAdminWeb.BackendView
   alias BorutaAdminWeb.ChangesetView
-  alias BorutaAdminWeb.IdentityProviderView
   alias BorutaAdminWeb.UserView
   alias BorutaIdentity.Accounts
 
@@ -32,7 +32,7 @@ defmodule BorutaAdminWeb.UserView do
       email: user.username,
       authorized_scopes: Accounts.get_user_scopes(user.id),
       backend:
-        render_one(user.backend, IdentityProviderView, "backend.json", backend: user.backend)
+        render_one(user.backend, BackendView, "backend.json", backend: user.backend)
     }
   end
 

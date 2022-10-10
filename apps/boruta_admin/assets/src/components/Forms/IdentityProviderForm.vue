@@ -28,15 +28,17 @@
               :to="{ name: 'edit-session-template', params: { identityProviderId: identityProvider.id } }"
               class="ui fluid blue button">Edit login template</router-link>
           </div>
-          <div class="ui segment">
-            <router-link
-              :to="{ name: 'edit-new-reset-password-template', params: { identityProviderId: identityProvider.id } }"
-              class="ui fluid blue button">Edit send reset password instructions template</router-link>
-          </div>
-          <div class="ui segment">
-            <router-link
-              :to="{ name: 'edit-edit-reset-password-template', params: { identityProviderId: identityProvider.id } }"
-              class="ui fluid blue button">Edit reset password template</router-link>
+          <div v-if="identityProvider.backend.features?.includes('reset_password')">
+            <div class="ui segment">
+              <router-link
+                :to="{ name: 'edit-new-reset-password-template', params: { identityProviderId: identityProvider.id } }"
+                class="ui fluid blue button">Edit send reset password instructions template</router-link>
+            </div>
+            <div class="ui segment">
+              <router-link
+                :to="{ name: 'edit-edit-reset-password-template', params: { identityProviderId: identityProvider.id } }"
+                class="ui fluid blue button">Edit reset password template</router-link>
+            </div>
           </div>
         </section>
         <section v-if="identityProvider.isPersisted">
@@ -56,7 +58,7 @@
             </div>
           </div>
         </section>
-        <section v-if="identityProvider.isPersisted">
+        <section v-if="identityProvider.isPersisted && identityProvider.backend.features?.includes('registrable')">
           <h3>Registration</h3>
           <div class="ui segment">
             <div class="ui toggle checkbox">
@@ -73,7 +75,7 @@
             </div>
           </div>
         </section>
-        <section v-if="identityProvider.isPersisted">
+        <section v-if="identityProvider.isPersisted && identityProvider.backend.features?.includes('user_editable')">
           <h3>User information edition</h3>
           <div class="ui segment">
             <div class="ui toggle checkbox">
@@ -90,7 +92,7 @@
             </div>
           </div>
         </section>
-        <section v-if="identityProvider.isPersisted">
+        <section v-if="identityProvider.isPersisted && identityProvider.backend.features?.includes('confirmable')">
           <h3>Email confirmation</h3>
           <div class="ui segment">
             <div class=" field">
@@ -109,7 +111,7 @@
             </div>
           </div>
         </section>
-        <section v-if="identityProvider.isPersisted">
+        <section v-if="identityProvider.isPersisted && identityProvider.backend.features?.includes('consentable')">
           <h3>User consent</h3>
           <div class="ui segment">
             <div class=" field">
@@ -157,6 +159,15 @@ export default {
   methods: {
     back () {
       this.$emit('back')
+    }
+  },
+  watch: {
+    identityProvider: {
+      handler({ backend_id }) {
+        console.log(backend_id)
+        this.identityProvider.backend = this.backends.find(({ id }) => id === backend_id)
+      },
+      deep: true
     }
   }
 }
