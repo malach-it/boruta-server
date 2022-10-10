@@ -85,10 +85,7 @@ BorutaAuth.Repo.insert(
     public_revoke: true
   })
 
-{:ok, backend} = BorutaIdentity.IdentityProviders.create_backend(%{
-  name: "Default",
-  is_default: true
-})
+backend = BorutaIdentity.IdentityProviders.Backend.default!()
 
 {:ok, identity_provider} =
   BorutaIdentity.IdentityProviders.create_identity_provider(%{
