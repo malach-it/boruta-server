@@ -18,7 +18,8 @@ defmodule BorutaIdentity.Accounts.Ldap do
     :authenticable,
     :consentable,
     :user_editable,
-    :reset_password
+    :reset_password,
+    :confirmable
   ]
 
   @ldap_timeout 10_000
