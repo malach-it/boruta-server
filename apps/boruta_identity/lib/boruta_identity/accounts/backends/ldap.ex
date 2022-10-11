@@ -264,14 +264,17 @@ defmodule BorutaIdentity.Accounts.Ldap do
            ldap_master_password: ldap_master_password
          },
          user,
-         reset_password_params
-       ) do
+         %{password: password} = reset_password_params
+       )
+       when byte_size(password) > 0 do
     with :ok <- check_password_confirmation(reset_password_params),
          :ok <- LdapRepo.simple_bind(ldap, ldap_master_dn, ldap_master_password),
          :ok <- LdapRepo.modify_password(ldap, user, reset_password_params.password) do
       {:ok, user}
     end
   end
+
+  defp reset_password_in_ldap(_ldap, _backend, _user, _reset_password_params), do: {:error, "Password cannot be empty."}
 
   defp check_password_confirmation(%{
          password: password,
