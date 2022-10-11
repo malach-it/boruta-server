@@ -53,12 +53,12 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders
-  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.Repo
 
@@ -73,13 +73,6 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           password: String.t(),
           password_confirmation: String.t()
         }
-
-  @callback send_reset_password_instructions(
-              backend :: Backend.t(),
-              user :: User.t(),
-              reset_password_url_fun :: reset_password_url_fun()
-            ) ::
-              :ok | {:error, reason :: String.t()}
 
   @callback reset_password(
               backend :: BorutaIdentity.IdentityProviders.Backend.t(),
@@ -113,15 +106,13 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                      reset_password_url_fun,
                      module
                    ) do
-    client_impl = IdentityProvider.implementation(client_idp)
-
     with %User{} = user <-
            Users.get_user_by_email(client_idp.backend, reset_password_instructions_params[:email]) do
-      apply(client_impl, :send_reset_password_instructions, [
+      send_reset_password_instructions(
         client_idp.backend,
         user,
         reset_password_url_fun
-      ])
+      )
     end
 
     # NOTE return a success either reset passowrd instructions email sent or not
@@ -186,6 +177,17 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           token: reset_password_params.reset_password_token,
           message: reason
         })
+    end
+  end
+
+  defp send_reset_password_instructions(backend, user, reset_password_url_fun) do
+    with {:ok, _email} <-
+           Deliveries.deliver_user_reset_password_instructions(
+             backend,
+             user,
+             reset_password_url_fun
+           ) do
+      :ok
     end
   end
 
