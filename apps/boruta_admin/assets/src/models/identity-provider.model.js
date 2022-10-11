@@ -9,7 +9,7 @@ const defaults = {
   name: null,
   type: 'internal',
   errors: null,
-  backend: new Backend({})
+  backend: new Backend()
 }
 
 const assign = {

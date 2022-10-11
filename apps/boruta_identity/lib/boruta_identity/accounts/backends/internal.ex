@@ -11,7 +11,6 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   import Ecto.Query, only: [from: 2]
 
-  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
@@ -77,26 +76,6 @@ defmodule BorutaIdentity.Accounts.Internal do
     case Internal.User.valid_password?(backend, user, password) do
       true -> {:ok, user}
       false -> {:error, "Invalid user password."}
-    end
-  end
-
-  @impl BorutaIdentity.Accounts.ResetPasswords
-  def send_reset_password_instructions(backend, user, reset_password_url_fun) do
-    with {:ok, _email} <-
-           Deliveries.deliver_user_reset_password_instructions(
-             backend,
-             user,
-             reset_password_url_fun
-           ) do
-      :ok
-    end
-  end
-
-  @impl BorutaIdentity.Accounts.ResetPasswords
-  def reset_password_changeset(_backend, token) do
-    with {:ok, user} <-
-           get_user_by_reset_password_token(token) do
-      {:ok, Ecto.Changeset.change(user)}
     end
   end
 

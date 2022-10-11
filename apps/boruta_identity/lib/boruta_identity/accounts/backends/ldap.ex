@@ -5,17 +5,21 @@ defmodule BorutaIdentity.Accounts.Ldap do
 
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.LdapRepo
   alias BorutaIdentity.Repo
 
+  @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
   @behaviour BorutaIdentity.Accounts.Settings
 
   @features [
     :authenticable,
     :consentable,
-    :user_editable
+    :user_editable,
+    :reset_password,
+    :confirmable
   ]
 
   @ldap_timeout 10_000
@@ -87,6 +91,30 @@ defmodule BorutaIdentity.Accounts.Ldap do
             # NOTE keep user synchronized from LDAP
             domain_user!(user, backend)
 
+            {{:error, error}, ldap}
+        end
+      end
+    )
+  end
+
+  @impl BorutaIdentity.Accounts.ResetPasswords
+  def reset_password(backend, reset_password_params) do
+    lazy_start(backend)
+
+    NimblePool.checkout!(
+      pool_name(backend),
+      :checkout,
+      fn _from, ldap ->
+        with {:ok, user} <-
+               get_user_by_reset_password_token(
+                 ldap,
+                 backend,
+                 reset_password_params.reset_password_token
+               ),
+             {:ok, _user} <- reset_password_in_ldap(ldap, backend, user, reset_password_params) do
+          {{:ok, user}, ldap}
+        else
+          {:error, error} ->
             {{:error, error}, ldap}
         end
       end
@@ -218,6 +246,46 @@ defmodule BorutaIdentity.Accounts.Ldap do
   end
 
   defp update_user_in_ldap(_ldap, _backend, user, _params), do: {:ok, user}
+
+  defp get_user_by_reset_password_token(ldap, backend, token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "reset_password"),
+         %User{username: username} <- Repo.one(query),
+         {:ok, user} <- fetch_user_from_ldap(ldap, backend, username) do
+      {:ok, user}
+    else
+      _ -> {:error, "Given reset password token is invalid."}
+    end
+  end
+
+  defp reset_password_in_ldap(
+         ldap,
+         %Backend{
+           ldap_master_dn: ldap_master_dn,
+           ldap_master_password: ldap_master_password
+         },
+         user,
+         %{password: password} = reset_password_params
+       )
+       when byte_size(password) > 0 do
+    with :ok <- check_password_confirmation(reset_password_params),
+         :ok <- LdapRepo.simple_bind(ldap, ldap_master_dn, ldap_master_password),
+         :ok <- LdapRepo.modify_password(ldap, user, reset_password_params.password) do
+      {:ok, user}
+    end
+  end
+
+  defp reset_password_in_ldap(_ldap, _backend, _user, _reset_password_params), do: {:error, "Password cannot be empty."}
+
+  defp check_password_confirmation(%{
+         password: password,
+         password_confirmation: password_confirmation
+       })
+       when password == password_confirmation do
+    :ok
+  end
+
+  defp check_password_confirmation(_reset_password_params),
+    do: {:error, "Password and password confirmation do not match."}
 
   defp lazy_start(backend) do
     case start_link(backend) do

@@ -53,12 +53,14 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
 
   import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
+  alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.Users
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders
-  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.IdentityProvider
+  alias BorutaIdentity.Repo
 
   @type reset_password_url_fun :: (token :: String.t() -> reset_password_url :: String.t())
 
@@ -71,16 +73,6 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           password: String.t(),
           password_confirmation: String.t()
         }
-
-  @callback send_reset_password_instructions(
-              backend :: Backend.t(),
-              user :: User.t(),
-              reset_password_url_fun :: reset_password_url_fun()
-            ) ::
-              :ok | {:error, reason :: String.t()}
-
-  @callback reset_password_changeset(backend :: Backend.t(), token :: String.t()) ::
-              {:ok, changeset :: Ecto.Changeset.t()} | {:error, reason :: String.t()}
 
   @callback reset_password(
               backend :: BorutaIdentity.IdentityProviders.Backend.t(),
@@ -114,15 +106,13 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                      reset_password_url_fun,
                      module
                    ) do
-    client_impl = IdentityProvider.implementation(client_idp)
-
     with %User{} = user <-
            Users.get_user_by_email(client_idp.backend, reset_password_instructions_params[:email]) do
-      apply(client_impl, :send_reset_password_instructions, [
+      send_reset_password_instructions(
         client_idp.backend,
         user,
         reset_password_url_fun
-      ])
+      )
     end
 
     # NOTE return a success either reset passowrd instructions email sent or not
@@ -141,9 +131,7 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                      token,
                      module
                    ) do
-    client_impl = IdentityProvider.implementation(client_idp)
-
-    case apply(client_impl, :reset_password_changeset, [client_idp.backend, token]) do
+    case reset_password_changeset(client_idp.backend, token) do
       {:ok, _changeset} ->
         module.password_reset_initialized(
           context,
@@ -152,7 +140,11 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
         )
 
       {:error, reason} ->
-        module.password_reset_failure(context, %ResetPasswordError{message: reason, token: token})
+        module.password_reset_failure(context, %ResetPasswordError{
+          message: reason,
+          token: token,
+          template: edit_reset_password_template(client_idp)
+        })
     end
   end
 
@@ -189,6 +181,33 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
           token: reset_password_params.reset_password_token,
           message: reason
         })
+    end
+  end
+
+  defp send_reset_password_instructions(backend, user, reset_password_url_fun) do
+    with {:ok, _email} <-
+           Deliveries.deliver_user_reset_password_instructions(
+             backend,
+             user,
+             reset_password_url_fun
+           ) do
+      :ok
+    end
+  end
+
+  defp reset_password_changeset(_backend, token) do
+    with {:ok, user} <-
+           get_user_by_reset_password_token(token) do
+      {:ok, Ecto.Changeset.change(user)}
+    end
+  end
+
+  defp get_user_by_reset_password_token(token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "reset_password"),
+         %User{} = user <- Repo.one(query) do
+      {:ok, user}
+    else
+      _ -> {:error, "Given reset password token is invalid."}
     end
   end
 

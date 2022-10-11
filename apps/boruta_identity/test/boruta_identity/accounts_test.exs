@@ -1012,7 +1012,10 @@ defmodule BorutaIdentity.AccountsTest do
   test "initialize_password_reset/3"
 
   @tag :skip
-  test "reset_password/4"
+  test "reset_password/4 with an internal backend"
+
+  @tag :skip
+  test "reset_password/4 with a ldap backend"
 
   @tag :skip
   test "initialize_edit_user/4"

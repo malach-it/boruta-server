@@ -70,8 +70,11 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
     test "does not render reset password with invalid token", %{conn: conn, request: request} do
       conn = get(conn, Routes.user_reset_password_path(conn, :edit, "oops", request: request))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
-      assert get_flash(conn, :error) =~ "Given reset password token is invalid."
+
+      response = html_response(conn, 200)
+
+      assert response =~ "<h1>Reset password</h1>"
+      assert response =~ "Given reset password token is invalid."
     end
   end
 
@@ -117,6 +120,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
         })
 
       response = html_response(conn, 200)
+
       assert response =~ "<h1>Reset password</h1>"
       assert response =~ "should be at least 12 character(s)"
       assert response =~ "does not match password"
@@ -124,8 +128,11 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
     test "does not reset password with invalid token", %{conn: conn, request: request} do
       conn = put(conn, Routes.user_reset_password_path(conn, :update, "oops", request: request))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
-      assert get_flash(conn, :error) =~ "Given reset password token is invalid."
+
+      response = html_response(conn, 200)
+
+      assert response =~ "<h1>Reset password</h1>"
+      assert response =~ "Given reset password token is invalid."
     end
   end
 end
