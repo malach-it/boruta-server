@@ -123,13 +123,20 @@ defmodule BorutaIdentityWeb.UserResetPasswordController do
   end
 
   @impl BorutaIdentity.Accounts.ResetPasswordApplication
-  def password_reset_failure(%Plug.Conn{query_params: query_params} = conn, %ResetPasswordError{
+  def password_reset_failure(conn, %ResetPasswordError{
+        template: template,
+        token: token,
         message: message
       }) do
-    request = query_params["request"]
-
     conn
-    |> put_flash(:error, message)
-    |> redirect(to: Routes.user_session_path(conn, :new, %{request: request}))
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        errors: [message],
+        token: token
+      }
+    )
   end
 end

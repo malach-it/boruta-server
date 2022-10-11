@@ -140,7 +140,11 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
         )
 
       {:error, reason} ->
-        module.password_reset_failure(context, %ResetPasswordError{message: reason, token: token})
+        module.password_reset_failure(context, %ResetPasswordError{
+          message: reason,
+          token: token,
+          template: edit_reset_password_template(client_idp)
+        })
     end
   end
 

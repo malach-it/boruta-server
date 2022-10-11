@@ -102,7 +102,7 @@
         </div>
         <div class="field" :class="{ 'error': backend.errors?.smtp_port }">
           <label>Port</label>
-          <input type="number" v-model="backend.smtp_port" placeholder="smtp.example.com">
+          <input type="number" v-model="backend.smtp_port" placeholder="25">
         </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
