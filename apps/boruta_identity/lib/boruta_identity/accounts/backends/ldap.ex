@@ -1,9 +1,27 @@
+defmodule BorutaIdentity.Accounts.LdapError do
+  @enforce_keys [:message]
+  defexception [:message]
+
+  @type t :: %__MODULE__{
+          message: String.t()
+        }
+
+  def exception(message) when is_binary(message) do
+    %__MODULE__{message: message}
+  end
+
+  def message(exception) do
+    exception.message
+  end
+end
+
 defmodule BorutaIdentity.Accounts.Ldap do
   @moduledoc false
 
   @behaviour NimblePool
 
   alias BorutaIdentity.Accounts.Ldap
+  alias BorutaIdentity.Accounts.LdapError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders.Backend
@@ -13,6 +31,7 @@ defmodule BorutaIdentity.Accounts.Ldap do
   @behaviour BorutaIdentity.Accounts.ResetPasswords
   @behaviour BorutaIdentity.Accounts.Sessions
   @behaviour BorutaIdentity.Accounts.Settings
+  @behaviour BorutaIdentity.Admin
 
   @features [
     :authenticable,
@@ -119,6 +138,21 @@ defmodule BorutaIdentity.Accounts.Ldap do
         end
       end
     )
+  end
+
+  @impl BorutaIdentity.Admin
+  def create_user(_backend, _params) do
+    raise LdapError, "LDAP backends does not support user creation."
+  end
+
+  @impl BorutaIdentity.Admin
+  def create_raw_user(_backend, _params) do
+    raise LdapError, "LDAP backends does not support user creation."
+  end
+
+  @impl BorutaIdentity.Admin
+  def delete_user(_id) do
+    {:error, "LDAP backends does not support user deletion."}
   end
 
   @spec pool_name(backend :: Backend.t()) :: pool_name :: atom()

@@ -21,7 +21,7 @@ defmodule BorutaIdentity.Admin do
           hashed_password: String.t()
         }
 
-  @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: any()}
+  @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: String.t()}
   @callback create_user(
               backend :: Backend.t(),
               params :: user_params()
@@ -209,7 +209,7 @@ defmodule BorutaIdentity.Admin do
   end
 
   @spec delete_user(user_id :: Ecto.UUID.t()) ::
-          {:ok, user :: User.t()} | {:error, atom()} | {:error, Ecto.Changeset.t()}
+          {:ok, user :: User.t()} | {:error, atom()} | {:error, Ecto.Changeset.t()} | {:error, reason :: String.t()}
   def delete_user(user_id) when is_binary(user_id) do
     case get_user(user_id) do
       nil ->
@@ -217,8 +217,9 @@ defmodule BorutaIdentity.Admin do
 
       user ->
         # TODO delete both provider and domain users in a transaction
-        apply(Backend.implementation(user.backend), :delete_user, [user.uid])
-        Repo.delete(user)
+        with :ok <- apply(Backend.implementation(user.backend), :delete_user, [user.uid]) do
+          Repo.delete(user)
+        end
     end
   end
 

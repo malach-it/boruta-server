@@ -15,10 +15,11 @@ defmodule BorutaAdminWeb.UserController do
   action_fallback(BorutaAdminWeb.FallbackController)
 
   def index(conn, params) do
-    users = case params["q"] do
-      nil -> Admin.list_users(params)
-      query -> Admin.search_users(query, params)
-    end
+    users =
+      case params["q"] do
+        nil -> Admin.list_users(params)
+        query -> Admin.search_users(query, params)
+      end
 
     render(conn, "index.json",
       users: users.entries,
@@ -54,6 +55,10 @@ defmodule BorutaAdminWeb.UserController do
     _e in Ecto.NoResultsError ->
       {:error,
        Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:backend, "does not exist")}
+
+    error in LdapError ->
+      {:error,
+       Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:backend, error.message)}
   end
 
   def create(conn, %{"backend_id" => backend_id, "file" => file_params} = import_params) do
@@ -77,14 +82,18 @@ defmodule BorutaAdminWeb.UserController do
         result = Admin.import_users(backend, file_params.path, import_users_opts)
 
         render(conn, "import_result.json", import_result: result)
+
       _ ->
-      {:error,
-       Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:file, "is invalid")}
+        {:error, Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:file, "is invalid")}
     end
   rescue
     _e in Ecto.NoResultsError ->
       {:error,
        Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:backend, "does not exist")}
+
+    error in LdapError ->
+      {:error,
+       Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:backend, error.message)}
   end
 
   def create(_conn, _params), do: {:error, :bad_request}
@@ -107,6 +116,12 @@ defmodule BorutaAdminWeb.UserController do
     with :ok <- ensure_open_for_edition(user_id, conn),
          {:ok, _user} <- Admin.delete_user(user_id) do
       send_resp(conn, 204, "")
+    else
+      {:error, "" <> reason} ->
+        {:error, Ecto.Changeset.change(%User{}) |> Ecto.Changeset.add_error(:backend, reason)}
+
+      error ->
+        error
     end
   end
 

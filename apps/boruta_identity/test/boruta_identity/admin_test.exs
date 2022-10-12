@@ -91,7 +91,7 @@ defmodule BorutaIdentity.AdminTest do
     end
   end
 
-  describe "delete_user/1" do
+  describe "delete_user/1 with internal backend" do
     test "returns an error" do
       assert Admin.delete_user(Ecto.UUID.generate()) == {:error, :not_found}
     end
@@ -103,6 +103,9 @@ defmodule BorutaIdentity.AdminTest do
       refute Repo.get(Internal.User, user_uid)
     end
   end
+
+  @tag :skip
+  test "delete_user/1 with ldap backend"
 
   @tag :skip
   test "create_user/2"
