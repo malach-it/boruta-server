@@ -1,0 +1,101 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  static_code_analysis:
+    name: Static Code Analysis
+    runs-on: ubuntu-22.04
+    container: elixir:1.14
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve Cached Dependencies
+        uses: actions/cache@v2
+        id: mix-cache
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ hashFiles('mix.lock') }}
+
+            # - name: Check Code Format
+            #   run: mix format --check-formatted
+
+      - name: Elixir prerequisites
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+
+      - name: Run Credo
+        run: mix credo -- strict
+
+      - name: Run Dialyzer
+        run: mix dialyzer
+
+  unit_tests:
+    name: Unit Tests
+    runs-on: ubuntu-22.04
+    container: elixir:1.14
+    strategy:
+      fail-fast: false
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve Cached Dependencies
+        uses: actions/cache@v2
+        id: mix-cache
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ hashFiles('mix.lock') }}
+
+      - name: Elixir prerequisites
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+
+      - name: Run test
+        run: mix test --trace
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DATABASE: boruta_test
+          POSTGRES_HOST: postgres

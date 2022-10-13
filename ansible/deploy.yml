@@ -193,7 +193,7 @@
             template:
               spec:
                 containers:
-                  - image: registry.gitlab.com/patatoid/boruta/app:latest
+                  - image: ghcr.io/malach-it/boruta-server:master
                     command: ["/app/bin/boruta"]
                     args: ["eval", "Boruta.Release.setup"]
                     envFrom:
@@ -203,7 +203,7 @@
                     name: boruta
                 restartPolicy: OnFailure
                 imagePullSecrets:
-                - name: regcred
+                  - name: dockerconfigjson-github-com
 
     - name: Create Boruta logs storage class
       kubernetes.core.k8s:
@@ -269,7 +269,7 @@
                     persistentVolumeClaim:
                       claimName: boruta-logs-pvc
                 containers:
-                  - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
                     readinessProbe:
                       httpGet:
                         path: /healthcheck
@@ -283,7 +283,7 @@
                       - mountPath: "/app/log"
                         name: logs
                 imagePullSecrets:
-                - name: regcred
+                - name: dockerconfigjson-github-com
 
     - name: Migrate boruta database
       when: not database_setup.changed
@@ -301,7 +301,7 @@
             template:
               spec:
                 containers:
-                  - image: "registry.gitlab.com/patatoid/boruta/app:{{ release_tag }}"
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
                     command: ["/app/bin/boruta"]
                     args: ["eval", "Boruta.Release.migrate"]
                     envFrom:
@@ -311,7 +311,7 @@
                     name: boruta
                 restartPolicy: OnFailure
                 imagePullSecrets:
-                - name: regcred
+                  - name: dockerconfigjson-github-com
 
     - name: Wait for deployment readyness
       shell: "kubectl -n boruta-staging wait --for=condition=Ready po --all -l deployment={{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
