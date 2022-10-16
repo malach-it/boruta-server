@@ -189,13 +189,19 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         authorize_error(conn, error)
 
       {false, _current_user} ->
-        conn
-        |> redirect(
-          to:
-            IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
-              request: request_param(conn)
-            })
-        )
+        case request_param(conn) do
+          "" ->
+            authorize_error(conn, error)
+
+          request ->
+            conn
+            |> redirect(
+              to:
+                IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
+                  request: request
+                })
+            )
+        end
     end
   end
 
