@@ -29,7 +29,8 @@ defmodule BorutaGateway.Plug.Authorize do
         } = conn,
         _options
       ) do
-    with ["Bearer " <> value] <- get_req_header(conn, "authorization"),
+    with [authorization_header] <- get_req_header(conn, "authorization"),
+         [_header, value] <- Regex.run(~r/[B|b]earer (.+)/, authorization_header),
          {:ok, %Token{scope: scope} = token} <- Authorization.AccessToken.authorize(value: value),
          {:ok, _} <- validate_scopes(scope, required_scopes, method) do
       assign(conn, :token, token)
