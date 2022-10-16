@@ -46,7 +46,7 @@
           </div>
           <div class="field" :class="{ 'error': backend.errors?.ldap_user_rdn_attribute }">
             <label>User RDN attribute</label>
-            <input :type="text" v-model="backend.ldap_user_rdn_attribute" />
+            <input :type="text" v-model="backend.ldap_user_rdn_attribute" placeholder="sn" />
           </div>
           <div class="field" :class="{ 'error': backend.errors?.ldap_base_dn }">
             <label>Base distinguished name (dn)</label>

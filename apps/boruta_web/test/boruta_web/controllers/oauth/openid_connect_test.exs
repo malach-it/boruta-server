@@ -222,7 +222,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn = get(conn, Routes.openid_path(conn, :jwks_index))
 
       assert %{
-        "keys" => [%{"kid" => ^client_id, "kty" => "RSA"}, %{"kid" => ^client_id, "kty" => "oct"}]
+        "keys" => [%{"kid" => ^client_id, "kty" => "RSA"}]
       } = json_response(conn, 200)
     end
   end

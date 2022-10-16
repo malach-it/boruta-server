@@ -37,7 +37,6 @@ defmodule BorutaAdmin.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:boruta, "~> 2.2.0"},
       {:boruta_auth, in_umbrella: true},
       {:boruta_gateway, in_umbrella: true},
       {:boruta_identity, in_umbrella: true},

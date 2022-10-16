@@ -26,7 +26,7 @@ defmodule BorutaAuth.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:boruta, "~> 2.2.0"},
+      {:boruta, "~> 2.2.1"},
       {:logger_file_backend, "~> 0.0.13"},
       {:quantum, "~> 3.0"}
     ]

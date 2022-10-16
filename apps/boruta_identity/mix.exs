@@ -39,7 +39,6 @@ defmodule BorutaIdentity.MixProject do
     [
       {:argon2_elixir, "~> 2.0"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:boruta, "~> 2.2.0"},
       {:boruta_auth, in_umbrella: true},
       {:ecto_sql, "~> 3.4"},
       {:ex_json_schema, "~> 0.9"},
