@@ -9,7 +9,8 @@ const defaults = {
   type: 'Elixir.BorutaIdentity.Accounts.Internal',
   errors: null,
   password_hashing_alg: 'argon2',
-  password_hashing_opts: {}
+  password_hashing_opts: {},
+  features: []
 }
 
 const assign = {

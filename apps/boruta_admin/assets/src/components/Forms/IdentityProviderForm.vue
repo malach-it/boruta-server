@@ -28,7 +28,7 @@
               :to="{ name: 'edit-session-template', params: { identityProviderId: identityProvider.id } }"
               class="ui fluid blue button">Edit login template</router-link>
           </div>
-          <div v-if="identityProvider.backend.features?.includes('reset_password')">
+          <div v-show="displayResetPassword">
             <div class="ui segment">
               <router-link
                 :to="{ name: 'edit-new-reset-password-template', params: { identityProviderId: identityProvider.id } }"
@@ -58,7 +58,7 @@
             </div>
           </div>
         </section>
-        <section v-if="identityProvider.isPersisted && identityProvider.backend.features?.includes('registrable')">
+        <section v-show="displayRegistrable">
           <h3>Registration</h3>
           <div class="ui segment">
             <div class="ui toggle checkbox">
@@ -75,7 +75,7 @@
             </div>
           </div>
         </section>
-        <section v-if="identityProvider.isPersisted && identityProvider.backend.features?.includes('user_editable')">
+        <section v-show="displayUserEditable">
           <h3>User information edition</h3>
           <div class="ui segment">
             <div class="ui toggle checkbox">
@@ -92,7 +92,7 @@
             </div>
           </div>
         </section>
-        <section v-if="identityProvider.isPersisted && identityProvider.backend.features?.includes('confirmable')">
+        <section v-show="displayConfirmable">
           <h3>Email confirmation</h3>
           <div class="ui segment">
             <div class=" field">
@@ -111,7 +111,7 @@
             </div>
           </div>
         </section>
-        <section v-if="identityProvider.isPersisted && identityProvider.backend.features?.includes('consentable')">
+        <section v-show="displayConsentable">
           <h3>User consent</h3>
           <div class="ui segment">
             <div class=" field">
@@ -153,6 +153,23 @@ export default {
       backends: []
     }
   },
+  computed: {
+    displayConfirmable () {
+      return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('confirmable')
+    },
+    displayResetPassword () {
+      return this.identityProvider.backend.features?.includes('reset_password')
+    },
+    displayRegistrable () {
+      return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('registrable')
+    },
+    displayUserEditable () {
+      return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('user_editable')
+    },
+    displayConsentable () {
+      return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('consentable')
+    }
+  },
   mounted () {
     Backend.all().then(backends => this.backends = backends)
   },
@@ -163,9 +180,8 @@ export default {
   },
   watch: {
     identityProvider: {
-      handler({ backend_id }) {
-        console.log(backend_id)
-        this.identityProvider.backend = this.backends.find(({ id }) => id === backend_id)
+      handler ({ backend_id }) {
+        this.identityProvider.backend = this.backends.find(({ id }) => id === backend_id) || this.identityProvider.backend
       },
       deep: true
     }
