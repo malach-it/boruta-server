@@ -61,12 +61,18 @@ defmodule BorutaIdentityWeb.Authenticable do
   def request_param(conn) do
     case Oauth.Request.authorize_request(conn, %Oauth.ResourceOwner{sub: ""}) do
       {:ok, %_{client_id: client_id, scope: scope}} ->
+        # NOTE remove prompt and max_age params affecting redirections
+        user_return_to =
+          current_path(conn)
+          |> String.replace(~r/prompt=(login|none)/, "")
+          |> String.replace(~r/max_age=(\d+)/, "")
+
         {:ok, jwt, _payload} =
           Joken.encode_and_sign(
             %{
               "client_id" => client_id,
               "scope" => scope,
-              "user_return_to" => current_path(conn)
+              "user_return_to" => user_return_to
             },
             BorutaIdentityWeb.Token.application_signer()
           )
