@@ -141,7 +141,8 @@ defmodule BorutaIdentity.Accounts.Sessions do
           | {:error, changeset :: Ecto.Changeset.t()}
   def create_user_session(%User{} = user) do
     with {_token, user_token} <- UserToken.build_session_token(user),
-         {:ok, session_token} <- Repo.insert(user_token) do
+         {:ok, session_token} <- Repo.insert(user_token),
+         {:ok, user} <- User.login_changeset(user) |> Repo.update() do
       {:ok, user, session_token.token}
     end
   end

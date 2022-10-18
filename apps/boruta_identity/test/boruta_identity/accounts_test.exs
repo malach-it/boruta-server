@@ -586,7 +586,7 @@ defmodule BorutaIdentity.AccountsTest do
       authentication_params = %{email: username, password: valid_user_password()}
 
       assert {:user_authenticated, ^context,
-              %User{username: ^username, backend: ^backend, uid: ^uid},
+              %User{username: ^username, backend: ^backend, uid: ^uid, last_login_at: last_login_at},
               session_token} =
                Accounts.create_session(
                  context,
@@ -595,6 +595,7 @@ defmodule BorutaIdentity.AccountsTest do
                  DummySession
                )
 
+      assert last_login_at
       assert session_token
     end
 
@@ -889,7 +890,7 @@ defmodule BorutaIdentity.AccountsTest do
       authentication_params = %{email: username, password: valid_user_password()}
 
       assert {:user_authenticated, ^context,
-              %User{username: ^username, backend: ^backend, uid: ^uid},
+              %User{username: ^username, backend: ^backend, uid: ^uid, last_login_at: last_login_at},
               session_token} =
                Accounts.create_session(
                  context,
@@ -898,6 +899,7 @@ defmodule BorutaIdentity.AccountsTest do
                  DummySession
                )
 
+      assert last_login_at
       assert session_token
     end
 
