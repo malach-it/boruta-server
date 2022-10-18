@@ -22,9 +22,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = put_unsigned_request(conn)
 
-    with {:unchanged, conn} <- check_preauthorized(conn),
+    with {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
-         {:unchanged, conn} <- prompt_redirection(conn, current_user),
+         {:unchanged, conn} <- check_preauthorized(conn),
          {:unchanged, conn} <- preauthorize(conn, current_user) do
       redirect(conn,
         to:
@@ -231,6 +231,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
+  def authorize_error(
+        %Plug.Conn{} = conn,
+        %Error{status: :unauthorized, error: :login_required} = error
+      ) do
+    redirect(conn, external: Error.redirect_to_url(error))
+  end
+
   def authorize_error(
         %Plug.Conn{} = conn,
         %Error{status: :unauthorized, error: :invalid_resource_owner} = error
