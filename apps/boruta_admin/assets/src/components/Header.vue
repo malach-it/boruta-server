@@ -42,10 +42,11 @@ export default {
 .header.dark {
   background: #1b1c1d;
   .main.menu {
-    border-bottom: 1px solid rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.08);
   }
 }
 .header {
+  background: white;
   max-width: 100%;
   overflow: hidden;
   .item.logo {
@@ -64,11 +65,16 @@ export default {
   .main.menu {
     border-radius: 0;
   }
-
   @media screen and (max-width: 768px) {
     .item.email {
       display: none;
     }
+  }
+  @media screen and (max-width: 1127px) {
+    position: fixed;
+    z-index: 100;
+    width: 100%;
+    padding-left: 3.2em;
   }
 }
 </style>

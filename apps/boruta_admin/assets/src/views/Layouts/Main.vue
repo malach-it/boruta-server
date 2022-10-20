@@ -2,7 +2,9 @@
   <div id="app" :class="{ 'dark': currentMode }">
     <Header ref="header" :darkMode="currentMode" />
     <div id="main" ref="main">
-      <div class="sidebar-menu">
+      <div class="sidebar-menu" ref="menu">
+        <i class="ui large burger bars icon" @click="toggleMenu()"></i>
+        <i class="ui large burger close icon" @click="toggleMenu()"></i>
         <div class="ui vertical fluid tabular menu" :class="{ 'inverted': currentMode }">
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
@@ -126,7 +128,7 @@ export default {
     Header,
     Breadcrumb
   },
-  data() {
+  data () {
     return {
       currentMode: JSON.parse(localStorage.getItem('dark_mode'))
     }
@@ -145,10 +147,16 @@ export default {
     })
   },
   methods: {
-    toggleDarkMode() {
+    toggleMenu () {
+      this.$refs.menu.classList.toggle('opened')
+    },
+    toggleDarkMode () {
       this.currentMode = !this.currentMode
       localStorage.setItem('dark_mode', this.currentMode)
     }
+  },
+  beforeRouteUpdate () {
+    this.$refs.menu.classList.remove('opened')
   }
 }
 </script>
@@ -254,9 +262,12 @@ export default {
     min-width: 200px;
     border-right: 1px solid #d4d4d5;
     .menu {
+      margin-top: 0!important;
+      background: white;
       height: 100%;
       border: none;
       .item {
+        background: white;
         position: relative;
         padding: 0;
         min-width: 3em;
@@ -339,6 +350,40 @@ export default {
           }
         }
       }
+    }
+    .burger {
+      display: none;
+      cursor: pointer;
+      position: absolute;
+      top: -1.5em;
+      left: .5em;
+    }
+    @media screen and (max-width: 1127px) {
+      position: fixed;
+      z-index: 100;
+      width: 100%;
+      .menu {
+        display: none;
+        z-index: 100;
+        .item {
+          border-bottom: 1px solid #d4d4d5;
+        }
+      }
+      .burger.bars {
+        display: block;
+      }
+      &.opened {
+        .burger.close {
+          display: block;
+        }
+        .burger.bars {
+          display: none;
+        }
+        .menu {
+          display: block;
+        }
+      }
+      height: auto;
     }
   }
   &.fixed-sidebar {
@@ -457,10 +502,8 @@ export default {
     }
   }
   @media screen and (max-width: 1127px) {
+    padding-top: 3em;
     flex-direction: column;
-    .sidebar-menu {
-      height: auto;
-    }
     .content-wrapper {
       width: auto;
     }
@@ -488,8 +531,10 @@ export default {
     border-right: 1px solid rgba(255,255,255,.05);
     color: white;
     .menu {
+      background: #1b1c1d;
       border: none;
       .item {
+        background: #1b1c1d;
         border: none;
         &.active {
           border: none;
@@ -532,6 +577,11 @@ export default {
             }
           }
         }
+      }
+    }
+    @media screen and (max-width: 1127px) {
+      .menu .item {
+        border-bottom: 1px solid rgba(255,255,255,.05);
       }
     }
   }
