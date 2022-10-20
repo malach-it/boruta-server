@@ -10,7 +10,7 @@
           {{ currentUser.email }}
         </span>
         <a v-on:click.prevent="logout()" class="ui item">
-          Logout
+          <i class="ui power off icon"></i>
         </a>
       </div>
     </div>
@@ -61,6 +61,9 @@ export default {
       max-height: 22px;
       width: auto;
     }
+  }
+  .power.off.icon {
+    margin: 0!important;
   }
   .main.menu {
     border-radius: 0;
