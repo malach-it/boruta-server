@@ -1,5 +1,0 @@
-# app_root/compile
-cd $phoenix_dir/assets
-npm run build
-cd $phoenix_dir
-mix "${phoenix_ex}.digest" #use the ${phoenix_ex} variable instead of hardcoding phx or phoenix
