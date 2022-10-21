@@ -6,6 +6,7 @@ defmodule BorutaAdminWeb.UserController do
       authorize: 2
     ]
 
+  alias BorutaIdentity.Accounts.LdapError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Admin
   alias BorutaIdentity.IdentityProviders
