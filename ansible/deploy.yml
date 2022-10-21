@@ -153,7 +153,7 @@
             name: boruta-env
             namespace: boruta-staging
           data:
-            SECRET_KEY_BASE: fm6UIOyjYUe51Xo7JDTurwSeyOoZ15Kmlbj4NUhU9951P8cEUZc3k8bsAeJJtCvg
+            SECRET_KEY_BASE: "{{ secret_key_base }}"
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: "{{ postgresql_password }}"
             POSTGRES_DATABASE: boruta
@@ -174,8 +174,6 @@
             BORUTA_OAUTH_PORT: "4001"
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
             BORUTA_GATEWAY_PORT: "4000"
-            MAILJET_API_KEY: "{{ mailjet_api_key }}"
-            MAILJET_SECRET: "{{ mailjet_secret }}"
             POOL_SIZE: "10"
 
     - name: Setup boruta database
