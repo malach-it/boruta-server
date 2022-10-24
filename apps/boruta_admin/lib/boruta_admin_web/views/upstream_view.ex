@@ -25,7 +25,8 @@ defmodule BorutaAdminWeb.UpstreamView do
       max_idle_time: upstream.max_idle_time,
       error_content_type: upstream.error_content_type,
       forbidden_response: upstream.forbidden_response,
-      unauthorized_response: upstream.unauthorized_response
+      unauthorized_response: upstream.unauthorized_response,
+      forwarded_token_signature_alg: upstream.forwarded_token_signature_alg
     }
   end
 end

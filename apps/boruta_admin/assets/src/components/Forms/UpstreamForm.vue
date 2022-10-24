@@ -73,6 +73,22 @@
             <textarea v-model="upstream.unauthorized_response" placeholder="You are unauthorized to access this resource."></textarea>
           </div>
         </div>
+        <h3>Forwarded authorization</h3>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': upstream.errors?.forwarded_token_signature_alg }">
+            <label>Forwarded token signature algorithm</label>
+            <div class="field" v-for="alg in forwardedTokenSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg }}</label>
+                <input type="radio" v-model="upstream.forwarded_token_signature_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field" :class="{ 'error': upstream.errors?.error_content_type }">
+          <label>Error content type</label>
+          <input type="text" v-model="upstream.error_content_type" placeholder="text">
+        </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a class="ui button" v-on:click="back()">Back</a>
@@ -83,6 +99,7 @@
 
 <script>
 import Scope from '../../models/scope.model'
+import Upstream from '../../models/upstream.model'
 import GatewayScopesField from '../../components/Forms/GatewayScopesField.vue'
 import FormErrors from '../../components/Forms/FormErrors.vue'
 
@@ -92,6 +109,11 @@ export default {
   components: {
     FormErrors,
     GatewayScopesField
+  },
+  data () {
+    return {
+      forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms
+    }
   },
   methods: {
     back () {

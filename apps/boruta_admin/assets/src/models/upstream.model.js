@@ -20,6 +20,7 @@ const assign = {
   pool_count: function ({ pool_count }) { this.pool_count = pool_count },
   max_idle_time: function ({ max_idle_time }) { this.max_idle_time = max_idle_time },
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
+  forwarded_token_signature_alg: function ({ forwarded_token_signature_alg }) { this.forwarded_token_signature_alg = forwarded_token_signature_alg },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
   },
@@ -102,7 +103,8 @@ class Upstream {
       required_scopes,
       error_content_type,
       forbidden_response,
-      unauthorized_response
+      unauthorized_response,
+      forwarded_token_signature_alg
     } = this
 
     return {
@@ -123,7 +125,8 @@ class Upstream {
       authorize,
       error_content_type,
       forbidden_response,
-      unauthorized_response
+      unauthorized_response,
+      forwarded_token_signature_alg
     }
   }
 }
@@ -150,5 +153,14 @@ Upstream.get = function (id) {
     return new Upstream(data.data)
   })
 }
+
+Upstream.forwardedTokenSignatureAlgorithms = [
+  "HS256",
+  "HS384",
+  "HS512",
+  "RS256",
+  "RS384",
+  "RS512"
+]
 
 export default Upstream

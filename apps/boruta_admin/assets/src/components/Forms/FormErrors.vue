@@ -23,6 +23,7 @@ const labels = {
   'redirect_uris': 'Redirect URIs',
   'file': 'File',
   'id_token_signature_alg': 'ID token signature algorithm',
+  'forwarded_token_signature_alg': 'Forwarded token signature algorithm',
   'resource': 'Resource',
   'is_default': 'Default',
   'password_hashing_opts': 'Password hashing options'

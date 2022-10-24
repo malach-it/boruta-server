@@ -52,6 +52,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:error_content_type, :string)
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
+    field(:forwarded_token_signature_alg, :string)
 
     field(:http_client, :any, virtual: true)
 
@@ -101,7 +102,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :max_idle_time,
       :error_content_type,
       :forbidden_response,
-      :unauthorized_response
+      :unauthorized_response,
+      :forwarded_token_signature_alg
     ])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
