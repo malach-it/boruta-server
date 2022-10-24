@@ -19,6 +19,11 @@ defmodule BorutaGateway.Upstreams.Upstream do
   use Ecto.Schema
   import Ecto.Changeset
 
+  import Boruta.Config,
+    only: [
+      token_generator: 0
+    ]
+
   alias BorutaGateway.Upstreams.ClientSupervisor
 
   @type t :: %__MODULE__{
@@ -53,6 +58,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
     field(:forwarded_token_signature_alg, :string)
+    field(:forwarded_token_secret, :string)
 
     field(:http_client, :any, virtual: true)
 
@@ -103,12 +109,14 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :error_content_type,
       :forbidden_response,
       :unauthorized_response,
-      :forwarded_token_signature_alg
+      :forwarded_token_signature_alg,
+      :forwarded_token_secret
     ])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_inclusion(:pool_size, 1..100)
     |> validate_inclusion(:pool_count, 1..10)
+    |> maybe_put_forwarded_token_secret()
     |> validate_uris()
     |> validate_required_scopes_format()
   end
@@ -143,4 +151,30 @@ defmodule BorutaGateway.Upstreams.Upstream do
   end
 
   defp validate_required_scopes_format(changeset), do: changeset
+
+  defp maybe_put_forwarded_token_secret(%Ecto.Changeset{data: data, changes: changes} = changeset) do
+    signature_algorithm = get_field(changeset, :forwarded_token_signature_alg)
+    if signature_algorithm && String.match?(signature_algorithm, ~r/HS/) do
+      case fetch_change(changeset, :forwarded_token_secret) do
+        {:ok, nil} ->
+          put_change(
+            changeset,
+            :forwarded_token_secret,
+            token_generator().secret(struct(data, changes))
+          )
+
+        {:ok, _secret} ->
+          changeset
+
+        :error ->
+          put_change(
+            changeset,
+            :forwarded_token_secret,
+            token_generator().secret(struct(data, changes))
+          )
+      end
+    else
+      changeset
+    end
+  end
 end

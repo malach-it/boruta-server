@@ -85,9 +85,9 @@
             </div>
           </div>
         </div>
-        <div class="field" :class="{ 'error': upstream.errors?.error_content_type }">
-          <label>Error content type</label>
-          <input type="text" v-model="upstream.error_content_type" placeholder="text">
+        <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_secret }">
+          <label>Forwarded token secret <em>(leave blank to autogenerate)</em></label>
+          <input type="text" v-model="upstream.forwarded_token_secret" placeholder="text">
         </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>

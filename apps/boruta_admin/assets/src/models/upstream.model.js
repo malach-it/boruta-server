@@ -21,6 +21,7 @@ const assign = {
   max_idle_time: function ({ max_idle_time }) { this.max_idle_time = max_idle_time },
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
   forwarded_token_signature_alg: function ({ forwarded_token_signature_alg }) { this.forwarded_token_signature_alg = forwarded_token_signature_alg },
+  forwarded_token_secret: function ({ forwarded_token_secret }) { this.forwarded_token_secret = forwarded_token_secret },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
   },
@@ -104,7 +105,8 @@ class Upstream {
       error_content_type,
       forbidden_response,
       unauthorized_response,
-      forwarded_token_signature_alg
+      forwarded_token_signature_alg,
+      forwarded_token_secret
     } = this
 
     return {
@@ -126,7 +128,8 @@ class Upstream {
       error_content_type,
       forbidden_response,
       unauthorized_response,
-      forwarded_token_signature_alg
+      forwarded_token_signature_alg,
+      forwarded_token_secret
     }
   }
 }

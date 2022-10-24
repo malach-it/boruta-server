@@ -54,6 +54,19 @@ defmodule BorutaGateway.UpstreamsTest do
       assert {:ok, %Upstream{}} = Upstreams.create_upstream(@valid_attrs)
     end
 
+    test "create_upstream/1 generates a secret with HS* algorithms" do
+      assert {:ok, %Upstream{forwarded_token_secret: forwarded_token_secret}} =
+               Upstreams.create_upstream(
+                 Map.put(
+                   @valid_attrs,
+                   :forwarded_token_signature_alg,
+                   "HS256"
+                 )
+               )
+
+      assert forwarded_token_secret
+    end
+
     test "create_upstream/1 with invalid data returns error changeset" do
       assert {:error,
               %Ecto.Changeset{

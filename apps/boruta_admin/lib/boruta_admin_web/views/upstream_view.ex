@@ -26,7 +26,8 @@ defmodule BorutaAdminWeb.UpstreamView do
       error_content_type: upstream.error_content_type,
       forbidden_response: upstream.forbidden_response,
       unauthorized_response: upstream.unauthorized_response,
-      forwarded_token_signature_alg: upstream.forwarded_token_signature_alg
+      forwarded_token_signature_alg: upstream.forwarded_token_signature_alg,
+      forwarded_token_secret: upstream.forwarded_token_secret
     }
   end
 end
