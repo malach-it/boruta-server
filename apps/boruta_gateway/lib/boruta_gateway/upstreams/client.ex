@@ -7,7 +7,16 @@ defmodule BorutaGateway.Upstreams.Client do
 
   import Plug.Conn
 
+  alias Boruta.Oauth
   alias BorutaGateway.Upstreams.Upstream
+
+  defmodule Token do
+    @moduledoc false
+
+    use Joken.Config
+
+    def token_config, do: %{}
+  end
 
   def child_spec(upstream) do
     %{
@@ -33,6 +42,7 @@ defmodule BorutaGateway.Upstreams.Client do
   @impl GenServer
   def init(upstream) do
     name = finch_name(upstream)
+
     {:ok, _pid} =
       Finch.start_link(
         name: name,
@@ -59,7 +69,7 @@ defmodule BorutaGateway.Upstreams.Client do
     Finch.build(
       transform_method(conn),
       transform_url(upstream, conn),
-      transform_headers(conn),
+      transform_headers(upstream, conn),
       transform_body(conn)
     )
     |> Finch.request(http_client)
@@ -78,8 +88,52 @@ defmodule BorutaGateway.Upstreams.Client do
     method |> String.downcase() |> String.to_atom()
   end
 
-  defp transform_headers(%{req_headers: req_headers}) do
-    Enum.reject(req_headers, fn
+  defp transform_headers(
+         %Upstream{
+           forwarded_token_signature_alg: signature_alg,
+           forwarded_token_secret: secret,
+           forwarded_token_private_key: private_key
+         } = upstream,
+         %Plug.Conn{req_headers: req_headers} = conn
+       ) do
+    authorization_header =
+      case get_req_header(conn, "authorization") do
+        [] -> ""
+        [authorization] -> authorization
+      end
+
+    token = conn.assigns[:token] || %Oauth.Token{type: "access_token"}
+
+    payload = %{
+      "scope" => token.scope,
+      "sub" => token.sub,
+      "value" => token.value,
+      "exp" => token.expires_at,
+      "iat" => token.inserted_at && DateTime.to_unix(token.inserted_at)
+    }
+
+    token =
+      case signature_alg && signature_type(upstream) do
+        :symmetric ->
+          signer = Joken.Signer.create(signature_alg, secret)
+          with {:ok, token, _payload} <- Token.encode_and_sign(payload, signer) do
+            token
+          end
+
+        :asymmetric ->
+          signer = Joken.Signer.create(signature_alg, %{"pem" => private_key})
+          with {:ok, token, _payload} <- Token.encode_and_sign(payload, signer) do
+            token
+          end
+
+        nil ->
+          nil
+      end
+
+    req_headers
+    |> List.insert_at(0, {"x-forwarded-authorization", authorization_header})
+    |> Enum.reject(fn
+      {"authorization", _value} -> true
       {"connection", _value} -> true
       {"content-length", _value} -> true
       {"expect", _value} -> true
@@ -89,6 +143,15 @@ defmodule BorutaGateway.Upstreams.Client do
       {"upgrade", _value} -> true
       _rest -> false
     end)
+    |> List.insert_at(0, {"authorization", "bearer #{token}"})
+  end
+
+  defp signature_type(%Upstream{forwarded_token_signature_alg: signature_alg}) do
+    case signature_alg && String.match?(signature_alg, ~r/HS/) do
+      true -> :symmetric
+      false -> :asymmetric
+      nil -> nil
+    end
   end
 
   defp transform_body(conn) do

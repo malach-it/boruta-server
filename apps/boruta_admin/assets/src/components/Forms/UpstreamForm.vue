@@ -73,6 +73,32 @@
             <textarea v-model="upstream.unauthorized_response" placeholder="You are unauthorized to access this resource."></textarea>
           </div>
         </div>
+        <h3>Forwarded authorization</h3>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': upstream.errors?.forwarded_token_signature_alg }">
+            <label>Forwarded token signature algorithm</label>
+            <div class="field" v-for="alg in forwardedTokenSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg }}</label>
+                <input type="radio" v-model="upstream.forwarded_token_signature_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="isHsAlgorithm" class="field" :class="{ 'error': upstream.errors?.forwarded_token_secret }">
+          <label>Forwarded token secret <em>(leave blank to autogenerate)</em></label>
+          <input type="text" v-model="upstream.forwarded_token_secret" placeholder="text">
+        </div>
+        <div v-if="isRsAlgorithm">
+          <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_private_key }">
+            <label>Forwarded token private key <em>(leave blank to autogenerate)</em></label>
+            <textarea v-model="upstream.forwarded_token_private_key"></textarea>
+          </div>
+          <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_public_key }">
+            <label>Forwarded token public key</label>
+            <textarea v-model="upstream.forwarded_token_public_key"></textarea>
+          </div>
+        </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a class="ui button" v-on:click="back()">Back</a>
@@ -83,6 +109,7 @@
 
 <script>
 import Scope from '../../models/scope.model'
+import Upstream from '../../models/upstream.model'
 import GatewayScopesField from '../../components/Forms/GatewayScopesField.vue'
 import FormErrors from '../../components/Forms/FormErrors.vue'
 
@@ -92,6 +119,19 @@ export default {
   components: {
     FormErrors,
     GatewayScopesField
+  },
+  data () {
+    return {
+      forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms
+    }
+  },
+  computed: {
+    isHsAlgorithm () {
+      return this.upstream.forwarded_token_signature_alg?.match(/HS/)
+    },
+    isRsAlgorithm () {
+      return this.upstream.forwarded_token_signature_alg?.match(/RS/)
+    }
   },
   methods: {
     back () {

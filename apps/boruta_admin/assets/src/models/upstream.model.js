@@ -20,6 +20,10 @@ const assign = {
   pool_count: function ({ pool_count }) { this.pool_count = pool_count },
   max_idle_time: function ({ max_idle_time }) { this.max_idle_time = max_idle_time },
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
+  forwarded_token_signature_alg: function ({ forwarded_token_signature_alg }) { this.forwarded_token_signature_alg = forwarded_token_signature_alg },
+  forwarded_token_secret: function ({ forwarded_token_secret }) { this.forwarded_token_secret = forwarded_token_secret },
+  forwarded_token_public_key: function ({ forwarded_token_public_key }) { this.forwarded_token_public_key = forwarded_token_public_key },
+  forwarded_token_private_key: function ({ forwarded_token_private_key }) { this.forwarded_token_private_key = forwarded_token_private_key },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
   },
@@ -102,7 +106,11 @@ class Upstream {
       required_scopes,
       error_content_type,
       forbidden_response,
-      unauthorized_response
+      unauthorized_response,
+      forwarded_token_signature_alg,
+      forwarded_token_secret,
+      forwarded_token_private_key,
+      forwarded_token_public_key
     } = this
 
     return {
@@ -123,7 +131,11 @@ class Upstream {
       authorize,
       error_content_type,
       forbidden_response,
-      unauthorized_response
+      unauthorized_response,
+      forwarded_token_signature_alg,
+      forwarded_token_secret,
+      forwarded_token_private_key,
+      forwarded_token_public_key
     }
   }
 }
@@ -150,5 +162,14 @@ Upstream.get = function (id) {
     return new Upstream(data.data)
   })
 }
+
+Upstream.forwardedTokenSignatureAlgorithms = [
+  "HS256",
+  "HS384",
+  "HS512",
+  "RS256",
+  "RS384",
+  "RS512"
+]
 
 export default Upstream

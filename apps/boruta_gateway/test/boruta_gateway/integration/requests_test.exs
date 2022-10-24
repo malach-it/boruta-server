@@ -164,5 +164,47 @@ defmodule BorutaGateway.RequestsIntegrationTest do
         end
       end)
     end
+
+    test "returns authorization header with introspected token when authorized", %{
+      access_token: access_token
+    } do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          Upstreams.create_upstream(%{
+            scheme: "http",
+            host: "httpbin.patatoid.fr",
+            port: 80,
+            uris: ["/httpbin"],
+            strip_uri: true,
+            authorize: true,
+            required_scopes: %{"GET" => ["test"]},
+            forwarded_token_signature_alg: "HS256"
+          })
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/httpbin/anything",
+              [{"authorization", "bearer #{access_token.value}"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, status: 200}} =
+                   Finch.request(request, HttpClient)
+
+          assert %{
+                   "headers" => %{
+                     "Authorization" => authorization,
+                     "X-Forwarded-Authorization" => forwarded_authorization
+                   }
+                 } = Jason.decode!(body)
+
+          assert String.match?(authorization, ~r/bearer (.+)/)
+          assert forwarded_authorization == "bearer #{access_token.value}"
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
   end
 end

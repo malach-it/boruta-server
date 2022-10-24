@@ -19,6 +19,11 @@ defmodule BorutaGateway.Upstreams.Upstream do
   use Ecto.Schema
   import Ecto.Changeset
 
+  import Boruta.Config,
+    only: [
+      token_generator: 0
+    ]
+
   alias BorutaGateway.Upstreams.ClientSupervisor
 
   @type t :: %__MODULE__{
@@ -52,6 +57,10 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:error_content_type, :string)
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
+    field(:forwarded_token_signature_alg, :string)
+    field(:forwarded_token_secret, :string)
+    field(:forwarded_token_public_key, :string)
+    field(:forwarded_token_private_key, :string)
 
     field(:http_client, :any, virtual: true)
 
@@ -101,12 +110,16 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :max_idle_time,
       :error_content_type,
       :forbidden_response,
-      :unauthorized_response
+      :unauthorized_response,
+      :forwarded_token_signature_alg,
+      :forwarded_token_secret
     ])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_inclusion(:pool_size, 1..100)
     |> validate_inclusion(:pool_count, 1..10)
+    |> maybe_put_forwarded_token_secret()
+    |> maybe_generate_key_pair()
     |> validate_uris()
     |> validate_required_scopes_format()
   end
@@ -141,4 +154,55 @@ defmodule BorutaGateway.Upstreams.Upstream do
   end
 
   defp validate_required_scopes_format(changeset), do: changeset
+
+  defp maybe_put_forwarded_token_secret(%Ecto.Changeset{data: data, changes: changes} = changeset) do
+    signature_algorithm = get_field(changeset, :forwarded_token_signature_alg)
+
+    if signature_algorithm && String.match?(signature_algorithm, ~r/HS/) do
+      case fetch_field(changeset, :forwarded_token_secret) do
+        {_, nil} ->
+          put_change(
+            changeset,
+            :forwarded_token_secret,
+            token_generator().secret(struct(data, changes))
+          )
+
+        {_, _secret} ->
+          changeset
+
+        :error ->
+          put_change(
+            changeset,
+            :forwarded_token_secret,
+            token_generator().secret(struct(data, changes))
+          )
+      end
+    else
+      changeset
+    end
+  end
+
+  defp maybe_generate_key_pair(changeset) do
+    signature_algorithm = get_field(changeset, :forwarded_token_signature_alg)
+
+    if signature_algorithm && String.match?(signature_algorithm, ~r/RS/) do
+      case fetch_field(changeset, :forwarded_token_private_key) do
+        {_, "" <> _private_key} ->
+          changeset
+
+        _ ->
+          private_key = JOSE.JWK.generate_key({:rsa, 1024, 65_537})
+          public_key = JOSE.JWK.to_public(private_key)
+
+          {_type, public_pem} = JOSE.JWK.to_pem(public_key)
+          {_type, private_pem} = JOSE.JWK.to_pem(private_key)
+
+          changeset
+          |> put_change(:forwarded_token_public_key, public_pem)
+          |> put_change(:forwarded_token_private_key, private_pem)
+      end
+    else
+      changeset
+    end
+  end
 end
