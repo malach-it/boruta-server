@@ -24,6 +24,9 @@ const labels = {
   'file': 'File',
   'id_token_signature_alg': 'ID token signature algorithm',
   'forwarded_token_signature_alg': 'Forwarded token signature algorithm',
+  'forwarded_token_signature_secret': 'ID token signature secret',
+  'forwarded_token_signature_public_key': 'ID token signature public key',
+  'forwarded_token_signature_private_key': 'ID token signature private key',
   'resource': 'Resource',
   'is_default': 'Default',
   'password_hashing_opts': 'Password hashing options'

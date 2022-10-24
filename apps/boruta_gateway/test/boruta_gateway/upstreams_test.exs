@@ -67,6 +67,23 @@ defmodule BorutaGateway.UpstreamsTest do
       assert forwarded_token_secret
     end
 
+    test "create_upstream/1 generates a secret with RS* algorithms" do
+      assert {:ok, %Upstream{
+        forwarded_token_private_key: forwarded_token_private_key,
+        forwarded_token_public_key: forwarded_token_public_key
+      }} =
+               Upstreams.create_upstream(
+                 Map.put(
+                   @valid_attrs,
+                   :forwarded_token_signature_alg,
+                   "RS256"
+                 )
+               )
+
+      assert forwarded_token_private_key
+      assert forwarded_token_public_key
+    end
+
     test "create_upstream/1 with invalid data returns error changeset" do
       assert {:error,
               %Ecto.Changeset{

@@ -22,6 +22,8 @@ const assign = {
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
   forwarded_token_signature_alg: function ({ forwarded_token_signature_alg }) { this.forwarded_token_signature_alg = forwarded_token_signature_alg },
   forwarded_token_secret: function ({ forwarded_token_secret }) { this.forwarded_token_secret = forwarded_token_secret },
+  forwarded_token_public_key: function ({ forwarded_token_public_key }) { this.forwarded_token_public_key = forwarded_token_public_key },
+  forwarded_token_private_key: function ({ forwarded_token_private_key }) { this.forwarded_token_private_key = forwarded_token_private_key },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
   },
@@ -106,7 +108,9 @@ class Upstream {
       forbidden_response,
       unauthorized_response,
       forwarded_token_signature_alg,
-      forwarded_token_secret
+      forwarded_token_secret,
+      forwarded_token_private_key,
+      forwarded_token_public_key
     } = this
 
     return {
@@ -129,7 +133,9 @@ class Upstream {
       forbidden_response,
       unauthorized_response,
       forwarded_token_signature_alg,
-      forwarded_token_secret
+      forwarded_token_secret,
+      forwarded_token_private_key,
+      forwarded_token_public_key
     }
   }
 }

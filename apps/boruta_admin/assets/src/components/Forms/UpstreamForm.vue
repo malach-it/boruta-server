@@ -85,9 +85,19 @@
             </div>
           </div>
         </div>
-        <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_secret }">
+        <div v-if="isHsAlgorithm" class="field" :class="{ 'error': upstream.errors?.forwarded_token_secret }">
           <label>Forwarded token secret <em>(leave blank to autogenerate)</em></label>
           <input type="text" v-model="upstream.forwarded_token_secret" placeholder="text">
+        </div>
+        <div v-if="isRsAlgorithm">
+          <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_private_key }">
+            <label>Forwarded token private key <em>(leave blank to autogenerate)</em></label>
+            <textarea v-model="upstream.forwarded_token_private_key"></textarea>
+          </div>
+          <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_public_key }">
+            <label>Forwarded token public key</label>
+            <textarea v-model="upstream.forwarded_token_public_key"></textarea>
+          </div>
         </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
@@ -113,6 +123,14 @@ export default {
   data () {
     return {
       forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms
+    }
+  },
+  computed: {
+    isHsAlgorithm () {
+      return this.upstream.forwarded_token_signature_alg?.match(/HS/)
+    },
+    isRsAlgorithm () {
+      return this.upstream.forwarded_token_signature_alg?.match(/RS/)
     }
   },
   methods: {
