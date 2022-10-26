@@ -28,7 +28,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
     @invalid_attrs %{name: nil}
 
     def identity_provider_fixture(attrs \\ %{}) do
-      insert(:identity_provider, Map.merge(@valid_attrs, attrs))
+      insert(:identity_provider, Map.merge(@valid_attrs, attrs)) |> Repo.preload(backend: :email_templates)
     end
 
     test "list_identity_providers/0 returns all identity_providers" do
@@ -263,6 +263,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
     test "returns client's identity provider" do
       %ClientIdentityProvider{client_id: client_id, identity_provider: identity_provider} =
         insert(:client_identity_provider)
+
+      identity_provider = Repo.preload(identity_provider, backend: :email_templates)
 
       assert IdentityProviders.get_identity_provider_by_client_id(client_id) == identity_provider
     end

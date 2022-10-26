@@ -78,6 +78,7 @@ defmodule BorutaIdentity.Factory do
       type: "Elixir.BorutaIdentity.Accounts.Internal",
       smtp_from: "from@test.factory",
       smtp_relay: "test.smtp.factory",
+      smtp_tls: "never",
       smtp_username: "factory_smtp_username",
       smtp_password: "factory_smtp_password",
       smtp_port: 25

@@ -22,7 +22,8 @@ defmodule BorutaIdentity.IdentityProviders do
     Repo.all(
       from idp in IdentityProvider,
         join: b in assoc(idp, :backend),
-        preload: [backend: b]
+        left_join: et in assoc(b, :email_templates),
+        preload: [backend: {b, email_templates: et}]
     )
   end
 
@@ -46,8 +47,9 @@ defmodule BorutaIdentity.IdentityProviders do
         Repo.one!(
           from idp in IdentityProvider,
             join: b in assoc(idp, :backend),
+            left_join: et in assoc(b, :email_templates),
             where: idp.id == ^id,
-            preload: [backend: b]
+            preload: [backend: {b, email_templates: et}]
         )
 
       _ ->
@@ -159,9 +161,10 @@ defmodule BorutaIdentity.IdentityProviders do
         Repo.one(
           from(idp in IdentityProvider,
             join: b in assoc(idp, :backend),
+            left_join: et in assoc(b, :email_templates),
             join: cidp in assoc(idp, :client_identity_providers),
             where: cidp.client_id == ^client_id,
-            preload: [backend: b]
+            preload: [backend: {b, email_templates: et}]
           )
         )
 

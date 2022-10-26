@@ -34,7 +34,6 @@ const labels = {
   'backends': 'Backends',
   'backend': ({ params }) => params.backendId,
   'new-backend': 'Create',
-  'edit-backend': ({ params }) => params.backendId,
   'edit-confirmation-instructions-email-template': 'Edit confirmation instructions email template',
   'edit-reset-password-instructions-email-template': 'Edit reset password instructions email template',
   'users': 'Users',
