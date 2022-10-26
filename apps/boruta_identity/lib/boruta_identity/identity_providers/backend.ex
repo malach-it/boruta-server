@@ -86,10 +86,12 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     field(:type, :string)
     field(:is_default, :boolean, default: false)
     field(:name, :string)
+
     field(:smtp_from, :string)
     field(:smtp_relay, :string)
     field(:smtp_username, :string)
     field(:smtp_password, :string)
+    field(:smtp_ssl, :boolean)
     field(:smtp_tls, :string)
     field(:smtp_port, :integer)
 
@@ -181,6 +183,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :smtp_relay,
       :smtp_username,
       :smtp_password,
+      :smtp_ssl,
       :smtp_tls,
       :smtp_port
     ])

@@ -35,6 +35,7 @@ defmodule BorutaAdminWeb.BackendView do
       smtp_relay: backend.smtp_relay,
       smtp_username: backend.smtp_username,
       smtp_password: backend.smtp_password,
+      smtp_ssl: backend.smtp_ssl,
       smtp_tls: backend.smtp_tls,
       smtp_port: backend.smtp_port,
       features: Backend.features(backend)

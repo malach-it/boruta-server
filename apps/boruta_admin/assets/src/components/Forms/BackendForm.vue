@@ -10,7 +10,7 @@
         </div>
         <div class="field" :class="{ 'error': backend.errors?.is_default }">
           <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="backend.is_default" placeholder="Shiny new backend">
+            <input type="checkbox" v-model="backend.is_default">
             <label>Default</label>
           </div>
         </div>
@@ -91,6 +91,12 @@
           <div class="ui left icon input">
             <input :type="smtpPasswordVisible ? 'text' : 'password'" autocomplete="new-password" v-model="backend.smtp_password" />
             <i class="eye icon" :class="{ 'slash': smtpPasswordVisible }" @click="smtpPasswordVisibilityToggle()"></i>
+          </div>
+        </div>
+        <div class="field" :class="{ 'error': backend.errors?.smtp_ssl }">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="backend.smtp_ssl">
+            <label>SSL</label>
           </div>
         </div>
         <div class="field" :class="{ 'error': backend.errors?.smtp_tls }">

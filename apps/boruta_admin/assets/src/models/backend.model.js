@@ -32,6 +32,7 @@ const assign = {
   smtp_relay: function ({ smtp_relay }) { this.smtp_relay = smtp_relay },
   smtp_username: function ({ smtp_username }) { this.smtp_username = smtp_username },
   smtp_password: function ({ smtp_password }) { this.smtp_password = smtp_password },
+  smtp_ssl: function ({ smtp_ssl }) { this.smtp_ssl = smtp_ssl },
   smtp_tls: function ({ smtp_tls }) { this.smtp_tls = smtp_tls },
   smtp_port: function ({ smtp_port }) { this.smtp_port = smtp_port }
 }
@@ -106,6 +107,7 @@ class Backend {
       smtp_relay,
       smtp_username,
       smtp_password,
+      smtp_ssl,
       smtp_tls,
       smtp_port
     } = this
@@ -135,6 +137,7 @@ class Backend {
       smtp_relay,
       smtp_username,
       smtp_password,
+      smtp_ssl,
       smtp_tls,
       smtp_port
     }

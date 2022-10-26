@@ -20,7 +20,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
       relay: backend.smtp_relay,
       username: backend.smtp_username,
       password: backend.smtp_password,
-      ssl: false,
+      ssl: backend.smtp_ssl,
       tls: String.to_atom(backend.smtp_tls),
       auth: :always,
       port: backend.smtp_port,
