@@ -4,7 +4,10 @@ defmodule BorutaIdentity.IdentityProvidersTest do
   import BorutaIdentity.Factory
   import Mox
 
+  alias BorutaIdentity.Accounts.EmailTemplate
+  alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
@@ -398,9 +401,6 @@ defmodule BorutaIdentity.IdentityProvidersTest do
   end
 
   describe "backends" do
-    alias BorutaIdentity.Accounts.Ldap
-    alias BorutaIdentity.IdentityProviders.Backend
-
     import BorutaIdentity.IdentityProvidersFixtures
 
     @invalid_attrs %{name: nil, type: "bad type"}
@@ -667,6 +667,131 @@ defmodule BorutaIdentity.IdentityProvidersTest do
     test "change_backend/1 returns a backend changeset" do
       backend = backend_fixture()
       assert %Ecto.Changeset{} = IdentityProviders.change_backend(backend)
+    end
+  end
+
+  describe "get_backend_email_template!/2" do
+    test "raises an error with unexisting identity provider" do
+      backend_id = SecureRandom.uuid()
+
+      assert_raise Ecto.NoResultsError, fn ->
+        IdentityProviders.get_backend_email_template!(backend_id, :unexisting)
+      end
+    end
+
+    test "raises an error with unexisting template" do
+      backend_id = insert(:backend).id
+
+      assert_raise Ecto.NoResultsError, fn ->
+        IdentityProviders.get_backend_email_template!(backend_id, :unexisting)
+      end
+    end
+
+    test "returns default template" do
+      backend = insert(:backend, email_templates: [])
+
+      template = IdentityProviders.get_backend_email_template!(backend.id, :reset_password_instructions)
+
+      assert template == %{
+               EmailTemplate.default_template(:reset_password_instructions)
+               | backend_id: backend.id,
+                 backend: backend
+             }
+    end
+
+    test "returns backend email template with a layout" do
+      template =
+        build(:reset_password_instructions_email_template,
+          txt_content: "custom reset password instructions template"
+        )
+
+      %Backend{email_templates: [template]} =
+        backend = insert(:backend, email_templates: [template])
+
+      assert IdentityProviders.get_backend_email_template!(
+               backend.id,
+               :reset_password_instructions
+             ) ==
+               %{template | backend: backend}
+    end
+  end
+
+  describe "upsert_email_template/2" do
+    test "inserts with a default template" do
+      backend = insert(:backend)
+
+      template = IdentityProviders.get_backend_email_template!(backend.id, :reset_password_instructions)
+
+      assert {:ok, template} =
+               IdentityProviders.upsert_email_template(template, %{txt_content: "new txt content"})
+
+      assert Repo.reload(template)
+    end
+
+    test "updates with an existing template" do
+      backend = insert(:backend)
+      template = insert(:reset_password_instructions_email_template, backend: backend)
+
+      assert {:ok, template} =
+               IdentityProviders.upsert_email_template(template, %{txt_content: "new content"})
+
+      assert Repo.reload(template)
+    end
+  end
+
+  describe "delete_email_template!/2" do
+    test "raises an error with unexisting identity provider" do
+      backend_id = SecureRandom.uuid()
+
+      assert_raise Ecto.NoResultsError, fn ->
+        IdentityProviders.delete_email_template!(backend_id, :unexisting)
+      end
+    end
+
+    test "raises an error with unexisting template" do
+      backend_id = insert(:backend).id
+
+      assert_raise Ecto.NoResultsError, fn ->
+        IdentityProviders.delete_email_template!(backend_id, :unexisting)
+      end
+    end
+
+    test "returns an error if template is default" do
+      backend = insert(:backend, email_templates: [])
+
+      assert_raise Ecto.NoResultsError, fn ->
+        IdentityProviders.delete_email_template!(
+          backend.id,
+          :reset_password_instructions
+        )
+      end
+    end
+
+    test "returns identity provider template with a layout" do
+      template =
+        build(:reset_password_instructions_email_template,
+          txt_content: "custom registration template"
+        )
+
+      %Backend{email_templates: [template]} =
+        backend = insert(:backend, email_templates: [template])
+
+      default_template = %{
+        EmailTemplate.default_template(:reset_password_instructions)
+        | backend_id: backend.id
+      }
+
+      reseted_template =
+        IdentityProviders.delete_email_template!(
+          backend.id,
+          :reset_password_instructions
+        )
+
+      assert reseted_template.default == true
+      assert reseted_template.type == "reset_password_instructions"
+      assert reseted_template.txt_content == default_template.txt_content
+
+      assert Repo.get_by(EmailTemplate, id: template.id) == nil
     end
   end
 end

@@ -4,6 +4,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Repo
@@ -105,6 +106,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     field(:password_hashing_alg, :string, default: "argon2")
     field(:password_hashing_opts, :map, default: %{})
 
+    has_many(:email_templates, EmailTemplate)
+
     timestamps()
   end
 
@@ -135,6 +138,27 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       {key, value} -> {String.to_atom(key), value}
     end)
     |> Enum.into([])
+  end
+
+  @spec email_template(backend :: t(), type :: atom()) :: EmailTemplate.t() | nil
+  def email_template(%__MODULE__{email_templates: email_templates} = backend, type)
+      when is_list(email_templates) do
+    case Enum.find(email_templates, fn
+           %EmailTemplate{type: template_type} -> Atom.to_string(type) == template_type
+         end) do
+      nil ->
+        template = EmailTemplate.default_template(type)
+
+        template &&
+          %{
+            template
+            | backend_id: backend.id,
+              backend: backend
+          }
+
+      template ->
+        %{template | backend: backend}
+    end
   end
 
   @doc false

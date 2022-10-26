@@ -242,9 +242,9 @@ defmodule BorutaIdentity.IdentityProviders do
     with {1, _results} <-
            Repo.delete_all(
              from(t in Template,
-               join: rp in assoc(t, :identity_provider),
+               join: idp in assoc(t, :identity_provider),
                where:
-                 rp.id == ^identity_provider_id and
+                 idp.id == ^identity_provider_id and
                    t.type == ^template_type
              )
            ),
@@ -252,9 +252,11 @@ defmodule BorutaIdentity.IdentityProviders do
       template
     else
       {0, nil} -> raise Ecto.NoResultsError, queryable: Template
+      nil -> raise Ecto.NoResultsError, queryable: Template
     end
   end
 
+  alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.IdentityProviders.Backend
 
@@ -390,5 +392,88 @@ defmodule BorutaIdentity.IdentityProviders do
   """
   def change_backend(%Backend{} = backend, attrs \\ %{}) do
     Backend.changeset(backend, attrs)
+  end
+
+  @doc """
+  Gets an email template. Returns a default template if the email template is not defined.
+
+  Raises `Ecto.NoResultsError` if the associated backend does not exist.
+
+  ## Examples
+
+      iex> get_backend_email_template!(123, :reset_password)
+      %EmailTemplate{}
+
+      iex> get_backend_email_template!(456, :reset_password)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_backend_email_template!(backend_id, type) do
+    with %Backend{} = backend <-
+           Repo.one(
+             from(b in Backend,
+               left_join: t in assoc(b, :email_templates),
+               where: b.id == ^backend_id,
+               preload: [email_templates: t]
+             )
+           ),
+         %EmailTemplate{} = template <- Backend.email_template(backend, type) do
+      template
+    else
+      nil -> raise Ecto.NoResultsError, queryable: Template
+    end
+  end
+
+  @doc """
+  Upserts an email template.
+
+  ## Examples
+
+      iex> upsert_email_template(template, %{field: new_value})
+      {:ok, %EmailTemplate{}}
+
+      iex> upsert_email_template(template, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def upsert_email_template(%EmailTemplate{id: template_id} = template, attrs) do
+    changeset = EmailTemplate.changeset(template, attrs)
+
+    case template_id do
+      nil -> Repo.insert(changeset)
+      _ -> Repo.update(changeset)
+    end
+  end
+
+  @doc """
+  Deletes an email template.
+
+  ## Examples
+
+      iex> delete_email_template!(template, :reset_password)
+      {:ok, %EmailTemplate{}}
+
+      iex> delete_email_template!(template, :unknown)
+      ** (Ecto.NoResultsError)
+
+  """
+  def delete_email_template!(backend_id, type) do
+    template_type = Atom.to_string(type)
+
+    with {1, _results} <-
+           Repo.delete_all(
+             from(t in EmailTemplate,
+               join: b in assoc(t, :backend),
+               where:
+                 b.id == ^backend_id and
+                   t.type == ^template_type
+             )
+           ),
+         %EmailTemplate{} = template <- get_backend_email_template!(backend_id, type) do
+      template
+    else
+      {0, nil} -> raise Ecto.NoResultsError, queryable: Template
+      nil -> raise Ecto.NoResultsError, queryable: Template
+    end
   end
 end
