@@ -4,6 +4,7 @@ defmodule BorutaIdentity.Factory do
   use ExMachina.Ecto, repo: BorutaIdentity.Repo
 
   alias BorutaIdentity.Accounts.Consent
+  alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Configuration.ErrorTemplate
@@ -81,4 +82,21 @@ defmodule BorutaIdentity.Factory do
       content: "error template content"
     }
   end
+
+  def email_template_factory do
+    %EmailTemplate{
+      type: "template_type",
+      txt_content: "template content",
+      html_content: "template content"
+    }
+  end
+
+  def reset_password_instructions_email_template_factory do
+    %EmailTemplate{
+      type: "reset_password_instructions",
+      txt_content: EmailTemplate.default_txt_content(:reset_password_instructions),
+      html_content: EmailTemplate.default_html_content(:reset_password_instructions)
+    }
+  end
+
 end

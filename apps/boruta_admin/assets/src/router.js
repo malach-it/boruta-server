@@ -42,9 +42,12 @@ import NewUser from './views/IdentityProviders/NewUser.vue'
 import EditUser from './views/IdentityProviders/EditUser.vue'
 
 import Backends from './views/IdentityProviders/Backends.vue'
+import Backend from './views/IdentityProviders/Backends/Backend.vue'
 import BackendList from './views/IdentityProviders/BackendList.vue'
 import NewBackend from './views/IdentityProviders/NewBackend.vue'
 import EditBackend from './views/IdentityProviders/EditBackend.vue'
+import EditConfirmationInstructionsEmailTemplate from './views/IdentityProviders/Backends/EditConfirmationInstructionsEmailTemplate.vue'
+import EditResetPasswordInstructionsEmailTemplate from './views/IdentityProviders/Backends/EditResetPasswordInstructionsEmailTemplate.vue'
 
 import Scopes from './views/Scopes.vue'
 import ScopeList from './views/Scopes/ScopeList.vue'
@@ -182,9 +185,28 @@ const router = createRouter({
                   name: 'new-backend',
                   component: NewBackend
                 }, {
-                  path: '/backends/edit/:backendId',
-                  name: 'edit-backend',
-                  component: EditBackend
+                  path: '/backends/:backendId',
+                  name: 'backend',
+                  component: Backend,
+                  redirect: to => ({
+                    name: 'edit-backend',
+                    params: { backendId: to.params.backendId }
+                  }),
+                  children: [
+                    {
+                      path: 'edit',
+                      name: 'edit-backend',
+                      component: EditBackend
+                    }, {
+                      path: 'edit/confirmation-instructions-email-template',
+                      name: 'edit-confirmation-instructions-email-template',
+                      component: EditConfirmationInstructionsEmailTemplate
+                    }, {
+                      path: 'edit/reset-password-instructions-email-template',
+                      name: 'edit-reset-password-instructions-email-template',
+                      component: EditResetPasswordInstructionsEmailTemplate
+                    }
+                  ]
                 }
               ]
             }, {

@@ -111,6 +111,8 @@ defmodule BorutaIdentity.AccountsTest do
           identity_provider: identity_provider
         )
 
+      identity_provider = Repo.preload(identity_provider, backend: :email_templates)
+
       assert Accounts.Utils.client_identity_provider(client_id) == {:ok, identity_provider}
     end
   end

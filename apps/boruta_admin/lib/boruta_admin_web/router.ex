@@ -66,7 +66,17 @@ defmodule BorutaAdminWeb.Router do
         as: :template
       )
     end
-    resources "/backends", BackendController, except: [:new, :edit]
+    resources "/backends", BackendController, except: [:new, :edit] do
+      get("/email-templates/:template_type", BackendController, :email_template, as: :email_template)
+
+      patch("/email-templates/:template_type", BackendController, :update_email_template,
+        as: :email_template
+      )
+
+      delete("/email-templates/:template_type", BackendController, :delete_email_template,
+        as: :email_template
+      )
+    end
   end
 
   scope "/", BorutaAdminWeb do

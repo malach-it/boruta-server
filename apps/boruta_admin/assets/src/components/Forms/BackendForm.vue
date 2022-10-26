@@ -72,7 +72,8 @@
             <input type="number" v-model="backend.ldap_pool_size" placeholder="5">
           </div>
         </section>
-        <h2>SMTP configuration</h2>
+        <h2>Email configuration</h2>
+        <h3>SMTP configuration</h3>
         <div class="field" :class="{ 'error': backend.errors?.smtp_from }">
           <label>From</label>
           <input type="email" v-model="backend.smtp_from" placeholder="from@mail.example">
@@ -104,6 +105,17 @@
           <label>Port</label>
           <input type="number" v-model="backend.smtp_port" placeholder="25">
         </div>
+        <h3>Email templates</h3>
+          <div v-if="backend.isPersisted" class="ui segment">
+            <router-link
+              :to="{ name: 'edit-confirmation-instructions-email-template', params: { backendId: backend.id } }"
+              class="ui fluid blue button">Edit confirmation template</router-link>
+          </div>
+          <div v-if="backend.isPersisted" class="ui segment">
+            <router-link
+              :to="{ name: 'edit-reset-password-instructions-email-template', params: { backendId: backend.id } }"
+              class="ui fluid blue button">Edit reset password template</router-link>
+          </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a v-on:click="back()" class="ui button">Back</a>

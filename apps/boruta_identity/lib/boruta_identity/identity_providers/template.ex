@@ -111,7 +111,7 @@ defmodule BorutaIdentity.IdentityProviders.Template do
   def changeset(template, attrs) do
     template
     |> cast(attrs, [:type, :content, :identity_provider_id])
-    |> validate_required([:identity_provider_id, :content])
+    |> validate_required([:type, :identity_provider_id, :content])
     |> validate_inclusion(:type, Enum.map(@template_types, &Atom.to_string/1))
     |> foreign_key_constraint(:identity_provider_id)
     |> put_default()

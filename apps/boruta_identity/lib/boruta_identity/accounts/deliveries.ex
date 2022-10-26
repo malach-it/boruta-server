@@ -38,6 +38,7 @@ defmodule BorutaIdentity.Accounts.Deliveries do
       with {:ok, _confirmation_token} <- Repo.insert(confirmation_token),
            {:ok, _email} <-
              UserNotifier.deliver_confirmation_instructions(
+               backend,
                user,
                confirmation_url_fun.(encoded_token)
              )
@@ -68,6 +69,7 @@ defmodule BorutaIdentity.Accounts.Deliveries do
     with {:ok, _user_token} <- Repo.insert(user_token),
          {:ok, _email} <-
            UserNotifier.deliver_reset_password_instructions(
+             backend,
              user,
              reset_password_url_fun.(encoded_token)
            )

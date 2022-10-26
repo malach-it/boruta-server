@@ -1,6 +1,8 @@
 defmodule BorutaAdminWeb.BackendControllerTest do
   use BorutaAdminWeb.ConnCase
 
+  import BorutaIdentity.Factory
+
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
@@ -8,6 +10,12 @@ defmodule BorutaAdminWeb.BackendControllerTest do
   @create_attrs %{name: "some name"}
   @update_attrs %{name: "some updated name"}
   @invalid_attrs %{name: nil, type: "other"}
+  @update_email_template_attrs %{
+    txt_content: "some updated content"
+  }
+  @invalid_email_template_attrs %{
+    txt_content: nil
+  }
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -260,6 +268,161 @@ defmodule BorutaAdminWeb.BackendControllerTest do
       assert response(conn, 204)
 
       refute Repo.get(Backend, backend.id)
+    end
+  end
+
+  describe "show abckend email template" do
+    setup [:create_backend]
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders not found", %{conn: conn, backend: %Backend{id: id}} do
+      assert_raise Ecto.NoResultsError, fn ->
+        get(conn, Routes.admin_backend_email_template_path(conn, :email_template, id, "unexisting"))
+      end
+    end
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders a backend email template", %{
+      conn: conn,
+      backend: %Backend{id: id}
+    } do
+      conn =
+        get(
+          conn,
+          Routes.admin_backend_email_template_path(conn, :email_template, id, "reset_password_instructions")
+        )
+
+      assert %{"backend_id" => ^id, "type" => "reset_password_instructions"} =
+        json_response(conn, 200)["data"]
+    end
+  end
+
+  describe "update backend email template" do
+    setup [:create_backend]
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders backend template when data is valid", %{
+      conn: conn,
+      backend: %Backend{id: backend_id}
+    } do
+      conn =
+        patch(
+          conn,
+          Routes.admin_backend_email_template_path(
+            conn,
+            :update_email_template,
+            backend_id,
+            "reset_password_instructions"
+          ),
+          template: @update_email_template_attrs
+        )
+
+      assert %{"id" => template_id, "txt_content" => "some updated content"} =
+               json_response(conn, 200)["data"]
+
+      conn =
+        get(
+          conn,
+          Routes.admin_backend_email_template_path(
+            conn,
+            :email_template,
+            backend_id,
+            "reset_password_instructions"
+          )
+        )
+
+      assert %{
+               "id" => ^template_id,
+               "txt_content" => "some updated content",
+               "type" => "reset_password_instructions",
+               "backend_id" => ^backend_id
+             } = json_response(conn, 200)["data"]
+    end
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "renders errors when data is invalid", %{
+      conn: conn,
+      backend: backend
+    } do
+      conn =
+        patch(
+          conn,
+          Routes.admin_backend_email_template_path(
+            conn,
+            :update_email_template,
+            backend,
+            "reset_password_instructions"
+          ),
+          template: @invalid_email_template_attrs
+        )
+
+      assert json_response(conn, 422)["errors"] != %{}
+    end
+  end
+
+  describe "delete backend email template" do
+    setup [:create_backend]
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "respond a 404 when backend does not exist", %{
+      conn: conn
+    } do
+      backend_id = SecureRandom.uuid()
+      type = "reset_password_instructions"
+
+      assert_error_sent(404, fn ->
+        delete(
+          conn,
+          Routes.admin_backend_email_template_path(
+            conn,
+            :delete_email_template,
+            backend_id,
+            type
+          )
+        )
+      end)
+    end
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "respond a 404 when template does not exist", %{
+      conn: conn,
+      backend: %Backend{id: backend_id}
+    } do
+      type = "reset_password_instructions"
+
+      assert_error_sent(404, fn ->
+        delete(
+          conn,
+          Routes.admin_backend_email_template_path(
+            conn,
+            :delete_email_template,
+            backend_id,
+            type
+          )
+        )
+      end)
+    end
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "deletes backend template when template exists", %{
+      conn: conn,
+      backend: %Backend{id: backend_id} = backend
+    } do
+      type = "reset_password_instructions"
+      insert(:email_template, type: type, backend: backend)
+
+      conn =
+        delete(
+          conn,
+          Routes.admin_backend_email_template_path(
+            conn,
+            :delete_email_template,
+            backend_id,
+            type
+          )
+        )
+
+      assert %{"id" => nil, "type" => "reset_password_instructions"} = json_response(conn, 200)["data"]
     end
   end
 

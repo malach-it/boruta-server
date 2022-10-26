@@ -5,6 +5,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
 
   import Swoosh.Email
 
+  alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.IdentityProviders.Backend
 
   def smtp_adapter do
@@ -20,7 +21,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
       username: backend.smtp_username,
       password: backend.smtp_password,
       ssl: false,
-      tls: backend.smtp_tls,
+      tls: String.to_atom(backend.smtp_tls),
       auth: :always,
       port: backend.smtp_port,
       # dkim: [
@@ -53,27 +54,25 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
   @doc """
   Deliver instructions to confirm account.
   """
-  def deliver_confirmation_instructions(user, url) do
-    body = """
+  def deliver_confirmation_instructions(backend, user, url) do
+    template = Enum.find(backend.email_templates, fn %EmailTemplate{type: type} ->
+      type == "confirmation_instructions"
+    end) || EmailTemplate.default_template(:confirmation_instructions)
 
-    ==============================
+    context = %{
+      user: Map.from_struct(user),
+      url: url
+    }
 
-    Hi #{user.username},
-
-    You can confirm your account by visiting the URL below:
-
-    #{url}
-
-    If you didn't create an account with us, please ignore this.
-
-    ==============================
-    """
+    text_body = Mustachex.render(template.txt_content, context)
+    html_body = Mustachex.render(template.html_content, context)
 
     new()
     |> from(user.backend.smtp_from)
     |> to(user.username)
     |> subject("Confirm your account.")
-    |> text_body(body)
+    |> text_body(text_body)
+    |> html_body(html_body)
   rescue
     _error ->
       {:error, "Bad SMTP configuration."}
@@ -82,27 +81,25 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
   @doc """
   Deliver instructions to reset a user password.
   """
-  def deliver_reset_password_instructions(user, url) do
-    body = """
+  def deliver_reset_password_instructions(backend, user, url) do
+    template = Enum.find(backend.email_templates, fn %EmailTemplate{type: type} ->
+      type == "reset_password_instructions"
+    end) || EmailTemplate.default_template(:reset_password_instructions)
 
-    ==============================
+    context = %{
+      user: Map.from_struct(user),
+      url: url
+    }
 
-    Hi #{user.username},
-
-    You can reset your password by visiting the URL below:
-
-    #{url}
-
-    If you didn't request this change, please ignore this.
-
-    ==============================
-    """
+    text_body = Mustachex.render(template.txt_content, context)
+    html_body = Mustachex.render(template.html_content, context)
 
     new()
     |> from(user.backend.smtp_from)
     |> to(user.username)
     |> subject("Reset your password.")
-    |> text_body(body)
+    |> text_body(text_body)
+    |> html_body(html_body)
   rescue
     _error ->
       {:error, "Bad SMTP configuration."}
