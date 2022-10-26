@@ -300,14 +300,11 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
     end
   end
 
-  @tag :skip
-  test "get an identity_provider template"
-
   describe "update identity_provider template" do
     setup [:create_identity_provider]
 
     @tag authorized: ["identity-providers:manage:all"]
-    test "renders identity_provider when data is valid", %{
+    test "renders identity_provider template when data is valid", %{
       conn: conn,
       identity_provider: %IdentityProvider{id: identity_provider_id}
     } do

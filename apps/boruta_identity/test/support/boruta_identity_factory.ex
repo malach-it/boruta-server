@@ -98,6 +98,14 @@ defmodule BorutaIdentity.Factory do
     }
   end
 
+  def email_template_factory do
+    %EmailTemplate{
+      type: "template_type",
+      txt_content: "template content",
+      html_content: "template content"
+    }
+  end
+
   def reset_password_instructions_email_template_factory do
     %EmailTemplate{
       type: "reset_password_instructions",

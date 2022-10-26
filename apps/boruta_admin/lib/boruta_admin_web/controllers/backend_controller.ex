@@ -6,6 +6,7 @@ defmodule BorutaAdminWeb.BackendController do
       authorize: 2
     ]
 
+  alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.Backend
 
@@ -53,6 +54,29 @@ defmodule BorutaAdminWeb.BackendController do
     with {:ok, %Backend{}} <- IdentityProviders.delete_backend(backend) do
       send_resp(conn, :no_content, "")
     end
+  end
+
+  def email_template(conn, %{"backend_id" => id, "template_type" => template_type}) do
+    template = IdentityProviders.get_backend_email_template!(id, String.to_atom(template_type))
+    render(conn, "show_email_template.json", email_template: template)
+  end
+
+  def update_email_template(conn, %{
+        "backend_id" => id,
+        "template_type" => template_type,
+        "template" => template_params
+      }) do
+    template = IdentityProviders.get_backend_email_template!(id, String.to_atom(template_type))
+
+    with {:ok, %EmailTemplate{} = template} <-
+           IdentityProviders.upsert_email_template(template, template_params) do
+      render(conn, "show_email_template.json", email_template: template)
+    end
+  end
+
+  def delete_email_template(conn, %{"backend_id" => id, "template_type" => template_type}) do
+    template = IdentityProviders.delete_email_template!(id, String.to_atom(template_type))
+    render(conn, "show_email_template.json", email_template: template)
   end
 
   # TODO client backend association

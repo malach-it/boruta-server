@@ -2,18 +2,17 @@ defmodule BorutaAdminWeb.IdentityProviderView do
   use BorutaAdminWeb, :view
 
   alias BorutaAdminWeb.BackendView
-  alias BorutaAdminWeb.IdentityProviderView
 
   def render("index.json", %{identity_providers: identity_providers}) do
-    %{data: render_many(identity_providers, IdentityProviderView, "identity_provider.json")}
+    %{data: render_many(identity_providers, __MODULE__, "identity_provider.json")}
   end
 
   def render("show.json", %{identity_provider: identity_provider}) do
-    %{data: render_one(identity_provider, IdentityProviderView, "identity_provider.json")}
+    %{data: render_one(identity_provider, __MODULE__, "identity_provider.json")}
   end
 
   def render("show_template.json", %{template: template}) do
-    %{data: render_one(template, IdentityProviderView, "template.json", template: template)}
+    %{data: render_one(template, __MODULE__, "template.json", template: template)}
   end
 
   def render("identity_provider.json", %{identity_provider: identity_provider}) do

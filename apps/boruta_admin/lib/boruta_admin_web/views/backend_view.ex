@@ -12,6 +12,10 @@ defmodule BorutaAdminWeb.BackendView do
     %{data: render_one(backend, BackendView, "backend.json")}
   end
 
+  def render("show_email_template.json", %{email_template: template}) do
+    %{data: render_one(template, __MODULE__, "email_template.json", template: template)}
+  end
+
   def render("backend.json", %{backend: backend}) do
     %{
       id: backend.id,
@@ -34,6 +38,16 @@ defmodule BorutaAdminWeb.BackendView do
       smtp_tls: backend.smtp_tls,
       smtp_port: backend.smtp_port,
       features: Backend.features(backend)
+    }
+  end
+
+  def render("email_template.json", %{template: template}) do
+    %{
+      id: template.id,
+      txt_content: template.txt_content,
+      html_content: template.html_content,
+      type: template.type,
+      backend_id: template.backend_id
     }
   end
 end

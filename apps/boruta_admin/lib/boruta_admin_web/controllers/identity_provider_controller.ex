@@ -34,11 +34,6 @@ defmodule BorutaAdminWeb.IdentityProviderController do
     render(conn, "show.json", identity_provider: identity_provider)
   end
 
-  def template(conn, %{"identity_provider_id" => id, "template_type" => template_type}) do
-    template = IdentityProviders.get_identity_provider_template!(id, String.to_atom(template_type))
-    render(conn, "show_template.json", template: template)
-  end
-
   def update(conn, %{"id" => id, "identity_provider" => identity_provider_params}) do
     identity_provider = IdentityProviders.get_identity_provider!(id)
 
@@ -46,6 +41,20 @@ defmodule BorutaAdminWeb.IdentityProviderController do
            IdentityProviders.update_identity_provider(identity_provider, identity_provider_params) do
       render(conn, "show.json", identity_provider: identity_provider)
     end
+  end
+
+  def delete(conn, %{"id" => id}) do
+    identity_provider = IdentityProviders.get_identity_provider!(id)
+
+    with :ok <- ensure_open_for_edition(id),
+         {:ok, %IdentityProvider{}} <- IdentityProviders.delete_identity_provider(identity_provider) do
+      send_resp(conn, :no_content, "")
+    end
+  end
+
+  def template(conn, %{"identity_provider_id" => id, "template_type" => template_type}) do
+    template = IdentityProviders.get_identity_provider_template!(id, String.to_atom(template_type))
+    render(conn, "show_template.json", template: template)
   end
 
   def update_template(conn, %{
@@ -64,15 +73,6 @@ defmodule BorutaAdminWeb.IdentityProviderController do
   def delete_template(conn, %{"identity_provider_id" => id, "template_type" => template_type}) do
     template = IdentityProviders.delete_identity_provider_template!(id, String.to_atom(template_type))
     render(conn, "show_template.json", template: template)
-  end
-
-  def delete(conn, %{"id" => id}) do
-    identity_provider = IdentityProviders.get_identity_provider!(id)
-
-    with :ok <- ensure_open_for_edition(id),
-         {:ok, %IdentityProvider{}} <- IdentityProviders.delete_identity_provider(identity_provider) do
-      send_resp(conn, :no_content, "")
-    end
   end
 
   defp ensure_open_for_edition(identity_provider_id) do
