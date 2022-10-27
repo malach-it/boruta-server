@@ -15,17 +15,17 @@ jobs:
     container: elixir:1.14
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.6.0
+        uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ github.token }}
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Retrieve Cached Dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: mix-cache
         with:
           path: |
@@ -73,12 +73,12 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Retrieve Cached Dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: mix-cache
         with:
           path: |
