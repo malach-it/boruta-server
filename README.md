@@ -1,12 +1,12 @@
 ![logo-yellow](images/logo-yellow.png)
 
-Boruta is an authorization server implementing OAuth 2.0 and Openid Connect specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also a gateway to apply access rules to incoming traffic.
+Boruta is a standalone authorization server implementing OAuth 2.0 and Openid Connect specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also a gateway to apply access rules to incoming traffic.
 
 ## Status
 
 This server is on an ongoing beta stage. Developments are moving fast on master then are keen to be less stable. Tagged versions are said to be stable and sanity tested.
 
-As far as I know, there are no production deployments of the server. I would be happy to contribute to deployments if ones want to go for it, just contact me and a discussion can be started to fulfill the your specific needs.
+As far as I know, there are no production deployments of the server. I would be happy to contribute to deployments if ones want to go for it. Reach out, we can discuss the needs of your use case.
 
 ## Implemented specifications and certification
 
@@ -19,7 +19,7 @@ As it, boruta server aim to follow the RFCs from IETF:
 And the specifications from the OpenID Foundation:
 - [OpenID Connect core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
 
-This server has been certified by the OpenID Foundation on October, 18th 2022 for the tagged version 0.1.0
+This server has been certified for the Basic, Implicit and Hybrid OpenID Provider profiles by the OpenID Foundation on October, 18th 2022 for the tagged version 0.1.0
 
 ![OpenID certified](https://github.com/malach-it/boruta-server/blob/master/images/oid-certification-mark.png?raw=true)
 
