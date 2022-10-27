@@ -101,6 +101,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
   def update_changeset(user, attrs, opts) do
     user
     |> cast(attrs, [:email, :password])
+    |> validate_required([:email])
     |> validate_email()
     |> validate_password(opts)
   end

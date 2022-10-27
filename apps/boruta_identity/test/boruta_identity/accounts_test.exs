@@ -10,6 +10,7 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.RegistrationError
   alias BorutaIdentity.Accounts.SessionError
+  alias BorutaIdentity.Accounts.SettingsError
   alias BorutaIdentity.Accounts.{User, UserToken}
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
@@ -83,6 +84,25 @@ defmodule BorutaIdentity.AccountsTest do
     @impl Accounts.ConfirmationApplication
     def user_confirmation_failure(context, error) do
       {:user_confirmation_failure, context, error}
+    end
+  end
+
+  defmodule DummySettings do
+    @behaviour Accounts.SettingsApplication
+
+    @impl Accounts.SettingsApplication
+    def edit_user_initialized(context, user, template) do
+      {:edit_user_initialized, context, user, template}
+    end
+
+    @impl Accounts.SettingsApplication
+    def user_updated(context, user) do
+      {:user_updated, context, user}
+    end
+
+    @impl Accounts.SettingsApplication
+    def user_update_failure(context, error) do
+      {:user_update_failure, context, error}
     end
   end
 
@@ -588,7 +608,12 @@ defmodule BorutaIdentity.AccountsTest do
       authentication_params = %{email: username, password: valid_user_password()}
 
       assert {:user_authenticated, ^context,
-              %User{username: ^username, backend: ^backend, uid: ^uid, last_login_at: last_login_at},
+              %User{
+                username: ^username,
+                backend: ^backend,
+                uid: ^uid,
+                last_login_at: last_login_at
+              },
               session_token} =
                Accounts.create_session(
                  context,
@@ -711,6 +736,7 @@ defmodule BorutaIdentity.AccountsTest do
 
         {:error, "user not found"}
       end)
+
       context = :context
       authentication_params = %{email: ""}
 
@@ -734,6 +760,7 @@ defmodule BorutaIdentity.AccountsTest do
 
         {:error, "user not found"}
       end)
+
       context = :context
       authentication_params = %{email: "does_not_exist"}
 
@@ -764,6 +791,7 @@ defmodule BorutaIdentity.AccountsTest do
 
         {:error, :boom}
       end)
+
       context = :context
       authentication_params = %{email: username}
 
@@ -794,6 +822,7 @@ defmodule BorutaIdentity.AccountsTest do
 
         {:error, :boom}
       end)
+
       context = :context
       authentication_params = %{email: username, password: "wrong password"}
 
@@ -826,6 +855,7 @@ defmodule BorutaIdentity.AccountsTest do
 
         {:error, :boom}
       end)
+
       context = :context
       authentication_params = %{email: username, password: "wrong password"}
 
@@ -858,6 +888,7 @@ defmodule BorutaIdentity.AccountsTest do
 
         :ok
       end)
+
       context = :context
       authentication_params = %{email: username, password: valid_user_password()}
 
@@ -888,11 +919,17 @@ defmodule BorutaIdentity.AccountsTest do
 
         :ok
       end)
+
       context = :context
       authentication_params = %{email: username, password: valid_user_password()}
 
       assert {:user_authenticated, ^context,
-              %User{username: ^username, backend: ^backend, uid: ^uid, last_login_at: last_login_at},
+              %User{
+                username: ^username,
+                backend: ^backend,
+                uid: ^uid,
+                last_login_at: last_login_at
+              },
               session_token} =
                Accounts.create_session(
                  context,
@@ -1021,11 +1058,157 @@ defmodule BorutaIdentity.AccountsTest do
   @tag :skip
   test "reset_password/4 with a ldap backend"
 
-  @tag :skip
-  test "initialize_edit_user/4"
+  describe "initialize_edit_user/4" do
+    setup do
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider:
+            build(
+              :identity_provider,
+              user_editable: true
+            )
+        )
 
-  @tag :skip
-  test "edit_user/5 with internal backend"
+      user = insert(:user)
+
+      {:ok, client_id: client_identity_provider.client_id, user: user}
+    end
+
+    test "returns an error with nil client_id", %{user: user} do
+      client_id = nil
+      context = :context
+
+      assert_raise IdentityProviderError, "Client identifier not provided.", fn ->
+        Accounts.initialize_edit_user(context, client_id, user, DummySettings)
+      end
+    end
+
+    test "returns an error with unknown client_id", %{user: user} do
+      client_id = SecureRandom.uuid()
+      context = :context
+
+      assert_raise IdentityProviderError,
+                   "identity provider not configured for given OAuth client. Please contact your administrator.",
+                   fn ->
+                     Accounts.initialize_edit_user(context, client_id, user, DummySettings)
+                   end
+    end
+
+    test "returns an error if registration is not enabled for client identity provider", %{
+      user: user
+    } do
+      %ClientIdentityProvider{client_id: client_id} = insert(:client_identity_provider)
+
+      context = :context
+
+      assert_raise IdentityProviderError,
+                   "Feature is not enabled for client identity provider.",
+                   fn ->
+                     Accounts.initialize_edit_user(context, client_id, user, DummySettings)
+                   end
+    end
+
+    test "returns a template", %{client_id: client_id, user: user} do
+      context = :context
+
+      assert {:edit_user_initialized, ^context, ^user, %Template{}} =
+               Accounts.initialize_edit_user(context, client_id, user, DummySettings)
+    end
+  end
+
+  describe "edit_user/5 with internal backend" do
+    setup do
+      backend = insert(:backend)
+
+      identity_provider =
+        build(
+          :identity_provider,
+          user_editable: true,
+          backend: backend
+        )
+
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider: identity_provider
+        )
+
+      user = user_fixture(%{backend: backend})
+
+      {:ok, client_id: client_identity_provider.client_id, user: user}
+    end
+
+    test "returns an error with unexisting user", %{client_id: client_id} do
+      user = %User{username: "unexisting"}
+      confirmation_url_fun = fn -> "" end
+
+      assert {:user_update_failure, :context,
+              %SettingsError{message: "User not found.", template: %Template{type: "edit_user"}}} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "returns an error with a bad current password", %{client_id: client_id, user: user} do
+      confirmation_url_fun = fn -> "" end
+
+      assert {:user_update_failure, :context,
+              %SettingsError{
+                message: "Invalid user password.",
+                template: %Template{type: "edit_user"}
+              }} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: "bad password"},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "returns an error with bad update parameters", %{client_id: client_id, user: user} do
+      confirmation_url_fun = fn -> "" end
+
+      assert {:user_update_failure, :context,
+              %SettingsError{
+                message: "Could not update user with given params.",
+                changeset: %Ecto.Changeset{},
+                template: %Template{type: "edit_user"}
+              }} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: valid_user_password(), email: ""},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "updates user", %{client_id: client_id, user: user} do
+      updated_email = "updated@email.test"
+      confirmation_url_fun = fn -> "" end
+
+      assert {:user_updated, :context,
+              %User{username: ^updated_email}} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: valid_user_password(), email: updated_email},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    @tag :skip
+    test "unconfirms user"
+  end
 
   @tag :skip
   test "edit_user/5 with ldap backend"
