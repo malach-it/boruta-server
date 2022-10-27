@@ -42,6 +42,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             port: 80,
             uris: ["/upstream"]
           })
+          Process.sleep(100)
 
           request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
 
@@ -68,6 +69,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
               error_content_type: "text",
               unauthorized_response: "boom"
             })
+          Process.sleep(100)
 
           request = Finch.build(:get, "http://localhost:7777/unauthorized", [], "")
 
@@ -105,6 +107,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
               error_content_type: "text",
               forbidden_response: "boom"
             })
+          Process.sleep(100)
 
           request =
             Finch.build(
@@ -146,6 +149,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             authorize: true,
             required_scopes: %{"GET" => ["test"]}
           })
+          Process.sleep(100)
 
           request =
             Finch.build(
@@ -180,6 +184,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             required_scopes: %{"GET" => ["test"]},
             forwarded_token_signature_alg: "HS256"
           })
+          Process.sleep(100)
 
           request =
             Finch.build(
