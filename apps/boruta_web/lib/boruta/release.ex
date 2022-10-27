@@ -17,6 +17,11 @@ defmodule Boruta.Release do
   end
 
   def seed do
+    _started =
+      Enum.map(@apps, fn app ->
+        Application.ensure_all_started(app)
+      end)
+
     Code.eval_file(Path.join(:code.priv_dir(:boruta_auth), "/repo/boruta.seeds.exs"))
   end
 
@@ -27,7 +32,7 @@ defmodule Boruta.Release do
 
   defp repos do
     Enum.flat_map(@apps, fn app ->
-      Application.ensure_all_started(app)
+      Application.load(app)
       Application.fetch_env!(app, :ecto_repos)
     end)
   end

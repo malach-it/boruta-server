@@ -10,6 +10,11 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
       POSTGRES_DATABASE: "boruta_release"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   boruta:
     build: .
@@ -43,5 +48,6 @@ services:
       MAILJET_API_KEY: "MAILJET_API_KEY"
       MAILJET_SECRET: "MAILJET_SECRET"
     depends_on:
-      - "postgres"
+      postgres:
+        condition: service_healthy
 
