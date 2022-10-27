@@ -1,4 +1,0 @@
-<div class="ui center aligned segment">
-  <h1>OAuth client misconfiguration, please contact your administrator</h1>
-  <h2><%= @error_description %></h2>
-</div>

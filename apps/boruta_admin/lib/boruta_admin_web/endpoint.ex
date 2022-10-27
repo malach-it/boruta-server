@@ -14,10 +14,6 @@ defmodule BorutaAdminWeb.Endpoint do
     gzip: false,
     only: ~w(assets favicon.ico)
 
-  socket "/socket", BorutaAdminWeb.UserSocket,
-    websocket: true,
-    longpoll: false
-
   if code_reloading? do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
