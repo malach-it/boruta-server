@@ -1,6 +1,6 @@
 defmodule Boruta.Release do
   @moduledoc false
-  @apps [:boruta_identity, :boruta_gateway, :boruta_web]
+  @apps [:boruta_auth, :boruta_identity, :boruta_gateway, :boruta_web]
 
   def migrate do
     for repo <- repos() do
@@ -35,5 +35,6 @@ defmodule Boruta.Release do
       Application.load(app)
       Application.fetch_env!(app, :ecto_repos)
     end)
+    |> Enum.uniq()
   end
 end
