@@ -35,5 +35,6 @@ defmodule Boruta.Release do
       Application.load(app)
       Application.fetch_env!(app, :ecto_repos)
     end)
+    |> Enum.uniq()
   end
 end

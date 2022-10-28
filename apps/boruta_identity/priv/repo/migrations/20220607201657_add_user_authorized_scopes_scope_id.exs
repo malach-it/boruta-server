@@ -7,10 +7,13 @@ defmodule BorutaIdentity.Repo.Migrations.AddUserAuthorizedScopesScopeId do
   def up do
     Repo.start_link([])
 
-    json_scopes =
-      Admin.list_scopes()
-      |> Enum.map(fn %{name: name, id: id} -> %{name: name, id: id} end)
-      |> Enum.map(&Jason.encode!/1)
+    {:ok, %Postgrex.Result{rows: scopes}} =
+      BorutaAuth.Repo.query("""
+        SELECT id, name
+        FROM oauth_scopes
+      """)
+
+    json_scopes = Enum.map(scopes, fn [id, name] -> %{id: id, name: name} end)
 
     execute("""
     CREATE OR REPLACE FUNCTION scope_id_from_name(name varchar(255))

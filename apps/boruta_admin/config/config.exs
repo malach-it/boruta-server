@@ -20,7 +20,7 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
   live_view: [signing_salt: "mtlt3we/"]
 
 config :boruta, Boruta.Oauth,
-  repo: BorutaWeb.Repo,
+  repo: BorutaAuth.Repo,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
   ]
