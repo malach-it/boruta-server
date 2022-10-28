@@ -42,6 +42,9 @@ jobs:
           mix local.hex --force
           mix deps.get
 
+      - name: Compilation warnings
+        run: mix compile --force --warnings-as-errors
+
       - name: Run Credo
         run: mix credo --strict
 

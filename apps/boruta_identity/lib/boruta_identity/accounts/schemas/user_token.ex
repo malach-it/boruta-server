@@ -111,7 +111,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
         hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
 
         {:ok, token_and_context_query(hashed_token, context)}
-      error ->
+      _error ->
         {:error, "Could not revoke given token."}
     end
   end
