@@ -162,11 +162,15 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
                    ) do
     client_impl = IdentityProvider.implementation(client_idp)
     edit_template = edit_reset_password_template(client_idp)
+    token = reset_password_params.reset_password_token
 
-    case apply(client_impl, :reset_password, [client_idp.backend, reset_password_params]) do
-      {:ok, user} ->
-        module.password_reseted(context, user)
-
+    with {:ok, user} <- get_user_by_reset_password_token(token),
+         # TODO wrap password reset and token revocation in a transaction
+         {:ok, _user} <- apply(client_impl, :reset_password, [client_idp.backend, reset_password_params]),
+         {:ok, revoke_query} <- UserToken.revoke_email_token_query(token, "reset_password"),
+    _deleted <- Repo.update_all(revoke_query, set: [revoked_at: DateTime.utc_now()]) do
+      module.password_reseted(context, user)
+    else
       {:error, %Ecto.Changeset{} = changeset} ->
         module.password_reset_failure(context, %ResetPasswordError{
           token: reset_password_params.reset_password_token,
@@ -185,11 +189,14 @@ defmodule BorutaIdentity.Accounts.ResetPasswords do
   end
 
   defp send_reset_password_instructions(backend, user, reset_password_url_fun) do
-    with {:ok, _email} <-
+    {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
+
+    with {:ok, _user_token} <- Repo.insert(user_token),
+         {:ok, _user_token} <-
            Deliveries.deliver_user_reset_password_instructions(
              backend,
              user,
-             reset_password_url_fun
+             reset_password_url_fun.(encoded_token)
            ) do
       :ok
     end

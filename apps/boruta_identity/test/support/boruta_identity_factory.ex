@@ -7,6 +7,7 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Configuration.ErrorTemplate
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
@@ -21,6 +22,17 @@ defmodule BorutaIdentity.Factory do
       username: "user#{System.unique_integer()}@example.com",
       uid: SecureRandom.hex(),
       backend: insert(:backend)
+    }
+  end
+
+  def reset_password_user_token_factory do
+    user = build(:user)
+
+    %UserToken{
+      token: SecureRandom.hex(64),
+      context: "reset_password",
+      sent_to: user.username,
+      user: user
     }
   end
 
@@ -78,6 +90,7 @@ defmodule BorutaIdentity.Factory do
       type: "Elixir.BorutaIdentity.Accounts.Internal",
       smtp_from: "from@test.factory",
       smtp_relay: "test.smtp.factory",
+      smtp_ssl: false,
       smtp_tls: "never",
       smtp_username: "factory_smtp_username",
       smtp_password: "factory_smtp_password",
