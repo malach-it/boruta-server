@@ -9,6 +9,7 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Accounts.IdentityProviderError
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.RegistrationError
+  alias BorutaIdentity.Accounts.ResetPasswordError
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.SettingsError
   alias BorutaIdentity.Accounts.{User, UserToken}
@@ -103,6 +104,35 @@ defmodule BorutaIdentity.AccountsTest do
     @impl Accounts.SettingsApplication
     def user_update_failure(context, error) do
       {:user_update_failure, context, error}
+    end
+  end
+
+  defmodule DummyResetPasswords do
+    @behaviour Accounts.ResetPasswordApplication
+
+    @impl Accounts.ResetPasswordApplication
+    def password_instructions_initialized(context, template) do
+      {:password_instructions_initialized, context, template}
+    end
+
+    @impl Accounts.ResetPasswordApplication
+    def reset_password_instructions_delivered(context) do
+      {:reset_password_instructions_delivered, context}
+    end
+
+    @impl Accounts.ResetPasswordApplication
+    def password_reset_initialized(context, token, template) do
+      {:passsword_reseet_initialized, context, token, template}
+    end
+
+    @impl Accounts.ResetPasswordApplication
+    def password_reseted(context, user) do
+      {:password_reseted, context, user}
+    end
+
+    @impl Accounts.ResetPasswordApplication
+    def password_reset_failure(context, error) do
+      {:password_reset_failure, context, error}
     end
   end
 
@@ -1052,11 +1082,335 @@ defmodule BorutaIdentity.AccountsTest do
   @tag :skip
   test "initialize_password_reset/3"
 
-  @tag :skip
-  test "reset_password/4 with an internal backend"
+  describe "reset_password/4 with an internal backend" do
+    setup do
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider:
+            build(
+              :identity_provider,
+              user_editable: true
+            )
+        )
 
-  @tag :skip
-  test "reset_password/4 with a ldap backend"
+      {:ok, client_id: client_identity_provider.client_id}
+    end
+
+    test "returns an error when password token is invalid", %{client_id: client_id} do
+      user_token = insert(:reset_password_user_token)
+
+      reset_password_params = %{
+        reset_password_token: user_token.token
+      }
+
+      assert {:password_reset_failure, :context,
+              %ResetPasswordError{
+                message: "Given reset password token is invalid.",
+                template: %Template{type: "edit_reset_password"}
+              }} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "returns an error when password params are invalid", %{client_id: client_id} do
+      user = user_fixture()
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(user_token)
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: "password",
+        password_confirmation: "bad password confirmation"
+      }
+
+      assert {:password_reset_failure, :context,
+              %ResetPasswordError{
+                message: "Could not update user password.",
+                changeset: %Ecto.Changeset{},
+                template: %Template{type: "edit_reset_password"}
+              }} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "returns an error with an already used token", %{client_id: client_id} do
+      user = user_fixture()
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(%{user_token | revoked_at: DateTime.utc_now()})
+      password = "a good password"
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: password,
+        password_confirmation: password
+      }
+
+      assert {:password_reset_failure, :context,
+              %ResetPasswordError{
+                message: "Given reset password token is invalid.",
+                template: %Template{type: "edit_reset_password"}
+              }} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "resets user password", %{client_id: client_id} do
+      %User{id: user_id} = user = user_fixture()
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(user_token)
+      password = "a good password"
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: password,
+        password_confirmation: password
+      }
+
+      assert {:password_reseted, :context, %User{id: ^user_id}} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "invalidates reset password token", %{client_id: client_id} do
+      %User{id: user_id} = user = user_fixture()
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, user_token} = Repo.insert(user_token)
+      password = "a good password"
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: password,
+        password_confirmation: password
+      }
+
+      assert {:password_reseted, :context, %User{id: ^user_id}} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+
+      assert %UserToken{revoked_at: revoked_at} = Repo.reload(user_token)
+      assert revoked_at
+    end
+  end
+
+  describe "reset_password/4 with an ldap backend" do
+    setup do
+      backend = insert(:ldap_backend)
+
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider:
+            build(
+              :identity_provider,
+              user_editable: true,
+              backend: backend
+            )
+        )
+
+      BorutaIdentity.LdapRepoMock
+      |> stub(:open, fn host, _opts ->
+        assert host == backend.ldap_host
+
+        {:ok, :ldap_pid}
+      end)
+      |> stub(:close, fn _handle ->
+        :ok
+      end)
+
+      {:ok, client_id: client_identity_provider.client_id, backend: backend}
+    end
+
+    test "returns an error when password token is invalid", %{client_id: client_id} do
+      user_token = insert(:reset_password_user_token)
+
+      reset_password_params = %{
+        reset_password_token: user_token.token
+      }
+
+      assert {:password_reset_failure, :context,
+              %ResetPasswordError{
+                message: "Given reset password token is invalid.",
+                template: %Template{type: "edit_reset_password"}
+              }} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "returns an error when password params are invalid", %{
+      client_id: client_id,
+      backend: backend
+    } do
+      user = user_fixture(%{backend: backend})
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(user_token)
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: "password",
+        password_confirmation: "bad password confirmation"
+      }
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+
+      assert {:password_reset_failure, :context,
+              %ResetPasswordError{
+                message: "Password and password confirmation do not match.",
+                changeset: nil,
+                template: %Template{type: "edit_reset_password"}
+              }} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "returns an error when password params are invalid (ldap error)", %{
+      client_id: client_id,
+      backend: backend
+    } do
+      user = user_fixture(%{backend: backend})
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(user_token)
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: "password that fails on ldap",
+        password_confirmation: "password that fails on ldap"
+      }
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+      |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
+      |> expect(:modify_password, fn _handle, _ldap_user, _password -> {:error, "ldap error"} end)
+
+      assert {:password_reset_failure, :context,
+              %ResetPasswordError{
+                message: "ldap error",
+                changeset: nil,
+                template: %Template{type: "edit_reset_password"}
+              }} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "returns an error with an already used token", %{client_id: client_id, backend: backend} do
+      user = user_fixture(%{backend: backend})
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(%{user_token | revoked_at: DateTime.utc_now()})
+      password = "a good password"
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: password,
+        password_confirmation: password
+      }
+
+      assert {:password_reset_failure, :context,
+              %ResetPasswordError{
+                message: "Given reset password token is invalid.",
+                template: %Template{type: "edit_reset_password"}
+              }} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "resets user password", %{client_id: client_id, backend: backend} do
+      %User{id: user_id} = user = user_fixture(%{backend: backend})
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(user_token)
+      password = "a good password"
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: password,
+        password_confirmation: password
+      }
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+      |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
+      |> expect(:modify_password, fn _handle, _ldap_user, _password -> :ok end)
+
+      assert {:password_reseted, :context, %User{id: ^user_id}} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+    end
+
+    test "invalidates reset password token", %{client_id: client_id, backend: backend} do
+      %User{id: user_id} = user = user_fixture(%{backend: backend})
+      {token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, user_token} = Repo.insert(user_token)
+      password = "a good password"
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+      |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
+      |> expect(:modify_password, fn _handle, _ldap_user, _password -> :ok end)
+
+      reset_password_params = %{
+        reset_password_token: token,
+        password: password,
+        password_confirmation: password
+      }
+
+      assert {:password_reseted, :context, %User{id: ^user_id}} =
+               Accounts.reset_password(
+                 :context,
+                 client_id,
+                 reset_password_params,
+                 DummyResetPasswords
+               )
+
+      assert %UserToken{revoked_at: revoked_at} = Repo.reload(user_token)
+      assert revoked_at
+    end
+  end
 
   describe "initialize_edit_user/4" do
     setup do
@@ -1194,8 +1548,7 @@ defmodule BorutaIdentity.AccountsTest do
       updated_email = "updated@email.test"
       confirmation_url_fun = fn -> "" end
 
-      assert {:user_updated, :context,
-              %User{username: ^updated_email}} =
+      assert {:user_updated, :context, %User{username: ^updated_email}} =
                Accounts.update_user(
                  :context,
                  client_id,

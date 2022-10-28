@@ -5,7 +5,7 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
   import Swoosh.TestAssertions
 
   alias BorutaIdentity.Accounts
-  alias BorutaIdentity.Accounts.Deliveries
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Repo
 
   setup :set_swoosh_global
@@ -55,12 +55,10 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
   describe "GET /users/reset_password/:token" do
     setup %{user: user} do
-      reset_password_url_fun = fn _ -> "http://test.host" end
+      {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(user_token)
 
-      {:ok, token} =
-        Deliveries.deliver_user_reset_password_instructions(user.backend, user, reset_password_url_fun)
-
-      {:ok, token: token}
+      {:ok, token: encoded_token}
     end
 
     test "renders reset password", %{conn: conn, token: token, request: request} do
@@ -80,12 +78,10 @@ defmodule BorutaIdentityWeb.UserResetPasswordControllerTest do
 
   describe "PUT /users/reset_password/:token" do
     setup %{user: user} do
-      reset_password_url_fun = fn _ -> "http://test.host" end
+      {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
+      {:ok, _user_token} = Repo.insert(user_token)
 
-      {:ok, token} =
-        Deliveries.deliver_user_reset_password_instructions(user.backend, user, reset_password_url_fun)
-
-      {:ok, token: token}
+      {:ok, token: encoded_token}
     end
 
     test "resets password once", %{conn: conn, user: user, token: token, request: request, identity_provider: identity_provider} do

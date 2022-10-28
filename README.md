@@ -4,7 +4,7 @@ Boruta is a standalone authorization server implementing OAuth 2.0 and Openid Co
 
 ## Status
 
-This server is on an ongoing beta stage. Developments are moving fast on master then are keen to be less stable. Tagged versions are said to be stable and sanity tested.
+This server is on an ongoing beta stage. Developments are moving fast on master then are keen to be less stable. Tagged versions are said to be more stable and sanity tested.
 
 As far as I know, there are no production deployments of the server. I would be happy to contribute to deployments if ones want to go for it. Reach out, we can discuss the needs of your use case.
 
@@ -170,3 +170,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_OAUTH_PORT`                | The port where boruta oauth server will be exposed on. |
 | `BORUTA_OAUTH_BASE_URL`            | The base URL where boruta oauth server http endpoint will be deployed to (without trailing slash). |
 | `BORUTA_GATEWAY_PORT`              | The port where boruta gateway will be exposed on. |
+
+## License
+
+This code is released under the [Apache 2.0](LICENSE.md) license.

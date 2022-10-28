@@ -9,6 +9,10 @@
 - [gateway] introspected token forwarding to updatreams
 - [identity] email templates edition
 
+### Security
+
+- [identity] invalidate user reset password token at use
+
 ## [0.1.0] - 2022-10-25
 
 Initial beta release

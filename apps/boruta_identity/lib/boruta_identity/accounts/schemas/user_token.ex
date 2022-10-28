@@ -20,6 +20,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
     field :token, :binary
     field :context, :string
     field :sent_to, :string
+    field :revoked_at, :utc_datetime_usec
     belongs_to :user, BorutaIdentity.Accounts.User
 
     timestamps(updated_at: false)
@@ -32,7 +33,9 @@ defmodule BorutaIdentity.Accounts.UserToken do
   """
   def build_session_token(user) do
     token = :crypto.strong_rand_bytes(@rand_size)
-    {token, %BorutaIdentity.Accounts.UserToken{token: token, context: "session", user_id: user.id}}
+
+    {token,
+     %BorutaIdentity.Accounts.UserToken{token: token, context: "session", user_id: user.id}}
   end
 
   @doc """
@@ -89,13 +92,27 @@ defmodule BorutaIdentity.Accounts.UserToken do
         query =
           from token in token_and_context_query(hashed_token, context),
             join: user in assoc(token, :user),
-            where: token.inserted_at > ago(^days, "day") and token.sent_to == user.username,
+            where:
+              token.inserted_at > ago(^days, "day") and
+                token.sent_to == user.username and
+                is_nil(token.revoked_at),
             select: user
 
         {:ok, query}
 
       :error ->
         :error
+    end
+  end
+
+  def revoke_email_token_query(token, context) do
+    case Base.url_decode64(token, padding: false) do
+      {:ok, decoded_token} ->
+        hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
+
+        {:ok, token_and_context_query(hashed_token, context)}
+      error ->
+        {:error, "Could not revoke given token."}
     end
   end
 
@@ -138,6 +155,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
   end
 
   def user_and_contexts_query(user, [_ | _] = contexts) do
-    from t in BorutaIdentity.Accounts.UserToken, where: t.user_id == ^user.id and t.context in ^contexts
+    from t in BorutaIdentity.Accounts.UserToken,
+      where: t.user_id == ^user.id and t.context in ^contexts
   end
 end

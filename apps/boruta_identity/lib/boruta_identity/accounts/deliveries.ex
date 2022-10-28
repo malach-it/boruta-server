@@ -61,20 +61,13 @@ defmodule BorutaIdentity.Accounts.Deliveries do
           backend :: Backend.t(),
           user :: User.t(),
           reset_password_url_fun :: callback_function()
-        ) :: {:ok, %UserToken{}} | {:error, reason :: any()}
-  def deliver_user_reset_password_instructions(backend, %User{} = user, reset_password_url_fun)
-      when is_function(reset_password_url_fun, 1) do
-    {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
-
-    with {:ok, _user_token} <- Repo.insert(user_token),
-         {:ok, _email} <-
-           UserNotifier.deliver_reset_password_instructions(
-             backend,
-             user,
-             reset_password_url_fun.(encoded_token)
-           )
-           |> UserNotifier.deliver(backend) do
-      {:ok, encoded_token}
-    end
+        ) :: {:ok, email :: any()} | {:error, reason :: any()}
+  def deliver_user_reset_password_instructions(backend, %User{} = user, reset_password_url) do
+    UserNotifier.deliver_reset_password_instructions(
+      backend,
+      user,
+      reset_password_url
+    )
+    |> UserNotifier.deliver(backend)
   end
 end
