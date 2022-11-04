@@ -15,7 +15,6 @@ defmodule BorutaAuth.MixProject do
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       mod: {BorutaAuth.Application, []},
@@ -23,10 +22,9 @@ defmodule BorutaAuth.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:boruta, "~> 2.2.2"},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", branch: "dynamic-registration"},
       {:logger_file_backend, "~> 0.0.13"},
       {:quantum, "~> 3.0"}
     ]
