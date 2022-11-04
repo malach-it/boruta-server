@@ -252,6 +252,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                ],
                "issuer" => "boruta",
                "jwks_uri" => "boruta/openid/jwks",
+               "registration_endpoint" => "boruta/openid/register",
                "response_types_supported" => [
                  "code",
                  "token",

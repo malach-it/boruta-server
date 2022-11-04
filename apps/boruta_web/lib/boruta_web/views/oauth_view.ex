@@ -69,6 +69,7 @@ defmodule BorutaWeb.OauthView do
       "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
       "userinfo_endpoint" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :userinfo),
       "jwks_uri" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :jwks_index),
+      "registration_endpoint" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :register_client),
       "response_types_supported" => ["code", "token", "id_token", "code token", "code id_token", "code id_token token"],
       "response_modes_supported" => ["query", "fragment"],
       "subject_types_supported" => ["public"],
