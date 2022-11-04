@@ -3,7 +3,11 @@ defmodule BorutaWeb.OpenidController do
 
   use BorutaWeb, :controller
 
+  alias Boruta.Oauth
   alias Boruta.Openid
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaWeb.OauthView
   alias BorutaWeb.OpenidView
 
@@ -48,11 +52,20 @@ defmodule BorutaWeb.OpenidController do
   end
 
   @impl Boruta.Openid.Application
-  def client_registered(conn, client) do
-    conn
-    |> put_view(OpenidView)
-    |> put_status(:created)
-    |> render("client.json", client: client)
+  def client_registered(conn, %Oauth.Client{id: client_id} = client) do
+    with %Backend{id: backend_id} <- Backend.default!(),
+         {:ok, %IdentityProvider{id: identity_provider_id}} <-
+           IdentityProviders.create_identity_provider(%{name: "Created with dynamic registration", backend_id: backend_id}),
+         {:ok, _client_identity_provider} <-
+           IdentityProviders.upsert_client_identity_provider(client_id, identity_provider_id) do
+      conn
+      |> put_view(OpenidView)
+      |> put_status(:created)
+      |> render("client.json", client: client)
+    else
+      {:error, changeset} ->
+        registration_failure(conn, changeset)
+    end
   end
 
   @impl Boruta.Openid.Application

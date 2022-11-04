@@ -15,7 +15,7 @@ defmodule BorutaWeb.OpenidView do
 
   def render("registration_error.json", %{changeset: changeset}) do
     %{
-      error: "invalid_redirect_uri",
+      error: "invalid_client_metadata",
       error_description: errors_full_message(changeset)
     }
   end

@@ -4,6 +4,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Authenticable
 
   alias Boruta.Ecto
@@ -274,7 +276,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn = post(conn, Routes.openid_path(conn, :register_client))
 
       assert json_response(conn, 400) == %{
-               "error" => "invalid_redirect_uri",
+               "error" => "invalid_client_metadata",
                "error_description" => "redirect_uris : can't be blank"
              }
     end
@@ -293,6 +295,22 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
       assert client_id
       assert client_secret
+    end
+
+    test "creates associated identity provider", %{conn: conn} do
+      conn =
+        post(conn, Routes.openid_path(conn, :register_client), %{
+          redirect_uris: ["https://test.uri"]
+        })
+
+      assert %{
+               "client_id" => client_id
+             } = json_response(conn, 201)
+
+      assert %ClientIdentityProvider{identity_provider_id: identity_provider_id} =
+               BorutaIdentity.Repo.get_by(ClientIdentityProvider, client_id: client_id)
+
+      assert BorutaIdentity.Repo.get!(IdentityProvider, identity_provider_id)
     end
   end
 end
