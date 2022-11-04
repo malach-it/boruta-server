@@ -265,6 +265,11 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                ],
                "response_modes_supported" => ["query", "fragment"],
                "subject_types_supported" => ["public"],
+               "token_endpoint_auth_methods_supported" => [
+                 "client_secret_basic",
+                 "client_secret_post",
+                 "client_secret_jwt"
+               ],
                "token_endpoint" => "boruta/oauth/token",
                "userinfo_endpoint" => "boruta/oauth/userinfo"
              }

@@ -73,6 +73,7 @@ defmodule BorutaWeb.OauthView do
       "response_types_supported" => ["code", "token", "id_token", "code token", "code id_token", "code id_token token"],
       "response_modes_supported" => ["query", "fragment"],
       "subject_types_supported" => ["public"],
+      "token_endpoint_auth_methods_supported" => ["client_secret_basic", "client_secret_post", "client_secret_jwt"],
       "id_token_signing_alg_values_supported" => IdToken.signature_algorithms()
     }
   end
