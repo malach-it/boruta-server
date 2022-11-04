@@ -51,6 +51,7 @@ defmodule BorutaWeb.OpenidController do
   def client_registered(conn, client) do
     conn
     |> put_view(OpenidView)
+    |> put_status(:created)
     |> render("client.json", client: client)
   end
 
