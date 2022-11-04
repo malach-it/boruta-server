@@ -55,7 +55,7 @@ defmodule BorutaWeb.OpenidController do
   def client_registered(conn, %Oauth.Client{id: client_id} = client) do
     with %Backend{id: backend_id} <- Backend.default!(),
          {:ok, %IdentityProvider{id: identity_provider_id}} <-
-           IdentityProviders.create_identity_provider(%{name: "Created with dynamic registration", backend_id: backend_id}),
+           IdentityProviders.create_identity_provider(%{name: "Created with dynamic registration for client #{client_id}", backend_id: backend_id}),
          {:ok, _client_identity_provider} <-
            IdentityProviders.upsert_client_identity_provider(client_id, identity_provider_id) do
       conn
