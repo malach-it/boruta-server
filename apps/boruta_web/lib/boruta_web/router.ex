@@ -55,6 +55,7 @@ defmodule BorutaWeb.Router do
 
     get("/jwks", OpenidController, :jwks_index)
     get("/jwks/:client_id", OpenidController, :jwks_show)
+    post("/register", OpenidController, :register_client)
   end
 
   scope "/oauth", BorutaWeb.Oauth do
