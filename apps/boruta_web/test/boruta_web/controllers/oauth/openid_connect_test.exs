@@ -289,7 +289,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                "client_id" => client_id,
                "client_secret" => client_secret,
                "client_secret_expires_at" => 0
-             } = json_response(conn, 200)
+             } = json_response(conn, 201)
 
       assert client_id
       assert client_secret
