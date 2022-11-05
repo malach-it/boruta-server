@@ -45,7 +45,8 @@ defmodule BorutaWeb.OpenidController do
 
   def register_client(conn, params) do
     registration_params = %{
-      redirect_uris: params["redirect_uris"]
+      redirect_uris: params["redirect_uris"],
+      id_token_signature_alg: "RS256"
     }
 
     Openid.register_client(conn, registration_params, __MODULE__)
@@ -55,7 +56,10 @@ defmodule BorutaWeb.OpenidController do
   def client_registered(conn, %Oauth.Client{id: client_id} = client) do
     with %Backend{id: backend_id} <- Backend.default!(),
          {:ok, %IdentityProvider{id: identity_provider_id}} <-
-           IdentityProviders.create_identity_provider(%{name: "Created with dynamic registration for client #{client_id}", backend_id: backend_id}),
+           IdentityProviders.create_identity_provider(%{
+             name: "Created with dynamic registration for client #{client_id}",
+             backend_id: backend_id
+           }),
          {:ok, _client_identity_provider} <-
            IdentityProviders.upsert_client_identity_provider(client_id, identity_provider_id) do
       conn
