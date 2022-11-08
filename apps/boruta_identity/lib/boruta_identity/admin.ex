@@ -11,10 +11,12 @@ defmodule BorutaIdentity.Admin do
   alias BorutaIdentity.Repo
   alias NimbleCSV.RFC4180, as: CSV
 
-  @type user_params :: %{
-          username: String.t(),
-          password: String.t()
-        }
+  @type user_params ::
+          %{
+            :username => String.t(),
+            :password => String.t(),
+            optional(:metadata) => map()
+          }
 
   @type raw_user_params :: %{
           username: String.t(),
@@ -45,7 +47,10 @@ defmodule BorutaIdentity.Admin do
   @spec search_users(query :: String.t(), params :: map()) :: Scrivener.Page.t()
   @spec search_users(query :: String.t()) :: Scrivener.Page.t()
   def search_users(query, params \\ %{}) do
-    from(u in User, where: fragment("username % ?", ^query), order_by: fragment("word_similarity(username, ?) DESC", ^query))
+    from(u in User,
+      where: fragment("username % ?", ^query),
+      order_by: fragment("word_similarity(username, ?) DESC", ^query)
+    )
     |> preload([:authorized_scopes, :backend])
     |> Repo.paginate(params)
   end
@@ -209,7 +214,10 @@ defmodule BorutaIdentity.Admin do
   end
 
   @spec delete_user(user_id :: Ecto.UUID.t()) ::
-          {:ok, user :: User.t()} | {:error, atom()} | {:error, Ecto.Changeset.t()} | {:error, reason :: String.t()}
+          {:ok, user :: User.t()}
+          | {:error, atom()}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, reason :: String.t()}
   def delete_user(user_id) when is_binary(user_id) do
     case get_user(user_id) do
       nil ->

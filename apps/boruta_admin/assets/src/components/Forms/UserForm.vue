@@ -17,8 +17,17 @@
           <label>Password</label>
           <input type="password" v-model="user.password">
         </div>
+        <section v-if="user.backend.metadata_fields.length">
+          <h2>Metadata</h2>
+          <div v-for="field in user.backend.metadata_fields">
+            <div class="field">
+              <label>{{ field.attribute_name }}</label>
+              <input type="text" v-model="user.metadata[field.attribute_name]" placeholder="metadata">
+            </div>
+          </div>
+        </section>
         <section v-if="user.isPersisted">
-          <h3>Authorized scopes</h3>
+          <h2>Authorized scopes</h2>
           <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </section>
         <hr />
@@ -68,6 +77,14 @@ export default {
         this.user.authorized_scopes.indexOf(scope),
         1
       )
+    }
+  },
+  watch: {
+    user: {
+      handler ({ backend_id }) {
+        this.user.backend = this.backends.find(({ id }) => id === backend_id) || this.user.backend
+      },
+      deep: true
     }
   }
 }

@@ -5,6 +5,7 @@ defmodule BorutaIdentity.AdminTest do
   import BorutaIdentity.Factory
 
   alias BorutaIdentity.Accounts.Internal
+  alias BorutaIdentity.Accounts.LdapError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Admin
@@ -107,8 +108,67 @@ defmodule BorutaIdentity.AdminTest do
   @tag :skip
   test "delete_user/1 with ldap backend"
 
-  @tag :skip
-  test "create_user/2"
+  describe "create_user/2 with an internal backend" do
+    setup do
+      backend = insert(:backend)
+
+      {:ok, backend: backend}
+    end
+
+    test "returns an error when data is invalid", %{backend: backend} do
+      params = %{}
+
+      assert {:error, %Ecto.Changeset{}} = Admin.create_user(backend, params)
+    end
+
+    test "creates a user", %{backend: backend} do
+      params = %{username: "test@created.email", password: "a valid password"}
+
+      assert {:ok, %User{}} = Admin.create_user(backend, params)
+    end
+
+    test "creates a user with metadata", %{backend: backend} do
+      metadata_field = %{
+        type: "type",
+        attribute_name: "attribute_test"
+      }
+
+      {:ok, _backend} =
+        Ecto.Changeset.change(backend, %{
+          metadata_fields: [
+            metadata_field
+          ]
+        })
+        |> Repo.update()
+
+      params = %{
+        username: "test@created.email",
+        password: "a valid password",
+        metadata: %{attribute_test: "attribute_test value"}
+      }
+
+      assert {:ok,
+              %User{
+                metadata: %{"attribute_test" => "attribute_test value"}
+              }} = Admin.create_user(backend, params)
+    end
+  end
+
+  describe "create_user/2 with a ldap backend" do
+    setup do
+      backend = insert(:ldap_backend)
+
+      {:ok, backend: backend}
+    end
+
+    test "raises an error", %{backend: backend} do
+      params = %{}
+
+      assert_raise LdapError, fn ->
+        Admin.create_user(backend, params)
+      end
+    end
+  end
 
   @tag :skip
   test "create_raw_user/2"
