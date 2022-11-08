@@ -100,10 +100,15 @@ defmodule BorutaAdminWeb.UserController do
 
   def create(_conn, _params), do: {:error, :bad_request}
 
-  def update(conn, %{"id" => id, "user" => %{"authorized_scopes" => scopes}}) do
+  def update(conn, %{"id" => id, "user" => %{"authorized_scopes" => scopes} = user_params}) do
+    update_params = user_params
+                    |> Enum.map(fn {key, value} -> {String.to_atom(key), value} end)
+                    |> Enum.into(%{})
+
     with :ok <- ensure_open_for_edition(id, conn),
          %User{} = user <- Admin.get_user(id),
          # TODO update user email and password
+         {:ok, %User{} = user} <- Admin.update_user(user, update_params),
          {:ok, %User{} = user} <- Admin.update_user_authorized_scopes(user, scopes) do
       render(conn, "show.json", user: user)
     else

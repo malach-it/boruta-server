@@ -339,6 +339,28 @@ defmodule BorutaAdminWeb.UserControllerTest do
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
     end
 
+    @tag authorized: ["users:manage:all"]
+    test "renders user submitting metadata", %{
+      conn: conn,
+      user: %User{id: id} = user,
+      existing_scope: scope
+    } do
+      {:ok, _backend} =
+        Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
+        |> Repo.update()
+
+      conn =
+        put(conn, Routes.admin_user_path(conn, :update, user),
+          user: %{
+            "authorized_scopes" => [%{"id" => scope.id}],
+            "metadata" => %{"test" => "test value"}
+          }
+        )
+
+      assert %{"id" => ^id, "metadata" => %{"test" => "test value"}} =
+               json_response(conn, 200)["data"]
+    end
+
     @tag user_authorized: ["users:manage:all"]
     test "cannot update current user", %{
       conn: conn,

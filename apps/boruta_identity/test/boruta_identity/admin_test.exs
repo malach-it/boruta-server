@@ -170,6 +170,25 @@ defmodule BorutaIdentity.AdminTest do
     end
   end
 
+  describe "update_user/2 with an internal backend" do
+    setup do
+      user = user_fixture()
+
+      {:ok, user: user}
+    end
+
+    test "updates user with metadata", %{user: user} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
+        |> Repo.update()
+
+      metadata = %{"test" => "test value"}
+      user_params = %{metadata: metadata}
+
+      assert {:ok, %User{metadata: ^metadata}} = Admin.update_user(user, user_params)
+    end
+  end
+
   @tag :skip
   test "create_raw_user/2"
 

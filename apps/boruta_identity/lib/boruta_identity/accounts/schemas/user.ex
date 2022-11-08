@@ -45,6 +45,11 @@ defmodule BorutaIdentity.Accounts.User do
     |> validate_required([:backend_id, :uid, :username])
   end
 
+  def changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:metadata])
+  end
+
   def login_changeset(user) do
     user
     |> change(last_login_at: DateTime.utc_now())

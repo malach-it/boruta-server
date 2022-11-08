@@ -213,6 +213,18 @@ defmodule BorutaIdentity.Admin do
     end
   end
 
+  @type user_update_params :: %{
+    optional(:metadata) => map()
+  }
+
+  @spec update_user(user :: User.t(), user_params :: user_update_params()) ::
+          {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
+  def update_user(user, user_params) do
+    user
+    |> User.changeset(user_params)
+    |> Repo.update()
+  end
+
   @spec delete_user(user_id :: Ecto.UUID.t()) ::
           {:ok, user :: User.t()}
           | {:error, atom()}
