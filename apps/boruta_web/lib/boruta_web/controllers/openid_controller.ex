@@ -46,6 +46,7 @@ defmodule BorutaWeb.OpenidController do
   def register_client(conn, params) do
     registration_params = %{
       redirect_uris: params["redirect_uris"],
+      jwks: params["jwks"],
       id_token_signature_alg: "RS256"
     }
 
