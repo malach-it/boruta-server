@@ -10,7 +10,8 @@ const defaults = {
   errors: null,
   password_hashing_alg: 'argon2',
   password_hashing_opts: {},
-  features: []
+  features: [],
+  metadata_fields: []
 }
 
 const assign = {
@@ -18,6 +19,7 @@ const assign = {
   name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
   is_default: function ({ is_default }) { this.is_default = is_default },
+  metadata_fields: function ({ metadata_fields }) { this.metadata_fields = metadata_fields },
   features: function ({ features }) { this.features = features },
   password_hashing_alg: function ({ password_hashing_alg }) { this.password_hashing_alg = password_hashing_alg },
   password_hashing_opts: function ({ password_hashing_opts }) { this.password_hashing_opts = password_hashing_opts },
@@ -96,6 +98,7 @@ class Backend {
       is_default,
       password_hashing_alg,
       password_hashing_opts,
+      metadata_fields,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,
@@ -126,6 +129,7 @@ class Backend {
       is_default,
       password_hashing_alg,
       password_hashing_opts: formattedPasswordHashingOpts,
+      metadata_fields,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,

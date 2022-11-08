@@ -425,6 +425,13 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
     end
 
+    test "create_backend/1 with valid metadata fields" do
+      metadata_fields = [%{type: "boolean", attribute_name: "test"}]
+      valid_attrs = %{name: "some name", type: "Elixir.BorutaIdentity.Accounts.Internal", metadata_fields: metadata_fields}
+
+      assert {:ok, %Backend{metadata_fields: ^metadata_fields}} = IdentityProviders.create_backend(valid_attrs)
+    end
+
     test "create_backend/1 with valid argon2 password hashing opts creates a backend" do
       valid_attrs = %{
         name: "some name",

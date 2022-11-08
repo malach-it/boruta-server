@@ -86,7 +86,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     field(:type, :string)
     field(:is_default, :boolean, default: false)
     field(:name, :string)
+    field(:metadata_fields, {:array, :map}, default: [])
 
+    # smtp config
     field(:smtp_from, :string)
     field(:smtp_relay, :string)
     field(:smtp_username, :string)
@@ -170,6 +172,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :type,
       :name,
       :is_default,
+      :metadata_fields,
       :password_hashing_alg,
       :password_hashing_opts,
       :ldap_pool_size,

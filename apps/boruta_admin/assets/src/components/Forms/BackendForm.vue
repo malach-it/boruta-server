@@ -112,16 +112,36 @@
           <input type="number" v-model="backend.smtp_port" placeholder="25">
         </div>
         <h3>Email templates</h3>
-          <div v-if="backend.isPersisted" class="ui segment">
-            <router-link
-              :to="{ name: 'edit-confirmation-instructions-email-template', params: { backendId: backend.id } }"
-              class="ui fluid blue button">Edit confirmation template</router-link>
+        <div v-if="backend.isPersisted" class="ui segment">
+          <router-link
+            :to="{ name: 'edit-confirmation-instructions-email-template', params: { backendId: backend.id } }"
+            class="ui fluid blue button">Edit confirmation template</router-link>
+        </div>
+        <div v-if="backend.isPersisted" class="ui segment">
+          <router-link
+            :to="{ name: 'edit-reset-password-instructions-email-template', params: { backendId: backend.id } }"
+            class="ui fluid blue button">Edit reset password template</router-link>
+        </div>
+        <h2>User metadata configuration</h2>
+        <div v-for="field in backend.metadata_fields" :class="{ 'error': backend.errors?.metadata_fields }">
+          <i class="ui close icon" @click="deleteMetadataField(field)"></i>
+          <h3>Metadata field</h3>
+          <div class="field">
+            <label>Type</label>
+            <select v-model="field.type">
+              <option value="string">string</option>
+              <option value="boolean">boolean</option>
+              <option value="number">number</option>
+            </select>
           </div>
-          <div v-if="backend.isPersisted" class="ui segment">
-            <router-link
-              :to="{ name: 'edit-reset-password-instructions-email-template', params: { backendId: backend.id } }"
-              class="ui fluid blue button">Edit reset password template</router-link>
+          <div class="field">
+            <label>Attribute name</label>
+            <input type="text" v-model="field.attribute_name" placeholder="Familly name">
           </div>
+        </div>
+        <div class="field">
+          <a class="ui blue fluid button" @click="addMetadataField()">Add a metadata field</a>
+        </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a v-on:click="back()" class="ui button">Back</a>
@@ -165,9 +185,25 @@ export default {
     smtpPasswordVisibilityToggle () {
       this.smtpPasswordVisible = !this.smtpPasswordVisible
     },
+    addMetadataField () {
+      this.backend.metadata_fields.push({})
+    },
+    deleteMetadataField (field) {
+      this.backend.metadata_fields.splice(
+        this.backend.metadata_fields.indexOf(field),
+        1
+      )
+    },
     back () {
       this.$emit('back')
     }
   }
 }
 </script>
+
+<style scoped lang="scss">
+.close.icon {
+  float: right;
+  cursor: pointer;
+}
+</style>
