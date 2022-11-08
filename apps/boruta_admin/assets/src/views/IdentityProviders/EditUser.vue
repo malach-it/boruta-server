@@ -5,8 +5,8 @@
       <div class="ui segment">
         <div class="ui attribute list">
           <div class="item">
-            <span class="header">Provider</span>
-            <span class="description">{{ user.provider }}</span>
+            <span class="header">Backend</span>
+            <span class="description">{{ user.backend.name }}</span>
           </div>
           <div class="item">
             <span class="header">User ID</span>
