@@ -30,6 +30,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:password, :string, virtual: true)
     field(:confirmed_at, :utc_datetime_usec)
     field(:last_login_at, :utc_datetime_usec)
+    field(:metadata, :map, default: %{})
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:consents, Consent, on_replace: :delete)
@@ -40,7 +41,7 @@ defmodule BorutaIdentity.Accounts.User do
 
   def implementation_changeset(attrs) do
     %__MODULE__{}
-    |> cast(attrs, [:backend_id, :uid, :username])
+    |> cast(attrs, [:backend_id, :uid, :username, :metadata])
     |> validate_required([:backend_id, :uid, :username])
   end
 

@@ -453,6 +453,9 @@ export default {
       pointer-events: all;
       position: absolute;
     }
+    .field {
+      margin-bottom: 1em;
+    }
   }
   .ui.segments {
     margin: 0;

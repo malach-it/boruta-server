@@ -44,7 +44,8 @@ defmodule BorutaAdminWeb.UserController do
   def create(conn, %{"backend_id" => backend_id, "user" => user_params}) do
     create_params = %{
       username: user_params["email"],
-      password: user_params["password"]
+      password: user_params["password"],
+      metadata: user_params["metadata"]
     }
 
     backend = IdentityProviders.get_backend!(backend_id)

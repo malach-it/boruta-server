@@ -30,6 +30,7 @@ defmodule BorutaAdminWeb.UserView do
     %{
       id: user.id,
       email: user.username,
+      metadata: user.metadata,
       authorized_scopes: Accounts.get_user_scopes(user.id),
       backend:
         render_one(user.backend, BackendView, "backend.json", backend: user.backend)
