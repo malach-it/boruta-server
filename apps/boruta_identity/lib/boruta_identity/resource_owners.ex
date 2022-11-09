@@ -71,7 +71,7 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def claims(%ResourceOwner{sub: sub}, scope) do
     case Accounts.get_user(sub) do
-      %User{username: email, confirmed_at: confirmed_at} ->
+      %User{username: email, confirmed_at: confirmed_at, metadata: metadata} ->
         scope
         |> Scope.split()
         |> Enum.reduce(%{}, fn
@@ -120,6 +120,7 @@ defmodule BorutaIdentity.ResourceOwners do
           _, acc ->
             acc
         end)
+        |> Map.merge(metadata)
 
       _ ->
         %{}

@@ -5,6 +5,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
 
   alias Boruta.Oauth.ResourceOwner
   alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.Repo
   alias BorutaIdentity.ResourceOwners
 
   doctest BorutaIdentity
@@ -105,6 +106,15 @@ defmodule BorutaIdentity.ResourceOwnersTest do
         _ ->
           assert false
       end
+    end
+  end
+
+  describe "claims/2" do
+    test "returns user metadata" do
+      user = user_fixture()
+      {:ok, user} = Ecto.Changeset.change(user, %{metadata: %{"metadata" => true}}) |> Repo.update()
+
+      assert %{"metadata" => true} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "")
     end
   end
 end
