@@ -1,4 +1,5 @@
 ![logo-yellow](images/logo-yellow.png)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmalach-it%2Fboruta-server.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmalach-it%2Fboruta-server?ref=badge_shield)
 
 Boruta is a standalone authorization server implementing OAuth 2.0 and Openid Connect specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also a gateway to apply access rules to incoming traffic.
 
@@ -174,3 +175,6 @@ In order to authenticate to the administration interface you will be asked for c
 ## License
 
 This code is released under the [Apache 2.0](LICENSE.md) license.
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmalach-it%2Fboruta-server.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmalach-it%2Fboruta-server?ref=badge_large)
