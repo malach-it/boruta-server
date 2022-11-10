@@ -52,5 +52,25 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
 
       assert %User{metadata: %{"test" => "test value"}} = Repo.reload(user)
     end
+
+    test "updates an user without metadata (do not override)", %{
+      conn: conn,
+      request: request,
+      user: user
+    } do
+      {:ok, _user} =
+        Ecto.Changeset.change(user, %{metadata: %{"test" => "test value"}}) |> Repo.update()
+
+      conn =
+        put(conn, Routes.user_settings_path(conn, :update, request: request), %{
+          "user" => %{
+            "current_password" => valid_user_password()
+          }
+        })
+
+      assert redirected_to(conn, 302) == Routes.user_settings_path(conn, :edit, request: request)
+
+      assert %User{metadata: %{"test" => "test value"}} = Repo.reload(user)
+    end
   end
 end

@@ -55,15 +55,24 @@ defmodule BorutaIdentity.Accounts.Internal do
   def domain_user!(%Internal.User{id: id, email: email, metadata: metadata}, %Backend{
         id: backend_id
       }) do
-    User.implementation_changeset(%{
+    impl_user_params = %{
       uid: id,
       username: email,
-      backend_id: backend_id,
-      # TODO validate metadata upfront
-      metadata: metadata || %{}
-    })
+      backend_id: backend_id
+    }
+
+    {replace, impl_user_params} =
+      case metadata do
+        %{} = metadata ->
+          {[:username, :metadata], Map.put(impl_user_params, :metadata, metadata)}
+
+        _ ->
+          {[:username], impl_user_params}
+      end
+
+    User.implementation_changeset(impl_user_params)
     |> Repo.insert!(
-      on_conflict: {:replace, [:username, :metadata]},
+      on_conflict: {:replace, replace},
       returning: true,
       conflict_target: [:backend_id, :uid]
     )
