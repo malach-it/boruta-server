@@ -1,6 +1,5 @@
 <template>
   <div class="new-backend">
-    <Toaster :active="success" message="Backend has been created" type="success" />
     <BackendForm :backend="backend" @submit="createBackend()" @back="back()" action="Create" />
   </div>
 </template>
@@ -19,7 +18,6 @@ export default {
   data () {
     return {
       backend: new Backend(),
-      success: false
     }
   },
   methods: {
@@ -27,11 +25,8 @@ export default {
       this.$router.push({ name: 'backend-list' })
     },
     createBackend () {
-      this.success = false
-      return this.backend.save().then(() => {
-        this.success = true
-        // this.$router.push({ name: 'edit-backend', params: { backendId: this.backend.id } })
-        this.$router.push({ name: 'backend-list' })
+      return this.backend.save().then(({ id }) => {
+        this.$router.push({ name: 'edit-backend', params: { backendId: id } })
       }).catch()
     }
   }

@@ -25,8 +25,8 @@ export default {
       this.$router.push({ name: 'identity-provider-list' })
     },
     createIdentityProvider () {
-      return this.identityProvider.save().then(() => {
-        this.$router.push({ name: 'identity-provider-list' })
+      return this.identityProvider.save().then(({ id }) => {
+        this.$router.push({ name: 'edit-identity-provider', params: { identityProviderId: id } })
       }).catch()
     }
   }
