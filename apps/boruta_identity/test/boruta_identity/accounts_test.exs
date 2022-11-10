@@ -1259,7 +1259,7 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "returns an error when password params are invalid", %{
+    test "returns an error when password params are invalid (no ldap user)", %{
       client_id: client_id,
       backend: backend
     } do
@@ -1292,7 +1292,7 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "returns an error when password params are invalid (ldap error)", %{
+    test "returns an error when password params are invalid (ldap password error)", %{
       client_id: client_id,
       backend: backend
     } do
@@ -1470,7 +1470,7 @@ defmodule BorutaIdentity.AccountsTest do
     end
   end
 
-  describe "edit_user/5 with internal backend" do
+  describe "update_user/5 with internal backend" do
     setup do
       backend = insert(:backend)
 
@@ -1559,12 +1559,194 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
+    test "updates user with metadata", %{client_id: client_id, user: user} do
+      metadata = %{"test" => "test value"}
+      updated_email = "updated@email.test"
+      confirmation_url_fun = fn -> "" end
+
+      assert {:user_updated, :context, %User{username: ^updated_email, metadata: ^metadata}} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: valid_user_password(), email: updated_email, metadata: metadata},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
     @tag :skip
     test "unconfirms user"
   end
 
   @tag :skip
-  test "edit_user/5 with ldap backend"
+  describe "update_user/5 with ldap backend" do
+    setup do
+      backend = insert(:ldap_backend)
+
+      identity_provider =
+        build(
+          :identity_provider,
+          user_editable: true,
+          backend: backend
+        )
+
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider: identity_provider
+        )
+
+      user = user_fixture(%{backend: backend})
+
+      BorutaIdentity.LdapRepoMock
+      |> stub(:open, fn host, _opts ->
+        assert host == backend.ldap_host
+
+        {:ok, :ldap_pid}
+      end)
+      |> stub(:close, fn _handle ->
+        :ok
+      end)
+
+      {:ok, client_id: client_identity_provider.client_id, backend: backend, user: user}
+    end
+
+    test "returns an error with unexisting user", %{client_id: client_id} do
+      user = %User{username: "unexisting"}
+      confirmation_url_fun = fn -> "" end
+
+      assert {:user_update_failure, :context,
+              %SettingsError{message: "User not found.", template: %Template{type: "edit_user"}}} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "returns an error with a bad current password (no ldap user)", %{client_id: client_id, user: user} do
+      confirmation_url_fun = fn -> "" end
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:error, "ldap error"}
+      end)
+
+      assert {:user_update_failure, :context,
+              %SettingsError{
+                message: "ldap error",
+                template: %Template{type: "edit_user"}
+              }} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: "bad password"},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "returns an error with a bad current password (ldap password error)", %{client_id: client_id, backend: backend, user: user} do
+      confirmation_url_fun = fn -> "" end
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+      |> expect(:simple_bind, fn _handle, _dn, _password -> {:error, "ldap error"} end)
+
+      assert {:user_update_failure, :context,
+              %SettingsError{
+                message: "Authentication failure.",
+                template: %Template{type: "edit_user"}
+              }} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: "bad password"},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "returns an error with bad update parameters", %{client_id: client_id, user: user, backend: backend} do
+      confirmation_url_fun = fn -> "" end
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+      |> expect(:simple_bind, fn _handle, _dn, _password -> :ok end)
+      |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
+      |> expect(:modify, fn _handle, _backend, _user, "" -> {:error, "ldap error"} end)
+
+      assert {:user_update_failure, :context,
+              %SettingsError{
+                message: "ldap error",
+                template: %Template{type: "edit_user"}
+              }} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: valid_user_password(), email: ""},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "updates user", %{client_id: client_id, user: user, backend: backend} do
+      updated_email = "updated@email.test"
+      confirmation_url_fun = fn -> "" end
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+      |> expect(:simple_bind, fn _handle, _dn, _password -> :ok end)
+      |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
+      |> expect(:modify, fn _handle, _backend, _user, ^updated_email -> :ok end)
+
+      assert {:user_updated, :context, %User{username: ^updated_email}} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: valid_user_password(), email: updated_email},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "updates user with metadata", %{client_id: client_id, user: user, backend: backend} do
+      metadata = %{"test" => "test value"}
+      updated_email = "updated@email.test"
+      confirmation_url_fun = fn -> "" end
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+      |> expect(:simple_bind, fn _handle, _dn, _password -> :ok end)
+      |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
+      |> expect(:modify, fn _handle, _backend, _user, ^updated_email -> :ok end)
+
+      assert {:user_updated, :context, %User{username: ^updated_email, metadata: ^metadata}} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{current_password: valid_user_password(), email: updated_email, metadata: metadata},
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+  end
 
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do

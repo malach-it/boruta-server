@@ -60,14 +60,25 @@ defmodule BorutaIdentity.Accounts.Ldap do
   end
 
   @impl BorutaIdentity.Accounts.Sessions
-  def domain_user!(%Ldap.User{uid: uid, username: username}, %Backend{id: backend_id}) do
-    User.implementation_changeset(%{
+  def domain_user!(%Ldap.User{uid: uid, username: username, metadata: metadata}, %Backend{id: backend_id}) do
+    impl_user_params = %{
       uid: uid,
       username: username,
       backend_id: backend_id
-    })
+    }
+
+    {replace, impl_user_params} =
+      case metadata do
+        %{} = metadata ->
+          {[:username, :metadata], Map.put(impl_user_params, :metadata, metadata)}
+
+        _ ->
+          {[:username], impl_user_params}
+      end
+
+    User.implementation_changeset(impl_user_params)
     |> Repo.insert!(
-      on_conflict: {:replace, [:username]},
+      on_conflict: {:replace, replace},
       returning: true,
       conflict_target: [:backend_id, :uid]
     )
@@ -104,7 +115,7 @@ defmodule BorutaIdentity.Accounts.Ldap do
       fn _from, ldap ->
         case update_user_in_ldap(ldap, backend, user, params) do
           {:ok, user} ->
-            {{:ok, domain_user!(user, backend)}, ldap}
+            {{:ok, domain_user!(%{user | metadata: params[:metadata]}, backend)}, ldap}
 
           {:error, error, user} ->
             # NOTE keep user synchronized from LDAP
@@ -308,7 +319,8 @@ defmodule BorutaIdentity.Accounts.Ldap do
     end
   end
 
-  defp reset_password_in_ldap(_ldap, _backend, _user, _reset_password_params), do: {:error, "Password cannot be empty."}
+  defp reset_password_in_ldap(_ldap, _backend, _user, _reset_password_params),
+    do: {:error, "Password cannot be empty."}
 
   defp check_password_confirmation(%{
          password: password,
