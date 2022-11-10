@@ -32,11 +32,10 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
 
-    user_update_params = %{
-      email: user_params["email"],
-      password: user_params["password"],
-      current_password: user_params["current_password"]
-    }
+    user_update_params =
+      user_params
+      |> Enum.map(fn {key, value} -> {String.to_atom(key), value} end)
+      |> Enum.into(%{})
 
     Accounts.update_user(
       conn,

@@ -52,7 +52,9 @@ defmodule BorutaIdentity.Accounts.Internal do
   def get_user(_authentication_params), do: {:error, "Cannot find an user without an email."}
 
   @impl BorutaIdentity.Accounts.Sessions
-  def domain_user!(%Internal.User{id: id, email: email, metadata: metadata}, %Backend{id: backend_id}) do
+  def domain_user!(%Internal.User{id: id, email: email, metadata: metadata}, %Backend{
+        id: backend_id
+      }) do
     User.implementation_changeset(%{
       uid: id,
       username: email,
@@ -61,7 +63,7 @@ defmodule BorutaIdentity.Accounts.Internal do
       metadata: metadata || %{}
     })
     |> Repo.insert!(
-      on_conflict: {:replace, [:username]},
+      on_conflict: {:replace, [:username, :metadata]},
       returning: true,
       conflict_target: [:backend_id, :uid]
     )
@@ -96,7 +98,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   @impl BorutaIdentity.Accounts.Settings
   def update_user(backend, user, params) do
     with {:ok, user} <-
-           user
+           %{user | metadata: params[:metadata]}
            |> Internal.User.update_changeset(params, %{backend: backend})
            |> Repo.update() do
       {:ok, domain_user!(user, backend)}
@@ -155,7 +157,10 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   defp reset_user_password_multi(backend, user, reset_password_params) do
     Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, Internal.User.password_changeset(user, reset_password_params, %{backend: backend}))
+    |> Ecto.Multi.update(
+      :user,
+      Internal.User.password_changeset(user, reset_password_params, %{backend: backend})
+    )
     |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
     |> Repo.transaction()
   end

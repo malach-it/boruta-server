@@ -1,6 +1,11 @@
 defmodule BorutaIdentityWeb.UserSettingsControllerTest do
   use BorutaIdentityWeb.ConnCase
 
+  import BorutaIdentity.AccountsFixtures
+
+  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Repo
+
   setup :register_and_log_in
 
   describe "GET /users/settings" do
@@ -19,6 +24,33 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
     end
   end
 
-  @tag :skip
-  test "PUT /users/settings"
+  describe "PUT /users/settings" do
+    setup :with_a_request
+
+    setup %{identity_provider: identity_provider, user: user} do
+      {:ok, _identity_provider} =
+        identity_provider
+        |> Ecto.Changeset.change(%{backend_id: user.backend.id})
+        |> Repo.update()
+
+      :ok
+    end
+
+    @tag :skip
+    test "render errors when data is invalid"
+
+    test "updates an user with metadata", %{conn: conn, request: request, user: user} do
+      conn =
+        put(conn, Routes.user_settings_path(conn, :update, request: request), %{
+          "user" => %{
+            "current_password" => valid_user_password(),
+            "metadata" => %{"test" => "test value"}
+          }
+        })
+
+      assert redirected_to(conn, 302) == Routes.user_settings_path(conn, :edit, request: request)
+
+      assert %User{metadata: %{"test" => "test value"}} = Repo.reload(user)
+    end
+  end
 end

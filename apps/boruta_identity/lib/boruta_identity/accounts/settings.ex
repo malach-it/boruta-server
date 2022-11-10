@@ -52,7 +52,8 @@ defmodule BorutaIdentity.Accounts.Settings do
   @type user_update_params :: %{
           :current_password => String.t(),
           optional(:email) => String.t(),
-          optional(:password) => String.t()
+          optional(:password) => String.t(),
+          optional(:metadata) => map()
         }
 
   @type authentication_params :: %{
