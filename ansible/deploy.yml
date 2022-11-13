@@ -31,11 +31,11 @@
       kubernetes.core.helm:
         name: postgres
         chart_ref: bitnami/postgresql
-        chart_version: 10.16.2
+        chart_version: "10.16.2"
         release_namespace: boruta-staging
         values:
-          global.postgresql.postgresqlPassword	: "{{ postgresql_password }}"
-          postgresqlMaxConnections: "200"
+          global.postgresql.postgresqlPassword: "{{ postgresql_password }}"
+          postgresqlMaxConnections: "1024"
 
     - name: Create libcluster role
       kubernetes.core.k8s:
@@ -174,7 +174,7 @@
             BORUTA_OAUTH_PORT: "4001"
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
             BORUTA_GATEWAY_PORT: "4000"
-            POOL_SIZE: "10"
+            POOL_SIZE: "100"
 
     - name: Setup boruta database
       register: database_setup
