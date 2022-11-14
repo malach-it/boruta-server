@@ -16,6 +16,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
   describe "get_by/1" do
     test "returns an user by username" do
       username = @valid_username
+
       user =
         user_fixture(%{
           email: username,
@@ -26,7 +27,9 @@ defmodule BorutaIdentity.ResourceOwnersTest do
       {:ok, result} = ResourceOwners.get_by(username: username)
 
       user_id = user.id
-      assert %ResourceOwner{sub: ^user_id, username: ^username, extra_claims: %{user: _user}} = result
+
+      assert %ResourceOwner{sub: ^user_id, username: ^username, extra_claims: %{user: _user}} =
+               result
     end
 
     test "returns an user by sub" do
@@ -56,6 +59,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
     test "returns ok if password match" do
       username = @valid_username
       backend = Backend.default!()
+
       user =
         user_fixture(%{
           email: username,
@@ -63,8 +67,14 @@ defmodule BorutaIdentity.ResourceOwnersTest do
           backend: backend
         })
 
-      {:ok, impl_user} = apply(Backend.implementation(backend), :get_user, [backend, %{email: username}])
-      resource_owner = %ResourceOwner{sub: user.id, username: user.username, extra_claims: %{user: impl_user}}
+      {:ok, impl_user} =
+        apply(Backend.implementation(backend), :get_user, [backend, %{email: username}])
+
+      resource_owner = %ResourceOwner{
+        sub: user.id,
+        username: user.username,
+        extra_claims: %{user: impl_user}
+      }
 
       assert ResourceOwners.check_password(resource_owner, @valid_password) == :ok
     end
@@ -112,9 +122,25 @@ defmodule BorutaIdentity.ResourceOwnersTest do
   describe "claims/2" do
     test "returns user metadata" do
       user = user_fixture()
-      {:ok, user} = Ecto.Changeset.change(user, %{metadata: %{"metadata" => true}}) |> Repo.update()
+      {:ok, backend} = Ecto.Changeset.change(user.backend, %{metadata_fields: [%{"attribute_name" => "metadata"}]}) |> Repo.update()
+      user = %{user | backend: backend}
+
+      {:ok, user} =
+        Ecto.Changeset.change(user, %{metadata: %{"metadata" => true}}) |> Repo.update()
 
       assert %{"metadata" => true} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "")
+    end
+
+    test "filters user metadata" do
+      user = user_fixture()
+      {:ok, backend} = Ecto.Changeset.change(user.backend, %{metadata_fields: [%{"attribute_name" => "metadata"}]}) |> Repo.update()
+      user = %{user | backend: backend}
+
+      {:ok, user} =
+        Ecto.Changeset.change(user, %{metadata: %{"filtered" => true, "metadata" => true}})
+        |> Repo.update()
+
+      assert ResourceOwners.claims(%ResourceOwner{sub: user.id}, "") == %{"metadata" => true}
     end
   end
 end

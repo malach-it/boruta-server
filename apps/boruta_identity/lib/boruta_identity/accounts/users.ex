@@ -36,7 +36,8 @@ defmodule BorutaIdentity.Accounts.Users do
     Repo.one(
       from(u in User,
         left_join: as in assoc(u, :authorized_scopes),
-        preload: [authorized_scopes: as],
+        left_join: b in assoc(u, :backend),
+        preload: [authorized_scopes: as, backend: b],
         where: u.id == ^id
       )
     )
