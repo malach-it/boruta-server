@@ -28,7 +28,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
     @invalid_attrs %{name: nil}
 
     def identity_provider_fixture(attrs \\ %{}) do
-      insert(:identity_provider, Map.merge(@valid_attrs, attrs)) |> Repo.preload(backend: :email_templates)
+      insert(:identity_provider, Map.merge(@valid_attrs, attrs))
+      |> Repo.preload(backend: :email_templates)
     end
 
     test "list_identity_providers/0 returns all identity_providers" do
@@ -425,13 +426,6 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert backend.type == "Elixir.BorutaIdentity.Accounts.Internal"
     end
 
-    test "create_backend/1 with valid metadata fields" do
-      metadata_fields = [%{type: "boolean", attribute_name: "test"}]
-      valid_attrs = %{name: "some name", type: "Elixir.BorutaIdentity.Accounts.Internal", metadata_fields: metadata_fields}
-
-      assert {:ok, %Backend{metadata_fields: ^metadata_fields}} = IdentityProviders.create_backend(valid_attrs)
-    end
-
     test "create_backend/1 with valid argon2 password hashing opts creates a backend" do
       valid_attrs = %{
         name: "some name",
@@ -587,6 +581,25 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:error, %Ecto.Changeset{}} = IdentityProviders.create_backend(@invalid_attrs)
     end
 
+    test "create_backend/1 with invalid metadata_fields returns error changeset" do
+      attrs = Map.put(@valid_attrs, :metadata_fields, [%{"valid" => false}])
+      assert {:error, %Ecto.Changeset{errors: errors}} = IdentityProviders.create_backend(attrs)
+      assert errors[:metadata_fields]
+
+      attrs = Map.put(@valid_attrs, :metadata_fields, %{"valid" => false})
+      assert {:error, %Ecto.Changeset{errors: errors}} = IdentityProviders.create_backend(attrs)
+      assert errors[:metadata_fields]
+    end
+
+    test "create_backend/1 with valid metadata_fields creates a backend" do
+      metadata_fields = [%{"attribute_name" => "attribute value"}]
+      attrs = Map.put(@valid_attrs, :metadata_fields, metadata_fields)
+
+      assert {:ok, backend} = IdentityProviders.create_backend(attrs)
+
+      assert backend.metadata_fields == metadata_fields
+    end
+
     test "update_backend/2 with valid data updates the backend" do
       backend = backend_fixture()
       update_attrs = %{name: "some updated name"}
@@ -699,7 +712,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
     test "returns default template" do
       backend = insert(:backend, email_templates: [])
 
-      template = IdentityProviders.get_backend_email_template!(backend.id, :reset_password_instructions)
+      template =
+        IdentityProviders.get_backend_email_template!(backend.id, :reset_password_instructions)
 
       assert template == %{
                EmailTemplate.default_template(:reset_password_instructions)
@@ -729,7 +743,8 @@ defmodule BorutaIdentity.IdentityProvidersTest do
     test "inserts with a default template" do
       backend = insert(:backend)
 
-      template = IdentityProviders.get_backend_email_template!(backend.id, :reset_password_instructions)
+      template =
+        IdentityProviders.get_backend_email_template!(backend.id, :reset_password_instructions)
 
       assert {:ok, template} =
                IdentityProviders.upsert_email_template(template, %{txt_content: "new txt content"})

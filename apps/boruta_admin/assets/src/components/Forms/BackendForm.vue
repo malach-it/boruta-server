@@ -127,14 +127,6 @@
           <i class="ui close icon" @click="deleteMetadataField(field)"></i>
           <h3>Metadata field</h3>
           <div class="field">
-            <label>Type</label>
-            <select v-model="field.type">
-              <option value="string">string</option>
-              <option value="boolean">boolean</option>
-              <option value="number">number</option>
-            </select>
-          </div>
-          <div class="field">
             <label>Attribute name</label>
             <input type="text" v-model="field.attribute_name" placeholder="Familly name">
           </div>

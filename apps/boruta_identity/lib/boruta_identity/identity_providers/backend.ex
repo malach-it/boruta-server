@@ -78,6 +78,17 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     }
   }
 
+  @metadata_fields_schema ExJsonSchema.Schema.resolve(%{
+                            "type" => "array",
+                            "items" => %{
+                              "type" => "object",
+                              "properties" => %{
+                                "attribute_name" => %{"type" => "string"}
+                              },
+                              "additionalProperties" => false
+                            }
+                          })
+
   @spec backend_types() :: list(atom)
   def backend_types, do: @backend_types
 
@@ -191,6 +202,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :smtp_port
     ])
     |> validate_required([:name, :password_hashing_alg])
+    |> validate_metadata_fields()
     |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
     |> validate_inclusion(:smtp_tls, Enum.map(@smtp_tls_types, &Atom.to_string/1))
     |> foreign_key_constraint(:identity_provider, name: :identity_providers_backend_id_fkey)
@@ -217,6 +229,22 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       message: "This backend has existing users. Please delete them before continue"
     )
   end
+
+  defp validate_metadata_fields(
+         %Ecto.Changeset{changes: %{metadata_fields: metadata_fields}} = changeset
+       ) do
+    case ExJsonSchema.Validator.validate(@metadata_fields_schema, metadata_fields) do
+      :ok ->
+        changeset
+
+      {:error, errors} ->
+        Enum.reduce(errors, changeset, fn {message, path}, changeset ->
+          add_error(changeset, :metadata_fields, "#{message} at #{path}")
+        end)
+    end
+  end
+
+  defp validate_metadata_fields(changeset), do: changeset
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: false}} = changeset) do
     Ecto.Changeset.add_error(

@@ -129,7 +129,7 @@ class Backend {
       is_default,
       password_hashing_alg,
       password_hashing_opts: formattedPasswordHashingOpts,
-      metadata_fields,
+      metadata_fields: metadata_fields.map(({ attribute_name }) => ({ attribute_name })),
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,
