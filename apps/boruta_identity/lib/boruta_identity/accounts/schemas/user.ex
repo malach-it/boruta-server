@@ -83,11 +83,11 @@ defmodule BorutaIdentity.Accounts.User do
   def confirmed?(%__MODULE__{confirmed_at: _confirmed_at}), do: true
 
   defp metadata_template_filter(
-         %Ecto.Changeset{changes: %{metadata: metadata}} = changeset,
+         %Ecto.Changeset{changes: %{metadata: %{} = metadata}} = changeset,
          %Backend{
            metadata_fields: metadata_fields
          }
-       ) do
+       ) when not (map_size(metadata) == 0) do
     Enum.reduce(metadata, changeset, fn {key, _value}, changeset ->
       attribute_names =
         Enum.map(metadata_fields, fn %{"attribute_name" => attribute_name} -> attribute_name end)

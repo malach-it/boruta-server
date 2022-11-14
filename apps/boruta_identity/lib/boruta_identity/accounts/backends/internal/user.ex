@@ -11,7 +11,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
           email: String.t(),
           password: String.t(),
           hashed_password: String.t(),
-          metadata: map(),
+          metadata: map() | nil,
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -23,7 +23,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     field(:email, :string)
     field(:password, :string, virtual: true)
     field(:hashed_password, :string)
-    field(:metadata, :map, default: %{}, virtual: true)
+    field(:metadata, :map, virtual: true)
 
     belongs_to(:backend, Backend)
 
