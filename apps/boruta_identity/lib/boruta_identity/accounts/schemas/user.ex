@@ -39,9 +39,10 @@ defmodule BorutaIdentity.Accounts.User do
     timestamps()
   end
 
-  def implementation_changeset(attrs) do
+  def implementation_changeset(attrs, backend) do
     %__MODULE__{}
     |> cast(attrs, [:backend_id, :uid, :username, :metadata])
+    |> metadata_template_filter(backend)
     |> validate_required([:backend_id, :uid, :username])
   end
 
@@ -80,4 +81,26 @@ defmodule BorutaIdentity.Accounts.User do
 
   def confirmed?(%__MODULE__{confirmed_at: nil}), do: false
   def confirmed?(%__MODULE__{confirmed_at: _confirmed_at}), do: true
+
+  defp metadata_template_filter(
+         %Ecto.Changeset{changes: %{metadata: metadata}} = changeset,
+         %Backend{
+           metadata_fields: metadata_fields
+         }
+       ) do
+    Enum.reduce(metadata, changeset, fn {key, _value}, changeset ->
+      attribute_names =
+        Enum.map(metadata_fields, fn %{"attribute_name" => attribute_name} -> attribute_name end)
+
+      case Enum.member?(attribute_names, key) do
+        true ->
+          changeset
+
+        false ->
+          put_change(changeset, :metadata, Map.delete(metadata, key))
+      end
+    end)
+  end
+
+  defp metadata_template_filter(changeset, _backend), do: changeset
 end

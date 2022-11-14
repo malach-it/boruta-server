@@ -1488,7 +1488,7 @@ defmodule BorutaIdentity.AccountsTest do
 
       user = user_fixture(%{backend: backend})
 
-      {:ok, client_id: client_identity_provider.client_id, user: user}
+      {:ok, client_id: client_identity_provider.client_id, user: user, backend: backend}
     end
 
     test "returns an error with unexisting user", %{client_id: client_id} do
@@ -1559,7 +1559,11 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "updates user with metadata", %{client_id: client_id, user: user} do
+    test "updates user with metadata", %{client_id: client_id, user: user, backend: backend} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]})
+        |> Repo.update()
+
       metadata = %{"test" => "test value"}
       updated_email = "updated@email.test"
       confirmation_url_fun = fn -> "" end
@@ -1569,7 +1573,35 @@ defmodule BorutaIdentity.AccountsTest do
                  :context,
                  client_id,
                  user,
-                 %{current_password: valid_user_password(), email: updated_email, metadata: metadata},
+                 %{
+                   current_password: valid_user_password(),
+                   email: updated_email,
+                   metadata: metadata
+                 },
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "updates user with filtered metadata", %{client_id: client_id, user: user, backend: backend} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]})
+        |> Repo.update()
+
+      metadata = %{"test" => "test value"}
+      updated_email = "updated@email.test"
+      confirmation_url_fun = fn -> "" end
+
+      assert {:user_updated, :context, %User{username: ^updated_email, metadata: ^metadata}} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{
+                   current_password: valid_user_password(),
+                   email: updated_email,
+                   metadata: Map.put(metadata, "filtered", true)
+                 },
                  confirmation_url_fun,
                  DummySettings
                )
@@ -1627,7 +1659,10 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "returns an error with a bad current password (no ldap user)", %{client_id: client_id, user: user} do
+    test "returns an error with a bad current password (no ldap user)", %{
+      client_id: client_id,
+      user: user
+    } do
       confirmation_url_fun = fn -> "" end
 
       BorutaIdentity.LdapRepoMock
@@ -1650,7 +1685,11 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "returns an error with a bad current password (ldap password error)", %{client_id: client_id, backend: backend, user: user} do
+    test "returns an error with a bad current password (ldap password error)", %{
+      client_id: client_id,
+      backend: backend,
+      user: user
+    } do
       confirmation_url_fun = fn -> "" end
 
       BorutaIdentity.LdapRepoMock
@@ -1674,7 +1713,11 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "returns an error with bad update parameters", %{client_id: client_id, user: user, backend: backend} do
+    test "returns an error with bad update parameters", %{
+      client_id: client_id,
+      user: user,
+      backend: backend
+    } do
       confirmation_url_fun = fn -> "" end
 
       BorutaIdentity.LdapRepoMock
@@ -1724,6 +1767,10 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "updates user with metadata", %{client_id: client_id, user: user, backend: backend} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]})
+        |> Repo.update()
+
       metadata = %{"test" => "test value"}
       updated_email = "updated@email.test"
       confirmation_url_fun = fn -> "" end
@@ -1741,7 +1788,43 @@ defmodule BorutaIdentity.AccountsTest do
                  :context,
                  client_id,
                  user,
-                 %{current_password: valid_user_password(), email: updated_email, metadata: metadata},
+                 %{
+                   current_password: valid_user_password(),
+                   email: updated_email,
+                   metadata: metadata
+                 },
+                 confirmation_url_fun,
+                 DummySettings
+               )
+    end
+
+    test "updates user with filtered metadata", %{client_id: client_id, user: user, backend: backend} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]})
+        |> Repo.update()
+
+      metadata = %{"test" => "test value"}
+      updated_email = "updated@email.test"
+      confirmation_url_fun = fn -> "" end
+
+      BorutaIdentity.LdapRepoMock
+      |> expect(:search, fn _handle, _backend, _email ->
+        {:ok, {"dn", %{"uid" => "uid", backend.ldap_user_rdn_attribute => "username"}}}
+      end)
+      |> expect(:simple_bind, fn _handle, _dn, _password -> :ok end)
+      |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
+      |> expect(:modify, fn _handle, _backend, _user, ^updated_email -> :ok end)
+
+      assert {:user_updated, :context, %User{username: ^updated_email, metadata: ^metadata}} =
+               Accounts.update_user(
+                 :context,
+                 client_id,
+                 user,
+                 %{
+                   current_password: valid_user_password(),
+                   email: updated_email,
+                   metadata: Map.put(metadata, "filtered", true)
+                 },
                  confirmation_url_fun,
                  DummySettings
                )

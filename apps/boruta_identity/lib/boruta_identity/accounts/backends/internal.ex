@@ -54,7 +54,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   @impl BorutaIdentity.Accounts.Sessions
   def domain_user!(%Internal.User{id: id, email: email, metadata: metadata}, %Backend{
         id: backend_id
-      }) do
+      } = backend) do
     impl_user_params = %{
       uid: id,
       username: email,
@@ -70,7 +70,7 @@ defmodule BorutaIdentity.Accounts.Internal do
           {[:username], impl_user_params}
       end
 
-    User.implementation_changeset(impl_user_params)
+    User.implementation_changeset(impl_user_params, backend)
     |> Repo.insert!(
       on_conflict: {:replace, replace},
       returning: true,

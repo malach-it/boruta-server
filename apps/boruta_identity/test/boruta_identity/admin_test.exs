@@ -129,11 +129,10 @@ defmodule BorutaIdentity.AdminTest do
 
     test "creates a user with metadata", %{backend: backend} do
       metadata_field = %{
-        type: "type",
-        attribute_name: "attribute_test"
+        "attribute_name" => "attribute_test"
       }
 
-      {:ok, _backend} =
+      {:ok, backend} =
         Ecto.Changeset.change(backend, %{
           metadata_fields: [
             metadata_field
@@ -144,7 +143,7 @@ defmodule BorutaIdentity.AdminTest do
       params = %{
         username: "test@created.email",
         password: "a valid password",
-        metadata: %{attribute_test: "attribute_test value"}
+        metadata: %{"attribute_test" => "attribute_test value"}
       }
 
       assert {:ok,

@@ -40,6 +40,7 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
     test "render errors when data is invalid"
 
     test "updates an user with metadata", %{conn: conn, request: request, user: user} do
+      {:ok, _backend} = Ecto.Changeset.change(user.backend, %{metadata_fields: [%{"attribute_name" => "test"}]}) |> Repo.update()
       conn =
         put(conn, Routes.user_settings_path(conn, :update, request: request), %{
           "user" => %{

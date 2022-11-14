@@ -60,7 +60,10 @@ defmodule BorutaIdentity.Accounts.Ldap do
   end
 
   @impl BorutaIdentity.Accounts.Sessions
-  def domain_user!(%Ldap.User{uid: uid, username: username, metadata: metadata}, %Backend{id: backend_id}) do
+  def domain_user!(
+        %Ldap.User{uid: uid, username: username, metadata: metadata},
+        %Backend{id: backend_id} = backend
+      ) do
     impl_user_params = %{
       uid: uid,
       username: username,
@@ -76,7 +79,7 @@ defmodule BorutaIdentity.Accounts.Ldap do
           {[:username], impl_user_params}
       end
 
-    User.implementation_changeset(impl_user_params)
+    User.implementation_changeset(impl_user_params, backend)
     |> Repo.insert!(
       on_conflict: {:replace, replace},
       returning: true,
