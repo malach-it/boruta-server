@@ -123,12 +123,18 @@
             class="ui fluid blue button">Edit reset password template</router-link>
         </div>
         <h2>User metadata configuration</h2>
-        <div v-for="field in backend.metadata_fields" :class="{ 'error': backend.errors?.metadata_fields }">
+        <div v-for="field in backend.metadata_fields">
           <i class="ui close icon" @click="deleteMetadataField(field)"></i>
           <h3>Metadata field</h3>
-          <div class="field">
+          <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="field.user_editable">
+              <label>User editable</label>
+            </div>
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
             <label>Attribute name</label>
-            <input type="text" v-model="field.attribute_name" placeholder="Familly name">
+            <input type="text" v-model="field.attribute_name" placeholder="family_name">
           </div>
         </div>
         <div class="field">

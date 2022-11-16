@@ -13,6 +13,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           type: String.t(),
           name: String.t(),
           is_default: boolean(),
+          metadata_fields: map(),
           password_hashing_alg: String.t(),
           password_hashing_opts: map(),
           smtp_from: String.t() | nil,
@@ -83,7 +84,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                             "items" => %{
                               "type" => "object",
                               "properties" => %{
-                                "attribute_name" => %{"type" => "string"}
+                                "attribute_name" => %{"type" => "string"},
+                                "user_editable" => %{"type" => "boolean"}
                               },
                               "additionalProperties" => false
                             }

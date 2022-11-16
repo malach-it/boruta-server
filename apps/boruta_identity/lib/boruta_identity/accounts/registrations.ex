@@ -54,10 +54,10 @@ defmodule BorutaIdentity.Accounts.Registrations do
   alias BorutaIdentity.IdentityProviders.IdentityProvider
 
   @type registration_params :: %{
-    email: String.t(),
-    password: String.t(),
-    metadata: map()
-  }
+          email: String.t(),
+          password: String.t(),
+          metadata: map()
+        }
 
   @callback register(
               backend :: BorutaIdentity.IdentityProviders.Backend.t(),
@@ -88,9 +88,28 @@ defmodule BorutaIdentity.Accounts.Registrations do
                    ) do
     client_impl = IdentityProvider.implementation(client_idp)
 
+    registration_params =
+      case registration_params[:metadata] do
+        %{} = metadata ->
+          Map.put(
+            registration_params,
+            :metadata,
+            User.user_metadata_filter(metadata, client_idp.backend)
+          )
+
+        nil ->
+          registration_params
+      end
+
     with {:ok, user} <-
            apply(client_impl, :register, [client_idp.backend, registration_params]),
-         :ok <- maybe_deliver_confirmation_email(client_idp.backend, user, confirmation_url_fun, client_idp),
+         :ok <-
+           maybe_deliver_confirmation_email(
+             client_idp.backend,
+             user,
+             confirmation_url_fun,
+             client_idp
+           ),
          {:ok, user, session_token} <- maybe_create_session(user, client_idp) do
       module.user_registered(context, user, session_token)
     else

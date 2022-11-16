@@ -224,6 +224,7 @@ defmodule BorutaIdentity.AccountsTest do
   describe "register/3" do
     setup do
       identity_provider = insert(:identity_provider, registrable: true)
+
       client_identity_provider =
         BorutaIdentity.Factory.insert(:client_identity_provider,
           identity_provider: identity_provider
@@ -416,14 +417,28 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "registers users with metadata", %{client_id: client_id, backend: backend} do
-      {:ok, _backend} = Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]}) |> Repo.update()
+      {:ok, _backend} =
+        Ecto.Changeset.change(backend, %{
+          metadata_fields: [
+            %{"attribute_name" => "test", "user_editable" => true},
+            %{"attribute_name" => "restricted_field", "user_editable" => false}
+          ]
+        })
+        |> Repo.update()
+
       metadata = %{"test" => "test value"}
       email = unique_user_email()
       context = :context
-      user_params = %{email: email, password: valid_user_password(), metadata: metadata}
+
+      user_params = %{
+        email: email,
+        password: valid_user_password(),
+        metadata: Map.put(metadata, "restricted_field", "restricted")
+      }
+
       confirmation_callback_fun = & &1
 
-      assert {:user_registered, ^context, user, session_token} =
+      assert {:user_registered, ^context, user, _session_token} =
                Accounts.register(
                  context,
                  client_id,
@@ -1578,7 +1593,9 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "updates user with metadata", %{client_id: client_id, user: user, backend: backend} do
       {:ok, _backend} =
-        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]})
+        Ecto.Changeset.change(backend, %{
+          metadata_fields: [%{"attribute_name" => "test", "user_editable" => true}]
+        })
         |> Repo.update()
 
       metadata = %{"test" => "test value"}
@@ -1600,9 +1617,18 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "updates user with filtered metadata", %{client_id: client_id, user: user, backend: backend} do
+    test "updates user with filtered metadata", %{
+      client_id: client_id,
+      user: user,
+      backend: backend
+    } do
       {:ok, _backend} =
-        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]})
+        Ecto.Changeset.change(backend, %{
+          metadata_fields: [
+            %{"attribute_name" => "test", "user_editable" => true},
+            %{"attribute_name" => "restricted_field", "user_editable" => false}
+          ]
+        })
         |> Repo.update()
 
       metadata = %{"test" => "test value"}
@@ -1617,7 +1643,10 @@ defmodule BorutaIdentity.AccountsTest do
                  %{
                    current_password: valid_user_password(),
                    email: updated_email,
-                   metadata: Map.put(metadata, "filtered", true)
+                   metadata:
+                     metadata
+                     |> Map.put("filtered", true)
+                     |> Map.put("restricted_field", "restricted")
                  },
                  confirmation_url_fun,
                  DummySettings
@@ -1785,7 +1814,7 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "updates user with metadata", %{client_id: client_id, user: user, backend: backend} do
       {:ok, _backend} =
-        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]})
+        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test", "user_editable" => true}]})
         |> Repo.update()
 
       metadata = %{"test" => "test value"}
@@ -1815,10 +1844,18 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "updates user with filtered metadata", %{client_id: client_id, user: user, backend: backend} do
-      {:ok, _backend} =
-        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]})
-        |> Repo.update()
+    test "updates user with filtered metadata", %{
+      client_id: client_id,
+      user: user,
+      backend: backend
+    } do
+      Ecto.Changeset.change(backend, %{
+        metadata_fields: [
+          %{"attribute_name" => "test", "user_editable" => true},
+          %{"attribute_name" => "restricted_field", "user_editable" => false}
+        ]
+      })
+      |> Repo.update()
 
       metadata = %{"test" => "test value"}
       updated_email = "updated@email.test"
@@ -1840,7 +1877,10 @@ defmodule BorutaIdentity.AccountsTest do
                  %{
                    current_password: valid_user_password(),
                    email: updated_email,
-                   metadata: Map.put(metadata, "filtered", true)
+                   metadata:
+                     metadata
+                     |> Map.put("filtered", true)
+                     |> Map.put("restricted_field", "restricted")
                  },
                  confirmation_url_fun,
                  DummySettings

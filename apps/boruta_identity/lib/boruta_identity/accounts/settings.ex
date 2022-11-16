@@ -105,6 +105,20 @@ defmodule BorutaIdentity.Accounts.Settings do
                    ) do
     client_impl = IdentityProvider.implementation(client_idp)
     # TODO remove implementation_user from domain
+
+    user_update_params =
+      case user_update_params[:metadata] do
+        %{} = metadata ->
+          Map.put(
+            user_update_params,
+            :metadata,
+            User.user_metadata_filter(metadata, client_idp.backend)
+          )
+
+        nil ->
+          user_update_params
+      end
+
     with {:ok, old_user} <-
            apply(client_impl, :get_user, [client_idp.backend, %{email: user.username}]),
          {:ok, _user} <-

@@ -82,21 +82,30 @@ defmodule BorutaIdentity.Accounts.User do
   def confirmed?(%__MODULE__{confirmed_at: nil}), do: false
   def confirmed?(%__MODULE__{confirmed_at: _confirmed_at}), do: true
 
+  @spec metadata_filter(metadata :: map(), backend :: Backend.t()) :: metadata :: map()
   def metadata_filter(metadata, %Backend{
         metadata_fields: metadata_fields
       }) do
-    Enum.reduce(metadata, %{}, fn {key, value}, acc ->
+    Enum.filter(metadata, fn {key, _value} ->
       attribute_names =
         Enum.map(metadata_fields, fn %{"attribute_name" => attribute_name} -> attribute_name end)
 
-      case Enum.member?(attribute_names, key) do
-        true ->
-          Map.put(acc, key, value)
-
-        false ->
-          acc
-      end
+      Enum.member?(attribute_names, key)
     end)
+    |> Enum.into(%{})
+  end
+
+  @spec user_metadata_filter(metadata :: map(), backend :: Backend.t()) :: metadata :: map()
+  def user_metadata_filter(metadata, %Backend{metadata_fields: metadata_fields} = backend) do
+    metadata
+    |> metadata_filter(backend)
+    |> Enum.filter(fn {key, _value} ->
+      Enum.find(metadata_fields, fn %{"attribute_name" => attribute_name} ->
+        attribute_name == key
+      end)
+      |> Map.get("user_editable")
+    end)
+    |> Enum.into(%{})
   end
 
   defp metadata_template_filter(
