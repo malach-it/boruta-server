@@ -8,6 +8,7 @@
 
 - [gateway] introspected token forwarding to updatreams
 - [identity] email templates edition
+- [identity] configure, expose and edit user metadata
 
 ### Security
 
