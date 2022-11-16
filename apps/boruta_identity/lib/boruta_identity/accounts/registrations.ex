@@ -53,7 +53,11 @@ defmodule BorutaIdentity.Accounts.Registrations do
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
 
-  @type registration_params :: map()
+  @type registration_params :: %{
+    email: String.t(),
+    password: String.t(),
+    metadata: map()
+  }
 
   @callback register(
               backend :: BorutaIdentity.IdentityProviders.Backend.t(),

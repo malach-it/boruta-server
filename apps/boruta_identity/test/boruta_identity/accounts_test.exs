@@ -223,16 +223,13 @@ defmodule BorutaIdentity.AccountsTest do
 
   describe "register/3" do
     setup do
+      identity_provider = insert(:identity_provider, registrable: true)
       client_identity_provider =
         BorutaIdentity.Factory.insert(:client_identity_provider,
-          identity_provider:
-            build(
-              :identity_provider,
-              registrable: true
-            )
+          identity_provider: identity_provider
         )
 
-      {:ok, client_id: client_identity_provider.client_id}
+      {:ok, client_id: client_identity_provider.client_id, backend: identity_provider.backend}
     end
 
     test "returns an error with nil client_id" do
@@ -416,6 +413,26 @@ defmodule BorutaIdentity.AccountsTest do
       assert user.username == email
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
+    end
+
+    test "registers users with metadata", %{client_id: client_id, backend: backend} do
+      {:ok, _backend} = Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test"}]}) |> Repo.update()
+      metadata = %{"test" => "test value"}
+      email = unique_user_email()
+      context = :context
+      user_params = %{email: email, password: valid_user_password(), metadata: metadata}
+      confirmation_callback_fun = & &1
+
+      assert {:user_registered, ^context, user, session_token} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
+      assert user.metadata == metadata
     end
 
     @tag :skip

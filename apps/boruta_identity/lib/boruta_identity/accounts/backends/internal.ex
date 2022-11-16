@@ -31,9 +31,13 @@ defmodule BorutaIdentity.Accounts.Internal do
   @impl BorutaIdentity.Accounts.Registrations
   def register(backend, registration_params) do
     with {:ok, user} <-
-           Internal.User.registration_changeset(%Internal.User{}, registration_params, %{
-             backend: backend
-           })
+           Internal.User.registration_changeset(
+             %Internal.User{metadata: registration_params[:metadata]},
+             registration_params,
+             %{
+               backend: backend
+             }
+           )
            |> Repo.insert() do
       {:ok, domain_user!(user, backend)}
     end
@@ -52,9 +56,12 @@ defmodule BorutaIdentity.Accounts.Internal do
   def get_user(_authentication_params), do: {:error, "Cannot find an user without an email."}
 
   @impl BorutaIdentity.Accounts.Sessions
-  def domain_user!(%Internal.User{id: id, email: email, metadata: metadata}, %Backend{
-        id: backend_id
-      } = backend) do
+  def domain_user!(
+        %Internal.User{id: id, email: email, metadata: metadata},
+        %Backend{
+          id: backend_id
+        } = backend
+      ) do
     impl_user_params = %{
       uid: id,
       username: email,
