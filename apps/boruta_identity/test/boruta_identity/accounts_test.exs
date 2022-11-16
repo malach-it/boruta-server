@@ -1631,11 +1631,13 @@ defmodule BorutaIdentity.AccountsTest do
         })
         |> Repo.update()
 
+      {:ok, user} = Ecto.Changeset.change(user, %{metadata: %{"restricted_field" => "restricted"}}) |> Repo.update()
+
       metadata = %{"test" => "test value"}
       updated_email = "updated@email.test"
       confirmation_url_fun = fn -> "" end
 
-      assert {:user_updated, :context, %User{username: ^updated_email, metadata: ^metadata}} =
+      assert {:user_updated, :context, %User{username: ^updated_email}} =
                Accounts.update_user(
                  :context,
                  client_id,
@@ -1646,11 +1648,12 @@ defmodule BorutaIdentity.AccountsTest do
                    metadata:
                      metadata
                      |> Map.put("filtered", true)
-                     |> Map.put("restricted_field", "restricted")
+                     |> Map.put("restricted_field", "update restricted")
                  },
                  confirmation_url_fun,
                  DummySettings
                )
+      assert %User{metadata: %{"test" => "test value", "restricted_field" => "restricted"}} = Repo.reload(user)
     end
 
     @tag :skip

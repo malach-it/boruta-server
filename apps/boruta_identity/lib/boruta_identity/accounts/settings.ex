@@ -112,7 +112,7 @@ defmodule BorutaIdentity.Accounts.Settings do
           Map.put(
             user_update_params,
             :metadata,
-            User.user_metadata_filter(metadata, client_idp.backend)
+            User.user_metadata_filter(user, metadata, client_idp.backend)
           )
 
         nil ->

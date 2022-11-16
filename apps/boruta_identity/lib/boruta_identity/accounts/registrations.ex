@@ -94,7 +94,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
           Map.put(
             registration_params,
             :metadata,
-            User.user_metadata_filter(metadata, client_idp.backend)
+            User.user_metadata_filter(%User{}, metadata, client_idp.backend)
           )
 
         nil ->

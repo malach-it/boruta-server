@@ -10,14 +10,19 @@ defmodule BorutaIdentity.Accounts.User do
   alias BorutaIdentity.Repo
 
   @type t :: %__MODULE__{
-          username: String.t(),
-          password: String.t(),
-          confirmed_at: NaiveDateTime.t() | nil,
+          id: String.t() | nil,
+          uid: String.t() | nil,
+          username: String.t() | nil,
+          password: String.t() | nil,
+          metadata: map(),
+          confirmed_at: DateTime.t() | nil,
           authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
           consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
-          last_login_at: DateTime.t(),
-          inserted_at: DateTime.t(),
-          updated_at: DateTime.t()
+          backend: Ecto.Association.NotLoaded.t() | Backend.t(),
+          backend_id: String.t() | nil,
+          last_login_at: DateTime.t() | nil,
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
         }
 
   @derive {Inspect, except: [:password]}
@@ -95,15 +100,34 @@ defmodule BorutaIdentity.Accounts.User do
     |> Enum.into(%{})
   end
 
-  @spec user_metadata_filter(metadata :: map(), backend :: Backend.t()) :: metadata :: map()
-  def user_metadata_filter(metadata, %Backend{metadata_fields: metadata_fields} = backend) do
-    metadata
-    |> metadata_filter(backend)
-    |> Enum.filter(fn {key, _value} ->
-      Enum.find(metadata_fields, fn %{"attribute_name" => attribute_name} ->
-        attribute_name == key
-      end)
-      |> Map.get("user_editable")
+  @spec user_metadata_filter(user :: t(), metadata :: map(), backend :: Backend.t()) ::
+          metadata :: map()
+  def user_metadata_filter(
+        %__MODULE__{metadata: user_metadata},
+        metadata,
+        %Backend{metadata_fields: metadata_fields} = backend
+      ) do
+    metadata = metadata_filter(metadata, backend)
+
+    metadata_fields
+    |> Enum.map(fn %{"attribute_name" => attribute_name, "user_editable" => user_editable} ->
+      case Enum.find(metadata, fn {key, _value} ->
+             attribute_name == key
+           end) do
+        {key, _value} = field ->
+          case user_editable do
+            true -> field
+            false -> {attribute_name, user_metadata[key]}
+          end
+
+        nil ->
+          {attribute_name, user_metadata[attribute_name]}
+      end
+    end)
+    |> Enum.reject(fn
+      {_key, nil} -> true
+      nil -> true
+      _ -> false
     end)
     |> Enum.into(%{})
   end

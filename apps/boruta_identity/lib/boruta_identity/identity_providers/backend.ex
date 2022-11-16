@@ -16,6 +16,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           metadata_fields: map(),
           password_hashing_alg: String.t(),
           password_hashing_opts: map(),
+          email_templates: Ecto.Association.NotLoaded.t() | list(EmailTemplate.t()),
           smtp_from: String.t() | nil,
           smtp_relay: String.t() | nil,
           smtp_username: String.t() | nil,
@@ -28,7 +29,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           ldap_base_dn: String.t() | nil,
           ldap_ou: String.t() | nil,
           ldap_master_dn: String.t() | nil,
-          ldap_master_password: String.t() | nil
+          ldap_master_password: String.t() | nil,
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
         }
 
   @backend_types [Internal, Ldap]
