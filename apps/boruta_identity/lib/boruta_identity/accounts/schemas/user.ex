@@ -110,14 +110,16 @@ defmodule BorutaIdentity.Accounts.User do
     metadata = metadata_filter(metadata, backend)
 
     metadata_fields
-    |> Enum.map(fn %{"attribute_name" => attribute_name, "user_editable" => user_editable} ->
+    |> Enum.map(fn field ->
+      attribute_name = field["attribute_name"]
+      user_editable = field["user_editable"]
       case Enum.find(metadata, fn {key, _value} ->
              attribute_name == key
            end) do
         {key, _value} = field ->
           case user_editable do
             true -> field
-            false -> {attribute_name, user_metadata[key]}
+            _ -> {attribute_name, user_metadata[key]}
           end
 
         nil ->
