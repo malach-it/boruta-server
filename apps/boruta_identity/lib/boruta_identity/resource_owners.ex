@@ -77,6 +77,11 @@ defmodule BorutaIdentity.ResourceOwners do
         metadata: metadata,
         backend: backend
       } ->
+        metadata =
+          metadata
+          |> User.metadata_filter(backend)
+          |> metadata_scope_filter(scope, backend)
+
         scope
         |> Scope.split()
         |> Enum.reduce(%{}, fn
@@ -125,10 +130,27 @@ defmodule BorutaIdentity.ResourceOwners do
           _, acc ->
             acc
         end)
-        |> Map.merge(User.metadata_filter(metadata, backend))
+        |> Map.merge(metadata)
 
       _ ->
         %{}
     end
+  end
+
+  defp metadata_scope_filter(metadata, request_scope, %Backend{metadata_fields: metadata_fields}) do
+    Enum.filter(metadata, fn {key, _value} ->
+      # does backend metadata fields configuration allows current field according to scope ?
+      Enum.reduce(metadata_fields, true, fn
+        %{"attribute_name" => ^key, "scopes" => scopes}, acc ->
+        case scopes do
+          nil -> acc && true
+          scopes ->
+            request_scopes = Scope.split(request_scope)
+            Enum.empty?(scopes -- request_scopes)
+        end
+        _, acc -> acc && true
+      end)
+    end)
+    |> Enum.into(%{})
   end
 end

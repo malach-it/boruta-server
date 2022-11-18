@@ -122,7 +122,13 @@ defmodule BorutaIdentity.ResourceOwnersTest do
   describe "claims/2" do
     test "returns user metadata" do
       user = user_fixture()
-      {:ok, backend} = Ecto.Changeset.change(user.backend, %{metadata_fields: [%{"attribute_name" => "metadata"}]}) |> Repo.update()
+
+      {:ok, backend} =
+        Ecto.Changeset.change(user.backend, %{
+          metadata_fields: [%{"attribute_name" => "metadata"}]
+        })
+        |> Repo.update()
+
       user = %{user | backend: backend}
 
       {:ok, user} =
@@ -133,7 +139,13 @@ defmodule BorutaIdentity.ResourceOwnersTest do
 
     test "filters user metadata" do
       user = user_fixture()
-      {:ok, backend} = Ecto.Changeset.change(user.backend, %{metadata_fields: [%{"attribute_name" => "metadata"}]}) |> Repo.update()
+
+      {:ok, backend} =
+        Ecto.Changeset.change(user.backend, %{
+          metadata_fields: [%{"attribute_name" => "metadata"}]
+        })
+        |> Repo.update()
+
       user = %{user | backend: backend}
 
       {:ok, user} =
@@ -141,6 +153,28 @@ defmodule BorutaIdentity.ResourceOwnersTest do
         |> Repo.update()
 
       assert ResourceOwners.claims(%ResourceOwner{sub: user.id}, "") == %{"metadata" => true}
+    end
+
+    test "filters user metadata according to scopes" do
+      user = user_fixture()
+
+      {:ok, backend} =
+        Ecto.Changeset.change(user.backend, %{
+          metadata_fields: [
+            %{"attribute_name" => "without_scopes"},
+            %{"attribute_name" => "test_scope", "scopes" => ["test"]},
+            %{"attribute_name" => "other_scope", "scopes"=> ["other"]}
+          ]
+        })
+        |> Repo.update()
+
+      user = %{user | backend: backend}
+
+      {:ok, user} =
+        Ecto.Changeset.change(user, %{metadata: %{"without_scopes" => true, "test_scope" => true, "other_scope" => true}})
+        |> Repo.update()
+
+      assert ResourceOwners.claims(%ResourceOwner{sub: user.id}, "test") == %{"without_scopes" => true, "test_scope" => true}
     end
   end
 end
