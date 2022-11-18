@@ -106,7 +106,6 @@ defmodule BorutaIdentity.ResourceOwners do
               "zoneinfo" => "zoneinfo",
               "birthdate" => "2021-08-01",
               "gender" => "gender",
-              "prefered_username" => "prefered_username",
               "given_name" => "given_name",
               "middle_name" => "middle_name",
               "locale" => "FR",

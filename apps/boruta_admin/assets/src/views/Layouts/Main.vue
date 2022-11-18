@@ -248,6 +248,9 @@ export default {
   a {
     cursor: pointer;
   }
+  h3, h4, h5 {
+    margin: .5em 0;
+  }
   .actions {
     float: right;
     &.main {

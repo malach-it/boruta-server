@@ -123,8 +123,8 @@
             class="ui fluid blue button">Edit reset password template</router-link>
         </div>
         <h2>User metadata configuration</h2>
-        <div v-for="field in backend.metadata_fields">
-          <i class="ui close icon" @click="deleteMetadataField(field)"></i>
+        <div v-for="field in backend.metadata_fields" class="ui metadata-field segment">
+          <i class="ui large close icon" @click="deleteMetadataField(field)"></i>
           <h3>Metadata field</h3>
           <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
             <div class="ui toggle checkbox">
@@ -213,8 +213,15 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.close.icon {
-  float: right;
-  cursor: pointer;
+.metadata-field.segment {
+  .field {
+    margin-bottom: 1em!important;
+  }
+  .close.icon {
+    position: absolute;
+    cursor: pointer;
+    top: 1.17em;
+    right: 1em;
+  }
 }
 </style>
