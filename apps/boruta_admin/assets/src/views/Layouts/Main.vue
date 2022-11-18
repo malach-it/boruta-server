@@ -455,6 +455,9 @@ export default {
     }
     .field {
       margin-bottom: 1em;
+      &.error label {
+        color: #9f3a38!important;
+      }
     }
   }
   .ui.segments {

@@ -32,11 +32,9 @@ export default {
   mounted () {
     const { backendId } = this.$route.params
     Backend.get(backendId).then((backend) => {
-      console.log(backend)
       this.backend = backend
     })
     EmailTemplate.get(backendId, 'confirmation_instructions').then((template) => {
-      console.log(template)
       this.template = template
       this.txtContent = template.txt_content
       this.htmlContent = template.html_content

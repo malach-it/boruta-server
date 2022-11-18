@@ -19,7 +19,13 @@ const assign = {
   name: function ({ name }) { this.name = name },
   type: function ({ type }) { this.type = type },
   is_default: function ({ is_default }) { this.is_default = is_default },
-  metadata_fields: function ({ metadata_fields }) { this.metadata_fields = metadata_fields },
+  metadata_fields: function ({ metadata_fields }) {
+    this.metadata_fields = metadata_fields.map(field => {
+      field.scopes ||= []
+      field.scopes = field.scopes.map(name => ({ name }))
+      return field
+    })
+  },
   features: function ({ features }) { this.features = features },
   password_hashing_alg: function ({ password_hashing_alg }) { this.password_hashing_alg = password_hashing_alg },
   password_hashing_opts: function ({ password_hashing_opts }) { this.password_hashing_opts = password_hashing_opts },
@@ -129,7 +135,7 @@ class Backend {
       is_default,
       password_hashing_alg,
       password_hashing_opts: formattedPasswordHashingOpts,
-      metadata_fields: metadata_fields.map(({ attribute_name, user_editable }) => ({ attribute_name, user_editable })),
+      metadata_fields: metadata_fields.map(({ attribute_name, user_editable, scopes }) => ({ attribute_name, user_editable, scopes: scopes.map(({ name }) => name) })),
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,

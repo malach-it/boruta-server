@@ -133,6 +133,10 @@
             </div>
           </div>
           <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
+            <label>Scope restriction <i>(leave blank for no restriction)</i></label>
+            <ScopesFieldByName :currentScopes="field.scopes" @add-scope="addMetadataFieldScope(field)" @delete-scope="scope => deleteMetadataFieldScope(field, scope)" />
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
             <label>Attribute name</label>
             <input type="text" v-model="field.attribute_name" placeholder="family_name">
           </div>
@@ -151,12 +155,14 @@
 <script>
 import Backend from '../../models/backend.model'
 import FormErrors from './FormErrors.vue'
+import ScopesFieldByName from './ScopesFieldByName.vue'
 
 export default {
   name: 'backend-form',
   props: ['backend', 'action'],
   components: {
-    FormErrors
+    FormErrors,
+    ScopesFieldByName,
   },
   data () {
     return {
@@ -184,13 +190,20 @@ export default {
       this.smtpPasswordVisible = !this.smtpPasswordVisible
     },
     addMetadataField () {
-      this.backend.metadata_fields.push({})
+      this.backend.metadata_fields.push({ scopes: [] })
     },
     deleteMetadataField (field) {
       this.backend.metadata_fields.splice(
         this.backend.metadata_fields.indexOf(field),
         1
       )
+    },
+    addMetadataFieldScope (field) {
+      field.scopes ||= []
+      field.scopes.push({})
+    },
+    deleteMetadataFieldScope (field, scope) {
+      field.scopes.splice(field.scopes.indexOf(scope), 1)
     },
     back () {
       this.$emit('back')
