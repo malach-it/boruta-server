@@ -16,6 +16,8 @@
 <script>
 const labels = {
   'root': 'Home',
+  'not-found': 'Not found',
+  'bad-request': 'Bad request',
   'dashboard': 'Dashboard',
   'request-logs': 'Requests',
   'business-event-logs': 'Business Events',

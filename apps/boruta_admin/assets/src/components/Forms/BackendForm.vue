@@ -221,7 +221,7 @@ export default {
     position: absolute;
     cursor: pointer;
     top: 1.17em;
-    right: 1em;
+    right: .5em;
   }
 }
 </style>
