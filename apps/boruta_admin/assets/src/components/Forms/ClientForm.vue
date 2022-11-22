@@ -56,6 +56,33 @@
             </div>
           </div>
         </div>
+        <h3>Client authentication</h3>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.token_endpoint_auth_methods }">
+            <label>Client authentication methods</label>
+            <div class="field" v-for="method in tokenEndpointAuthMethods" :key="method">
+              <div class="ui checkbox">
+                <input type="checkbox" v-model="client.token_endpoint_auth_methods" :value="method" />
+                <label>{{ method }}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.token_endpoint_jwt_auth_alg }">
+            <label>Client JWT authentication signature algorithm</label>
+            <div class="field" v-for="alg in clientJwtAuthenticationSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg }}</label>
+                <input type="radio" v-model="client.token_endpoint_jwt_auth_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Client JWT authentication public key (pem)</label>
+          <textarea v-model="client.jwt_public_key" placeholder="Your public key here"></textarea>
+        </div>
         <div class="ui segment">
           <div class="ui toggle checkbox">
             <input type="checkbox" v-model="client.confidential">
@@ -130,6 +157,8 @@ export default {
   data() {
     return {
       idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
+      clientJwtAuthenticationSignatureAlgorithms: Client.clientJwtAuthenticationSignatureAlgorithms,
+      tokenEndpointAuthMethods: Client.tokenEndpointAuthMethods,
       passwordVisible: false
     }
   },

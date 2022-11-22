@@ -11,6 +11,8 @@ const defaults = {
   authorized_scopes: [],
   redirect_uris: [],
   id_token_signature_alg: 'RS512',
+  token_endpoint_jwt_auth_alg: 'HS256',
+  token_endpoint_auth_methods: ["client_secret_basic", "client_secret_post"],
   identity_provider: { model: new IdentityProvider() },
   grantTypes: allGrantTypes.map((label) => {
     return {
@@ -54,6 +56,9 @@ const assign = {
       }
     })
   },
+  token_endpoint_jwt_auth_alg: function ({ token_endpoint_jwt_auth_alg }) { this.token_endpoint_jwt_auth_alg = token_endpoint_jwt_auth_alg },
+  token_endpoint_auth_methods: function ({ token_endpoint_auth_methods }) { this.token_endpoint_auth_methods = token_endpoint_auth_methods },
+  jwt_public_key: function ({ jwt_public_key }) { this.jwt_public_key = jwt_public_key },
   id_token_signature_alg: function ({ id_token_signature_alg }) { this.id_token_signature_alg = id_token_signature_alg },
 }
 
@@ -144,7 +149,10 @@ class Client {
       refresh_token_ttl,
       identity_provider,
       secret,
-      id_token_signature_alg
+      id_token_signature_alg,
+      token_endpoint_jwt_auth_alg,
+      token_endpoint_auth_methods,
+      jwt_public_key
     } = this
 
     return {
@@ -166,7 +174,10 @@ class Client {
       supported_grant_types: grantTypes
         .filter(({ value }) => value)
         .map(({ label }) => label),
-      id_token_signature_alg
+      id_token_signature_alg,
+      token_endpoint_jwt_auth_alg,
+      token_endpoint_auth_methods,
+      jwt_public_key
     }
   }
 }
@@ -205,6 +216,22 @@ Client.idTokenSignatureAlgorithms = [
   "RS256",
   "RS384",
   "RS512"
+]
+
+Client.clientJwtAuthenticationSignatureAlgorithms = [
+  "HS256",
+  "HS384",
+  "HS512",
+  "RS256",
+  "RS384",
+  "RS512"
+]
+
+Client.tokenEndpointAuthMethods = [
+  "client_secret_basic",
+  "client_secret_post",
+  "client_secret_jwt",
+  "private_key_jwt"
 ]
 
 export default Client

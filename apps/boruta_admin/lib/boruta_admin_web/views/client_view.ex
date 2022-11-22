@@ -43,7 +43,10 @@ defmodule BorutaAdminWeb.ClientView do
         }
       end),
       supported_grant_types: client.supported_grant_types,
-      id_token_signature_alg: client.id_token_signature_alg
+      id_token_signature_alg: client.id_token_signature_alg,
+      token_endpoint_jwt_auth_alg: client.token_endpoint_jwt_auth_alg,
+      token_endpoint_auth_methods: client.token_endpoint_auth_methods,
+      jwt_public_key: client.jwt_public_key
     }
   end
 end
