@@ -42,6 +42,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             port: 80,
             uris: ["/upstream"]
           })
+
           Process.sleep(100)
 
           request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
@@ -69,6 +70,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
               error_content_type: "text",
               unauthorized_response: "boom"
             })
+
           Process.sleep(100)
 
           request = Finch.build(:get, "http://localhost:7777/unauthorized", [], "")
@@ -107,6 +109,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
               error_content_type: "text",
               forbidden_response: "boom"
             })
+
           Process.sleep(100)
 
           request =
@@ -149,6 +152,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             authorize: true,
             required_scopes: %{"GET" => ["test"]}
           })
+
           Process.sleep(100)
 
           request =
@@ -174,16 +178,18 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     } do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          Upstreams.create_upstream(%{
-            scheme: "http",
-            host: "httpbin.patatoid.fr",
-            port: 80,
-            uris: ["/httpbin"],
-            strip_uri: true,
-            authorize: true,
-            required_scopes: %{"GET" => ["test"]},
-            forwarded_token_signature_alg: "HS256"
-          })
+          {:ok, upstream} =
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "httpbin.patatoid.fr",
+              port: 80,
+              uris: ["/httpbin"],
+              strip_uri: true,
+              authorize: true,
+              required_scopes: %{"GET" => ["test"]},
+              forwarded_token_signature_alg: "HS256"
+            })
+
           Process.sleep(100)
 
           request =
@@ -204,7 +210,12 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                    }
                  } = Jason.decode!(body)
 
-          assert String.match?(authorization, ~r/bearer (.+)/)
+          assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
+          signer = Upstreams.Client.signer(upstream)
+          assert {:ok, claims} = Upstreams.Client.Token.verify(token, signer)
+          assert claims["client_id"] == access_token.client.id
+          assert claims["value"] == access_token.value
+
           assert forwarded_authorization == "bearer #{access_token.value}"
         after
           Repo.delete_all(Upstream)

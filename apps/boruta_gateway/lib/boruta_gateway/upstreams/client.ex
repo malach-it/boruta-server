@@ -89,11 +89,7 @@ defmodule BorutaGateway.Upstreams.Client do
   end
 
   defp transform_headers(
-         %Upstream{
-           forwarded_token_signature_alg: signature_alg,
-           forwarded_token_secret: secret,
-           forwarded_token_private_key: private_key
-         } = upstream,
+         upstream,
          %Plug.Conn{req_headers: req_headers} = conn
        ) do
     authorization_header =
@@ -109,25 +105,16 @@ defmodule BorutaGateway.Upstreams.Client do
       "sub" => token.sub,
       "value" => token.value,
       "exp" => token.expires_at,
+      "client_id" => token.client && token.client.id,
       "iat" => token.inserted_at && DateTime.to_unix(token.inserted_at)
     }
 
     token =
-      case signature_alg && signature_type(upstream) do
-        :symmetric ->
-          signer = Joken.Signer.create(signature_alg, secret)
-          with {:ok, token, _payload} <- Token.encode_and_sign(payload, signer) do
-            token
-          end
-
-        :asymmetric ->
-          signer = Joken.Signer.create(signature_alg, %{"pem" => private_key})
-          with {:ok, token, _payload} <- Token.encode_and_sign(payload, signer) do
-            token
-          end
-
-        nil ->
-          nil
+      with %Joken.Signer{} = signer <- signer(upstream),
+           {:ok, token, _payload} <- Token.encode_and_sign(payload, signer) do
+        token
+      else
+        _ -> nil
       end
 
     req_headers
@@ -144,6 +131,25 @@ defmodule BorutaGateway.Upstreams.Client do
       _rest -> false
     end)
     |> List.insert_at(0, {"authorization", "bearer #{token}"})
+  end
+
+  def signer(
+         %Upstream{
+           forwarded_token_signature_alg: signature_alg,
+           forwarded_token_secret: secret,
+           forwarded_token_private_key: private_key
+         } = upstream
+       ) do
+    case signature_alg && signature_type(upstream) do
+      :symmetric ->
+        Joken.Signer.create(signature_alg, secret)
+
+      :asymmetric ->
+        Joken.Signer.create(signature_alg, %{"pem" => private_key})
+
+      nil ->
+        nil
+    end
   end
 
   defp signature_type(%Upstream{forwarded_token_signature_alg: signature_alg}) do
