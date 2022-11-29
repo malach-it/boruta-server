@@ -13,21 +13,9 @@
 </template>
 
 <script>
-import Scope from '../../models/scope.model'
-
 export default {
   name: 'ScopesFieldByName',
-  props: ['currentScopes'],
-  data () {
-    return {
-      scopes: []
-    }
-  },
-  mounted () {
-    Scope.all().then((scopes) => {
-      this.scopes = scopes
-    })
-  },
+  props: ['currentScopes', 'scopes'],
   methods: {
     deleteScope (scope) {
       this.$emit('delete-scope', scope)

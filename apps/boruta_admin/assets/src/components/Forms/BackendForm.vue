@@ -134,7 +134,7 @@
           </div>
           <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
             <label>Scope restriction <i>(leave blank for no restriction)</i></label>
-            <ScopesFieldByName :currentScopes="field.scopes" @add-scope="addMetadataFieldScope(field)" @delete-scope="scope => deleteMetadataFieldScope(field, scope)" />
+            <ScopesFieldByName :currentScopes="field.scopes" :scopes="scopes" @add-scope="addMetadataFieldScope(field)" @delete-scope="scope => deleteMetadataFieldScope(field, scope)" />
           </div>
           <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
             <label>Attribute name</label>
@@ -154,6 +154,7 @@
 
 <script>
 import Backend from '../../models/backend.model'
+import Scope from '../../models/scope.model'
 import FormErrors from './FormErrors.vue'
 import ScopesFieldByName from './ScopesFieldByName.vue'
 
@@ -168,13 +169,19 @@ export default {
     return {
       passwordHashingAlgorithms: Backend.passwordHashingAlgorithms,
       ldapMasterPasswordVisible: false,
-      smtpPasswordVisible: false
+      smtpPasswordVisible: false,
+      scopes: []
     }
   },
   computed: {
     passwordHashingOpts () {
       return Backend.passwordHashingOpts[this.backend.password_hashing_alg]
     }
+  },
+  mounted () {
+    Scope.all().then(scopes => {
+      this.scopes = scopes
+    })
   },
   methods: {
     onAlgorithmChange () {
