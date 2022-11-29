@@ -5,6 +5,7 @@ defmodule BorutaWeb.OpenidController do
 
   alias Boruta.Oauth
   alias Boruta.Openid
+  alias Boruta.Openid.UserinfoResponse
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.IdentityProvider
@@ -16,10 +17,11 @@ defmodule BorutaWeb.OpenidController do
   end
 
   @impl Boruta.Openid.Application
-  def userinfo_fetched(conn, userinfo) do
+  def userinfo_fetched(conn, response) do
     conn
     |> put_view(OauthView)
-    |> render("userinfo.json", userinfo: userinfo)
+    |> put_resp_header("content-type", UserinfoResponse.content_type(response))
+    |> render("userinfo.json", response: response)
   end
 
   @impl Boruta.Openid.Application
@@ -47,6 +49,7 @@ defmodule BorutaWeb.OpenidController do
     registration_params = %{
       redirect_uris: params["redirect_uris"],
       jwks: params["jwks"],
+      userinfo_signed_response_alg: params["userinfo_signed_response_alg"],
       id_token_signature_alg: "RS256"
     }
 
