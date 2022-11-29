@@ -8,7 +8,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Authenticable
 
-  alias Boruta.Ecto
+  alias Boruta.Ecto.Client
 
   describe "OpenID Connect flows" do
     setup %{conn: conn} do
@@ -228,13 +228,45 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
     end
 
     test "returns all clients keys", %{conn: conn} do
-      %Ecto.Client{id: client_id} = insert(:client)
+      %Client{id: client_id} = insert(:client)
 
       conn = get(conn, Routes.openid_path(conn, :jwks_index))
 
       assert %{
                "keys" => [%{"kid" => ^client_id, "kty" => "RSA"}]
              } = json_response(conn, 200)
+    end
+  end
+
+  describe "userinfo" do
+    test "returns userinfo", %{conn: conn} do
+      sub = user_fixture().id
+
+      token = insert(:token, sub: sub)
+
+      conn =
+        conn
+        |> put_req_header("authorization", "bearer #{token.value}")
+        |> post(Routes.openid_path(conn, :userinfo))
+
+      assert json_response(conn, 200)
+    end
+
+    test "returns userinfo as jwt", %{conn: conn} do
+      sub = user_fixture().id
+
+      token = insert(:token, sub: sub)
+
+      {:ok, _client} =
+        Ecto.Changeset.change(token.client, %{userinfo_signed_response_alg: "HS512"})
+        |> BorutaAuth.Repo.update()
+
+      conn =
+        conn
+        |> put_req_header("authorization", "bearer #{token.value}")
+        |> post(Routes.openid_path(conn, :userinfo))
+
+      assert response(conn, 200)
     end
   end
 
@@ -272,7 +304,15 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "private_key_jwt"
                ],
                "token_endpoint" => "boruta/oauth/token",
-               "userinfo_endpoint" => "boruta/oauth/userinfo"
+               "userinfo_endpoint" => "boruta/oauth/userinfo",
+               "userinfo_signing_alg_values_supported" => [
+                 "RS256",
+                 "RS384",
+                 "RS512",
+                 "HS256",
+                 "HS384",
+                 "HS512"
+               ],
              }
     end
   end

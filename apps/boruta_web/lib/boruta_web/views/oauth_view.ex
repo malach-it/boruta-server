@@ -2,7 +2,8 @@ defmodule BorutaWeb.OauthView do
   use BorutaWeb, :view
 
   alias Boruta.Ecto
-  alias Boruta.Oauth.IdToken
+  alias Boruta.Oauth.Client
+  alias Boruta.Openid.UserinfoResponse
   alias BorutaWeb.Token
 
   def render("token.json", %{response: %Boruta.Oauth.TokenResponse{} = response}) do
@@ -74,12 +75,13 @@ defmodule BorutaWeb.OauthView do
       "response_modes_supported" => ["query", "fragment"],
       "subject_types_supported" => ["public"],
       "token_endpoint_auth_methods_supported" => ["client_secret_basic", "client_secret_post", "client_secret_jwt", "private_key_jwt"],
-      "id_token_signing_alg_values_supported" => IdToken.signature_algorithms()
+      "id_token_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
+      "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms()
     }
   end
 
-  def render("userinfo.json", %{userinfo: userinfo}) do
-    userinfo
+  def render("userinfo.json", %{response: response}) do
+    UserinfoResponse.payload(response)
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
