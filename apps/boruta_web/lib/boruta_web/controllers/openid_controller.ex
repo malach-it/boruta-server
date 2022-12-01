@@ -21,7 +21,7 @@ defmodule BorutaWeb.OpenidController do
     conn
     |> put_view(OauthView)
     |> put_resp_header("content-type", UserinfoResponse.content_type(response))
-    |> render("userinfo.json", response: response)
+    |> render("userinfo.#{response.format}", response: response)
   end
 
   @impl Boruta.Openid.Application

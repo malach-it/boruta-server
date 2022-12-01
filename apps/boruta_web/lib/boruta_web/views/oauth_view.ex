@@ -84,6 +84,10 @@ defmodule BorutaWeb.OauthView do
     UserinfoResponse.payload(response)
   end
 
+  def render("userinfo.jwt", %{response: response}) do
+    UserinfoResponse.payload(response)
+  end
+
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
     def encode(
           %Boruta.Oauth.TokenResponse{
