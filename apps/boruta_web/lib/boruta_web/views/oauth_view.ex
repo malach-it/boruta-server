@@ -2,7 +2,8 @@ defmodule BorutaWeb.OauthView do
   use BorutaWeb, :view
 
   alias Boruta.Ecto
-  alias Boruta.Oauth.IdToken
+  alias Boruta.Oauth.Client
+  alias Boruta.Openid.UserinfoResponse
   alias BorutaWeb.Token
 
   def render("token.json", %{response: %Boruta.Oauth.TokenResponse{} = response}) do
@@ -69,15 +70,22 @@ defmodule BorutaWeb.OauthView do
       "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
       "userinfo_endpoint" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :userinfo),
       "jwks_uri" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :jwks_index),
+      "registration_endpoint" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :register_client),
       "response_types_supported" => ["code", "token", "id_token", "code token", "code id_token", "code id_token token"],
       "response_modes_supported" => ["query", "fragment"],
       "subject_types_supported" => ["public"],
-      "id_token_signing_alg_values_supported" => IdToken.signature_algorithms()
+      "token_endpoint_auth_methods_supported" => ["client_secret_basic", "client_secret_post", "client_secret_jwt", "private_key_jwt"],
+      "id_token_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
+      "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms()
     }
   end
 
-  def render("userinfo.json", %{userinfo: userinfo}) do
-    userinfo
+  def render("userinfo.json", %{response: response}) do
+    UserinfoResponse.payload(response)
+  end
+
+  def render("userinfo.jwt", %{response: response}) do
+    UserinfoResponse.payload(response)
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do

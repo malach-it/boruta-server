@@ -19,6 +19,9 @@
             <i class="eye icon" :class="{ 'slash': passwordVisible }" @click="passwordVisibilityToggle()"></i>
           </div>
         </div>
+        <div class="ui segment" v-if="client.isPersisted">
+          <a class="ui fluid orange button" @click="regenerateKeyPair()">Regenerate client key pair</a>
+        </div>
         <div class="field" :class="{ 'error': client.errors?.access_token_ttl }">
           <label>Access token TTL (seconds)</label>
           <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
@@ -55,6 +58,44 @@
               </div>
             </div>
           </div>
+        </div>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.userinfo_signed_response_alg }">
+            <label>Userinfo response signature algorithm</label>
+            <div class="field" v-for="alg in UserinfoResponseSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg || 'none' }}</label>
+                <input type="radio" v-model="client.userinfo_signed_response_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <h3>Client authentication</h3>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.token_endpoint_auth_methods }">
+            <label>Client authentication methods</label>
+            <div class="field" v-for="method in tokenEndpointAuthMethods" :key="method">
+              <div class="ui checkbox">
+                <input type="checkbox" v-model="client.token_endpoint_auth_methods" :value="method" />
+                <label>{{ method }}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.token_endpoint_jwt_auth_alg }">
+            <label>Client JWT authentication signature algorithm</label>
+            <div class="field" v-for="alg in clientJwtAuthenticationSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg }}</label>
+                <input type="radio" v-model="client.token_endpoint_jwt_auth_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field" v-if="client.token_endpoint_jwt_auth_alg.match(/RS/)">
+          <label>Client JWT authentication public key (pem)</label>
+          <textarea v-model="client.jwt_public_key" placeholder="Your public key here"></textarea>
         </div>
         <div class="ui segment">
           <div class="ui toggle checkbox">
@@ -130,12 +171,22 @@ export default {
   data() {
     return {
       idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
+      UserinfoResponseSignatureAlgorithms: Client.UserinfoResponseSignatureAlgorithms,
+      clientJwtAuthenticationSignatureAlgorithms: Client.clientJwtAuthenticationSignatureAlgorithms,
+      tokenEndpointAuthMethods: Client.tokenEndpointAuthMethods,
       passwordVisible: false
     }
   },
   methods: {
     back () {
       this.$emit('back')
+    },
+    regenerateKeyPair () {
+      if (confirm("Are you sure you want to regenerate this client key pair?")) {
+        this.client.regenerateKeyPair().then(() => {
+          this.$emit('submit')
+        })
+      }
     },
     addRedirectUri () {
       this.client.redirect_uris.push({})

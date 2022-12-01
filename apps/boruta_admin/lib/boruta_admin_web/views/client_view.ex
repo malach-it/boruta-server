@@ -14,7 +14,8 @@ defmodule BorutaAdminWeb.ClientView do
   end
 
   def render("client.json", %{client: client}) do
-    identity_provider = IdentityProviders.get_identity_provider_by_client_id(client.id) || %IdentityProvider{}
+    identity_provider =
+      IdentityProviders.get_identity_provider_by_client_id(client.id) || %IdentityProvider{}
 
     %{
       id: client.id,
@@ -35,15 +36,20 @@ defmodule BorutaAdminWeb.ClientView do
         id: identity_provider.id,
         name: identity_provider.name
       },
-      authorized_scopes: Enum.map(client.authorized_scopes, fn (scope) ->
-        %{
-          id: scope.id,
-          name: scope.name,
-          public: scope.public
-        }
-      end),
+      authorized_scopes:
+        Enum.map(client.authorized_scopes, fn scope ->
+          %{
+            id: scope.id,
+            name: scope.name,
+            public: scope.public
+          }
+        end),
       supported_grant_types: client.supported_grant_types,
-      id_token_signature_alg: client.id_token_signature_alg
+      id_token_signature_alg: client.id_token_signature_alg,
+      userinfo_signed_response_alg: client.userinfo_signed_response_alg,
+      token_endpoint_jwt_auth_alg: client.token_endpoint_jwt_auth_alg,
+      token_endpoint_auth_methods: client.token_endpoint_auth_methods,
+      jwt_public_key: client.jwt_public_key
     }
   end
 end
