@@ -85,6 +85,15 @@ defmodule BorutaAdminWeb.ClientController do
     Admin.update_client(client, client_params)
   end
 
+  def regenerate_key_pair(conn, %{"id" => client_id}) do
+    client = get_client(client_id)
+
+    with :ok <- ensure_open_for_edition(client_id),
+         {:ok, client} <- Admin.regenerate_client_key_pair(client) do
+      render(conn, "show.json", client: client)
+    end
+  end
+
   def delete(conn, %{"id" => client_id}) do
     with :ok <- ensure_open_for_edition(client_id),
          {:ok, _result} <- delete_client_multi(client_id) do

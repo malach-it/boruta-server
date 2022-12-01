@@ -24,7 +24,7 @@ defmodule BorutaAuth.MixProject do
 
   defp deps do
     [
-      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git", branch: "userinfo-signed-response"},
+      {:boruta, git: "https://gitlab.com/patatoid/boruta_auth.git"},
       {:logger_file_backend, "~> 0.0.13"},
       {:quantum, "~> 3.0"}
     ]

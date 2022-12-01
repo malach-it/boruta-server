@@ -19,6 +19,9 @@
             <i class="eye icon" :class="{ 'slash': passwordVisible }" @click="passwordVisibilityToggle()"></i>
           </div>
         </div>
+        <div class="ui segment" v-if="client.isPersisted">
+          <a class="ui fluid orange button" @click="regenerateKeyPair()">Regenerate client key pair</a>
+        </div>
         <div class="field" :class="{ 'error': client.errors?.access_token_ttl }">
           <label>Access token TTL (seconds)</label>
           <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
@@ -177,6 +180,13 @@ export default {
   methods: {
     back () {
       this.$emit('back')
+    },
+    regenerateKeyPair () {
+      if (confirm("Are you sure you want to regenerate this client key pair?")) {
+        this.client.regenerateKeyPair().then(() => {
+          this.$emit('submit')
+        })
+      }
     },
     addRedirectUri () {
       this.client.redirect_uris.push({})

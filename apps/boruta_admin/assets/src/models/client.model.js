@@ -123,6 +123,26 @@ class Client {
       })
   }
 
+  async regenerateKeyPair () {
+    const { id } = this
+    this.constructor.api().post(`/${id}/regenerate_key_pair`)
+      .then(({ data }) => {
+        const params = data.data
+
+        Object.keys(params).forEach((key) => {
+          this[key] = params[key]
+          assign[key].bind(this)(params)
+        })
+        return this
+      })
+      .catch((error) => {
+        const { errors } = error.response.data
+        this.errors = errors
+        throw errors
+      })
+  }
+
+
   destroy () {
     return this.constructor.api().delete(`/${this.id}`)
       .catch((error) => {
