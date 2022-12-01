@@ -59,23 +59,27 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
     @tag authorized: ["clients:manage:all"]
     test "renders errors when identity provider is missing", %{conn: conn} do
-      create_attrs = %{@create_attrs|identity_provider: %{id: SecureRandom.uuid()}}
+      create_attrs = %{@create_attrs | identity_provider: %{id: SecureRandom.uuid()}}
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
-      assert %{"identity_provider_id" => ["does not exist"]} = json_response(create, 422)["errors"]
+
+      assert %{"identity_provider_id" => ["does not exist"]} =
+               json_response(create, 422)["errors"]
     end
 
     @tag authorized: ["clients:manage:all"]
     test "renders errors when identity provider has invalid uuid", %{conn: conn} do
-      create_attrs = %{@create_attrs|identity_provider: %{id: "bad_uuid"}}
+      create_attrs = %{@create_attrs | identity_provider: %{id: "bad_uuid"}}
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
-      assert %{"identity_provider_id" => ["has invalid format"]} = json_response(create, 422)["errors"]
+
+      assert %{"identity_provider_id" => ["has invalid format"]} =
+               json_response(create, 422)["errors"]
     end
 
     @tag authorized: ["clients:manage:all"]
     test "renders client when data is valid", %{conn: conn, identity_provider: identity_provider} do
-      create_attrs = %{@create_attrs|identity_provider: %{id: identity_provider.id}}
+      create_attrs = %{@create_attrs | identity_provider: %{id: identity_provider.id}}
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
       assert %{"id" => _id} = json_response(create, 201)["data"]
@@ -86,7 +90,11 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     setup %{conn: conn} do
       client = insert(:client)
       identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
-      BorutaIdentity.Factory.insert(:client_identity_provider, client_id: client.id, identity_provider: identity_provider)
+
+      BorutaIdentity.Factory.insert(:client_identity_provider,
+        client_id: client.id,
+        identity_provider: identity_provider
+      )
 
       {:ok, conn: conn, client: client}
     end
@@ -117,23 +125,57 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
-    test "updates client identity provider when data is valid", %{conn: conn, client: %Client{id: id} = client} do
+    test "updates client identity provider when data is valid", %{
+      conn: conn,
+      client: %Client{id: id} = client
+    } do
       identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
       update_attrs = Map.put(@update_attrs, "identity_provider", %{"id" => identity_provider.id})
 
       conn = put(conn, Routes.admin_client_path(conn, :update, client), client: update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      assert BorutaIdentity.Repo.get_by(ClientIdentityProvider, client_id: id, identity_provider_id: identity_provider.id)
+      assert BorutaIdentity.Repo.get_by(ClientIdentityProvider,
+               client_id: id,
+               identity_provider_id: identity_provider.id
+             )
     end
 
     @tag authorized: ["clients:manage:all"]
     test "renders client when data is valid", %{conn: conn, client: %Client{id: id} = client} do
       conn = put(conn, Routes.admin_client_path(conn, :update, client), client: @update_attrs)
+
       assert %{
-        "id" => ^id,
-        "redirect_uris" => ["http://updated.redirect.uri"]
-      } = json_response(conn, 200)["data"]
+               "id" => ^id,
+               "redirect_uris" => ["http://updated.redirect.uri"]
+             } = json_response(conn, 200)["data"]
+    end
+  end
+
+  describe "regenerate client key pair" do
+    setup %{conn: conn} do
+      client = insert(:client)
+      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+
+      BorutaIdentity.Factory.insert(:client_identity_provider,
+        client_id: client.id,
+        identity_provider: identity_provider
+      )
+
+      {:ok, conn: conn, client: client}
+    end
+
+    @tag authorized: ["clients:manage:all"]
+    test "regenerates client key pair", %{conn: conn, client: client} do
+      public_key = client.public_key
+      private_key = client.private_key
+
+      conn = post(conn, Routes.admin_client_path(conn, :regenerate_key_pair, client))
+      assert %{"data" => %{
+        "public_key" => new_public_key
+      }} = json_response(conn, 200)
+
+      assert new_public_key != public_key
     end
   end
 
