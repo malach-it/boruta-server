@@ -56,6 +56,17 @@
             </div>
           </div>
         </div>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.userinfo_signed_response_alg }">
+            <label>Userinfo response signature algorithm</label>
+            <div class="field" v-for="alg in UserinfoResponseSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg || 'none' }}</label>
+                <input type="radio" v-model="client.userinfo_signed_response_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
+        </div>
         <h3>Client authentication</h3>
         <div class="ui segment">
           <div class="inline fields" :class="{ 'error': client.errors?.token_endpoint_auth_methods }">
@@ -157,6 +168,7 @@ export default {
   data() {
     return {
       idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
+      UserinfoResponseSignatureAlgorithms: Client.UserinfoResponseSignatureAlgorithms,
       clientJwtAuthenticationSignatureAlgorithms: Client.clientJwtAuthenticationSignatureAlgorithms,
       tokenEndpointAuthMethods: Client.tokenEndpointAuthMethods,
       passwordVisible: false
