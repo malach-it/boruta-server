@@ -90,7 +90,7 @@
             </div>
           </div>
         </div>
-        <div class="field">
+        <div class="field" v-if="client.token_endpoint_jwt_auth_alg.match(/RS/)">
           <label>Client JWT authentication public key (pem)</label>
           <textarea v-model="client.jwt_public_key" placeholder="Your public key here"></textarea>
         </div>
