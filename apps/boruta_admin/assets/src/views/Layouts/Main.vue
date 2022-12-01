@@ -451,6 +451,9 @@ export default {
       display: block;
       width: 100%;
     }
+    .inline.fields>.field {
+      margin: 0;
+    }
     .ui.icon.input>i.icon {
       cursor: pointer;
       pointer-events: all;

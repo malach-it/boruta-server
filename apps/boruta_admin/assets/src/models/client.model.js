@@ -60,6 +60,7 @@ const assign = {
   token_endpoint_auth_methods: function ({ token_endpoint_auth_methods }) { this.token_endpoint_auth_methods = token_endpoint_auth_methods },
   jwt_public_key: function ({ jwt_public_key }) { this.jwt_public_key = jwt_public_key },
   id_token_signature_alg: function ({ id_token_signature_alg }) { this.id_token_signature_alg = id_token_signature_alg },
+  userinfo_signed_response_alg: function ({ userinfo_signed_response_alg }) { this.userinfo_signed_response_alg = userinfo_signed_response_alg },
 }
 
 class Client {
@@ -150,6 +151,7 @@ class Client {
       identity_provider,
       secret,
       id_token_signature_alg,
+      userinfo_signed_response_alg,
       token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods,
       jwt_public_key
@@ -175,6 +177,7 @@ class Client {
         .filter(({ value }) => value)
         .map(({ label }) => label),
       id_token_signature_alg,
+      userinfo_signed_response_alg,
       token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods,
       jwt_public_key
@@ -219,6 +222,16 @@ Client.idTokenSignatureAlgorithms = [
 ]
 
 Client.clientJwtAuthenticationSignatureAlgorithms = [
+  "HS256",
+  "HS384",
+  "HS512",
+  "RS256",
+  "RS384",
+  "RS512"
+]
+
+Client.UserinfoResponseSignatureAlgorithms = [
+  null,
   "HS256",
   "HS384",
   "HS512",
