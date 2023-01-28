@@ -25,6 +25,8 @@ This server has been certified for the Basic, Implicit and Hybrid OpenID Provide
 
 ## Installation
 
+A [loom presentation](https://www.loom.com/share/77006360fdac44bc9113fab9cf30aba5) about how to get a server up and running.
+
 ### Requirements
 - Elixir >= 1.13
 - postgreSQL >= 13
