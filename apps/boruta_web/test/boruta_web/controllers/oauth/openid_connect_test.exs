@@ -222,7 +222,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
   describe "jwks endpoints" do
     test "returns an empty list", %{conn: conn} do
-      conn = get(conn, Routes.openid_path(conn, :jwks_index))
+      conn = get(conn, Routes.jwks_path(conn, :jwks_index))
 
       assert json_response(conn, 200) == %{"keys" => []}
     end
@@ -230,7 +230,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
     test "returns all clients keys", %{conn: conn} do
       %Client{id: client_id} = insert(:client)
 
-      conn = get(conn, Routes.openid_path(conn, :jwks_index))
+      conn = get(conn, Routes.jwks_path(conn, :jwks_index))
 
       assert %{
                "keys" => [%{"kid" => ^client_id, "kty" => "RSA"}]
@@ -247,7 +247,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn =
         conn
         |> put_req_header("authorization", "bearer #{token.value}")
-        |> post(Routes.openid_path(conn, :userinfo))
+        |> post(Routes.userinfo_path(conn, :userinfo))
 
       assert json_response(conn, 200)
     end
@@ -264,7 +264,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn =
         conn
         |> put_req_header("authorization", "bearer #{token.value}")
-        |> post(Routes.openid_path(conn, :userinfo))
+        |> post(Routes.userinfo_path(conn, :userinfo))
 
       assert response(conn, 200)
     end
@@ -319,7 +319,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
   describe "dynamic registration" do
     test "returns an error when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.openid_path(conn, :register_client))
+      conn = post(conn, Routes.dynamic_registration_path(conn, :register_client))
 
       assert json_response(conn, 400) == %{
                "error" => "invalid_client_metadata",
@@ -329,7 +329,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
     test "registers client", %{conn: conn} do
       conn =
-        post(conn, Routes.openid_path(conn, :register_client), %{
+        post(conn, Routes.dynamic_registration_path(conn, :register_client), %{
           redirect_uris: ["https://test.uri"]
         })
 
@@ -345,7 +345,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
     test "creates associated identity provider", %{conn: conn} do
       conn =
-        post(conn, Routes.openid_path(conn, :register_client), %{
+        post(conn, Routes.dynamic_registration_path(conn, :register_client), %{
           redirect_uris: ["https://test.uri"]
         })
 

@@ -168,7 +168,6 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     @tag authorized: ["clients:manage:all"]
     test "regenerates client key pair", %{conn: conn, client: client} do
       public_key = client.public_key
-      private_key = client.private_key
 
       conn = post(conn, Routes.admin_client_path(conn, :regenerate_key_pair, client))
       assert %{"data" => %{

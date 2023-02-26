@@ -1,9 +1,7 @@
 defmodule BorutaWeb.OauthView do
   use BorutaWeb, :view
 
-  alias Boruta.Ecto
   alias Boruta.Oauth.Client
-  alias Boruta.Openid.UserinfoResponse
   alias BorutaWeb.Token
 
   def render("token.json", %{response: %Boruta.Oauth.TokenResponse{} = response}) do
@@ -47,20 +45,6 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
-  def render("jwks.json", %{keys: keys}) do
-    %{
-      keys: keys
-    }
-  end
-
-  def render("jwk.json", %{client: %Ecto.Client{id: client_id, public_key: public_key}}) do
-    {_type, jwk} = public_key |> :jose_jwk.from_pem() |> :jose_jwk.to_map()
-
-    %{
-      keys: [Map.put(jwk, :kid, client_id)]
-    }
-  end
-
   def render("well_known.json", %{routes: routes}) do
     issuer = Boruta.Config.issuer()
 
@@ -68,9 +52,9 @@ defmodule BorutaWeb.OauthView do
       "issuer" => issuer,
       "authorization_endpoint" => issuer <> routes.authorize_path(BorutaWeb.Endpoint, :authorize),
       "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
-      "userinfo_endpoint" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :userinfo),
-      "jwks_uri" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :jwks_index),
-      "registration_endpoint" => issuer <> routes.openid_path(BorutaWeb.Endpoint, :register_client),
+      "userinfo_endpoint" => issuer <> routes.userinfo_path(BorutaWeb.Endpoint, :userinfo),
+      "jwks_uri" => issuer <> routes.jwks_path(BorutaWeb.Endpoint, :jwks_index),
+      "registration_endpoint" => issuer <> routes.dynamic_registration_path(BorutaWeb.Endpoint, :register_client),
       "response_types_supported" => ["code", "token", "id_token", "code token", "code id_token", "code id_token token"],
       "response_modes_supported" => ["query", "fragment"],
       "subject_types_supported" => ["public"],
@@ -78,14 +62,6 @@ defmodule BorutaWeb.OauthView do
       "id_token_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms()
     }
-  end
-
-  def render("userinfo.json", %{response: response}) do
-    UserinfoResponse.payload(response)
-  end
-
-  def render("userinfo.jwt", %{response: response}) do
-    UserinfoResponse.payload(response)
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
