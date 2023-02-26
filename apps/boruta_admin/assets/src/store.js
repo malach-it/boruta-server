@@ -1,5 +1,4 @@
 import { createStore } from 'vuex'
-import { Socket } from 'phoenix'
 
 import oauth from './services/oauth.service'
 
@@ -11,9 +10,6 @@ export default createStore({
   getters: {
     isAuthenticated (state) {
       return state.isAuthenticated
-    },
-    socket (state) {
-      return state.socket
     }
   },
   mutations: {
@@ -25,15 +21,6 @@ export default createStore({
     }
   },
   actions: {
-    async socketConnection ({ commit, state }) {
-      if (state.socket) return state.socket
-
-      const socket = new Socket(`${window.env.BORUTA_ADMIN_BASE_SOCKET_URL}/socket`, { params: { token: oauth.accessToken } })
-      commit('SET_SOCKET', socket)
-      await socket.connect()
-
-      return socket
-    },
     logout ({ commit }) {
       oauth.logout().then(() => {
         commit('SET_AUTHENTICATED', false)
