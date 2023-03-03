@@ -32,6 +32,7 @@ defmodule BorutaIdentity.Accounts.User do
     # TODO add email field
     field(:username, :string)
     field(:uid, :string)
+    field(:group, :string)
     field(:password, :string, virtual: true)
     field(:confirmed_at, :utc_datetime_usec)
     field(:last_login_at, :utc_datetime_usec)
@@ -46,14 +47,14 @@ defmodule BorutaIdentity.Accounts.User do
 
   def implementation_changeset(attrs, backend) do
     %__MODULE__{}
-    |> cast(attrs, [:backend_id, :uid, :username, :metadata])
+    |> cast(attrs, [:backend_id, :uid, :username, :group, :metadata])
     |> metadata_template_filter(backend)
     |> validate_required([:backend_id, :uid, :username])
   end
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:metadata])
+    |> cast(attrs, [:metadata, :group])
   end
 
   def login_changeset(user) do

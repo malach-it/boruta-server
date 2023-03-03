@@ -11,21 +11,25 @@
         </div>
         <div class="field" v-if="!user.isPersisted">
           <label>Email</label>
-          <input type="text" v-model="user.email" placeholder="email@example.com">
+          <input type="text" v-model="user.email" placeholder="email@example.com" />
         </div>
         <div class="field" v-if="!user.isPersisted">
           <label>Password</label>
-          <input type="password" v-model="user.password">
+          <input type="password" v-model="user.password" />
         </div>
         <section v-if="user.backend.metadata_fields.length">
           <h2>Metadata</h2>
           <div v-for="field in user.backend.metadata_fields">
             <div class="field">
               <label>{{ field.attribute_name }}</label>
-              <input type="text" v-model="user.metadata[field.attribute_name]" placeholder="metadata">
+              <input type="text" v-model="user.metadata[field.attribute_name]" placeholder="metadata" />
             </div>
           </div>
         </section>
+        <div class="field">
+          <label>Group</label>
+          <input type="text" v-model="user.group" />
+        </div>
         <section v-if="user.isPersisted">
           <h2>Authorized scopes</h2>
           <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />

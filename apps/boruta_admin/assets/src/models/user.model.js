@@ -17,6 +17,7 @@ const assign = {
   backend: function ({ backend }) { this.backend = backend },
   email: function ({ email }) { this.email = email },
   metadata: function ({ metadata }) { this.metadata = metadata },
+  group: function ({ group }) { this.group = group },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
       return { model: new Scope(scope) }

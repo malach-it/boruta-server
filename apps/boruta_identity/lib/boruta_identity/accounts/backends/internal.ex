@@ -32,7 +32,10 @@ defmodule BorutaIdentity.Accounts.Internal do
   def register(backend, registration_params) do
     with {:ok, user} <-
            Internal.User.registration_changeset(
-             %Internal.User{metadata: registration_params[:metadata]},
+             %Internal.User{
+               group: registration_params[:group],
+               metadata: registration_params[:metadata]
+             },
              registration_params,
              %{
                backend: backend
@@ -57,7 +60,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Accounts.Sessions
   def domain_user!(
-        %Internal.User{id: id, email: email, metadata: metadata},
+        %Internal.User{id: id, email: email, metadata: metadata, group: group},
         %Backend{
           id: backend_id
         } = backend
@@ -65,16 +68,17 @@ defmodule BorutaIdentity.Accounts.Internal do
     impl_user_params = %{
       uid: id,
       username: email,
+      group: group,
       backend_id: backend_id
     }
 
     {replace, impl_user_params} =
       case metadata do
         %{} = metadata ->
-          {[:username, :metadata], Map.put(impl_user_params, :metadata, metadata)}
+          {[:username, :metadata, :group], Map.put(impl_user_params, :metadata, metadata)}
 
         _ ->
-          {[:username], impl_user_params}
+          {[:username, :group], impl_user_params}
       end
 
     User.implementation_changeset(impl_user_params, backend)
@@ -114,7 +118,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   @impl BorutaIdentity.Accounts.Settings
   def update_user(backend, user, params) do
     with {:ok, user} <-
-           %{user | metadata: params[:metadata]}
+           %{user | metadata: params[:metadata], group: params[:group]}
            |> Internal.User.update_changeset(params, %{backend: backend})
            |> Repo.update() do
       {:ok, domain_user!(user, backend)}
@@ -125,7 +129,10 @@ defmodule BorutaIdentity.Accounts.Internal do
   def create_user(backend, params) do
     with {:ok, user} <-
            Internal.User.registration_changeset(
-             %Internal.User{metadata: params[:metadata]},
+             %Internal.User{
+               group: params[:group],
+               metadata: params[:metadata]
+             },
              %{
                email: params[:username],
                password: params[:password]

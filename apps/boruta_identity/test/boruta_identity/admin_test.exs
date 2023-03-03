@@ -151,6 +151,31 @@ defmodule BorutaIdentity.AdminTest do
                 metadata: %{"attribute_test" => "attribute_test value"}
               }} = Admin.create_user(backend, params)
     end
+
+    test "creates a user with a group", %{backend: backend} do
+      metadata_field = %{
+        "attribute_name" => "attribute_test"
+      }
+
+      {:ok, backend} =
+        Ecto.Changeset.change(backend, %{
+          metadata_fields: [
+            metadata_field
+          ]
+        })
+        |> Repo.update()
+
+      params = %{
+        username: "test@created.email",
+        password: "a valid password",
+        group: "group"
+      }
+
+      assert {:ok,
+              %User{
+                group: "group"
+              }} = Admin.create_user(backend, params)
+    end
   end
 
   describe "create_user/2 with a ldap backend" do
@@ -167,6 +192,9 @@ defmodule BorutaIdentity.AdminTest do
         Admin.create_user(backend, params)
       end
     end
+
+    @tag :skip
+    test "creates a user"
   end
 
   describe "update_user/2 with an internal backend" do
@@ -185,6 +213,16 @@ defmodule BorutaIdentity.AdminTest do
       user_params = %{metadata: metadata}
 
       assert {:ok, %User{metadata: ^metadata}} = Admin.update_user(user, user_params)
+    end
+
+    test "updates user with a group", %{user: user} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
+        |> Repo.update()
+
+      user_params = %{group: "group"}
+
+      assert {:ok, %User{group: "group"}} = Admin.update_user(user, user_params)
     end
   end
 

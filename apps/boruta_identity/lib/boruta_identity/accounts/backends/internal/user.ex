@@ -24,6 +24,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     field(:password, :string, virtual: true)
     field(:hashed_password, :string)
     field(:metadata, :map, virtual: true)
+    field(:group, :string, virtual: true)
 
     belongs_to(:backend, Backend)
 
@@ -102,7 +103,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
 
   def update_changeset(user, attrs, opts) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :password, :group])
     |> validate_required([:email])
     |> validate_email()
     |> validate_password(opts)
