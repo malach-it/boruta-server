@@ -340,7 +340,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
     end
 
     @tag authorized: ["users:manage:all"]
-    test "renders user submitting metadata", %{
+    test "updates user with metadata", %{
       conn: conn,
       user: %User{id: id} = user,
       existing_scope: scope
@@ -348,17 +348,43 @@ defmodule BorutaAdminWeb.UserControllerTest do
       {:ok, _backend} =
         Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
         |> Repo.update()
+      metadata = %{"test" => "test value"}
 
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
           user: %{
             "authorized_scopes" => [%{"id" => scope.id}],
-            "metadata" => %{"test" => "test value"}
+            "metadata" => metadata
           }
         )
 
       assert %{"id" => ^id, "metadata" => %{"test" => "test value"}} =
                json_response(conn, 200)["data"]
+      assert %User{metadata: ^metadata} = Repo.get!(User, id)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "updates user with group", %{
+      conn: conn,
+      user: %User{id: id} = user,
+      existing_scope: scope
+    } do
+      {:ok, _backend} =
+        Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
+        |> Repo.update()
+      group = "group1 group2"
+
+      conn =
+        put(conn, Routes.admin_user_path(conn, :update, user),
+          user: %{
+            "authorized_scopes" => [%{"id" => scope.id}],
+            "group" => group
+          }
+        )
+
+      assert %{"id" => ^id, "group" => ^group} =
+               json_response(conn, 200)["data"]
+      assert %User{group: ^group} = Repo.get!(User, id)
     end
 
     @tag user_authorized: ["users:manage:all"]

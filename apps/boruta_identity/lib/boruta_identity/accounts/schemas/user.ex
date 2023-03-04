@@ -50,11 +50,13 @@ defmodule BorutaIdentity.Accounts.User do
     |> cast(attrs, [:backend_id, :uid, :username, :group, :metadata])
     |> metadata_template_filter(backend)
     |> validate_required([:backend_id, :uid, :username])
+    |> validate_group()
   end
 
   def changeset(user, attrs \\ %{}) do
     user
     |> cast(attrs, [:metadata, :group])
+    |> validate_group()
   end
 
   def login_changeset(user) do
@@ -114,6 +116,7 @@ defmodule BorutaIdentity.Accounts.User do
     |> Enum.map(fn field ->
       attribute_name = field["attribute_name"]
       user_editable = field["user_editable"]
+
       case Enum.find(metadata, fn {key, _value} ->
              attribute_name == key
            end) do
@@ -144,4 +147,26 @@ defmodule BorutaIdentity.Accounts.User do
   end
 
   defp metadata_template_filter(changeset, _backend), do: changeset
+
+  defp validate_group(changeset) do
+    case Ecto.Changeset.get_change(changeset, :group) do
+      nil ->
+        changeset
+
+      group ->
+        groups = String.split(group, " ")
+
+        case groups == Enum.uniq(groups) do
+          true ->
+            changeset
+
+          false ->
+            %{
+              changeset
+              | valid?: false,
+                errors: [{:group, {"must be unique", []}} | changeset.errors]
+            }
+        end
+    end
+  end
 end

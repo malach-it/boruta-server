@@ -215,6 +215,17 @@ defmodule BorutaIdentity.AdminTest do
       assert {:ok, %User{metadata: ^metadata}} = Admin.update_user(user, user_params)
     end
 
+    test "returns an error if group is not unique", %{user: user} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
+        |> Repo.update()
+
+      user_params = %{group: "group group"}
+
+      assert {:error, %Ecto.Changeset{errors: [group: {"must be unique", []}]}} =
+               Admin.update_user(user, user_params)
+    end
+
     test "updates user with a group", %{user: user} do
       {:ok, _backend} =
         Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})

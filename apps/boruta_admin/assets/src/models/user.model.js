@@ -91,13 +91,14 @@ class User {
   }
 
   get serialized () {
-    const { id, email, password, metadata, authorized_scopes } = this
+    const { id, email, password, metadata, group, authorized_scopes } = this
 
     return {
       id,
       email,
       password,
       metadata,
+      group,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized)
     }
   }
