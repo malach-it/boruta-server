@@ -27,15 +27,19 @@
         values:
           installCRDs: true
 
-    - name: Install postgres helm package
-      kubernetes.core.helm:
-        name: postgres
-        chart_ref: bitnami/postgresql
-        chart_version: "10.16.2"
-        release_namespace: boruta-staging
-        values:
-          global.postgresql.postgresqlPassword: "{{ postgresql_password }}"
-          postgresqlMaxConnections: "1024"
+            # upgrade looks to be complicated, variable names contain breaking changes
+            # the master configuration file - https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
+            #
+            # - name: Install postgres helm package
+            #   kubernetes.core.helm:
+            #     name: postgres
+            #     chart_ref: bitnami/postgresql
+            #     chart_version: "12.2.7"
+            #     release_namespace: boruta-staging
+            #     values:
+            #       global.postgresql.auth.postgresPassword: "{{ postgresql_password }}"
+            #       primary.extendedConfiguration: |
+            #         max_connections = 1024
 
     - name: Create libcluster role
       kubernetes.core.k8s:
