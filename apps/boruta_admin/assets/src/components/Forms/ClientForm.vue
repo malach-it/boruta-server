@@ -21,6 +21,11 @@
         </div>
         <div class="ui segment" v-if="client.isPersisted">
           <a class="ui fluid orange button" @click="regenerateKeyPair()">Regenerate client key pair</a>
+          <hr />
+          <div class="field">
+            <label>Client public key</label>
+            <pre>{{ client.public_key }}</pre>
+          </div>
         </div>
         <div class="field" :class="{ 'error': client.errors?.access_token_ttl }">
           <label>Access token TTL (seconds)</label>
