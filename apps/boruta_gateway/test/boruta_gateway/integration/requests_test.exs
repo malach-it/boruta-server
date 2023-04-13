@@ -8,6 +8,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   alias BorutaGateway.Repo
   alias BorutaGateway.RequestsIntegrationTest.HttpClient
   alias BorutaGateway.Upstreams
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams.Upstream
   alias Ecto.Adapters.SQL.Sandbox
 
@@ -211,6 +212,185 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                  } = Jason.decode!(body)
 
           assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
+          signer = Upstreams.Client.signer(upstream)
+          assert {:ok, claims} = Upstreams.Client.Token.verify(token, signer)
+          assert claims["client_id"] == access_token.client.id
+          assert claims["value"] == access_token.value
+
+          assert forwarded_authorization == "bearer #{access_token.value}"
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+  end
+
+  describe "requests (from configuration file" do
+    setup do
+      {:ok, %Boruta.Ecto.Client{id: client_id}} = Boruta.Ecto.Admin.create_client(%{})
+
+      {:ok, access_token} =
+        AccessTokensAdapter.create(
+          %{
+            client: ClientsAdapter.get_client(client_id),
+            scope: "test"
+          },
+          []
+        )
+
+      {:ok, access_token: access_token}
+    end
+
+    test "returns a 404 when no upstream found" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          configuration_file_path =
+            :code.priv_dir(:boruta_gateway)
+            |> Path.join("/test/configuration_files/not_found.yml")
+
+          ConfigurationLoader.from_file(configuration_file_path)
+
+          Process.sleep(100)
+
+          request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
+
+          assert {:ok, %Finch.Response{body: body, status: 404}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "No upstream has been found corresponding to the given request."
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "returns a 401 when unauthorized" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          configuration_file_path =
+            :code.priv_dir(:boruta_gateway)
+            |> Path.join("/test/configuration_files/unauthorized.yml")
+          ConfigurationLoader.from_file(configuration_file_path)
+
+          Process.sleep(100)
+
+          request = Finch.build(:get, "http://localhost:7777/unauthorized", [], "")
+
+          assert {:ok, %Finch.Response{body: body, headers: headers, status: 401}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "boom"
+
+          assert Enum.any?(headers, fn
+                   {"content-type", content_type} ->
+                     Regex.match?(~r/text/, content_type)
+
+                   _ ->
+                     false
+                 end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "returns a 403 when forbidden", %{access_token: access_token} do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          configuration_file_path =
+            :code.priv_dir(:boruta_gateway)
+            |> Path.join("/test/configuration_files/forbidden.yml")
+          ConfigurationLoader.from_file(configuration_file_path)
+
+          Process.sleep(100)
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/forbidden",
+              [{"authorization", "Bearer #{access_token.value}"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, headers: headers, status: 403}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "boom"
+
+          assert Enum.any?(headers, fn
+                   {"content-type", content_type} ->
+                     Regex.match?(~r/text/, content_type)
+
+                   _ ->
+                     false
+                 end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "returns response when authorized", %{access_token: access_token} do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          configuration_file_path =
+            :code.priv_dir(:boruta_gateway)
+            |> Path.join("/test/configuration_files/authorized.yml")
+          ConfigurationLoader.from_file(configuration_file_path)
+
+          Process.sleep(100)
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/httpbin/status/418",
+              [{"authorization", "Bearer #{access_token.value}"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, status: 418}} =
+                   Finch.request(request, HttpClient)
+
+          assert body =~ ~r/teapot/
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "returns authorization header with introspected token when authorized", %{
+      access_token: access_token
+    } do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          configuration_file_path =
+            :code.priv_dir(:boruta_gateway)
+            |> Path.join("/test/configuration_files/authorized_introspect.yml")
+          ConfigurationLoader.from_file(configuration_file_path)
+
+          Process.sleep(100)
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/httpbin/anything",
+              [{"authorization", "bearer #{access_token.value}"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, status: 200}} =
+                   Finch.request(request, HttpClient)
+
+          assert %{
+                   "headers" => %{
+                     "Authorization" => authorization,
+                     "X-Forwarded-Authorization" => forwarded_authorization
+                   }
+                 } = Jason.decode!(body)
+
+          assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
+
+          upstream = Repo.all(Upstream) |> List.first()
           signer = Upstreams.Client.signer(upstream)
           assert {:ok, claims} = Upstreams.Client.Token.verify(token, signer)
           assert claims["client_id"] == access_token.client.id

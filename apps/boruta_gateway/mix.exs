@@ -44,6 +44,7 @@ defmodule BorutaGateway.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
       {:telemetry, "~> 0.4"},
+      {:yaml_elixir, "~> 2.9"}
     ]
   end
 

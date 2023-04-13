@@ -1,0 +1,10 @@
+---
+configuration:
+  gateway:
+     scheme: "http"
+     host: "should.not.be.called"
+     port: 80
+     uris: ["/unauthorized"]
+     authorize: true
+     error_content_type: "text"
+     unauthorized_response: "boom"
