@@ -1,6 +1,6 @@
 <template>
   <div class="upstream-list">
-    <Toaster :active="deleted" message="Upstream has been updated" type="warning" />
+    <Toaster :active="deleted" message="Upstream has been deleted" type="warning" />
     <router-link :to="{ name: 'new-upstream' }" class="ui violet main create button">Add an upstream</router-link>
     <div class="container">
       <div class="ui info message">

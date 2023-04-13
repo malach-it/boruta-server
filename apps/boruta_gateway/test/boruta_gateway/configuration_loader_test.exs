@@ -2,8 +2,8 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
   use BorutaGateway.DataCase
 
   alias BorutaGateway.ConfigurationLoader
-  alias BorutaGateway.Upstreams.Upstream
   alias BorutaGateway.Repo
+  alias BorutaGateway.Upstreams.Upstream
 
   test "returns an error with a bad configuration file" do
     assert Repo.all(Upstream) |> Enum.empty?()

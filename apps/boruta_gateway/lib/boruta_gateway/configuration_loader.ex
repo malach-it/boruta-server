@@ -1,4 +1,6 @@
 defmodule BorutaGateway.ConfigurationLoader do
+  @moduledoc false
+
   alias BorutaGateway.Upstreams
 
   @spec from_file!(configuration_file_path :: String.t()) :: :ok

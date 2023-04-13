@@ -5,10 +5,12 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
   alias Boruta.AccessTokensAdapter
   alias Boruta.ClientsAdapter
+  alias Boruta.Ecto.Admin
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Repo
   alias BorutaGateway.RequestsIntegrationTest.HttpClient
   alias BorutaGateway.Upstreams
-  alias BorutaGateway.ConfigurationLoader
+  alias BorutaGateway.Upstreams.Client
   alias BorutaGateway.Upstreams.Upstream
   alias Ecto.Adapters.SQL.Sandbox
 
@@ -20,7 +22,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
   describe "requests" do
     setup do
-      {:ok, %Boruta.Ecto.Client{id: client_id}} = Boruta.Ecto.Admin.create_client(%{})
+      {:ok, %Boruta.Ecto.Client{id: client_id}} = Admin.create_client(%{})
 
       {:ok, access_token} =
         AccessTokensAdapter.create(
@@ -212,8 +214,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                  } = Jason.decode!(body)
 
           assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
-          signer = Upstreams.Client.signer(upstream)
-          assert {:ok, claims} = Upstreams.Client.Token.verify(token, signer)
+          signer = Client.signer(upstream)
+          assert {:ok, claims} = Client.Token.verify(token, signer)
           assert claims["client_id"] == access_token.client.id
           assert claims["value"] == access_token.value
 
@@ -227,7 +229,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
   describe "requests (from configuration file)" do
     setup do
-      {:ok, %Boruta.Ecto.Client{id: client_id}} = Boruta.Ecto.Admin.create_client(%{})
+      {:ok, %Boruta.Ecto.Client{id: client_id}} = Admin.create_client(%{})
 
       {:ok, access_token} =
         AccessTokensAdapter.create(
@@ -395,8 +397,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
 
           upstream = Repo.all(Upstream) |> List.first()
-          signer = Upstreams.Client.signer(upstream)
-          assert {:ok, claims} = Upstreams.Client.Token.verify(token, signer)
+          signer = Client.signer(upstream)
+          assert {:ok, claims} = Client.Token.verify(token, signer)
           assert claims["client_id"] == access_token.client.id
           assert claims["value"] == access_token.value
 

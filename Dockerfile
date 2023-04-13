@@ -42,5 +42,6 @@ FROM elixir:1.14-slim
 WORKDIR /app
 
 COPY --from=builder /app/_build/prod/rel/boruta ./
+COPY /ansible/files/production-gateway-configuration.yml config/gateway-configuration.yml
 
 CMD ["/bin/sh", "-c", "/app/bin/boruta start"]
