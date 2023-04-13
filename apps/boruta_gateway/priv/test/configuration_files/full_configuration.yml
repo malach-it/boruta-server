@@ -1,0 +1,21 @@
+---
+configuration:
+  gateway:
+    authorize: true
+    error_content_type: "test"
+    forbidden_response: "test"
+    forwarded_token_private_key: null
+    forwarded_token_public_key: null
+    forwarded_token_secret: "test"
+    forwarded_token_signature_alg: "HS384"
+    host: "httpbin.patatoid.fr"
+    max_idle_time: 10
+    pool_count: 1
+    pool_size: 10
+    port: 80
+    required_scopes:
+      GET: ["test"]
+    scheme: "http"
+    strip_uri: true
+    unauthorized_response: "test"
+    uris: ["/httpbin"]

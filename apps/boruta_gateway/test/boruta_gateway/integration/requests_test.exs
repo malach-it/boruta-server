@@ -225,7 +225,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     end
   end
 
-  describe "requests (from configuration file" do
+  describe "requests (from configuration file)" do
     setup do
       {:ok, %Boruta.Ecto.Client{id: client_id}} = Boruta.Ecto.Admin.create_client(%{})
 
@@ -248,7 +248,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             :code.priv_dir(:boruta_gateway)
             |> Path.join("/test/configuration_files/not_found.yml")
 
-          ConfigurationLoader.from_file(configuration_file_path)
+          ConfigurationLoader.from_file!(configuration_file_path)
 
           Process.sleep(100)
 
@@ -270,7 +270,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           configuration_file_path =
             :code.priv_dir(:boruta_gateway)
             |> Path.join("/test/configuration_files/unauthorized.yml")
-          ConfigurationLoader.from_file(configuration_file_path)
+
+          ConfigurationLoader.from_file!(configuration_file_path)
 
           Process.sleep(100)
 
@@ -300,7 +301,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           configuration_file_path =
             :code.priv_dir(:boruta_gateway)
             |> Path.join("/test/configuration_files/forbidden.yml")
-          ConfigurationLoader.from_file(configuration_file_path)
+
+          ConfigurationLoader.from_file!(configuration_file_path)
 
           Process.sleep(100)
 
@@ -336,7 +338,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           configuration_file_path =
             :code.priv_dir(:boruta_gateway)
             |> Path.join("/test/configuration_files/authorized.yml")
-          ConfigurationLoader.from_file(configuration_file_path)
+
+          ConfigurationLoader.from_file!(configuration_file_path)
 
           Process.sleep(100)
 
@@ -366,7 +369,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           configuration_file_path =
             :code.priv_dir(:boruta_gateway)
             |> Path.join("/test/configuration_files/authorized_introspect.yml")
-          ConfigurationLoader.from_file(configuration_file_path)
+
+          ConfigurationLoader.from_file!(configuration_file_path)
 
           Process.sleep(100)
 
