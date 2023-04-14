@@ -178,7 +178,7 @@
             BORUTA_OAUTH_PORT: "4001"
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
             BORUTA_GATEWAY_PORT: "4000"
-            BORUTA_GATEWAY_CONFIGURATION_PATH: "./config/gateway-configuration.yml"
+            BORUTA_GATEWAY_CONFIGURATION_PATH: "./config/example-gateway-configuration.yml"
             POOL_SIZE: "100"
 
     - name: Setup boruta database

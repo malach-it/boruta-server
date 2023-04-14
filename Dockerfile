@@ -42,6 +42,8 @@ FROM elixir:1.14-slim
 WORKDIR /app
 
 COPY --from=builder /app/_build/prod/rel/boruta ./
-COPY /ansible/files/production-gateway-configuration.yml config/gateway-configuration.yml
+
+# File used for gateway static configuration, used in combination with `BORUTA_GATEWAY_CONFIGURATION_PATH` environment variable
+COPY /static_config/example-gateway-configuration.yml config/example-gateway-configuration.yml
 
 CMD ["/bin/sh", "-c", "/app/bin/boruta start"]

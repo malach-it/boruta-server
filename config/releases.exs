@@ -43,7 +43,7 @@ config :boruta_identity, BorutaIdentity.SMTP,
 
 config :boruta_gateway,
   port: System.get_env("BORUTA_GATEWAY_PORT") |> String.to_integer(),
-  configuration_path: System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH"),
+  configuration_path: System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH", "config/example-configuration.yml"),
   server: true
 
 config :boruta_web, BorutaWeb.Endpoint,
