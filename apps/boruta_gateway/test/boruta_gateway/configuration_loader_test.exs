@@ -17,6 +17,18 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
     end
   end
 
+  test "returns an error with a bad gateway configuration file" do
+    assert Repo.all(Upstream) |> Enum.empty?()
+
+    configuration_file_path =
+      :code.priv_dir(:boruta_gateway)
+      |> Path.join("/test/configuration_files/bad_gateway_configuration.yml")
+
+    assert_raise RuntimeError, ~s|[{"Required properties scheme, host, port, uris were not present.", "#"}]|, fn ->
+      ConfigurationLoader.from_file!(configuration_file_path)
+    end
+  end
+
   test "loads a file" do
     assert Repo.all(Upstream) |> Enum.empty?()
 
