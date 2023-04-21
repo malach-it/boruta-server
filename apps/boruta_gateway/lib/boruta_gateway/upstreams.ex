@@ -23,7 +23,9 @@ defmodule BorutaGateway.Upstreams do
 
   """
   def list_upstreams do
-    Repo.all(Upstream)
+    Upstream
+    |> Repo.all()
+    |> Enum.group_by(fn %Upstream{node_name: node_name} -> node_name end)
   end
 
   @doc """

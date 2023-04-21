@@ -116,7 +116,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
     @tag authorized: ["upstreams:manage:all"]
     test "lists all upstreams", %{conn: conn} do
       conn = get(conn, Routes.admin_upstream_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"] == %{}
     end
   end
 

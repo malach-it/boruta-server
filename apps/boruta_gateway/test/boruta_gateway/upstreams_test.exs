@@ -28,7 +28,7 @@ defmodule BorutaGateway.UpstreamsTest do
 
     test "list_upstreams/0 returns all upstreams" do
       upstream = upstream_fixture()
-      assert Upstreams.list_upstreams() == [upstream]
+      assert Upstreams.list_upstreams() == %{"global" => [upstream]}
     end
 
     test "get_upstream!/1 returns the upstream with given id" do
