@@ -6,34 +6,37 @@
       <div class="ui info message">
         Upstreams are here the configuration of the flow the gateway will apply for requests to be forwarded to backends. Corresponding to given paths, the gateway will route the request to the configured server.
       </div>
-      <div class="ui three column upstreams stackable grid" v-if="upstreams.length">
-        <div v-for="upstream in upstreams" :key="upstream.id" class="column">
-        <div class="ui upstream highlightable segment">
-          <div class="actions">
-            <router-link
-              :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"
-              class="ui tiny blue button">edit</router-link>
-            <a v-on:click="deleteUpstream(upstream)" class="ui tiny red button">delete</a>
-          </div>
-          <div class="ui attribute list">
-            <div class="item">
-              <span class="header">Upstream ID</span>
-              <span class="description">{{ upstream.id }}</span>
-            </div>
-            <div class="item">
-              <span class="header">Base URL</span>
-              <span class="description">{{ upstream.baseUrl }}</span>
-            </div>
-            <div class="item">
-              <span class="header">Paths</span>
-              <div class="description">
-                <span v-for="path in upstream.uris" class="ui teal label" :key="path.uri">
-                  {{ path.uri }}
-                </span>
+      <div class="ui segment" v-for="nodeName in Object.keys(upstreams)" :key="nodeName">
+        <h2>{{ nodeName }}</h2>
+        <div class="ui three column upstreams stackable grid">
+          <div v-for="upstream in upstreams[nodeName]" :key="upstream.id" class="column">
+            <div class="ui upstream highlightable segment">
+              <div class="actions">
+                <router-link
+                  :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"
+                  class="ui tiny blue button">edit</router-link>
+                <a v-on:click="deleteUpstream(upstream)" class="ui tiny red button">delete</a>
+              </div>
+              <div class="ui attribute list">
+                <div class="item">
+                  <span class="header">Upstream ID</span>
+                  <span class="description">{{ upstream.id }}</span>
+                </div>
+                <div class="item">
+                  <span class="header">Base URL</span>
+                  <span class="description">{{ upstream.baseUrl }}</span>
+                </div>
+                <div class="item">
+                  <span class="header">Paths</span>
+                  <div class="description">
+                    <span v-for="path in upstream.uris" class="ui teal label" :key="path.uri">
+                      {{ path.uri }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </div>

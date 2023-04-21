@@ -4,6 +4,13 @@
       <FormErrors v-if="upstream.errors" :errors="upstream.errors" />
       <form class="ui form" @submit.prevent="submit">
         <h3>General configuration</h3>
+        <div class="field" :class="{ 'error': upstream.errors?.node_name }">
+          <label>Node</label>
+          <select v-model="upstream.node_name" placeholder="global">
+            <option value="global">global</option>
+            <option v-for="name in nodeNames" :value="name">{{ name }}</option>
+          </select>
+        </div>
         <div class="field" :class="{ 'error': upstream.errors?.scheme }">
           <label>Scheme</label>
           <select v-model="upstream.scheme" placeholder="https">
@@ -122,8 +129,12 @@ export default {
   },
   data () {
     return {
+      nodeNames: [],
       forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms
     }
+  },
+  mounted () {
+    Upstream.nodeList().then(nodes => this.nodeNames = nodes)
   },
   computed: {
     isHsAlgorithm () {
