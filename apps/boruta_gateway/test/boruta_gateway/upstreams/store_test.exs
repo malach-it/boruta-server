@@ -97,4 +97,20 @@ defmodule BorutaGateway.Upstreams.StoreTest do
       end)
     end
   end
+
+  describe "sidecar_match/2" do
+    test "return sidecar matching upstream" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          {:ok, a} = Repo.insert(%Upstream{node_name: Atom.to_string(node()), host: "test1.host", port: 1111, uris: ["/matching/uri"]})
+          :timer.sleep(100)
+
+          %Upstream{id: id} = Store.sidecar_match(["matching", "uri"])
+          assert  id == a.id
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+  end
 end
