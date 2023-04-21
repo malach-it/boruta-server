@@ -72,7 +72,9 @@ export default {
       this.deleted = false
       upstream.destroy().then(() => {
         this.deleted = true
-        this.upstreams.splice(this.upstreams.indexOf(upstream), 1)
+        this.upstreams[upstream.node_name].splice(this.upstreams[upstream.node_name].indexOf(upstream), 1)
+        if (!this.upstreams[upstream.node_name].length)
+          delete this.upstreams[upstream.node_name]
       })
     }
   }
