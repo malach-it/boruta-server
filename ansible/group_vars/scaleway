@@ -13,6 +13,7 @@ postgresql_password: !vault |
 admin_host: admin.boruta.patatoid.fr
 oauth_host: oauth.boruta.patatoid.fr
 gateway_host: gateway.boruta.patatoid.fr
+microgateway_host: microgateway.boruta.patatoid.fr
 
 admin_client_id: 41846447-e178-4953-87ef-caf0b538f047
 admin_client_secret: !vault |

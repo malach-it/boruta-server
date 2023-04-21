@@ -15,4 +15,7 @@ config :boruta_auth, BorutaAuth.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :boruta_gateway,
-  port: 7777
+  server: true,
+  sidecar_server: true,
+  port: 7777,
+  sidecar_port: 7778

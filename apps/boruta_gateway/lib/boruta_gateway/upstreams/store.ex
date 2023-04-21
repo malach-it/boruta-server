@@ -127,16 +127,16 @@ defmodule BorutaGateway.Upstreams.Store do
   @impl GenServer
   def handle_info(
         {:notification, _pid, _ref, "upstreams_changed", payload},
-        %{gateway: upstreams} = state
+        %{gateway: gateway_upstreams, microgateway: sidecar_upstreams} = state
       ) do
     state =
       case Jason.decode!(payload) do
         %{"record" => %{"node_name" => "global"}} = updated_upstream ->
-          upstreams = update_upstreams(upstreams, updated_upstream)
+          upstreams = update_upstreams(gateway_upstreams, updated_upstream)
           %{state | gateway: upstreams}
 
         %{"record" => %{"node_name" => _node_name}} = updated_upstream ->
-          upstreams = update_upstreams(upstreams, updated_upstream)
+          upstreams = update_upstreams(sidecar_upstreams, updated_upstream)
           %{state | microgateway: upstreams}
       end
 

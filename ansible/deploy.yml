@@ -119,7 +119,17 @@
                     service:
                       name: boruta-gateway
                       port:
-                        number: 4000
+                        number: 5000
+            - host: "{{ microgateway_host }}"
+              http:
+                paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: boruta-microgateway
+                      port:
+                        number: 5001
             - host: "{{ oauth_host }}"
               http:
                 paths:
@@ -145,6 +155,7 @@
                 - "{{ oauth_host }}"
                 - "{{ admin_host }}"
                 - "{{ gateway_host }}"
+                - "{{ microgateway_host }}"
                 secretName: boruta-staging-cert
 
     - name: create boruta app ConfigMap
@@ -177,7 +188,8 @@
             BORUTA_OAUTH_HOST: "{{ oauth_host }}"
             BORUTA_OAUTH_PORT: "4001"
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
-            BORUTA_GATEWAY_PORT: "4000"
+            BORUTA_GATEWAY_PORT: "5000"
+            BORUTA_GATEWAY_SIDECAR_PORT: "5001"
             BORUTA_GATEWAY_CONFIGURATION_PATH: "./config/example-gateway-configuration.yml"
             POOL_SIZE: "100"
 
@@ -405,9 +417,29 @@
               deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
             ports:
             - protocol: TCP
-              targetPort: 4000
+              targetPort: 5000
               name: gateway-tcp
-              port: 4000
+              port: 5000
+
+    - name: Create Microgateway Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: boruta-microgateway
+            namespace: boruta-staging
+            labels:
+              app: boruta
+          spec:
+            selector:
+              deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+            ports:
+            - protocol: TCP
+              targetPort: 5001
+              name: gateway-tcp
+              port: 5001
 
     - name: Delete Boruta blue/green deployment
       kubernetes.core.k8s:

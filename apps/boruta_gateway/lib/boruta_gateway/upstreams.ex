@@ -13,6 +13,10 @@ defmodule BorutaGateway.Upstreams do
     Store.match(path)
   end
 
+  def sidecar_match(path) do
+    Store.sidecar_match(path)
+  end
+
   @doc """
   Returns the list of upstreams.
 

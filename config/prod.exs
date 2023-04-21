@@ -33,7 +33,8 @@ config :boruta_admin, BorutaAdmin.Repo,
   pool_size: 10
 
 config :boruta_gateway,
-  server: true
+  server: true,
+  sidecar_server: true
 
 config :boruta_web, BorutaWeb.Endpoint,
   server: true,
