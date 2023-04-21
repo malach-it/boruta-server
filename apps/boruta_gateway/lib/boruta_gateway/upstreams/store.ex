@@ -135,8 +135,16 @@ defmodule BorutaGateway.Upstreams.Store do
           upstreams = update_upstreams(gateway_upstreams, updated_upstream)
           %{state | gateway: upstreams}
 
-        %{"record" => %{"node_name" => _node_name}} = updated_upstream ->
-          upstreams = update_upstreams(sidecar_upstreams, updated_upstream)
+        %{"record" => %{"node_name" => node_name}} = updated_upstream ->
+          upstreams =
+            case node_name == Atom.to_string(node()) do
+              true ->
+                update_upstreams(sidecar_upstreams, updated_upstream)
+
+              false ->
+                sidecar_upstreams
+            end
+
           %{state | microgateway: upstreams}
       end
 
