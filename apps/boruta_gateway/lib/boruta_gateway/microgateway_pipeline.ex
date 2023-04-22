@@ -3,15 +3,17 @@ defmodule BorutaGateway.MicrogatewayPipeline do
 
   use Plug.Router
 
-  plug BorutaGateway.Plug.Metrics
-  plug BorutaGateway.Plug.AssignSidecarUpstream
-  plug Plug.RequestId
-  plug Plug.Telemetry,
+  plug(Plug.RequestId)
+  plug(BorutaGateway.Plug.Metrics)
+  plug(BorutaGateway.Plug.AssignSidecarUpstream)
+
+  plug(Plug.Telemetry,
     event_prefix: [:boruta_gateway, :endpoint]
+  )
 
-  plug :match
-  plug BorutaGateway.Plug.Authorize
+  plug(:match)
+  plug(BorutaGateway.Plug.Authorize)
 
-  plug :dispatch
-  match _, to: BorutaGateway.Plug.Handler, init_opts: []
+  plug(:dispatch)
+  match(_, to: BorutaGateway.Plug.Handler, init_opts: [])
 end
