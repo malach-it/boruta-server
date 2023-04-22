@@ -3,8 +3,6 @@ defmodule BorutaGateway.Upstreams.Store do
 
   require Logger
 
-  import Ecto.Query
-
   use GenServer
 
   alias BorutaGateway.Repo
@@ -19,7 +17,7 @@ defmodule BorutaGateway.Upstreams.Store do
   def init(_args) do
     subscribe()
     hydrate()
-    {:ok, %{hydrated: false, gateway: [], microgateway: [], listener: nil}}
+    {:ok, %{hydrated: false, upstreams: %{}, listener: nil}}
   end
 
   @impl GenServer
@@ -58,14 +56,14 @@ defmodule BorutaGateway.Upstreams.Store do
   end
 
   @impl GenServer
-  def handle_call(:all, _from, %{gateway: upstreams} = state) do
+  def handle_call(:all, _from, %{upstreams: upstreams} = state) do
     {:reply, upstreams, state}
   end
 
-  def handle_call({:match, path_info}, _from, %{gateway: upstreams} = state) do
+  def handle_call({:match, path_info}, _from, %{upstreams: upstreams} = state) do
     upstream =
       with {_prefix_info, upstream} <-
-             Enum.find(upstreams, fn {prefix_info, _upstream} ->
+             Enum.find(upstreams["global"], fn {prefix_info, _upstream} ->
                path_info = Enum.take(path_info, length(prefix_info))
 
                Enum.empty?(prefix_info -- path_info)
@@ -76,10 +74,12 @@ defmodule BorutaGateway.Upstreams.Store do
     {:reply, upstream, state}
   end
 
-  def handle_call({:sidecar_match, path_info}, _from, %{microgateway: upstreams} = state) do
+  def handle_call({:sidecar_match, path_info}, _from, %{upstreams: upstreams} = state) do
+    node_name = Atom.to_string(node())
+
     upstream =
       with {_prefix_info, upstream} <-
-             Enum.find(upstreams, fn {prefix_info, _upstream} ->
+             Enum.find(upstreams[node_name] || [], fn {prefix_info, _upstream} ->
                path_info = Enum.take(path_info, length(prefix_info))
 
                Enum.empty?(prefix_info -- path_info)
@@ -92,24 +92,14 @@ defmodule BorutaGateway.Upstreams.Store do
 
   @impl GenServer
   def handle_cast(:hydrate, state) do
-    gateway_upstreams =
-      Repo.all(from u in Upstream, where: u.node_name == "global")
+    upstreams =
+      Repo.all(Upstream)
       |> Enum.map(fn upstream ->
         Upstream.with_http_client(upstream)
       end)
       |> structure()
 
-    current_node = Atom.to_string(node())
-
-    microgateway_upstreams =
-      Repo.all(from u in Upstream, where: u.node_name == ^current_node)
-      |> Enum.map(fn upstream ->
-        Upstream.with_http_client(upstream)
-      end)
-      |> structure()
-
-    {:noreply,
-     %{state | hydrated: true, gateway: gateway_upstreams, microgateway: microgateway_upstreams}}
+    {:noreply, %{state | hydrated: true, upstreams: upstreams}}
   rescue
     error ->
       Logger.error(inspect(error))
@@ -127,26 +117,13 @@ defmodule BorutaGateway.Upstreams.Store do
   @impl GenServer
   def handle_info(
         {:notification, _pid, _ref, "upstreams_changed", payload},
-        %{gateway: gateway_upstreams, microgateway: sidecar_upstreams} = state
+        %{upstreams: upstreams} = state
       ) do
-    state =
-      case Jason.decode!(payload) do
-        %{"record" => %{"node_name" => "global"}} = updated_upstream ->
-          upstreams = update_upstreams(gateway_upstreams, updated_upstream)
-          %{state | gateway: upstreams}
+    upstreams =
+      Enum.reduce(upstreams, [], fn {_node_name, upstreams}, acc -> acc ++ (upstreams || []) end)
+      |> update_upstreams(Jason.decode!(payload))
 
-        %{"record" => %{"node_name" => node_name}} = updated_upstream ->
-          upstreams =
-            case node_name == Atom.to_string(node()) do
-              true ->
-                update_upstreams(sidecar_upstreams, updated_upstream)
-
-              false ->
-                sidecar_upstreams
-            end
-
-          %{state | microgateway: upstreams}
-      end
+    state = %{state | upstreams: upstreams}
 
     {:noreply, state}
   end
@@ -211,5 +188,6 @@ defmodule BorutaGateway.Upstreams.Store do
          end))
       |> Enum.sort_by(fn {path_info, _upstream} -> length(path_info) end, :desc)
     end)
+    |> Enum.group_by(fn {_path_info, %Upstream{node_name: node_name}} -> node_name end)
   end
 end

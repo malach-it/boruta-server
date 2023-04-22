@@ -43,7 +43,7 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         :timer.sleep(200)
 
         upstreams = Store.all()
-        assert Enum.any?(upstreams, fn
+        assert Enum.any?(upstreams["global"], fn
           ({["path"], %{host: "updated.host", http_client: http_client} = upstream}) ->
             assert Client.upstream(http_client).host == upstream.host
           (_) -> false
@@ -60,7 +60,7 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         {:ok, a} = Repo.insert(%Upstream{host: "test1.host", port: 1111, uris: ["/path"]})
         :timer.sleep(100)
         upstreams = Store.all()
-        assert {_path, %Upstream{http_client: http_client}} = Enum.find(upstreams, fn
+        assert {_path, %Upstream{http_client: http_client}} = Enum.find(upstreams["global"], fn
           ({["path"], %{id: id}}) -> id == a.id
           (_) -> false
         end)
