@@ -60,6 +60,7 @@ defmodule BorutaGateway.Logger do
         _
       ) do
     %{method: method, request_path: path, status: status_code} = conn
+    node_name = conn.assigns[:node_name]
     status_code = Integer.to_string(status_code)
 
     status =
@@ -76,6 +77,7 @@ defmodule BorutaGateway.Logger do
       "request",
       " - ",
       status,
+      log_attribute("node_name", node_name),
       log_attribute("method", method),
       log_attribute("path", path),
       log_attribute("status_code", status_code),
@@ -92,7 +94,6 @@ defmodule BorutaGateway.Logger do
 
           log_line ++
             [
-              log_attribute("upstream_node_name", upstream.node_name),
               log_attribute("upstream_scheme", upstream.scheme),
               log_attribute("upstream_host", upstream.host),
               log_attribute("upstream_port", upstream.port),

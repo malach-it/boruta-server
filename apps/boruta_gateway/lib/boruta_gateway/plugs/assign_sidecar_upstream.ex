@@ -10,12 +10,18 @@ defmodule BorutaGateway.Plug.AssignSidecarUpstream do
 
   def init(options), do: options
 
-  def call(%Plug.Conn{
-    path_info: path_info
-  } = conn, _options) do
+  def call(
+        %Plug.Conn{
+          path_info: path_info
+        } = conn,
+        _options
+      ) do
+    conn = assign(conn, :node_name, Atom.to_string(node()))
+
     case Upstreams.sidecar_match(path_info) do
       %Upstream{} = upstream ->
         assign(conn, :upstream, upstream)
+
       nil ->
         conn
         |> send_resp(404, "No upstream has been found corresponding to the given request.")
