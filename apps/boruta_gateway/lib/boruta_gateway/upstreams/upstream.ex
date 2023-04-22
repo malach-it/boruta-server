@@ -121,6 +121,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_inclusion(:pool_size, 1..100)
     |> validate_inclusion(:pool_count, 1..10)
+    |> unique_constraint([:node_name, :host, :port, :uris])
     |> maybe_put_forwarded_token_secret()
     |> maybe_generate_key_pair()
     |> validate_uris()
