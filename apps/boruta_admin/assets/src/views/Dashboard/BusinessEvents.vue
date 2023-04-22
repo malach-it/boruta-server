@@ -69,7 +69,11 @@
               </div>
             </div>
           </div>
+          <div v-if="businessEventFilter.application == 'boruta_gateway'" class="sixteen wide filter-form column">
+            <LineChart :chartData="gatewayTimes" :options="gatewayTimesOptions" height="500" :key="graphRerenders" />
+          </div>
         </div>
+
         <h3>Log trail</h3>
         <div class="ui error message" v-if="overflow">
           This interface is limited to read at most {{ maxLogLines }} log lines, later log lines are skipped.
@@ -100,6 +104,34 @@ export default {
     LineChart
   },
   data() {
+    const requestDataset = {
+       label: 'request time',
+       borderColor: stringToColor('request time'),
+       backgroundColor: stringToColor('request time'),
+       fill: false,
+       linetension: 0,
+       data: [],
+       tmp: {}
+    }
+    const upstreamDataset = {
+       label: 'upstream time',
+       borderColor: stringToColor('upstream time'),
+       backgroundColor: stringToColor('upstream time'),
+       fill: false,
+       linetension: 0,
+       data: [],
+       tmp: []
+    }
+    const gatewayDataset = {
+       label: 'gateway time',
+       borderColor: stringToColor('gateway time'),
+       backgroundColor: stringToColor('gateway time'),
+       fill: false,
+       linetension: 0,
+       data: [],
+       tmp: []
+    }
+
     return {
       overflow: false,
       pending: false,
@@ -127,6 +159,10 @@ export default {
       businessEventCounts: {
         labels: [],
         datasets: []
+      },
+      gatewayTimes: {
+        labels: [],
+        datasets: [requestDataset, upstreamDataset, gatewayDataset]
       }
     }
   },
@@ -138,6 +174,30 @@ export default {
           title: {
             display: true,
             text: `Business event counts per ${this.timeScaleUnit}`
+          },
+          legend: {
+            align: 'start',
+            position: 'bottom'
+          }
+        },
+        scales: {
+          x: {
+            type: 'timeseries',
+            time: {
+              unit: 'hour',
+              round: true
+            }
+          }
+        }
+      }
+    },
+    gatewayTimesOptions() {
+      return {
+        animation: false,
+        plugins: {
+          title: {
+            display: true,
+            text: `Gateway times per ${this.timeScaleUnit}`
           },
           legend: {
             align: 'start',
@@ -177,10 +237,42 @@ export default {
       this.$router.push({ path: this.$route.path, query })
     },
     resetGraphs() {
+      const requestDataset = {
+         label: 'request time',
+         borderColor: stringToColor('request time'),
+         backgroundColor: stringToColor('request time'),
+         fill: false,
+         linetension: 0,
+         data: [],
+         tmp: {}
+      }
+      const upstreamDataset = {
+         label: 'upstream time',
+         borderColor: stringToColor('upstream time'),
+         backgroundColor: stringToColor('upstream time'),
+         fill: false,
+         linetension: 0,
+         data: [],
+         tmp: []
+      }
+      const gatewayDataset = {
+         label: 'gateway time',
+         borderColor: stringToColor('gateway time'),
+         backgroundColor: stringToColor('gateway time'),
+         fill: false,
+         linetension: 0,
+         data: [],
+         tmp: []
+      }
+
       this.counts = {}
       this.businessEventCounts = {
         labels: [],
         datasets: []
+      }
+      this.gatewayTimes = {
+        labels: [],
+        datasets: [requestDataset, upstreamDataset, gatewayDataset]
       }
     },
     resetFilters() {
@@ -216,6 +308,7 @@ export default {
         this.logCount = log_count
         this.populateCounts(counts)
         this.populateBusinessEventCounts(business_event_counts)
+        this.populateGatewayTimes(log_lines)
         this.businessEventFiltersData.domains = domains
         this.businessEventFiltersData.actions = actions
         this.pending = false
@@ -260,6 +353,69 @@ export default {
         this.businessEventCounts.datasets.forEach(dataset => {
           dataset.data = dataset.data.map(value => value === 0 ? NaN : value)
         })
+      })
+    },
+    populateGatewayTimes(logLines) {
+      logLines.forEach(line => {
+        if (!(line.match(/boruta_gateway/))) return
+        if (!(line.match(/success/))) return
+
+        let unitFactor
+        if (this.timeScaleUnit == 'second') {
+          unitFactor = 1000
+        } else if (this.timeScaleUnit == 'minute') {
+          unitFactor = 1000 * 60
+        } else if (this.timeScaleUnit == 'hour') {
+          unitFactor = 1000 * 60 * 60
+        }
+        const timestamp = new Date(Math.floor(Date.parse(line.split(' ')[0]).valueOf() / unitFactor) * unitFactor).toString()
+
+        const rawAttributes = line.split(' - ')[1].split(' ')
+        const rawRequestTime = rawAttributes.find(rawAttribute => {
+          return rawAttribute.match(/request_time/)
+        })
+        const requestTime = rawRequestTime && rawRequestTime.match(/\d+/)[0]
+
+        const rawGatewayTime = rawAttributes.find(rawAttribute => {
+          return rawAttribute.match(/gateway_time/)
+        })
+        const gatewayTime = rawGatewayTime && rawGatewayTime.match(/\d+/)[0]
+
+        const rawUpstreamTime = rawAttributes.find(rawAttribute => {
+          return rawAttribute.match(/upstream_time/)
+        })
+        const upstreamTime = rawUpstreamTime && rawUpstreamTime.match(/\d+/)[0]
+
+        const labels = ['Request time', 'Gateway time', 'Upstream time']
+
+        const requestDataset = this.gatewayTimes.datasets[0]
+        const upstreamDataset = this.gatewayTimes.datasets[1]
+        const gatewayDataset = this.gatewayTimes.datasets[2]
+
+        if (requestDataset.tmp[timestamp]) {
+          const lastRequestTime = requestDataset.tmp[timestamp]
+          requestDataset.tmp[timestamp] = (lastRequestTime + parseInt(requestTime) / 1000) / 2
+        } else {
+          requestDataset.tmp[timestamp] = parseInt(requestTime) / 1000
+        }
+        this.gatewayTimes.labels = Object.keys(requestDataset.tmp)
+        requestDataset.data = Object.values(requestDataset.tmp)
+
+        if (gatewayDataset.tmp[timestamp]) {
+          const lastGatewayTime = gatewayDataset.tmp[timestamp]
+          gatewayDataset.tmp[timestamp] = (lastGatewayTime + parseInt(gatewayTime) / 1000) / 2
+        } else {
+          gatewayDataset.tmp[timestamp] = parseInt(gatewayTime) / 1000
+        }
+        gatewayDataset.data = Object.values(gatewayDataset.tmp)
+
+        if (upstreamDataset.tmp[timestamp]) {
+          const lastUpstreamTime = upstreamDataset.tmp[timestamp]
+          upstreamDataset.tmp[timestamp] = (lastUpstreamTime + parseInt(upstreamTime) / 1000) / 2
+        } else {
+          upstreamDataset.tmp[timestamp] = parseInt(upstreamTime) / 1000
+        }
+        upstreamDataset.data = Object.values(upstreamDataset.tmp)
       })
     },
   },
