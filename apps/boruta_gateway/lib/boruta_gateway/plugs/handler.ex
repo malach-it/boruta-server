@@ -15,8 +15,11 @@ defmodule BorutaGateway.Plug.Handler do
         } = conn,
         _options
       ) do
+    start = System.system_time(:microsecond)
     case Client.request(upstream, conn) do
       {:ok, %Finch.Response{status: status, headers: headers, body: body}} ->
+        now = System.system_time(:microsecond)
+        request_time = now - start
         conn =
           Enum.reduce(headers, conn, fn
             {"connection", _value}, conn -> conn
@@ -26,12 +29,18 @@ defmodule BorutaGateway.Plug.Handler do
           end)
 
         conn
+        |> assign(:upstream_time, request_time)
         |> send_resp(status, body)
         |> halt()
 
-      {:error, e} ->
+      {:error, error} ->
+        now = System.system_time(:microsecond)
+        request_time = now - start
+
         conn
-        |> send_resp(500, inspect(e))
+        |> assign(:upstream_time, request_time)
+        |> assign(:upstream_error, error)
+        |> send_resp(500, inspect(error))
         |> halt()
     end
   end

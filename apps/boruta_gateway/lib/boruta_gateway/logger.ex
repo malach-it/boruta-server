@@ -6,14 +6,14 @@ defmodule BorutaGateway.Logger do
   def start do
     handlers = [
       {
-        :boruta_gateway_requests,
+        :boruta_gateway_server,
         [:boruta_gateway, :endpoint, :stop],
-        &__MODULE__.boruta_gateway_request_handler/4
+        &__MODULE__.boruta_gateway_server_handler/4
       },
       {
-        :boruta_gateway_upstream_requests,
-        [:finch, :request, :stop],
-        &__MODULE__.boruta_gateway_upstream_request_handler/4
+        :boruta_gateway_requests,
+        [:boruta_gateway, :request, :done],
+        &__MODULE__.boruta_gateway_request_handler/4
       }
     ]
 
@@ -22,7 +22,7 @@ defmodule BorutaGateway.Logger do
     end
   end
 
-  def boruta_gateway_request_handler(_, %{duration: duration}, %{conn: conn} = metadata, _) do
+  def boruta_gateway_server_handler(_, %{duration: duration}, %{conn: conn} = metadata, _) do
     case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
@@ -53,61 +53,68 @@ defmodule BorutaGateway.Logger do
     end
   end
 
-  def boruta_gateway_upstream_request_handler(
+  def boruta_gateway_request_handler(
         _,
-        %{duration: duration},
-        %{request: request, result: result, name: name},
+        _measurements,
+        %{request_time: request_time, conn: conn},
         _
       ) do
-    with "finch_gateway_client_" <> _upstream_id <- to_string(name) do
-      Logger.log(
-        :info,
-        fn ->
-          %Finch.Request{
-            host: upstream_host,
-            method: upstream_method,
-            path: upstream_path,
-            port: upstream_port,
-            scheme: upstream_scheme
-          } = request
+    %{method: method, request_path: path, status: status_code} = conn
+    status_code = Integer.to_string(status_code)
 
-          case result do
-            {:ok,
-             %Finch.Response{
-               status: upstream_status
-             }} ->
-              [
-                "boruta_gateway",
-                ?\s,
-                "gateway",
-                ?\s,
-                "upstream",
-                " - ",
-                "success",
-                log_attribute("duration", duration(duration)),
-                log_attribute("upstream_host", upstream_host),
-                log_attribute("upstream_port", upstream_port),
-                log_attribute("upstream_scheme", upstream_scheme),
-                log_attribute("upstream_method", upstream_method),
-                log_attribute("upstream_path", upstream_path),
-                log_attribute("upstream_status", upstream_status)
-              ]
+    status =
+      case conn.assigns[:upstream] do
+        nil -> "failure"
+        _upstream -> "success"
+      end
 
-            {:error, exception} ->
-              [
-                "gateway",
-                ?\s,
-                "upstream",
-                " - ",
-                "failure",
-                log_attribute("duration", duration),
-                log_attribute("error", ~s{"#{inspect(exception)}"})
-              ]
-          end
-        end,
-        type: :business
-      )
-    end
+    log_line = [
+      "boruta_gateway",
+      ?\s,
+      "upstream",
+      ?\s,
+      "request",
+      " - ",
+      status,
+      log_attribute("method", method),
+      log_attribute("path", path),
+      log_attribute("status_code", status_code),
+      log_attribute("request_time", duration(request_time))
+    ]
+
+    log_line =
+      case conn.assigns[:upstream] do
+        nil ->
+          log_line
+
+        upstream ->
+          upstream_time = conn.assigns[:upstream_time]
+
+          log_line ++
+            [
+              log_attribute("upstream_node_name", upstream.node_name),
+              log_attribute("upstream_scheme", upstream.scheme),
+              log_attribute("upstream_host", upstream.host),
+              log_attribute("upstream_port", upstream.port),
+              log_attribute("upstream_time", duration(upstream_time)),
+              log_attribute("gateway_time", duration(request_time - upstream_time))
+            ]
+      end
+
+    log_line =
+      case conn.assigns[:upstream_error] do
+        nil ->
+          log_line
+
+        error ->
+          log_line ++ [log_attribute("upstream_error", ~s["#{inspect(error)}"])]
+      end
+
+    Logger.log(
+      :info,
+      fn -> log_line end,
+      type: :business
+    )
   end
 
   defp log_attribute(_key, nil), do: ""
@@ -125,8 +132,6 @@ defmodule BorutaGateway.Logger do
   defp connection_type(_), do: "sent"
 
   defp duration(duration) do
-    duration = System.convert_time_unit(duration, :native, :microsecond)
-
     [Integer.to_string(duration), "µs"]
   end
 end
