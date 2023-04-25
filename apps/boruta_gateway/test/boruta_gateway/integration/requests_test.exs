@@ -176,6 +176,39 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "returns response root uri stripped", %{access_token: access_token} do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          Upstreams.create_upstream(%{
+            scheme: "http",
+            host: "httpbin.patatoid.fr",
+            port: 80,
+            uris: ["/"],
+            strip_uri: true,
+            authorize: true,
+            required_scopes: %{"GET" => ["test"]}
+          })
+
+          Process.sleep(100)
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/status/418",
+              [{"authorization", "Bearer #{access_token.value}"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, status: 418}} =
+                   Finch.request(request, HttpClient)
+
+          assert body =~ ~r/teapot/
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do

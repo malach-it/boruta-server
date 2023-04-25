@@ -17,4 +17,4 @@ configuration:
       host: "httpbin.patatoid.fr"
       port: 80
       uris: ["/"]
-      strip_uri: true
+      strip_uri: false

@@ -175,7 +175,10 @@ defmodule BorutaGateway.Upstreams.Client do
       case strip_uri do
         true ->
           matching_uri = Enum.find(uris, fn uri -> String.starts_with?(request_path, uri) end)
-          String.replace_prefix(request_path, matching_uri, "")
+          case matching_uri == "/" do
+            true -> request_path
+            false -> String.replace_prefix(request_path, matching_uri, "")
+          end
 
         false ->
           request_path
