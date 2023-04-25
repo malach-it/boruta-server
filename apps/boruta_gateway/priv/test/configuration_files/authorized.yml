@@ -1,11 +1,11 @@
 ---
 configuration:
   gateway:
-    scheme: "http"
-    host: "httpbin.patatoid.fr"
-    port: 80
-    uris: ["/httpbin"]
-    strip_uri: true
-    authorize: true
-    required_scopes:
-      GET: ["test"]
+    - scheme: "http"
+      host: "httpbin.patatoid.fr"
+      port: 80
+      uris: ["/httpbin"]
+      strip_uri: true
+      authorize: true
+      required_scopes:
+        GET: ["test"]

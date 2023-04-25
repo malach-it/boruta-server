@@ -2,12 +2,12 @@
 
 configuration:
   gateway:
-    scheme: "http"
-    host: "should.not.be.called"
-    port: 80
-    uris: ["/forbidden"]
-    authorize: true
-    required_scopes:
-      GET: ["required"]
-    error_content_type: "text"
-    forbidden_response: "boom"
+    - scheme: "http"
+      host: "should.not.be.called"
+      port: 80
+      uris: ["/forbidden"]
+      authorize: true
+      required_scopes:
+        GET: ["required"]
+      error_content_type: "text"
+      forbidden_response: "boom"

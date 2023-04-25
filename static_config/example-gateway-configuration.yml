@@ -1,21 +1,37 @@
 ---
 configuration:
   gateway:
-    authorize: true
-    error_content_type: "text"
-    forbidden_response: "forbidden"
-    unauthorized_response: "unauthorized"
-    forwarded_token_private_key: null
-    forwarded_token_public_key: null
-    forwarded_token_secret: "this is a secret"
-    forwarded_token_signature_alg: "HS512"
-    pool_count: 1
-    pool_size: 10
-    max_idle_time: 10
-    required_scopes:
-      GET: ["test"]
-    scheme: "http"
-    host: "httpbin.patatoid.fr"
-    port: 80
-    uris: ["/httpbin"]
-    strip_uri: true
+    - authorize: false
+      error_content_type: "text"
+      forbidden_response: "forbidden"
+      unauthorized_response: "unauthorized"
+      forwarded_token_private_key: null
+      forwarded_token_public_key: null
+      forwarded_token_secret: "this is a secret"
+      forwarded_token_signature_alg: "HS512"
+      pool_count: 1
+      pool_size: 10
+      max_idle_time: 10
+      scheme: "https"
+      host: "httpbin.boruta.patatoid.fr"
+      port: 443
+      uris: ["/httpbin"]
+      strip_uri: true
+    - authorize: true
+      error_content_type: "text"
+      forbidden_response: "forbidden"
+      unauthorized_response: "unauthorized"
+      forwarded_token_private_key: null
+      forwarded_token_public_key: null
+      forwarded_token_secret: "this is a secret"
+      forwarded_token_signature_alg: "HS512"
+      pool_count: 1
+      pool_size: 10
+      max_idle_time: 10
+      required_scopes:
+        GET: ["test"]
+      scheme: "https"
+      host: "protected-httpbin.boruta.patatoid.fr"
+      port: 443
+      uris: ["/protected-httpbin"]
+      strip_uri: true
