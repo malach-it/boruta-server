@@ -5,6 +5,7 @@ defmodule BorutaGateway.Upstreams.Store do
 
   use GenServer
 
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Repo
   alias BorutaGateway.Upstreams.ClientSupervisor
   alias BorutaGateway.Upstreams.Upstream
@@ -75,7 +76,7 @@ defmodule BorutaGateway.Upstreams.Store do
   end
 
   def handle_call({:sidecar_match, path_info}, _from, %{upstreams: upstreams} = state) do
-    node_name = Atom.to_string(node())
+    node_name = ConfigurationLoader.node_name()
 
     upstream =
       with {_prefix_info, upstream} <-

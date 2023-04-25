@@ -5,6 +5,7 @@ defmodule BorutaAdminWeb.UpstreamController do
     authorize: 2
   ]
 
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -19,6 +20,9 @@ defmodule BorutaAdminWeb.UpstreamController do
 
   def node_list(conn, _params) do
     nodes = [node() | Node.list()]
+            |> Enum.map(fn node ->
+              :rpc.call(node, ConfigurationLoader, :node_name, [])
+            end)
     render(conn, "node_list.json", nodes: nodes)
   end
 

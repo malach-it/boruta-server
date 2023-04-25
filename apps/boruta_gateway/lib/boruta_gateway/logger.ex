@@ -98,7 +98,7 @@ defmodule BorutaGateway.Logger do
               log_attribute("upstream_host", upstream.host),
               log_attribute("upstream_port", upstream.port),
               log_attribute("upstream_time", duration(upstream_time)),
-              log_attribute("gateway_time", duration(request_time - upstream_time))
+              log_attribute("gateway_time", upstream_time && duration(request_time - upstream_time))
             ]
       end
 
@@ -132,6 +132,7 @@ defmodule BorutaGateway.Logger do
   defp connection_type(:set_chunked), do: "chunked"
   defp connection_type(_), do: "sent"
 
+  defp duration(nil), do: ["0", "µs"]
   defp duration(duration) do
     [Integer.to_string(duration), "µs"]
   end
