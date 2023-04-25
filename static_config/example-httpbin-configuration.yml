@@ -1,0 +1,17 @@
+---
+configuration:
+  microgateway:
+    - authorize: false
+      error_content_type: "text"
+      forbidden_response: "forbidden"
+      unauthorized_response: "unauthorized"
+      forwarded_token_secret: "this is a secret"
+      forwarded_token_signature_alg: "HS512"
+      pool_count: 1
+      pool_size: 10
+      max_idle_time: 10
+      scheme: "http"
+      host: "httpbin.patatoid.fr"
+      port: 80
+      uris: ["/"]
+      strip_uri: true

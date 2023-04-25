@@ -5,8 +5,6 @@ configuration:
       error_content_type: "text"
       forbidden_response: "forbidden"
       unauthorized_response: "unauthorized"
-      forwarded_token_private_key: null
-      forwarded_token_public_key: null
       forwarded_token_secret: "this is a secret"
       forwarded_token_signature_alg: "HS512"
       pool_count: 1
@@ -21,8 +19,6 @@ configuration:
       error_content_type: "text"
       forbidden_response: "forbidden"
       unauthorized_response: "unauthorized"
-      forwarded_token_private_key: null
-      forwarded_token_public_key: null
       forwarded_token_secret: "this is a secret"
       forwarded_token_signature_alg: "HS512"
       pool_count: 1

@@ -46,4 +46,7 @@ COPY --from=builder /app/_build/prod/rel/boruta ./
 # File used for gateway static configuration, used in combination with `BORUTA_GATEWAY_CONFIGURATION_PATH` environment variable
 COPY /static_config/example-gateway-configuration.yml config/example-gateway-configuration.yml
 
+COPY /static_config/example-httpbin-configuration.yml config/example-httpbin-configuration.yml
+COPY /static_config/example-protected-httpbin-configuration.yml config/example-protected-httpbin-configuration.yml
+
 CMD ["/bin/sh", "-c", "/app/bin/boruta start"]
