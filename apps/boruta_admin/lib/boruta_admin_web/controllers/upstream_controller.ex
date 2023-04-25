@@ -23,6 +23,7 @@ defmodule BorutaAdminWeb.UpstreamController do
             |> Enum.map(fn node ->
               :rpc.call(node, ConfigurationLoader, :node_name, [])
             end)
+            |> Enum.uniq()
     render(conn, "node_list.json", nodes: nodes)
   end
 

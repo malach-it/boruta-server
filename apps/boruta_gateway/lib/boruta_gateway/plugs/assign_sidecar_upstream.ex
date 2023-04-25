@@ -3,6 +3,7 @@ defmodule BorutaGateway.Plug.AssignSidecarUpstream do
 
   import Plug.Conn
 
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -16,7 +17,7 @@ defmodule BorutaGateway.Plug.AssignSidecarUpstream do
         } = conn,
         _options
       ) do
-    conn = assign(conn, :node_name, Atom.to_string(node()))
+    conn = assign(conn, :node_name, ConfigurationLoader.node_name())
 
     case Upstreams.sidecar_match(path_info) do
       %Upstream{} = upstream ->

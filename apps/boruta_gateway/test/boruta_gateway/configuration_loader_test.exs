@@ -39,7 +39,7 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
       |> Path.join("/test/configuration_files/bad_microgateway_configuration.yml")
 
     assert_raise RuntimeError,
-                 ~s|[{"Required properties node_name, scheme, host, port, uris were not present.", "#"}]|,
+                 ~s|[{"Required properties scheme, host, port, uris were not present.", "#"}]|,
                  fn ->
                    ConfigurationLoader.from_file!(configuration_file_path)
                  end
@@ -75,7 +75,7 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
                forwarded_token_private_key: nil
              },
              %Upstream{
-               node_name: "httpbin",
+               node_name: "full-configuration",
                scheme: "http",
                host: "httpbin.patatoid.fr",
                port: 80,

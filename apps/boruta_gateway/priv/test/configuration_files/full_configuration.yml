@@ -1,5 +1,6 @@
 ---
 configuration:
+  node_name: "full-configuration"
   gateway:
     - authorize: true
       error_content_type: "test"
@@ -18,8 +19,7 @@ configuration:
       scheme: "http"
       strip_uri: true
   microgateway:
-    - node_name: "httpbin"
-      authorize: true
+    - authorize: true
       error_content_type: "test"
       forbidden_response: "test"
       unauthorized_response: "test"

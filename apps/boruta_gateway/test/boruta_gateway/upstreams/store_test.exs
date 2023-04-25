@@ -120,7 +120,7 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         try do
           {:ok, a} =
             Repo.insert(%Upstream{
-              node_name: Atom.to_string(node()),
+              node_name: ConfigurationLoader.node_name(),
               host: "test1.host",
               port: 1111,
               uris: ["/matching/uri"]
@@ -141,12 +141,13 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         :code.priv_dir(:boruta_gateway)
         |> Path.join("/test/configuration_files/full_configuration.yml")
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
+      :timer.sleep(100)
 
       Sandbox.unboxed_run(Repo, fn ->
         try do
           {:ok, a} =
             Repo.insert(%Upstream{
-              node_name: ConfigurationLoader.node_name(),
+              node_name: "full-configuration",
               host: "test1.host",
               port: 1111,
               uris: ["/matching/uri"]

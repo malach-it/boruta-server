@@ -11,9 +11,7 @@ defmodule BorutaGateway.ConfigurationLoader do
 
       %{
         "configuration" => %{
-          "microgateway" => %{
-            "node_name" => node_name
-          }
+          "node_name" => node_name
         }
       } = YamlElixir.read_from_file!(path)
 
@@ -48,6 +46,13 @@ defmodule BorutaGateway.ConfigurationLoader do
 
   defp load_configuration!(%{"microgateway" => microgateway_configurations} = configuration) do
     Enum.map(microgateway_configurations, fn microgateway_configuration ->
+      microgateway_configuration =
+        Map.put(
+          microgateway_configuration,
+          "node_name",
+          node_name()
+        )
+
       case ExJsonSchema.Validator.validate(
              GatewaySchema.microgateway(),
              microgateway_configuration

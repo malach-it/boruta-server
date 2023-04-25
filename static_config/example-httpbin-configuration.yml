@@ -1,5 +1,6 @@
 ---
 configuration:
+  node_name: "httpbin"
   microgateway:
     - authorize: false
       error_content_type: "text"
