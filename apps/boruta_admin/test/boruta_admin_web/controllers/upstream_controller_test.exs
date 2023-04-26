@@ -123,8 +123,13 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
   describe "node_list" do
     @tag authorized: ["upstreams:manage:all"]
     test "lists all boruta nodes", %{conn: conn} do
+      configuration_file_path =
+        :code.priv_dir(:boruta_gateway)
+        |> Path.join("/test/configuration_files/full_configuration.yml")
+      Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
+
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
-      assert json_response(conn, 200)["data"] == ["nonode@nohost"]
+      assert json_response(conn, 200)["data"] == ["full-configuration"]
     end
 
     @tag authorized: ["upstreams:manage:all"]
@@ -135,7 +140,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
-      assert json_response(conn, 200)["data"] == ["httpbin"]
+      assert json_response(conn, 200)["data"] == ["full-configuration"]
     end
   end
 
