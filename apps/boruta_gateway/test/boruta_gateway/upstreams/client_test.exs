@@ -84,7 +84,7 @@ defmodule BorutaGateway.Upstreams.ClientTest do
           req_headers = Jason.decode!(body)["headers"]
 
           assert Enum.any?(req_headers, fn
-                   {"X-Forwarded-Authorization", "Bearer test"} -> true
+                   {"Authorization", "Bearer test"} -> true
                    _ -> false
                  end)
 

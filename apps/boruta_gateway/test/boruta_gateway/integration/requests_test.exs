@@ -241,8 +241,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           assert %{
                    "headers" => %{
-                     "Authorization" => authorization,
-                     "X-Forwarded-Authorization" => forwarded_authorization
+                     "Authorization" => forwarded_authorization,
+                     "X-Forwarded-Authorization" => authorization
                    }
                  } = Jason.decode!(body)
 
@@ -422,8 +422,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           assert %{
                    "headers" => %{
-                     "Authorization" => authorization,
-                     "X-Forwarded-Authorization" => forwarded_authorization
+                     "Authorization" => forwarded_authorization,
+                     "X-Forwarded-Authorization" => authorization
                    }
                  } = Jason.decode!(body)
 
@@ -636,8 +636,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           assert %{
                    "headers" => %{
-                     "Authorization" => authorization,
-                     "X-Forwarded-Authorization" => forwarded_authorization
+                     "Authorization" => forwarded_authorization,
+                     "X-Forwarded-Authorization" => authorization
                    }
                  } = Jason.decode!(body)
 

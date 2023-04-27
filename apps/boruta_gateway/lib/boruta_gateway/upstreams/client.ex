@@ -92,12 +92,6 @@ defmodule BorutaGateway.Upstreams.Client do
          upstream,
          %Plug.Conn{req_headers: req_headers} = conn
        ) do
-    authorization_header =
-      case get_req_header(conn, "authorization") do
-        [] -> ""
-        [authorization] -> authorization
-      end
-
     token = conn.assigns[:token] || %Oauth.Token{type: "access_token"}
 
     payload = %{
@@ -118,9 +112,8 @@ defmodule BorutaGateway.Upstreams.Client do
       end
 
     req_headers
-    |> List.insert_at(0, {"x-forwarded-authorization", authorization_header})
     |> Enum.reject(fn
-      {"authorization", _value} -> true
+      {"x-forwarded-authorization", _value} -> true
       {"connection", _value} -> true
       {"content-length", _value} -> true
       {"expect", _value} -> true
@@ -130,7 +123,7 @@ defmodule BorutaGateway.Upstreams.Client do
       {"upgrade", _value} -> true
       _rest -> false
     end)
-    |> List.insert_at(0, {"authorization", "bearer #{token}"})
+    |> List.insert_at(0, {"x-forwarded-authorization", "bearer #{token}"})
   end
 
   def signer(
