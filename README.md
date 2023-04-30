@@ -56,6 +56,7 @@ The applications will be available on different ports (depending on the docker c
 - http://localhost:8080 for the authorization server
 - http://localhost:8081 for the admin interface
 - http://localhost:8082 for the gateway
+- http://localhost:8083 for the microgateway
 
 ### Run a release from scratch
 
@@ -93,6 +94,7 @@ The applications will be available on different ports (depending on the values p
 - http://localhost:8080 for the authorization server
 - http://localhost:8081 for the admin interface
 - http://localhost:8082 for the gateway
+- http://localhost:8083 for the microgateway
 
 ### Run a development server
 
@@ -141,6 +143,7 @@ The applications will be available on different ports (depending on the values p
 - http://localhost:4000 for the authorization server
 - http://localhost:4001 for the admin interface
 - http://localhost:4002 for the gateway
+- http://localhost:4003 for the microgateway
 
 ### Default admin credentials
 
