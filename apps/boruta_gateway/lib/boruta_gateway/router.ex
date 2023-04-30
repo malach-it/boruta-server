@@ -1,4 +1,6 @@
 defmodule BorutaGateway.Router do
+  @moduledoc false
+
   use Plug.Router
 
   plug :match

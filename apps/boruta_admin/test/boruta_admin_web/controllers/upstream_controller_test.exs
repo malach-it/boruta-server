@@ -73,40 +73,40 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
       assert conn
              |> get(Routes.admin_upstream_path(conn, :index))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> post(Routes.admin_upstream_path(conn, :create))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> patch(Routes.admin_upstream_path(conn, :update, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> delete(Routes.admin_upstream_path(conn, :delete, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
     end
@@ -116,7 +116,31 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
     @tag authorized: ["upstreams:manage:all"]
     test "lists all upstreams", %{conn: conn} do
       conn = get(conn, Routes.admin_upstream_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"] == %{}
+    end
+  end
+
+  describe "node_list" do
+    @tag authorized: ["upstreams:manage:all"]
+    test "lists all boruta nodes", %{conn: conn} do
+      configuration_file_path =
+        :code.priv_dir(:boruta_gateway)
+        |> Path.join("/test/configuration_files/full_configuration.yml")
+      Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
+
+      conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
+      assert json_response(conn, 200)["data"] == ["full-configuration"]
+    end
+
+    @tag authorized: ["upstreams:manage:all"]
+    test "lists all boruta nodes from config", %{conn: conn} do
+      configuration_file_path =
+        :code.priv_dir(:boruta_gateway)
+        |> Path.join("/test/configuration_files/full_configuration.yml")
+      Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
+
+      conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
+      assert json_response(conn, 200)["data"] == ["full-configuration"]
     end
   end
 

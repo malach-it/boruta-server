@@ -5,6 +5,7 @@ defmodule BorutaAdminWeb.UpstreamController do
     authorize: 2
   ]
 
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -17,6 +18,20 @@ defmodule BorutaAdminWeb.UpstreamController do
     render(conn, "index.json", upstreams: upstreams)
   end
 
+  def node_list(conn, _params) do
+    nodes = [node() | Node.list()]
+            |> Enum.map(fn node ->
+              :rpc.call(node, ConfigurationLoader, :node_name, [])
+            end)
+            |> Enum.uniq()
+    render(conn, "node_list.json", nodes: nodes)
+  end
+
+  def show(conn, %{"id" => id}) do
+    upstream = Upstreams.get_upstream!(id)
+    render(conn, "show.json", upstream: upstream)
+  end
+
   def create(conn, %{"upstream" => upstream_params}) do
     with {:ok, %Upstream{} = upstream} <- Upstreams.create_upstream(upstream_params) do
       conn
@@ -24,11 +39,6 @@ defmodule BorutaAdminWeb.UpstreamController do
       |> put_resp_header("location", Routes.admin_upstream_path(conn, :show, upstream))
       |> render("show.json", upstream: upstream)
     end
-  end
-
-  def show(conn, %{"id" => id}) do
-    upstream = Upstreams.get_upstream!(id)
-    render(conn, "show.json", upstream: upstream)
   end
 
   def update(conn, %{"id" => id, "upstream" => upstream_params}) do

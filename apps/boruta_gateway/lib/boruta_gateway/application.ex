@@ -25,7 +25,39 @@ defmodule BorutaGateway.Application do
       case Application.get_env(:boruta_gateway, :server) do
         true ->
           [
-            {BorutaGateway.Server, [port: Application.fetch_env!(:boruta_gateway, :port)]}
+            %{
+              start:
+                {BorutaGateway.Server, :start_link,
+                 [
+                   [
+                     port: Application.fetch_env!(:boruta_gateway, :port),
+                     router: BorutaGateway.Router
+                   ]
+                 ]},
+              id: :server
+            }
+            | children
+          ]
+
+        _ ->
+          children
+      end
+
+    children =
+      case Application.get_env(:boruta_gateway, :sidecar_server) do
+        true ->
+          [
+            %{
+              start:
+                {BorutaGateway.Server, :start_link,
+                 [
+                   [
+                     port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
+                     router: BorutaGateway.SidecarRouter
+                   ]
+                 ]},
+              id: :sidecar_server
+            }
             | children
           ]
 

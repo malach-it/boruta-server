@@ -13,6 +13,10 @@ defmodule BorutaGateway.Upstreams do
     Store.match(path)
   end
 
+  def sidecar_match(path) do
+    Store.sidecar_match(path)
+  end
+
   @doc """
   Returns the list of upstreams.
 
@@ -23,7 +27,9 @@ defmodule BorutaGateway.Upstreams do
 
   """
   def list_upstreams do
-    Repo.all(Upstream)
+    Upstream
+    |> Repo.all()
+    |> Enum.group_by(fn %Upstream{node_name: node_name} -> node_name end)
   end
 
   @doc """

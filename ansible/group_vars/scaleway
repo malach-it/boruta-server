@@ -13,6 +13,8 @@ postgresql_password: !vault |
 admin_host: admin.boruta.patatoid.fr
 oauth_host: oauth.boruta.patatoid.fr
 gateway_host: gateway.boruta.patatoid.fr
+httpbin_sidecar_host: httpbin.boruta.patatoid.fr
+protected_httpbin_sidecar_host: protected-httpbin.boruta.patatoid.fr
 
 admin_client_id: 41846447-e178-4953-87ef-caf0b538f047
 admin_client_secret: !vault |

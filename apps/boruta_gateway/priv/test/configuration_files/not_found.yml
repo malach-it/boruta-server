@@ -1,0 +1,8 @@
+---
+configuration:
+  gateway:
+    - scheme: "http"
+      host: "should.not.be.called"
+      port: 80
+      uris:
+        - "/upstream"

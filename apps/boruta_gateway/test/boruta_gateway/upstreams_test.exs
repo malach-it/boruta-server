@@ -28,7 +28,7 @@ defmodule BorutaGateway.UpstreamsTest do
 
     test "list_upstreams/0 returns all upstreams" do
       upstream = upstream_fixture()
-      assert Upstreams.list_upstreams() == [upstream]
+      assert Upstreams.list_upstreams() == %{"global" => [upstream]}
     end
 
     test "get_upstream!/1 returns the upstream with given id" do
@@ -68,10 +68,11 @@ defmodule BorutaGateway.UpstreamsTest do
     end
 
     test "create_upstream/1 generates a secret with RS* algorithms" do
-      assert {:ok, %Upstream{
-        forwarded_token_private_key: forwarded_token_private_key,
-        forwarded_token_public_key: forwarded_token_public_key
-      }} =
+      assert {:ok,
+              %Upstream{
+                forwarded_token_private_key: forwarded_token_private_key,
+                forwarded_token_public_key: forwarded_token_public_key
+              }} =
                Upstreams.create_upstream(
                  Map.put(
                    @valid_attrs,
@@ -94,6 +95,19 @@ defmodule BorutaGateway.UpstreamsTest do
                   port: {"can't be blank", [validation: :required]}
                 ]
               }} = Upstreams.create_upstream(@invalid_attrs)
+    end
+
+    test "create_upstream/1 with unique constraint returns error changeset" do
+      Upstreams.create_upstream(@valid_attrs)
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  node_name:
+                    {"has already been taken",
+                     [constraint: :unique, constraint_name: "upstreams_node_name_host_port_uris_index"]}
+                ]
+              }} = Upstreams.create_upstream(@valid_attrs)
     end
 
     test "update_upstream/2 with valid data updates the upstream" do

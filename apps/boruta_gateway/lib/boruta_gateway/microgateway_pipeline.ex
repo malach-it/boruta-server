@@ -1,11 +1,11 @@
-defmodule BorutaGateway.GatewayPipeline do
+defmodule BorutaGateway.MicrogatewayPipeline do
   @moduledoc false
 
   use Plug.Router
 
   plug(Plug.RequestId)
   plug(BorutaGateway.Plug.Metrics)
-  plug(BorutaGateway.Plug.AssignUpstream)
+  plug(BorutaGateway.Plug.AssignSidecarUpstream)
 
   plug(Plug.Telemetry,
     event_prefix: [:boruta_gateway, :endpoint]

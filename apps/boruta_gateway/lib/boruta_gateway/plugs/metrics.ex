@@ -8,10 +8,7 @@ defmodule BorutaGateway.Plug.Metrics do
   def init(_options), do: []
 
   def call(
-        %Plug.Conn{
-          method: method,
-          request_path: request_path
-        } = conn,
+        %Plug.Conn{} = conn,
         _options
       ) do
     start = System.system_time(:microsecond)
@@ -22,11 +19,11 @@ defmodule BorutaGateway.Plug.Metrics do
 
       :telemetry.execute(
         [:boruta_gateway, :request, :done],
+        %{},
         %{
           request_time: request_time,
-          status_code: conn.status
-        },
-        %{request_path: request_path, method: method, start_time: start}
+          conn: conn
+        }
       )
 
       conn

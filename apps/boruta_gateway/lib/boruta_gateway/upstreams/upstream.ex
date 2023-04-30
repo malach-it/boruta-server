@@ -27,6 +27,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
   alias BorutaGateway.Upstreams.ClientSupervisor
 
   @type t :: %__MODULE__{
+          node_name: String.t(),
           scheme: String.t(),
           host: String.t(),
           port: integer(),
@@ -44,6 +45,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "upstreams" do
+    field(:node_name, :string, default: "global")
     field(:scheme, :string)
     field(:host, :string)
     field(:port, :integer)
@@ -98,6 +100,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
   def changeset(upstream, attrs) do
     upstream
     |> cast(attrs, [
+      :node_name,
       :scheme,
       :host,
       :port,
@@ -118,6 +121,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_inclusion(:pool_size, 1..100)
     |> validate_inclusion(:pool_count, 1..10)
+    |> unique_constraint([:node_name, :host, :port, :uris])
     |> maybe_put_forwarded_token_secret()
     |> maybe_generate_key_pair()
     |> validate_uris()

@@ -187,7 +187,7 @@ defmodule BorutaIdentity.Logger do
   def registration_create_success_handler(
         _,
         _measurements,
-        %{sub: sub, backend: backend, client_id: client_id} = metadata,
+        %{sub: sub, backend: backend, client_id: client_id},
         _
       ) do
     Logger.log(
@@ -203,8 +203,8 @@ defmodule BorutaIdentity.Logger do
           "success",
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
-          log_attribute("backend", backend),
-          log_attribute("message", metadata[:message])
+          log_attribute("backend_id", backend.id),
+          log_attribute("provider", backend.type)
         ]
       end,
       type: :business

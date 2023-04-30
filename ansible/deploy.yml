@@ -119,7 +119,27 @@
                     service:
                       name: boruta-gateway
                       port:
-                        number: 4000
+                        number: 5000
+            - host: "{{ httpbin_sidecar_host }}"
+              http:
+                paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: boruta-httpbin-sidecar
+                      port:
+                        number: 5001
+            - host: "{{ protected_httpbin_sidecar_host }}"
+              http:
+                paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: boruta-protected-httpbin-sidecar
+                      port:
+                        number: 5001
             - host: "{{ oauth_host }}"
               http:
                 paths:
@@ -145,6 +165,8 @@
                 - "{{ oauth_host }}"
                 - "{{ admin_host }}"
                 - "{{ gateway_host }}"
+                - "{{ httpbin_sidecar_host }}"
+                - "{{ protected_httpbin_sidecar_host }}"
                 secretName: boruta-staging-cert
 
     - name: create boruta app ConfigMap
@@ -177,8 +199,9 @@
             BORUTA_OAUTH_HOST: "{{ oauth_host }}"
             BORUTA_OAUTH_PORT: "4001"
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
-            BORUTA_GATEWAY_PORT: "4000"
-            POOL_SIZE: "100"
+            BORUTA_GATEWAY_PORT: "5000"
+            BORUTA_GATEWAY_SIDECAR_PORT: "5001"
+            POOL_SIZE: "20"
 
     - name: Setup boruta database
       register: database_setup
@@ -276,6 +299,105 @@
                       httpGet:
                         path: /healthcheck
                         port: 4001
+                    env:
+                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
+                        value: "./config/example-gateway-configuration.yml"
+                    envFrom:
+                      - configMapRef:
+                          name: boruta-env
+                    imagePullPolicy: Always
+                    name: boruta
+                    volumeMounts:
+                      - mountPath: "/app/log"
+                        name: logs
+                imagePullSecrets:
+                - name: dockerconfigjson-github-com
+
+    - name: Create httpbin sidecar blue/green deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
+            namespace: boruta-staging
+          spec:
+            replicas: 2
+            strategy:
+              type: Recreate
+              rollingUpdate: null
+            selector:
+              matchLabels:
+                deployment: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
+            template:
+              metadata:
+                name: boruta-httpbin
+                labels:
+                  deployment: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
+                  app: boruta-httpbin
+              spec:
+                volumes:
+                  - name: logs
+                    persistentVolumeClaim:
+                      claimName: boruta-logs-pvc
+                containers:
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
+                    readinessProbe:
+                      httpGet:
+                        path: /healthcheck
+                        port: 4001
+                    env:
+                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
+                        value: "./config/example-httpbin-configuration.yml"
+                    envFrom:
+                      - configMapRef:
+                          name: boruta-env
+                    imagePullPolicy: Always
+                    name: boruta
+                    volumeMounts:
+                      - mountPath: "/app/log"
+                        name: logs
+                imagePullSecrets:
+                - name: dockerconfigjson-github-com
+
+    - name: Create protected httpbin sidecar blue/green deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
+            namespace: boruta-staging
+          spec:
+            replicas: 2
+            strategy:
+              type: Recreate
+              rollingUpdate: null
+            selector:
+              matchLabels:
+                deployment: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
+            template:
+              metadata:
+                name: boruta-protected-httpbin
+                labels:
+                  deployment: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
+                  app: boruta-protected-httpbin
+              spec:
+                volumes:
+                  - name: logs
+                    persistentVolumeClaim:
+                      claimName: boruta-logs-pvc
+                containers:
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
+                    readinessProbe:
+                      httpGet:
+                        path: /healthcheck
+                        port: 4001
+                    env:
+                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
+                        value: "./config/example-protected-httpbin-configuration.yml"
                     envFrom:
                       - configMapRef:
                           name: boruta-env
@@ -306,6 +428,96 @@
                   - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
                     command: ["/app/bin/boruta"]
                     args: ["eval", "Boruta.Release.migrate"]
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
+                    imagePullPolicy: Always
+                    name: boruta
+                restartPolicy: OnFailure
+                imagePullSecrets:
+                  - name: dockerconfigjson-github-com
+
+    - name: Load boruta gateway configuration
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: "boruta-gateway-configuration-{{ release_tag }}"
+            namespace: boruta-staging
+          backoffLimit: 3
+          spec:
+            ttlSecondsAfterFinished: 864000
+            template:
+              spec:
+                containers:
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
+                    command: ["/app/bin/boruta"]
+                    args: ["eval", "Boruta.Release.load_configuration"]
+                    env:
+                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
+                        value: "./config/example-gateway-configuration.yml"
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
+                    imagePullPolicy: Always
+                    name: boruta
+                restartPolicy: OnFailure
+                imagePullSecrets:
+                  - name: dockerconfigjson-github-com
+
+    - name: Load httpbin sidecar configuration
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: "boruta-httpbin-configuration-{{ release_tag }}"
+            namespace: boruta-staging
+          backoffLimit: 3
+          spec:
+            ttlSecondsAfterFinished: 864000
+            template:
+              spec:
+                containers:
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
+                    command: ["/app/bin/boruta"]
+                    args: ["eval", "Boruta.Release.load_configuration"]
+                    env:
+                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
+                        value: "./config/example-httpbin-configuration.yml"
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
+                    imagePullPolicy: Always
+                    name: boruta
+                restartPolicy: OnFailure
+                imagePullSecrets:
+                  - name: dockerconfigjson-github-com
+
+    - name: Load protected httpbin sidecar configuration
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: "boruta-protected-httpbin-configuration-{{ release_tag }}"
+            namespace: boruta-staging
+          backoffLimit: 3
+          spec:
+            ttlSecondsAfterFinished: 864000
+            template:
+              spec:
+                containers:
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
+                    command: ["/app/bin/boruta"]
+                    args: ["eval", "Boruta.Release.load_configuration"]
+                    env:
+                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
+                        value: "./config/example-protected-httpbin-configuration.yml"
                     envFrom:
                     - configMapRef:
                         name: boruta-env
@@ -378,9 +590,49 @@
               deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
             ports:
             - protocol: TCP
-              targetPort: 4000
+              targetPort: 5000
               name: gateway-tcp
-              port: 4000
+              port: 5000
+
+    - name: Create httpbin sidecar Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: boruta-httpbin-sidecar
+            namespace: boruta-staging
+            labels:
+              app: boruta-httpbin
+          spec:
+            selector:
+              deployment: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
+            ports:
+            - protocol: TCP
+              targetPort: 5001
+              name: httpbin-tcp
+              port: 5001
+
+    - name: Create protected httpbin sidecar Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: boruta-protected-httpbin-sidecar
+            namespace: boruta-staging
+            labels:
+              app: boruta-protected-httpbin
+          spec:
+            selector:
+              deployment: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
+            ports:
+            - protocol: TCP
+              targetPort: 5001
+              name: gateway-tcp
+              port: 5001
 
     - name: Delete Boruta blue/green deployment
       kubernetes.core.k8s:

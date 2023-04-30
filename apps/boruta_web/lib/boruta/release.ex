@@ -10,6 +10,14 @@ defmodule Boruta.Release do
     end
   end
 
+  def load_configuration do
+    Application.ensure_all_started(:boruta_gateway)
+
+    configuration_path = Application.get_env(:boruta_gateway, :configuration_path)
+
+    BorutaGateway.ConfigurationLoader.from_file!(configuration_path)
+  end
+
   def rollback(repo, version) do
     repo.__adapter__.storage_up(repo.config)
 

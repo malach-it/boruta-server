@@ -1,8 +1,9 @@
-defmodule BorutaGateway.Plug.AssignUpstream do
+defmodule BorutaGateway.Plug.AssignSidecarUpstream do
   @moduledoc false
 
   import Plug.Conn
 
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -16,9 +17,9 @@ defmodule BorutaGateway.Plug.AssignUpstream do
         } = conn,
         _options
       ) do
-    conn = assign(conn, :node_name, "global")
+    conn = assign(conn, :node_name, ConfigurationLoader.node_name())
 
-    case Upstreams.match(path_info) do
+    case Upstreams.sidecar_match(path_info) do
       %Upstream{} = upstream ->
         assign(conn, :upstream, upstream)
 

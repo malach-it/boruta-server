@@ -3,7 +3,17 @@ defmodule BorutaAdminWeb.UpstreamView do
   alias BorutaAdminWeb.UpstreamView
 
   def render("index.json", %{upstreams: upstreams}) do
-    %{data: render_many(upstreams, UpstreamView, "upstream.json")}
+    data =
+      Enum.map(upstreams, fn {node_name, upstreams} ->
+        {node_name, render_many(upstreams, UpstreamView, "upstream.json")}
+      end)
+      |> Enum.into(%{})
+
+    %{data: data}
+  end
+
+  def render("node_list.json", %{nodes: nodes}) do
+    %{data: nodes}
   end
 
   def render("show.json", %{upstream: upstream}) do
@@ -13,6 +23,7 @@ defmodule BorutaAdminWeb.UpstreamView do
   def render("upstream.json", %{upstream: upstream}) do
     %{
       id: upstream.id,
+      node_name: upstream.node_name,
       scheme: upstream.scheme,
       host: upstream.host,
       port: upstream.port,

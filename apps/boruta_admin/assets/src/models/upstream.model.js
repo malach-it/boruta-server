@@ -4,6 +4,7 @@ import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
   errors: null,
+  node_name: 'global',
   uris: [],
   required_scopes: [],
   pool_size: 10,
@@ -13,6 +14,7 @@ const defaults = {
 
 const assign = {
   id: function ({ id }) { this.id = id },
+  node_name: function ({ node_name }) { this.node_name = node_name },
   scheme: function ({ scheme }) { this.scheme = scheme },
   host: function ({ host }) { this.host = host },
   port: function ({ port }) { this.port = port },
@@ -94,6 +96,7 @@ class Upstream {
   get serialized () {
     const {
       id,
+      node_name,
       scheme,
       host,
       port,
@@ -115,6 +118,7 @@ class Upstream {
 
     return {
       id,
+      node_name,
       scheme,
       host,
       port,
@@ -151,9 +155,21 @@ Upstream.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
+Upstream.nodeList = function () {
+  return this.api().get('/nodes').then(({ data }) => {
+    return data.data
+  })
+}
+
 Upstream.all = function () {
   return this.api().get('/').then(({ data }) => {
-    return data.data.map((upstream) => new Upstream(upstream))
+    const result = data.data
+
+    Object.keys(result).forEach((nodeName) => {
+      result[nodeName] = result[nodeName].map((upstream) => new Upstream(upstream))
+    })
+
+    return result
   })
 }
 
