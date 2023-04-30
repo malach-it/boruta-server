@@ -239,6 +239,7 @@
           metadata:
             name: boruta-logs
           provisioner: csi.scaleway.com
+          allowVolumeExpansion: true
 
     - name: Create Boruta logs persistent volume claim
       kubernetes.core.k8s:
@@ -255,7 +256,7 @@
               - ReadWriteOnce # TODO will cause issues when running on multiple nodes
             resources:
               requests:
-                storage: 1Gi
+                storage: 5Gi
 
     - name: Get blue/green deployment status
       kubernetes.core.k8s_info:
