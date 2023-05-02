@@ -122,6 +122,42 @@
             :to="{ name: 'edit-reset-password-instructions-email-template', params: { backendId: backend.id } }"
             class="ui fluid blue button">Edit reset password template</router-link>
         </div>
+        <h2>Identity federation (login with)</h2>
+        <div v-for="federatedServer in backend.federated_servers" class="ui federated-server-field segment">
+          <i class="ui large close icon" @click="deleteFederatedServer(federatedServer)"></i>
+          <h3>Federated server</h3>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>Server name</label>
+            <input type="text" v-model="federatedServer.name" placeholder="boruta">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>Client ID</label>
+            <input type="text" v-model="federatedServer.client_id">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>Client secret</label>
+            <div class="ui left icon input">
+              <input :type="federatedServer.clientSecretVisible ? 'text' : 'password'" autocomplete="new-password" v-model="federatedServer.client_secret" />
+              <i class="eye icon" :class="{ 'slash': federatedServer.clientSecretVisible }" @click="federatedServerVisibilityToggle(federatedServer)"></i>
+            </div>
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>Base URL</label>
+            <input type="text" v-model="federatedServer.base_url">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>Authorize path</label>
+            <input type="text" v-model="federatedServer.authorize_path">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>Token path</label>
+            <input type="text" v-model="federatedServer.token_path">
+          </div>
+        </div>
+        <div class="field">
+          <a class="ui blue fluid button" @click="addFederatedServer()">Add a federated server</a>
+        </div>
+        <hr />
         <h2>User metadata configuration</h2>
         <div v-for="field in backend.metadata_fields" class="ui metadata-field segment">
           <i class="ui large close icon" @click="deleteMetadataField(field)"></i>
@@ -196,12 +232,24 @@ export default {
     smtpPasswordVisibilityToggle () {
       this.smtpPasswordVisible = !this.smtpPasswordVisible
     },
+    federatedServerVisibilityToggle (federatedServer) {
+      federatedServer.clientSecretVisible = !federatedServer.clientSecretVisible
+    },
+    addFederatedServer () {
+      this.backend.federated_servers.push({})
+    },
     addMetadataField () {
       this.backend.metadata_fields.push({ scopes: [] })
     },
     deleteMetadataField (field) {
       this.backend.metadata_fields.splice(
         this.backend.metadata_fields.indexOf(field),
+        1
+      )
+    },
+    deleteFederatedServer (federatedServer) {
+      this.backend.federated_servers.splice(
+        this.backend.federated_servers.indexOf(federatedServer),
         1
       )
     },
@@ -220,7 +268,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.metadata-field.segment {
+.metadata-field.segment, .federated-server-field.segment {
   .field {
     margin-bottom: 1em!important;
   }

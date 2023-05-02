@@ -11,7 +11,8 @@ const defaults = {
   password_hashing_alg: 'argon2',
   password_hashing_opts: {},
   features: [],
-  metadata_fields: []
+  metadata_fields: [],
+  federated_servers: []
 }
 
 const assign = {
@@ -26,6 +27,7 @@ const assign = {
       return field
     })
   },
+  federated_servers: function ({ federated_servers }) { this.federated_servers = federated_servers },
   features: function ({ features }) { this.features = features },
   password_hashing_alg: function ({ password_hashing_alg }) { this.password_hashing_alg = password_hashing_alg },
   password_hashing_opts: function ({ password_hashing_opts }) { this.password_hashing_opts = password_hashing_opts },
@@ -105,6 +107,7 @@ class Backend {
       password_hashing_alg,
       password_hashing_opts,
       metadata_fields,
+      federated_servers,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,
@@ -136,6 +139,7 @@ class Backend {
       password_hashing_alg,
       password_hashing_opts: formattedPasswordHashingOpts,
       metadata_fields: metadata_fields.map(({ attribute_name, user_editable, scopes }) => ({ attribute_name, user_editable, scopes: scopes.map(({ name }) => name) })),
+      federated_servers,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,
