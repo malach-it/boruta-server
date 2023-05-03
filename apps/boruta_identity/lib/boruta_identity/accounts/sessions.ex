@@ -97,9 +97,14 @@ defmodule BorutaIdentity.Accounts.Sessions do
   defwithclientidp create_session(context, client_id, authentication_params, module) do
     client_impl = IdentityProvider.implementation(client_idp)
 
-    with {:ok, user} <- apply(client_impl, :get_user, [client_idp.backend, authentication_params]),
+    with {:ok, user} <-
+           apply(client_impl, :get_user, [client_idp.backend, authentication_params]),
          {:ok, user} <-
-           apply(client_impl, :check_user_against, [client_idp.backend, user, authentication_params]),
+           apply(client_impl, :check_user_against, [
+             client_idp.backend,
+             user,
+             authentication_params
+           ]),
          %User{} = user <- apply(client_impl, :domain_user!, [user, client_idp.backend]),
          :ok <- ensure_user_confirmed(user, client_idp),
          {:ok, user, session_token} <- create_user_session(user) do
@@ -161,7 +166,10 @@ defmodule BorutaIdentity.Accounts.Sessions do
   end
 
   defp new_confirmation_instructions_template(identity_provider) do
-    IdentityProviders.get_identity_provider_template!(identity_provider.id, :new_confirmation_instructions)
+    IdentityProviders.get_identity_provider_template!(
+      identity_provider.id,
+      :new_confirmation_instructions
+    )
   end
 
   defp delete_session(nil), do: {:error, "Session not found."}

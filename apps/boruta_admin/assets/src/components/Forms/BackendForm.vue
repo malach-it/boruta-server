@@ -146,6 +146,10 @@
             <input type="text" v-model="federatedServer.base_url">
           </div>
           <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>Userinfo path</label>
+            <input type="text" v-model="federatedServer.userinfo_path">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
             <label>Authorize path</label>
             <input type="text" v-model="federatedServer.authorize_path">
           </div>

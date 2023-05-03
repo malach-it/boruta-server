@@ -14,6 +14,7 @@ const defaults = {
 
 const assign = {
   id: function ({ id }) { this.id = id },
+  uid: function ({ uid }) { this.uid = uid },
   backend: function ({ backend }) { this.backend = backend },
   email: function ({ email }) { this.email = email },
   metadata: function ({ metadata }) { this.metadata = metadata },

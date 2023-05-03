@@ -29,6 +29,7 @@ defmodule BorutaAdminWeb.UserView do
   def render("user.json", %{user: user}) do
     %{
       id: user.id,
+      uid: user.uid,
       email: user.username,
       metadata: user.metadata,
       group: user.group,

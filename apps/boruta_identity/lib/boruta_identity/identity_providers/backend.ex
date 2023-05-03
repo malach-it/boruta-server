@@ -89,10 +89,19 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       "client_id" => %{"type" => "string"},
       "client_secret" => %{"type" => "string"},
       "base_url" => %{"type" => "string"},
+      "userinfo_path" => %{"type" => "string"},
       "authorize_path" => %{"type" => "string"},
       "token_path" => %{"type" => "string"}
     },
-    "required" => ["name", "client_id", "client_secret", "base_url", "authorize_path", "token_path"],
+    "required" => [
+      "name",
+      "client_id",
+      "client_secret",
+      "base_url",
+      "userinfo_path",
+      "authorize_path",
+      "token_path"
+    ],
     "additionalProperties" => false
   }
 
@@ -200,6 +209,54 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     end
   end
 
+  @spec federated_login_url(backend :: t(), federated_server_name :: String.t()) ::
+          login_url :: String.t()
+  def federated_login_url(%__MODULE__{} = backend, federated_server_name) do
+    case federated_oauth_client(backend, federated_server_name) do
+      nil ->
+        nil
+
+      client ->
+        OAuth2.Client.authorize_url!(client, scope: "email")
+    end
+  end
+
+  @spec federated_oauth_client(backend :: t(), federated_server_name :: String.t()) ::
+          oauth_client :: OAuth2.Client.t()
+  def federated_oauth_client(
+        %__MODULE__{federated_servers: federated_servers} = backend,
+        federated_server_name
+      ) do
+    case Enum.find(federated_servers, fn federated_server ->
+           federated_server["name"] == federated_server_name
+         end) do
+      nil ->
+        nil
+
+      federated_server ->
+        base_url = URI.parse(federated_server["base_url"])
+
+        client = OAuth2.Client.new(
+          strategy: OAuth2.Strategy.AuthCode,
+          client_id: federated_server["client_id"],
+          client_secret: federated_server["client_secret"],
+          site: federated_server["base_url"],
+          authorize_url: URI.to_string(%{base_url | path: federated_server["authorize_path"]}),
+          token_url: URI.to_string(%{base_url | path: federated_server["token_path"]}),
+          redirect_uri: federated_redirect_url(backend, federated_server_name)
+        )
+
+        OAuth2.Client.put_serializer(client, "application/json", Jason)
+    end
+  end
+
+  @spec federated_redirect_url(backend :: t(), federated_server_name :: String.t()) ::
+          redirect_uri :: String.t()
+  def federated_redirect_url(%__MODULE__{id: backend_id}, federated_server_name) do
+    base_url = URI.parse(BorutaIdentityWeb.Endpoint.url())
+    URI.to_string(%{base_url | path: "/accounts/backends/#{backend_id}/#{federated_server_name}/callback"})
+  end
+
   @doc false
   def changeset(backend, attrs) do
     backend
@@ -274,7 +331,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
   defp validate_federated_servers(
          %Ecto.Changeset{changes: %{federated_servers: federated_servers}} = changeset
-      ) do
+       ) do
     Enum.reduce(federated_servers, changeset, fn federated_server, changeset ->
       case ExJsonSchema.Validator.validate(@federated_server_schema, federated_server) do
         :ok ->

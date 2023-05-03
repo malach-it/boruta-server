@@ -72,6 +72,22 @@ defmodule BorutaIdentity.Factory do
     }
   end
 
+  def federated_backend_factory do
+    %Backend{
+      name: "backend name",
+      type: "Elixir.BorutaIdentity.Accounts.Internal",
+      federated_servers: [%{
+        "name" => "federated",
+        "client_id" => "client_id",
+        "client_secret" => "client_secret",
+        "base_url" => "http://localhost:7878",
+        "token_path" => "/token_path",
+        "authorize_path" => "/authorize_path",
+        "userinfo_path" => "/userinfo_path",
+      }]
+    }
+  end
+
   def ldap_backend_factory do
     %Backend{
       name: "backend name",

@@ -4,6 +4,8 @@ config :logger, level: :info
 
 config :phoenix, :filter_parameters, ["password", "client_secret"]
 
+config :swoosh, local: false
+
 config :boruta_web, BorutaWeb.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",

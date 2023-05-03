@@ -608,7 +608,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
               %Ecto.Changeset{
                 errors: [
                   federated_servers:
-                    {"Required properties client_id, client_secret, base_url, authorize_path, token_path were not present. at #",
+                    {"Required properties name, client_id, client_secret, base_url, userinfo_path, authorize_path, token_path were not present. at #",
                      []}
                 ]
               }} = IdentityProviders.create_backend(attrs)
@@ -621,6 +621,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
           "client_id" => "client_id",
           "client_secret" => "client_secret",
           "base_url" => "https://host.test",
+          "userinfo_path" => "/userinfo",
           "authorize_path" => "/authorize",
           "token_path" => "/token"
         }
