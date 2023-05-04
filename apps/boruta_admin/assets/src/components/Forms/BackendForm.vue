@@ -145,17 +145,31 @@
             <label>Base URL</label>
             <input type="text" v-model="federatedServer.base_url">
           </div>
-          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
-            <label>Userinfo path</label>
-            <input type="text" v-model="federatedServer.userinfo_path">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="federatedServer.isDiscovery">
+              <label>Use OpenID discovery</label>
+            </div>
           </div>
-          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
-            <label>Authorize path</label>
-            <input type="text" v-model="federatedServer.authorize_path">
+          <div v-if="federatedServer.isDiscovery">
+            <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+              <label>Discovery path</label>
+              <input type="text" v-model="federatedServer.discovery_path">
+            </div>
           </div>
-          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
-            <label>Token path</label>
-            <input type="text" v-model="federatedServer.token_path">
+          <div v-else>
+            <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+              <label>Userinfo path</label>
+              <input type="text" v-model="federatedServer.userinfo_path">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+              <label>Authorize path</label>
+              <input type="text" v-model="federatedServer.authorize_path">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+              <label>Token path</label>
+              <input type="text" v-model="federatedServer.token_path">
+            </div>
           </div>
         </div>
         <div class="field">

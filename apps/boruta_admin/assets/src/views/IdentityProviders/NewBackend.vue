@@ -1,6 +1,8 @@
 <template>
   <div class="new-backend">
-    <BackendForm :backend="backend" @submit="createBackend()" @back="back()" action="Create" />
+    <div class="ui container">
+      <BackendForm :backend="backend" @submit="createBackend()" @back="back()" action="Create" />
+    </div>
   </div>
 </template>
 

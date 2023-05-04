@@ -89,6 +89,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       "client_id" => %{"type" => "string"},
       "client_secret" => %{"type" => "string"},
       "base_url" => %{"type" => "string"},
+      "discovery_path" => %{"type" => "string"},
       "userinfo_path" => %{"type" => "string"},
       "authorize_path" => %{"type" => "string"},
       "token_path" => %{"type" => "string"}
@@ -214,7 +215,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   def federated_login_url(%__MODULE__{} = backend, federated_server_name) do
     case federated_oauth_client(backend, federated_server_name) do
       nil ->
-        nil
+        ""
 
       client ->
         OAuth2.Client.authorize_url!(client, scope: "email")
@@ -222,7 +223,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   @spec federated_oauth_client(backend :: t(), federated_server_name :: String.t()) ::
-          oauth_client :: OAuth2.Client.t()
+          oauth_client :: OAuth2.Client.t() | nil
   def federated_oauth_client(
         %__MODULE__{federated_servers: federated_servers} = backend,
         federated_server_name
@@ -236,17 +237,91 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       federated_server ->
         base_url = URI.parse(federated_server["base_url"])
 
-        client = OAuth2.Client.new(
-          strategy: OAuth2.Strategy.AuthCode,
-          client_id: federated_server["client_id"],
-          client_secret: federated_server["client_secret"],
-          site: federated_server["base_url"],
-          authorize_url: URI.to_string(%{base_url | path: federated_server["authorize_path"]}),
-          token_url: URI.to_string(%{base_url | path: federated_server["token_path"]}),
-          redirect_uri: federated_redirect_url(backend, federated_server_name)
-        )
+        endpoints =
+          case federated_server["discovery_path"] do
+            nil ->
+              %{
+                authorize_url:
+                  URI.to_string(%{base_url | path: federated_server["authorize_path"]}),
+                token_url: URI.to_string(%{base_url | path: federated_server["token_path"]})
+              }
+
+            discovery_path ->
+              discover_federated_server_urls(backend, federated_server, discovery_path)
+          end
+
+        client =
+          OAuth2.Client.new(
+            strategy: OAuth2.Strategy.AuthCode,
+            client_id: federated_server["client_id"],
+            client_secret: federated_server["client_secret"],
+            site: base_url,
+            request_opts: [],
+            authorize_url: endpoints[:authorize_url] || "",
+            token_url: endpoints[:token_url] || "",
+            redirect_uri: federated_redirect_url(backend, federated_server_name)
+          )
 
         OAuth2.Client.put_serializer(client, "application/json", Jason)
+    end
+  end
+
+  defp discover_federated_server_urls(
+    %__MODULE__{federated_servers: federated_servers} = backend,
+    federated_server,
+    discovery_path
+  ) do
+    base_url = URI.parse(federated_server["base_url"])
+
+    case Finch.build(
+           :get,
+           URI.to_string(%{base_url | path: discovery_path}),
+           []
+         )
+         |> Finch.request(BorutaIdentity.Finch) do
+      {:ok, %Finch.Response{status: 200, body: body}} ->
+        discovery = Jason.decode!(body)
+
+        authorize_path =
+          discovery["authorization_endpoint"]
+          |> URI.parse()
+          |> Map.get(:path)
+
+        token_path =
+          discovery["token_endpoint"]
+          |> URI.parse()
+          |> Map.get(:path)
+
+        userinfo_path =
+          discovery["userinfo_endpoint"]
+          |> URI.parse()
+          |> Map.get(:path)
+
+        change(backend, %{
+          federated_servers:
+            Enum.map(federated_servers, fn %{"name" => name} = current_federated_server ->
+              case name == federated_server["name"] do
+                true ->
+                  current_federated_server
+                  |> Map.put("authorize_path", authorize_path)
+                  |> Map.put("token_path", token_path)
+                  |> Map.put("userinfo_path", userinfo_path)
+
+                false ->
+                  current_federated_server
+              end
+            end)
+        })
+        |> Repo.update()
+
+        %{
+          authorize_url: discovery["authorization_endpoint"],
+          token_url: discovery["token_endpoint"],
+          userinfo_url: discovery["userinfo_endpoint"],
+        }
+
+      _error ->
+        %{}
     end
   end
 
@@ -254,7 +329,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           redirect_uri :: String.t()
   def federated_redirect_url(%__MODULE__{id: backend_id}, federated_server_name) do
     base_url = URI.parse(BorutaIdentityWeb.Endpoint.url())
-    URI.to_string(%{base_url | path: "/accounts/backends/#{backend_id}/#{federated_server_name}/callback"})
+
+    URI.to_string(%{
+      base_url
+      | path: "/accounts/backends/#{backend_id}/#{federated_server_name}/callback"
+    })
   end
 
   @doc false
