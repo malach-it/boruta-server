@@ -99,10 +99,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       "name",
       "client_id",
       "client_secret",
-      "base_url",
-      "userinfo_path",
-      "authorize_path",
-      "token_path"
+      "base_url"
     ],
     "additionalProperties" => false
   })

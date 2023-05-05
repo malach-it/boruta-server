@@ -49,11 +49,11 @@ config :boruta_gateway,
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer()],
-  url: [host: System.get_env("BORUTA_OAUTH_HOST")],
+  url: [scheme: "https", host: System.get_env("BORUTA_OAUTH_HOST")],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  url: [host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts"],
+  url: [scheme: "https", host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts"],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
@@ -61,7 +61,7 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
     port: System.get_env("BORUTA_ADMIN_PORT") |> String.to_integer(),
     protocol_options: [idle_timeout: 3_600_000, inactivity_timeout: 3_600_000]
   ],
-  url: [host: System.get_env("BORUTA_ADMIN_HOST")],
+  url: [scheme: "https", host: System.get_env("BORUTA_ADMIN_HOST")],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_web, BorutaWeb.Authorization,
