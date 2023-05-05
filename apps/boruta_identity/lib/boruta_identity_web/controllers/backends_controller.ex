@@ -9,6 +9,7 @@ defmodule BorutaIdentityWeb.BackendsController do
       client_id_from_request: 1
     ]
 
+  alias BorutaIdentity.Accounts.Federated
   alias BorutaIdentity.Accounts.IdentityProviderError
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.FederatedAccounts
@@ -67,7 +68,7 @@ defmodule BorutaIdentityWeb.BackendsController do
       %{},
       %{
         sub: user.uid,
-        backend: user.backend,
+        backend: %{user.backend | type: Federated},
         client_id: client_id
       }
     )

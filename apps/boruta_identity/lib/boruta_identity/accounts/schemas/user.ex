@@ -49,7 +49,7 @@ defmodule BorutaIdentity.Accounts.User do
     %__MODULE__{}
     |> cast(attrs, [:backend_id, :uid, :username, :group, :metadata])
     |> metadata_template_filter(backend)
-    |> validate_required([:uid, :username])
+    |> validate_required([:backend_id, :uid, :username])
     |> validate_group()
   end
 

@@ -8,6 +8,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Repo
+  alias BorutaIdentityWeb.Router.Helpers, as: Routes
 
   @type t :: %__MODULE__{
           type: String.t(),
@@ -82,10 +83,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     }
   }
 
-  @federated_server_schema %{
+  @federated_server_schema ExJsonSchema.Schema.resolve(%{
     "type" => "object",
     "properties" => %{
-      "name" => %{"type" => "string"},
+      "name" => %{"type" => "string", "pattern" => "^[^\s]+$"},
       "client_id" => %{"type" => "string"},
       "client_secret" => %{"type" => "string"},
       "base_url" => %{"type" => "string"},
@@ -104,7 +105,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       "token_path"
     ],
     "additionalProperties" => false
-  }
+  })
 
   @metadata_fields_schema ExJsonSchema.Schema.resolve(%{
                             "type" => "array",
@@ -267,10 +268,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   defp discover_federated_server_urls(
-    %__MODULE__{federated_servers: federated_servers} = backend,
-    federated_server,
-    discovery_path
-  ) do
+         %__MODULE__{federated_servers: federated_servers} = backend,
+         federated_server,
+         discovery_path
+       ) do
     base_url = URI.parse(federated_server["base_url"])
 
     case Finch.build(
@@ -317,7 +318,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
         %{
           authorize_url: discovery["authorization_endpoint"],
           token_url: discovery["token_endpoint"],
-          userinfo_url: discovery["userinfo_endpoint"],
+          userinfo_url: discovery["userinfo_endpoint"]
         }
 
       _error ->
@@ -332,7 +333,13 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
     URI.to_string(%{
       base_url
-      | path: "/accounts/backends/#{backend_id}/#{federated_server_name}/callback"
+      | path:
+          Routes.backends_path(
+            BorutaIdentityWeb.Endpoint,
+            :callback,
+            backend_id,
+            federated_server_name
+          )
     })
   end
 

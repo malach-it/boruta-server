@@ -6,10 +6,10 @@ defmodule BorutaIdentity.IdentityProviders.BackendTest do
   alias BorutaIdentity.IdentityProviders.Backend
 
   describe "federated_login_url/2" do
-    test "returns nil" do
+    test "returns an empty string" do
       backend = insert(:backend)
 
-      assert Backend.federated_login_url(backend, "inexistant") == nil
+      assert Backend.federated_login_url(backend, "inexistant") == ""
     end
 
     test "returns login url" do
@@ -25,7 +25,7 @@ defmodule BorutaIdentity.IdentityProviders.BackendTest do
       ]
       backend = insert(:backend, federated_servers: federated_servers)
 
-      assert Backend.federated_login_url(backend, "name") == "https://host.test/authorize?client_id=client_id&redirect_uri=http%3A%2F%2Flocalhost%3A4003%2Faccounts%2Fbackends%2F#{backend.id}%2Fname%2Fcallback&response_type=code&scope=email"
+      assert Backend.federated_login_url(backend, "name") == "https://host.test/authorize?client_id=client_id&redirect_uri=http%3A%2F%2Flocalhost%3A4003%2Fbackends%2F#{backend.id}%2Fname%2Fcallback&response_type=code&scope=email"
     end
   end
 end

@@ -13,8 +13,13 @@ defmodule BorutaIdentityWeb.TemplateView do
         },
         assigns: assigns
       }) do
+    assigns =
+      assigns
+      |> Map.put(:identity_provider, identity_provider)
+      |> Map.put(:conn, conn)
+
     context =
-      context(%{conn: conn}, Map.put(assigns, :identity_provider, identity_provider))
+      context(%{}, assigns)
       |> Map.put(:messages, messages(conn))
       |> Map.put(:_csrf_token, Plug.CSRFProtection.get_csrf_token())
       |> Map.merge(errors(assigns))
@@ -24,7 +29,7 @@ defmodule BorutaIdentityWeb.TemplateView do
     {:safe, Mustachex.render(layout.content, context, partials: %{inner_content: content})}
   end
 
-  def context(%{conn: conn} = context, %{identity_provider: identity_provider} = assigns) do
+  def context(context, %{conn: conn, identity_provider: identity_provider} = assigns) do
     %Plug.Conn{query_params: query_params} = conn
     request = Map.get(query_params, "request")
     backend = identity_provider.backend
@@ -34,7 +39,16 @@ defmodule BorutaIdentityWeb.TemplateView do
         federated_server_name = federated_server["name"]
 
         {federated_server_name,
-         %{login_url: Routes.backends_path(BorutaIdentityWeb.Endpoint, :authorize, backend.id, federated_server_name, %{request: request})}}
+         %{
+           login_url:
+             Routes.backends_path(
+               BorutaIdentityWeb.Endpoint,
+               :authorize,
+               backend.id,
+               federated_server_name,
+               %{request: request}
+             )
+         }}
       end)
       |> Enum.into(%{})
 

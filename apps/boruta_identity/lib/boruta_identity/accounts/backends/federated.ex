@@ -20,7 +20,6 @@ defmodule BorutaIdentity.Accounts.Federated do
              URI.to_string(%{base_url | path: federated_server["userinfo_path"]}),
              [
                {"accept", "application/json"},
-               {"content-type", "application/x-www-form-urlencoded"},
                {"authorization", "Bearer #{access_token}"}
              ]
            )
@@ -38,6 +37,7 @@ defmodule BorutaIdentity.Accounts.Federated do
       backend_id: backend.id
     }
 
+    # TODO store origin federated server
     User.implementation_changeset(impl_user_params, backend)
     |> Repo.insert!(
       on_conflict: {:replace, [:username]},
