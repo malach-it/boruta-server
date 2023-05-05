@@ -47,6 +47,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     authenticable: [
       # BorutaIdentity.Accounts.Sessions
       :initialize_session,
+      # BorutaIdentity.Accounts.FederatedSessions
+      :create_federated_session,
       # BorutaIdentity.Accounts.Sessions
       :create_session,
       # BorutaIdentity.Accounts.Sessions

@@ -581,7 +581,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:error, %Ecto.Changeset{}} = IdentityProviders.create_backend(@invalid_attrs)
     end
 
-    test "create_backend/1 with invalid metadata_fields returns error changeset" do
+    test "create_backend/1 with invalid metadata_fields returns an error changeset" do
       attrs = Map.put(@valid_attrs, :metadata_fields, [%{"valid" => false}])
       assert {:error, %Ecto.Changeset{errors: errors}} = IdentityProviders.create_backend(attrs)
       assert errors[:metadata_fields]
@@ -598,6 +598,40 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:ok, backend} = IdentityProviders.create_backend(attrs)
 
       assert backend.metadata_fields == metadata_fields
+    end
+
+    test "create_backend/1 with invalid federated_servers returns an error changeset" do
+      federated_servers = [%{}]
+      attrs = Map.put(@valid_attrs, :federated_servers, federated_servers)
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  federated_servers:
+                    {"Required properties name, client_id, client_secret, base_url, userinfo_path, authorize_path, token_path were not present. at #",
+                     []}
+                ]
+              }} = IdentityProviders.create_backend(attrs)
+    end
+
+    test "create_backend/1 with valid federated_servers creates a backend" do
+      federated_servers = [
+        %{
+          "name" => "name",
+          "client_id" => "client_id",
+          "client_secret" => "client_secret",
+          "base_url" => "https://host.test",
+          "userinfo_path" => "/userinfo",
+          "authorize_path" => "/authorize",
+          "token_path" => "/token"
+        }
+      ]
+
+      attrs = Map.put(@valid_attrs, :federated_servers, federated_servers)
+
+      assert {:ok, backend} = IdentityProviders.create_backend(attrs)
+
+      assert backend.federated_servers == federated_servers
     end
 
     test "update_backend/2 with valid data updates the backend" do

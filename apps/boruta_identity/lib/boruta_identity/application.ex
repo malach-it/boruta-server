@@ -11,7 +11,7 @@ defmodule BorutaIdentity.Application do
       BorutaIdentityWeb.Telemetry,
       {Phoenix.PubSub, name: BorutaIdentity.PubSub},
       BorutaIdentityWeb.Endpoint,
-      {Finch, name: Swoosh.Finch}
+      {Finch, name: BorutaIdentity.Finch}
     ]
 
     BorutaIdentity.Logger.start()

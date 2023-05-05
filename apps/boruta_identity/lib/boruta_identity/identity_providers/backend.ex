@@ -8,6 +8,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Repo
+  alias BorutaIdentityWeb.Router.Helpers, as: Routes
 
   @type t :: %__MODULE__{
           type: String.t(),
@@ -82,6 +83,30 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     }
   }
 
+  @federated_server_schema ExJsonSchema.Schema.resolve(%{
+    "type" => "object",
+    "properties" => %{
+      "name" => %{"type" => "string", "pattern" => "^[^\s]+$"},
+      "client_id" => %{"type" => "string"},
+      "client_secret" => %{"type" => "string"},
+      "base_url" => %{"type" => "string"},
+      "discovery_path" => %{"type" => "string"},
+      "userinfo_path" => %{"type" => "string"},
+      "authorize_path" => %{"type" => "string"},
+      "token_path" => %{"type" => "string"}
+    },
+    "required" => [
+      "name",
+      "client_id",
+      "client_secret",
+      "base_url",
+      "userinfo_path",
+      "authorize_path",
+      "token_path"
+    ],
+    "additionalProperties" => false
+  })
+
   @metadata_fields_schema ExJsonSchema.Schema.resolve(%{
                             "type" => "array",
                             "items" => %{
@@ -127,6 +152,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     # internal config
     field(:password_hashing_alg, :string, default: "argon2")
     field(:password_hashing_opts, :map, default: %{})
+
+    # identity federation
+    field(:federated_servers, {:array, :map}, default: [])
 
     has_many(:email_templates, EmailTemplate)
 
@@ -183,6 +211,138 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     end
   end
 
+  @spec federated_login_url(backend :: t(), federated_server_name :: String.t()) ::
+          login_url :: String.t()
+  def federated_login_url(%__MODULE__{} = backend, federated_server_name) do
+    case federated_oauth_client(backend, federated_server_name) do
+      nil ->
+        ""
+
+      client ->
+        OAuth2.Client.authorize_url!(client, scope: "email")
+    end
+  end
+
+  @spec federated_oauth_client(backend :: t(), federated_server_name :: String.t()) ::
+          oauth_client :: OAuth2.Client.t() | nil
+  def federated_oauth_client(
+        %__MODULE__{federated_servers: federated_servers} = backend,
+        federated_server_name
+      ) do
+    case Enum.find(federated_servers, fn federated_server ->
+           federated_server["name"] == federated_server_name
+         end) do
+      nil ->
+        nil
+
+      federated_server ->
+        base_url = URI.parse(federated_server["base_url"])
+
+        endpoints =
+          case federated_server["discovery_path"] do
+            nil ->
+              %{
+                authorize_url:
+                  URI.to_string(%{base_url | path: federated_server["authorize_path"]}),
+                token_url: URI.to_string(%{base_url | path: federated_server["token_path"]})
+              }
+
+            discovery_path ->
+              discover_federated_server_urls(backend, federated_server, discovery_path)
+          end
+
+        client =
+          OAuth2.Client.new(
+            strategy: OAuth2.Strategy.AuthCode,
+            client_id: federated_server["client_id"],
+            client_secret: federated_server["client_secret"],
+            site: base_url,
+            request_opts: [],
+            authorize_url: endpoints[:authorize_url] || "",
+            token_url: endpoints[:token_url] || "",
+            redirect_uri: federated_redirect_url(backend, federated_server_name)
+          )
+
+        OAuth2.Client.put_serializer(client, "application/json", Jason)
+    end
+  end
+
+  defp discover_federated_server_urls(
+         %__MODULE__{federated_servers: federated_servers} = backend,
+         federated_server,
+         discovery_path
+       ) do
+    base_url = URI.parse(federated_server["base_url"])
+
+    case Finch.build(
+           :get,
+           URI.to_string(%{base_url | path: discovery_path}),
+           []
+         )
+         |> Finch.request(BorutaIdentity.Finch) do
+      {:ok, %Finch.Response{status: 200, body: body}} ->
+        discovery = Jason.decode!(body)
+
+        authorize_path =
+          discovery["authorization_endpoint"]
+          |> URI.parse()
+          |> Map.get(:path)
+
+        token_path =
+          discovery["token_endpoint"]
+          |> URI.parse()
+          |> Map.get(:path)
+
+        userinfo_path =
+          discovery["userinfo_endpoint"]
+          |> URI.parse()
+          |> Map.get(:path)
+
+        change(backend, %{
+          federated_servers:
+            Enum.map(federated_servers, fn %{"name" => name} = current_federated_server ->
+              case name == federated_server["name"] do
+                true ->
+                  current_federated_server
+                  |> Map.put("authorize_path", authorize_path)
+                  |> Map.put("token_path", token_path)
+                  |> Map.put("userinfo_path", userinfo_path)
+
+                false ->
+                  current_federated_server
+              end
+            end)
+        })
+        |> Repo.update()
+
+        %{
+          authorize_url: discovery["authorization_endpoint"],
+          token_url: discovery["token_endpoint"],
+          userinfo_url: discovery["userinfo_endpoint"]
+        }
+
+      _error ->
+        %{}
+    end
+  end
+
+  @spec federated_redirect_url(backend :: t(), federated_server_name :: String.t()) ::
+          redirect_uri :: String.t()
+  def federated_redirect_url(%__MODULE__{id: backend_id}, federated_server_name) do
+    base_url = URI.parse(BorutaIdentityWeb.Endpoint.url())
+
+    URI.to_string(%{
+      base_url
+      | path:
+          Routes.backends_path(
+            BorutaIdentityWeb.Endpoint,
+            :callback,
+            backend_id,
+            federated_server_name
+          )
+    })
+  end
+
   @doc false
   def changeset(backend, attrs) do
     backend
@@ -206,10 +366,12 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :smtp_password,
       :smtp_ssl,
       :smtp_tls,
-      :smtp_port
+      :smtp_port,
+      :federated_servers
     ])
     |> validate_required([:name, :password_hashing_alg])
     |> validate_metadata_fields()
+    |> validate_federated_servers()
     |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
     |> validate_inclusion(:smtp_tls, Enum.map(@smtp_tls_types, &Atom.to_string/1))
     |> foreign_key_constraint(:identity_provider, name: :identity_providers_backend_id_fkey)
@@ -252,6 +414,24 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   defp validate_metadata_fields(changeset), do: changeset
+
+  defp validate_federated_servers(
+         %Ecto.Changeset{changes: %{federated_servers: federated_servers}} = changeset
+       ) do
+    Enum.reduce(federated_servers, changeset, fn federated_server, changeset ->
+      case ExJsonSchema.Validator.validate(@federated_server_schema, federated_server) do
+        :ok ->
+          changeset
+
+        {:error, errors} ->
+          Enum.reduce(errors, changeset, fn {message, path}, changeset ->
+            add_error(changeset, :federated_servers, "#{message} at #{path}")
+          end)
+      end
+    end)
+  end
+
+  defp validate_federated_servers(changeset), do: changeset
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: false}} = changeset) do
     Ecto.Changeset.add_error(

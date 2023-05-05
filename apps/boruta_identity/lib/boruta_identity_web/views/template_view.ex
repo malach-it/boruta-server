@@ -6,9 +6,18 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   def render("template.html", %{
         conn: conn,
-        template: %Template{layout: layout, content: content, identity_provider: identity_provider},
+        template: %Template{
+          layout: layout,
+          content: content,
+          identity_provider: identity_provider
+        },
         assigns: assigns
       }) do
+    assigns =
+      assigns
+      |> Map.put(:identity_provider, identity_provider)
+      |> Map.put(:conn, conn)
+
     context =
       context(%{}, assigns)
       |> Map.put(:messages, messages(conn))
@@ -18,6 +27,34 @@ defmodule BorutaIdentityWeb.TemplateView do
       |> Map.merge(identity_provider_configurations(identity_provider))
 
     {:safe, Mustachex.render(layout.content, context, partials: %{inner_content: content})}
+  end
+
+  def context(context, %{conn: conn, identity_provider: identity_provider} = assigns) do
+    %Plug.Conn{query_params: query_params} = conn
+    request = Map.get(query_params, "request")
+    backend = identity_provider.backend
+
+    federated_servers =
+      Enum.map(backend.federated_servers, fn federated_server ->
+        federated_server_name = federated_server["name"]
+
+        {federated_server_name,
+         %{
+           login_url:
+             Routes.backends_path(
+               BorutaIdentityWeb.Endpoint,
+               :authorize,
+               backend.id,
+               federated_server_name,
+               %{request: request}
+             )
+         }}
+      end)
+      |> Enum.into(%{})
+
+    %{federated_servers: federated_servers}
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :identity_provider))
   end
 
   def context(context, %{current_user: current_user} = assigns) do
@@ -65,7 +102,8 @@ defmodule BorutaIdentityWeb.TemplateView do
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
       delete_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{request: request}),
-      edit_user_path: Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :edit, %{request: request}),
+      edit_user_path:
+        Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :edit, %{request: request}),
       new_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_reset_password_path:
@@ -79,7 +117,8 @@ defmodule BorutaIdentityWeb.TemplateView do
           Map.get(assigns, :token, ""),
           %{request: request}
         ),
-      update_user_path: Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :update, %{request: request})
+      update_user_path:
+        Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :update, %{request: request})
     }
   end
 
@@ -113,7 +152,7 @@ defmodule BorutaIdentityWeb.TemplateView do
   defp identity_provider_configurations(identity_provider) do
     %{
       registrable?: identity_provider.registrable,
-      user_editable?: identity_provider.user_editable,
+      user_editable?: identity_provider.user_editable
     }
   end
 end

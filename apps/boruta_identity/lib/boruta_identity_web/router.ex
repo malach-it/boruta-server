@@ -57,6 +57,8 @@ defmodule BorutaIdentityWeb.Router do
   scope "/", BorutaIdentityWeb do
     pipe_through([:browser])
 
+    get("/backends/:id/:federated_server_name/authorize", BackendsController, :authorize)
+    get("/backends/:id/:federated_server_name/callback", BackendsController, :callback)
     get("/users/log_out", UserSessionController, :delete)
     get("/users/confirm", UserConfirmationController, :new)
     post("/users/confirm", UserConfirmationController, :create)

@@ -13,6 +13,10 @@
             <span class="description">{{ user.id }}</span>
           </div>
           <div class="item">
+            <span class="header">User UID</span>
+            <span class="description">{{ user.uid }}</span>
+          </div>
+          <div class="item">
             <span class="header">Email</span>
             <span class="description">{{ user.email }}</span>
           </div>
