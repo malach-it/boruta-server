@@ -12,6 +12,7 @@ defmodule BorutaWeb.Openid.DynamicRegistrationController do
 
   def register_client(conn, params) do
     registration_params = %{
+      client_name: params["client_name"],
       redirect_uris: params["redirect_uris"],
       jwks: params["jwks"],
       userinfo_signed_response_alg: params["userinfo_signed_response_alg"],
