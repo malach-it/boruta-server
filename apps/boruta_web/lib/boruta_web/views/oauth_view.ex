@@ -59,6 +59,7 @@ defmodule BorutaWeb.OauthView do
       "response_modes_supported" => ["query", "fragment"],
       "subject_types_supported" => ["public"],
       "token_endpoint_auth_methods_supported" => ["client_secret_basic", "client_secret_post", "client_secret_jwt", "private_key_jwt"],
+      "request_object_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "id_token_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms()
     }

@@ -314,13 +314,22 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "HS384",
                  "HS512"
                ],
+               "request_object_signing_alg_values_supported" => [
+                 "RS256",
+                 "RS384",
+                 "RS512",
+                 "HS256",
+                 "HS384",
+                 "HS512"
+               ]
              }
     end
   end
 
   describe "dynamic registration" do
     test "returns an error when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.dynamic_registration_path(conn, :register_client), %{redirect_uris: nil})
+      conn =
+        post(conn, Routes.dynamic_registration_path(conn, :register_client), %{redirect_uris: nil})
 
       assert json_response(conn, 400) == %{
                "error" => "invalid_client_metadata",
