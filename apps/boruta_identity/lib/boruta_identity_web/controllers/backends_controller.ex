@@ -74,6 +74,7 @@ defmodule BorutaIdentityWeb.BackendsController do
     )
 
     conn
+    |> clear_session()
     |> store_user_session(session_token)
     |> put_session(:session_chosen, true)
     |> redirect(to: after_sign_in_path(conn))
@@ -99,6 +100,7 @@ defmodule BorutaIdentityWeb.BackendsController do
     conn
     |> put_layout(false)
     |> put_status(:unauthorized)
+    |> clear_session()
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,

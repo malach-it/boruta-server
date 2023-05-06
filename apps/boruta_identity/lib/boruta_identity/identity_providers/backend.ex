@@ -84,25 +84,25 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   }
 
   @federated_server_schema ExJsonSchema.Schema.resolve(%{
-    "type" => "object",
-    "properties" => %{
-      "name" => %{"type" => "string", "pattern" => "^[^\s]+$"},
-      "client_id" => %{"type" => "string"},
-      "client_secret" => %{"type" => "string"},
-      "base_url" => %{"type" => "string"},
-      "discovery_path" => %{"type" => "string"},
-      "userinfo_path" => %{"type" => "string"},
-      "authorize_path" => %{"type" => "string"},
-      "token_path" => %{"type" => "string"}
-    },
-    "required" => [
-      "name",
-      "client_id",
-      "client_secret",
-      "base_url"
-    ],
-    "additionalProperties" => false
-  })
+                             "type" => "object",
+                             "properties" => %{
+                               "name" => %{"type" => "string", "pattern" => "^[^\s]+$"},
+                               "client_id" => %{"type" => "string"},
+                               "client_secret" => %{"type" => "string"},
+                               "base_url" => %{"type" => "string"},
+                               "discovery_path" => %{"type" => "string"},
+                               "userinfo_path" => %{"type" => "string"},
+                               "authorize_path" => %{"type" => "string"},
+                               "token_path" => %{"type" => "string"}
+                             },
+                             "required" => [
+                               "name",
+                               "client_id",
+                               "client_secret",
+                               "base_url"
+                             ],
+                             "additionalProperties" => false
+                           })
 
   @metadata_fields_schema ExJsonSchema.Schema.resolve(%{
                             "type" => "array",
@@ -327,6 +327,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           redirect_uri :: String.t()
   def federated_redirect_url(%__MODULE__{id: backend_id}, federated_server_name) do
     base_url = URI.parse(BorutaIdentityWeb.Endpoint.url())
+
+    base_url = case base_url.port do
+      80 -> %{base_url|port: nil}
+      _ -> base_url
+    end
 
     URI.to_string(%{
       base_url
