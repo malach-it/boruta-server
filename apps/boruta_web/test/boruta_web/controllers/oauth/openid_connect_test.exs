@@ -293,6 +293,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "id_token",
                  "code token",
                  "code id_token",
+                 "token id_token",
                  "code id_token token"
                ],
                "response_modes_supported" => ["query", "fragment"],
@@ -319,7 +320,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
   describe "dynamic registration" do
     test "returns an error when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.dynamic_registration_path(conn, :register_client))
+      conn = post(conn, Routes.dynamic_registration_path(conn, :register_client), %{redirect_uris: nil})
 
       assert json_response(conn, 400) == %{
                "error" => "invalid_client_metadata",

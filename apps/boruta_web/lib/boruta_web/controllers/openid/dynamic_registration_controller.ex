@@ -11,13 +11,12 @@ defmodule BorutaWeb.Openid.DynamicRegistrationController do
   use BorutaWeb, :controller
 
   def register_client(conn, params) do
-    registration_params = %{
-      client_name: params["client_name"],
-      redirect_uris: params["redirect_uris"],
-      jwks: params["jwks"],
-      userinfo_signed_response_alg: params["userinfo_signed_response_alg"],
-      id_token_signature_alg: "RS256"
-    }
+    registration_params =
+      Enum.map(params, fn {key, value} ->
+        {String.to_atom(key), value}
+      end)
+      |> Enum.into(%{})
+      |> Map.put(:id_token_signature_alg, "RS256")
 
     Openid.register_client(conn, registration_params, __MODULE__)
   end
