@@ -137,6 +137,7 @@ defmodule BorutaGateway.Upstreams.StoreTest do
     end
 
     test "return sidecar matching upstream from static configuration" do
+      Application.delete_env(ConfigurationLoader, :node_name)
       configuration_file_path =
         :code.priv_dir(:boruta_gateway)
         |> Path.join("/test/configuration_files/full_configuration.yml")

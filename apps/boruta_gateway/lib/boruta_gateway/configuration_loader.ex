@@ -6,17 +6,27 @@ defmodule BorutaGateway.ConfigurationLoader do
 
   @spec node_name() :: node_name :: String.t()
   def node_name do
-    path = Application.get_env(:boruta_gateway, :configuration_path)
+    case Application.get_env(__MODULE__, :node_name) do
+      nil ->
+        path = Application.get_env(:boruta_gateway, :configuration_path)
 
-    %{
-      "configuration" => %{
-        "node_name" => node_name
-      }
-    } = YamlElixir.read_from_file!(path)
+        %{
+          "configuration" => %{
+            "node_name" => node_name
+          }
+        } = YamlElixir.read_from_file!(path)
 
-    node_name
+        Application.put_env(__MODULE__, :node_name, node_name)
+        node_name
+
+      node_name ->
+        node_name
+    end
   rescue
-    _ -> Atom.to_string(node())
+    _ ->
+      node_name = Atom.to_string(node())
+      Application.put_env(__MODULE__, :node_name, node_name)
+      node_name
   end
 
   @spec from_file!(configuration_file_path :: String.t()) :: :ok

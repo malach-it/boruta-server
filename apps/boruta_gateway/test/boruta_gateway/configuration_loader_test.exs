@@ -48,6 +48,7 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
   test "loads a file" do
     assert Repo.all(Upstream) |> Enum.empty?()
 
+    Application.delete_env(ConfigurationLoader, :node_name)
     configuration_file_path =
       :code.priv_dir(:boruta_gateway)
       |> Path.join("/test/configuration_files/full_configuration.yml")
