@@ -2,6 +2,7 @@ defmodule BorutaWeb.Openid.JwksController do
   @behaviour Boruta.Openid.JwksApplication
 
   alias Boruta.Openid
+  alias BorutaAuth.KeyPairs
   alias BorutaWeb.OpenidView
 
   use BorutaWeb, :controller
@@ -12,8 +13,10 @@ defmodule BorutaWeb.Openid.JwksController do
 
   @impl Boruta.Openid.JwksApplication
   def jwk_list(conn, jwk_keys) do
+    global_keys = KeyPairs.list_jwks()
+
     conn
     |> put_view(OpenidView)
-    |> render("jwks.json", keys: jwk_keys)
+    |> render("jwks.json", keys: global_keys ++ jwk_keys)
   end
 end
