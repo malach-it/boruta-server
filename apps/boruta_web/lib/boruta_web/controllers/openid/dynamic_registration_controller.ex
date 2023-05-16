@@ -55,16 +55,11 @@ defmodule BorutaWeb.Openid.DynamicRegistrationController do
     |> render("registration_error.json", changeset: changeset)
   end
 
-  defp insert_global_key_pair(%Oauth.Client{id: client_id} = oauth_client) do
+  defp insert_global_key_pair(%Oauth.Client{id: client_id}) do
     %KeyPair{public_key: public_key, private_key: private_key} = KeyPair.default!()
 
     client = BorutaAuth.Repo.get!(Ecto.Client, client_id)
 
-    Ecto.Clients.invalidate(oauth_client)
-    Ecto.Client.key_pair_changeset(client, %{
-      public_key: public_key,
-      private_key: private_key
-    })
-    |> BorutaAuth.Repo.update()
+    Admin.regenerate_client_key_pair(client, public_key, private_key)
   end
 end

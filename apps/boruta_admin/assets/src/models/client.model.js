@@ -7,6 +7,7 @@ const allGrantTypes = ['client_credentials', 'password', 'authorization_code', '
 
 const defaults = {
   errors: null,
+  key_pair_id: null,
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
@@ -174,7 +175,8 @@ class Client {
       userinfo_signed_response_alg,
       token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods,
-      jwt_public_key
+      jwt_public_key,
+      key_pair_id
     } = this
 
     return {
@@ -200,7 +202,8 @@ class Client {
       userinfo_signed_response_alg,
       token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods,
-      jwt_public_key
+      jwt_public_key,
+      key_pair_id
     }
   }
 }

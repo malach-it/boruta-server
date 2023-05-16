@@ -19,12 +19,21 @@
             <i class="eye icon" :class="{ 'slash': passwordVisible }" @click="passwordVisibilityToggle()"></i>
           </div>
         </div>
-        <div class="ui segment" v-if="client.isPersisted">
-          <a class="ui fluid orange button" @click="regenerateKeyPair()">Regenerate client key pair</a>
+        <div class="ui segment">
+          <a class="ui fluid orange button" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</a>
           <hr />
           <div class="field">
+            <select v-model="client.key_pair_id">
+              <option :value="null">Custom key pair</option>
+              <option v-for="keyPair in keyPairs" :value="keyPair.id" :key="keyPair.id">
+                {{ keyPair.id }}
+              </option>
+            </select>
+          </div>
+          <hr />
+          <div class="field" v-if="clientPublicKey">
             <label>Client public key</label>
-            <pre>{{ client.public_key }}</pre>
+            <pre>{{ clientPublicKey }}</pre>
           </div>
         </div>
         <div class="field" :class="{ 'error': client.errors?.access_token_ttl }">
@@ -160,6 +169,7 @@
 
 <script>
 import Scope from '../../models/scope.model'
+import KeyPair from '../../models/key-pair.model'
 import Client from '../../models/client.model'
 import ScopesField from './ScopesField.vue'
 import IdentityProviderField from './IdentityProviderField.vue'
@@ -175,12 +185,18 @@ export default {
   },
   data() {
     return {
+      keyPairs: [],
       idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
       UserinfoResponseSignatureAlgorithms: Client.UserinfoResponseSignatureAlgorithms,
       clientJwtAuthenticationSignatureAlgorithms: Client.clientJwtAuthenticationSignatureAlgorithms,
       tokenEndpointAuthMethods: Client.tokenEndpointAuthMethods,
       passwordVisible: false
     }
+  },
+  mounted () {
+    KeyPair.all().then(keyPairs => {
+      this.keyPairs = keyPairs
+    })
   },
   methods: {
     back () {
@@ -216,6 +232,20 @@ export default {
     },
     passwordVisibilityToggle () {
       this.passwordVisible = !this.passwordVisible
+    }
+  },
+  watch: {
+    'client.key_pair_id': {
+      deep: true,
+      handler (newKeyPairId) {
+        if (newKeyPairId) {
+          this.clientPublicKey = this.keyPairs.find(({ id }) => {
+            return id === newKeyPairId
+          }).public_key
+        } else {
+          this.clientPublicKey = this.client.public_key
+        }
+      }
     }
   }
 }
