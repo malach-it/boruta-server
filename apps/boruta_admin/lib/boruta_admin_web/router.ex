@@ -37,6 +37,7 @@ defmodule BorutaAdminWeb.Router do
 
     resources("/logs", LogsController, only: [:index])
     resources("/scopes", ScopeController, except: [:new, :edit])
+    resources("/key-pairs", KeyPairController, except: [:new, :edit])
     resources("/clients", ClientController, except: [:new, :edit])
     post("/clients/:id/regenerate_key_pair", ClientController, :regenerate_key_pair)
     resources("/users", UserController, except: [:new, :edit])

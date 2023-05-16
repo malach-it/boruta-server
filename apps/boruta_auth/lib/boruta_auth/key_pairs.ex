@@ -11,18 +11,29 @@ defmodule BorutaAuth.KeyPairs do
     Repo.all(KeyPair)
   end
 
+  def get_key_pair!(id) do
+    Repo.get!(KeyPair, id)
+  end
+
   def list_jwks do
     Repo.all(KeyPair)
     |> Enum.map(&rsa_key/1)
   end
 
   def create_key_pair(attrs \\ %{}) do
-    KeyPair.create_changeset(%KeyPair{}, attrs)
+    KeyPair.changeset(%KeyPair{}, attrs)
     |> Repo.insert()
   end
 
+  def update_key_pair(key_pair, attrs \\ %{}) do
+    KeyPair.changeset(key_pair, attrs)
+    |> Repo.update()
+  end
+
   def delete_key_pair(%KeyPair{} = key_pair) do
-    Repo.delete(key_pair)
+    key_pair
+    |> KeyPair.delete_changeset()
+    |> Repo.delete()
   end
 
   def rotate(%KeyPair{private_key: private_key} = key_pair) do

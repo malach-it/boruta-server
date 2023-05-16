@@ -2,19 +2,14 @@ import axios from 'axios'
 import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
-  name: '',
-  edit: false,
-  errors: null
 }
 
 const assign = {
   id: function ({ id }) { this.id = id },
-  name: function ({ name }) { this.name = name },
-  label: function ({ label }) { this.label = label },
-  edit: function ({ edit }) { this.edit = edit },
-  public: function ({ public: e }) { this.public = e }
+  public_key: function ({ public_key }) { this.public_key = public_key },
+  is_default: function ({ is_default }) { this.is_default = is_default }
 }
-class Scope {
+class KeyPair {
   constructor (params = {}) {
     Object.assign(this, defaults)
 
@@ -28,13 +23,6 @@ class Scope {
     return !!this.id
   }
 
-  reset () {
-    return this.constructor.api().get(`/${this.id}`).then(({ data }) => {
-      Object.assign(this, defaults)
-      return Object.assign(this, data.data)
-    })
-  }
-
   save () {
     const { id, serialized } = this
     let response
@@ -42,10 +30,10 @@ class Scope {
     this.errors = null
 
     if (id) {
-      response = this.constructor.api().patch(`/${id}`, { scope: serialized })
+      response = this.constructor.api().patch(`/${id}`, { key_pair: serialized })
         .then(({ data }) => Object.assign(this, data.data))
     } else {
-      response = this.constructor.api().post('/', { scope: serialized })
+      response = this.constructor.api().post('/', { key_pair: serialized })
         .then(({ data }) => Object.assign(this, data.data))
     }
     return response.catch((error) => {
@@ -65,38 +53,36 @@ class Scope {
   }
 
   get serialized () {
-    const { id, label, name, public: p } = this
+    const { id, is_default } = this
 
     return {
       id,
-      label,
-      name,
-      public: p
+      is_default
     }
   }
 }
 
-Scope.api = function () {
+KeyPair.api = function () {
   const accessToken = localStorage.getItem('access_token')
 
   const instance = axios.create({
-    baseURL: `${window.env.BORUTA_ADMIN_BASE_URL}/api/scopes`,
+    baseURL: `${window.env.BORUTA_ADMIN_BASE_URL}/api/key-pairs`,
     headers: { 'Authorization': `Bearer ${accessToken}` }
   })
 
   return addClientErrorInterceptor(instance)
 }
 
-Scope.all = function () {
+KeyPair.all = function () {
   return this.api().get('/').then(({ data }) => {
-    return data.data.map((scope) => new Scope(scope))
+    return data.data.map((keyPair) => new KeyPair(keyPair))
   })
 }
 
-Scope.get = function (id) {
+KeyPair.get = function (id) {
   return this.api().get(`/${id}`).then(({ data }) => {
-    return new Scope(data.data)
+    return new KeyPair(data.data)
   })
 }
 
-export default Scope
+export default KeyPair
