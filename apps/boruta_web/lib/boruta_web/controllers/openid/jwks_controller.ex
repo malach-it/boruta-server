@@ -15,8 +15,14 @@ defmodule BorutaWeb.Openid.JwksController do
   def jwk_list(conn, jwk_keys) do
     global_keys = KeyPairs.list_jwks()
 
+    keys =
+      Enum.uniq_by(
+        global_keys ++ jwk_keys,
+        fn %{"kid" => kid} -> kid end
+      )
+
     conn
     |> put_view(OpenidView)
-    |> render("jwks.json", keys: global_keys ++ jwk_keys)
+    |> render("jwks.json", keys: keys)
   end
 end

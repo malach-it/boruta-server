@@ -246,7 +246,7 @@ export default {
           const keyPair = this.keyPairs.find(({ public_key }) => {
             return public_key === this.client.public_key
           })
-          this.client.key_pair_id = keyPair && keyPair.id
+          this.client.key_pair_id = keyPair ? keyPair.id : null
           this.clientPublicKey = this.client.public_key
         }
       }

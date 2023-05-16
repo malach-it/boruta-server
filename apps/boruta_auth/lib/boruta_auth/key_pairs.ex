@@ -4,6 +4,7 @@ defmodule BorutaAuth.KeyPairs do
   import Ecto.Query
 
   alias Boruta.Ecto.Client
+  alias Boruta.Oauth.Client.Crypto
   alias BorutaAuth.KeyPairs.KeyPair
   alias BorutaAuth.Repo
 
@@ -52,6 +53,6 @@ defmodule BorutaAuth.KeyPairs do
   defp rsa_key(%KeyPair{} = key_pair) do
     {_type, jwk} = key_pair.public_key |> :jose_jwk.from_pem() |> :jose_jwk.to_map()
 
-    Map.put(jwk, "kid", key_pair.id)
+    Map.put(jwk, "kid", Crypto.kid_from_private_key(key_pair.private_key))
   end
 end
