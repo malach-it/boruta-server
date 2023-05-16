@@ -23,6 +23,16 @@ class KeyPair {
     return !!this.id
   }
 
+  rotate () {
+    return this.constructor.api().post(`/${this.id}/rotate`)
+      .then(({ data }) => Object.assign(this, data.data))
+      .catch((error) => {
+        const { code, message, errors } = error.response.data
+        this.errors = errors
+        throw { code, message, errors }
+      })
+  }
+
   save () {
     const { id, serialized } = this
     let response

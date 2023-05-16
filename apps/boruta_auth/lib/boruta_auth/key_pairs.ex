@@ -37,18 +37,15 @@ defmodule BorutaAuth.KeyPairs do
   end
 
   def rotate(%KeyPair{private_key: private_key} = key_pair) do
-    client_ids = Repo.all(from(c in Client, where: c.private_key == ^private_key, select: c.id))
-
     with {:ok, key_pair} <- KeyPair.rotate_changeset(key_pair) |> Repo.update() do
       Repo.update_all(
-        from(c in Client,
-          where: c.id in ^client_ids
-        ),
+        from(c in Client, where: c.private_key == ^private_key, select: c.id),
         set: [
           public_key: key_pair.public_key,
           private_key: key_pair.private_key
         ]
       )
+      {:ok, key_pair}
     end
   end
 

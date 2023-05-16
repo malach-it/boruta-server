@@ -27,7 +27,8 @@ defmodule BorutaAuth.KeyPairs.KeyPair do
     case Repo.get_by(__MODULE__, is_default: true) do
       nil ->
         {:ok, key_pair} =
-          changeset(%__MODULE__{}, %{is_default: true})
+          change(%__MODULE__{}, %{is_default: true})
+          |> generate_key_pair()
           |> Repo.insert()
 
         key_pair
@@ -52,8 +53,15 @@ defmodule BorutaAuth.KeyPairs.KeyPair do
   end
 
   def rotate_changeset(key_pair) do
+    private_key = JOSE.JWK.generate_key({:rsa, 1024, 65_537})
+    public_key = JOSE.JWK.to_public(private_key)
+
+    {_type, public_pem} = JOSE.JWK.to_pem(public_key)
+    {_type, private_pem} = JOSE.JWK.to_pem(private_key)
+
     change(key_pair)
-    |> generate_key_pair()
+    |> put_change(:public_key, public_pem)
+    |> put_change(:private_key, private_pem)
   end
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: true}} = changeset) do
@@ -101,7 +109,9 @@ defmodule BorutaAuth.KeyPairs.KeyPair do
           :is_default,
           "Cannot delete a default key pair."
         )
-      _ -> changeset
+
+      _ ->
+        changeset
     end
   end
 end

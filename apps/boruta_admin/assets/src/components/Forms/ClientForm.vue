@@ -243,6 +243,10 @@ export default {
             return id === newKeyPairId
           }).public_key
         } else {
+          const keyPair = this.keyPairs.find(({ public_key }) => {
+            return public_key === this.client.public_key
+          })
+          this.client.key_pair_id = keyPair && keyPair.id
           this.clientPublicKey = this.client.public_key
         }
       }

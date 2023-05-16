@@ -1,6 +1,7 @@
 <template>
   <div class="key-pair-list">
     <Toaster :active="created" message="Key pair has been created" type="success" />
+    <Toaster :active="rotated" message="Key pair has been rotated" type="success" />
     <Toaster :active="error" :message="error" type="error" />
     <Toaster :active="deleted" message="Key pair has been deleted" type="warning" />
     <a class="ui violet main create button" v-on:click="createKeyPair()">Add a key pair</a>
@@ -11,6 +12,7 @@
           <div class="ui key-pair segment">
             <div class="actions">
               <a v-on:click="setDefault(keyPair)" class="ui tiny blue button">default</a>
+              <a v-on:click="rotate(keyPair)" class="ui tiny orange button">rotate</a>
               <a v-on:click="deleteKeyPair(keyPair)" class="ui tiny red button">delete</a>
             </div>
             <label><strong>Key pair ID</strong> {{ keyPair.id }}</label>
@@ -36,6 +38,7 @@ export default {
   data () {
     return {
       created: false,
+      rotated: false,
       deleted: false,
       error: false,
       keyPairs: []
@@ -70,15 +73,22 @@ export default {
         keyPair.is_default = false
       })
     },
+    rotate (keyPair) {
+      if (!confirm('Are you sure?')) return
+      this.rotated = false
+      keyPair.rotate().then(() => {
+        this.rotated = true
+      })
+    },
     deleteKeyPair (keyPair) {
-      if (confirm('Are you sure?')) {
-        this.deleted = false
-        this.error = false
-        keyPair.destroy().then(() => {
-          this.deleted = true
-          this.keyPairs.splice(this.keyPairs.indexOf(keyPair), 1)
-        }).catch(error => this.error = error.message)
-      }
+      if (!confirm('Are you sure?')) return
+
+      this.deleted = false
+      this.error = false
+      keyPair.destroy().then(() => {
+        this.deleted = true
+        this.keyPairs.splice(this.keyPairs.indexOf(keyPair), 1)
+      }).catch(error => this.error = error.message)
     }
   }
 }

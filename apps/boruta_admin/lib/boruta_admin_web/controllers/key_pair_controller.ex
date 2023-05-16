@@ -32,6 +32,14 @@ defmodule BorutaAdminWeb.KeyPairController do
     render(conn, "show.json", key_pair: key_pair)
   end
 
+  def rotate(conn, %{"id" => id}) do
+    key_pair = KeyPairs.get_key_pair!(id)
+
+    with {:ok, key_pair} <- KeyPairs.rotate(key_pair) do
+      render(conn, "show.json", key_pair: key_pair)
+    end
+  end
+
   def update(conn, %{"id" => id, "key_pair" => key_pair_params}) do
     key_pair = KeyPairs.get_key_pair!(id)
 

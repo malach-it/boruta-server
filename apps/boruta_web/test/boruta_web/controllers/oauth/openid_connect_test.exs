@@ -321,6 +321,13 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "HS256",
                  "HS384",
                  "HS512"
+               ],
+               "grant_types_supported" => [
+                 "client_credentials",
+                 "password",
+                 "implicit",
+                 "authorization_code",
+                 "refresh_token"
                ]
              }
     end

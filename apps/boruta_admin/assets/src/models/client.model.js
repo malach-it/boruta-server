@@ -134,6 +134,8 @@ class Client {
           this[key] = params[key]
           assign[key].bind(this)(params)
         })
+
+        this.key_pair_id = null
         return this
       })
       .catch((error) => {

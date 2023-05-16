@@ -60,6 +60,6 @@ defmodule BorutaWeb.Openid.DynamicRegistrationController do
 
     client = BorutaAuth.Repo.get!(Ecto.Client, client_id)
 
-    Admin.regenerate_client_key_pair(client, public_key, private_key)
+    Ecto.Admin.regenerate_client_key_pair(client, public_key, private_key)
   end
 end
