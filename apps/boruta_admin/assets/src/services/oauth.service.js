@@ -1,6 +1,5 @@
 import decode from 'jwt-decode'
 import { BorutaOauth } from 'boruta-client'
-import store from '../store'
 
 class Oauth {
   constructor () {

@@ -42,7 +42,7 @@ defmodule BorutaWeb.Oauth.ClientCredentialsTest do
       assert json_response(conn, 400) == %{
                "error" => "invalid_request",
                "error_description" =>
-                 "Request body validation failed. Required properties client_id, client_secret are missing at #."
+                 "Request body validation failed. Required property client_id is missing at #."
              }
     end
 
@@ -57,7 +57,7 @@ defmodule BorutaWeb.Oauth.ClientCredentialsTest do
       assert json_response(conn, 400) == %{
                "error" => "invalid_request",
                "error_description" =>
-                 "Request body validation failed. #/client_id do match required pattern /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/."
+                 "Request body validation failed. #/client_id do match required pattern /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/."
              }
     end
 

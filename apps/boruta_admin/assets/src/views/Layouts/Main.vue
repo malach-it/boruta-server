@@ -46,6 +46,18 @@
                 <i class="certificate icon"></i>
                 <span>Clients</span>
               </a>
+              <div class="dropdown">
+                <div class="subitem">
+                  <router-link :to="{ name: 'client-list' }">
+                    <span>Client list</span>
+                  </router-link>
+                </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'key-pair-list' }">
+                    <span>Key pair list</span>
+                  </router-link>
+                </div>
+              </div>
             </div>
           </router-link>
           <router-link
@@ -450,6 +462,9 @@ export default {
     .inline.fields>label {
       display: block;
       width: 100%;
+    }
+    .inline.fields>.field {
+      margin: 0;
     }
     .ui.icon.input>i.icon {
       cursor: pointer;

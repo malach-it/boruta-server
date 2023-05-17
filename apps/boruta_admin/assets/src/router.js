@@ -11,6 +11,7 @@ import BadRequest from './views/BadRequest.vue'
 
 import Clients from './views/Clients.vue'
 import ClientList from './views/Clients/ClientList.vue'
+import KeyPairList from './views/Clients/KeyPairList.vue'
 import NewClient from './views/Clients/NewClient.vue'
 import Client from './views/Clients/Client.vue'
 import EditClient from './views/Clients/EditClient.vue'
@@ -245,6 +246,10 @@ const router = createRouter({
               path: '',
               name: 'client-list',
               component: ClientList
+            }, {
+              path: 'key-pairs',
+              name: 'key-pair-list',
+              component: KeyPairList
             }, {
               path: '/clients/new',
               name: 'new-client',

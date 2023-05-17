@@ -7,10 +7,13 @@ const allGrantTypes = ['client_credentials', 'password', 'authorization_code', '
 
 const defaults = {
   errors: null,
+  key_pair_id: null,
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
   id_token_signature_alg: 'RS512',
+  token_endpoint_jwt_auth_alg: 'HS256',
+  token_endpoint_auth_methods: ["client_secret_basic", "client_secret_post"],
   identity_provider: { model: new IdentityProvider() },
   grantTypes: allGrantTypes.map((label) => {
     return {
@@ -54,7 +57,11 @@ const assign = {
       }
     })
   },
+  token_endpoint_jwt_auth_alg: function ({ token_endpoint_jwt_auth_alg }) { this.token_endpoint_jwt_auth_alg = token_endpoint_jwt_auth_alg },
+  token_endpoint_auth_methods: function ({ token_endpoint_auth_methods }) { this.token_endpoint_auth_methods = token_endpoint_auth_methods },
+  jwt_public_key: function ({ jwt_public_key }) { this.jwt_public_key = jwt_public_key },
   id_token_signature_alg: function ({ id_token_signature_alg }) { this.id_token_signature_alg = id_token_signature_alg },
+  userinfo_signed_response_alg: function ({ userinfo_signed_response_alg }) { this.userinfo_signed_response_alg = userinfo_signed_response_alg },
 }
 
 class Client {
@@ -117,6 +124,28 @@ class Client {
       })
   }
 
+  async regenerateKeyPair () {
+    const { id } = this
+    this.constructor.api().post(`/${id}/regenerate_key_pair`)
+      .then(({ data }) => {
+        const params = data.data
+
+        Object.keys(params).forEach((key) => {
+          this[key] = params[key]
+          assign[key].bind(this)(params)
+        })
+
+        this.key_pair_id = null
+        return this
+      })
+      .catch((error) => {
+        const { errors } = error.response.data
+        this.errors = errors
+        throw errors
+      })
+  }
+
+
   destroy () {
     return this.constructor.api().delete(`/${this.id}`)
       .catch((error) => {
@@ -144,7 +173,12 @@ class Client {
       refresh_token_ttl,
       identity_provider,
       secret,
-      id_token_signature_alg
+      id_token_signature_alg,
+      userinfo_signed_response_alg,
+      token_endpoint_jwt_auth_alg,
+      token_endpoint_auth_methods,
+      jwt_public_key,
+      key_pair_id
     } = this
 
     return {
@@ -166,7 +200,12 @@ class Client {
       supported_grant_types: grantTypes
         .filter(({ value }) => value)
         .map(({ label }) => label),
-      id_token_signature_alg
+      id_token_signature_alg,
+      userinfo_signed_response_alg,
+      token_endpoint_jwt_auth_alg,
+      token_endpoint_auth_methods,
+      jwt_public_key,
+      key_pair_id
     }
   }
 }
@@ -205,6 +244,32 @@ Client.idTokenSignatureAlgorithms = [
   "RS256",
   "RS384",
   "RS512"
+]
+
+Client.clientJwtAuthenticationSignatureAlgorithms = [
+  "HS256",
+  "HS384",
+  "HS512",
+  "RS256",
+  "RS384",
+  "RS512"
+]
+
+Client.UserinfoResponseSignatureAlgorithms = [
+  null,
+  "HS256",
+  "HS384",
+  "HS512",
+  "RS256",
+  "RS384",
+  "RS512"
+]
+
+Client.tokenEndpointAuthMethods = [
+  "client_secret_basic",
+  "client_secret_post",
+  "client_secret_jwt",
+  "private_key_jwt"
 ]
 
 export default Client

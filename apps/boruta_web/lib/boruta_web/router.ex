@@ -53,8 +53,10 @@ defmodule BorutaWeb.Router do
   scope "/openid", BorutaWeb do
     pipe_through(:api)
 
-    get("/jwks", OpenidController, :jwks_index)
-    get("/jwks/:client_id", OpenidController, :jwks_show)
+    get("/jwks", Openid.JwksController, :jwks_index)
+    get("/jwks/:client_id", Openid.JwksController, :jwks_show)
+
+    post("/register", Openid.DynamicRegistrationController, :register_client)
   end
 
   scope "/oauth", BorutaWeb.Oauth do
@@ -70,8 +72,8 @@ defmodule BorutaWeb.Router do
   scope "/oauth", BorutaWeb do
     pipe_through(:api)
 
-    get("/userinfo", OpenidController, :userinfo)
-    post("/userinfo", OpenidController, :userinfo)
+    get("/userinfo", Openid.UserinfoController, :userinfo)
+    post("/userinfo", Openid.UserinfoController, :userinfo)
   end
 
   scope "/oauth", BorutaWeb.Oauth do

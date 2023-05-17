@@ -54,7 +54,7 @@ defmodule BorutaIdentity.MixProject do
       {:nimble_pool, "~> 0.2"},
       {:oauth2, "~> 2.0"},
       {:pbkdf2_elixir, "~> 2.0"},
-      {:phoenix, "~> 1.6"},
+      {:phoenix, "~> 1.6.0", override: true},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

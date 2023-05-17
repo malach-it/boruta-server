@@ -47,7 +47,7 @@ defmodule BorutaAdmin.MixProject do
       {:finch, "~> 0.8"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:phoenix, "~> 1.6"},
+      {:phoenix, "~> 1.6.0", override: true},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

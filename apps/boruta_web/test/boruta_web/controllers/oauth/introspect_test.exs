@@ -40,7 +40,7 @@ defmodule BorutaWeb.Oauth.IntrospectTest do
       assert json_response(conn, 400) == %{
                "error" => "invalid_request",
                "error_description" =>
-                 "Request validation failed. Required properties client_id, client_secret, token are missing at #."
+                 "Request validation failed. Required properties client_id, token are missing at #."
              }
     end
 
