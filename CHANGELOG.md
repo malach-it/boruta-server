@@ -23,8 +23,6 @@
 
 - [identity] invalidate user reset password token at use
 
-### Fixed
-
 ## [0.1.0] - 2022-10-25
 
 Initial beta release

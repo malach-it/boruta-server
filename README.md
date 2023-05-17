@@ -15,11 +15,16 @@ As it, boruta server aim to follow the RFCs from IETF:
 - [RFC 7662 - OAuth 2.0 Token Introspection](https://tools.ietf.org/html/rfc7662)
 - [RFC 7009 - OAuth 2.0 Token Revocation](https://tools.ietf.org/html/rfc7009)
 - [RFC 7636 - Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
+- [RFC 7521 - Assertion Framework for OAuth 2.0 Client Authentication and Authorization Grants](https://www.rfc-editor.org/rfc/rfc7521)
+- [RFC 7523 - JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants](https://tools.ietf.org/html/rfc7523)
 
 And the specifications from the OpenID Foundation:
 - [OpenID Connect core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
+- [OpenID Connect Dynamic Client Registration 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-registration-1_0.html)
 
-This server has been certified for the Basic, Implicit and Hybrid OpenID Provider profiles by the OpenID Foundation on October, 18th 2022 for the tagged version 0.1.0
+This server has been certified for the Basic, Implicit, and Hybrid OpenID Provider profiles by the OpenID Foundation on October, 18th 2022 for the tagged version 0.1.0
+
+This server has been also certified for the Config and Dynamic OpenID Provider profiles by the OpenID Foundation on May, 16th 2023 for the tagged version 0.2.0
 
 ![OpenID certified](https://github.com/malach-it/boruta-server/blob/master/images/oid-certification-mark.png?raw=true)
 
