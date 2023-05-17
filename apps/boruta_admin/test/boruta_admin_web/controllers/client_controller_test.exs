@@ -150,6 +150,9 @@ defmodule BorutaAdminWeb.ClientControllerTest do
                "redirect_uris" => ["http://updated.redirect.uri"]
              } = json_response(conn, 200)["data"]
     end
+
+    @tag :skip
+    test "updates a client with a global key pair"
   end
 
   describe "regenerate client key pair" do
