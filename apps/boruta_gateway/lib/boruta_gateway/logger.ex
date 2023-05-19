@@ -62,6 +62,7 @@ defmodule BorutaGateway.Logger do
     %{method: method, request_path: path, status: status_code} = conn
     node_name = conn.assigns[:node_name]
     status_code = Integer.to_string(status_code)
+    remote_ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
 
     status =
       case conn.assigns[:upstream] do
@@ -78,6 +79,7 @@ defmodule BorutaGateway.Logger do
       " - ",
       status,
       log_attribute("node_name", node_name),
+      log_attribute("remote_ip", remote_ip),
       log_attribute("method", method),
       log_attribute("path", path),
       log_attribute("status_code", status_code),
@@ -98,7 +100,10 @@ defmodule BorutaGateway.Logger do
               log_attribute("upstream_host", upstream.host),
               log_attribute("upstream_port", upstream.port),
               log_attribute("upstream_time", duration(upstream_time)),
-              log_attribute("gateway_time", upstream_time && duration(request_time - upstream_time))
+              log_attribute(
+                "gateway_time",
+                upstream_time && duration(request_time - upstream_time)
+              )
             ]
       end
 
@@ -133,6 +138,7 @@ defmodule BorutaGateway.Logger do
   defp connection_type(_), do: "sent"
 
   defp duration(nil), do: ["0", "µs"]
+
   defp duration(duration) do
     [Integer.to_string(duration), "µs"]
   end

@@ -3,6 +3,7 @@ defmodule BorutaGateway.GatewayPipeline do
 
   use Plug.Router
 
+  plug(RemoteIp)
   plug(Plug.RequestId)
   plug(BorutaGateway.Plug.Metrics)
   plug(BorutaGateway.Plug.AssignUpstream)

@@ -3,6 +3,7 @@ defmodule BorutaGateway.MicrogatewayPipeline do
 
   use Plug.Router
 
+  plug(RemoteIp)
   plug(Plug.RequestId)
   plug(BorutaGateway.Plug.Metrics)
   plug(BorutaGateway.Plug.AssignSidecarUpstream)

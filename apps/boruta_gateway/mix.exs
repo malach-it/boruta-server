@@ -43,6 +43,7 @@ defmodule BorutaGateway.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
+      {:remote_ip, "~> 1.1"},
       {:telemetry, "~> 0.4"},
       {:yaml_elixir, "~> 2.9"}
     ]
