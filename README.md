@@ -182,6 +182,10 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_GATEWAY_SIDECAR_PORT`      | The port where boruta microgateway will be exposed on. |
 | `BORUTA_GATEWAY_CONFIGURATION_PATH`| The path containing the gateway static configuration. |
 
+## Code of Conduct
+
+This product community follows the code of conduct available [here](https://io.malach.it/code-of-conduct.html)
+
 ## License
 
 This code is released under the [Apache 2.0](LICENSE.md) license.
