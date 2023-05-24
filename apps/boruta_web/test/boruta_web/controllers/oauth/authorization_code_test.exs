@@ -196,9 +196,21 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
           })
         )
 
-      [_, code, _expires_in, state] =
+      assert [_, _redirect_uri] =
         Regex.run(
-          ~r/#{redirect_uri}\?code=(.+)&expires_in=(.+)&state=(.+)/,
+          ~r/(#{redirect_uri})\?/,
+          redirected_to(conn)
+        )
+
+      [_, code] =
+        Regex.run(
+          ~r/code=([^&]+)/,
+          redirected_to(conn)
+        )
+
+      [_, state] =
+        Regex.run(
+          ~r/state=([^&]+)/,
           redirected_to(conn)
         )
 

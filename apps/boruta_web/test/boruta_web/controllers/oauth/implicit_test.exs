@@ -171,12 +171,35 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
           })
         )
 
-      [_, access_token, expires_in, state] =
+      assert [_, "bearer"] =
         Regex.run(
-          ~r/#{redirect_uri}#access_token=(.+)&expires_in=(.+)&state=(.+)&token_type=bearer/,
+          ~r/token_type=([^&]+)/,
           redirected_to(conn)
         )
 
+      assert [_, _redirect_uri] =
+        Regex.run(
+          ~r/(#{redirect_uri})#/,
+          redirected_to(conn)
+        )
+
+      [_, access_token] =
+        Regex.run(
+          ~r/access_token=([^&]+)/,
+          redirected_to(conn)
+        )
+
+      [_, expires_in] =
+        Regex.run(
+          ~r/expires_in=([^&]+)/,
+          redirected_to(conn)
+        )
+
+      [_, state] =
+        Regex.run(
+          ~r/state=([^&]+)/,
+          redirected_to(conn)
+        )
       assert access_token
       assert expires_in
       assert state == given_state
