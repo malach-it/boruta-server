@@ -87,7 +87,7 @@ if System.get_env("K8S_NAMESPACE") && System.get_env("K8S_SELECTOR") do
       k8s: [
         strategy: Cluster.Strategy.Kubernetes,
         config: [
-          mode: :ip,
+          mode: :dns,
           kubernetes_ip_lookup_mode: :pods,
           kubernetes_node_basename: "boruta",
           kubernetes_selector: System.get_env("K8S_SELECTOR"),
