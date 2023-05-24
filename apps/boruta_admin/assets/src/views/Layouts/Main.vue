@@ -263,6 +263,10 @@ export default {
   h3, h4, h5 {
     margin: .5em 0;
   }
+  pre {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .actions {
     float: right;
     &.main {
