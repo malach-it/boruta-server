@@ -259,6 +259,10 @@ export default {
 .client-form {
   .field {
     position: relative;
+    pre {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
   .authorized-scopes-select {
     margin-right: 3em;
