@@ -87,6 +87,18 @@ defmodule BorutaGateway.Logger do
     ]
 
     log_line =
+      case conn.assigns[:token] do
+        nil ->
+          log_line
+
+        token ->
+          log_line ++
+            [
+              log_attribute("access_token", token.value),
+            ]
+      end
+
+    log_line =
       case conn.assigns[:upstream] do
         nil ->
           log_line
