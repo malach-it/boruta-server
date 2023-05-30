@@ -64,11 +64,7 @@ defmodule BorutaGateway.Logger do
     status_code = Integer.to_string(status_code)
     remote_ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
 
-    status =
-      case conn.assigns[:upstream] do
-        nil -> "failure"
-        _upstream -> "success"
-      end
+    status = business_status(conn)
 
     log_line = [
       "boruta_gateway",
@@ -83,56 +79,72 @@ defmodule BorutaGateway.Logger do
       log_attribute("method", method),
       log_attribute("path", path),
       log_attribute("status_code", status_code),
-      log_attribute("request_time", duration(request_time))
+      log_attribute("request_time", [to_string(request_time), "µs"])
     ]
 
     log_line =
-      case conn.assigns[:token] do
-        nil ->
-          log_line
-
-        token ->
-          log_line ++
-            [
-              log_attribute("access_token", token.value),
-            ]
-      end
-
-    log_line =
-      case conn.assigns[:upstream] do
-        nil ->
-          log_line
-
-        upstream ->
-          upstream_time = conn.assigns[:upstream_time]
-
-          log_line ++
-            [
-              log_attribute("upstream_scheme", upstream.scheme),
-              log_attribute("upstream_host", upstream.host),
-              log_attribute("upstream_port", upstream.port),
-              log_attribute("upstream_time", duration(upstream_time)),
-              log_attribute(
-                "gateway_time",
-                upstream_time && duration(request_time - upstream_time)
-              )
-            ]
-      end
-
-    log_line =
-      case conn.assigns[:upstream_error] do
-        nil ->
-          log_line
-
-        error ->
-          log_line ++ [log_attribute("upstream_error", ~s["#{inspect(error)}"])]
-      end
+      log_line
+      |> put_access_token(conn)
+      |> put_upstream_attributes(conn, request_time)
+      |> put_upstream_error(conn)
 
     Logger.log(
       :info,
       fn -> log_line end,
       type: :business
     )
+  end
+
+  defp business_status(conn) do
+    case conn.assigns[:upstream] do
+      nil -> "failure"
+      _upstream -> "success"
+    end
+  end
+
+  defp put_access_token(log_line, conn) do
+    case conn.assigns[:token] do
+      nil ->
+        log_line
+
+      token ->
+        log_line ++
+          [
+            log_attribute("access_token", token.value)
+          ]
+    end
+  end
+
+  defp put_upstream_attributes(log_line, conn, request_time) do
+    case conn.assigns[:upstream] do
+      nil ->
+        log_line
+
+      upstream ->
+        upstream_time = conn.assigns[:upstream_time]
+
+        log_line ++
+          [
+            log_attribute("upstream_scheme", upstream.scheme),
+            log_attribute("upstream_host", upstream.host),
+            log_attribute("upstream_port", upstream.port),
+            log_attribute("upstream_time", upstream_time && [to_string(upstream_time), "µs"]),
+            log_attribute(
+              "gateway_time",
+              upstream_time && [to_string(request_time - upstream_time), "µs"]
+            )
+          ]
+    end
+  end
+
+  defp put_upstream_error(log_line, conn) do
+    case conn.assigns[:upstream_error] do
+      nil ->
+        log_line
+
+      error ->
+        log_line ++ [log_attribute("upstream_error", ~s["#{inspect(error)}"])]
+    end
   end
 
   defp log_attribute(_key, nil), do: ""
@@ -152,6 +164,12 @@ defmodule BorutaGateway.Logger do
   defp duration(nil), do: ["0", "µs"]
 
   defp duration(duration) do
-    [Integer.to_string(duration), "µs"]
+    duration = System.convert_time_unit(duration, :native, :microsecond)
+
+    if duration > 1000 do
+      [duration |> div(1000) |> Integer.to_string(), "ms"]
+    else
+      [Integer.to_string(duration), "µs"]
+    end
   end
 end
