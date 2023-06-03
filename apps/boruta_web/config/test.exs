@@ -33,13 +33,6 @@ config :boruta_auth, BorutaAuth.Repo,
 
 config :boruta_identity, Boruta.Accounts, secret_key_base: "secret"
 
-config :boruta_web, BorutaWeb.Authorization,
-  oauth2: [
-    client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e20",
-    client_secret: "777",
-    site: "http://localhost:7779"
-  ]
-
 config :logger, level: :warn
 
 config :libcluster,

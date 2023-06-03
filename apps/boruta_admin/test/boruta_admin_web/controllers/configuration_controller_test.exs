@@ -8,6 +8,7 @@ defmodule BorutaAdminWeb.ConfigurationControllerTest do
   }
   @invalid_attrs %{content: nil}
 
+  # TODO test sub restriction
   test "returns a 401", %{conn: conn} do
     assert conn
            |> get(

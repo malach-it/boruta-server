@@ -50,5 +50,13 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [port: 4002],
   server: false
 
+config :boruta_web, BorutaAdminWeb.Authorization,
+  oauth2: [
+    client_id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20"),
+    client_secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "777"),
+    site: System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL", "http://localhost:4000")
+  ],
+  sub_restricted: System.get_env("BORUTA_SUB_RESTRICTED", nil)
+
 # Print only warnings and errors during test
 config :logger, level: :warn

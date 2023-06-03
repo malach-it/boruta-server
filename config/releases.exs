@@ -69,12 +69,13 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
   url: [scheme: "https", host: System.get_env("BORUTA_ADMIN_HOST")],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
-config :boruta_web, BorutaWeb.Authorization,
+config :boruta_web, BorutaAdminWeb.Authorization,
   oauth2: [
     client_id: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID"),
     client_secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET"),
     site: System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL")
-  ]
+  ],
+  sub_restricted: System.get_env("BORUTA_SUB_RESTRICTED", nil)
 
 config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,

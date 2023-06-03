@@ -1,6 +1,7 @@
 defmodule BorutaAdminWeb.KeyPairControllerTest do
   use BorutaAdminWeb.ConnCase
 
+  # TODO test sub restriction
   test "returns a 401", %{conn: conn} do
     assert conn
            |> get(Routes.admin_key_pair_path(conn, :index))

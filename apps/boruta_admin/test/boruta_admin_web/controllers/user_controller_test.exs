@@ -12,6 +12,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
+  # TODO test sub restriction
   test "returns a 401", %{conn: conn} do
     assert conn
            |> get(Routes.admin_user_path(conn, :index))

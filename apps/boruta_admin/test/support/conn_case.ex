@@ -80,7 +80,7 @@ defmodule BorutaAdminWeb.ConnCase do
 
     %URI{port: port} =
       URI.parse(
-        Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2][
+        Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:oauth2][
           :site
         ]
       )
@@ -113,7 +113,7 @@ defmodule BorutaAdminWeb.ConnCase do
 
     %URI{port: port} =
       URI.parse(
-        Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2][
+        Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:oauth2][
           :site
         ]
       )

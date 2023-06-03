@@ -23,6 +23,7 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
+  # TODO test sub restriction
   test "returns a 401", %{conn: conn} do
     conn = get(conn, Routes.admin_client_path(conn, :index))
     assert response(conn, 401)

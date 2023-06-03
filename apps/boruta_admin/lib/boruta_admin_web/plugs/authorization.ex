@@ -10,8 +10,8 @@ defmodule BorutaAdminWeb.Authorization do
   def require_authenticated(conn, _opts \\ []) do
     with [authorization_header] <- get_req_header(conn, "authorization"),
          [_authorization_header, token] <- Regex.run(~r/Bearer (.+)/, authorization_header),
-         {:ok, %{"active" => true} = payload} <-
-           introspect(token) do
+         {:ok, %{"sub" => sub, "active" => true} = payload} <- introspect(token),
+         :ok <- maybe_validate_user(sub) do
       conn
       |> assign(:token, token)
       |> assign(:introspected_token, payload)
@@ -53,7 +53,7 @@ defmodule BorutaAdminWeb.Authorization do
 
   # TODO cache token introspection
   def introspect(token) do
-    oauth2_config = Application.get_env(:boruta_web, BorutaWeb.Authorization)[:oauth2]
+    oauth2_config = Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:oauth2]
     client_id = oauth2_config[:client_id]
     client_secret = oauth2_config[:client_secret]
     site = oauth2_config[:site]
@@ -71,6 +71,22 @@ defmodule BorutaAdminWeb.Authorization do
            )
            |> Finch.request(FinchHttp) do
       Jason.decode(body)
+    end
+  end
+
+  defp maybe_validate_user(sub) do
+    case Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:sub_restricted] do
+      nil ->
+        :ok
+
+      restricted_sub ->
+        case sub == restricted_sub do
+          true ->
+            :ok
+
+          false ->
+            {:error, "Instance management is restricted to #{restricted_sub}"}
+        end
     end
   end
 end

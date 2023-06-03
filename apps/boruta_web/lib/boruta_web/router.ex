@@ -7,17 +7,6 @@ defmodule BorutaWeb.Router do
       fetch_current_user: 2
     ]
 
-  import BorutaWeb.Authorization,
-    only: [
-      require_authenticated: 2
-    ]
-
-  pipeline :protected_api do
-    plug(:accepts, ["json"])
-
-    plug(:require_authenticated)
-  end
-
   pipeline :browser do
     plug(:accepts, ["html"])
     plug(:fetch_session)
