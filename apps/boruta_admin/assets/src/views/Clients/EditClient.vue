@@ -1,7 +1,7 @@
 <template>
   <div class="edit-client">
     <Toaster :active="success" message="Client has been updated" type="success" />
-    <div class="ui container">
+    <div class="form-container">
       <div class="ui segment">
         <div class="ui attribute list">
           <div class="item">

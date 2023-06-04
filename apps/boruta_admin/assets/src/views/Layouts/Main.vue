@@ -459,6 +459,9 @@ export default {
     .ui.checkbox input[type=radio] {
       opacity: 1!important;
     }
+    .inline.fields {
+      flex-wrap: wrap!important;
+    }
     .inline.fields>label {
       display: block;
       width: 100%;
@@ -517,6 +520,14 @@ export default {
     flex-direction: column;
     .content {
       flex: 1;
+    }
+    .form-container {
+      padding: 0 1rem;
+      width: 60%;
+      @media screen and (max-width: 768px) {
+        width: 100%;
+        padding: 0;
+      }
     }
     .container {
       padding: 0 1rem;

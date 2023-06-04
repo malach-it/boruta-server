@@ -7,16 +7,34 @@
         <div class="field" :class="{ 'error': client.errors?.name }">
           <label>Name</label>
           <input v-model="client.name" placeholder="Super client" autocomplete="new-password" />
+          <i class="ui blue large help question outline circle icon"></i>
+          <div class="documentation">
+            <div class="ui info message">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin rutrum mattis neque. Praesent et sem est. Fusce mollis nisl et justo blandit ullamcorper. Nunc pulvinar ligula semper eleifend scelerisque. In tincidunt, mauris a porta mollis, augue mi vehicula nibh, elementum feugiat mauris lectus in felis. Nullam finibus lorem in nibh eleifend molestie.
+            </div>
+          </div>
         </div>
         <div class="field" :class="{ 'error': client.errors?.id }" v-if="!client.isPersisted">
           <label>Client ID</label>
           <input v-model="client.id" autocomplete="new-password" placeholder="Must be an UUIDv4 - Leave blank to autogenerate" />
+          <i class="ui blue large help question outline circle icon"></i>
+          <div class="documentation">
+            <div class="ui info message">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin rutrum mattis neque. Praesent et sem est. Fusce mollis nisl et justo blandit ullamcorper. Nunc pulvinar ligula semper eleifend scelerisque. In tincidunt, mauris a porta mollis, augue mi vehicula nibh, elementum feugiat mauris lectus in felis. Nullam finibus lorem in nibh eleifend molestie.
+            </div>
+          </div>
         </div>
         <div class="field" :class="{ 'error': client.errors?.secret }">
           <label>Client secret</label>
           <div class="ui left icon input">
             <input :type="passwordVisible ? 'text' : 'password'" autocomplete="new-password" v-model="client.secret" placeholder="Leave blank to autogenerate" />
             <i class="eye icon" :class="{ 'slash': passwordVisible }" @click="passwordVisibilityToggle()"></i>
+          </div>
+          <i class="ui blue large help question outline circle icon"></i>
+          <div class="documentation">
+            <div class="ui info message">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin rutrum mattis neque. Praesent et sem est. Fusce mollis nisl et justo blandit ullamcorper. Nunc pulvinar ligula semper eleifend scelerisque. In tincidunt, mauris a porta mollis, augue mi vehicula nibh, elementum feugiat mauris lectus in felis. Nullam finibus lorem in nibh eleifend molestie.
+            </div>
           </div>
         </div>
         <div class="ui segment">
@@ -262,6 +280,34 @@ export default {
     pre {
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .documentation {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      padding-left: 2em;
+      margin: 1em;
+      width: 70%;
+      &:hover {
+        display: block;
+      }
+    }
+    .help {
+      position: absolute;
+      right: -1em;
+      top: 1.6em;
+      cursor: help;
+      &:hover ~ .documentation {
+        display: block;
+      }
+    }
+    @media (max-width: 768px) {
+      .documentation {
+        position: relative;
+        width: auto;
+        left: 0;
+      }
     }
   }
   .authorized-scopes-select {
