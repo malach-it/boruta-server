@@ -4,8 +4,7 @@ import oauth from './services/oauth.service'
 
 export default createStore({
   state: {
-    isAuthenticated: false,
-    socket: null
+    isAuthenticated: false
   },
   getters: {
     isAuthenticated (state) {
@@ -15,9 +14,6 @@ export default createStore({
   mutations: {
     SET_AUTHENTICATED (state, isAuthenticated) {
       state.isAuthenticated = isAuthenticated
-    },
-    SET_SOCKET (state, socket) {
-      state.socket = socket
     }
   },
   actions: {

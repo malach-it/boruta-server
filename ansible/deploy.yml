@@ -195,7 +195,6 @@
             BORUTA_ADMIN_HOST: "{{ admin_host }}"
             BORUTA_ADMIN_PORT: "4002"
             BORUTA_ADMIN_BASE_URL: "{{ boruta_base_url }}"
-            BORUTA_ADMIN_BASE_SOCKET_URL: "{{ vue_app_boruta_base_socket_url }}"
             BORUTA_OAUTH_HOST: "{{ oauth_host }}"
             BORUTA_OAUTH_PORT: "4001"
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
