@@ -26,6 +26,14 @@ BorutaAuth.Repo.insert(
 
 BorutaAuth.Repo.insert(
   %Boruta.Ecto.Scope{
+    name: "roles:manage:all",
+    label: "Manage all roles"
+  },
+  on_conflict: :nothing
+)
+
+BorutaAuth.Repo.insert(
+  %Boruta.Ecto.Scope{
     name: "clients:manage:all",
     label: "Manage all clients"
   },
@@ -133,6 +141,7 @@ Boruta.Ecto.Admin.get_scopes_by_names([
   "users:manage:all",
   "clients:manage:all",
   "scopes:manage:all",
+  "roles:manage:all",
   "upstreams:manage:all",
   "identity-providers:manage:all",
   "configuration:manage:all",

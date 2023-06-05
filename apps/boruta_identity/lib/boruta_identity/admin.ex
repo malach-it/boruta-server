@@ -237,6 +237,7 @@ defmodule BorutaIdentity.Admin do
 
       user ->
         # TODO delete both provider and domain users in a transaction
+        # TODO manage identity federation users
         with :ok <- apply(Backend.implementation(user.backend), :delete_user, [user.uid]) do
           Repo.delete(user)
         end
@@ -246,5 +247,48 @@ defmodule BorutaIdentity.Admin do
   @spec delete_user_authorized_scopes_by_id(scope_id :: String.t()) :: {deleted :: integer(), nil}
   def delete_user_authorized_scopes_by_id(scope_id) do
     Repo.delete_all(from(s in UserAuthorizedScope, where: s.scope_id == ^scope_id))
+  end
+
+  # --------- TODO refactor below functions
+  alias BorutaIdentity.Accounts.Role
+
+  def list_roles do
+    Repo.all(Role)
+  end
+
+  @doc """
+  Gets a single role.
+
+  Raises `Ecto.NoResultsError` if the Role does not exist.
+
+  ## Examples
+
+      iex> get_role!(123)
+      %Role{}
+
+      iex> get_role!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_role!(id), do: Repo.get!(Role, id)
+
+  def create_role(attrs \\ %{}) do
+    %Role{}
+    |> Role.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_role(%Role{} = role, attrs) do
+    role
+    |> Role.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_role(%Role{} = role) do
+    Repo.delete(role)
+  end
+
+  def change_role(%Role{} = role, attrs \\ %{}) do
+    Role.changeset(role, attrs)
   end
 end
