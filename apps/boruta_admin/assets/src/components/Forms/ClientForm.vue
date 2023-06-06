@@ -264,8 +264,5 @@ export default {
       text-overflow: ellipsis;
     }
   }
-  .authorized-scopes-select {
-    margin-right: 3em;
-  }
 }
 </style>

@@ -5,6 +5,7 @@ defmodule BorutaIdentity.Admin do
 
   import Ecto.Query
 
+  alias Boruta.Ecto.Admin
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.IdentityProviders.Backend
@@ -214,8 +215,8 @@ defmodule BorutaIdentity.Admin do
   end
 
   @type user_update_params :: %{
-    optional(:metadata) => map()
-  }
+          optional(:metadata) => map()
+        }
 
   @spec update_user(user :: User.t(), user_params :: user_update_params()) ::
           {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
@@ -253,7 +254,19 @@ defmodule BorutaIdentity.Admin do
   alias BorutaIdentity.Accounts.Role
 
   def list_roles do
-    Repo.all(Role)
+    Repo.all(
+      from r in Role,
+        left_join: rs in assoc(r, :role_scopes),
+        preload: [role_scopes: rs]
+    )
+    |> Enum.map(fn %Role{role_scopes: role_scopes} = role ->
+      scopes =
+        role_scopes
+        |> Enum.map(fn role_scope -> role_scope.scope_id end)
+        |> Admin.get_scopes_by_ids()
+
+      %{role | scopes: scopes}
+    end)
   end
 
   @doc """
@@ -270,18 +283,40 @@ defmodule BorutaIdentity.Admin do
       ** (Ecto.NoResultsError)
 
   """
-  def get_role!(id), do: Repo.get!(Role, id)
+  def get_role!(id) do
+    %Role{role_scopes: role_scopes} =
+      role =
+      Repo.one!(
+        from r in Role,
+          left_join: rs in assoc(r, :role_scopes),
+          where: r.id == ^id,
+          preload: [role_scopes: rs]
+      )
+
+    scopes =
+      role_scopes
+      |> Enum.map(fn role_scope -> role_scope.scope_id end)
+      |> Admin.get_scopes_by_ids()
+
+    %{role | scopes: scopes}
+  end
 
   def create_role(attrs \\ %{}) do
-    %Role{}
-    |> Role.changeset(attrs)
-    |> Repo.insert()
+    with {:ok, role} <-
+           %Role{}
+           |> Role.changeset(attrs)
+           |> Repo.insert() do
+      {:ok, get_role!(role.id)}
+    end
   end
 
   def update_role(%Role{} = role, attrs) do
-    role
-    |> Role.changeset(attrs)
-    |> Repo.update()
+    with {:ok, role} <-
+           role
+           |> Role.changeset(attrs)
+           |> Repo.update() do
+      {:ok, get_role!(role.id)}
+    end
   end
 
   def delete_role(%Role{} = role) do

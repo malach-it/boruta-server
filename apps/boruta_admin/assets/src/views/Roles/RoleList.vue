@@ -24,6 +24,12 @@
                 <span class="header">Name</span>
                 <span class="description">{{ role.name }}</span>
               </div>
+              <div class="scopes item">
+                <span class="header">Scopes</span>
+                <div class="description">
+                  <span v-for="scope in role.scopes">{{ scope.model.name }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -69,4 +75,11 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.scopes.item .description {
+  height: 7em;
+  overflow-y: scroll!important;
+  span {
+    display: block;
+  }
+}
 </style>

@@ -12,6 +12,15 @@ defmodule BorutaAdminWeb.RoleView do
 
   def render("role.json", %{role: role}) do
     %{id: role.id,
-      name: role.name}
+      name: role.name,
+      scopes:
+        Enum.map(role.scopes, fn scope ->
+          %{
+            id: scope.id,
+            name: scope.name,
+            public: scope.public
+          }
+        end)
+    }
   end
 end

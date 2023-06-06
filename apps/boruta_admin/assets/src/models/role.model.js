@@ -1,12 +1,15 @@
 import axios from 'axios'
+import Scope from './scope.model'
 import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
+  scopes: []
 }
 
 const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
+  scopes: function ({ scopes }) { this.scopes = scopes.map(scope => ({ model: new Scope(scope) })) }
 }
 
 class Role {
@@ -59,12 +62,15 @@ class Role {
   get serialized () {
     const {
       id,
-      name
+      name,
+      scopes
     } = this
 
+    console.log(scopes)
     return {
       id,
-      name
+      name,
+      scopes: scopes.map(({ model: { id, name } }) => ({ id, name }))
     }
   }
 }

@@ -8,6 +8,7 @@
           <input type="text" v-model="role.name" placeholder="administrator">
         </div>
         <hr />
+        <ScopesField :currentScopes="role.scopes" @addScope="addScope" @deleteScope="deleteScope" />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a class="ui button" v-on:click="back()">Back</a>
       </form>
@@ -19,16 +20,14 @@
 import Scope from '../../models/scope.model'
 import Role from '../../models/role.model'
 import FormErrors from '../../components/Forms/FormErrors.vue'
+import ScopesField from '../../components/Forms/ScopesField.vue'
 
 export default {
   name: 'role-form',
   props: ['role', 'action'],
   components: {
-    FormErrors
-  },
-  data () {
-    return {
-    }
+    FormErrors,
+    ScopesField
   },
   mounted () {
   },

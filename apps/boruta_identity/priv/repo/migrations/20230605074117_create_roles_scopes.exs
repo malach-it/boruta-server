@@ -4,7 +4,7 @@ defmodule BorutaIdentity.Repo.Migrations.CreateRolesScopes do
   def change do
     create table(:roles_scopes, primary_key: false) do
       add :id, :uuid, primary_key: true
-      add :role_id, references(:roles, type: :uuid), null: false
+      add :role_id, references(:roles, type: :uuid, on_delete: :delete_all), null: false
       add :scope_id, :uuid, null: false
 
       timestamps()
