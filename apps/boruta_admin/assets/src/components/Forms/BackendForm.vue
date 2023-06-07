@@ -141,6 +141,9 @@
               <i class="eye icon" :class="{ 'slash': federatedServer.clientSecretVisible }" @click="federatedServerVisibilityToggle(federatedServer)"></i>
             </div>
           </div>
+          <div class="ui info message">
+            You'll need to fill the redirect uri on the remote server `${BORUTA_OAUTH_HOST}/accounts/backends/:backend_id/:federated_server_name/callback`
+          </div>
           <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
             <label>Base URL</label>
             <input type="text" v-model="federatedServer.base_url">
