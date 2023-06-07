@@ -6,6 +6,7 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Internal
+  alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Configuration.ErrorTemplate
   alias BorutaIdentity.IdentityProviders.Backend
@@ -99,4 +100,9 @@ defmodule BorutaIdentity.Factory do
     }
   end
 
+  def role_factory do
+    %Role{
+      name: SecureRandom.hex(32)
+    }
+  end
 end

@@ -95,6 +95,18 @@
                 <i class="cogs icon"></i>
                 <span>Scopes</span>
               </a>
+              <div class="dropdown">
+                <div class="subitem">
+                  <router-link :to="{ name: 'scope-list' }">
+                    <span>scope list</span>
+                  </router-link>
+                </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'role-list' }">
+                    <span>role list</span>
+                  </router-link>
+                </div>
+              </div>
             </div>
           </router-link>
           <router-link

@@ -5,6 +5,7 @@ defmodule BorutaIdentity.Admin do
 
   import Ecto.Query
 
+  alias Boruta.Ecto.Admin
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.IdentityProviders.Backend
@@ -214,8 +215,8 @@ defmodule BorutaIdentity.Admin do
   end
 
   @type user_update_params :: %{
-    optional(:metadata) => map()
-  }
+          optional(:metadata) => map()
+        }
 
   @spec update_user(user :: User.t(), user_params :: user_update_params()) ::
           {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
@@ -237,6 +238,7 @@ defmodule BorutaIdentity.Admin do
 
       user ->
         # TODO delete both provider and domain users in a transaction
+        # TODO manage identity federation users
         with :ok <- apply(Backend.implementation(user.backend), :delete_user, [user.uid]) do
           Repo.delete(user)
         end
@@ -246,5 +248,82 @@ defmodule BorutaIdentity.Admin do
   @spec delete_user_authorized_scopes_by_id(scope_id :: String.t()) :: {deleted :: integer(), nil}
   def delete_user_authorized_scopes_by_id(scope_id) do
     Repo.delete_all(from(s in UserAuthorizedScope, where: s.scope_id == ^scope_id))
+  end
+
+  # --------- TODO refactor below functions
+  alias BorutaIdentity.Accounts.Role
+
+  def list_roles do
+    Repo.all(
+      from r in Role,
+        left_join: rs in assoc(r, :role_scopes),
+        preload: [role_scopes: rs]
+    )
+    |> Enum.map(fn %Role{role_scopes: role_scopes} = role ->
+      scopes =
+        role_scopes
+        |> Enum.map(fn role_scope -> role_scope.scope_id end)
+        |> Admin.get_scopes_by_ids()
+
+      %{role | scopes: scopes}
+    end)
+  end
+
+  @doc """
+  Gets a single role.
+
+  Raises `Ecto.NoResultsError` if the Role does not exist.
+
+  ## Examples
+
+      iex> get_role!(123)
+      %Role{}
+
+      iex> get_role!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_role!(id) do
+    %Role{role_scopes: role_scopes} =
+      role =
+      Repo.one!(
+        from r in Role,
+          left_join: rs in assoc(r, :role_scopes),
+          where: r.id == ^id,
+          preload: [role_scopes: rs]
+      )
+
+    scopes =
+      role_scopes
+      |> Enum.map(fn role_scope -> role_scope.scope_id end)
+      |> Admin.get_scopes_by_ids()
+
+    %{role | scopes: scopes}
+  end
+
+  def create_role(attrs \\ %{}) do
+    with {:ok, role} <-
+           %Role{}
+           |> Role.changeset(attrs)
+           |> Repo.insert() do
+      {:ok, get_role!(role.id)}
+    end
+  end
+
+  def update_role(%Role{} = role, attrs) do
+    with {:ok, role} <-
+           role
+           |> Role.changeset(attrs)
+           |> Repo.update() do
+      {:ok, get_role!(role.id)}
+    end
+  end
+
+  def delete_role(%Role{} = role) do
+    Repo.delete(role)
+  end
+
+  def change_role(%Role{} = role, attrs \\ %{}) do
+    Role.changeset(role, attrs)
   end
 end

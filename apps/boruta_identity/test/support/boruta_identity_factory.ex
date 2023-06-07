@@ -6,6 +6,7 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Internal
+  alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Configuration.ErrorTemplate
@@ -148,6 +149,12 @@ defmodule BorutaIdentity.Factory do
     %ErrorTemplate{
       type: "400",
       content: "error template content"
+    }
+  end
+
+  def role_factory do
+    %Role{
+      name: SecureRandom.hex(32)
     }
   end
 end
