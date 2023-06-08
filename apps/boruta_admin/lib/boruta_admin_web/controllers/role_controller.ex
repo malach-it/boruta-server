@@ -9,7 +9,7 @@ defmodule BorutaAdminWeb.RoleController do
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Admin
 
-  plug(:authorize, ["roles:manage:all"])
+  plug(:authorize, ["scopes:manage:all"])
 
   action_fallback(BorutaAdminWeb.FallbackController)
 

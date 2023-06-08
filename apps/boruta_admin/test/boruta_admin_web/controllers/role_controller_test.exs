@@ -107,7 +107,7 @@ defmodule BorutaAdminWeb.RoleControllerTest do
   end
 
   describe "index" do
-    @tag authorized: ["roles:manage:all"]
+    @tag authorized: ["scopes:manage:all"]
     test "lists all roles", %{conn: conn} do
       conn = get(conn, Routes.admin_role_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
@@ -115,7 +115,7 @@ defmodule BorutaAdminWeb.RoleControllerTest do
   end
 
   describe "create role" do
-    @tag authorized: ["roles:manage:all"]
+    @tag authorized: ["scopes:manage:all"]
     test "renders role when data is valid", %{conn: conn} do
       conn = post(conn, Routes.admin_role_path(conn, :create), role: @create_attrs)
 
@@ -123,7 +123,7 @@ defmodule BorutaAdminWeb.RoleControllerTest do
                json_response(conn, 201)["data"]
     end
 
-    @tag authorized: ["roles:manage:all"]
+    @tag authorized: ["scopes:manage:all"]
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post(conn, Routes.admin_role_path(conn, :create), role: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
@@ -137,13 +137,13 @@ defmodule BorutaAdminWeb.RoleControllerTest do
       {:ok, conn: conn, existing_role: role}
     end
 
-    @tag authorized: ["roles:manage:all"]
+    @tag authorized: ["scopes:manage:all"]
     test "renders role when data is valid", %{conn: conn, existing_role: %Role{id: id} = role} do
       conn = put(conn, Routes.admin_role_path(conn, :update, role), role: @update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
     end
 
-    @tag authorized: ["roles:manage:all"]
+    @tag authorized: ["scopes:manage:all"]
     test "cannot update protected roles", %{conn: conn} do
       Enum.map(@protected_roles, fn name ->
         conn = put(conn, Routes.admin_role_path(conn, :update, insert(:role, name: name)), role: @update_attrs)
@@ -152,7 +152,7 @@ defmodule BorutaAdminWeb.RoleControllerTest do
       end)
     end
 
-    @tag authorized: ["roles:manage:all"]
+    @tag authorized: ["scopes:manage:all"]
     test "renders errors when data is invalid", %{conn: conn, existing_role: role} do
       conn = put(conn, Routes.admin_role_path(conn, :update, role), role: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
@@ -166,7 +166,7 @@ defmodule BorutaAdminWeb.RoleControllerTest do
       {:ok, conn: conn, existing_role: role}
     end
 
-    @tag authorized: ["roles:manage:all"]
+    @tag authorized: ["scopes:manage:all"]
     test "cannot delete protected roles", %{conn: conn} do
       Enum.map(@protected_roles, fn name ->
         conn = delete(conn, Routes.admin_role_path(conn, :delete, insert(:role, name: name)))
@@ -175,7 +175,7 @@ defmodule BorutaAdminWeb.RoleControllerTest do
       end)
     end
 
-    @tag authorized: ["roles:manage:all"]
+    @tag authorized: ["scopes:manage:all"]
     test "deletes chosen role", %{conn: conn, existing_role: role} do
       conn = delete(conn, Routes.admin_role_path(conn, :delete, role))
       assert response(conn, 204)
