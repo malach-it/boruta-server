@@ -30,7 +30,7 @@
           <label>Group</label>
           <input type="text" v-model="user.group" />
         </div>
-        <section v-if="user.isPersisted">
+        <section>
           <h2>Roles</h2>
           <RolesField :currentRoles="user.roles" @delete-role="deleteRole" @add-role="addRole" />
           <h2>Authorized scopes</h2>

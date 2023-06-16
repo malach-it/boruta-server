@@ -17,7 +17,9 @@ defmodule BorutaIdentity.Admin do
           %{
             :username => String.t(),
             :password => String.t(),
-            optional(:metadata) => map()
+            optional(:metadata) => map(),
+            optional(:roles) => map(),
+            optional(:authorized_scopes) => map()
           }
 
   @type raw_user_params :: %{
@@ -85,12 +87,15 @@ defmodule BorutaIdentity.Admin do
   @spec create_user(backend :: Backend.t(), params :: user_params()) ::
           {:ok, User.t()} | {:error, Ecto.Changeset.t()}
   def create_user(backend, params) do
-    # TODO give the ability to provide authorized scopes at user creation
-    apply(
-      Backend.implementation(backend),
-      :create_user,
-      [backend, params]
-    )
+    with {:ok, user} <-
+           apply(
+             Backend.implementation(backend),
+             :create_user,
+             [backend, params]
+           ),
+         {:ok, user} <- update_user_authorized_scopes(user, params[:authorized_scopes] || []) do
+      update_user_roles(user, params[:roles] || [])
+    end
   end
 
   @spec create_raw_user(backend :: Backend.t(), params :: raw_user_params()) ::

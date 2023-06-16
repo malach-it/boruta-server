@@ -238,6 +238,12 @@ defmodule BorutaIdentity.AdminTest do
   end
 
   @tag :skip
+  test "update_user_roles/2"
+
+  @tag :skip
+  test "update_user_authorized_scopes/2"
+
+  @tag :skip
   test "create_raw_user/2"
 
   @tag :skip
