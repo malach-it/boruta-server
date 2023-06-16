@@ -55,7 +55,7 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns paginated users" do
-      user = insert(:user) |> Repo.preload(:authorized_scopes)
+      user = insert(:user) |> Repo.preload([:authorized_scopes, :roles])
 
       assert Admin.list_users() == %Scrivener.Page{
                entries: [user],

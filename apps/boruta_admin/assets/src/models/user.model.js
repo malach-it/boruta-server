@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Scope from './scope.model'
+import Role from './role.model'
 import Backend from './backend.model'
 import { addClientErrorInterceptor } from './utils'
 
@@ -7,6 +8,7 @@ const defaults = {
   errors: null,
   authorize_scopes: false,
   authorized_scopes: [],
+  roles: [],
   backend_id: '',
   backend: new Backend(),
   metadata: {}
@@ -22,6 +24,11 @@ const assign = {
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
       return { model: new Scope(scope) }
+    })
+  },
+  roles: function ({ roles }) {
+    this.roles = roles.map((scope) => {
+      return { model: new Role(scope) }
     })
   }
 }
@@ -92,7 +99,7 @@ class User {
   }
 
   get serialized () {
-    const { id, email, password, metadata, group, authorized_scopes } = this
+    const { id, email, password, metadata, group, authorized_scopes, roles } = this
 
     return {
       id,
@@ -100,7 +107,8 @@ class User {
       password,
       metadata,
       group,
-      authorized_scopes: authorized_scopes.map(({ model }) => model.serialized)
+      authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
+      roles: roles.map(({ model }) => model.serialized)
     }
   }
 }

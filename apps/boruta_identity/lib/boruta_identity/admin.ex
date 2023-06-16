@@ -8,6 +8,7 @@ defmodule BorutaIdentity.Admin do
   alias Boruta.Ecto.Admin
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
   alias NimbleCSV.RFC4180, as: CSV
@@ -41,7 +42,7 @@ defmodule BorutaIdentity.Admin do
   @spec list_users() :: Scrivener.Page.t()
   def list_users(params \\ %{}) do
     from(u in User)
-    |> preload([:authorized_scopes, :backend])
+    |> preload([:authorized_scopes, :roles, :backend])
     |> Repo.paginate(params)
   end
 
@@ -73,8 +74,9 @@ defmodule BorutaIdentity.Admin do
     Repo.one(
       from(u in User,
         left_join: as in assoc(u, :authorized_scopes),
+        left_join: r in assoc(u, :roles),
         join: b in assoc(u, :backend),
-        preload: [authorized_scopes: as, backend: b],
+        preload: [authorized_scopes: as, roles: r, backend: b],
         where: u.id == ^id
       )
     )
@@ -198,7 +200,7 @@ defmodule BorutaIdentity.Admin do
              UserAuthorizedScope.changeset(
                %UserAuthorizedScope{},
                %{
-                 "scope_id" => attrs["id"],
+                 "scope_id" => attrs["id"] || attrs[:scope_id],
                  "user_id" => user.id
                }
              )
@@ -208,6 +210,32 @@ defmodule BorutaIdentity.Admin do
          |> Repo.transaction() do
       {:ok, _result} ->
         {:ok, user |> Repo.reload() |> Repo.preload([:backend, :authorized_scopes])}
+
+      {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
+        {:error, changeset}
+    end
+  end
+
+  @spec update_user_roles(user :: %User{}, roles :: list(map())) ::
+          {:ok, %User{}} | {:error, Ecto.Changeset.t()}
+  def update_user_roles(%User{id: user_id} = user, roles) do
+    Repo.delete_all(from(s in UserRole, where: s.user_id == ^user_id))
+
+    case Enum.reduce(roles, Ecto.Multi.new(), fn attrs, multi ->
+           changeset =
+             UserRole.changeset(
+               %UserRole{},
+               %{
+                 "role_id" => attrs["id"] || attrs[:role_id],
+                 "user_id" => user.id
+               }
+             )
+
+           Ecto.Multi.insert(multi, "scope_-#{SecureRandom.uuid()}", changeset)
+         end)
+         |> Repo.transaction() do
+      {:ok, _result} ->
+        {:ok, user |> Repo.reload() |> Repo.preload([:backend, :authorized_scopes, :roles])}
 
       {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
         {:error, changeset}
@@ -238,7 +266,7 @@ defmodule BorutaIdentity.Admin do
 
       user ->
         # TODO delete both provider and domain users in a transaction
-        # TODO manage identity federation users
+        # TODO manage identity federated users
         with :ok <- apply(Backend.implementation(user.backend), :delete_user, [user.uid]) do
           Repo.delete(user)
         end

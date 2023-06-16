@@ -162,4 +162,5 @@ defmodule BorutaIdentity.Accounts do
   defdelegate get_user(id), to: Users
   defdelegate get_user_by_session_token(token), to: Users
   defdelegate get_user_scopes(user_id), to: Users
+  defdelegate get_user_roles(user_id), to: Users
 end

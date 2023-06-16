@@ -309,9 +309,11 @@ defmodule BorutaAdminWeb.UserControllerTest do
   describe "update user" do
     setup %{conn: conn} do
       user = user_fixture()
-      scope = Boruta.Factory.insert(:scope)
+      {:ok, scope} = Boruta.Ecto.Admin.create_scope(%{name: "some:scope"})
+      role = insert(:role)
+      insert(:role_scope, role_id: role.id, scope_id: scope.id)
 
-      {:ok, conn: conn, user: user, existing_scope: scope}
+      {:ok, conn: conn, user: user, existing_scope: scope, existing_role: role}
     end
 
     @tag authorized: ["users:manage:all"]
@@ -325,7 +327,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
     end
 
     @tag authorized: ["users:manage:all"]
-    test "renders user when data is valid", %{
+    test "renders user with authorized scopes", %{
       conn: conn,
       user: %User{id: id} = user,
       existing_scope: scope
@@ -343,8 +345,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
     @tag authorized: ["users:manage:all"]
     test "updates user with metadata", %{
       conn: conn,
-      user: %User{id: id} = user,
-      existing_scope: scope
+      user: %User{id: id} = user
     } do
       {:ok, _backend} =
         Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
@@ -354,7 +355,6 @@ defmodule BorutaAdminWeb.UserControllerTest do
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
           user: %{
-            "authorized_scopes" => [%{"id" => scope.id}],
             "metadata" => metadata
           }
         )
@@ -367,18 +367,13 @@ defmodule BorutaAdminWeb.UserControllerTest do
     @tag authorized: ["users:manage:all"]
     test "updates user with group", %{
       conn: conn,
-      user: %User{id: id} = user,
-      existing_scope: scope
+      user: %User{id: id} = user
     } do
-      {:ok, _backend} =
-        Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
-        |> Repo.update()
       group = "group1 group2"
 
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
           user: %{
-            "authorized_scopes" => [%{"id" => scope.id}],
             "group" => group
           }
         )
@@ -386,6 +381,26 @@ defmodule BorutaAdminWeb.UserControllerTest do
       assert %{"id" => ^id, "group" => ^group} =
                json_response(conn, 200)["data"]
       assert %User{group: ^group} = Repo.get!(User, id)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "updates user with roles", %{
+      conn: conn,
+      user: %User{id: id} = user,
+      existing_scope: scope,
+      existing_role: role
+    } do
+      conn =
+        put(conn, Routes.admin_user_path(conn, :update, user),
+          user: %{
+            "roles" => [%{"id" => role.id}]
+          }
+        )
+
+      scope_id = scope.id
+      role_id = role.id
+      assert %{"id" => ^id, "roles" => [%{"id" => ^role_id, "scopes" => [%{"id" => ^scope_id}]}]} =
+               json_response(conn, 200)["data"]
     end
 
     @tag user_authorized: ["users:manage:all"]

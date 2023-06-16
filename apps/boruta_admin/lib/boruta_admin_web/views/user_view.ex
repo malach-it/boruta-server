@@ -34,6 +34,7 @@ defmodule BorutaAdminWeb.UserView do
       metadata: user.metadata,
       group: user.group,
       authorized_scopes: Accounts.get_user_scopes(user.id),
+      roles: Accounts.get_user_roles(user.id),
       backend:
         render_one(user.backend, BackendView, "backend.json", backend: user.backend)
     }
@@ -46,6 +47,12 @@ defmodule BorutaAdminWeb.UserView do
   defimpl Jason.Encoder, for: Boruta.Oauth.Scope do
     def encode(scope, opts) do
       Jason.Encode.map(Map.take(scope, [:id, :name, :public]), opts)
+    end
+  end
+
+  defimpl Jason.Encoder, for: BorutaIdentity.Accounts.Role do
+    def encode(role, opts) do
+      Jason.Encode.map(Map.take(role, [:id, :name, :scopes]), opts)
     end
   end
 

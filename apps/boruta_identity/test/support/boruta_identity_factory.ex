@@ -7,7 +7,10 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Role
+  alias BorutaIdentity.Accounts.RoleScope
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Configuration.ErrorTemplate
   alias BorutaIdentity.IdentityProviders.Backend
@@ -24,6 +27,14 @@ defmodule BorutaIdentity.Factory do
       uid: SecureRandom.hex(),
       backend: insert(:backend)
     }
+  end
+
+  def user_authorized_scope_factory do
+    %UserAuthorizedScope{}
+  end
+
+  def user_role_factory do
+    %UserRole{}
   end
 
   def reset_password_user_token_factory do
@@ -156,5 +167,9 @@ defmodule BorutaIdentity.Factory do
     %Role{
       name: SecureRandom.hex(32)
     }
+  end
+
+  def role_scope_factory do
+    %RoleScope{}
   end
 end
