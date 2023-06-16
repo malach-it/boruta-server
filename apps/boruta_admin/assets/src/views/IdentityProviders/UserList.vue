@@ -30,6 +30,12 @@
                 <span class="header">Email</span>
                 <span class="description">{{ user.email }}</span>
               </div>
+              <div class="item" v-if="user.roles.length">
+                <span class="header">Roles</span>
+                <span class="description">
+                  <span v-for="role in user.roles" :key="role.id">{{ role.model.name }}</span>
+                </span>
+              </div>
               <div class="item">
                 <span class="header">Backend</span>
                 <span class="description"><router-link :to="{ name: 'edit-backend', params: { backendId: user.backend.id } }">{{ user.backend.name }}</router-link></span>

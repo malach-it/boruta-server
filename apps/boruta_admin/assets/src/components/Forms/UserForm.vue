@@ -30,7 +30,9 @@
           <label>Group</label>
           <input type="text" v-model="user.group" />
         </div>
-        <section v-if="user.isPersisted">
+        <section>
+          <h2>Roles</h2>
+          <RolesField :currentRoles="user.roles" @delete-role="deleteRole" @add-role="addRole" />
           <h2>Authorized scopes</h2>
           <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </section>
@@ -44,8 +46,10 @@
 
 <script>
 import Scope from '../../models/scope.model'
+import Role from '../../models/role.model'
 import Backend from '../../models/backend.model'
 import ScopesField from './ScopesField.vue'
+import RolesField from './RolesField.vue'
 import FormErrors from './FormErrors.vue'
 
 export default {
@@ -53,6 +57,7 @@ export default {
   props: ['user', 'action'],
   components: {
     ScopesField,
+    RolesField,
     FormErrors
   },
   data () {
@@ -79,6 +84,15 @@ export default {
     deleteScope (scope) {
       this.user.authorized_scopes.splice(
         this.user.authorized_scopes.indexOf(scope),
+        1
+      )
+    },
+    addRole () {
+      this.user.roles.push({ model: new Role() })
+    },
+    deleteRole (scope) {
+      this.user.roles.splice(
+        this.user.roles.indexOf(scope),
         1
       )
     }

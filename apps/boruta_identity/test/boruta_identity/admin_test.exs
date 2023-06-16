@@ -55,7 +55,7 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns paginated users" do
-      user = insert(:user) |> Repo.preload(:authorized_scopes)
+      user = insert(:user) |> Repo.preload([:authorized_scopes, :roles])
 
       assert Admin.list_users() == %Scrivener.Page{
                entries: [user],
@@ -236,6 +236,12 @@ defmodule BorutaIdentity.AdminTest do
       assert {:ok, %User{group: "group"}} = Admin.update_user(user, user_params)
     end
   end
+
+  @tag :skip
+  test "update_user_roles/2"
+
+  @tag :skip
+  test "update_user_authorized_scopes/2"
 
   @tag :skip
   test "create_raw_user/2"

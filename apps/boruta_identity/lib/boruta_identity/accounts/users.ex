@@ -7,6 +7,7 @@ defmodule BorutaIdentity.Accounts.Users do
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
@@ -63,6 +64,30 @@ defmodule BorutaIdentity.Accounts.Users do
     |> Enum.flat_map(fn
       %{id: id, name: name} -> [%Scope{id: id, name: name}]
       _ -> []
+    end)
+  end
+
+  @spec get_user_roles(user_id :: String.t()) :: user :: list(UserAuthorizedScope.t()) | nil
+  def get_user_roles(user_id) do
+    scopes = Scopes.all()
+
+    Repo.all(from(ur in UserRole,
+      left_join: r in assoc(ur, :role),
+      left_join: rs in assoc(r, :role_scopes),
+      where: ur.user_id == ^user_id,
+      preload: [role: {r, [role_scopes: rs]}]
+    ))
+    |> Enum.map(fn %{role: role} ->
+      %{role |
+        scopes: role.role_scopes
+          |> Enum.map(fn role_scope ->
+            Enum.find(scopes, fn %{id: id} -> id == role_scope.scope_id end)
+          end)
+          |> Enum.flat_map(fn
+            %{id: id, name: name} -> [%Scope{id: id, name: name}]
+            _ -> []
+          end)
+      }
     end)
   end
 end

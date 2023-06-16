@@ -3,6 +3,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
 
   import BorutaIdentity.AccountsFixtures
 
+  alias Boruta.Ecto.Admin
   alias Boruta.Oauth.ResourceOwner
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
@@ -101,21 +102,28 @@ defmodule BorutaIdentity.ResourceOwnersTest do
       assert ResourceOwners.authorized_scopes(resource_owner) == []
     end
 
-    @tag :skip
-    test "return user associated scopes" do
-      %{id: _id} = user = user_fixture(%{backend: Backend.default!()})
-      scope = Boruta.Factory.insert(:scope)
-      # insert(:user_scope, user_id: id, name: scope.name)
+    test "return user associated scopes with aithorized scopes" do
+      %{id: id} = user = user_fixture(%{backend: Backend.default!()})
+      {:ok, scope} = Admin.create_scope(%{name: "scope:scope"})
+      insert(:user_authorized_scope, user_id: id, scope_id: scope.id)
 
       resource_owner = %ResourceOwner{sub: user.id}
 
-      case ResourceOwners.authorized_scopes(resource_owner) do
-        [%Boruta.Oauth.Scope{name: name}] ->
-          assert name == scope.name
+      name = scope.name
+      assert [%Boruta.Oauth.Scope{name: ^name}] = ResourceOwners.authorized_scopes(resource_owner)
+    end
 
-        _ ->
-          assert false
-      end
+    test "return user associated scopes with roles" do
+      %{id: id} = user = user_fixture(%{backend: Backend.default!()})
+      {:ok, scope} = Admin.create_scope(%{name: "scope:scope"})
+      role = insert(:role)
+      insert(:role_scope, role_id: role.id, scope_id: scope.id)
+      insert(:user_role, user_id: id, role_id: role.id)
+
+      resource_owner = %ResourceOwner{sub: user.id}
+
+      name = scope.name
+      assert [%Boruta.Oauth.Scope{name: ^name}] = ResourceOwners.authorized_scopes(resource_owner)
     end
   end
 
