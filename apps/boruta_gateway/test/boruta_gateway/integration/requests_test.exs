@@ -60,6 +60,21 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "returns a 404 when no upstream persisted" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
+
+          assert {:ok, %Finch.Response{body: body, status: 404}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "No upstream has been found corresponding to the given request."
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns a 401 when unauthorized" do
       Sandbox.unboxed_run(Repo, fn ->
         try do

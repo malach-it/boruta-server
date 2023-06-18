@@ -102,7 +102,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
       assert ResourceOwners.authorized_scopes(resource_owner) == []
     end
 
-    test "return user associated scopes with aithorized scopes" do
+    test "return user associated scopes with authorized scopes" do
       %{id: id} = user = user_fixture(%{backend: Backend.default!()})
       {:ok, scope} = Admin.create_scope(%{name: "scope:scope"})
       insert(:user_authorized_scope, user_id: id, scope_id: scope.id)
