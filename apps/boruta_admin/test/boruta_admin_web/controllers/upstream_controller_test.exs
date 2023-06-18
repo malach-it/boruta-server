@@ -1,6 +1,7 @@
 defmodule BorutaAdminWeb.UpstreamControllerTest do
   use BorutaAdminWeb.ConnCase, async: false
 
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -124,9 +125,12 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
   describe "node_list" do
     @tag authorized: ["upstreams:manage:all"]
     test "lists all boruta nodes", %{conn: conn} do
+      Application.delete_env(ConfigurationLoader, :node_name)
+
       configuration_file_path =
         :code.priv_dir(:boruta_gateway)
         |> Path.join("/test/configuration_files/full_configuration.yml")
+
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
@@ -135,9 +139,12 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
 
     @tag authorized: ["upstreams:manage:all"]
     test "lists all boruta nodes from config", %{conn: conn} do
+      Application.delete_env(ConfigurationLoader, :node_name)
+
       configuration_file_path =
         :code.priv_dir(:boruta_gateway)
         |> Path.join("/test/configuration_files/full_configuration.yml")
+
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))

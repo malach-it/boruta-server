@@ -14,6 +14,7 @@ const assign = {
   edit: function ({ edit }) { this.edit = edit },
   public: function ({ public: e }) { this.public = e }
 }
+
 class Scope {
   constructor (params = {}) {
     Object.assign(this, defaults)

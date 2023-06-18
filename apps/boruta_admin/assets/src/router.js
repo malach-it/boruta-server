@@ -21,6 +21,7 @@ import UpstreamList from "./views/Upstreams/UpstreamList.vue";
 import Upstream from "./views/Upstreams/Upstream.vue";
 import NewUpstream from "./views/Upstreams/NewUpstream.vue";
 import EditUpstream from "./views/Upstreams/EditUpstream.vue";
+import ServiceRegistry from "./views/ServiceRegistry.vue";
 
 import IdentityProviders from "./views/IdentityProviders.vue";
 import IdentityProviderList from "./views/IdentityProviders/IdentityProviderList.vue";
@@ -309,6 +310,10 @@ const router = createRouter({
           ],
         },
         {
+          path: "/service-registry",
+          component: ServiceRegistry,
+          name: "service-registry",
+        }, {
           path: "/upstreams",
           component: Upstreams,
           name: "upstreams",

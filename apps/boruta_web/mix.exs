@@ -38,6 +38,7 @@ defmodule BorutaWeb.MixProject do
     [
       {:boruta_auth, in_umbrella: true},
       {:boruta_identity, in_umbrella: true},
+      # TODO remove
       {:boruta_gateway, in_umbrella: true},
       {:bypass, "~> 2.1.0", only: :test},
       {:cors_plug, "~> 3.0"},

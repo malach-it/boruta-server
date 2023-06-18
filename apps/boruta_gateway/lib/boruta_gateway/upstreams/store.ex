@@ -64,7 +64,7 @@ defmodule BorutaGateway.Upstreams.Store do
   def handle_call({:match, path_info}, _from, %{upstreams: upstreams} = state) do
     upstream =
       with {_prefix_info, upstream} <-
-             Enum.find(upstreams["global"], fn {prefix_info, _upstream} ->
+             Enum.find(upstreams["global"] || [], fn {prefix_info, _upstream} ->
                path_info = Enum.take(path_info, length(prefix_info))
 
                Enum.empty?(prefix_info -- path_info)
