@@ -6,12 +6,17 @@ defmodule BorutaGateway.Application do
   use Application
 
   alias BorutaGateway.Logger
+  alias BorutaGateway.ServiceRegistry
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.ClientSupervisor
 
   def start(_type, _args) do
     children = [
       BorutaGateway.Repo,
+      %{
+        id: ServiceRegistry.Monitor,
+        start: {ServiceRegistry.Monitor, :start_link, [[]]}
+      },
       %{
         id: Upstreams.Store,
         start: {Upstreams.Store, :start_link, []}

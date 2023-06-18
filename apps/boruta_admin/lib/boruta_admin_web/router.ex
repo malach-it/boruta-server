@@ -45,6 +45,7 @@ defmodule BorutaAdminWeb.Router do
     resources("/users", UserController, except: [:new, :edit])
     resources("/organizations", OrganizationController, except: [:new, :edit])
     get("/upstreams/nodes", UpstreamController, :node_list)
+    get("/service-registry/nodes", ServiceRegistryController, :node_list)
     resources("/upstreams", UpstreamController, except: [:new, :edit])
 
     scope "/configuration", as: :configuration do

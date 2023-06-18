@@ -30,6 +30,16 @@
           </router-link>
           <router-link
             v-slot="{ href, route, navigate, isActive, isExactActive }"
+            :to="{ name: 'service-registry' }">
+            <div class="service-registry item" :class="{'active': isActive }">
+              <a :href="href" @click="navigate">
+                <i class="server icon"></i>
+                <span>Service registry</span>
+              </a>
+            </div>
+          </router-link>
+          <router-link
+            v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'upstreams' }">
             <div class="upstreams item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
