@@ -1,6 +1,6 @@
-defmodule Boruta.Release do
+defmodule BorutaWeb.Release do
   @moduledoc false
-  @apps [:boruta_auth, :boruta_identity, :boruta_gateway, :boruta_web]
+  @apps [:boruta_auth, :boruta_identity, :boruta_web]
 
   def migrate do
     for repo <- repos() do
@@ -8,14 +8,6 @@ defmodule Boruta.Release do
 
       {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
     end
-  end
-
-  def load_configuration do
-    Application.ensure_all_started(:boruta_gateway)
-
-    configuration_path = Application.get_env(:boruta_gateway, :configuration_path)
-
-    BorutaGateway.ConfigurationLoader.from_file!(configuration_path)
   end
 
   def rollback(repo, version) do

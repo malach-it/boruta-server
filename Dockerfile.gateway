@@ -1,15 +1,3 @@
-FROM node:17.4.0 AS assets
-
-# For packages not compatible with OpenSSL 3.0 https://nodejs.org/en/blog/release/v17.0.0/
-ENV NODE_OPTIONS=--openssl-legacy-provider
-
-WORKDIR /app
-
-COPY ./apps/boruta_admin/assets /app
-
-RUN npm ci
-RUN npm run build
-
 FROM elixir:1.14-otp-25-slim AS builder
 
 RUN apt-get update
@@ -22,26 +10,18 @@ RUN mix local.rebar --force
 
 WORKDIR /app
 COPY . .
-COPY --from=assets /priv ./apps/boruta_admin/priv/
 RUN rm -rf deps
 RUN mix do clean, deps.get
 RUN mix compile
 
-WORKDIR /app/apps/boruta_admin
-RUN mix phx.digest
-WORKDIR /app/apps/boruta_identity
-RUN mix phx.digest
-WORKDIR /app/apps/boruta_web
-RUN mix phx.digest
-
 WORKDIR /app
-RUN mix release --force --overwrite
+RUN mix release boruta_gateway --force --overwrite
 
 FROM elixir:1.14-otp-25-slim
 
 WORKDIR /app
 
-COPY --from=builder /app/_build/prod/rel/boruta ./
+COPY --from=builder /app/_build/prod/rel/boruta_gateway ./
 
 # File used for gateway static configuration, used in combination with `BORUTA_GATEWAY_CONFIGURATION_PATH` environment variable
 COPY /static_config/example-gateway-configuration.yml config/example-gateway-configuration.yml
@@ -49,4 +29,4 @@ COPY /static_config/example-gateway-configuration.yml config/example-gateway-con
 COPY /static_config/example-httpbin-configuration.yml config/example-httpbin-configuration.yml
 COPY /static_config/example-protected-httpbin-configuration.yml config/example-protected-httpbin-configuration.yml
 
-CMD ["/bin/sh", "-c", "/app/bin/boruta start"]
+CMD ["/bin/sh", "-c", "/app/bin/boruta_gateway start"]

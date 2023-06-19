@@ -200,9 +200,9 @@
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
             BORUTA_GATEWAY_PORT: "5000"
             BORUTA_GATEWAY_SIDECAR_PORT: "5001"
-            POOL_SIZE: "20"
+            POOL_SIZE: "5"
 
-    - name: Setup boruta database
+    - name: Setup boruta auth database
       register: database_setup
       kubernetes.core.k8s:
         state: present
@@ -210,16 +210,43 @@
           apiVersion: batch/v1
           kind: Job
           metadata:
-            name: boruta-setup
+            name: boruta-auth-setup
             namespace: boruta-staging
           backoffLimit: 3
           spec:
             template:
               spec:
                 containers:
-                  - image: ghcr.io/malach-it/boruta-server:master
-                    command: ["/app/bin/boruta"]
-                    args: ["eval", "Boruta.Release.setup"]
+                  - image: "ghcr.io/malach-it/boruta-server:master"
+                    command: ["/app/bin/boruta_full"]
+                    args: ["eval", "BorutaWeb.Release.setup"]
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
+                    imagePullPolicy: Always
+                    name: boruta
+                restartPolicy: OnFailure
+                imagePullSecrets:
+                  - name: dockerconfigjson-github-com
+
+    - name: Setup boruta gateway database
+      register: database_setup
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: boruta-gateway-setup
+            namespace: boruta-staging
+          backoffLimit: 3
+          spec:
+            template:
+              spec:
+                containers:
+                  - image: "ghcr.io/malach-it/boruta-gateway:master"
+                    command: ["/app/bin/boruta_gateway"]
+                    args: ["eval", "BorutaGateway.Release.setup"]
                     envFrom:
                     - configMapRef:
                         name: boruta-env
@@ -342,11 +369,11 @@
                     persistentVolumeClaim:
                       claimName: boruta-logs-pvc
                 containers:
-                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
+                  - image: "ghcr.io/malach-it/boruta-gateway:{{ release_tag }}"
                     readinessProbe:
                       httpGet:
-                        path: /healthcheck
-                        port: 4001
+                        path: /
+                        port: 5001
                     env:
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "./config/example-httpbin-configuration.yml"
@@ -390,11 +417,11 @@
                     persistentVolumeClaim:
                       claimName: boruta-logs-pvc
                 containers:
-                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
+                  - image: "ghcr.io/malach-it/boruta-gateway:{{ release_tag }}"
                     readinessProbe:
                       httpGet:
-                        path: /healthcheck
-                        port: 4001
+                        path: /
+                        port: 5001
                     env:
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "./config/example-protected-httpbin-configuration.yml"
@@ -409,7 +436,7 @@
                 imagePullSecrets:
                 - name: dockerconfigjson-github-com
 
-    - name: Migrate boruta database
+    - name: Migrate boruta gateway database
       when: not database_setup.changed
       kubernetes.core.k8s:
         state: present
@@ -417,7 +444,7 @@
           apiVersion: batch/v1
           kind: Job
           metadata:
-            name: "boruta-migration-{{ release_tag }}"
+            name: "boruta-gateway-migration-{{ release_tag }}"
             namespace: boruta-staging
           backoffLimit: 3
           spec:
@@ -426,8 +453,36 @@
               spec:
                 containers:
                   - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
-                    command: ["/app/bin/boruta"]
-                    args: ["eval", "Boruta.Release.migrate"]
+                    command: ["/app/bin/boruta_gateway"]
+                    args: ["eval", "BorutaGateway.Release.migrate"]
+                    envFrom:
+                    - configMapRef:
+                        name: boruta-env
+                    imagePullPolicy: Always
+                    name: boruta
+                restartPolicy: OnFailure
+                imagePullSecrets:
+                  - name: dockerconfigjson-github-com
+
+    - name: Migrate boruta web database
+      when: not database_setup.changed
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: "boruta-auth-migration-{{ release_tag }}"
+            namespace: boruta-staging
+          backoffLimit: 3
+          spec:
+            ttlSecondsAfterFinished: 864000
+            template:
+              spec:
+                containers:
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
+                    command: ["/app/bin/boruta_full"]
+                    args: ["eval", "BorutaWeb.Release.migrate"]
                     envFrom:
                     - configMapRef:
                         name: boruta-env
@@ -453,8 +508,8 @@
               spec:
                 containers:
                   - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
-                    command: ["/app/bin/boruta"]
-                    args: ["eval", "Boruta.Release.load_configuration"]
+                    command: ["/app/bin/boruta_full"]
+                    args: ["eval", "BorutaGateway.Release.load_configuration"]
                     env:
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "./config/example-gateway-configuration.yml"
@@ -482,9 +537,9 @@
             template:
               spec:
                 containers:
-                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
-                    command: ["/app/bin/boruta"]
-                    args: ["eval", "Boruta.Release.load_configuration"]
+                  - image: "ghcr.io/malach-it/boruta-gateway:{{ release_tag }}"
+                    command: ["/app/bin/boruta_gateway"]
+                    args: ["eval", "BorutaGateway.Release.load_configuration"]
                     env:
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "./config/example-httpbin-configuration.yml"
@@ -512,9 +567,9 @@
             template:
               spec:
                 containers:
-                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
-                    command: ["/app/bin/boruta"]
-                    args: ["eval", "Boruta.Release.load_configuration"]
+                  - image: "ghcr.io/malach-it/boruta-gateway:{{ release_tag }}"
+                    command: ["/app/bin/boruta_gateway"]
+                    args: ["eval", "BorutaGateway.Release.load_configuration"]
                     env:
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "./config/example-protected-httpbin-configuration.yml"
