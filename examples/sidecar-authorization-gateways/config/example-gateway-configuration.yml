@@ -10,9 +10,9 @@ configuration:
       pool_count: 1
       pool_size: 10
       max_idle_time: 10
-      scheme: "https"
-      host: "httpbin.boruta.patatoid.fr"
-      port: 443
+      scheme: "http"
+      host: "httpbin-sidecar"
+      port: 8083
       uris: ["/httpbin"]
       strip_uri: true
     - authorize: false
@@ -24,8 +24,8 @@ configuration:
       pool_count: 1
       pool_size: 10
       max_idle_time: 10
-      scheme: "https"
-      host: "protected-httpbin.boruta.patatoid.fr"
-      port: 443
+      scheme: "http"
+      host: "protected-httpbin-sidecar"
+      port: 8083
       uris: ["/protected-httpbin"]
       strip_uri: true

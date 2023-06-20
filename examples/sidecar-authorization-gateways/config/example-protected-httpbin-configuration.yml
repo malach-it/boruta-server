@@ -1,8 +1,8 @@
 ---
 configuration:
-  node_name: "httpbin"
+  node_name: "protected-httpbin"
   microgateway:
-    - authorize: false
+    - authorize: true
       error_content_type: "text/plain"
       forbidden_response: "forbidden"
       unauthorized_response: "unauthorized"
@@ -11,8 +11,10 @@ configuration:
       pool_count: 1
       pool_size: 10
       max_idle_time: 10
+      required_scopes:
+        GET: ["test"]
       scheme: "http"
-      host: "httpbin.patatoid.fr"
+      host: "httpbin"
       port: 80
       uris: ["/"]
       strip_uri: false

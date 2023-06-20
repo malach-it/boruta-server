@@ -3,7 +3,7 @@ configuration:
   node_name: "protected-httpbin"
   microgateway:
     - authorize: true
-      error_content_type: "text"
+      error_content_type: "text/plain"
       forbidden_response: "forbidden"
       unauthorized_response: "unauthorized"
       forwarded_token_secret: "this is a secret"
