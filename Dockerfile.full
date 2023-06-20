@@ -35,13 +35,13 @@ WORKDIR /app/apps/boruta_web
 RUN mix phx.digest
 
 WORKDIR /app
-RUN mix release boruta_full --force --overwrite
+RUN mix release boruta --force --overwrite
 
 FROM elixir:1.14-otp-25-slim
 
 WORKDIR /app
 
-COPY --from=builder /app/_build/prod/rel/boruta_full ./
+COPY --from=builder /app/_build/prod/rel/boruta ./
 
 # File used for gateway static configuration, used in combination with `BORUTA_GATEWAY_CONFIGURATION_PATH` environment variable
 COPY /static_config/example-gateway-configuration.yml config/example-gateway-configuration.yml
@@ -49,4 +49,4 @@ COPY /static_config/example-gateway-configuration.yml config/example-gateway-con
 COPY /static_config/example-httpbin-configuration.yml config/example-httpbin-configuration.yml
 COPY /static_config/example-protected-httpbin-configuration.yml config/example-protected-httpbin-configuration.yml
 
-CMD ["/bin/sh", "-c", "/app/bin/boruta_full start"]
+CMD ["/bin/sh", "-c", "/app/bin/boruta start"]

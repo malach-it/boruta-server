@@ -1,6 +1,6 @@
 defmodule BorutaGateway.Release do
   @moduledoc false
-  @apps [:boruta_gateway]
+  @apps [:boruta_auth, :boruta_gateway]
 
   def migrate do
     for repo <- repos() do

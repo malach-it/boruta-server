@@ -12,7 +12,7 @@ defmodule Boruta.Umbrella.MixProject do
       ],
       aliases: aliases(),
       releases: [
-        boruta_full: [
+        boruta: [
           include_executables_for: [:unix],
           applications: [
             boruta_web: :permanent,
