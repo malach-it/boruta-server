@@ -35,7 +35,7 @@ WORKDIR /app/apps/boruta_web
 RUN mix phx.digest
 
 WORKDIR /app
-RUN mix release --force --overwrite
+RUN mix release boruta --force --overwrite
 
 FROM elixir:1.14-otp-25-slim
 

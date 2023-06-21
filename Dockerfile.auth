@@ -1,0 +1,31 @@
+FROM elixir:1.14-otp-25-slim AS builder
+
+RUN apt-get update
+RUN apt-get install -y git build-essential
+
+ENV MIX_ENV=prod
+
+RUN mix local.hex --force
+RUN mix local.rebar --force
+
+WORKDIR /app
+COPY . .
+RUN rm -rf deps
+RUN mix do clean, deps.get
+RUN mix compile
+
+WORKDIR /app/apps/boruta_identity
+RUN mix phx.digest
+WORKDIR /app/apps/boruta_web
+RUN mix phx.digest
+
+WORKDIR /app
+RUN mix release boruta_auth --force --overwrite
+
+FROM elixir:1.14-otp-25-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/_build/prod/rel/boruta_auth ./
+
+CMD ["/bin/sh", "-c", "/app/bin/boruta_auth start"]

@@ -19,6 +19,24 @@ defmodule Boruta.Umbrella.MixProject do
             boruta_admin: :permanent,
             boruta_gateway: :permanent
           ]
+        ],
+        boruta_gateway: [
+          include_executables_for: [:unix],
+          applications: [
+            boruta_gateway: :permanent
+          ]
+        ],
+        boruta_auth: [
+          include_executables_for: [:unix],
+          applications: [
+            boruta_web: :permanent
+          ]
+        ],
+        boruta_admin: [
+          include_executables_for: [:unix],
+          applications: [
+            boruta_admin: :permanent
+          ]
         ]
       ]
     ]

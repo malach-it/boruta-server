@@ -48,7 +48,8 @@ docker-compose build
 2. run database migrations
 
 ```bash
-docker-compose run boruta ./bin/boruta eval "Boruta.Release.setup()"
+docker-compose run boruta ./bin/boruta eval "BorutaWeb.Release.setup()"
+docker-compose run boruta ./bin/boruta eval "BorutaGateway.Release.setup()"
 ```
 
 Once done, you can run the docker images as follow:
@@ -86,7 +87,8 @@ MIX_ENV=prod mix release
 4. finally setup database
 
 ```bash
-env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta eval "Boruta.Release.setup()"
+env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta eval "BorutaWeb.Release.setup()"
+env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta eval "BorutaGateway.Release.setup()"
 ```
 
 Once done, you can run the release as follow:

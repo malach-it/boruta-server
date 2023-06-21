@@ -1,0 +1,32 @@
+FROM elixir:1.14-otp-25-slim AS builder
+
+RUN apt-get update
+RUN apt-get install -y git build-essential
+
+ENV MIX_ENV=prod
+
+RUN mix local.hex --force
+RUN mix local.rebar --force
+
+WORKDIR /app
+COPY . .
+RUN rm -rf deps
+RUN mix do clean, deps.get
+RUN mix compile
+
+WORKDIR /app
+RUN mix release boruta_gateway --force --overwrite
+
+FROM elixir:1.14-otp-25-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/_build/prod/rel/boruta_gateway ./
+
+# File used for gateway static configuration, used in combination with `BORUTA_GATEWAY_CONFIGURATION_PATH` environment variable
+COPY /static_config/example-gateway-configuration.yml config/example-gateway-configuration.yml
+
+COPY /static_config/example-httpbin-configuration.yml config/example-httpbin-configuration.yml
+COPY /static_config/example-protected-httpbin-configuration.yml config/example-protected-httpbin-configuration.yml
+
+CMD ["/bin/sh", "-c", "/app/bin/boruta_gateway start"]
