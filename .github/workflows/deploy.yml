@@ -50,7 +50,7 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/malach-it/boruta-server:${{ steps.short-sha.outputs.sha }},
-            ${{ env.REGISTRY }}/malach-it/boruta-gateway:${{ github.head_ref || github.ref_name }}
+            ${{ env.REGISTRY }}/malach-it/boruta-server:${{ github.head_ref || github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
 
   build-and-push-gateway-image:

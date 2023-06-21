@@ -25,7 +25,7 @@ services:
       - "8083:8083"
     volumes:
       - "boruta-logs:/app/log"
-    env_file: "../.env.example"
+    env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
       POSTGRES_USER: "postgres"
