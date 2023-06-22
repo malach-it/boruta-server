@@ -362,14 +362,14 @@
                 name: boruta-httpbin
                 labels:
                   deployment: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
-                  app: boruta-httpbin
+                  app: boruta
               spec:
                 volumes:
                   - name: logs
                     persistentVolumeClaim:
                       claimName: boruta-logs-pvc
                 containers:
-                  - image: "ghcr.io/malach-it/boruta-gateway:{{ release_tag }}"
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
                     env:
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "./config/example-httpbin-configuration.yml"
@@ -406,14 +406,14 @@
                 name: boruta-protected-httpbin
                 labels:
                   deployment: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
-                  app: boruta-protected-httpbin
+                  app: boruta
               spec:
                 volumes:
                   - name: logs
                     persistentVolumeClaim:
                       claimName: boruta-logs-pvc
                 containers:
-                  - image: "ghcr.io/malach-it/boruta-gateway:{{ release_tag }}"
+                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
                     env:
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "./config/example-protected-httpbin-configuration.yml"
