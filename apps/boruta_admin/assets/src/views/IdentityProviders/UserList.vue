@@ -32,7 +32,7 @@
               </div>
               <div class="item" v-if="user.roles.length">
                 <span class="header">Roles</span>
-                <span class="description">
+                <span class="roles description">
                   <span v-for="role in user.roles" :key="role.id">{{ role.model.name }}</span>
                 </span>
               </div>
@@ -168,5 +168,10 @@ export default {
 <style scoped lang="scss">
 .users.grid {
   margin-bottom: 1em!important;
+}
+.roles.description {
+  span {
+    display: block;
+  }
 }
 </style>

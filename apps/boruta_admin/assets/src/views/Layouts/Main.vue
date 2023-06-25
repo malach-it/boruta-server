@@ -425,6 +425,9 @@ export default {
       }
     }
   }
+  .ui.message {
+    word-break: break-word;
+  }
   .ui.button {
     font-size: .9em;
   }
