@@ -10,6 +10,7 @@ defmodule BorutaIdentity.Accounts.Users do
   alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.IdentityProviders.BackendRole
   alias BorutaIdentity.Repo
 
   @spec get_user_by_email(backend :: Backend.t(), email :: String.t()) :: user :: User.t() | nil
@@ -67,26 +68,41 @@ defmodule BorutaIdentity.Accounts.Users do
     end)
   end
 
-  @spec get_user_roles(user_id :: String.t()) :: user :: list(UserAuthorizedScope.t()) | nil
+  @spec get_user_roles(user_id :: String.t()) :: user :: list(BackendRole.t() | UserRole.t()) | nil
   def get_user_roles(user_id) do
     scopes = Scopes.all()
 
-    Repo.all(from(ur in UserRole,
-      left_join: r in assoc(ur, :role),
-      left_join: rs in assoc(r, :role_scopes),
-      where: ur.user_id == ^user_id,
-      preload: [role: {r, [role_scopes: rs]}]
-    ))
+    (Repo.all(
+       from(ur in UserRole,
+         left_join: r in assoc(ur, :role),
+         left_join: rs in assoc(r, :role_scopes),
+         where: ur.user_id == ^user_id,
+         preload: [role: {r, [role_scopes: rs]}]
+       )
+     ) ++
+       Repo.all(
+         from(br in BackendRole,
+           left_join: b in assoc(br, :backend),
+           left_join: u in assoc(b, :users),
+           left_join: r in assoc(br, :role),
+           left_join: rs in assoc(r, :role_scopes),
+           where: u.id == ^user_id,
+           preload: [role: {r, [role_scopes: rs]}]
+         )
+       ))
+    |> Enum.uniq_by(fn %{role: role} -> role end)
     |> Enum.map(fn %{role: role} ->
-      %{role |
-        scopes: role.role_scopes
-          |> Enum.map(fn role_scope ->
-            Enum.find(scopes, fn %{id: id} -> id == role_scope.scope_id end)
-          end)
-          |> Enum.flat_map(fn
-            %{id: id, name: name} -> [%Scope{id: id, name: name}]
-            _ -> []
-          end)
+      %{
+        role
+        | scopes:
+            role.role_scopes
+            |> Enum.map(fn role_scope ->
+              Enum.find(scopes, fn %{id: id} -> id == role_scope.scope_id end)
+            end)
+            |> Enum.flat_map(fn
+              %{id: id, name: name} -> [%Scope{id: id, name: name}]
+              _ -> []
+            end)
       }
     end)
   end

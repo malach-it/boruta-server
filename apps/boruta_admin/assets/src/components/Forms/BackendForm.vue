@@ -17,6 +17,8 @@
         <div class="ui info message">
           Default backend will be used in case of resource owner password credentials requests.
         </div>
+        <h2>Roles</h2>
+        <RolesField :currentRoles="backend.roles" @delete-role="deleteRole" @add-role="addRole" />
         <div class="field" :class="{ 'error': backend.errors?.type }">
           <label>Type</label>
           <select v-model="backend.type">
@@ -211,6 +213,8 @@
 
 <script>
 import Backend from '../../models/backend.model'
+import RolesField from './RolesField.vue'
+import Role from '../../models/role.model'
 import Scope from '../../models/scope.model'
 import FormErrors from './FormErrors.vue'
 import ScopesFieldByName from './ScopesFieldByName.vue'
@@ -220,7 +224,8 @@ export default {
   props: ['backend', 'action'],
   components: {
     FormErrors,
-    ScopesFieldByName,
+    RolesField,
+    ScopesFieldByName
   },
   data () {
     return {
@@ -283,6 +288,15 @@ export default {
     },
     back () {
       this.$emit('back')
+    },
+    addRole () {
+      this.backend.roles.push({ model: new Role() })
+    },
+    deleteRole (role) {
+      this.backend.roles.splice(
+        this.user.roles.indexOf(role),
+        1
+      )
     }
   }
 }

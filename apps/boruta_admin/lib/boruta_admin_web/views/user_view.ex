@@ -5,6 +5,8 @@ defmodule BorutaAdminWeb.UserView do
   alias BorutaAdminWeb.ChangesetView
   alias BorutaAdminWeb.UserView
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.Role
+  alias BorutaIdentity.Accounts.UserRole
 
   def render("index.json", %{
         users: users,
@@ -34,9 +36,16 @@ defmodule BorutaAdminWeb.UserView do
       metadata: user.metadata,
       group: user.group,
       authorized_scopes: Accounts.get_user_scopes(user.id),
-      roles: Accounts.get_user_roles(user.id),
-      backend:
-        render_one(user.backend, BackendView, "backend.json", backend: user.backend)
+      roles:
+        Accounts.get_user_roles(user.id)
+        |> Enum.filter(fn
+          %Role{id: id} ->
+            Enum.find(user.roles, fn %UserRole{role_id: role_id} -> role_id == id end)
+
+          _ ->
+            false
+        end),
+      backend: render_one(user.backend, BackendView, "backend.json", backend: user.backend)
     }
   end
 

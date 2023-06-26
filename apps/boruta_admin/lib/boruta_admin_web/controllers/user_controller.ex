@@ -103,18 +103,10 @@ defmodule BorutaAdminWeb.UserController do
   def create(_conn, _params), do: {:error, :bad_request}
 
   def update(conn, %{"id" => id, "user" => user_params}) do
-    update_params = user_params
-                    |> Enum.map(fn {key, value} -> {String.to_atom(key), value} end)
-                    |> Enum.into(%{})
-
     with :ok <- ensure_open_for_edition(id, conn),
          %User{} = user <- Admin.get_user(id),
-         scopes <- user_params["authorized_scopes"] || user.authorized_scopes,
-         roles <- user_params["roles"] || user.roles,
          # TODO update user email and password
-         {:ok, %User{} = user} <- Admin.update_user(user, update_params),
-         {:ok, %User{} = user} <- Admin.update_user_authorized_scopes(user, scopes),
-         {:ok, %User{} = user} <- Admin.update_user_roles(user, roles) do
+         {:ok, %User{} = user} <- Admin.update_user(user, user_params) do
       render(conn, "show.json", user: user)
     else
       nil -> {:error, :not_found}

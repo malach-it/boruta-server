@@ -418,6 +418,9 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert IdentityProviders.get_backend!(backend.id) == backend
     end
 
+    @tag :skip
+    test "get_backend_roles/1"
+
     test "create_backend/1 with valid data creates a backend" do
       valid_attrs = %{name: "some name", type: "Elixir.BorutaIdentity.Accounts.Internal"}
 

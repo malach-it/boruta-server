@@ -176,6 +176,9 @@ defmodule BorutaIdentity.AdminTest do
                 group: "group"
               }} = Admin.create_user(backend, params)
     end
+
+    @tag :skip
+    test "creates a user with roles"
   end
 
   describe "create_user/2 with a ldap backend" do
@@ -195,6 +198,9 @@ defmodule BorutaIdentity.AdminTest do
 
     @tag :skip
     test "creates a user"
+
+    @tag :skip
+    test "creates a user with roles"
   end
 
   describe "update_user/2 with an internal backend" do
@@ -235,6 +241,9 @@ defmodule BorutaIdentity.AdminTest do
 
       assert {:ok, %User{group: "group"}} = Admin.update_user(user, user_params)
     end
+
+    @tag :skip
+    test "updates user with roles"
   end
 
   @tag :skip

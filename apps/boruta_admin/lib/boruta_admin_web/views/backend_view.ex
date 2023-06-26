@@ -2,6 +2,7 @@ defmodule BorutaAdminWeb.BackendView do
   use BorutaAdminWeb, :view
 
   alias BorutaAdminWeb.BackendView
+  alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.Backend
 
   def render("index.json", %{backends: backends}) do
@@ -22,6 +23,7 @@ defmodule BorutaAdminWeb.BackendView do
       name: backend.name,
       type: backend.type,
       is_default: backend.is_default,
+      roles: IdentityProviders.get_backend_roles(backend.id),
       metadata_fields: backend.metadata_fields,
       federated_servers: backend.federated_servers,
       password_hashing_alg: backend.password_hashing_alg,

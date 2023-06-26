@@ -1,11 +1,13 @@
 import axios from "axios";
 import { addClientErrorInterceptor } from "./utils";
+import Role from './role.model'
 
 const DEFAULT_ID = "non-existing";
 
 const defaults = {
   id: DEFAULT_ID,
   name: null,
+  roles: [],
   type: "Elixir.BorutaIdentity.Accounts.Internal",
   errors: null,
   password_hashing_alg: "argon2",
@@ -21,6 +23,11 @@ const assign = {
   },
   name: function ({ name }) {
     this.name = name;
+  },
+  roles: function ({ roles }) {
+    this.roles = roles.map((scope) => {
+      return { model: new Role(scope) }
+    })
   },
   type: function ({ type }) {
     this.type = type;
@@ -156,6 +163,7 @@ class Backend {
       id,
       name,
       type,
+      roles,
       is_default,
       password_hashing_alg,
       password_hashing_opts,
@@ -187,6 +195,7 @@ class Backend {
     return {
       id,
       name,
+      roles: roles.map(({ model }) => model.serialized),
       type,
       is_default,
       password_hashing_alg,
