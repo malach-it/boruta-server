@@ -294,7 +294,7 @@ export default {
     },
     deleteRole (role) {
       this.backend.roles.splice(
-        this.user.roles.indexOf(role),
+        this.backend.roles.indexOf(role),
         1
       )
     }
