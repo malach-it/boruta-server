@@ -7,6 +7,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Ldap
+  alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
   alias BorutaIdentityWeb.Router.Helpers, as: Routes
 
@@ -154,6 +155,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     field(:federated_servers, {:array, :map}, default: [])
 
     has_many(:email_templates, EmailTemplate)
+    has_many(:users, User)
 
     timestamps()
   end

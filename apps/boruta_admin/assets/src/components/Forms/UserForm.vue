@@ -90,9 +90,9 @@ export default {
     addRole () {
       this.user.roles.push({ model: new Role() })
     },
-    deleteRole (scope) {
+    deleteRole (role) {
       this.user.roles.splice(
-        this.user.roles.indexOf(scope),
+        this.user.roles.indexOf(role),
         1
       )
     }

@@ -93,7 +93,8 @@ defmodule BorutaIdentity.Admin do
              :create_user,
              [backend, params]
            ),
-         {:ok, user} <- update_user_authorized_scopes(user, params[:authorized_scopes] || []) do
+         {:ok, user} <- update_user_authorized_scopes(user, params[:authorized_scopes] || []),
+         {:ok, user} <- update_user_roles(user, params[:roles] || []) do
       update_user_roles(user, params[:roles] || [])
     end
   end
@@ -214,7 +215,7 @@ defmodule BorutaIdentity.Admin do
          end)
          |> Repo.transaction() do
       {:ok, _result} ->
-        {:ok, user |> Repo.reload() |> Repo.preload([:backend, :authorized_scopes])}
+        {:ok, user |> Repo.reload() |> Repo.preload([:backend, :authorized_scopes, :roles])}
 
       {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
         {:error, changeset}
@@ -236,7 +237,7 @@ defmodule BorutaIdentity.Admin do
                }
              )
 
-           Ecto.Multi.insert(multi, "scope_-#{SecureRandom.uuid()}", changeset)
+           Ecto.Multi.insert(multi, "role_-#{SecureRandom.uuid()}", changeset)
          end)
          |> Repo.transaction() do
       {:ok, _result} ->
@@ -254,9 +255,17 @@ defmodule BorutaIdentity.Admin do
   @spec update_user(user :: User.t(), user_params :: user_update_params()) ::
           {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
   def update_user(user, user_params) do
-    user
-    |> User.changeset(user_params)
-    |> Repo.update()
+    with {:ok, user} <-
+           user
+           |> User.changeset(user_params)
+           |> Repo.update(),
+         {:ok, user} <-
+           update_user_authorized_scopes(
+             user,
+             user_params["authorized_scopes"] || user.authorized_scopes
+           ) do
+      update_user_roles(user, user_params["roles"] || user.roles)
+    end
   end
 
   @spec delete_user(user_id :: Ecto.UUID.t()) ::

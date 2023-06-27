@@ -7,6 +7,12 @@ defmodule BorutaIdentity.Accounts.UserRole do
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
 
+  @type t :: %__MODULE__{
+    id: String.t(),
+    user_id: String.t(),
+    role_id: String.t()
+  }
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "roles_users" do
