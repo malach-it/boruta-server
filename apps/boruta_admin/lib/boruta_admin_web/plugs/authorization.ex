@@ -10,8 +10,8 @@ defmodule BorutaAdminWeb.Authorization do
   def require_authenticated(conn, _opts \\ []) do
     with [authorization_header] <- get_req_header(conn, "authorization"),
          [_authorization_header, token] <- Regex.run(~r/Bearer (.+)/, authorization_header),
-         {:ok, %{"sub" => sub, "active" => true} = payload} <- introspect(token),
-         :ok <- maybe_validate_user(sub) do
+         {:ok, %{"sub" => sub, "iss" => issuer, "active" => true} = payload} <- introspect(token),
+         :ok <- maybe_validate_user(issuer, sub) do
       conn
       |> assign(:token, token)
       |> assign(:introspected_token, payload)
@@ -74,18 +74,23 @@ defmodule BorutaAdminWeb.Authorization do
     end
   end
 
-  defp maybe_validate_user(sub) do
+  defp maybe_validate_user(issuer, sub) do
+    restricted_issuer = Boruta.Config.issuer()
+
     case Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:sub_restricted] do
       nil ->
         :ok
 
       restricted_sub ->
-        case sub == restricted_sub do
-          true ->
+        case {issuer, sub} do
+          {_, ^restricted_sub} ->
             :ok
 
-          false ->
-            {:error, "Instance management is restricted to #{restricted_sub}"}
+          {^restricted_issuer, _} ->
+            :ok
+
+          _ ->
+            {:error, "Instance management is restricted to self issued tokens or to subject #{restricted_sub}"}
         end
     end
   end
