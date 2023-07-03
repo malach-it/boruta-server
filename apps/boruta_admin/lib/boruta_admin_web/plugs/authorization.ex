@@ -1,29 +1,41 @@
 defmodule BorutaAdminWeb.Authorization do
   @moduledoc false
+  @dialyzer {:no_unused, {:maybe_validate_user, 1}}
 
   require Logger
 
   use BorutaAdminWeb, :controller
 
+  alias Boruta.Oauth.Authorization
   alias BorutaAdminWeb.ErrorView
 
   def require_authenticated(conn, _opts \\ []) do
     with [authorization_header] <- get_req_header(conn, "authorization"),
          [_authorization_header, token] <- Regex.run(~r/Bearer (.+)/, authorization_header),
-         {:ok, %{"sub" => sub, "active" => true} = payload} <- introspect(token),
-         :ok <- maybe_validate_user(sub) do
+         {:ok, token} <- Authorization.AccessToken.authorize(value: token) do
       conn
       |> assign(:token, token)
-      |> assign(:introspected_token, payload)
+      |> assign(:introspected_token, %{
+        "sub" => token.sub,
+        "active" => true,
+        "scope" => token.scope
+      })
     else
-      e ->
-        Logger.debug("User unauthorized : #{inspect(e)}")
+      {:error, _error} ->
+        with [authorization_header] <- get_req_header(conn, "authorization"),
+             [_authorization_header, token] <- Regex.run(~r/Bearer (.+)/, authorization_header),
+             {:ok, %{"sub" => sub, "active" => true} = payload} <- introspect(token),
+             :ok <- maybe_validate_user(sub) do
+          conn
+          |> assign(:token, token)
+          |> assign(:introspected_token, payload)
+        else
+          e ->
+            unauthorized(conn, e)
+        end
 
-        conn
-        |> put_status(:unauthorized)
-        |> put_view(ErrorView)
-        |> render("401.json")
-        |> halt()
+      e ->
+        unauthorized(conn, e)
     end
   end
 
@@ -74,17 +86,27 @@ defmodule BorutaAdminWeb.Authorization do
     end
   end
 
+  defp unauthorized(conn, e) do
+    Logger.debug("User unauthorized : #{inspect(e)}")
+
+    conn
+    |> put_status(:unauthorized)
+    |> put_view(ErrorView)
+    |> render("401.json")
+    |> halt()
+  end
+
   defp maybe_validate_user(sub) do
     case Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:sub_restricted] do
       nil ->
         :ok
 
       restricted_sub ->
-        case sub == restricted_sub do
-          true ->
+        case sub do
+          ^restricted_sub ->
             :ok
 
-          false ->
+          _ ->
             {:error, "Instance management is restricted to #{restricted_sub}"}
         end
     end
