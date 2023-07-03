@@ -8,6 +8,7 @@ defmodule BorutaIdentity.ResourceOwners do
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders.Backend
 
@@ -82,6 +83,7 @@ defmodule BorutaIdentity.ResourceOwners do
           metadata
           |> User.metadata_filter(backend)
           |> metadata_scope_filter(scope, backend)
+        roles = Accounts.get_user_roles(sub)
 
         scope
         |> Scope.split()
@@ -131,6 +133,7 @@ defmodule BorutaIdentity.ResourceOwners do
             acc
         end)
         |> Map.merge(metadata)
+        |> Map.put("roles", Enum.map(roles, fn %Role{name: name} -> name end))
 
       _ ->
         %{}

@@ -5,6 +5,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
 
   alias Boruta.Ecto.Admin
   alias Boruta.Oauth.ResourceOwner
+  alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
   alias BorutaIdentity.ResourceOwners
@@ -145,6 +146,16 @@ defmodule BorutaIdentity.ResourceOwnersTest do
       assert %{"metadata" => true} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "")
     end
 
+    test "returns user roles" do
+      user = user_fixture()
+      role = BorutaIdentity.Factory.insert(:role)
+
+      Repo.insert(%UserRole{user_id: user.id, role_id: role.id})
+
+      role_name = role.name
+      assert %{"roles" => [^role_name]} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "")
+    end
+
     test "filters user metadata" do
       user = user_fixture()
 
@@ -160,7 +171,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
         Ecto.Changeset.change(user, %{metadata: %{"filtered" => true, "metadata" => true}})
         |> Repo.update()
 
-      assert ResourceOwners.claims(%ResourceOwner{sub: user.id}, "") == %{"metadata" => true}
+      assert %{"metadata" => true} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "")
     end
 
     test "filters user metadata according to scopes" do
@@ -182,7 +193,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
         Ecto.Changeset.change(user, %{metadata: %{"without_scopes" => true, "test_scope" => true, "other_scope" => true}})
         |> Repo.update()
 
-      assert ResourceOwners.claims(%ResourceOwner{sub: user.id}, "test") == %{"without_scopes" => true, "test_scope" => true}
+      assert %{"without_scopes" => true, "test_scope" => true} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "test")
     end
   end
 end

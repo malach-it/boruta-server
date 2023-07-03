@@ -4,7 +4,7 @@
     <router-link :to="{ name: 'new-role' }" class="ui violet main create button">Add a role</router-link>
     <div class="container">
       <div class="ui info message">
-        TODO Roles description
+        Roles have here a label and are associated with scopes that will be available to the users having them.
       </div>
       <div class="ui three column roles stackable grid">
         <div v-for="role in roles" :key="role.id" class="column">
