@@ -55,7 +55,7 @@ defmodule BorutaIdentity.Admin do
       where: fragment("username % ?", ^query),
       order_by: fragment("word_similarity(username, ?) DESC", ^query)
     )
-    |> preload([:authorized_scopes, :backend])
+    |> preload([:authorized_scopes, :backend, :roles])
     |> Repo.paginate(params)
   end
 
@@ -95,7 +95,7 @@ defmodule BorutaIdentity.Admin do
            ),
          {:ok, user} <- update_user_authorized_scopes(user, params[:authorized_scopes] || []),
          {:ok, user} <- update_user_roles(user, params[:roles] || []) do
-      update_user_roles(user, params[:roles] || [])
+      {:ok, user}
     end
   end
 

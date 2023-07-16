@@ -80,7 +80,7 @@ defmodule BorutaIdentity.AdminTest do
 
     test "returns user search" do
       _other = insert(:user) |> Repo.preload(:authorized_scopes)
-      user = insert(:user, username: "match") |> Repo.preload(:authorized_scopes)
+      user = insert(:user, username: "match") |> Repo.preload([:authorized_scopes, :roles])
 
       assert Admin.search_users("match") == %Scrivener.Page{
                entries: [user],
