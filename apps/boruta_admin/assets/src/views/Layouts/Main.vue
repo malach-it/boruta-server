@@ -137,7 +137,7 @@
       <a @click="toggleDarkMode()" class="dark-mode">
         <i class="sun icon" :class="{ 'outline': currentMode }"></i>
       </a>
-      &copy; 2022 patatoid
+      &copy; 2023 patatoid
     </footer>
   </div>
 </template>
