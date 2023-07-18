@@ -32,10 +32,29 @@ This server has been also certified for the Config and Dynamic OpenID Provider p
 
 A [loom presentation](https://www.loom.com/share/77006360fdac44bc9113fab9cf30aba5) about how to get a server up and running.
 
-### Requirements
-- Elixir >= 1.13
-- postgreSQL >= 13
-- node >= 16.5 (if you need to prepare assets)
+### Run an instance from docker
+
+A docker image is available at `malachit/boruta-server` on [DockerHub](https://hub.docker.com/r/malachit/boruta-server), you will need a postgres instance installed on your system with credentials provided as environment variables in `.env.*`.
+
+1. Run database migrations
+
+```bash
+docker run --env-file .env.dev --network=host malachit/boruta-server:0.2.0 ./bin/boruta eval "Boruta.Release.setup()"
+```
+
+Once done you will be able to launch the server.
+
+```bash
+docker run --env-file .env.dev --network=host malachit/boruta-server:0.2.0
+```
+
+The applications will be available on different ports (depending on the values provided in `.env.dev`):
+- http://localhost:4000 for the authorization server
+- http://localhost:4001 for the admin interface
+- http://localhost:4002 for the gateway
+- http://localhost:4003 for the microgateway
+
+Admin credentials are the one seeded and available in environment file.
 
 ### Run an instance from docker-compose
 
@@ -63,6 +82,13 @@ The applications will be available on different ports (depending on the docker c
 - http://localhost:8081 for the admin interface
 - http://localhost:8082 for the gateway
 - http://localhost:8083 for the microgateway
+
+Admin credentials are the one seeded and available in environment file.
+
+### Requirements
+- Elixir >= 1.13
+- postgreSQL >= 13
+- node >= 16.5 (if you need to prepare assets)
 
 ### Run a release from scratch
 
@@ -102,6 +128,8 @@ The applications will be available on different ports (depending on the values p
 - http://localhost:8081 for the admin interface
 - http://localhost:8082 for the gateway
 - http://localhost:8083 for the microgateway
+
+Admin credentials are the one seeded and available in environment file.
 
 ### Run a development server
 
@@ -151,6 +179,8 @@ The applications will be available on different ports (depending on the values p
 - http://localhost:4001 for the admin interface
 - http://localhost:4002 for the gateway
 - http://localhost:4003 for the microgateway
+
+Admin credentials are the one seeded and available in environment file.
 
 ### Default admin credentials
 
