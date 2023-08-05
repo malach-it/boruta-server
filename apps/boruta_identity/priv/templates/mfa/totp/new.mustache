@@ -1,0 +1,28 @@
+<h1>Add a TOTP from an authenticator</h1>
+
+{{^valid?}}
+<div class="ui error message">
+{{#errors}}
+  <li>{{ message }}</li>
+{{/errors}}
+</div>
+{{/valid?}}
+
+<h2>1. Scan the QR code with your authenticator</h2>
+<hr />
+<div class="ui center aligned segment">
+  <img width="150" src="data:image/svg+xml; base64, {{ base64_totp_registration_qr_code }}" alt="QR code" />
+</div>
+
+<h2>2. Insert the TOTP code</h2>
+<hr />
+<form class="ui form" action="{{ create_user_totp_registration_path }}" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+  <input type="hidden" name="totp[totp_secret]" value="{{ totp_secret }}" />
+  <div class="field">
+    <label for="totp-code">TOTP code</label>
+    <input type="text" id="totp-code" name="totp[totp_code]" placeholder="XXXXXX" />
+  </div>
+
+  <button class="ui large fluid button" type="submit">Add TOTP authenticator</button>
+</form>

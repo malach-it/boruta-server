@@ -19,6 +19,7 @@ const assign = {
   backend: function ({ backend }) { this.backend = new Backend(backend) },
   backend_id: function ({ backend_id }) { this.backend_id = backend_id },
   choose_session: function ({ choose_session }) { this.choose_session = choose_session },
+  totpable: function ({ totpable }) { this.totpable = totpable },
   registrable: function ({ registrable }) { this.registrable = registrable },
   user_editable: function ({ user_editable }) { this.user_editable = user_editable },
   consentable: function ({ consentable }) { this.consentable = consentable },
@@ -82,6 +83,7 @@ class IdentityProvider {
       name,
       backend_id,
       choose_session,
+      totpable,
       registrable,
       user_editable,
       consentable,
@@ -94,6 +96,7 @@ class IdentityProvider {
       backend_id,
       choose_session,
       user_editable,
+      totpable,
       registrable,
       consentable,
       confirmable

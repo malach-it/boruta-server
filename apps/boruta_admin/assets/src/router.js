@@ -29,11 +29,12 @@ import EditIdentityProvider from "./views/IdentityProviders/EditIdentityProvider
 import EditLayoutTemplate from "./views/IdentityProviders/EditLayoutTemplate.vue";
 import EditSessionTemplate from "./views/IdentityProviders/EditSessionTemplate.vue";
 import EditNewChooseSessionTemplate from "./views/IdentityProviders/EditNewChooseSessionTemplate.vue";
+import EditTotpRegistrationTemplate from "./views/IdentityProviders/EditTotpRegistrationTemplate.vue";
+import EditRegistrationTemplate from "./views/IdentityProviders/EditRegistrationTemplate.vue";
 import EditNewConsentTemplate from "./views/IdentityProviders/EditNewConsentTemplate.vue";
 import EditNewConfirmationTemplate from "./views/IdentityProviders/EditNewConfirmationTemplate.vue";
 import EditNewResetPasswordTemplate from "./views/IdentityProviders/EditNewResetPasswordTemplate.vue";
 import EditEditResetPasswordTemplate from "./views/IdentityProviders/EditEditResetPasswordTemplate.vue";
-import EditRegistrationTemplate from "./views/IdentityProviders/EditRegistrationTemplate.vue";
 import EditEditUserTemplate from "./views/IdentityProviders/EditEditUserTemplate.vue";
 import NewIdentityProvider from "./views/IdentityProviders/NewIdentityProvider.vue";
 import Users from "./views/IdentityProviders/Users.vue";
@@ -162,6 +163,11 @@ const router = createRouter({
                   path: "edit/session-template",
                   name: "edit-session-template",
                   component: EditSessionTemplate,
+                },
+                {
+                  path: "edit/totp-registration-template",
+                  name: "edit-totp-registration-template",
+                  component: EditTotpRegistrationTemplate,
                 },
                 {
                   path: "edit/registration-template",

@@ -35,6 +35,7 @@ defmodule BorutaIdentity.Accounts.Ldap do
 
   @features [
     :authenticable,
+    :totpable,
     :consentable,
     :user_editable,
     :reset_password,

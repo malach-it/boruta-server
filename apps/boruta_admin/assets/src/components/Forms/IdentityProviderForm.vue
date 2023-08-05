@@ -58,6 +58,23 @@
             </div>
           </div>
         </section>
+        <section v-show="displayTotpable">
+          <h3>Time based One Time Password</h3>
+          <div class="ui segment">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="identityProvider.totpable">
+              <label>enable TOTP</label>
+            </div>
+            <p class="ui info message">
+              Give the ability for end users to register an authentication second factor with TOTP.
+            </p>
+            <div v-if="identityProvider.totpable">
+              <router-link
+                :to="{ name: 'edit-totp-registration-template', params: { identityProviderId: identityProvider.id } }"
+                class="ui fluid blue button">Edit TOTP registration template</router-link>
+            </div>
+          </div>
+        </section>
         <section v-show="displayRegistrable">
           <h3>Registration</h3>
           <div class="ui segment">
@@ -162,6 +179,9 @@ export default {
     },
     displayRegistrable () {
       return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('registrable')
+    },
+    displayTotpable () {
+      return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('totpable')
     },
     displayUserEditable () {
       return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('user_editable')

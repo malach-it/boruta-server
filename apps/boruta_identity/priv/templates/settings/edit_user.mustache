@@ -9,6 +9,11 @@
 </div>
 {{/valid?}}
 
+{{#totpable?}}
+<a href="{{ new_user_totp_registration_path }}" class="ui fluid blue button" type="submit">Register a TOTP authenticator</a>
+<hr />
+{{/totpable?}}
+
 <form class="ui form" action="{{ update_user_path }}" method="POST">
   <input type="hidden" name="_method" value="put" />
   <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
