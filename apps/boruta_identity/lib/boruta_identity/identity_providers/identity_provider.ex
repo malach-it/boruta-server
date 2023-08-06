@@ -39,10 +39,14 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
       :initialize_choose_session
     ],
     totpable: [
-      # BorutaIdentity.Accounts.Totp
+      # BorutaIdentity.Totp
       :initialize_totp_registration,
-      # BorutaIdentity.Accounts.Totp
-      :register_totp
+      # BorutaIdentity.Totp
+      :register_totp,
+      # BorutaIdentity.Totp
+      :initialize_totp,
+      # BorutaIdentity.Totp
+      :authenticate_totp
     ],
     registrable: [
       # BorutaIdentity.Accounts.Registrations

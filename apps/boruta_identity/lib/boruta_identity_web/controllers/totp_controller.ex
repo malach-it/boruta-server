@@ -1,5 +1,5 @@
 defmodule BorutaIdentityWeb.TotpController do
-  @behaviour BorutaIdentity.TotpApplication
+  @behaviour BorutaIdentity.TotpRegistrationApplication
 
   use BorutaIdentityWeb, :controller
 
@@ -30,7 +30,7 @@ defmodule BorutaIdentityWeb.TotpController do
     Totp.register_totp(conn, client_id, current_user, totp_params, __MODULE__)
   end
 
-  @impl BorutaIdentity.TotpApplication
+  @impl BorutaIdentity.TotpRegistrationApplication
   def totp_registration_initialized(conn, totp_secret, template) do
     current_user = conn.assigns.current_user
 
@@ -46,7 +46,7 @@ defmodule BorutaIdentityWeb.TotpController do
     )
   end
 
-  @impl BorutaIdentity.TotpApplication
+  @impl BorutaIdentity.TotpRegistrationApplication
   def totp_registration_error(conn, %TotpError{
         changeset: %Ecto.Changeset{} = changeset,
         totp_secret: totp_secret,
@@ -87,7 +87,7 @@ defmodule BorutaIdentityWeb.TotpController do
     )
   end
 
-  @impl BorutaIdentity.TotpApplication
+  @impl BorutaIdentity.TotpRegistrationApplication
   def totp_registration_success(%Plug.Conn{query_params: query_params} = conn, _user) do
     conn
     |> put_flash(:info, "TOTP authenticator registered successfully.")

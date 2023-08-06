@@ -115,6 +115,8 @@ defmodule BorutaIdentityWeb.TemplateView do
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
       create_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
+      create_user_session_totp_authentication_path:
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_totp, %{request: request}),
       delete_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{request: request}),
       edit_user_path:

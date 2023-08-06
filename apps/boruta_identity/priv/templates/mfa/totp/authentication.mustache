@@ -1,0 +1,24 @@
+<h1>TOTP authentication</h1>
+
+{{^valid?}}
+<div class="ui error message">
+{{#errors}}
+  <li>{{ message }}</li>
+{{/errors}}
+</div>
+{{/valid?}}
+
+<div class="ui info message">
+  Provide the TOTP code provided by your authenticator
+</div>
+
+<form class="ui massive form" action="{{ create_user_session_totp_authentication_path }}" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+  <div class="field">
+    <label for="totp-code">TOTP code</label>
+    <hr />
+    <input autofocus type="text" id="totp-code" name="totp[totp_code]" placeholder="XXXXXX" style="text-align: center;" />
+  </div>
+
+  <button class="ui large fluid button" type="submit">Authenticate</button>
+</form>

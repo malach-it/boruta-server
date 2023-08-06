@@ -27,6 +27,7 @@ const labels = {
   'edit-layout-template': 'Edit layout template',
   'edit-session-template': 'Edit login template',
   'edit-totp-registration-template': 'Edit TOTP registration template',
+  'edit-totp-authentication-template': 'Edit TOTP authentication template',
   'edit-choose-session-template': 'Edit choose session template',
   'edit-registration-template': 'Edit registration template',
   'edit-edit-user-template': 'Edit user edition template',

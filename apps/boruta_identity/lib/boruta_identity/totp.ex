@@ -1,4 +1,6 @@
 defmodule BorutaIdentity.TotpError do
+  @moduledoc false
+
   @enforce_keys [:message, :totp_secret]
   defexception [:message, :totp_secret, :changeset, :template]
 
@@ -18,7 +20,9 @@ defmodule BorutaIdentity.TotpError do
   end
 end
 
-defmodule BorutaIdentity.TotpApplication do
+defmodule BorutaIdentity.TotpRegistrationApplication do
+  @moduledoc false
+
   @callback totp_registration_initialized(
               context :: any(),
               totp_secret :: String.t(),
@@ -33,6 +37,28 @@ defmodule BorutaIdentity.TotpApplication do
   @callback totp_registration_success(
               context :: any(),
               user :: BorutaIdentity.Accounts.User.t()
+            ) :: any()
+end
+
+defmodule BorutaIdentity.TotpAuthenticationApplication do
+  @moduledoc false
+
+  @callback totp_not_required(context :: any()) :: any()
+
+  @callback totp_initialized(
+              context :: any(),
+              template :: BorutaIdentity.IdentityProviders.Template.t()
+            ) :: any()
+
+  @callback totp_authenticated(
+              context :: any(),
+              user :: BorutaIdentity.Accounts.User.t()
+            ) ::
+              any()
+
+  @callback totp_authentication_failure(
+              context :: any(),
+              error :: BorutaIdentity.TotpError.t()
             ) :: any()
 end
 
@@ -88,10 +114,9 @@ defmodule BorutaIdentity.Totp do
     end
 
     def check_totp(totp, secret) when is_binary(secret) do
-      dbg secret
       secret = Base.decode32!(secret, padding: false)
 
-      case Hotp.generate_hotp(secret, number_of_time_steps()) |> dbg == totp do
+      case Hotp.generate_hotp(secret, number_of_time_steps()) == totp do
         true -> :ok
         false -> {:error, "Given TOTP is invalid."}
       end
@@ -116,8 +141,8 @@ defmodule BorutaIdentity.Totp do
 
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders
-  alias BorutaIdentity.TotpError
   alias BorutaIdentity.Repo
+  alias BorutaIdentity.TotpError
 
   defwithclientidp initialize_totp_registration(context, client_id, module) do
     totp_secret = Admin.generate_secret()
@@ -158,10 +183,45 @@ defmodule BorutaIdentity.Totp do
     end
   end
 
+  def initialize_totp(context, _client_id, %User{totp_registered_at: nil}, module) do
+    module.totp_not_required(context)
+  end
+
+  defwithclientidp initialize_totp(context, client_id, _user, module) do
+    module.totp_initialized(context, new_totp_authentication_template(client_idp))
+  end
+
+  def authenticate_totp(context, _client_id, %User{totp_registered_at: nil}, _totp_params, module) do
+    module.totp_not_required(context)
+  end
+
+  defwithclientidp authenticate_totp(context, client_id, user, totp_params, module) do
+    case Admin.check_totp(totp_params[:totp_code], user.totp_secret) do
+      :ok ->
+        module.totp_authenticated(context, user)
+
+      {:error, error} ->
+        error = %TotpError{
+          message: error,
+          totp_secret: totp_params[:totp_secret],
+          template: new_totp_authentication_template(client_idp)
+        }
+
+        module.totp_authentication_failure(context, error)
+    end
+  end
+
   defp new_totp_registration_template(identity_provider) do
     IdentityProviders.get_identity_provider_template!(
       identity_provider.id,
       :new_totp_registration
+    )
+  end
+
+  defp new_totp_authentication_template(identity_provider) do
+    IdentityProviders.get_identity_provider_template!(
+      identity_provider.id,
+      :new_totp_authentication
     )
   end
 end

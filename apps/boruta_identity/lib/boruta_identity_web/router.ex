@@ -49,6 +49,7 @@ defmodule BorutaIdentityWeb.Router do
 
     get("/users/totp_registration", TotpController, :new)
     post("/users/totp_registration", TotpController, :register)
+    post("/users/totp_authenticate", UserSessionController, :authenticate_totp)
     get("/users/choose_session", ChooseSessionController, :index)
     get("/users/consent", UserConsentController, :index)
     post("/users/consent", UserConsentController, :consent)

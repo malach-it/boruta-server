@@ -8,7 +8,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   @behaviour Boruta.Oauth.AuthorizeApplication
 
   use BorutaWeb, :controller
-  import BorutaIdentityWeb.Authenticable, only: [request_param: 1]
+
+  import BorutaIdentityWeb.Authenticable,
+    only: [request_param: 1, get_user_session: 1]
 
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizeResponse
@@ -25,6 +27,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     with {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
          {:unchanged, conn} <- check_preauthorized(conn),
+         {:unchanged, conn} <- ensure_user_authenticated(conn, current_user),
          {:unchanged, conn} <- preauthorize(conn, current_user) do
       redirect(conn,
         to:
@@ -44,6 +47,47 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
       {:redirected, conn} ->
         conn
+    end
+  end
+
+  defp ensure_user_authenticated(conn, current_user) do
+    case current_user do
+      %User{totp_registered_at: nil} ->
+        {:unchanged, conn}
+
+      %User{} ->
+        case {get_session(conn, :session_chosen),
+              (get_session(conn, :totp_authenticated) || %{})[get_user_session(conn)]} do
+          {true, true} ->
+            {:unchanged, conn}
+
+          {true, _} ->
+            conn =
+              conn
+              |> redirect(
+                to:
+                  IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
+                    request: request_param(conn)
+                  })
+              )
+
+            {:redirected, conn}
+
+          {_, _} ->
+            conn =
+              conn
+              |> redirect(
+                to:
+                  IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
+                    request: request_param(conn)
+                  })
+              )
+
+            {:redirected, conn}
+        end
+
+      nil ->
+        {:unchanged, conn}
     end
   end
 
@@ -93,8 +137,30 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp max_age_redirection(conn, _current_user), do: {:unchanged, conn}
 
-  defp prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "none"}} = conn, current_user) do
-    {:authorize, do_authorize(conn, current_user)}
+  defp prompt_redirection(
+         %Plug.Conn{query_params: %{"prompt" => "none"} = query_params} = conn,
+         current_user
+       ) do
+    case current_user do
+      %User{totp_registered_at: nil} ->
+        {:authorize, do_authorize(conn, current_user)}
+
+      _user ->
+        case get_session(conn, :totp_authenticated) do
+          true ->
+            {:authorize, do_authorize(conn, current_user)}
+
+          _ ->
+            {:redirected,
+             authorize_error(conn, %Error{
+               status: :unauthorized,
+               format: :fragment,
+               redirect_uri: query_params["redirect_uri"],
+               error: :login_required,
+               error_description: "Multi factor authentication required for current user."
+             })}
+        end
+    end
   end
 
   defp prompt_redirection(%Plug.Conn{query_params: %{"prompt" => "login"}} = conn, _current_user) do
@@ -246,6 +312,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn
     |> delete_session(:session_chosen)
+    |> delete_session(:totp_authenticated)
     |> redirect(
       to:
         IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
@@ -260,6 +327,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn
     |> delete_session(:session_chosen)
+    |> delete_session(:totp_authenticated)
     |> redirect(external: Error.redirect_to_url(error))
   end
 
@@ -271,6 +339,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn
     |> delete_session(:session_chosen)
+    |> delete_session(:totp_authenticated)
     |> put_status(status)
 
     raise %BorutaWeb.AuthorizeError{message: error_description, plug_status: status}

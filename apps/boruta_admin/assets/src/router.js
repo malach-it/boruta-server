@@ -30,6 +30,7 @@ import EditLayoutTemplate from "./views/IdentityProviders/EditLayoutTemplate.vue
 import EditSessionTemplate from "./views/IdentityProviders/EditSessionTemplate.vue";
 import EditNewChooseSessionTemplate from "./views/IdentityProviders/EditNewChooseSessionTemplate.vue";
 import EditTotpRegistrationTemplate from "./views/IdentityProviders/EditTotpRegistrationTemplate.vue";
+import EditTotpAuthenticationTemplate from "./views/IdentityProviders/EditTotpAuthenticationTemplate.vue";
 import EditRegistrationTemplate from "./views/IdentityProviders/EditRegistrationTemplate.vue";
 import EditNewConsentTemplate from "./views/IdentityProviders/EditNewConsentTemplate.vue";
 import EditNewConfirmationTemplate from "./views/IdentityProviders/EditNewConfirmationTemplate.vue";
@@ -168,6 +169,11 @@ const router = createRouter({
                   path: "edit/totp-registration-template",
                   name: "edit-totp-registration-template",
                   component: EditTotpRegistrationTemplate,
+                },
+                {
+                  path: "edit/totp-authentication-template",
+                  name: "edit-totp-authentication-template",
+                  component: EditTotpAuthenticationTemplate,
                 },
                 {
                   path: "edit/registration-template",

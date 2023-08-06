@@ -1,5 +1,6 @@
 defmodule BorutaIdentityWeb.UserSessionController do
   @behaviour BorutaIdentity.Accounts.SessionApplication
+  @behaviour BorutaIdentity.TotpAuthenticationApplication
 
   use BorutaIdentityWeb, :controller
 
@@ -15,6 +16,8 @@ defmodule BorutaIdentityWeb.UserSessionController do
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.SessionError
+  alias BorutaIdentity.Totp
+  alias BorutaIdentity.TotpError
   alias BorutaIdentityWeb.TemplateView
 
   def new(conn, _params) do
@@ -39,6 +42,17 @@ defmodule BorutaIdentityWeb.UserSessionController do
     session_token = get_user_session(conn)
 
     Accounts.delete_session(conn, client_id, session_token, __MODULE__)
+  end
+
+  def authenticate_totp(conn, %{"totp" => totp_params}) do
+    client_id = client_id_from_request(conn)
+    current_user = conn.assigns[:current_user]
+
+    totp_params = %{
+      totp_code: totp_params["totp_code"]
+    }
+
+    Totp.authenticate_totp(conn, client_id, current_user, totp_params, __MODULE__)
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
@@ -68,8 +82,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
 
     conn
     |> store_user_session(session_token)
-    |> put_session(:session_chosen, true)
-    |> redirect(to: after_sign_in_path(conn))
+    |> Totp.initialize_totp(client_id, user, __MODULE__)
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
@@ -87,6 +100,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
         client_id: client_id
       }
     )
+
     conn
     |> put_layout(false)
     |> put_status(:unauthorized)
@@ -118,5 +132,52 @@ defmodule BorutaIdentityWeb.UserSessionController do
     |> remove_user_session()
     |> put_flash(:info, "Logged out successfully.")
     |> redirect(to: after_sign_out_path(conn))
+  end
+
+  @impl BorutaIdentity.TotpAuthenticationApplication
+  def totp_not_required(conn) do
+    conn
+    |> put_session(:session_chosen, true)
+    |> redirect(to: after_sign_in_path(conn))
+  end
+
+  @impl BorutaIdentity.TotpAuthenticationApplication
+  def totp_initialized(%Plug.Conn{} = conn, template) do
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{}
+    )
+  end
+
+  @impl BorutaIdentity.TotpAuthenticationApplication
+  def totp_authenticated(%Plug.Conn{} = conn, _user) do
+    conn
+    |> put_session(
+      :totp_authenticated,
+      (get_session(conn, :totp_authenticated) || %{})
+      |> Map.put(get_user_session(conn), true)
+    )
+    |> put_session(:session_chosen, true)
+    |> redirect(to: after_sign_in_path(conn))
+  end
+
+  @impl BorutaIdentity.TotpAuthenticationApplication
+  def totp_authentication_failure(%Plug.Conn{} = conn, %TotpError{
+        message: message,
+        template: template
+      }) do
+    conn
+    |> put_layout(false)
+    |> put_status(:unauthorized)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        errors: [message]
+      }
+    )
   end
 end

@@ -72,6 +72,10 @@
               <router-link
                 :to="{ name: 'edit-totp-registration-template', params: { identityProviderId: identityProvider.id } }"
                 class="ui fluid blue button">Edit TOTP registration template</router-link>
+              <hr />
+              <router-link
+                :to="{ name: 'edit-totp-authentication-template', params: { identityProviderId: identityProvider.id } }"
+                class="ui fluid blue button">Edit TOTP authentication template</router-link>
             </div>
           </div>
         </section>
