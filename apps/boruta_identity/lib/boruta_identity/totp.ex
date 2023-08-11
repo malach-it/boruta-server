@@ -188,17 +188,17 @@ defmodule BorutaIdentity.Totp do
 
   defwithclientidp initialize_totp(context, client_id, user, module) do
     case {client_idp, user} do
+      {%IdentityProvider{totpable: true}, %User{totp_registered_at: %DateTime{}}} ->
+        module.totp_initialized(context, new_totp_authentication_template(client_idp))
+
       {%IdentityProvider{enforce_totp: true}, %User{totp_registered_at: nil}} ->
         module.totp_registration_missing(context)
 
       {%IdentityProvider{enforce_totp: true}, _} ->
         module.totp_initialized(context, new_totp_authentication_template(client_idp))
 
-      {_, %User{totp_registered_at: nil}} ->
+      {%IdentityProvider{enforce_totp: false}, _} ->
         module.totp_not_required(context)
-
-      {_, _} ->
-        module.totp_initialized(context, new_totp_authentication_template(client_idp))
     end
   end
 

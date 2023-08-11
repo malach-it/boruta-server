@@ -110,6 +110,20 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp do_enforce_mfa(
+         %IdentityProvider{totpable: true},
+         %User{totp_registered_at: %DateTime{}},
+         totp_authenticated
+       ) do
+    case totp_authenticated do
+      true ->
+        :ok
+
+      _ ->
+        {:error, "Multi factor authentication required."}
+    end
+  end
+
+  defp do_enforce_mfa(
          %IdentityProvider{enforce_totp: true},
          %User{totp_registered_at: nil},
          totp_authenticated
@@ -121,6 +135,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       _ ->
         {:error, "Multi factor authentication required."}
     end
+  end
+
+  defp do_enforce_mfa(
+         %IdentityProvider{enforce_totp: false},
+         %User{},
+         _totp_authenticated
+       ) do
+    :ok
   end
 
   defp do_enforce_mfa(

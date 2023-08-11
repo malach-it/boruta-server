@@ -15,7 +15,7 @@
 <form class="ui massive form" action="{{ create_user_session_totp_authentication_path }}" method="POST">
   <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
   <div class="field">
-    <label for="totp-code">TOTP code</label>
+    <label for="totp-code">TOTP code <em>({{ current_user.username }})</em></label>
     <hr />
     <input autofocus type="text" id="totp-code" name="totp[totp_code]" placeholder="XXXXXX" style="text-align: center;" />
   </div>
