@@ -75,6 +75,13 @@ defmodule BorutaIdentityWeb.TemplateView do
   def context(context, %{current_user: current_user} = assigns) do
     current_user = Map.take(current_user, [:username, :totp_registered_at, :metadata])
 
+    current_user = %{
+      current_user
+      | totp_registered_at:
+          current_user.totp_registered_at &&
+            current_user.totp_registered_at |> DateTime.truncate(:second) |> DateTime.to_string()
+    }
+
     %{current_user: current_user}
     |> Map.merge(context)
     |> context(Map.delete(assigns, :current_user))
@@ -116,7 +123,9 @@ defmodule BorutaIdentityWeb.TemplateView do
       create_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
       create_user_session_totp_authentication_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_totp, %{request: request}),
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_totp, %{
+          request: request
+        }),
       delete_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{request: request}),
       edit_user_path:
