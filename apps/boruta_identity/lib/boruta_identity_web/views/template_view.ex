@@ -69,11 +69,11 @@ defmodule BorutaIdentityWeb.TemplateView do
       base64_totp_registration_qr_code: base64_totp_registration_qr_code
     }
     |> Map.merge(context)
-    |> context(Map.delete(assigns, :current_user))
+    |> context(Map.delete(assigns, :totp_secret))
   end
 
   def context(context, %{current_user: current_user} = assigns) do
-    current_user = Map.from_struct(current_user)
+    current_user = Map.take(current_user, [:username, :totp_registered_at, :metadata])
 
     %{current_user: current_user}
     |> Map.merge(context)

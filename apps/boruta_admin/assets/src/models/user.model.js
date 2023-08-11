@@ -19,6 +19,7 @@ const assign = {
   uid: function ({ uid }) { this.uid = uid },
   backend: function ({ backend }) { this.backend = backend },
   email: function ({ email }) { this.email = email },
+  totp_registered_at: function ({ totp_registered_at }) { this.totp_registered_at = totp_registered_at },
   metadata: function ({ metadata }) { this.metadata = metadata },
   group: function ({ group }) { this.group = group },
   authorized_scopes: function ({ authorized_scopes }) {

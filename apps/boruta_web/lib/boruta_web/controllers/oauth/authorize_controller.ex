@@ -17,6 +17,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
 
   def authorize(%Plug.Conn{} = conn, _params) do
@@ -27,7 +29,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     with {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
          {:unchanged, conn} <- check_preauthorized(conn),
-         {:unchanged, conn} <- ensure_user_authenticated(conn, current_user),
+         {:unchanged, conn} <- redirect_if_mfa_required(conn, current_user),
          {:unchanged, conn} <- preauthorize(conn, current_user) do
       redirect(conn,
         to:
@@ -50,32 +52,34 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
-  defp ensure_user_authenticated(conn, current_user) do
-    case current_user do
-      %User{totp_registered_at: nil} ->
+  defp redirect_if_mfa_required(conn, current_user) do
+    case ensure_mfa(conn, current_user) do
+      :ok ->
         {:unchanged, conn}
 
-      %User{} ->
-        case {get_session(conn, :session_chosen),
-              (get_session(conn, :totp_authenticated) || %{})[get_user_session(conn)]} do
-          {true, true} ->
-            {:unchanged, conn}
-
-          {true, _} ->
+      {:error, reason} ->
+        case get_session(conn, :session_chosen) do
+          true ->
             conn =
               conn
+              |> put_flash(:warning, reason)
               |> redirect(
                 to:
-                  IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
-                    request: request_param(conn)
-                  })
+                  IdentityRoutes.user_session_path(
+                    BorutaIdentityWeb.Endpoint,
+                    :initialize_totp,
+                    %{
+                      request: request_param(conn)
+                    }
+                  )
               )
 
             {:redirected, conn}
 
-          {_, _} ->
+          _ ->
             conn =
               conn
+              |> put_flash(:warning, reason)
               |> redirect(
                 to:
                   IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
@@ -85,10 +89,56 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             {:redirected, conn}
         end
-
-      nil ->
-        {:unchanged, conn}
     end
+  end
+
+  defp ensure_mfa(%Plug.Conn{query_params: query_params} = conn, current_user) do
+    identity_provider =
+      IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"])
+
+    totp_authenticated = (get_session(conn, :totp_authenticated) || %{})[get_user_session(conn)]
+
+    do_enforce_mfa(identity_provider, current_user, totp_authenticated)
+  end
+
+  defp do_enforce_mfa(
+         %IdentityProvider{enforce_totp: false},
+         %User{totp_registered_at: nil},
+         _totp_authenticated
+       ) do
+    :ok
+  end
+
+  defp do_enforce_mfa(
+         %IdentityProvider{enforce_totp: true},
+         %User{totp_registered_at: nil},
+         totp_authenticated
+       ) do
+    case totp_authenticated do
+      true ->
+        :ok
+
+      _ ->
+        {:error, "Multi factor authentication required."}
+    end
+  end
+
+  defp do_enforce_mfa(
+         %IdentityProvider{},
+         %User{totp_registered_at: %DateTime{}},
+         totp_authenticated
+       ) do
+    case totp_authenticated do
+      true ->
+        :ok
+
+      _ ->
+        {:error, "Multi factor authentication required."}
+    end
+  end
+
+  defp do_enforce_mfa(_identity_provider, _user, _totp_authenticated) do
+    :ok
   end
 
   defp check_preauthorized(conn) do
@@ -141,25 +191,19 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
          %Plug.Conn{query_params: %{"prompt" => "none"} = query_params} = conn,
          current_user
        ) do
-    case current_user do
-      %User{totp_registered_at: nil} ->
+    case ensure_mfa(conn, current_user) do
+      :ok ->
         {:authorize, do_authorize(conn, current_user)}
 
-      _user ->
-        case get_session(conn, :totp_authenticated) do
-          true ->
-            {:authorize, do_authorize(conn, current_user)}
-
-          _ ->
-            {:redirected,
-             authorize_error(conn, %Error{
-               status: :unauthorized,
-               format: :fragment,
-               redirect_uri: query_params["redirect_uri"],
-               error: :login_required,
-               error_description: "Multi factor authentication required for current user."
-             })}
-        end
+      {:error, reason} ->
+        {:redirected,
+         authorize_error(conn, %Error{
+           status: :unauthorized,
+           format: :fragment,
+           redirect_uri: query_params["redirect_uri"],
+           error: :login_required,
+           error_description: reason
+         })}
     end
   end
 

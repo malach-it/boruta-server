@@ -14,6 +14,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
           backend_id: String.t(),
           backend: Backend.t(),
           registrable: boolean(),
+          totpable: boolean(),
+          enforce_totp: boolean(),
           confirmable: boolean(),
           authenticable: boolean(),
           reset_password: boolean(),
@@ -29,6 +31,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
       :initialize_session,
       # BorutaIdentity.Accounts.FederatedSessions
       :create_federated_session,
+      # BorutaIdentity.Totp
+      :initialize_totp,
       # BorutaIdentity.Accounts.Sessions
       :create_session,
       # BorutaIdentity.Accounts.Sessions
@@ -90,6 +94,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     field(:name, :string)
     field(:choose_session, :boolean, default: true)
     field(:totpable, :boolean, default: false)
+    field(:enforce_totp, :boolean, default: false)
     field(:registrable, :boolean, default: false)
     field(:user_editable, :boolean, default: false)
     field(:confirmable, :boolean, default: false)
@@ -158,6 +163,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
       :name,
       :choose_session,
       :totpable,
+      :enforce_totp,
       :registrable,
       :user_editable,
       :consentable,

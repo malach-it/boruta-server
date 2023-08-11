@@ -44,6 +44,14 @@ defmodule BorutaIdentityWeb.UserSessionController do
     Accounts.delete_session(conn, client_id, session_token, __MODULE__)
   end
 
+  def initialize_totp(conn, _params) do
+    client_id = client_id_from_request(conn)
+    current_user = conn.assigns[:current_user]
+
+    conn
+    |> Totp.initialize_totp(client_id, current_user, __MODULE__)
+  end
+
   def authenticate_totp(conn, %{"totp" => totp_params}) do
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
@@ -139,6 +147,15 @@ defmodule BorutaIdentityWeb.UserSessionController do
     conn
     |> put_session(:session_chosen, true)
     |> redirect(to: after_sign_in_path(conn))
+  end
+
+  @impl BorutaIdentity.TotpAuthenticationApplication
+  def totp_registration_missing(%Plug.Conn{query_params: query_params} = conn) do
+    conn
+    |> put_flash(:warning, "You need to register a TOTP authenticator before continue.")
+    |> redirect(
+      to: Routes.totp_path(BorutaIdentityWeb.Endpoint, :new, %{request: query_params["request"]})
+    )
   end
 
   @impl BorutaIdentity.TotpAuthenticationApplication

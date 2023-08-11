@@ -61,9 +61,18 @@
         <section v-show="displayTotpable">
           <h3>Time based One Time Password</h3>
           <div class="ui segment">
-            <div class="ui toggle checkbox">
-              <input type="checkbox" v-model="identityProvider.totpable">
-              <label>enable TOTP</label>
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="identityProvider.totpable">
+                <label>enable TOTP</label>
+              </div>
+            </div>
+            <hr />
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="identityProvider.enforce_totp">
+                <label>enforce TOTP</label>
+              </div>
             </div>
             <p class="ui info message">
               Give the ability for end users to register an authentication second factor with TOTP.

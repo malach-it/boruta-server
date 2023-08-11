@@ -92,7 +92,7 @@ defmodule BorutaIdentityWeb.TotpController do
     conn
     |> put_flash(:info, "TOTP authenticator registered successfully.")
     |> redirect(
-      to: Routes.user_settings_path(conn, :edit, request: Map.get(query_params, "request"))
+      to: Routes.choose_session_path(conn, :index, request: Map.get(query_params, "request"))
     )
   end
 end

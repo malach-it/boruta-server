@@ -45,6 +45,8 @@ defmodule BorutaIdentity.TotpAuthenticationApplication do
 
   @callback totp_not_required(context :: any()) :: any()
 
+  @callback totp_registration_missing(context :: any()) :: any()
+
   @callback totp_initialized(
               context :: any(),
               template :: BorutaIdentity.IdentityProviders.Template.t()
@@ -141,6 +143,7 @@ defmodule BorutaIdentity.Totp do
 
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.Repo
   alias BorutaIdentity.TotpError
 
@@ -183,12 +186,20 @@ defmodule BorutaIdentity.Totp do
     end
   end
 
-  def initialize_totp(context, _client_id, %User{totp_registered_at: nil}, module) do
-    module.totp_not_required(context)
-  end
+  defwithclientidp initialize_totp(context, client_id, user, module) do
+    case {client_idp, user} do
+      {%IdentityProvider{enforce_totp: true}, %User{totp_registered_at: nil}} ->
+        module.totp_registration_missing(context)
 
-  defwithclientidp initialize_totp(context, client_id, _user, module) do
-    module.totp_initialized(context, new_totp_authentication_template(client_idp))
+      {%IdentityProvider{enforce_totp: true}, _} ->
+        module.totp_initialized(context, new_totp_authentication_template(client_idp))
+
+      {_, %User{totp_registered_at: nil}} ->
+        module.totp_not_required(context)
+
+      {_, _} ->
+        module.totp_initialized(context, new_totp_authentication_template(client_idp))
+    end
   end
 
   def authenticate_totp(context, _client_id, %User{totp_registered_at: nil}, _totp_params, module) do
