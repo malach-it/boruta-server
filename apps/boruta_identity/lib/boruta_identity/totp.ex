@@ -43,18 +43,18 @@ end
 defmodule BorutaIdentity.TotpAuthenticationApplication do
   @moduledoc false
 
-  @callback totp_not_required(context :: any()) :: any()
-
-  @callback totp_registration_missing(context :: any()) :: any()
-
   @callback totp_initialized(
               context :: any(),
               template :: BorutaIdentity.IdentityProviders.Template.t()
             ) :: any()
 
+  @callback totp_not_required(context :: any()) :: any()
+
+  @callback totp_registration_missing(context :: any()) :: any()
+
   @callback totp_authenticated(
               context :: any(),
-              user :: BorutaIdentity.Accounts.User.t()
+              current_user :: BorutaIdentity.Accounts.User.t()
             ) ::
               any()
 
@@ -68,13 +68,18 @@ defmodule BorutaIdentity.Totp do
   @moduledoc false
 
   defmodule Hotp do
-    @moduledoc false
+    @moduledoc """
+    Implements HOTP generation as described in the IETF RFC
+    [HOTP: An HMAC-Based One-Time Password Algorithm](https://www.ietf.org/rfc/rfc4226.txt)
+    > This implementation defaults to 6 digits using the sha1 algorithm as hashing function
+    """
 
     import Bitwise
 
     @hmac_algorithm :sha
     @digits 6
 
+    @spec generate_hotp(secret :: String.t(), counter :: integer()) :: hotp :: String.t()
     def generate_hotp(secret, counter) do
       # Step 1: Generate an HMAC-SHA-1 value
       hmac_result = :crypto.mac(:hmac, @hmac_algorithm, secret, <<counter::size(64)>>)
@@ -83,12 +88,13 @@ defmodule BorutaIdentity.Totp do
       truncated_hash = truncate_hash(hmac_result)
 
       # Step 3: Compute HOTP value (6-digit OTP)
-      hotp = truncated_hash |> rem(1_000_000)
+      hotp = truncated_hash |> rem(10 ** @digits)
 
       format_hotp(hotp)
     end
 
-    def truncate_hash(hmac_value) do
+    defp truncate_hash(hmac_value) do
+      # NOTE the folowing hard coded values are part of the specification
       offset = :binary.at(hmac_value, 19) &&& 0xF
 
       with <<_::size(1), result::size(31)>> <- :binary.part(hmac_value, offset, 4) do
@@ -109,18 +115,22 @@ defmodule BorutaIdentity.Totp do
         issuer: 0
       ]
 
-    def generate_totp(secret) do
-      secret = Base.decode32!(secret)
+    @interval 30
 
-      Hotp.generate_hotp(secret, number_of_time_steps())
+    @spec generate_totp(secret :: String.t()) :: totp :: String.t() | :error
+    def generate_totp(secret) do
+      with {:ok, secret} <- Base.decode32(secret, padding: false) do
+        Hotp.generate_hotp(secret, number_of_time_steps())
+      end
     end
 
+    @spec check_totp(totp :: String.t(), secret :: String.t()) :: totp :: :ok | {:error, reason :: String.t()}
     def check_totp(totp, secret) when is_binary(secret) do
-      secret = Base.decode32!(secret, padding: false)
-
-      case Hotp.generate_hotp(secret, number_of_time_steps()) == totp do
-        true -> :ok
-        false -> {:error, "Given TOTP is invalid."}
+      with {:ok, secret} <- Base.decode32(secret, padding: false),
+           true <- Hotp.generate_hotp(secret, number_of_time_steps()) == totp do
+        :ok
+      else
+        _ -> {:error, "Given TOTP is invalid."}
       end
     end
 
@@ -135,7 +145,7 @@ defmodule BorutaIdentity.Totp do
     end
 
     defp number_of_time_steps do
-      floor(:os.system_time(:seconds) / 30)
+      floor(:os.system_time(:seconds) / @interval)
     end
   end
 
@@ -186,8 +196,8 @@ defmodule BorutaIdentity.Totp do
     end
   end
 
-  defwithclientidp initialize_totp(context, client_id, user, module) do
-    case {client_idp, user} do
+  defwithclientidp initialize_totp(context, client_id, current_user, module) do
+    case {client_idp, current_user} do
       {%IdentityProvider{totpable: true}, %User{totp_registered_at: %DateTime{}}} ->
         module.totp_initialized(context, new_totp_authentication_template(client_idp))
 
@@ -202,8 +212,13 @@ defmodule BorutaIdentity.Totp do
     end
   end
 
-  def authenticate_totp(context, _client_id, %User{totp_registered_at: nil}, _totp_params, module) do
-    module.totp_not_required(context)
+  defwithclientidp authenticate_totp(context, client_id, %User{totp_registered_at: nil}, _totp_params, module) do
+    case client_idp.enforce_totp do
+      true ->
+        module.totp_registration_missing(context)
+      false ->
+        module.totp_not_required(context)
+    end
   end
 
   defwithclientidp authenticate_totp(context, client_id, user, totp_params, module) do

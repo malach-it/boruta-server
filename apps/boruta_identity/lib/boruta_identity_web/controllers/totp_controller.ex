@@ -76,6 +76,7 @@ defmodule BorutaIdentityWeb.TotpController do
 
     conn
     |> put_layout(false)
+    |> put_status(:unprocessable_entity)
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
