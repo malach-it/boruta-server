@@ -195,7 +195,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `POSTGRES_PASSWORD`                | The database password provided as credentials in postgreSQL connections. |
 | `POSTGRES_DATABASE`                | The database name provided in postgreSQL connections. |
 | `POSTGRES_HOST`                    | The database host provided in postgreSQL connections. |
-| `POOL_SIZE`                        | The postgreSQL pool size of each application, the real connection count will be 4 times that value. |
+| `POOL_SIZE`                        | The postgreSQL pool size of each application, the real connection count will be twice that value. |
 | `MAX_LOG_RETENTION_DAYS`           | The number of days the logs are kept to the server. This value defaults to 60. |
 | `K8S_NAMESPACE`                    | If set along with K8S_SELECTOR, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
 | `K8S_SELECTOR`                     | If set along with K8S_NAMESPACE, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
@@ -213,6 +213,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_GATEWAY_PORT`              | The port where boruta gateway will be exposed on. |
 | `BORUTA_GATEWAY_SIDECAR_PORT`      | The port where boruta microgateway will be exposed on. |
 | `BORUTA_GATEWAY_CONFIGURATION_PATH`| The path containing the gateway static configuration. |
+| `BORUTA_SUB_RESTRICTED`            | The uid of the only user to have access to the administration interface. |
 
 ## Code of Conduct
 

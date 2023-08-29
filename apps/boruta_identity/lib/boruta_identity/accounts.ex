@@ -158,9 +158,9 @@ defmodule BorutaIdentity.Accounts do
 
   ## Deprecated Database getters
 
-  defdelegate get_user_by_email(backend, email), to: Users
   defdelegate get_user(id), to: Users
+  defdelegate get_user_by_email(backend, email), to: Users
   defdelegate get_user_by_session_token(token), to: Users
-  defdelegate get_user_scopes(user_id), to: Users
   defdelegate get_user_roles(user_id), to: Users
+  defdelegate get_user_scopes(user_id), to: Users
 end

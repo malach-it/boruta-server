@@ -74,7 +74,7 @@ defmodule BorutaIdentity.ResourceOwners do
   def claims(%ResourceOwner{sub: sub}, scope) do
     case Accounts.get_user(sub) do
       %User{
-        username: email,
+        username: username,
         confirmed_at: confirmed_at,
         metadata: metadata,
         backend: backend
@@ -83,6 +83,7 @@ defmodule BorutaIdentity.ResourceOwners do
           metadata
           |> User.metadata_filter(backend)
           |> metadata_scope_filter(scope, backend)
+
         roles = Accounts.get_user_roles(sub)
 
         scope
@@ -90,43 +91,8 @@ defmodule BorutaIdentity.ResourceOwners do
         |> Enum.reduce(%{}, fn
           "email", acc ->
             Map.merge(acc, %{
-              "email" => email,
+              "email" => username,
               "email_verified" => !!confirmed_at
-            })
-
-          "phone", acc ->
-            Map.merge(acc, %{
-              "phone_number_verified" => false,
-              "phone_number" => "+33612345678"
-            })
-
-          "profile", acc ->
-            Map.merge(acc, %{
-              "profile" => "http://profile.host",
-              "preferred_username" => "prefered_username",
-              "updated_at" => :os.system_time(:seconds),
-              "website" => "website",
-              "zoneinfo" => "zoneinfo",
-              "birthdate" => "2021-08-01",
-              "gender" => "gender",
-              "given_name" => "given_name",
-              "middle_name" => "middle_name",
-              "locale" => "FR",
-              "picture" => "picture",
-              "updates_at" => "updates_at",
-              "name" => "name",
-              "nickname" => "nickname",
-              "family_name" => "family_name"
-            })
-
-          "address", acc ->
-            Map.put(acc, "address", %{
-              "formatted" => "3 rue Dupont-Moriety, 75021 Paris, France",
-              "street_address" => "3 rue Dupont-Moriety",
-              "locality" => "Paris",
-              "region" => "Ile-de-France",
-              "postal_code" => "75021",
-              "country" => "France"
             })
 
           _, acc ->
@@ -145,13 +111,17 @@ defmodule BorutaIdentity.ResourceOwners do
       # does backend metadata fields configuration allows current field according to scope ?
       Enum.reduce(metadata_fields, true, fn
         %{"attribute_name" => ^key, "scopes" => scopes}, acc ->
-        case scopes do
-          nil -> acc && true
-          scopes ->
-            request_scopes = Scope.split(request_scope)
-            Enum.empty?(scopes -- request_scopes)
-        end
-        _, acc -> acc && true
+          case scopes do
+            nil ->
+              acc && true
+
+            scopes ->
+              request_scopes = Scope.split(request_scope)
+              Enum.empty?(scopes -- request_scopes)
+          end
+
+        _, acc ->
+          acc && true
       end)
     end)
     |> Enum.into(%{})

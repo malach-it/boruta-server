@@ -31,7 +31,7 @@ defmodule BorutaIdentity.TotpRegistrationApplication do
 
   @callback totp_registration_error(
               context :: any(),
-              BorutaIdentity.TotpError.t()
+              error :: BorutaIdentity.TotpError.t()
             ) :: any()
 
   @callback totp_registration_success(

@@ -83,8 +83,8 @@ defmodule BorutaIdentity.Accounts.Users do
        Repo.all(
          from(br in BackendRole,
            left_join: b in assoc(br, :backend),
-           left_join: u in assoc(b, :users),
            left_join: r in assoc(br, :role),
+           left_join: u in assoc(b, :users),
            left_join: rs in assoc(r, :role_scopes),
            where: u.id == ^user_id,
            preload: [role: {r, [role_scopes: rs]}]
