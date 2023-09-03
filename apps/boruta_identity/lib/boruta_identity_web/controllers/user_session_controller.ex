@@ -190,6 +190,8 @@ defmodule BorutaIdentityWeb.UserSessionController do
         message: message,
         template: template
       }) do
+    current_user = conn.assigns.current_user
+
     conn
     |> put_layout(false)
     |> put_status(:unauthorized)
@@ -197,7 +199,8 @@ defmodule BorutaIdentityWeb.UserSessionController do
     |> render("template.html",
       template: template,
       assigns: %{
-        errors: [message]
+        errors: [message],
+        current_user: current_user
       }
     )
   end
