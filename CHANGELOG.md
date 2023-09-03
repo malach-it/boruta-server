@@ -2,6 +2,14 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [unreleased]
+
+### Added
+
+- [identity] TOTP second factor support
+- [identity] user roles management
+- [infra] split auth/admin/gateway/all docker images
+
 ## [0.2.0] - 2023-05-17
 
 ### Added
