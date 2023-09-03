@@ -16,6 +16,7 @@ defmodule BorutaIdentity.Accounts.User do
           username: String.t() | nil,
           password: String.t() | nil,
           metadata: map(),
+          totp_secret: String.t() | nil,
           confirmed_at: DateTime.t() | nil,
           authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
           consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
@@ -38,6 +39,8 @@ defmodule BorutaIdentity.Accounts.User do
     field(:confirmed_at, :utc_datetime_usec)
     field(:last_login_at, :utc_datetime_usec)
     field(:metadata, :map, default: %{})
+    field(:totp_secret, :string)
+    field(:totp_registered_at, :utc_datetime_usec)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:roles, UserRole)
@@ -80,6 +83,10 @@ defmodule BorutaIdentity.Accounts.User do
   """
   def unconfirm_changeset(user) do
     change(user, confirmed_at: nil)
+  end
+
+  def totp_changeset(user, totp_secret) do
+    change(user, totp_secret: totp_secret, totp_registered_at: DateTime.utc_now())
   end
 
   def consent_changeset(user, attrs) do

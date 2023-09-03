@@ -17,7 +17,7 @@
       display: flex;
     }
 
-    .main.message {
+    .main.messages {
       position: absolute;
       top: 1rem;
       left: 1rem;
@@ -72,11 +72,13 @@
       <header></header>
       <main role="main" class="container">
         <div class="content">
-          {{#messages}}
-          <div class="ui main {{ type }} message">
-            {{ content }}
+          <div class="main messages">
+            {{#messages}}
+            <div class="ui {{ type }} message">
+              {{ content }}
+            </div>
+            {{/messages}}
           </div>
-          {{/messages}}
           {{> inner_content }}
         </div>
         <div class="credits">

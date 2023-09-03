@@ -20,8 +20,10 @@ defmodule BorutaIdentity.IdentityProviders.Template do
     :layout,
     :new_session,
     :choose_session,
-    :new_consent,
+    :new_totp_registration,
+    :new_totp_authentication,
     :new_registration,
+    :new_consent,
     :new_reset_password,
     :edit_reset_password,
     :new_confirmation_instructions,
@@ -32,6 +34,8 @@ defmodule BorutaIdentity.IdentityProviders.Template do
           | :new_session
           | :choose_session
           | :new_consent
+          | :new_totp_registration
+          | :new_totp_authentication
           | :new_registration
           | :new_reset_password
           | :edit_reset_password
@@ -51,13 +55,21 @@ defmodule BorutaIdentity.IdentityProviders.Template do
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/choose_session/index.mustache")
       |> File.read!(),
-    new_consent:
+    new_totp_registration:
       :code.priv_dir(:boruta_identity)
-      |> Path.join("templates/consents/new.mustache")
+      |> Path.join("templates/mfa/totp/registration.mustache")
+      |> File.read!(),
+    new_totp_authentication:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/mfa/totp/authentication.mustache")
       |> File.read!(),
     new_registration:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/registrations/new.mustache")
+      |> File.read!(),
+    new_consent:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/consents/new.mustache")
       |> File.read!(),
     new_reset_password:
       :code.priv_dir(:boruta_identity)

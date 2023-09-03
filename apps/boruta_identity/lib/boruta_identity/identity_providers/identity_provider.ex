@@ -14,6 +14,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
           backend_id: String.t(),
           backend: Backend.t(),
           registrable: boolean(),
+          totpable: boolean(),
+          enforce_totp: boolean(),
           confirmable: boolean(),
           authenticable: boolean(),
           reset_password: boolean(),
@@ -24,6 +26,32 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
         }
 
   @features %{
+    authenticable: [
+      # BorutaIdentity.Accounts.Sessions
+      :initialize_session,
+      # BorutaIdentity.Accounts.FederatedSessions
+      :create_federated_session,
+      # BorutaIdentity.Totp
+      :initialize_totp,
+      # BorutaIdentity.Accounts.Sessions
+      :create_session,
+      # BorutaIdentity.Accounts.Sessions
+      :delete_session,
+      # BorutaIdentity.Accounts.Consents
+      :initialize_consent,
+      # BorutaIdentity.Accounts.ChooseSessions
+      :initialize_choose_session
+    ],
+    totpable: [
+      # BorutaIdentity.Totp
+      :initialize_totp_registration,
+      # BorutaIdentity.Totp
+      :register_totp,
+      # BorutaIdentity.Totp
+      :initialize_totp,
+      # BorutaIdentity.Totp
+      :authenticate_totp
+    ],
     registrable: [
       # BorutaIdentity.Accounts.Registrations
       :initialize_registration,
@@ -43,20 +71,6 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
       :send_confirmation_instructions,
       # BorutaIdentity.Accounts.Confirmations
       :confirm_user
-    ],
-    authenticable: [
-      # BorutaIdentity.Accounts.Sessions
-      :initialize_session,
-      # BorutaIdentity.Accounts.FederatedSessions
-      :create_federated_session,
-      # BorutaIdentity.Accounts.Sessions
-      :create_session,
-      # BorutaIdentity.Accounts.Sessions
-      :delete_session,
-      # BorutaIdentity.Accounts.Consents
-      :initialize_consent,
-      # BorutaIdentity.Accounts.ChooseSessions
-      :initialize_choose_session
     ],
     reset_password: [
       # BorutaIdentity.Accounts.ResetPasswords
@@ -79,6 +93,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
   schema "identity_providers" do
     field(:name, :string)
     field(:choose_session, :boolean, default: true)
+    field(:totpable, :boolean, default: false)
+    field(:enforce_totp, :boolean, default: false)
     field(:registrable, :boolean, default: false)
     field(:user_editable, :boolean, default: false)
     field(:confirmable, :boolean, default: false)
@@ -146,6 +162,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     |> cast(attrs, [
       :name,
       :choose_session,
+      :totpable,
+      :enforce_totp,
       :registrable,
       :user_editable,
       :consentable,

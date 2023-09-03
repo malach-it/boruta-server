@@ -22,6 +22,8 @@ defmodule BorutaAdminWeb.IdentityProviderView do
       backend: render_one(identity_provider.backend, BackendView, "backend.json", backend: identity_provider.backend),
       backend_id: identity_provider.backend_id,
       choose_session: identity_provider.choose_session,
+      totpable: identity_provider.totpable,
+      enforce_totp: identity_provider.enforce_totp,
       registrable: identity_provider.registrable,
       user_editable: identity_provider.user_editable,
       consentable: identity_provider.consentable,

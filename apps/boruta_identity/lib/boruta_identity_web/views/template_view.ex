@@ -57,8 +57,30 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :identity_provider))
   end
 
+  def context(context, %{current_user: current_user, totp_secret: totp_secret} = assigns) do
+    {:ok, base64_totp_registration_qr_code} =
+      BorutaIdentity.Totp.Admin.url(current_user.username, totp_secret)
+      |> QRCode.create()
+      |> QRCode.render(:svg)
+      |> QRCode.to_base64()
+
+    %{
+      totp_secret: totp_secret,
+      base64_totp_registration_qr_code: base64_totp_registration_qr_code
+    }
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :totp_secret))
+  end
+
   def context(context, %{current_user: current_user} = assigns) do
-    current_user = Map.from_struct(current_user)
+    current_user = Map.take(current_user, [:username, :totp_registered_at, :metadata])
+
+    current_user = %{
+      current_user
+      | totp_registered_at:
+          current_user.totp_registered_at &&
+            current_user.totp_registered_at |> DateTime.truncate(:second) |> DateTime.to_string()
+    }
 
     %{current_user: current_user}
     |> Map.merge(context)
@@ -100,10 +122,18 @@ defmodule BorutaIdentityWeb.TemplateView do
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
       create_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
+      create_user_session_totp_authentication_path:
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_totp, %{
+          request: request
+        }),
       delete_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{request: request}),
       edit_user_path:
         Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :edit, %{request: request}),
+      new_user_totp_registration_path:
+        Routes.totp_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+      create_user_totp_registration_path:
+        Routes.totp_path(BorutaIdentityWeb.Endpoint, :register, %{request: request}),
       new_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_reset_password_path:
@@ -152,6 +182,7 @@ defmodule BorutaIdentityWeb.TemplateView do
   defp identity_provider_configurations(identity_provider) do
     %{
       registrable?: identity_provider.registrable,
+      totpable?: identity_provider.totpable,
       user_editable?: identity_provider.user_editable
     }
   end

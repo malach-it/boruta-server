@@ -4,6 +4,7 @@ defmodule BorutaIdentityWeb.Authenticable do
   use BorutaIdentityWeb, :controller
 
   alias Boruta.Oauth
+  alias BorutaIdentity.Accounts
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -19,7 +20,10 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec store_user_session(conn :: Plug.Conn.t(), session_token :: String.t()) ::
           conn :: Plug.Conn.t()
   def store_user_session(%Plug.Conn{body_params: params} = conn, session_token) do
+    user = session_token && Accounts.get_user_by_session_token(session_token)
+
     conn
+    |> assign(:current_user, user)
     |> put_session(@session_key, session_token)
     |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(session_token)}")
     |> maybe_write_remember_me_cookie(session_token, params["user"])

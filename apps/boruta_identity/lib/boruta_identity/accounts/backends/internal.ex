@@ -18,10 +18,11 @@ defmodule BorutaIdentity.Accounts.Internal do
   alias BorutaIdentity.Repo
 
   @features [
+    :authenticable,
+    :totpable,
     :registrable,
     :user_editable,
     :confirmable,
-    :authenticable,
     :reset_password,
     :consentable
   ]

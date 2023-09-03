@@ -1,7 +1,9 @@
 <template>
   <div class="new-user">
     <Toaster :active="success" message="User has been created" type="success" />
-    <UserForm :user="user" @submit="createUser()" @back="back()" action="Create" />
+    <div class="ui container">
+      <UserForm :user="user" @submit="createUser()" @back="back()" action="Create" />
+    </div>
   </div>
 </template>
 

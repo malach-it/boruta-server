@@ -61,6 +61,7 @@ defmodule BorutaIdentity.MixProject do
       {:phoenix_pubsub, "~> 2.0"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
+      {:qr_code, "~> 3.0.0"},
       {:scrivener_ecto, "~> 2.7"},
       {:secure_random, "~> 0.5"},
       {:swoosh, "~> 1.5"},
