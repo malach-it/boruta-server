@@ -13,13 +13,10 @@
 <div class="ui big right aligned segment">
   TOTP registered at {{ . }}
 </div>
-<a href="{{ new_user_totp_registration_path }}" class="ui fluid blue button" type="submit">Replace TOTP authenticator</a>
-<hr />
 {{/current_user.totp_registered_at}}
-{{^current_user.totp_registered_at}}
-<a href="{{ new_user_totp_registration_path }}" class="ui fluid blue button" type="submit">Register a TOTP authenticator</a>
+
+<a href="{{ new_user_totp_registration_path }}" class="ui fluid blue button">Register a TOTP authenticator</a>
 <hr />
-{{/current_user.totp_registered_at}}
 
 <form class="ui form" action="{{ update_user_path }}" method="POST">
   <input type="hidden" name="_method" value="put" />
