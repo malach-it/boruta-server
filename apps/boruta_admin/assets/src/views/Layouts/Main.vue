@@ -84,6 +84,11 @@
                     <span>user list</span>
                   </router-link>
                 </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'organization-list' }">
+                    <span>organization list</span>
+                  </router-link>
+                </div>
               </div>
             </div>
           </router-link>

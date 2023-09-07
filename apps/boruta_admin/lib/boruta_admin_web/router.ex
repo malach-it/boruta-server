@@ -43,6 +43,7 @@ defmodule BorutaAdminWeb.Router do
     resources("/clients", ClientController, except: [:new, :edit])
     post("/clients/:id/regenerate_key_pair", ClientController, :regenerate_key_pair)
     resources("/users", UserController, except: [:new, :edit])
+    resources("/organizations", OrganizationController, except: [:new, :edit])
     get("/upstreams/nodes", UpstreamController, :node_list)
     resources("/upstreams", UpstreamController, except: [:new, :edit])
 

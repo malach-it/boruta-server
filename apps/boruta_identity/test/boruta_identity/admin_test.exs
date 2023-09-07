@@ -337,4 +337,14 @@ defmodule BorutaIdentity.AdminTest do
       assert %Ecto.Changeset{} = Admin.change_role(role)
     end
   end
+
+  defmodule OrganizationsTest do
+    use BorutaIdentity.DataCase, async: true
+
+    describe "list_organizations/0" do
+      test "returns an empty set" do
+        assert Enum.empty?(Admin.list_organizations())
+      end
+    end
+  end
 end

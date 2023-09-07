@@ -38,11 +38,15 @@ import EditNewResetPasswordTemplate from "./views/IdentityProviders/EditNewReset
 import EditEditResetPasswordTemplate from "./views/IdentityProviders/EditEditResetPasswordTemplate.vue";
 import EditEditUserTemplate from "./views/IdentityProviders/EditEditUserTemplate.vue";
 import NewIdentityProvider from "./views/IdentityProviders/NewIdentityProvider.vue";
+
 import Users from "./views/IdentityProviders/Users.vue";
 import UserList from "./views/IdentityProviders/UserList.vue";
 import UserImport from "./views/IdentityProviders/UserImport.vue";
 import NewUser from "./views/IdentityProviders/NewUser.vue";
 import EditUser from "./views/IdentityProviders/EditUser.vue";
+
+import Organizations from "./views/IdentityProviders/Organizations.vue";
+import OrganizationList from "./views/IdentityProviders/OrganizationList.vue";
 
 import Backends from "./views/IdentityProviders/Backends.vue";
 import Backend from "./views/IdentityProviders/Backends/Backend.vue";
@@ -276,6 +280,24 @@ const router = createRouter({
                   path: "/users/:userId/edit",
                   name: "edit-user",
                   component: EditUser,
+                },
+              ],
+            },
+            {
+              path: "organizations",
+              name: "organizations",
+              component: Organizations,
+              redirect: "/identity-providers/organizations/",
+              children: [
+                {
+                  path: "",
+                  name: "organization-list",
+                  component: OrganizationList,
+                },
+                {
+                  path: "/organizations/new",
+                  name: "new-organization",
+                  component: OrganizationList,
                 },
               ],
             },

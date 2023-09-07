@@ -292,6 +292,11 @@ defmodule BorutaIdentity.Admin do
     Repo.delete_all(from(s in UserAuthorizedScope, where: s.scope_id == ^scope_id))
   end
 
+  defdelegate list_organizations, to: BorutaIdentity.Admin.Organizations
+  defdelegate list_organizations(params), to: BorutaIdentity.Admin.Organizations
+  defdelegate search_organizations(query), to: BorutaIdentity.Admin.Organizations
+  defdelegate search_organizations(query, params), to: BorutaIdentity.Admin.Organizations
+
   # --------- TODO refactor below functions
   alias BorutaIdentity.Accounts.Role
 
