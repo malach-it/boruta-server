@@ -14,6 +14,7 @@ defmodule BorutaIdentity.Factory do
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
+  alias BorutaIdentity.Organizations.Organization
 
   # @password "hello world!"
   @hashed_password "$argon2id$v=19$m=131072,t=8,p=4$9lPv7KsJogno0FlnhaRQXA$TeTY9FYjR1HJtZzg+N1z0oDC+0Mn7buPpOMhDP+M2Ik"
@@ -109,5 +110,11 @@ defmodule BorutaIdentity.Factory do
 
   def role_scope_factory do
     %RoleScope{}
+  end
+
+  def organization_factory do
+    %Organization{
+      name: "Organization " <> SecureRandom.hex()
+    }
   end
 end

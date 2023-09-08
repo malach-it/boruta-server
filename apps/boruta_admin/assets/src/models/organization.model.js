@@ -31,12 +31,12 @@ class Organization {
   async save () {
     this.errors = null
 
-    const { id, backend_id, serialized } = this
+    const { id, serialized } = this
     let response
     if (this.isPersisted) {
-      response = this.constructor.api().patch(`/${id}`, { user: serialized })
+      response = this.constructor.api().patch(`/${id}`, { organization: serialized })
     } else {
-      response = this.constructor.api().post('/', { backend_id, user: serialized })
+      response = this.constructor.api().post('/', { organization: serialized })
     }
     return response
       .then(({ data }) => {

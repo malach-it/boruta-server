@@ -47,6 +47,8 @@ import EditUser from "./views/IdentityProviders/EditUser.vue";
 
 import Organizations from "./views/IdentityProviders/Organizations.vue";
 import OrganizationList from "./views/IdentityProviders/OrganizationList.vue";
+import NewOrganization from "./views/IdentityProviders/NewOrganization.vue";
+import EditOrganization from "./views/IdentityProviders/EditOrganization.vue";
 
 import Backends from "./views/IdentityProviders/Backends.vue";
 import Backend from "./views/IdentityProviders/Backends/Backend.vue";
@@ -297,7 +299,12 @@ const router = createRouter({
                 {
                   path: "/organizations/new",
                   name: "new-organization",
-                  component: OrganizationList,
+                  component: NewOrganization,
+                },
+                {
+                  path: "/organizations/:organizationId/edit",
+                  name: "edit-organization",
+                  component: EditOrganization,
                 },
               ],
             },
@@ -470,7 +477,7 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   if (to.name === "oauth-callback") return next();
 
   oauth.storeLocationName(to);

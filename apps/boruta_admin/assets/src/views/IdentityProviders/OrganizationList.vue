@@ -20,6 +20,10 @@
             </div>
             <div class="ui attribute list">
               <div class="item">
+                <span class="header">OrganizationId</span>
+                <span class="description">{{ organization.id }}</span>
+              </div>
+              <div class="item">
                 <span class="header">Name</span>
                 <span class="description">{{ organization.name }}</span>
               </div>

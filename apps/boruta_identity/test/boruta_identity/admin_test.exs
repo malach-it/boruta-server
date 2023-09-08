@@ -341,9 +341,102 @@ defmodule BorutaIdentity.AdminTest do
   defmodule OrganizationsTest do
     use BorutaIdentity.DataCase, async: true
 
+    alias BorutaIdentity.Organizations.Organization
+
     describe "list_organizations/0" do
       test "returns an empty set" do
         assert Enum.empty?(Admin.list_organizations())
+      end
+
+      test "returns paginated organizations" do
+        organization = insert(:organization)
+
+        assert Admin.list_organizations() == %Scrivener.Page{
+                 page_number: 1,
+                 page_size: 12,
+                 total_entries: 1,
+                 total_pages: 1,
+                 entries: [organization]
+               }
+      end
+    end
+
+    describe "get_organization/1" do
+      test "returns nil" do
+        assert Admin.get_organization("bad id") == nil
+      end
+
+      test "returns nil with an unkown uuid" do
+        organization_id = SecureRandom.uuid()
+
+        assert Admin.get_organization(organization_id) == nil
+      end
+
+      test "returns an organization" do
+        %Organization{id: organization_id} = organization = insert(:organization)
+
+        assert Admin.get_organization(organization_id) == organization
+      end
+    end
+
+    describe "create_organization/1" do
+      test "returns an error with invalid params" do
+        organization_params = %{name: nil}
+        assert {:error, %Ecto.Changeset{}} = Admin.create_organization(organization_params)
+      end
+
+      test "creates and organization" do
+        organization_params = %{name: "Organization"}
+
+        assert {:ok, %Organization{name: "Organization"}} =
+                 Admin.create_organization(organization_params)
+      end
+    end
+
+    describe "update_organization/2" do
+      test "returns an error with unkown organization" do
+        organization = build(:organization)
+
+        organization_params = %{name: nil}
+
+        assert {:error, %Ecto.Changeset{}} =
+                 Admin.update_organization(organization, organization_params)
+      end
+
+      test "returns an error with invalid params" do
+        organization = insert(:organization)
+
+        organization_params = %{name: nil}
+
+        assert {:error, %Ecto.Changeset{}} =
+                 Admin.update_organization(organization, organization_params)
+      end
+
+      test "updates an organization" do
+        organization = insert(:organization)
+
+        organization_params = %{name: "updated"}
+
+        assert {:ok, %Organization{name: "updated"}} =
+                 Admin.update_organization(organization, organization_params)
+
+        assert %Organization{name: "updated"} = Repo.reload(organization)
+      end
+    end
+
+    describe "delete_organization/1" do
+      test "returns an error with unkown organization" do
+        organization_id = SecureRandom.uuid()
+
+        assert {:error, :not_found} = Admin.delete_organization(organization_id)
+      end
+
+      test "deletes an organization" do
+        %Organization{id: organization_id} = insert(:organization)
+
+        assert {:ok, %Organization{}} = Admin.delete_organization(organization_id)
+
+        assert Repo.get(Organization, organization_id) == nil
       end
     end
   end

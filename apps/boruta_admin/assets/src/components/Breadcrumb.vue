@@ -45,6 +45,8 @@ const labels = {
   'user-import': 'Import',
   'edit-user': ({ params }) => params.userId,
   'organizations': 'Organizations',
+  'new-organization': 'Create',
+  'edit-organization': ({ params }) => params.organizationId,
   'clients': 'Clients',
   'key-pair-list': 'Key pairs',
   'new-client': 'Create',
