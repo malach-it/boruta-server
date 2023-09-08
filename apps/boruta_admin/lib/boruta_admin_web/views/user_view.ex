@@ -37,6 +37,7 @@ defmodule BorutaAdminWeb.UserView do
       metadata: user.metadata,
       group: user.group,
       authorized_scopes: Accounts.get_user_scopes(user.id),
+      organizations: Accounts.get_user_organizations(user.id),
       roles:
         Accounts.get_user_roles(user.id)
         |> Enum.filter(fn
@@ -63,6 +64,12 @@ defmodule BorutaAdminWeb.UserView do
   defimpl Jason.Encoder, for: BorutaIdentity.Accounts.Role do
     def encode(role, opts) do
       Jason.Encode.map(Map.take(role, [:id, :name, :scopes]), opts)
+    end
+  end
+
+  defimpl Jason.Encoder, for: BorutaIdentity.Organizations.Organization do
+    def encode(role, opts) do
+      Jason.Encode.map(Map.take(role, [:id, :name, :label]), opts)
     end
   end
 

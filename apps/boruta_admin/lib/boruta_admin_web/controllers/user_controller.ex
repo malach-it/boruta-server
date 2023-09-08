@@ -44,9 +44,11 @@ defmodule BorutaAdminWeb.UserController do
   def create(conn, %{"backend_id" => backend_id, "user" => user_params}) do
     create_params = %{
       username: user_params["email"],
+      group: user_params["group"],
       password: user_params["password"],
-      metadata: user_params["metadata"],
+      metadata: user_params["metadata"] || %{},
       authorized_scopes: user_params["authorized_scopes"],
+      organizations: user_params["organizations"],
       roles: user_params["roles"]
     }
 
@@ -103,10 +105,19 @@ defmodule BorutaAdminWeb.UserController do
   def create(_conn, _params), do: {:error, :bad_request}
 
   def update(conn, %{"id" => id, "user" => user_params}) do
+    update_params = %{
+      username: user_params["email"],
+      group: user_params["group"],
+      metadata: user_params["metadata"] || %{},
+      authorized_scopes: user_params["authorized_scopes"],
+      organizations: user_params["organizations"],
+      roles: user_params["roles"]
+    }
+
     with :ok <- ensure_open_for_edition(id, conn),
          %User{} = user <- Admin.get_user(id),
          # TODO update user email and password
-         {:ok, %User{} = user} <- Admin.update_user(user, user_params) do
+         {:ok, %User{} = user} <- Admin.update_user(user, update_params) do
       render(conn, "show.json", user: user)
     else
       nil -> {:error, :not_found}

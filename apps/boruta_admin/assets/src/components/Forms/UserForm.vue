@@ -35,6 +35,8 @@
           <RolesField :currentRoles="user.roles" @delete-role="deleteRole" @add-role="addRole" />
           <h2>Authorized scopes</h2>
           <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+          <h2>Organizations</h2>
+          <OrganizationsField :currentOrganizations="user.organizations" @delete-organization="deleteOrganization" @add-organization="addOrganization" />
           </section>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
@@ -47,9 +49,11 @@
 <script>
 import Scope from '../../models/scope.model'
 import Role from '../../models/role.model'
+import Organization from '../../models/organization.model'
 import Backend from '../../models/backend.model'
 import ScopesField from './ScopesField.vue'
 import RolesField from './RolesField.vue'
+import OrganizationsField from './OrganizationsField.vue'
 import FormErrors from './FormErrors.vue'
 
 export default {
@@ -58,6 +62,7 @@ export default {
   components: {
     ScopesField,
     RolesField,
+    OrganizationsField,
     FormErrors
   },
   data () {
@@ -93,6 +98,15 @@ export default {
     deleteRole (role) {
       this.user.roles.splice(
         this.user.roles.indexOf(role),
+        1
+      )
+    },
+    addOrganization () {
+      this.user.organizations.push({ model: new Organization() })
+    },
+    deleteOrganization (organization) {
+      this.user.organizations.splice(
+        this.user.organizations.indexOf(organization),
         1
       )
     }

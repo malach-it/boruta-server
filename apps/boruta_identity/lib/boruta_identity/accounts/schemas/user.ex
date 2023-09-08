@@ -8,6 +8,7 @@ defmodule BorutaIdentity.Accounts.User do
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.Organizations.OrganizationUser
   alias BorutaIdentity.Repo
 
   @type t :: %__MODULE__{
@@ -44,6 +45,7 @@ defmodule BorutaIdentity.Accounts.User do
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:roles, UserRole)
+    has_many(:organizations, OrganizationUser)
     has_many(:consents, Consent, on_replace: :delete)
     belongs_to(:backend, Backend)
 

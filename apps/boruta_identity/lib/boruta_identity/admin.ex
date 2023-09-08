@@ -10,6 +10,7 @@ defmodule BorutaIdentity.Admin do
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.Organizations.OrganizationUser
   alias BorutaIdentity.Repo
   alias NimbleCSV.RFC4180, as: CSV
 
@@ -19,7 +20,8 @@ defmodule BorutaIdentity.Admin do
             :password => String.t(),
             optional(:metadata) => map(),
             optional(:roles) => map(),
-            optional(:authorized_scopes) => map()
+            optional(:authorized_scopes) => map(),
+            optional(:organizations) => map()
           }
 
   @type raw_user_params :: %{
@@ -44,7 +46,7 @@ defmodule BorutaIdentity.Admin do
   @spec list_users() :: Scrivener.Page.t()
   def list_users(params \\ %{}) do
     from(u in User)
-    |> preload([:authorized_scopes, :roles, :backend])
+    |> user_preloads()
     |> Repo.paginate(params)
   end
 
@@ -55,7 +57,7 @@ defmodule BorutaIdentity.Admin do
       where: fragment("username % ?", ^query),
       order_by: fragment("word_similarity(username, ?) DESC", ^query)
     )
-    |> preload([:authorized_scopes, :backend, :roles])
+    |> user_preloads()
     |> Repo.paginate(params)
   end
 
@@ -77,8 +79,9 @@ defmodule BorutaIdentity.Admin do
       from(u in User,
         left_join: as in assoc(u, :authorized_scopes),
         left_join: r in assoc(u, :roles),
+        left_join: o in assoc(u, :organizations),
         join: b in assoc(u, :backend),
-        preload: [authorized_scopes: as, roles: r, backend: b],
+        preload: [authorized_scopes: as, roles: r, backend: b, organizations: o],
         where: u.id == ^id
       )
     )
@@ -94,6 +97,7 @@ defmodule BorutaIdentity.Admin do
              [backend, params]
            ),
          {:ok, user} <- update_user_authorized_scopes(user, params[:authorized_scopes] || []),
+         {:ok, user} <- update_user_organizations(user, params[:organizations] || []),
          {:ok, user} <- update_user_roles(user, params[:roles] || []) do
       {:ok, user}
     end
@@ -215,7 +219,7 @@ defmodule BorutaIdentity.Admin do
          end)
          |> Repo.transaction() do
       {:ok, _result} ->
-        {:ok, user |> Repo.reload() |> Repo.preload([:backend, :authorized_scopes, :roles])}
+        {:ok, user |> Repo.reload() |> user_preloads()}
 
       {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
         {:error, changeset}
@@ -241,18 +245,40 @@ defmodule BorutaIdentity.Admin do
          end)
          |> Repo.transaction() do
       {:ok, _result} ->
-        {:ok, user |> Repo.reload() |> Repo.preload([:backend, :authorized_scopes, :roles])}
+        {:ok, user |> Repo.reload() |> user_preloads()}
 
       {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
         {:error, changeset}
     end
   end
 
-  @type user_update_params :: %{
-          optional(:metadata) => map()
-        }
+  @spec update_user_organizations(user :: %User{}, organizations :: list(map())) ::
+          {:ok, %User{}} | {:error, Ecto.Changeset.t()}
+  def update_user_organizations(%User{id: user_id} = user, organizations) do
+    Repo.delete_all(from(o in OrganizationUser, where: o.user_id == ^user_id))
 
-  @spec update_user(user :: User.t(), user_params :: user_update_params()) ::
+    case Enum.reduce(organizations, Ecto.Multi.new(), fn attrs, multi ->
+           changeset =
+             OrganizationUser.changeset(
+               %OrganizationUser{},
+               %{
+                 "organization_id" => attrs["id"] || attrs[:organization_id],
+                 "user_id" => user.id
+               }
+             )
+
+           Ecto.Multi.insert(multi, "organization_-#{SecureRandom.uuid()}", changeset)
+         end)
+         |> Repo.transaction() do
+      {:ok, _result} ->
+        {:ok, user |> Repo.reload() |> user_preloads()}
+
+      {:error, _multi_name, %Ecto.Changeset{} = changeset, _changes} ->
+        {:error, changeset}
+    end
+  end
+
+  @spec update_user(user :: User.t(), user_params :: user_params()) ::
           {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
   def update_user(user, user_params) do
     with {:ok, user} <-
@@ -262,9 +288,14 @@ defmodule BorutaIdentity.Admin do
          {:ok, user} <-
            update_user_authorized_scopes(
              user,
-             user_params["authorized_scopes"] || user.authorized_scopes
+             user_params[:authorized_scopes] || user.authorized_scopes
+           ),
+         {:ok, user} <-
+           update_user_organizations(
+             user,
+             user_params[:organizations] || user.organizations
            ) do
-      update_user_roles(user, user_params["roles"] || user.roles)
+      update_user_roles(user, user_params[:roles] || user.roles)
     end
   end
 
@@ -292,13 +323,28 @@ defmodule BorutaIdentity.Admin do
     Repo.delete_all(from(s in UserAuthorizedScope, where: s.scope_id == ^scope_id))
   end
 
+  defp user_preloads(users) when is_list(users) do
+    Repo.preload(users, [:backend, :authorized_scopes, :roles, :organizations])
+  end
+
+  defp user_preloads(%User{} = user) do
+    Repo.preload(user, [:backend, :authorized_scopes, :roles, :organizations])
+  end
+
+  defp user_preloads(queryable) do
+    preload(queryable, [:backend, :authorized_scopes, :roles, :organizations])
+  end
+
   defdelegate list_organizations, to: BorutaIdentity.Admin.Organizations
   defdelegate list_organizations(params), to: BorutaIdentity.Admin.Organizations
   # defdelegate search_organizations(query), to: BorutaIdentity.Admin.Organizations
   # defdelegate search_organizations(query, params), to: BorutaIdentity.Admin.Organizations
   defdelegate get_organization(organization_id), to: BorutaIdentity.Admin.Organizations
   defdelegate create_organization(organization_params), to: BorutaIdentity.Admin.Organizations
-  defdelegate update_organization(organization, organization_params), to: BorutaIdentity.Admin.Organizations
+
+  defdelegate update_organization(organization, organization_params),
+    to: BorutaIdentity.Admin.Organizations
+
   defdelegate delete_organization(organization_id), to: BorutaIdentity.Admin.Organizations
 
   # --------- TODO refactor below functions

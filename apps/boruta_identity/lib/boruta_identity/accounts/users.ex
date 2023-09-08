@@ -11,6 +11,7 @@ defmodule BorutaIdentity.Accounts.Users do
   alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.BackendRole
+  alias BorutaIdentity.Organizations.OrganizationUser
   alias BorutaIdentity.Repo
 
   @spec get_user_by_email(backend :: Backend.t(), email :: String.t()) :: user :: User.t() | nil
@@ -68,7 +69,8 @@ defmodule BorutaIdentity.Accounts.Users do
     end)
   end
 
-  @spec get_user_roles(user_id :: String.t()) :: user :: list(BackendRole.t() | UserRole.t()) | nil
+  @spec get_user_roles(user_id :: String.t()) ::
+          user :: list(BackendRole.t() | UserRole.t()) | nil
   def get_user_roles(user_id) do
     scopes = Scopes.all()
 
@@ -105,5 +107,17 @@ defmodule BorutaIdentity.Accounts.Users do
             end)
       }
     end)
+  end
+
+  @spec get_user_organizations(user_id :: String.t()) :: user :: list(OrganizationUser.t()) | nil
+  def get_user_organizations(user_id) do
+    Repo.all(
+      from(ou in OrganizationUser,
+        left_join: o in assoc(ou, :organization),
+        where: ou.user_id == ^user_id,
+        preload: [organization: o]
+      )
+    )
+    |> Enum.map(fn %{organization: organization} -> organization end)
   end
 end

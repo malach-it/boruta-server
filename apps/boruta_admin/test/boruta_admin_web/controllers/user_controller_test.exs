@@ -113,9 +113,10 @@ defmodule BorutaAdminWeb.UserControllerTest do
     setup %{conn: conn} do
       {:ok, scope} = Admin.create_scope(%{name: "some:scope"})
       role = insert(:role)
+      organization = insert(:organization)
       insert(:role_scope, role_id: role.id, scope_id: scope.id)
 
-      {:ok, conn: conn, existing_scope: scope, existing_role: role}
+      {:ok, conn: conn, existing_scope: scope, existing_role: role, existing_organization: organization}
     end
 
     @tag authorized: ["users:manage:all"]
@@ -184,6 +185,27 @@ defmodule BorutaAdminWeb.UserControllerTest do
       scope_id = scope.id
 
       assert %{"id" => _id, "authorized_scopes" => [%{"id" => ^scope_id}]} =
+               json_response(conn, 200)["data"]
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "creates user with organizations", %{
+      conn: conn,
+      existing_organization: organization
+    } do
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "backend_id" => insert(:backend).id,
+          "user" => %{
+            "email" => unique_user_email(),
+            "password" => valid_user_password(),
+            "organizations" => [%{"id" => organization.id}]
+          }
+        })
+
+      organization_id = organization.id
+
+      assert %{"id" => _id, "organizations" => [%{"id" => ^organization_id}]} =
                json_response(conn, 200)["data"]
     end
 

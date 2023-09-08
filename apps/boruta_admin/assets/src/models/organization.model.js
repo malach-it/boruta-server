@@ -60,9 +60,10 @@ class Organization {
   }
 
   get serialized () {
-    const { name, label } = this
+    const { id, name, label } = this
 
     return {
+      id,
       name,
       label
     }
@@ -80,7 +81,7 @@ Organization.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-Organization.all = function ({ query, pageNumber }) {
+Organization.all = function ({ query, pageNumber } = {}) {
   const searchParams = new URLSearchParams()
   pageNumber && searchParams.append('page', pageNumber)
   query && searchParams.append('q', query)
