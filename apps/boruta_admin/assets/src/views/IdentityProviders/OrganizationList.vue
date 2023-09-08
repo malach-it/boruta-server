@@ -27,7 +27,7 @@
                 <span class="header">Name</span>
                 <span class="description">{{ organization.name }}</span>
               </div>
-              <div class="item">
+              <div class="item" v-if="organization.label">
                 <span class="header">Label</span>
                 <span class="description">{{ organization.label }}</span>
               </div>

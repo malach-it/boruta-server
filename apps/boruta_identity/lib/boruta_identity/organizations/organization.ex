@@ -7,6 +7,7 @@ defmodule BorutaIdentity.Organizations.Organization do
   @type t :: %__MODULE__{
     id: String.t(),
     name: String.t(),
+    label: String.t() | nil,
     inserted_at: DateTime.t(),
     updated_at: DateTime.t()
   }
@@ -15,6 +16,7 @@ defmodule BorutaIdentity.Organizations.Organization do
   @foreign_key_type Ecto.UUID
   schema "organizations" do
     field(:name, :string)
+    field(:label, :string)
 
     timestamps()
   end
@@ -22,7 +24,7 @@ defmodule BorutaIdentity.Organizations.Organization do
   @doc false
   def changeset(organization, attrs) do
     organization
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :label])
     |> validate_required([:name])
   end
 end

@@ -27,7 +27,7 @@ defmodule BorutaAdminWeb.OrganizationView do
     %{
       id: organization.id,
       name: organization.name,
-      label: "label"
+      label: organization.label
     }
   end
 end

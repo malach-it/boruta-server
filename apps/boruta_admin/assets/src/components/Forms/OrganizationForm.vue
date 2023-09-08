@@ -5,7 +5,11 @@
       <form class="ui form" @submit.prevent="submit">
         <div class="field">
           <label>Name</label>
-          <input type="text" v-model="organization.name" placeholder="Wonder organization" />
+          <input type="text" v-model="organization.name" placeholder="wonder-organization" />
+        </div>
+        <div class="field">
+          <label>Label</label>
+          <input type="text" v-model="organization.label" placeholder="Wonder organization" />
         </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>

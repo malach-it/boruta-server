@@ -391,6 +391,13 @@ defmodule BorutaIdentity.AdminTest do
         assert {:ok, %Organization{name: "Organization"}} =
                  Admin.create_organization(organization_params)
       end
+
+      test "creates and organization with label" do
+        organization_params = %{name: "Organization", label: "label"}
+
+        assert {:ok, %Organization{name: "Organization", label: "label"}} =
+                 Admin.create_organization(organization_params)
+      end
     end
 
     describe "update_organization/2" do
@@ -418,6 +425,17 @@ defmodule BorutaIdentity.AdminTest do
         organization_params = %{name: "updated"}
 
         assert {:ok, %Organization{name: "updated"}} =
+                 Admin.update_organization(organization, organization_params)
+
+        assert %Organization{name: "updated"} = Repo.reload(organization)
+      end
+
+      test "updates an organization with label" do
+        organization = insert(:organization)
+
+        organization_params = %{name: "updated", label: "updated"}
+
+        assert {:ok, %Organization{name: "updated", label: "updated"}} =
                  Admin.update_organization(organization, organization_params)
 
         assert %Organization{name: "updated"} = Repo.reload(organization)
