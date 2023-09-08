@@ -60,7 +60,7 @@ class Organization {
   }
 
   get serialized () {
-    const { id, name, label } = this
+    const { name, label } = this
 
     return {
       name,

@@ -19,7 +19,6 @@ export default {
     Toaster
   },
   data () {
-    console.log(new Organization())
     return {
       organization: new Organization(),
       success: false

@@ -54,12 +54,32 @@ defmodule BorutaWeb.OauthView do
       "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
       "userinfo_endpoint" => issuer <> routes.userinfo_path(BorutaWeb.Endpoint, :userinfo),
       "jwks_uri" => issuer <> routes.jwks_path(BorutaWeb.Endpoint, :jwks_index),
-      "registration_endpoint" => issuer <> routes.dynamic_registration_path(BorutaWeb.Endpoint, :register_client),
-      "grant_types_supported" => ["client_credentials", "password", "implicit", "authorization_code", "refresh_token"],
-      "response_types_supported" => ["code", "token", "id_token", "code token", "code id_token", "token id_token", "code id_token token"],
+      "registration_endpoint" =>
+        issuer <> routes.dynamic_registration_path(BorutaWeb.Endpoint, :register_client),
+      "grant_types_supported" => [
+        "client_credentials",
+        "password",
+        "implicit",
+        "authorization_code",
+        "refresh_token"
+      ],
+      "response_types_supported" => [
+        "code",
+        "token",
+        "id_token",
+        "code token",
+        "code id_token",
+        "token id_token",
+        "code id_token token"
+      ],
       "response_modes_supported" => ["query", "fragment"],
       "subject_types_supported" => ["public"],
-      "token_endpoint_auth_methods_supported" => ["client_secret_basic", "client_secret_post", "client_secret_jwt", "private_key_jwt"],
+      "token_endpoint_auth_methods_supported" => [
+        "client_secret_basic",
+        "client_secret_post",
+        "client_secret_jwt",
+        "private_key_jwt"
+      ],
       "request_object_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "id_token_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms()
@@ -98,9 +118,15 @@ defmodule BorutaWeb.OauthView do
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.IntrospectResponse do
+    def encode(%Boruta.Oauth.IntrospectResponse{
+          active: false
+        }, options) do
+      Jason.Encode.map(%{active: false}, options)
+    end
+
     def encode(
           %Boruta.Oauth.IntrospectResponse{
-            active: active,
+            active: true,
             client_id: client_id,
             username: username,
             scope: scope,
@@ -111,25 +137,19 @@ defmodule BorutaWeb.OauthView do
           },
           options
         ) do
-      result =
-        case active do
-          true ->
-            %{
-              active: true,
-              client_id: client_id,
-              username: username,
-              scope: scope,
-              sub: sub,
-              iss: iss,
-              exp: exp,
-              iat: iat
-            }
-
-          false ->
-            %{active: false}
-        end
-
-      Jason.Encode.map(result, options)
+      Jason.Encode.map(
+        %{
+          active: true,
+          client_id: client_id,
+          username: username,
+          scope: scope,
+          sub: sub,
+          iss: iss,
+          exp: exp,
+          iat: iat
+        },
+        options
+      )
     end
   end
 end

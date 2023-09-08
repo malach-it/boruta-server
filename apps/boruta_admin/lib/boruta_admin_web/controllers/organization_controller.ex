@@ -39,9 +39,10 @@ defmodule BorutaAdminWeb.OrganizationController do
     end
   end
 
-  def create(conn, %{"organization" => user_params}) do
+  def create(conn, %{"organization" => organization_params}) do
     create_params = %{
-      name: user_params["name"]
+      name: organization_params["name"],
+      label: organization_params["name"],
     }
 
     with {:ok, organization} <- Admin.create_organization(create_params) do
@@ -52,10 +53,15 @@ defmodule BorutaAdminWeb.OrganizationController do
   def create(_conn, _params), do: {:error, :bad_request}
 
   def update(conn, %{"id" => id, "organization" => organization_params}) do
+    update_params = %{
+      name: organization_params["name"],
+      label: organization_params["name"],
+    }
+
     with :ok <- ensure_open_for_edition(id, conn),
          %Organization{} = organization <- Admin.get_organization(id),
          {:ok, %Organization{} = organization} <-
-           Admin.update_organization(organization, organization_params) do
+           Admin.update_organization(organization, update_params) do
       render(conn, "show.json", organization: organization)
     else
       nil -> {:error, :not_found}

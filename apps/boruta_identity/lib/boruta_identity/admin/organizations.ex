@@ -6,6 +6,11 @@ defmodule BorutaIdentity.Admin.Organizations do
   alias BorutaIdentity.Organizations.Organization
   alias BorutaIdentity.Repo
 
+  @type organization_params :: %{
+          name: String.t(),
+          label: String.t() | nil
+        }
+
   @spec list_organizations() :: Scrivener.Page.t()
   @spec list_organizations(params :: map()) :: Scrivener.Page.t()
   def list_organizations(params \\ %{}) do
@@ -22,10 +27,6 @@ defmodule BorutaIdentity.Admin.Organizations do
   #   )
   #   |> Repo.paginate(params)
   # end
-
-  @type organization_params :: %{
-          name: String.t()
-        }
 
   @spec create_organization(organization_params :: organization_params()) ::
           {:ok, organization :: Organization.t()} | {:error, changeset :: Ecto.Changeset.t()}
