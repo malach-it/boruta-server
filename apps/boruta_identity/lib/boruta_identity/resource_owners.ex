@@ -11,6 +11,7 @@ defmodule BorutaIdentity.ResourceOwners do
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.Organizations.Organization
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
@@ -74,37 +75,56 @@ defmodule BorutaIdentity.ResourceOwners do
   def claims(%ResourceOwner{sub: sub}, scope) do
     case Accounts.get_user(sub) do
       %User{
-        username: username,
-        confirmed_at: confirmed_at,
         metadata: metadata,
         backend: backend
-      } ->
+      } = user ->
         metadata =
           metadata
           |> User.metadata_filter(backend)
           |> metadata_scope_filter(scope, backend)
 
-        roles = Accounts.get_user_roles(sub)
-
         scope
         |> Scope.split()
-        |> Enum.reduce(%{}, fn
-          "email", acc ->
-            Map.merge(acc, %{
-              "email" => username,
-              "email_verified" => !!confirmed_at
-            })
-
-          _, acc ->
-            acc
-        end)
+        |> Enum.reduce(%{}, fn scope, acc -> merge_claims(scope, acc, user, sub) end)
         |> Map.merge(metadata)
-        |> Map.put("roles", Enum.map(roles, fn %Role{name: name} -> name end))
 
       _ ->
         %{}
     end
   end
+
+  defp merge_claims(
+         "email",
+         acc,
+         %User{
+           username: username,
+           confirmed_at: confirmed_at
+         },
+         _sub
+       ) do
+    Map.merge(acc, %{
+      "email" => username,
+      "email_verified" => !!confirmed_at
+    })
+  end
+
+  defp merge_claims("profile", acc, _user, sub) do
+    roles = Accounts.get_user_roles(sub)
+    organizations = Accounts.get_user_organizations(sub)
+
+    acc
+    |> Map.put(
+      "organizations",
+      Enum.map(organizations, fn %Organization{} = organization ->
+        Map.from_struct(organization)
+        |> Enum.map(fn {key, value} -> {Atom.to_string(key), value} end)
+        |> Enum.into(%{})
+      end)
+    )
+    |> Map.put("roles", Enum.map(roles, fn %Role{name: name} -> name end))
+  end
+
+  defp merge_claims(_, acc, _user, _sub), do: acc
 
   defp metadata_scope_filter(metadata, request_scope, %Backend{metadata_fields: metadata_fields}) do
     Enum.filter(metadata, fn {key, _value} ->

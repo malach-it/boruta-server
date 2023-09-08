@@ -55,7 +55,7 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns paginated users" do
-      user = insert(:user) |> Repo.preload([:authorized_scopes, :roles])
+      user = insert(:user) |> Repo.preload([:authorized_scopes, :roles, :organizations])
 
       assert Admin.list_users() == %Scrivener.Page{
                entries: [user],
@@ -80,7 +80,10 @@ defmodule BorutaIdentity.AdminTest do
 
     test "returns user search" do
       _other = insert(:user) |> Repo.preload(:authorized_scopes)
-      user = insert(:user, username: "match") |> Repo.preload([:authorized_scopes, :roles])
+
+      user =
+        insert(:user, username: "match")
+        |> Repo.preload([:authorized_scopes, :roles, :organizations])
 
       assert Admin.search_users("match") == %Scrivener.Page{
                entries: [user],

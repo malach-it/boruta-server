@@ -1,4 +1,6 @@
 defmodule BorutaIdentity.Organizations.OrganizationUser do
+  @moduledoc false
+
   use Ecto.Schema
   import Ecto.Changeset
 
