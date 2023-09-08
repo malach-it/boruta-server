@@ -16,12 +16,13 @@ defmodule BorutaIdentity.Admin do
 
   @type user_params ::
           %{
-            :username => String.t(),
-            :password => String.t(),
+            optional(:username) => String.t(),
+            optional(:password) => String.t(),
+            optional(:group) => String.t(),
             optional(:metadata) => map(),
-            optional(:roles) => map(),
-            optional(:authorized_scopes) => map(),
-            optional(:organizations) => map()
+            optional(:roles) => list(map()),
+            optional(:authorized_scopes) => list(map()),
+            optional(:organizations) => list(map())
           }
 
   @type raw_user_params :: %{

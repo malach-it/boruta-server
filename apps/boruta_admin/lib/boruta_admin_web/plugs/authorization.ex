@@ -2,45 +2,61 @@ defmodule BorutaAdminWeb.Authorization do
   @moduledoc false
   @dialyzer {:no_unused, {:maybe_validate_user, 1}}
 
+  @behaviour Boruta.Openid.UserinfoApplication
+
   require Logger
 
   use BorutaAdminWeb, :controller
 
-  alias Boruta.Oauth.Authorization
+  alias Boruta.Openid.UserinfoResponse
   alias BorutaAdminWeb.ErrorView
 
   def require_authenticated(conn, _opts \\ []) do
-    with [authorization_header] <- get_req_header(conn, "authorization"),
-         [_authorization_header, token] <- Regex.run(~r/Bearer (.+)/, authorization_header),
-         {:ok, token} <- Authorization.AccessToken.authorize(value: token) do
-      conn
-      |> assign(:token, token)
-      |> assign(:introspected_token, %{
-        "sub" => token.sub,
-        "active" => true,
-        "scope" => token.scope
-      })
-    else
+        with [authorization_header] <- get_req_header(conn, "authorization"),
+             [_authorization_header, access_token] <-
+               Regex.run(~r/Bearer (.+)/, authorization_header),
+             {:ok, token} <- Boruta.Oauth.Authorization.AccessToken.authorize(value: access_token) do
+        conn
+        |> assign(:authorization, %{
+          "scope" => token.scope,
+          "sub" => token.sub
+        })
+
+        else
       {:error, _error} ->
         with [authorization_header] <- get_req_header(conn, "authorization"),
-             [_authorization_header, token] <- Regex.run(~r/Bearer (.+)/, authorization_header),
-             {:ok, %{"sub" => sub, "active" => true} = payload} <- introspect(token),
-             :ok <- maybe_validate_user(sub) do
-          conn
-          |> assign(:token, token)
-          |> assign(:introspected_token, payload)
+             [_authorization_header, access_token] <-
+               Regex.run(~r/Bearer (.+)/, authorization_header),
+             {:ok, userinfo} <- userinfo(access_token),
+             :ok <- maybe_validate_user(userinfo) do
+          assign(conn, :authorization, userinfo)
         else
           e ->
-            unauthorized(conn, e)
+            respond_unauthorized(conn, e)
         end
 
       e ->
-        unauthorized(conn, e)
+        respond_unauthorized(conn, e)
     end
   end
 
+  @impl Boruta.Openid.UserinfoApplication
+  def unauthorized(_conn, error) do
+    {:error, error}
+  end
+
+  @impl Boruta.Openid.UserinfoApplication
+  def userinfo_fetched(_conn, userinfo_response) do
+    userinfo =
+      UserinfoResponse.payload(%{userinfo_response | format: :json})
+      |> Enum.map(fn {k, v} -> {to_string(k), v} end)
+      |> Enum.into(%{})
+
+    {:ok, userinfo}
+  end
+
   def authorize(conn, [_h | _t] = scopes) do
-    current_scopes = String.split(conn.assigns[:introspected_token]["scope"], " ")
+    current_scopes = String.split(conn.assigns[:authorization]["scope"], " ")
 
     case Enum.empty?(scopes -- current_scopes) do
       true ->
@@ -64,29 +80,24 @@ defmodule BorutaAdminWeb.Authorization do
   end
 
   # TODO cache token introspection
-  def introspect(token) do
-    oauth2_config = Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:oauth2]
-    client_id = oauth2_config[:client_id]
-    client_secret = oauth2_config[:client_secret]
-    site = oauth2_config[:site]
+  def userinfo(access_token) do
+    site = Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:oauth2][:site]
 
     with {:ok, %Finch.Response{body: body}} <-
            Finch.build(
-             :post,
-             "#{site}/oauth/introspect",
+             :get,
+             "#{site}/oauth/userinfo",
              [
                {"accept", "application/json"},
-               {"content-type", "application/x-www-form-urlencoded"},
-               {"authorization", "Basic " <> Base.encode64("#{client_id}:#{client_secret}")}
-             ],
-             URI.encode_query(%{token: token})
+               {"authorization", "Bearer " <> access_token}
+             ]
            )
            |> Finch.request(FinchHttp) do
       Jason.decode(body)
     end
   end
 
-  defp unauthorized(conn, e) do
+  defp respond_unauthorized(conn, e) do
     Logger.debug("User unauthorized : #{inspect(e)}")
 
     conn
@@ -96,19 +107,33 @@ defmodule BorutaAdminWeb.Authorization do
     |> halt()
   end
 
-  defp maybe_validate_user(sub) do
-    case Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:sub_restricted] do
-      nil ->
-        :ok
+  defp maybe_validate_user(userinfo) do
+    case {
+      Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:sub_restricted],
+      Application.get_env(:boruta_web, BorutaAdminWeb.Authorization)[:organization_restricted]
+    } do
+      {_, "" <> restricted_organization} ->
+        case Map.get(userinfo, "organizations", [])
+             |> Enum.map(fn %{"id" => id} -> id end)
+             |> Enum.member?(restricted_organization) do
+          true ->
+            :ok
 
-      restricted_sub ->
-        case sub do
+          false ->
+            {:error, "Instance management is restricted to #{restricted_organization}"}
+        end
+
+      {"" <> restricted_sub, _} ->
+        case userinfo["sub"] do
           ^restricted_sub ->
             :ok
 
           _ ->
             {:error, "Instance management is restricted to #{restricted_sub}"}
         end
+
+      {_, _} ->
+        :ok
     end
   end
 end

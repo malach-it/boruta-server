@@ -213,7 +213,8 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_GATEWAY_PORT`              | The port where boruta gateway will be exposed on. |
 | `BORUTA_GATEWAY_SIDECAR_PORT`      | The port where boruta microgateway will be exposed on. |
 | `BORUTA_GATEWAY_CONFIGURATION_PATH`| The path containing the gateway static configuration. |
-| `BORUTA_SUB_RESTRICTED`            | The uid of the only user to have access to the administration interface. |
+| `BORUTA_SUB_RESTRICTED`            | If set, the uid of the only user to have access to the administration interface. |
+| `BORUTA_ORGANIZATION_RESTRICTED`            | If set, the uid of the only organization to have access to the administration interface. |
 
 ## Code of Conduct
 

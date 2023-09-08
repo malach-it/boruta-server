@@ -141,11 +141,11 @@ defmodule BorutaAdminWeb.UserController do
   end
 
   defp ensure_open_for_edition(user_id, conn) do
-    %{"sub" => sub} = conn.assigns[:introspected_token]
+    %{"sub" => sub} = conn.assigns[:authorization]
 
-    case user_id do
-      ^sub -> {:error, :protected_resource}
-      _ -> :ok
+    case user_id == sub do
+      true -> {:error, :protected_resource}
+      false -> :ok
     end
   end
 end

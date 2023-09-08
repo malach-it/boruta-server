@@ -86,6 +86,7 @@ defmodule BorutaIdentity.ResourceOwners do
         scope
         |> Scope.split()
         |> Enum.reduce(%{}, fn scope, acc -> merge_claims(scope, acc, user, sub) end)
+        |> Map.put("scope", scope)
         |> Map.merge(metadata)
 
       _ ->
@@ -117,6 +118,7 @@ defmodule BorutaIdentity.ResourceOwners do
       "organizations",
       Enum.map(organizations, fn %Organization{} = organization ->
         Map.from_struct(organization)
+        |> Map.take([:id, :name, :label])
         |> Enum.map(fn {key, value} -> {Atom.to_string(key), value} end)
         |> Enum.into(%{})
       end)
