@@ -1,4 +1,5 @@
 defmodule BorutaIdentityWeb.BackendsController do
+  # TODO test identity federation
   @behaviour BorutaIdentity.Accounts.FederatedSessionApplication
   use BorutaIdentityWeb, :controller
 
