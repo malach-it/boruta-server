@@ -19,6 +19,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
           password_hashing_alg: String.t(),
           password_hashing_opts: map(),
           email_templates: Ecto.Association.NotLoaded.t() | list(EmailTemplate.t()),
+          create_default_organization: boolean(),
           smtp_from: String.t() | nil,
           smtp_relay: String.t() | nil,
           smtp_username: String.t() | nil,
@@ -128,6 +129,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     field(:is_default, :boolean, default: false)
     field(:name, :string)
     field(:metadata_fields, {:array, :map}, default: [])
+    field(:create_default_organization, :boolean, default: false)
 
     # smtp config
     field(:smtp_from, :string)
@@ -354,6 +356,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :type,
       :name,
       :is_default,
+      :create_default_organization,
       :metadata_fields,
       :password_hashing_alg,
       :password_hashing_opts,

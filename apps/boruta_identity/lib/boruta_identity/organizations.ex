@@ -1,4 +1,4 @@
-defmodule BorutaIdentity.Admin.Organizations do
+defmodule BorutaIdentity.Organizations do
   @moduledoc false
 
   import Ecto.Query

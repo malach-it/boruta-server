@@ -17,6 +17,15 @@
         <div class="ui info message">
           Default backend will be used in case of resource owner password credentials requests.
         </div>
+        <div class="field" :class="{ 'error': backend.errors?.create_default_organization }">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="backend.create_default_organization">
+            <label>Create default organization</label>
+          </div>
+        </div>
+        <div class="ui info message">
+          Newly created users will have a default organization along with them.
+        </div>
         <h2>Roles</h2>
         <RolesField :currentRoles="backend.roles" @delete-role="deleteRole" @add-role="addRole" />
         <div class="field" :class="{ 'error': backend.errors?.type }">

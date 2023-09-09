@@ -37,6 +37,12 @@
                   <span v-for="role in user.roles" :key="role.id">{{ role.model.name }}</span>
                 </span>
               </div>
+              <div class="item" v-if="user.organizations.length">
+                <span class="header">Organizations</span>
+                <span class="organizations description">
+                  <span v-for="organization in user.organizations" :key="organization.id">{{ organization.model.name }}</span>
+                </span>
+              </div>
               <div class="item">
                 <span class="header">Backend</span>
                 <span class="description"><router-link :to="{ name: 'edit-backend', params: { backendId: user.backend.id } }">{{ user.backend.name }}</router-link></span>

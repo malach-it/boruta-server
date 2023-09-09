@@ -23,6 +23,7 @@ defmodule BorutaAdminWeb.BackendView do
       name: backend.name,
       type: backend.type,
       is_default: backend.is_default,
+      create_default_organization: backend.create_default_organization,
       roles: IdentityProviders.get_backend_roles(backend.id),
       metadata_fields: backend.metadata_fields,
       federated_servers: backend.federated_servers,

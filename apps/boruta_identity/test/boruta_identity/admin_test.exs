@@ -156,18 +156,6 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "creates a user with a group", %{backend: backend} do
-      metadata_field = %{
-        "attribute_name" => "attribute_test"
-      }
-
-      {:ok, backend} =
-        Ecto.Changeset.change(backend, %{
-          metadata_fields: [
-            metadata_field
-          ]
-        })
-        |> Repo.update()
-
       params = %{
         username: "test@created.email",
         password: "a valid password",
@@ -178,6 +166,27 @@ defmodule BorutaIdentity.AdminTest do
               %User{
                 group: "group"
               }} = Admin.create_user(backend, params)
+    end
+
+    test "creates a user with a default organization", %{backend: backend} do
+      {:ok, backend} =
+        Ecto.Changeset.change(backend, %{create_default_organization: true}) |> Repo.update()
+
+      params = %{
+        username: "test@created.email",
+        password: "a valid password"
+      }
+
+      assert {:ok,
+              %User{
+                uid: uid,
+                organizations: [organization]
+              }} = Admin.create_user(backend, params)
+
+      new_organization_name = "default_#{uid}"
+
+      assert %{organization: %{name: ^new_organization_name}} =
+               Repo.preload(organization, :organization)
     end
 
     @tag :skip

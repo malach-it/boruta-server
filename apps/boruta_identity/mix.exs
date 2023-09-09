@@ -41,6 +41,7 @@ defmodule BorutaIdentity.MixProject do
       {:bcrypt_elixir, "~> 3.0"},
       {:boruta_auth, in_umbrella: true},
       {:bypass, "~> 2.1.0", only: :test},
+      {:decorator, "~> 1.2"},
       {:ecto_sql, "~> 3.4"},
       {:ex_json_schema, "~> 0.9"},
       {:ex_machina, "~> 2.4", only: :test},

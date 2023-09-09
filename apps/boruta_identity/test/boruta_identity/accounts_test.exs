@@ -450,6 +450,36 @@ defmodule BorutaIdentity.AccountsTest do
       assert user.metadata == metadata
     end
 
+    test "registers users with default organization", %{client_id: client_id, backend: backend} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(backend, %{create_default_organization: true}) |> Repo.update()
+
+      email = unique_user_email()
+      context = :context
+
+      user_params = %{
+        email: email,
+        password: valid_user_password()
+      }
+
+      confirmation_callback_fun = & &1
+
+      assert {:user_registered, ^context, %User{organizations: [organization], uid: uid},
+              _session_token} =
+               Accounts.register(
+                 context,
+                 client_id,
+                 user_params,
+                 confirmation_callback_fun,
+                 DummyRegistration
+               )
+
+      new_organization_name = "default_#{uid}"
+
+      assert %{organization: %{name: ^new_organization_name}} =
+               Repo.preload(organization, :organization)
+    end
+
     @tag :skip
     test "delivers a confirmation mail when identity provider confirmable"
 
@@ -1631,7 +1661,9 @@ defmodule BorutaIdentity.AccountsTest do
         })
         |> Repo.update()
 
-      {:ok, user} = Ecto.Changeset.change(user, %{metadata: %{"restricted_field" => "restricted"}}) |> Repo.update()
+      {:ok, user} =
+        Ecto.Changeset.change(user, %{metadata: %{"restricted_field" => "restricted"}})
+        |> Repo.update()
 
       metadata = %{"test" => "test value"}
       updated_email = "updated@email.test"
@@ -1653,7 +1685,9 @@ defmodule BorutaIdentity.AccountsTest do
                  confirmation_url_fun,
                  DummySettings
                )
-      assert %User{metadata: %{"test" => "test value", "restricted_field" => "restricted"}} = Repo.reload(user)
+
+      assert %User{metadata: %{"test" => "test value", "restricted_field" => "restricted"}} =
+               Repo.reload(user)
     end
 
     @tag :skip
@@ -1817,7 +1851,9 @@ defmodule BorutaIdentity.AccountsTest do
 
     test "updates user with metadata", %{client_id: client_id, user: user, backend: backend} do
       {:ok, _backend} =
-        Ecto.Changeset.change(backend, %{metadata_fields: [%{"attribute_name" => "test", "user_editable" => true}]})
+        Ecto.Changeset.change(backend, %{
+          metadata_fields: [%{"attribute_name" => "test", "user_editable" => true}]
+        })
         |> Repo.update()
 
       metadata = %{"test" => "test value"}

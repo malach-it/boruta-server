@@ -88,8 +88,11 @@ defmodule BorutaIdentity.Admin do
     )
   end
 
+  use BorutaIdentity.PostUserCreationHook
+
   @spec create_user(backend :: Backend.t(), params :: user_params()) ::
           {:ok, User.t()} | {:error, Ecto.Changeset.t()}
+  @decorate post_user_creation_hook([])
   def create_user(backend, params) do
     with {:ok, user} <-
            apply(
@@ -106,6 +109,7 @@ defmodule BorutaIdentity.Admin do
 
   @spec create_raw_user(backend :: Backend.t(), params :: raw_user_params()) ::
           {:ok, User.t()} | {:error, Ecto.Changeset.t()}
+  @decorate post_user_creation_hook([])
   def create_raw_user(backend, params) do
     # TODO give the ability to provide authorized scopes at user creation
     apply(
@@ -336,17 +340,17 @@ defmodule BorutaIdentity.Admin do
     preload(queryable, [:backend, :authorized_scopes, :roles, :organizations])
   end
 
-  defdelegate list_organizations, to: BorutaIdentity.Admin.Organizations
-  defdelegate list_organizations(params), to: BorutaIdentity.Admin.Organizations
-  # defdelegate search_organizations(query), to: BorutaIdentity.Admin.Organizations
-  # defdelegate search_organizations(query, params), to: BorutaIdentity.Admin.Organizations
-  defdelegate get_organization(organization_id), to: BorutaIdentity.Admin.Organizations
-  defdelegate create_organization(organization_params), to: BorutaIdentity.Admin.Organizations
+  defdelegate list_organizations, to: BorutaIdentity.Organizations
+  defdelegate list_organizations(params), to: BorutaIdentity.Organizations
+  # defdelegate search_organizations(query), to: BorutaIdentity.Organizations
+  # defdelegate search_organizations(query, params), to: BorutaIdentity.Organizations
+  defdelegate get_organization(organization_id), to: BorutaIdentity.Organizations
+  defdelegate create_organization(organization_params), to: BorutaIdentity.Organizations
 
   defdelegate update_organization(organization, organization_params),
-    to: BorutaIdentity.Admin.Organizations
+    to: BorutaIdentity.Organizations
 
-  defdelegate delete_organization(organization_id), to: BorutaIdentity.Admin.Organizations
+  defdelegate delete_organization(organization_id), to: BorutaIdentity.Organizations
 
   # --------- TODO refactor below functions
   alias BorutaIdentity.Accounts.Role

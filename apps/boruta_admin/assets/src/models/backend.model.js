@@ -35,6 +35,9 @@ const assign = {
   is_default: function ({ is_default }) {
     this.is_default = is_default;
   },
+  create_default_organization: function ({ create_default_organization }) {
+    this.create_default_organization = create_default_organization;
+  },
   metadata_fields: function ({ metadata_fields }) {
     this.metadata_fields = metadata_fields.map((field) => {
       field.scopes ||= [];
@@ -165,6 +168,7 @@ class Backend {
       type,
       roles,
       is_default,
+      create_default_organization,
       password_hashing_alg,
       password_hashing_opts,
       metadata_fields,
@@ -198,6 +202,7 @@ class Backend {
       roles: roles.map(({ model }) => model.serialized),
       type,
       is_default,
+      create_default_organization,
       password_hashing_alg,
       password_hashing_opts: formattedPasswordHashingOpts,
       metadata_fields: metadata_fields.map(

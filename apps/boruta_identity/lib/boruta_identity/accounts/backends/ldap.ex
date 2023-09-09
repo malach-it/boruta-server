@@ -86,7 +86,7 @@ defmodule BorutaIdentity.Accounts.Ldap do
       returning: true,
       conflict_target: [:backend_id, :uid]
     )
-    |> Repo.preload([:authorized_scopes, :consents, :backend])
+    |> Repo.preload([:authorized_scopes, :consents, :backend, :organizations])
   end
 
   @impl BorutaIdentity.Accounts.Sessions

@@ -86,8 +86,6 @@ defmodule BorutaIdentity.Accounts.Registrations do
                      confirmation_url_fun,
                      module
                    ) do
-    client_impl = IdentityProvider.implementation(client_idp)
-
     registration_params =
       case registration_params[:metadata] do
         %{} = metadata ->
@@ -101,8 +99,7 @@ defmodule BorutaIdentity.Accounts.Registrations do
           registration_params
       end
 
-    with {:ok, user} <-
-           apply(client_impl, :register, [client_idp.backend, registration_params]),
+    with {:ok, user} <- create_user(client_idp, registration_params),
          :ok <-
            maybe_deliver_confirmation_email(
              client_idp.backend,
@@ -127,6 +124,15 @@ defmodule BorutaIdentity.Accounts.Registrations do
           template: new_confirmation_instructions_template(client_idp)
         })
     end
+  end
+
+  use BorutaIdentity.PostUserCreationHook
+
+  @decorate post_user_creation_hook([])
+  defp create_user(client_idp, registration_params) do
+    client_impl = IdentityProvider.implementation(client_idp)
+
+    apply(client_impl, :register, [client_idp.backend, registration_params])
   end
 
   defp maybe_deliver_confirmation_email(_backend, _user, _confirmation_url_fun, %IdentityProvider{
