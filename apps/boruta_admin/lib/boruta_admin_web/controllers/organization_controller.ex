@@ -42,7 +42,7 @@ defmodule BorutaAdminWeb.OrganizationController do
   def create(conn, %{"organization" => organization_params}) do
     create_params = %{
       name: organization_params["name"],
-      label: organization_params["name"],
+      label: organization_params["label"],
     }
 
     with {:ok, organization} <- Admin.create_organization(create_params) do
@@ -55,7 +55,7 @@ defmodule BorutaAdminWeb.OrganizationController do
   def update(conn, %{"id" => id, "organization" => organization_params}) do
     update_params = %{
       name: organization_params["name"],
-      label: organization_params["name"],
+      label: organization_params["label"],
     }
 
     with :ok <- ensure_open_for_edition(id, conn),
