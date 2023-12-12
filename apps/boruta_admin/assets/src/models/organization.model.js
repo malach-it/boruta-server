@@ -55,6 +55,13 @@ class Organization {
       })
   }
 
+  sendInvitations (client) {
+    if (!client?.id) {
+      return Promise.reject({ client: ["must be present"] })
+    }
+    return Promise.resolve()
+  }
+
   destroy () {
     return this.constructor.api().delete(`/${this.id}`)
   }

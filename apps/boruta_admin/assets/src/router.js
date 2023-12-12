@@ -49,6 +49,8 @@ import Organizations from "./views/IdentityProviders/Organizations.vue";
 import OrganizationList from "./views/IdentityProviders/OrganizationList.vue";
 import NewOrganization from "./views/IdentityProviders/NewOrganization.vue";
 import EditOrganization from "./views/IdentityProviders/EditOrganization.vue";
+import Organization from "./views/IdentityProviders/Organizations/Organization.vue";
+import InviteMembers from "./views/IdentityProviders/Organizations/InviteMembers.vue";
 
 import Backends from "./views/IdentityProviders/Backends.vue";
 import Backend from "./views/IdentityProviders/Backends/Backend.vue";
@@ -302,9 +304,25 @@ const router = createRouter({
                   component: NewOrganization,
                 },
                 {
-                  path: "/organizations/:organizationId/edit",
-                  name: "edit-organization",
-                  component: EditOrganization,
+                  path: "/organizations/:organizationId",
+                  name: "organization",
+                  component: Organization,
+                  redirect: (to) => ({
+                    name: "edit-organization",
+                    params: { organizationId: to.params.organizationId },
+                  }),
+                  children: [
+                    {
+                      path: "edit",
+                      name: "edit-organization",
+                      component: EditOrganization,
+                    },
+                    {
+                      path: "invite-members",
+                      name: "invite-organization-members",
+                      component: InviteMembers,
+                    },
+                  ],
                 },
               ],
             },
