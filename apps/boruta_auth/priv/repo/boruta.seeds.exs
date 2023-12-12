@@ -18,6 +18,15 @@ BorutaAuth.Repo.insert(
 
 BorutaAuth.Repo.insert(
   %Boruta.Ecto.Scope{
+    name: "profile",
+    label: "Profile",
+    public: true
+  },
+  on_conflict: :nothing
+)
+
+BorutaAuth.Repo.insert(
+  %Boruta.Ecto.Scope{
     name: "scopes:manage:all",
     label: "Manage all scopes"
   },
