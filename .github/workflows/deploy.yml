@@ -1,13 +1,9 @@
 name: Deployment
 
 on:
-  workflow_run:
-    workflows:
-      - Continuous Integration
+  pull_request:
     branches:
       - master
-    types:
-      - completed
 
 env:
   REGISTRY: ghcr.io
