@@ -16,7 +16,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
+  alias Boruta.Openid.CredentialOfferResponse
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
@@ -249,7 +251,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     resource_owner = %ResourceOwner{
       sub: current_user.id,
       username: current_user.username,
-      last_login_at: current_user.last_login_at
+      last_login_at: current_user.last_login_at,
+      authorization_details: VerifiableCredentials.authorization_details()
     }
 
     conn =
@@ -268,7 +271,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     resource_owner = %ResourceOwner{
       sub: current_user.id,
       username: current_user.username,
-      last_login_at: current_user.last_login_at
+      last_login_at: current_user.last_login_at,
+      authorization_details: VerifiableCredentials.authorization_details()
     }
 
     conn
@@ -338,7 +342,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
-  def authorize_success(%Plug.Conn{query_params: query_params} = conn, response) do
+  def authorize_success(
+        %Plug.Conn{query_params: query_params} = conn,
+        %AuthorizeResponse{} = response
+      ) do
     # TODO get client_id, grant_type and resource_owner from response
     client_id = query_params["client_id"]
     current_user = conn.assigns[:current_user]
@@ -360,6 +367,20 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     conn
     |> delete_session(:session_chosen)
     |> redirect(external: AuthorizeResponse.redirect_to_url(response))
+  end
+
+  def authorize_success(
+        %Plug.Conn{query_params: query_params} = conn,
+        %CredentialOfferResponse{} = response
+      ) do
+    # TODO CredentialOfferResponse#redirect_to_url
+    conn
+    |> delete_session(:session_chosen)
+    |> redirect(
+      external:
+        query_params["redirect_uri"] <>
+          "?#{URI.encode_query(%{credential_offer: response |> Map.from_struct() |> Jason.encode!()})}"
+    )
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
