@@ -51,6 +51,7 @@ import NewOrganization from "./views/IdentityProviders/NewOrganization.vue";
 import EditOrganization from "./views/IdentityProviders/EditOrganization.vue";
 import Organization from "./views/IdentityProviders/Organizations/Organization.vue";
 import InviteMembers from "./views/IdentityProviders/Organizations/InviteMembers.vue";
+import EditInviteOrganizationMemberEmailTemplate from "./views/IdentityProviders/Organizations/EditInviteOrganizationMemberEmailTemplate.vue";
 
 import Backends from "./views/IdentityProviders/Backends.vue";
 import Backend from "./views/IdentityProviders/Backends/Backend.vue";
@@ -321,6 +322,11 @@ const router = createRouter({
                       path: "invite-members",
                       name: "invite-organization-members",
                       component: InviteMembers,
+                    },
+                    {
+                      path: "edit/invite-organization-member-email-template",
+                      name: "edit-invite-organization-member-email-template",
+                      component: EditInviteOrganizationMemberEmailTemplate,
                     },
                   ],
                 },

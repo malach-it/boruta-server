@@ -3,6 +3,7 @@ defmodule BorutaIdentity.Organizations do
 
   import Ecto.Query
 
+  alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Organizations.Organization
   alias BorutaIdentity.Repo
 
@@ -65,5 +66,41 @@ defmodule BorutaIdentity.Organizations do
   def update_organization(organization, organization_params) do
     Organization.changeset(organization, organization_params)
     |> Repo.update()
+  end
+
+  @spec invite_members(
+    organization_id :: String.t(),
+    invitations :: list(%{
+      client_id: String.t(),
+      email: String.t()
+    })
+  ) :: :ok, {:error, reason :: String.t()}
+  def invite_members(organization_id, invitations) do
+    :ok
+  end
+
+  def get_organization_email_template!(organization_id, type) do
+    with %Organization{} = organization <-
+           Repo.one(
+             from(o in Organization,
+               left_join: t in assoc(o, :email_templates),
+               where: o.id == ^organization_id,
+               preload: [email_templates: t]
+             )
+           ),
+         %EmailTemplate{} = template <- Organization.email_template(organization, type) do
+      template
+    else
+      nil -> raise Ecto.NoResultsError, queryable: EmailTemplate
+    end
+  end
+
+  def upsert_email_template(%EmailTemplate{id: template_id} = template, attrs) do
+    changeset = EmailTemplate.changeset(template, attrs)
+
+    case template_id do
+      nil -> Repo.insert(changeset)
+      _ -> Repo.update(changeset)
+    end
   end
 end

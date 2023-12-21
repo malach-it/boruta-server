@@ -48,6 +48,7 @@ const labels = {
   'new-organization': 'Create',
   'organization': ({ params }) => params.organizationId,
   'invite-organization-members': 'Invite members',
+  'edit-invite-organization-member-email-template': 'Edit invite organization member email template',
   'clients': 'Clients',
   'key-pair-list': 'Key pairs',
   'new-client': 'Create',

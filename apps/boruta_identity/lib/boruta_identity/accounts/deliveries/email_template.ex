@@ -5,6 +5,7 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
   import Ecto.Changeset
 
   alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.Organizations.Organization
 
   @type t :: %__MODULE__{
           id: String.t() | nil,
@@ -18,10 +19,11 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
 
   @template_types [
     :confirmation_instructions,
-    :reset_password_instructions
+    :reset_password_instructions,
+    :invite_organization_member
   ]
 
-  @type template_type :: :confirmation_instructions | :reset_password_instructions
+  @type template_type :: :confirmation_instructions | :reset_password_instructions | :invite_organization_member
 
   @default_templates %{
     txt_confirmation_instructions:
@@ -39,6 +41,14 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
     html_reset_password_instructions:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/emails/reset_password_instructions.html.mustache")
+      |> File.read!(),
+    txt_invite_organization_member:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/emails/invite_organization_member.txt.mustache")
+      |> File.read!(),
+    html_invite_organization_member:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/emails/invite_organization_member.html.mustache")
       |> File.read!()
   }
 
@@ -52,6 +62,7 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
     field(:default, :boolean, virtual: true, default: false)
 
     belongs_to(:backend, Backend)
+    belongs_to(:organization, Organization)
 
     timestamps()
   end
@@ -79,8 +90,8 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
   @doc false
   def changeset(template, attrs) do
     template
-    |> cast(attrs, [:type, :txt_content, :html_content, :backend_id])
-    |> validate_required([:type, :backend_id, :txt_content, :html_content])
+    |> cast(attrs, [:type, :txt_content, :html_content, :backend_id, :organization_id])
+    |> validate_required([:type, :txt_content, :html_content])
     |> validate_inclusion(:type, Enum.map(@template_types, &Atom.to_string/1))
     |> foreign_key_constraint(:backend_id)
     |> put_default_txt()

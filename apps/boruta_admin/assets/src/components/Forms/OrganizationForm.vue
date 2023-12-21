@@ -14,6 +14,12 @@
         <div class="ui invite-members segment" v-if="organization.isPersisted">
           <router-link class="ui fluid blue button" :to="{ name: 'invite-organization-members', params: { organizationId: organization.id } }">Invite members</router-link>
         </div>
+        <h3>Email templates</h3>
+        <div v-if="organization.isPersisted" class="ui segment">
+          <router-link
+            :to="{ name: 'edit-invite-organization-member-email-template', params: { organizationId: organization.id } }"
+            class="ui fluid blue button">Edit invite organization member template</router-link>
+        </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a v-on:click="back()" class="ui button">Back</a>

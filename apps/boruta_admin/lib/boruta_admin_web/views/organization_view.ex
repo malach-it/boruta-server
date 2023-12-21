@@ -30,4 +30,18 @@ defmodule BorutaAdminWeb.OrganizationView do
       label: organization.label
     }
   end
+
+  def render("show_email_template.json", %{email_template: template}) do
+    %{data: render_one(template, __MODULE__, "email_template.json", template: template)}
+  end
+
+  def render("email_template.json", %{template: template}) do
+    %{
+      id: template.id,
+      txt_content: template.txt_content,
+      html_content: template.html_content,
+      type: template.type,
+      organization_id: template.organization_id
+    }
+  end
 end

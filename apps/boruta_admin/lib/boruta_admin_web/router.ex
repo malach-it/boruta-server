@@ -43,7 +43,17 @@ defmodule BorutaAdminWeb.Router do
     resources("/clients", ClientController, except: [:new, :edit])
     post("/clients/:id/regenerate_key_pair", ClientController, :regenerate_key_pair)
     resources("/users", UserController, except: [:new, :edit])
-    resources("/organizations", OrganizationController, except: [:new, :edit])
+    resources("/organizations", OrganizationController, except: [:new, :edit]) do
+      get("/email-templates/:template_type", OrganizationController, :email_template, as: :email_template)
+
+      patch("/email-templates/:template_type", OrganizationController, :update_email_template,
+        as: :email_template
+      )
+
+      delete("/email-templates/:template_type", OrganizationController, :delete_email_template,
+        as: :email_template
+      )
+    end
     get("/upstreams/nodes", UpstreamController, :node_list)
     resources("/upstreams", UpstreamController, except: [:new, :edit])
 

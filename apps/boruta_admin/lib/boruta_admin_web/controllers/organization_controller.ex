@@ -6,7 +6,9 @@ defmodule BorutaAdminWeb.OrganizationController do
       authorize: 2
     ]
 
+  alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Admin
+  alias BorutaIdentity.Organizations
   alias BorutaIdentity.Organizations.Organization
 
   plug(:authorize, ["users:manage:all"])
@@ -76,6 +78,30 @@ defmodule BorutaAdminWeb.OrganizationController do
          {:ok, _organization} <- Admin.delete_organization(organization) do
       send_resp(conn, 204, "")
     end
+  end
+
+  def email_template(conn, %{"organization_id" => id, "template_type" => template_type}) do
+    dbg id
+    template = Organizations.get_organization_email_template!(id, String.to_atom(template_type))
+    render(conn, "show_email_template.json", email_template: template)
+  end
+
+  def update_email_template(conn, %{
+        "organization_id" => id,
+        "template_type" => template_type,
+        "template" => template_params
+      }) do
+    template = Organizations.get_organization_email_template!(id, String.to_atom(template_type))
+
+    with {:ok, %EmailTemplate{} = template} <-
+           Organizations.upsert_email_template(template, template_params) do
+      render(conn, "show_email_template.json", email_template: template)
+    end
+  end
+
+  def delete_email_template(conn, %{"organization_id" => id, "template_type" => template_type}) do
+    template = Organizations.delete_email_template!(id, String.to_atom(template_type))
+    render(conn, "show_email_template.json", email_template: template)
   end
 
   defp ensure_open_for_edition(_user_id, _conn) do
