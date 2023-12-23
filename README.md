@@ -107,7 +107,7 @@ mix deps.get
 3. then you can craft the release
 
 ```bash
-MIX_ENV=prod mix release
+MIX_ENV=prod mix release boruta
 ```
 
 4. finally setup database
