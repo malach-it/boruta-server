@@ -16,5 +16,5 @@ configuration:
       scheme: "http"
       host: "httpbin"
       port: 80
-      uris: ["/"]
-      strip_uri: false
+      uris: ["/anything"]
+      strip_uri: true

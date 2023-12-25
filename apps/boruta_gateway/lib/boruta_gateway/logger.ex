@@ -11,6 +11,11 @@ defmodule BorutaGateway.Logger do
         &__MODULE__.boruta_gateway_server_handler/4
       },
       {
+        :boruta_gateway_http_proxy,
+        [:boruta_gateway, :http_proxy, :stop],
+        &__MODULE__.boruta_gateway_http_proxy_handler/4
+      },
+      {
         :boruta_gateway_requests,
         [:boruta_gateway, :request, :done],
         &__MODULE__.boruta_gateway_request_handler/4
@@ -36,6 +41,37 @@ defmodule BorutaGateway.Logger do
 
             [
               "boruta_gateway",
+              ?\s,
+              method,
+              ?\s,
+              path,
+              " - ",
+              connection_type(state),
+              ?\s,
+              status,
+              " in ",
+              duration(duration)
+            ]
+          end,
+          type: :request
+        )
+    end
+  end
+
+  def boruta_gateway_http_proxy_handler(_, %{duration: duration}, %{conn: conn} = metadata, _) do
+    case log_level(metadata[:options][:log], conn) do
+      false ->
+        :ok
+
+      level ->
+        Logger.log(
+          level,
+          fn ->
+            %{method: method, request_path: path, status: status, state: state} = conn
+            status = Integer.to_string(status)
+
+            [
+              "boruta_http_proxy",
               ?\s,
               method,
               ?\s,

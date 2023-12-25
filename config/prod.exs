@@ -36,7 +36,8 @@ config :boruta_admin, BorutaAdmin.Repo,
 
 config :boruta_gateway,
   server: true,
-  sidecar_server: true
+  sidecar_server: true,
+  http_proxy: true
 
 config :boruta_web, BorutaWeb.Endpoint,
   server: true,

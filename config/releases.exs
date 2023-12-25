@@ -43,6 +43,7 @@ config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.SMTP
 config :boruta_gateway,
   port: System.get_env("BORUTA_GATEWAY_PORT") |> String.to_integer(),
   sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT") |> String.to_integer(),
+  http_proxy_port: System.get_env("BORUTA_GATEWAY_HTTP_PROXY_PORT") |> String.to_integer(),
   configuration_path:
     System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH", "config/example-configuration.yml"),
   server: true

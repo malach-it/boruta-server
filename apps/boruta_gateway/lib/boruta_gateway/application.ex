@@ -21,6 +21,7 @@ defmodule BorutaGateway.Application do
         id: Upstreams.Store,
         start: {Upstreams.Store, :start_link, []}
       },
+      {Finch, name: HttpProxyClient},
       {ClientSupervisor, strategy: :one_for_one}
     ]
 
@@ -40,6 +41,28 @@ defmodule BorutaGateway.Application do
                    ]
                  ]},
               id: :server
+            }
+            | children
+          ]
+
+        _ ->
+          children
+      end
+
+    children =
+      case Application.get_env(:boruta_gateway, :http_proxy) do
+        true ->
+          [
+            %{
+              start:
+                {BorutaGateway.Server, :start_link,
+                 [
+                   [
+                     port: Application.fetch_env!(:boruta_gateway, :http_proxy_port),
+                     router: BorutaGateway.HttpProxyRouter
+                   ]
+                 ]},
+              id: :http_proxy
             }
             | children
           ]

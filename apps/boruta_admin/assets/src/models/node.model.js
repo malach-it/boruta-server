@@ -1,12 +1,20 @@
 import axios from 'axios'
+import NodeConnection from './node-connection.model.js'
 import { addClientErrorInterceptor } from './utils'
 
-const defaults = {}
+const defaults = {
+  connections: []
+}
 
 const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
+  node_name: function ({ node_name }) { this.node_name = node_name },
+  status: function ({ status }) { this.status = status },
   ip: function ({ ip }) { this.ip = ip },
+  connections: function ({ connections }) {
+    this.connections = connections.map(connection => new NodeConnection(connection))
+  },
 }
 
 class Node {
@@ -17,6 +25,17 @@ class Node {
       this[key] = params[key]
       assign[key].bind(this)(params)
     })
+  }
+
+  destroy() {
+    return this.constructor
+      .api()
+      .delete(`/${this.id}`)
+      .catch((error) => {
+        const { code, message, errors } = error.response.data;
+        this.errors = errors;
+        throw { code, message, errors };
+      });
   }
 }
 

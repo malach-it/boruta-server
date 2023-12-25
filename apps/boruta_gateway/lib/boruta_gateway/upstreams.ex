@@ -48,6 +48,8 @@ defmodule BorutaGateway.Upstreams do
   """
   def get_upstream!(id), do: Repo.get!(Upstream, id)
 
+  def get_upstream_by_node_name(node_name), do: Repo.get_by(Upstream, node_name: node_name)
+
   @doc """
   Creates a upstream.
 
