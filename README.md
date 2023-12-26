@@ -85,6 +85,12 @@ The applications will be available on different ports (depending on the docker c
 
 Admin credentials are the one seeded and available in environment file.
 
+### Install a sidecar from root
+
+```
+curl https://raw.githubusercontent.com/malach-it/boruta-server/service-mesh.alpha.2/scripts/setup_sidecar.sh | sh
+```
+
 ### Requirements
 - Elixir >= 1.13
 - postgreSQL >= 13

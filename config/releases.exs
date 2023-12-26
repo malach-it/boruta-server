@@ -41,16 +41,16 @@ config :boruta_identity, Boruta.Accounts, secret_key_base: System.get_env("SECRE
 config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.SMTP
 
 config :boruta_gateway,
-  port: System.get_env("BORUTA_GATEWAY_PORT") |> String.to_integer(),
-  sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT") |> String.to_integer(),
-  http_proxy_port: System.get_env("BORUTA_GATEWAY_HTTP_PROXY_PORT") |> String.to_integer(),
+  port: System.get_env("BORUTA_GATEWAY_PORT", "-1") |> String.to_integer(),
+  sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT", "-1") |> String.to_integer(),
+  http_proxy_port: System.get_env("BORUTA_GATEWAY_HTTP_PROXY_PORT", "-1") |> String.to_integer(),
   configuration_path:
     System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH", "config/example-configuration.yml"),
   server: true
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [
-    port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer(),
+    port: System.get_env("BORUTA_OAUTH_PORT", "-1") |> String.to_integer(),
     transport_options: [
       num_acceptors: String.to_integer(System.get_env("WEB_ACCEPTORS", "64"))
     ]
@@ -64,7 +64,7 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [
-    port: System.get_env("BORUTA_ADMIN_PORT") |> String.to_integer(),
+    port: System.get_env("BORUTA_ADMIN_PORT", "-1") |> String.to_integer(),
     protocol_options: [idle_timeout: 3_600_000, inactivity_timeout: 3_600_000]
   ],
   url: [scheme: "https", host: System.get_env("BORUTA_ADMIN_HOST")],

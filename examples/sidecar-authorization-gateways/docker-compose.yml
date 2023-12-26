@@ -80,6 +80,7 @@ services:
     image: debian:latest
     volumes:
       - "../../_build/prod/rel/boruta:/app"
+      - "../../scripts:/scripts"
     env_file: "../../.env.example"
     environment:
       MIX_ENV: "prod"
