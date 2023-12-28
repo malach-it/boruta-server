@@ -50,6 +50,8 @@ The applications will be available on different ports (depending on the filled o
 
 ### Run an instance from docker
 
+> Note this image is built for x86_64 architecture, for other architectures build yourself the image or use docker compose install that will build the image for your architecture.
+
 A docker image is available at `malachit/boruta-server` on [DockerHub](https://hub.docker.com/r/malachit/boruta-server), you will need a postgres instance installed on your system with credentials provided as environment variables in `.env.*`.
 
 1. Run database migrations
