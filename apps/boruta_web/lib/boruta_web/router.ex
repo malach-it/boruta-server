@@ -40,6 +40,7 @@ defmodule BorutaWeb.Router do
   scope "/openid", BorutaWeb do
     pipe_through(:api)
 
+    post("/credential", Openid.CredentialController, :credential)
     get("/jwks", Openid.JwksController, :jwks_index)
     get("/jwks/:client_id", Openid.JwksController, :jwks_show)
 
