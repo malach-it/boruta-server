@@ -1,6 +1,66 @@
 defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   @moduledoc false
 
+  @credentials_supported %{
+    "UniversityDegreeCredential" => %{
+      "format" => "jwt_vc_json",
+      "scope" => "UniversityDegree",
+      "cryptographic_binding_methods_supported" => [
+        "did:example"
+      ],
+      "cryptographic_suites_supported" => [
+        "ES256K"
+      ],
+      "credential_definition" => %{
+        "type" => [
+          "VerifiableCredential",
+          "UniversityDegreeCredential"
+        ],
+        "credentialSubject" => %{
+          "given_name" => %{
+            "display" => [
+              %{
+                "name" => "Given Name",
+                "locale" => "en-US"
+              }
+            ]
+          },
+          "family_name" => %{
+            "display" => [
+              %{
+                "name" => "Surname",
+                "locale" => "en-US"
+              }
+            ]
+          },
+          "degree" => %{},
+          "gpa" => %{
+            "display" => [
+              %{
+                "name" => "GPA"
+              }
+            ]
+          }
+        }
+      },
+      "proof_types_supported" => [
+        "jwt"
+      ],
+      "display" => [
+        %{
+          "name" => "University Credential",
+          "locale" => "en-US",
+          "logo" => %{
+            "url" => "https://exampleuniversity.com/public/logo.png",
+            "alt_text" => "a square logo of a university"
+          },
+          "background_color" => "#12107c",
+          "text_color" => "#FFFFFF"
+        }
+      ]
+    }
+  }
+
   @authorization_details [
     %{
       "type" => "openid_credential",
@@ -26,4 +86,6 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   end
 
   def authorization_details, do: @authorization_details
+
+  def credentials_supported, do: @credentials_supported
 end
