@@ -93,6 +93,19 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
+  def qr_code_from_credential_offer(credential_offer_response) do
+    with {:ok, code} <- text_from_credential_offer(credential_offer_response)
+      |> QRCode.create()
+      |> QRCode.render(:svg)
+      |> QRCode.to_base64() do
+      code
+    end
+  end
+
+  def text_from_credential_offer(credential_offer_response) do
+    "openid-credential-offer://?credential_offer#{credential_offer_response |> Map.from_struct() |> Jason.encode!() |> URI.encode()}"
+  end
+
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
     def encode(
           %Boruta.Oauth.TokenResponse{

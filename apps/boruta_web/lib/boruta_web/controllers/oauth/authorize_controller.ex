@@ -22,6 +22,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
+  alias BorutaWeb.OauthView
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -370,17 +371,15 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   def authorize_success(
-        %Plug.Conn{query_params: query_params} = conn,
+        %Plug.Conn{} = conn,
         %CredentialOfferResponse{} = response
       ) do
     # TODO CredentialOfferResponse#redirect_to_url
     conn
     |> delete_session(:session_chosen)
-    |> redirect(
-      external:
-        query_params["redirect_uri"] <>
-          "?#{URI.encode_query(%{credential_offer: response |> Map.from_struct() |> Jason.encode!()})}"
-    )
+    |> put_view(OauthView)
+    |> put_layout(false)
+    |> render("credential_offer.html", credential_offer_response: response)
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
