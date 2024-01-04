@@ -83,7 +83,10 @@ defmodule BorutaWeb.OauthView do
       ],
       "request_object_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "id_token_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
-      "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms()
+      "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
+      "credential_issuer" => issuer,
+      "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
+      "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
   end
 
@@ -93,6 +96,7 @@ defmodule BorutaWeb.OauthView do
     %{
       "issuer" => issuer,
       "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
+      "credential_issuer" => issuer,
       "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
       "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
