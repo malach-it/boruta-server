@@ -86,6 +86,16 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
+  def render("openid_credential_issuer.json", %{routes: routes}) do
+    issuer = Boruta.Config.issuer()
+
+    %{
+      "issuer" => issuer,
+      "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
+      "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential)
+    }
+  end
+
   def render("credential.json", %{credential_response: credential_response}) do
     %{
       format: credential_response.format,

@@ -31,6 +31,7 @@ defmodule BorutaWeb.Router do
     pipe_through(:api)
 
     get("/.well-known/openid-configuration", OpenidController, :well_known)
+    get("/.well-known/openid-credential-issuer", OpenidController, :openid_credential_issuer)
   end
 
   get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck, log: false)
