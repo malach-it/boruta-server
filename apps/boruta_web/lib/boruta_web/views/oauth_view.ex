@@ -113,7 +113,7 @@ defmodule BorutaWeb.OauthView do
   end
 
   def text_from_credential_offer(credential_offer_response) do
-    "openid-credential-offer://?credential_offer#{credential_offer_response |> Map.from_struct() |> Jason.encode!() |> URI.encode()}"
+    "openid-credential-offer://?credential_offer=#{credential_offer_response |> Map.from_struct() |> Jason.encode!() |> URI.encode_www_form()}"
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
