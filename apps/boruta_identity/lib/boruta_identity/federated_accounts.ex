@@ -76,7 +76,8 @@ defmodule BorutaIdentity.FederatedAccounts do
           message: error.message,
           template: new_session_template(client_idp)
         })
-      _ ->
+      error ->
+        Logger.error("Federation failed " <> inspect(error))
         module.authentication_failure(context, %SessionError{
           message: "Could not fetch user information.",
           template: new_session_template(client_idp)

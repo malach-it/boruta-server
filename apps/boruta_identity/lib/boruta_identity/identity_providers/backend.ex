@@ -254,12 +254,12 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                 authorize_url:
                   URI.to_string(%{
                     base_url
-                    | path: base_url.path <> federated_server["authorize_path"]
+                    | path: federated_server["authorize_path"]
                   }),
                 token_url:
                   URI.to_string(%{
                     base_url
-                    | path: base_url.path <> federated_server["token_path"]
+                    | path: federated_server["token_path"]
                   })
               }
 
