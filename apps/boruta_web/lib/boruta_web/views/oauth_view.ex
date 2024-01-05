@@ -158,7 +158,7 @@ defmodule BorutaWeb.OauthView do
         end
 
       Jason.Encode.map(
-        response,
+        response |> dbg,
         options
       )
     end
