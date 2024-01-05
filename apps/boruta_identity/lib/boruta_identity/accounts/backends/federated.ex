@@ -34,13 +34,15 @@ defmodule BorutaIdentity.Accounts.Federated do
     impl_user_params = %{
       uid: userinfo["sub"],
       username: userinfo["email"] || "#{userinfo["sub"]}@#{federated_server["name"]}",
+      metadata: userinfo,
       backend_id: backend.id
     }
 
     # TODO store origin federated server
     User.implementation_changeset(impl_user_params, backend)
     |> Repo.insert!(
-      on_conflict: {:replace, [:username]},
+      # TODO federated metadata will erase existing metadata
+      on_conflict: {:replace, [:username, :metadata]},
       returning: true,
       conflict_target: [:backend_id, :uid]
     )

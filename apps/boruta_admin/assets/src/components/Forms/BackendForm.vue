@@ -159,6 +159,14 @@
             <label>Base URL</label>
             <input type="text" v-model="federatedServer.base_url">
           </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>scope <i>(separated with a whitespace)</i></label>
+            <input type="text" v-model="federatedServer.scope">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>Federated attributes <i>(separated with a whitespace)</i></label>
+            <input type="text" v-model="federatedServer.federated_attributes">
+          </div>
           <div class="field">
             <div class="ui toggle checkbox">
               <input type="checkbox" v-model="federatedServer.isDiscovery">
