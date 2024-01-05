@@ -154,7 +154,7 @@ defmodule BorutaWeb.OauthView do
             response
           # |> Map.put(:authorization_details, authorization_details)
           |> Map.put(:c_nonce, SecureRandom.hex())
-          |> Map.put(:c_nonce_expires_in, :os.system_time(:seconds) + 3600)
+          |> Map.put(:c_nonce_expires_in, 3600)
         end
 
       Jason.Encode.map(
