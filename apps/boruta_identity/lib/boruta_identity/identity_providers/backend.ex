@@ -316,20 +316,14 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       {:ok, %Finch.Response{status: 200, body: body}} ->
         discovery = Jason.decode!(body)
 
-        authorize_path =
+        authorize_url =
           discovery["authorization_endpoint"]
-          |> URI.parse()
-          |> Map.get(:path)
 
-        token_path =
+        token_url =
           discovery["token_endpoint"]
-          |> URI.parse()
-          |> Map.get(:path)
 
-        userinfo_path =
+        userinfo_url =
           discovery["userinfo_endpoint"]
-          |> URI.parse()
-          |> Map.get(:path)
 
         change(backend, %{
           federated_servers:
@@ -337,9 +331,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
               case name == federated_server["name"] do
                 true ->
                   current_federated_server
-                  |> Map.put("authorize_path", authorize_path)
-                  |> Map.put("token_path", token_path)
-                  |> Map.put("userinfo_path", userinfo_path)
+                  |> Map.put("authorize_path", authorize_url)
+                  |> Map.put("token_path", token_url)
+                  |> Map.put("userinfo_path", userinfo_url)
 
                 false ->
                   current_federated_server
