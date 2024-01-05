@@ -107,6 +107,9 @@ defmodule BorutaWeb.OauthView do
       format: credential_response.format,
       credential: credential_response.credential
     }
+    |> Map.put(:c_nonce, "boruta")
+    |> Map.put(:c_nonce_expires_in, 3600)
+    |> dbg
   end
 
   def qr_code_from_credential_offer(credential_offer_response) do
@@ -153,7 +156,7 @@ defmodule BorutaWeb.OauthView do
           authorization_details ->
             response
           # |> Map.put(:authorization_details, authorization_details)
-          |> Map.put(:c_nonce, SecureRandom.hex())
+          |> Map.put(:c_nonce, "boruta")
           |> Map.put(:c_nonce_expires_in, 3600)
         end
 
