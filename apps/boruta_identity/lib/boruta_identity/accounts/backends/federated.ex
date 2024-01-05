@@ -14,10 +14,19 @@ defmodule BorutaIdentity.Accounts.Federated do
 
     base_url = URI.parse(federated_server["base_url"])
 
+    userinfo_uri =
+      case URI.parse(federated_server["userinfo_path"]) do
+        %URI{host: host} = uri when not is_nil(host) ->
+          uri
+
+        %URI{path: path} ->
+          %{base_url | path: path}
+      end
+
     userinfo =
       case Finch.build(
              :get,
-             URI.to_string(%{base_url | path: federated_server["userinfo_path"]}),
+             URI.to_string(userinfo_uri),
              [
                {"accept", "application/json"},
                {"authorization", "Bearer #{access_token}"}
