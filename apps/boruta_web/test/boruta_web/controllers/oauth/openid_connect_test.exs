@@ -328,6 +328,28 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "implicit",
                  "authorization_code",
                  "refresh_token"
+               ],
+               "credential_endpoint" => "boruta/openid/credential",
+               "credential_issuer" => "boruta",
+               "credentials_supported" => [
+                 %{
+                   "cryptographic_binding_methods_supported" => ["did:example"],
+                   "display" => [
+                     %{
+                       "background_color" => "#12107c",
+                       "locale" => "en-US",
+                       "logo" => %{
+                         "alt_text" => "a square logo of a university",
+                         "url" => "https://exampleuniversity.com/public/logo.png"
+                       },
+                       "name" => "University Credential",
+                       "text_color" => "#FFFFFF"
+                     }
+                   ],
+                   "format" => "jwt_vc_json",
+                   "id" => "UniversityDegreeCredential",
+                   "types" => ["VerifiableCredential", "UniversityDegreeCredential"]
+                 }
                ]
              }
     end
