@@ -3,7 +3,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
 
   @credentials_supported_draft_11 [
     %{
-      "id" => "UniversityDegreeCredential",
+      "id" => "CivilEngineeringDegree-2023",
       "types" => [
         "VerifiableCredential",
         "UniversityDegreeCredential"
@@ -98,8 +98,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
         ]
       },
       "credential_identifiers" => [
-        "CivilEngineeringDegree-2023",
-        "ElectricalEngineeringDegree-2023"
+        "CivilEngineeringDegree-2023"
       ]
     }
   ]
