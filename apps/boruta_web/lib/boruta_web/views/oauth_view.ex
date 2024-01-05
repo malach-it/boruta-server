@@ -129,8 +129,8 @@ defmodule BorutaWeb.OauthView do
             access_token: access_token,
             id_token: id_token,
             expires_in: expires_in,
-            refresh_token: refresh_token,
-            authorization_details: authorization_details
+            refresh_token: refresh_token
+            # authorization_details: authorization_details
           },
           options
         ) do
@@ -147,11 +147,11 @@ defmodule BorutaWeb.OauthView do
           id_token -> Map.put(response, :id_token, id_token)
         end
 
-      response =
-        case authorization_details do
-          nil -> response
-          authorization_details -> Map.put(response, :authorization_details, authorization_details)
-        end
+      # response =
+      #   case authorization_details do
+      #     nil -> response
+      #     authorization_details -> Map.put(response, :authorization_details, authorization_details)
+      #   end
 
       Jason.Encode.map(
         response,
