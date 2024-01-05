@@ -2,6 +2,8 @@ defmodule BorutaIdentity.Accounts.Federated do
   @moduledoc false
   @behaviour BorutaIdentity.FederatedAccounts
 
+  import Ecto.Query
+
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
 
@@ -48,10 +50,15 @@ defmodule BorutaIdentity.Accounts.Federated do
     }
 
     # TODO store origin federated server
-    User.implementation_changeset(impl_user_params, backend)
-    |> Repo.insert!(
+    changeset = User.implementation_changeset(impl_user_params, backend)
+    new_metadata = Ecto.Changeset.get_field(changeset, :metadata)
+    new_username = Ecto.Changeset.get_field(changeset, :username)
+
+    Repo.insert!(changeset,
       # TODO federated metadata will erase existing metadata
-      on_conflict: {:replace, [:username, :metadata]},
+      on_conflict: from(u in User, update: [
+        set: [username: ^new_username, metadata: fragment("? || ?", u.metadata, ^new_metadata)]
+      ]),
       returning: true,
       conflict_target: [:backend_id, :uid]
     )
