@@ -286,7 +286,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @spec federated_server_scope(backend :: t(), federated_server_name :: String.t()) ::
           server_scope :: String.t()
   def federated_server_scope(
-        %__MODULE__{federated_servers: federated_servers} = backend,
+        %__MODULE__{federated_servers: federated_servers},
         federated_server_name
       ) do
     case Enum.find(federated_servers, fn federated_server ->

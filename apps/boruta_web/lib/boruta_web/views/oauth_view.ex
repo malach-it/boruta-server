@@ -153,7 +153,7 @@ defmodule BorutaWeb.OauthView do
       response =
         case authorization_details do
           nil -> response
-          authorization_details ->
+          _authorization_details ->
             response
           # |> Map.put(:authorization_details, authorization_details)
           |> Map.put(:c_nonce, "boruta")

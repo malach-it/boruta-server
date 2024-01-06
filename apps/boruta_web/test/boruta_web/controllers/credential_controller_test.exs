@@ -6,8 +6,8 @@ defmodule BorutaWeb.CredentialControllerTest do
 
   alias Boruta.Config
   alias Boruta.Ecto.Token
-  alias BorutaIdentity.Accounts.User
   alias Boruta.VerifiableCredentials
+  alias BorutaIdentity.Accounts.User
 
   setup %{conn: conn} do
     {:ok, conn: conn}

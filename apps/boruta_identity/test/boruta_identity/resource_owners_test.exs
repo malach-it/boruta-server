@@ -44,7 +44,10 @@ defmodule BorutaIdentity.ResourceOwnersTest do
         })
 
       {:ok, result} = ResourceOwners.get_by(sub: user.id)
-      assert result == %ResourceOwner{sub: user.id, username: user.username}
+
+      user_id = user.id
+      user_username = user.username
+      assert %ResourceOwner{sub: ^user_id, username: ^user_username} = result
     end
 
     test "returns nil when username do not exists" do

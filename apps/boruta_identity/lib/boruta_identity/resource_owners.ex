@@ -10,9 +10,9 @@ defmodule BorutaIdentity.ResourceOwners do
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.Organization
-  alias BorutaIdentity.Accounts.VerifiableCredentials
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do

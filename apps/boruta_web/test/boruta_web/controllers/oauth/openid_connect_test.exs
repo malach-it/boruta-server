@@ -336,19 +336,19 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                    "cryptographic_binding_methods_supported" => ["did:example"],
                    "display" => [
                      %{
-                       "background_color" => "#12107c",
+                       "background_color" => "#53b29f",
                        "locale" => "en-US",
                        "logo" => %{
-                         "alt_text" => "a square logo of a university",
-                         "url" => "https://exampleuniversity.com/public/logo.png"
+                         "alt_text" => "Boruta PoC logo",
+                         "url" => "https://io.malach.it/assets/images/logo.png"
                        },
-                       "name" => "University Credential",
+                       "name" => "Federation credential PoC",
                        "text_color" => "#FFFFFF"
                      }
                    ],
                    "format" => "jwt_vc_json",
-                   "id" => "UniversityDegreeCredential",
-                   "types" => ["VerifiableCredential", "UniversityDegreeCredential"]
+                   "id" => "FederatedAttributes",
+                   "types" => ["VerifiableCredential", "BorutaCredential"]
                  }
                ]
              }
