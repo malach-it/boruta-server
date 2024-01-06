@@ -7,6 +7,7 @@ defmodule BorutaWeb.Openid.CredentialController do
   alias BorutaWeb.OauthView
 
   def credential(conn, params) do
+    dbg params
     Openid.credential(conn, params, __MODULE__)
   end
 

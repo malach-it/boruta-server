@@ -3,10 +3,10 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
 
   @credentials_supported_draft_11 [
     %{
-      "id" => "CivilEngineeringDegree-2023",
+      "id" => "FederatedAttributes",
       "types" => [
         "VerifiableCredential",
-        "UniversityDegreeCredential"
+        "BorutaCredential"
       ],
       "format" => "jwt_vc_json",
       "cryptographic_binding_methods_supported" => [
@@ -14,13 +14,13 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
       ],
       "display" => [
         %{
-          "name" => "University Credential",
+          "name" => "Federation credential PoC",
           "locale" => "en-US",
           "logo" => %{
-            "url" => "https://exampleuniversity.com/public/logo.png",
-            "alt_text" => "a square logo of a university"
+            "url" => "https://io.malach.it/assets/images/logo.png",
+            "alt_text" => "Boruta PoC logo"
           },
-          "background_color" => "#12107c",
+          "background_color" => "#53b29f",
           "text_color" => "#FFFFFF"
         }
       ]
@@ -94,14 +94,24 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
       "credential_definition" => %{
         "type" => [
           "VerifiableCredential",
-          "UniversityDegreeCredential"
+          "BorutaCredential"
         ]
       },
       "credential_identifiers" => [
-        "CivilEngineeringDegree-2023"
+        "FederatedAttributes"
       ]
     }
   ]
+
+  @credential_configuration %{
+    "FederatedAttributes" => %{
+      types: [
+        "VerifiableCredential",
+        "BorutaCredential"
+      ],
+      claims: ["family_name", "email", "email_verified"]
+    }
+  }
 
   def credentials do
     Enum.flat_map(@authorization_details, fn detail ->
@@ -115,4 +125,6 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   def credentials_supported, do: @credentials_supported_draft_11
 
   def credentials_supported_current, do: @credentials_supported_draft_12
+
+  def credential_configuration, do: @credential_configuration
 end

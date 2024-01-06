@@ -12,6 +12,7 @@ defmodule BorutaIdentity.ResourceOwners do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.Organization
+  alias BorutaIdentity.Accounts.VerifiableCredentials
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
@@ -26,6 +27,7 @@ defmodule BorutaIdentity.ResourceOwners do
          sub: id,
          username: email,
          last_login_at: last_login_at,
+         # TODO find out why the impl user in extra_claims
          extra_claims: %{user: impl_user}
        }}
     else
@@ -36,8 +38,16 @@ defmodule BorutaIdentity.ResourceOwners do
 
   def get_by(sub: sub) when not is_nil(sub) do
     case Accounts.get_user(sub) do
-      %User{id: id, username: email, last_login_at: last_login_at} ->
-        {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
+      %User{id: id, username: email, last_login_at: last_login_at, metadata: metadata} ->
+        {:ok,
+         %ResourceOwner{
+           sub: id,
+           username: email,
+           last_login_at: last_login_at,
+           extra_claims: metadata,
+           authorization_details: VerifiableCredentials.authorization_details(),
+           credential_configuration: VerifiableCredentials.credential_configuration()
+         }}
 
       _ ->
         {:error, "Invalid username or password."}
