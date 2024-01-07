@@ -103,16 +103,6 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
     }
   ]
 
-  @credential_configuration %{
-    "FederatedAttributes" => %{
-      types: [
-        "VerifiableCredential",
-        "BorutaCredential"
-      ],
-      claims: ["family_name", "email", "email_verified"]
-    }
-  }
-
   def credentials do
     Enum.flat_map(@authorization_details, fn detail ->
       detail["credential_definition"]["type"]
@@ -125,6 +115,4 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   def credentials_supported, do: @credentials_supported_draft_11
 
   def credentials_supported_current, do: @credentials_supported_draft_12
-
-  def credential_configuration, do: @credential_configuration
 end

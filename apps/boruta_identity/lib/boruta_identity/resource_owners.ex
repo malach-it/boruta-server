@@ -46,7 +46,15 @@ defmodule BorutaIdentity.ResourceOwners do
            last_login_at: last_login_at,
            extra_claims: metadata,
            authorization_details: VerifiableCredentials.authorization_details(),
-           credential_configuration: VerifiableCredentials.credential_configuration()
+           credential_configuration: %{
+             "FederatedAttributes" => %{
+               types: [
+                 "VerifiableCredential",
+                 "BorutaCredential"
+               ],
+               claims: Map.keys(metadata)
+             }
+           }
          }}
 
       _ ->
