@@ -43,7 +43,7 @@ defmodule BorutaIdentity.Accounts.Federated do
       end
 
     impl_user_params = %{
-      uid: userinfo["sub"],
+      uid: userinfo["sub"] || userinfo["id"],
       username: userinfo["email"] || "#{userinfo["sub"]}@#{federated_server["name"]}",
       metadata: userinfo,
       backend_id: backend.id
