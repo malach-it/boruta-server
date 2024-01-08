@@ -22,7 +22,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
-  alias BorutaWeb.OauthView
+  alias BorutaIdentityWeb.TemplateView
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -371,15 +371,25 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   def authorize_success(
-        %Plug.Conn{} = conn,
+        %Plug.Conn{query_params: query_params} = conn,
         %CredentialOfferResponse{} = response
       ) do
-    # TODO CredentialOfferResponse#redirect_to_url
-    conn
-    |> delete_session(:session_chosen)
-    |> put_view(OauthView)
-    |> put_layout(false)
-    |> render("credential_offer.html", credential_offer_response: response)
+    case IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"]) do
+      %IdentityProvider{} = identity_provider ->
+        template = IdentityProviders.get_identity_provider_template!(
+          identity_provider.id,
+          :credential_offer
+        )
+
+        conn
+        |> delete_session(:session_chosen)
+        |> put_layout(false)
+        |> put_view(TemplateView)
+        |> render("template.html", template: template, assigns: %{credential_offer: response})
+
+      nil ->
+        raise BorutaIdentity.Accounts.IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator."
+    end
   end
 
   @impl Boruta.Oauth.AuthorizeApplication

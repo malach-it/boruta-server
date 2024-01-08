@@ -72,6 +72,19 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :totp_secret))
   end
 
+  def context(context, %{credential_offer: credential_offer} = assigns) do
+    {:ok, base64_credential_offer_qr_code} = text_from_credential_offer(credential_offer)
+      |> QRCode.create()
+      |> QRCode.render(:svg)
+      |> QRCode.to_base64()
+
+    %{
+      base64_credential_offer_qr_code: base64_credential_offer_qr_code
+    }
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :credential_offer))
+  end
+
   def context(context, %{current_user: current_user} = assigns) do
     current_user = Map.take(current_user, [:username, :totp_registered_at, :metadata])
 
@@ -104,6 +117,10 @@ defmodule BorutaIdentityWeb.TemplateView do
   end
 
   def context(context, %{}), do: context
+
+  defp text_from_credential_offer(credential_offer) do
+    "openid-credential-offer://?credential_offer=#{credential_offer |> Map.from_struct() |> Jason.encode!() |> URI.encode_www_form()}"
+  end
 
   defp paths(conn, assigns) do
     %Plug.Conn{query_params: query_params} = conn
