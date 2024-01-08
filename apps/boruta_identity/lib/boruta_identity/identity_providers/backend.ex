@@ -225,7 +225,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
         OAuth2.Client.authorize_url!(client,
           scope:
             Enum.join(
-              ["openid email", federated_server_scope(backend, federated_server_name)],
+              [federated_server_scope(backend, federated_server_name)],
               " "
             )
         )
