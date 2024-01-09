@@ -1,6 +1,10 @@
 defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   @moduledoc false
 
+  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentity.Repo
+
   @credentials_supported_draft_11 [
     %{
       "id" => "FederatedAttributes",
@@ -110,9 +114,58 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
     |> Enum.uniq()
   end
 
-  def authorization_details, do: @authorization_details
-
-  def credentials_supported, do: @credentials_supported_draft_11
+  def credentials_supported do
+    Repo.all(Backend)
+    |> Enum.flat_map(fn %Backend{verifiable_credentials: credentials} ->
+      Enum.map(credentials, fn credential ->
+        %{
+          "id" => credential["credential_identifier"],
+          "types" => String.split(credential["types"], " "),
+          "display" => [Map.put(credential["display"], "locale", "en-US")],
+          "format" => "jwt_vc_json",
+          "cryptographic_binding_methods_supported" => [
+            "did:example"
+          ]
+        }
+      end)
+    end)
+  end
 
   def credentials_supported_current, do: @credentials_supported_draft_12
+
+  def authorization_details(%User{backend: %Backend{} = backend} = user) do
+    Enum.map(backend.verifiable_credentials, fn credential ->
+      %{
+        "type" => "openid_credential",
+        "format" => "jwt_vc_json",
+        "credential_definition" => %{
+          "type" => String.split(credential["types"], " ")
+        },
+        "credential_identifiers" => [credential["credential_identifier"]]
+      }
+    end)
+  end
+
+  def authorization_details(_user), do: []
+
+  def credential_configuration(%User{backend: %Backend{} = backend} = user) do
+    %{
+      "FederatedAttributes" => %{
+        types: [
+          "VerifiableCredential",
+          "BorutaCredential"
+        ],
+        claims: []
+      }
+    }
+    Enum.map(backend.verifiable_credentials, fn credential ->
+      {credential["credential_identifier"], %{
+        types: String.split(credential["types"], " "),
+        claims: String.split(credential["claims"], " ")
+      }}
+    end)
+    |> Enum.into(%{})
+  end
+
+  def credential_configuration(_user), do: %{}
 end

@@ -15,6 +15,7 @@ defmodule BorutaWeb.CredentialControllerTest do
 
   test "returns a credential with a valid credential type", %{conn: conn} do
     {_, public_jwk} = public_key_fixture() |> JOSE.JWK.from_pem() |> JOSE.JWK.to_map()
+
     signer =
       Joken.Signer.create("RS256", %{"pem" => private_key_fixture()}, %{
         "jwk" => public_jwk,
@@ -35,8 +36,32 @@ defmodule BorutaWeb.CredentialControllerTest do
       "jwt" => token
     }
 
-    credential_params = %{"types" => ["VerifiableCredential", "BorutaCredential"], "proof" => proof}
-    %User{id: sub} = user_fixture()
+    credential_params = %{
+      "types" => ["VerifiableCredential", "BorutaCredential"],
+      "proof" => proof
+    }
+
+    backend =
+      BorutaIdentity.Factory.insert(:backend,
+        verifiable_credentials: [
+          %{
+            "display" => %{
+              "background_color" => "#53b29f",
+              "logo" => %{
+                "alt_text" => "Boruta PoC logo",
+                "url" => "https://io.malach.it/assets/images/logo.png"
+              },
+              "name" => "Federation credential PoC",
+              "text_color" => "#FFFFFF"
+            },
+            "credential_identifier" => "FederatedAttributes",
+            "types" => "VerifiableCredential BorutaCredential",
+            "claims" => "family_name"
+          }
+        ]
+      )
+
+    %User{id: sub} = user_fixture(%{backend: backend, metadata: %{"family_name" => "family_name"}})
 
     %Token{value: access_token} =
       insert(:token,

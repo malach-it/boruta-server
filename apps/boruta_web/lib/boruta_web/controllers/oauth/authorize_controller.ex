@@ -253,7 +253,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       sub: current_user.id,
       username: current_user.username,
       last_login_at: current_user.last_login_at,
-      authorization_details: VerifiableCredentials.authorization_details()
+      authorization_details: VerifiableCredentials.authorization_details(current_user)
     }
 
     conn =
@@ -273,7 +273,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       sub: current_user.id,
       username: current_user.username,
       last_login_at: current_user.last_login_at,
-      authorization_details: VerifiableCredentials.authorization_details()
+      authorization_details: VerifiableCredentials.authorization_details(current_user)
     }
 
     conn

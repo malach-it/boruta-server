@@ -15,6 +15,7 @@ const defaults = {
   features: [],
   metadata_fields: [],
   federated_servers: [],
+  verifiable_credentials: [],
 };
 
 const assign = {
@@ -52,6 +53,9 @@ const assign = {
         isDiscovery: !!federatedServer.discovery_path,
       };
     });
+  },
+  verifiable_credentials: function ({ verifiable_credentials }) {
+    this.verifiable_credentials = verifiable_credentials;
   },
   features: function ({ features }) {
     this.features = features;
@@ -173,6 +177,7 @@ class Backend {
       password_hashing_opts,
       metadata_fields,
       federated_servers,
+      verifiable_credentials,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,
@@ -220,6 +225,7 @@ class Backend {
         delete federated_server.isDiscovery;
         return federated_server;
       }),
+      verifiable_credentials,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,

@@ -198,6 +198,51 @@
           <a class="ui blue fluid button" @click="addFederatedServer()">Add a federated server</a>
         </div>
         <hr />
+        <h2>Verifiable credentials</h2>
+        <div v-for="credential in backend.verifiable_credentials" class="ui credential-field segment">
+          <i class="ui large close icon" @click="deleteVerifiableCredential(credential)"></i>
+          <h3>Verifiable cerdential</h3>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Credential identifier</label>
+            <input type="text" v-model="credential.credential_identifier" placeholder="BorutaCredential">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Types <i>(separated by a whitespace)</i></label>
+            <input type="text" v-model="credential.types" placeholder="VerifiableCredential BorutaCredential">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Claims <i>(separated by a whitespace)</i></label>
+            <input type="text" v-model="credential.claims" placeholder="family_name given_name">
+          </div>
+          <div class="ui info message">
+            Claims must be present in user attributes.
+          </div>
+          <h4>Display</h4>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Name</label>
+            <input type="text" v-model="credential.display.name" placeholder="Boruta Credential">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Background color</label>
+            <input type="text" v-model="credential.display.background_color" placeholder="#53b29f">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Text color</label>
+            <input type="text" v-model="credential.display.text_color" placeholder="#ffffff">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Logo URL</label>
+            <input type="text" v-model="credential.display.logo.url" placeholder="https://io.malach.it/assets/images/logo.png">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Logo alt text</label>
+            <input type="text" v-model="credential.display.logo.alt_text" placeholder="Boruta credential logo">
+          </div>
+        </div>
+        <div class="field">
+          <a class="ui blue fluid button" @click="addVerifiableCredential()">Add a verifiable credential</a>
+        </div>
+        <hr />
         <h2>User metadata configuration</h2>
         <div v-for="field in backend.metadata_fields" class="ui metadata-field segment">
           <i class="ui large close icon" @click="deleteMetadataField(field)"></i>
@@ -281,6 +326,9 @@ export default {
     addFederatedServer () {
       this.backend.federated_servers.push({})
     },
+    addVerifiableCredential () {
+      this.backend.verifiable_credentials.push({display: {logo: {}}})
+    },
     addMetadataField () {
       this.backend.metadata_fields.push({ scopes: [] })
     },
@@ -293,6 +341,12 @@ export default {
     deleteFederatedServer (federatedServer) {
       this.backend.federated_servers.splice(
         this.backend.federated_servers.indexOf(federatedServer),
+        1
+      )
+    },
+    deleteVerifiableCredential (credential) {
+      this.backend.verifiable_credentials.splice(
+        this.backend.verifiable_credentials.indexOf(credential),
         1
       )
     },
@@ -320,7 +374,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.metadata-field.segment, .federated-server-field.segment {
+.metadata-field.segment, .federated-server-field.segment, .credential-field.segment {
   .field {
     margin-bottom: 1em!important;
   }

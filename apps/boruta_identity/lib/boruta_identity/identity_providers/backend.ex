@@ -122,6 +122,34 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                             }
                           })
 
+  @verifiable_credential_schema ExJsonSchema.Schema.resolve(%{
+                                  "type" => "object",
+                                  "properties" => %{
+                                    "credential_identifier" => %{"type" => "string"},
+                                    "types" => %{"type" => "string"},
+                                    "claims" => %{"type" => "string"},
+                                    "display" => %{
+                                      "type" => "object",
+                                      "properties" => %{
+                                        "name" => %{"type" => "string"},
+                                        "locale" => %{"type" => "string"},
+                                        "background_color" => %{"type" => "string"},
+                                        "text_color" => %{"type" => "string"},
+                                        "logo" => %{
+                                          "type" => "object",
+                                          "properties" => %{
+                                            "url" => %{"type" => "string"},
+                                            "alt_text" => %{"type" => "string"}
+                                          }
+                                        }
+                                      },
+                                      "required" => ["name"],
+                                      "additionalProperties" => false
+                                    }
+                                  },
+                                  "required" => ["credential_identifier", "types", "claims", "display"],
+                                  "additionalProperties" => false
+                                })
   @spec backend_types() :: list(atom)
   def backend_types, do: @backend_types
 
@@ -157,6 +185,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
     # identity federation
     field(:federated_servers, {:array, :map}, default: [])
+
+    # verifiable credentials
+    field(:verifiable_credentials, {:array, :map}, default: [])
 
     has_many(:email_templates, EmailTemplate)
     has_many(:users, User)
@@ -316,14 +347,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       {:ok, %Finch.Response{status: 200, body: body}} ->
         discovery = Jason.decode!(body)
 
-        authorize_url =
-          discovery["authorization_endpoint"]
+        authorize_url = discovery["authorization_endpoint"]
 
-        token_url =
-          discovery["token_endpoint"]
+        token_url = discovery["token_endpoint"]
 
-        userinfo_url =
-          discovery["userinfo_endpoint"]
+        userinfo_url = discovery["userinfo_endpoint"]
 
         change(backend, %{
           federated_servers:
@@ -401,11 +429,13 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :smtp_ssl,
       :smtp_tls,
       :smtp_port,
-      :federated_servers
+      :federated_servers,
+      :verifiable_credentials
     ])
     |> validate_required([:name, :password_hashing_alg])
     |> validate_metadata_fields()
     |> validate_federated_servers()
+    |> validate_verifiable_credentials()
     |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
     |> validate_inclusion(:smtp_tls, Enum.map(@smtp_tls_types, &Atom.to_string/1))
     |> foreign_key_constraint(:identity_provider, name: :identity_providers_backend_id_fkey)
@@ -466,6 +496,24 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   defp validate_federated_servers(changeset), do: changeset
+
+  defp validate_verifiable_credentials(
+         %Ecto.Changeset{changes: %{verifiable_credentials: verifiable_credentials}} = changeset
+       ) do
+    Enum.reduce(verifiable_credentials, changeset, fn verifiable_credential, changeset ->
+      case ExJsonSchema.Validator.validate(@verifiable_credential_schema, verifiable_credential) do
+        :ok ->
+          changeset
+
+        {:error, errors} ->
+          Enum.reduce(errors, changeset, fn {message, path}, changeset ->
+            add_error(changeset, :verifiable_credentials, "#{message} at #{path}")
+          end)
+      end
+    end)
+  end
+
+  defp validate_verifiable_credentials(changeset), do: changeset
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: false}} = changeset) do
     Ecto.Changeset.add_error(

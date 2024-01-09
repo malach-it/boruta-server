@@ -272,6 +272,24 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
   describe "discovery 1.0" do
     test "returns required keys", %{conn: conn} do
+      BorutaIdentity.Factory.insert(:backend,
+        verifiable_credentials: [
+          %{
+            "display" => %{
+              "background_color" => "#53b29f",
+              "logo" => %{
+                "alt_text" => "Boruta PoC logo",
+                "url" => "https://io.malach.it/assets/images/logo.png"
+              },
+              "name" => "Federation credential PoC",
+              "text_color" => "#FFFFFF"
+            },
+            "credential_identifier" => "FederatedAttributes",
+            "types" => "VerifiableCredential BorutaCredential"
+          }
+        ]
+      )
+
       conn = get(conn, Routes.openid_path(conn, :well_known))
 
       assert json_response(conn, 200) == %{
@@ -337,7 +355,6 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                    "display" => [
                      %{
                        "background_color" => "#53b29f",
-                       "locale" => "en-US",
                        "logo" => %{
                          "alt_text" => "Boruta PoC logo",
                          "url" => "https://io.malach.it/assets/images/logo.png"

@@ -27,6 +27,7 @@ defmodule BorutaAdminWeb.BackendView do
       roles: IdentityProviders.get_backend_roles(backend.id),
       metadata_fields: backend.metadata_fields,
       federated_servers: backend.federated_servers,
+      verifiable_credentials: backend.verifiable_credentials,
       password_hashing_alg: backend.password_hashing_alg,
       password_hashing_opts: backend.password_hashing_opts,
       ldap_pool_size: backend.ldap_pool_size,
