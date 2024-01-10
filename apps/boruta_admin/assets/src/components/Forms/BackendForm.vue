@@ -163,10 +163,23 @@
             <label>scope <i>(separated with a whitespace)</i></label>
             <input type="text" v-model="federatedServer.scope">
           </div>
-          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
-            <label>Federated attributes <i>(separated with a whitespace)</i></label>
-            <input type="text" v-model="federatedServer.federated_attributes">
+          <h4>Federated metadata</h4>
+          <div class="ui federated-metadata-fields segment" v-for="metadataEndpoint in federatedServer.metadata_endpoints || []">
+            <h5>Metadata endpoint configuration</h5>
+            <i class="ui large close icon" @click="deleteMetadataEndpoint(federatedServer, metadataEndpoint)"></i>
+            <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+              <label>Metadata endpoint URL</label>
+              <input type="text" v-model="metadataEndpoint.endpoint">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+              <label>Metadata endpoint claims <i>(separated with a whitespace)</i></label>
+              <input type="text" v-model="metadataEndpoint.claims">
+            </div>
           </div>
+          <div class="field">
+            <a class="ui blue fluid button" @click="addMetadataEndpoint(federatedServer)">Add a federated metadata endpoint</a>
+          </div>
+          <h4>Federated server endpoints</h4>
           <div class="field">
             <div class="ui toggle checkbox">
               <input type="checkbox" v-model="federatedServer.isDiscovery">
@@ -207,11 +220,11 @@
             <input type="text" v-model="credential.credential_identifier" placeholder="BorutaCredential">
           </div>
           <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
-            <label>Types <i>(separated by a whitespace)</i></label>
+            <label>Types <i>(separated with a whitespace)</i></label>
             <input type="text" v-model="credential.types" placeholder="VerifiableCredential BorutaCredential">
           </div>
           <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
-            <label>Claims <i>(separated by a whitespace)</i></label>
+            <label>Claims <i>(separated with a whitespace)</i></label>
             <input type="text" v-model="credential.claims" placeholder="family_name given_name">
           </div>
           <div class="ui info message">
@@ -325,6 +338,16 @@ export default {
     },
     addFederatedServer () {
       this.backend.federated_servers.push({})
+    },
+    addMetadataEndpoint (federatedServer) {
+      federatedServer.metadata_endpoints ||= []
+      federatedServer.metadata_endpoints.push({})
+    },
+    deleteMetadataEndpoint (federatedServer, endpoint) {
+      federatedServer.metadata_endpoints.splice(
+        federatedServer.metadata_endpoints.indexOf(endpoint),
+        1
+      )
     },
     addVerifiableCredential () {
       this.backend.verifiable_credentials.push({display: {logo: {}}})

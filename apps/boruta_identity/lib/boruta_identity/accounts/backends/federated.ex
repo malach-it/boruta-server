@@ -42,26 +42,60 @@ defmodule BorutaIdentity.Accounts.Federated do
           raise inspect(error)
       end
 
+    federated_metadata =
+      Enum.flat_map(federated_server["metadata_endpoints"] || [], fn endpoint ->
+        case Finch.build(
+               :get,
+               endpoint["endpoint"],
+               [
+                 {"accept", "application/json"},
+                 {"authorization", "Bearer #{access_token}"}
+               ]
+             )
+             |> Finch.request(BorutaIdentity.Finch) do
+          {:ok, %Finch.Response{status: 200, body: body}} ->
+            body = Jason.decode!(body)
+
+            endpoint["claims"]
+            |> String.split(" ")
+            |> Enum.map(fn claim ->
+              {claim, get_in(body, String.split(claim, "."))}
+            end)
+
+          error ->
+            raise inspect(error)
+        end
+      end)
+      |> Enum.into(%{})
+
     impl_user_params = %{
       uid: to_string(userinfo["sub"] || userinfo["id"]),
       username: userinfo["email"] || "#{userinfo["sub"]}@#{federated_server["name"]}",
-      metadata: userinfo,
+      federated_metadata: %{federated_server_name => Map.merge(userinfo, federated_metadata)},
       backend_id: backend.id
     }
 
     # TODO store origin federated server
     changeset = User.implementation_changeset(impl_user_params, backend)
-    new_metadata = Ecto.Changeset.get_field(changeset, :metadata)
+    new_metadata = Ecto.Changeset.get_field(changeset, :federated_metadata)
     new_username = Ecto.Changeset.get_field(changeset, :username)
 
     Repo.insert!(changeset,
-      # TODO federated metadata will erase existing metadata
-      on_conflict: from(u in User, update: [
-        set: [username: ^new_username, metadata: fragment("? || ?", u.metadata, ^new_metadata)]
-      ]),
+      on_conflict:
+        from(u in User,
+          update: [
+            set: [
+              username: ^new_username,
+              federated_metadata: fragment("? || ?", u.federated_metadata, ^new_metadata)
+            ]
+          ]
+        ),
       returning: true,
       conflict_target: [:backend_id, :uid]
     )
     |> Repo.preload([:authorized_scopes, :consents, :backend, :organizations])
+  rescue
+    error ->
+      raise BorutaIdentity.Accounts.IdentityProviderError, inspect(error)
   end
 end

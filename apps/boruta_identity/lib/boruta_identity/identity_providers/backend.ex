@@ -97,7 +97,18 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                "authorize_path" => %{"type" => "string"},
                                "token_path" => %{"type" => "string"},
                                "scope" => %{"type" => "string"},
-                               "federated_attributes" => %{"type" => "string"}
+                               "federated_attributes" => %{"type" => "string"},
+                               "metadata_endpoints" => %{
+                                 "type" => "array",
+                                 "items" => %{
+                                   "type" => "object",
+                                   "properties" => %{
+                                     "endpoint" => %{"type" => "string"},
+                                     "claims" => %{"type" => "string"}
+                                   },
+                                   "required" => ["endpoint", "claims"]
+                                 }
+                               }
                              },
                              "required" => [
                                "name",
