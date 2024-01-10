@@ -5,31 +5,31 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
 
-  @credentials_supported_draft_11 [
-    %{
-      "id" => "FederatedAttributes",
-      "types" => [
-        "VerifiableCredential",
-        "BorutaCredential"
-      ],
-      "format" => "jwt_vc_json",
-      "cryptographic_binding_methods_supported" => [
-        "did:example"
-      ],
-      "display" => [
-        %{
-          "name" => "Federation credential PoC",
-          "locale" => "en-US",
-          "logo" => %{
-            "url" => "https://io.malach.it/assets/images/logo.png",
-            "alt_text" => "Boruta PoC logo"
-          },
-          "background_color" => "#53b29f",
-          "text_color" => "#FFFFFF"
-        }
-      ]
-    }
-  ]
+  # @credentials_supported_draft_11 [
+  #   %{
+  #     "id" => "FederatedAttributes",
+  #     "types" => [
+  #       "VerifiableCredential",
+  #       "BorutaCredential"
+  #     ],
+  #     "format" => "jwt_vc_json",
+  #     "cryptographic_binding_methods_supported" => [
+  #       "did:example"
+  #     ],
+  #     "display" => [
+  #       %{
+  #         "name" => "Federation credential PoC",
+  #         "locale" => "en-US",
+  #         "logo" => %{
+  #           "url" => "https://io.malach.it/assets/images/logo.png",
+  #           "alt_text" => "Boruta PoC logo"
+  #         },
+  #         "background_color" => "#53b29f",
+  #         "text_color" => "#FFFFFF"
+  #       }
+  #     ]
+  #   }
+  # ]
 
   @credentials_supported_draft_12 %{
     "UniversityDegreeCredential" => %{
@@ -133,7 +133,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
 
   def credentials_supported_current, do: @credentials_supported_draft_12
 
-  def authorization_details(%User{backend: %Backend{} = backend} = user) do
+  def authorization_details(%User{backend: %Backend{} = backend}) do
     Enum.map(backend.verifiable_credentials, fn credential ->
       %{
         "type" => "openid_credential",
@@ -148,7 +148,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
 
   def authorization_details(_user), do: []
 
-  def credential_configuration(%User{backend: %Backend{} = backend} = user) do
+  def credential_configuration(%User{backend: %Backend{} = backend}) do
     %{
       "FederatedAttributes" => %{
         types: [

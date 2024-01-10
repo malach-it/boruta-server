@@ -38,13 +38,19 @@ defmodule BorutaIdentity.ResourceOwners do
 
   def get_by(sub: sub) when not is_nil(sub) do
     case Accounts.get_user(sub) do
-      %User{id: id, username: email, last_login_at: last_login_at, metadata: metadata} = user ->
+      %User{
+        id: id,
+        username: email,
+        last_login_at: last_login_at,
+        metadata: metadata,
+        federated_metadata: federated_metadata
+      } = user ->
         {:ok,
          %ResourceOwner{
            sub: id,
            username: email,
            last_login_at: last_login_at,
-           extra_claims: metadata,
+           extra_claims: Map.merge(metadata, federated_metadata),
            authorization_details: VerifiableCredentials.authorization_details(user),
            credential_configuration: VerifiableCredentials.credential_configuration(user)
          }}
