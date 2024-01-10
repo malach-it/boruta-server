@@ -59,7 +59,15 @@ defmodule BorutaIdentity.Accounts.Federated do
             endpoint["claims"]
             |> String.split(" ")
             |> Enum.map(fn claim ->
-              {claim, get_in(body, String.split(claim, "."))}
+              {String.replace(claim, ".", "-"),
+               get_in(
+                 body,
+                 String.split(claim, ".")
+                 |> Enum.map(fn
+                   ":all" -> Access.all()
+                   claim -> claim
+                 end)
+               )}
             end)
 
           error ->
