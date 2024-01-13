@@ -223,12 +223,21 @@
             <label>Types <i>(separated with a whitespace)</i></label>
             <input type="text" v-model="credential.types" placeholder="VerifiableCredential BorutaCredential">
           </div>
-          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
-            <label>Claims <i>(separated with a whitespace)</i></label>
-            <input type="text" v-model="credential.claims" placeholder="family_name given_name">
+          <h4>Claims</h4>
+          <div class="ui claim segment" v-for="claim in credential.claims">
+            <i class="ui large close icon" @click="deleteVerifiableCredentialClaim(credential, claim)"></i>
+            <h5>Claim definition</h5>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>Name</label>
+              <input type="text" v-model="claim.name" placeholder="family_name given_name">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>pointer</label>
+              <input type="text" v-model="claim.pointer" placeholder="family_name given_name">
+            </div>
           </div>
-          <div class="ui info message">
-            Claims must be present in user attributes.
+          <div class="field">
+            <a class="ui blue fluid button" @click="addVerifiableCredentialClaim(credential)">Add a verifiable credential</a>
           </div>
           <h4>Display</h4>
           <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
@@ -349,8 +358,17 @@ export default {
         1
       )
     },
+    addVerifiableCredentialClaim (credential) {
+      redential.claims.push({})
+    },
+    deleteVerifiableCredentialClaim (credential, claim) {
+      credential.claims.splice(
+        credential.claims.indexOf(claim),
+        1
+      )
+    },
     addVerifiableCredential () {
-      this.backend.verifiable_credentials.push({display: {logo: {}}})
+      this.backend.verifiable_credentials.push({display: {logo: {}}, claims: []})
     },
     addMetadataField () {
       this.backend.metadata_fields.push({ scopes: [] })

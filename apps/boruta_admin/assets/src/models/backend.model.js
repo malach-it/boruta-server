@@ -55,7 +55,15 @@ const assign = {
     });
   },
   verifiable_credentials: function ({ verifiable_credentials }) {
-    this.verifiable_credentials = verifiable_credentials;
+    this.verifiable_credentials = verifiable_credentials.map(credential => {
+      return {
+        ...credential,
+        // NOTE for retrocompatibility issues
+        claims: typeof credential.claims === "string" ?
+          credential.claims.split(' ').map(claim => ({ pointer: claim })) :
+          credential.claims
+      }
+    });
   },
   features: function ({ features }) {
     this.features = features;

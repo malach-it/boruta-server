@@ -138,7 +138,17 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   "properties" => %{
                                     "credential_identifier" => %{"type" => "string"},
                                     "types" => %{"type" => "string"},
-                                    "claims" => %{"type" => "string"},
+                                    "claims" => %{
+                                      "type" => "array",
+                                      "items" => %{
+                                        "type" => "object",
+                                        "properties" => %{
+                                          "name" => %{"type" => "string"},
+                                          "pointer" => %{"type" => "string"}
+                                        },
+                                        "required" => ["name", "pointer"]
+                                      }
+                                    },
                                     "display" => %{
                                       "type" => "object",
                                       "properties" => %{

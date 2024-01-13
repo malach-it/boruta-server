@@ -161,7 +161,10 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
     Enum.map(backend.verifiable_credentials, fn credential ->
       {credential["credential_identifier"], %{
         types: String.split(credential["types"], " "),
-        claims: String.split(credential["claims"], " ")
+        claims: case credential["claims"] do
+          claim when is_binary(claim) -> String.split(claim, " ")
+          claims when is_list(claims) -> claims
+        end
       }}
     end)
     |> Enum.into(%{})
