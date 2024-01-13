@@ -102,8 +102,5 @@ defmodule BorutaIdentity.Accounts.Federated do
       conflict_target: [:backend_id, :uid]
     )
     |> Repo.preload([:authorized_scopes, :consents, :backend, :organizations])
-  rescue
-    error ->
-      raise BorutaIdentity.Accounts.IdentityProviderError, inspect(error)
   end
 end

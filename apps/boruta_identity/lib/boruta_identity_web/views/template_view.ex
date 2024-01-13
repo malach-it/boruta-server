@@ -79,7 +79,8 @@ defmodule BorutaIdentityWeb.TemplateView do
       |> QRCode.to_base64()
 
     %{
-      base64_credential_offer_qr_code: base64_credential_offer_qr_code
+      base64_credential_offer_qr_code: base64_credential_offer_qr_code,
+      credential_offer_deeplink: text_from_credential_offer(credential_offer)
     }
     |> Map.merge(context)
     |> context(Map.delete(assigns, :credential_offer))
