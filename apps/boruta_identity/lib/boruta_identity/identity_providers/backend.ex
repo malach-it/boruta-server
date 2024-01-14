@@ -1,6 +1,38 @@
 defmodule BorutaIdentity.IdentityProviders.Backend do
   @moduledoc false
 
+  defmodule AuthCodeStrategy do
+    use OAuth2.Strategy
+
+    @impl true
+    def authorize_url(client, params) do
+      client
+      |> put_param(:response_type, "code")
+      |> put_param(:client_id, client.client_id)
+      |> put_param(:redirect_uri, client.redirect_uri)
+      |> merge_params(params)
+    end
+
+    @impl true
+    def get_token(client, params, headers) do
+      {code, params} = Keyword.pop(params, :code, client.params["code"])
+
+      unless code do
+        raise OAuth2.Error, reason: "Missing required key `code` for `#{inspect(__MODULE__)}`"
+      end
+
+      client
+      |> put_param(:code, code)
+      |> put_param(:grant_type, "authorization_code")
+      |> put_param(:client_id, client.client_id)
+      |> put_param(:client_secret, client.client_secret)
+      |> put_param(:redirect_uri, client.redirect_uri)
+      |> merge_params(params)
+      |> basic_auth()
+      |> put_headers(headers)
+    end
+  end
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -168,7 +200,12 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                       "additionalProperties" => false
                                     }
                                   },
-                                  "required" => ["credential_identifier", "types", "claims", "display"],
+                                  "required" => [
+                                    "credential_identifier",
+                                    "types",
+                                    "claims",
+                                    "display"
+                                  ],
                                   "additionalProperties" => false
                                 })
   @spec backend_types() :: list(atom)
@@ -321,7 +358,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
         client =
           OAuth2.Client.new(
-            strategy: OAuth2.Strategy.AuthCode,
+            strategy: AuthCodeStrategy,
+            token_method: :post,
             client_id: federated_server["client_id"],
             client_secret: federated_server["client_secret"],
             site: base_url,

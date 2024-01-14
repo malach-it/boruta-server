@@ -359,7 +359,7 @@ export default {
       )
     },
     addVerifiableCredentialClaim (credential) {
-      redential.claims.push({})
+      credential.claims.push({})
     },
     deleteVerifiableCredentialClaim (credential, claim) {
       credential.claims.splice(
