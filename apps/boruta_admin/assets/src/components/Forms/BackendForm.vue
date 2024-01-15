@@ -237,7 +237,7 @@
             </div>
           </div>
           <div class="field">
-            <a class="ui blue fluid button" @click="addVerifiableCredentialClaim(credential)">Add a verifiable credential</a>
+            <a class="ui blue fluid button" @click="addVerifiableCredentialClaim(credential)">Add a claim</a>
           </div>
           <h4>Display</h4>
           <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">

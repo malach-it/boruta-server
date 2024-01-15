@@ -230,6 +230,7 @@ class Backend {
         if (!federated_server.isDiscovery) {
           delete federated_server.discovery_path;
         }
+        delete federated_server.clientSecretVisible
         delete federated_server.isDiscovery;
         return federated_server;
       }),
