@@ -63,7 +63,7 @@ defmodule BorutaWeb.Application do
     IO.puts("These informations are optional, that said,")
     IO.puts("the owners would be thankful if you could provide those information")
     IO.puts("")
-    IO.puts("Thank you")
+    IO.puts("Thank you for using boruta")
     IO.puts("====================")
     company_name = Owl.IO.input(label: "Your company name:", optional: true)
     purpose = Owl.IO.input(label: "Purpose of the installation:", optional: true)
