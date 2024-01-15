@@ -65,6 +65,19 @@ defmodule BorutaGateway.Application do
           children
       end
 
+    setup_database()
     Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor)
+  end
+
+  def setup_database do
+    Enum.each([BorutaGateway.Repo], fn repo ->
+      repo.__adapter__.storage_up(repo.config)
+    end)
+
+    Enum.each([BorutaGateway.Repo], fn repo ->
+      Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+    end)
+
+    :ok
   end
 end

@@ -16,6 +16,7 @@ defmodule BorutaWeb.Application do
     ]
 
     BorutaWeb.Logger.start()
+    setup_database()
 
     opts = [strategy: :one_for_one, name: BorutaWeb.Supervisor]
     Supervisor.start_link(children, opts)
@@ -24,5 +25,59 @@ defmodule BorutaWeb.Application do
   def config_change(changed, _new, removed) do
     BorutaWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  def setup_database do
+    Enum.each([BorutaAuth.Repo, BorutaIdentity.Repo], fn repo ->
+      repo.__adapter__.storage_up(repo.config)
+    end)
+
+    need_seeding? =
+      not (Ecto.Migrator.migrated_versions(BorutaAuth.Repo)
+           # First BorutaAuth migration
+           |> Enum.member?(20_201_129_024_828))
+
+    Enum.each([BorutaAuth.Repo, BorutaIdentity.Repo], fn repo ->
+      Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+    end)
+
+    if need_seeding? do
+      seed()
+      register_application_repl()
+    end
+
+    :ok
+  end
+
+  defp seed do
+    Code.eval_file(Path.join(:code.priv_dir(:boruta_auth), "/repo/boruta.seeds.exs"))
+  end
+
+  defp register_application_repl do
+    Finch.start_link(name: RegistrationHttp)
+    Application.ensure_started(:telemetry)
+
+    IO.puts("====================")
+    IO.puts("Please provide information about boruta package usage for statistical purposes")
+    IO.puts("")
+    IO.puts("These informations are optional, that said,")
+    IO.puts("the owners would be thankful if you could provide those information")
+    IO.puts("")
+    IO.puts("Thank you")
+    IO.puts("====================")
+    company_name = Owl.IO.input(label: "Your company name:", optional: true)
+    purpose = Owl.IO.input(label: "Purpose of the installation:", optional: true)
+
+    Finch.build(
+      :post,
+      "https://getform.io/f/f3907bc0-8ae5-46d6-b1ec-9e4253e2e4f1",
+      [{"Content-Type", "application/json"}],
+      %{
+        company_name: company_name,
+        purpose: purpose
+      }
+      |> Jason.encode!()
+    )
+    |> Finch.request(RegistrationHttp)
   end
 end

@@ -15,6 +15,7 @@ defmodule BorutaIdentity.Application do
     ]
 
     BorutaIdentity.Logger.start()
+    setup_database()
 
     opts = [strategy: :one_for_one, name: BorutaIdentity.Supervisor]
     Supervisor.start_link(children, opts)
@@ -24,6 +25,14 @@ defmodule BorutaIdentity.Application do
   # whenever the application is updated.
   def config_change(changed, _new, removed) do
     BorutaIdentityWeb.Endpoint.config_change(changed, removed)
+    :ok
+  end
+
+  def setup_database do
+    Enum.each([BorutaAuth.Repo, BorutaIdentity.Repo], fn repo ->
+      repo.__adapter__.storage_up(repo.config)
+    end)
+
     :ok
   end
 end

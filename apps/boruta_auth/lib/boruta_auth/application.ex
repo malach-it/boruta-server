@@ -10,8 +10,16 @@ defmodule BorutaAuth.Application do
     ]
 
     BorutaAuth.LogRotate.rotate()
+    setup_database()
 
     opts = [strategy: :one_for_one, name: BorutaAuth.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+  def setup_database do
+    Enum.each([BorutaAuth.Repo], fn repo ->
+      repo.__adapter__.storage_up(repo.config) |> dbg
+    end)
+
+    :ok
   end
 end

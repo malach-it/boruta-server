@@ -32,6 +32,10 @@ This server has been also certified for the Config and Dynamic OpenID Provider p
 
 A [loom presentation](https://www.loom.com/share/77006360fdac44bc9113fab9cf30aba5) about how to get a server up and running.
 
+Note that the easiest way to try the server is by using docker compose.
+
+> During the installation, an optional prompt will ask for statistical info, it would be great if you could fill them.
+
 ### System wide setup (Debian based)
 
 You can perform a system wide installation performing the following command. It will create a systemd service to run the server. During the installation, you will be asked to fill out the environment variables for the server. The environment takes `.env.example` as a basis.
@@ -76,23 +80,10 @@ Admin credentials are the one seeded and available in environment file.
 
 ### Run an instance from docker-compose
 
-1. build the docker images
+You can build and run the docker images as follow:
 
 ```bash
-docker-compose build
-```
-
-2. run database migrations
-
-```bash
-docker-compose run boruta ./bin/boruta eval "BorutaWeb.Release.setup()"
-docker-compose run boruta ./bin/boruta eval "BorutaGateway.Release.setup()"
-```
-
-Once done, you can run the docker images as follow:
-
-```bash
-docker-compose up
+docker-compose up --build
 ```
 
 The applications will be available on different ports (depending on the docker compose environment configuration):
@@ -128,13 +119,6 @@ mix deps.get
 MIX_ENV=prod mix release boruta
 ```
 
-4. finally setup database
-
-```bash
-env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta eval "BorutaWeb.Release.setup()"
-env $(cat .env.example | xargs) _build/prod/rel/boruta/bin/boruta eval "BorutaGateway.Release.setup()"
-```
-
 Once done, you can run the release as follow:
 
 ```bash
@@ -163,15 +147,7 @@ mix deps.get
 ./scripts/prepare_assets.sh
 ```
 
-3. create, migrate and seed database
-
-```bash
-env $(cat .env.dev | xargs) mix ecto.create
-env $(cat .env.dev | xargs) mix ecto.migrate
-env $(cat .env.dev | xargs) mix run apps/boruta_auth/priv/repo/boruta.seeds.exs
-```
-
-4. because of the forwarding of requests between web and identity modules, you need to add the `/accounts` path prefix in configuration
+3. because of the forwarding of requests between web and identity modules, you need to add the `/accounts` path prefix in configuration
 
 ```diff
 --- a/apps/boruta_identity/config/config.exs
