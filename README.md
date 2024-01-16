@@ -6,8 +6,6 @@ Boruta is a standalone authorization server implementing OAuth 2.0 and Openid Co
 
 This server is on an ongoing beta stage. Developments are moving fast on master then are keen to be less stable. Tagged versions are said to be more stable and sanity tested.
 
-As far as I know, there are no production deployments of the server. I would be happy to contribute to deployments if ones want to go for it. Reach out, we can discuss the needs of your use case.
-
 ## Implemented specifications and certification
 
 As it, boruta server aim to follow the RFCs from IETF:
