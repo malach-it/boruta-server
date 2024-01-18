@@ -65,7 +65,7 @@ wget https://raw.githubusercontent.com/malach-it/boruta-server/master/.env.dev
 Once done you will be able to launch the server.
 
 ```bash
-docker run --env-file .env.dev --network=host malachit/boruta-server:0.3.0
+docker run -it --env-file .env.dev --network=host malachit/boruta-server:0.3.0
 ```
 
 The applications will be available on different ports (depending on the values provided in `.env.dev`):
@@ -81,7 +81,7 @@ Admin credentials are the one seeded and available in environment file.
 You can build and run the docker images as follow:
 
 ```bash
-docker-compose up --build
+docker-compose run boruta
 ```
 
 The applications will be available on different ports (depending on the docker compose environment configuration):
