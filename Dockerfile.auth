@@ -1,7 +1,6 @@
-FROM elixir:1.14-otp-25-slim AS builder
+FROM elixir:1.14-otp-25-alpine AS builder
 
-RUN apt-get update
-RUN apt-get install -y git build-essential
+RUN apk --no-cache --update add build-base git
 
 ENV MIX_ENV=prod
 
@@ -22,7 +21,7 @@ RUN mix phx.digest
 WORKDIR /app
 RUN mix release boruta_auth --force --overwrite
 
-FROM elixir:1.14-otp-25-slim
+FROM elixir:1.14-otp-25-alpine
 
 WORKDIR /app
 
