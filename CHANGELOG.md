@@ -2,13 +2,17 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
-## [unreleased]
+## [0.3.0] 2024-01-18
 
 ### Added
 
+- [identity] user organisation management
 - [identity] TOTP second factor support
 - [identity] user roles management
 - [infra] split auth/admin/gateway/all docker images
+- {infra] split gateway, admin, auth releases
+- {infra] system wide installation script
+- {infra] gather statistical info on installation
 
 ## [0.2.0] - 2023-05-17
 

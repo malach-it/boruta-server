@@ -56,16 +56,16 @@ The applications will be available on different ports (depending on the filled o
 
 A docker image is available at `malachit/boruta-server` on [DockerHub](https://hub.docker.com/r/malachit/boruta-server), you will need a postgres instance installed on your system with credentials provided as environment variables in `.env.*`.
 
-1. Run database migrations
+1. Get environment file
 
 ```bash
-docker run --env-file .env.dev --network=host malachit/boruta-server:0.2.0 ./bin/boruta eval "Boruta.Release.setup()"
+wget https://raw.githubusercontent.com/malach-it/boruta-server/master/.env.dev
 ```
 
 Once done you will be able to launch the server.
 
 ```bash
-docker run --env-file .env.dev --network=host malachit/boruta-server:0.2.0
+docker run --env-file .env.dev --network=host malachit/boruta-server:0.3.0
 ```
 
 The applications will be available on different ports (depending on the values provided in `.env.dev`):

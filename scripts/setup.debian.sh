@@ -10,10 +10,10 @@ apt-get -q install -y libssl-dev wget vim postgresql postgresql-client
 
 echo '## install boruta'
 cd /opt
-wget -q https://github.com/malach-it/boruta-server/releases/download/0.2.0/boruta.tar.gz
+wget -q https://github.com/malach-it/boruta-server/releases/download/0.3.0/boruta.tar.gz
 tar xf boruta.tar.gz
 
-wget -q -O /opt/boruta/.env.production https://raw.githubusercontent.com/malach-it/boruta-server/0.2.0/.env.example
+wget -q -O /opt/boruta/.env.production https://raw.githubusercontent.com/malach-it/boruta-server/0.3.0/.env.example
 vim /opt/boruta/.env.production
 
 cat > /etc/systemd/system/boruta.service <<- EOF
