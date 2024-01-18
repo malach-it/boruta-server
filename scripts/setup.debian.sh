@@ -27,7 +27,8 @@ User=root
 WorkingDirectory=/opt/boruta
 EnvironmentFile=/opt/boruta/.env.production
 ExecStartPre=-su -w POSTGRES_USER,POSTGRES_PASSWORD - postgres -c "psql -c \"CREATE USER \${POSTGRES_USER} WITH CREATEDB PASSWORD '\${POSTGRES_PASSWORD}'\""
-ExecStartPre=/opt/boruta/bin/boruta eval "Boruta.Release.setup()"
+ExecStartPre=/opt/boruta/bin/boruta eval "BorutaWeb.Release.setup()"
+ExecStartPre=/opt/boruta/bin/boruta eval "BorutaGateway.Release.setup()"
 ExecStart=/opt/boruta/bin/boruta start
 Restart=on-failure
 
