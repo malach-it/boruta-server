@@ -354,6 +354,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                    "cryptographic_binding_methods_supported" => ["did:example"],
                    "display" => [
                      %{
+                       "locale" => "en-US",
                        "background_color" => "#53b29f",
                        "logo" => %{
                          "alt_text" => "Boruta PoC logo",
@@ -364,6 +365,24 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                      }
                    ],
                    "format" => "jwt_vc_json",
+                   "id" => "FederatedAttributes",
+                   "types" => ["VerifiableCredential", "BorutaCredential"]
+                 },
+                 %{
+                   "cryptographic_binding_methods_supported" => ["did:example"],
+                   "display" => [
+                     %{
+                       "background_color" => "#53b29f",
+                       "locale" => "en-US",
+                       "logo" => %{
+                         "alt_text" => "Boruta PoC logo",
+                         "url" => "https://io.malach.it/assets/images/logo.png"
+                       },
+                       "name" => "Federation credential PoC",
+                       "text_color" => "#FFFFFF"
+                     }
+                   ],
+                   "format" => "jwt_vc",
                    "id" => "FederatedAttributes",
                    "types" => ["VerifiableCredential", "BorutaCredential"]
                  }
