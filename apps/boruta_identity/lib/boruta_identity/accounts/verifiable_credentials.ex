@@ -5,6 +5,9 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
 
+  # @available_formats ["jwt_vc_json", "jwt_vc"]
+  @available_formats ["jwt_vc"]
+
   # @credentials_supported_draft_11 [
   #   %{
   #     "id" => "FederatedAttributes",
@@ -117,16 +120,18 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   def credentials_supported do
     Repo.all(Backend)
     |> Enum.flat_map(fn %Backend{verifiable_credentials: credentials} ->
-      Enum.map(credentials, fn credential ->
-        %{
-          "id" => credential["credential_identifier"],
-          "types" => String.split(credential["types"], " "),
-          "display" => [Map.put(credential["display"], "locale", "en-US")],
-          "format" => "jwt_vc_json",
-          "cryptographic_binding_methods_supported" => [
-            "did:example"
-          ]
-        }
+      Enum.flat_map(credentials, fn credential ->
+        Enum.map(@available_formats, fn format ->
+          %{
+            "id" => credential["credential_identifier"],
+            "types" => String.split(credential["types"], " "),
+            "display" => [Map.put(credential["display"], "locale", "en-US")],
+            "format" => format,
+            "cryptographic_binding_methods_supported" => [
+              "did:example"
+            ]
+          }
+        end)
       end)
     end)
   end
@@ -134,15 +139,17 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   def credentials_supported_current, do: @credentials_supported_draft_12
 
   def authorization_details(%User{backend: %Backend{} = backend}) do
-    Enum.map(backend.verifiable_credentials, fn credential ->
-      %{
-        "type" => "openid_credential",
-        "format" => "jwt_vc_json",
-        "credential_definition" => %{
-          "type" => String.split(credential["types"], " ")
-        },
-        "credential_identifiers" => [credential["credential_identifier"]]
-      }
+    Enum.flat_map(backend.verifiable_credentials, fn credential ->
+      Enum.map(@available_formats, fn format ->
+        %{
+          "type" => "openid_credential",
+          "format" => format,
+          "credential_definition" => %{
+            "type" => String.split(credential["types"], " ")
+          },
+          "credential_identifiers" => [credential["credential_identifier"]]
+        }
+      end)
     end)
   end
 
@@ -158,14 +165,17 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
         claims: []
       }
     }
+
     Enum.map(backend.verifiable_credentials, fn credential ->
-      {credential["credential_identifier"], %{
-        types: String.split(credential["types"], " "),
-        claims: case credential["claims"] do
-          claim when is_binary(claim) -> String.split(claim, " ")
-          claims when is_list(claims) -> claims
-        end
-      }}
+      {credential["credential_identifier"],
+       %{
+         types: String.split(credential["types"], " "),
+         claims:
+           case credential["claims"] do
+             claim when is_binary(claim) -> String.split(claim, " ")
+             claims when is_list(claims) -> claims
+           end
+       }}
     end)
     |> Enum.into(%{})
   end
