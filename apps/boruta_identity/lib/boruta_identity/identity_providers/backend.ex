@@ -2,6 +2,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @moduledoc false
 
   defmodule AuthCodeStrategy do
+    @moduledoc false
+
     use OAuth2.Strategy
 
     @impl true
