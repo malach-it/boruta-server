@@ -24,55 +24,15 @@ defmodule BorutaIdentity.Accounts.Federated do
         %URI{path: path} ->
           %{base_url | path: path}
       end
+      |> URI.to_string()
 
-    userinfo =
-      case Finch.build(
-             :get,
-             URI.to_string(userinfo_uri),
-             [
-               {"accept", "application/json"},
-               {"authorization", "Bearer #{access_token}"}
-             ]
-           )
-           |> Finch.request(BorutaIdentity.Finch) do
-        {:ok, %Finch.Response{status: 200, body: body}} ->
-          Jason.decode!(body)
-
-        error ->
-          raise inspect(error)
-      end
+    userinfo = get_resource!(userinfo_uri, access_token)
 
     federated_metadata =
       Enum.flat_map(federated_server["metadata_endpoints"] || [], fn endpoint ->
-        case Finch.build(
-               :get,
-               endpoint["endpoint"],
-               [
-                 {"accept", "application/json"},
-                 {"authorization", "Bearer #{access_token}"}
-               ]
-             )
-             |> Finch.request(BorutaIdentity.Finch) do
-          {:ok, %Finch.Response{status: 200, body: body}} ->
-            body = Jason.decode!(body)
+        response = get_resource!(endpoint["endpoint"], access_token)
 
-            endpoint["claims"]
-            |> String.split(" ")
-            |> Enum.map(fn claim ->
-              {String.replace(claim, ".", "-"),
-               get_in(
-                 body,
-                 String.split(claim, ".")
-                 |> Enum.map(fn
-                   ":all" -> Access.all()
-                   claim -> claim
-                 end)
-               )}
-            end)
-
-          error ->
-            raise inspect(error)
-        end
+        claims_from_response(endpoint, response)
       end)
       |> Enum.into(%{})
 
@@ -102,5 +62,38 @@ defmodule BorutaIdentity.Accounts.Federated do
       conflict_target: [:backend_id, :uid]
     )
     |> Repo.preload([:authorized_scopes, :consents, :backend, :organizations])
+  end
+
+  defp get_resource!(url, access_token) do
+    case Finch.build(:get, url, [
+           {"accept", "application/json"},
+           {"authorization", "Bearer #{access_token}"}
+         ])
+         |> Finch.request(BorutaIdentity.Finch) do
+      {:ok, %Finch.Response{status: 200, body: body}} ->
+        Jason.decode!(body)
+
+      {:ok, %Finch.Response{status: status, body: body}} ->
+        raise "GET #{url} failed with status #{status} - #{inspect(body)}"
+
+      error ->
+        raise inspect(error)
+    end
+  end
+
+  defp claims_from_response(endpoint, body) do
+    endpoint["claims"]
+    |> String.split(" ")
+    |> Enum.map(fn claim ->
+      {String.replace(claim, ".", "-"),
+       get_in(
+         body,
+         String.split(claim, ".")
+         |> Enum.map(fn
+           ":all" -> Access.all()
+           claim -> claim
+         end)
+       )}
+    end)
   end
 end
