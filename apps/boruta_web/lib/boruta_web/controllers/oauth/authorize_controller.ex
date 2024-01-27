@@ -384,7 +384,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn
     |> redirect(external: SiopV2Response.redirect_to_deeplink(response, fn code ->
-      code
+      uri = URI.parse(Boruta.Config.issuer())
+
+      %{uri | path: Routes.token_path(conn, :direct_post, code)}
+      |> URI.to_string()
     end))
     |> dbg
   end

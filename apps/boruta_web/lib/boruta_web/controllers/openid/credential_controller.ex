@@ -5,10 +5,17 @@ defmodule BorutaWeb.Openid.CredentialController do
   alias Boruta.Oauth.Error
   alias Boruta.Openid
   alias BorutaWeb.OauthView
+  alias BorutaIdentity.Accounts.VerifiableCredentials
 
   def credential(conn, params) do
-    dbg params
-    Openid.credential(conn, params, __MODULE__)
+    dbg(params)
+
+    Openid.credential(
+      conn,
+      params,
+      VerifiableCredentials.public_credential_configuration(),
+      __MODULE__
+    )
   end
 
   @impl Boruta.Openid.CredentialApplication
