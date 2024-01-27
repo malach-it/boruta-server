@@ -14,9 +14,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizeResponse
+  alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Openid.CredentialOfferResponse
+  alias Boruta.Openid.SiopV2Response
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaIdentity.IdentityProviders
@@ -285,6 +287,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
+  def preauthorize_success(conn, %AuthorizationSuccess{sub: "did:" <> _key = sub}) do
+    Oauth.authorize(conn, %ResourceOwner{sub: sub}, __MODULE__)
+  end
+
   def preauthorize_success(conn, _authorization) do
     session_chosen? = get_session(conn, :session_chosen) || false
     preauthorizations = get_session(conn, :preauthorizations) || %{}
@@ -368,6 +374,19 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     conn
     |> delete_session(:session_chosen)
     |> redirect(external: AuthorizeResponse.redirect_to_url(response))
+  end
+
+  def authorize_success(
+        %Plug.Conn{} = conn,
+        %SiopV2Response{} = response
+      ) do
+    # TODO log business event
+
+    conn
+    |> redirect(external: SiopV2Response.redirect_to_deeplink(response, fn code ->
+      code
+    end))
+    |> dbg
   end
 
   def authorize_success(

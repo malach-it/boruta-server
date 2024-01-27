@@ -3,6 +3,7 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   use BorutaWeb, :controller
 
+  alias Boruta.CodesAdapter
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.TokenResponse
@@ -52,5 +53,24 @@ defmodule BorutaWeb.Oauth.TokenController do
     |> put_status(status)
     |> put_view(OauthView)
     |> render("error.json", error: error, error_description: error_description)
+  end
+
+  def direct_post(conn, %{"code_id" => code_id} = params) do
+    # TODO check id token signature to attest client
+    id_token = params["id_token"]
+
+    case CodesAdapter.get_by(id: code_id) do
+      nil ->
+        send_resp(conn, 404, "")
+      code ->
+        query = %{
+          code: code.value,
+          state: code.state
+        }
+        response = URI.parse(code.redirect_uri)
+        response = %{response | host: response.host || "", query: query}
+                   |> URI.to_string()
+        redirect(conn, external: response)
+    end
   end
 end
