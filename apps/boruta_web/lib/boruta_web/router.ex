@@ -71,6 +71,12 @@ defmodule BorutaWeb.Router do
     get("/authorize", AuthorizeController, :authorize)
   end
 
+  scope "/openid", BorutaWeb.Oauth do
+    pipe_through([:api])
+
+    post("/direct_post/:code_id", TokenController, :direct_post)
+  end
+
   @impl Plug.ErrorHandler
   def handle_errors(conn, error) do
     BorutaIdentityWeb.Router.handle_errors(conn, error)

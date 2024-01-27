@@ -155,6 +155,33 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
 
   def authorization_details(_user), do: []
 
+  def public_credential_configuration do
+    backend = Backend.default!()
+
+    %{
+      "FederatedAttributes" => %{
+        types: [
+          "VerifiableCredential",
+          "BorutaCredential"
+        ],
+        claims: []
+      }
+    }
+
+    Enum.map(backend.verifiable_credentials, fn credential ->
+      {credential["credential_identifier"],
+       %{
+         types: String.split(credential["types"], " "),
+         claims:
+           case credential["claims"] do
+             claim when is_binary(claim) -> String.split(claim, " ")
+             claims when is_list(claims) -> claims
+           end
+       }}
+    end)
+    |> Enum.into(%{})
+  end
+
   def credential_configuration(%User{backend: %Backend{} = backend}) do
     %{
       "FederatedAttributes" => %{

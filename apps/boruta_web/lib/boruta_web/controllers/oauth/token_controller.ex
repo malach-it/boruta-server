@@ -66,7 +66,7 @@ defmodule BorutaWeb.Oauth.TokenController do
         query = %{
           code: code.value,
           state: code.state
-        }
+        } |> URI.encode_query()
         response = URI.parse(code.redirect_uri)
         response = %{response | host: response.host || "", query: query}
                    |> URI.to_string()
