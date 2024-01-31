@@ -56,6 +56,7 @@ defmodule BorutaWeb.CredentialControllerTest do
             },
             "credential_identifier" => "FederatedAttributes",
             "types" => "VerifiableCredential BorutaCredential",
+            "format" => "jwt_vc",
             "claims" => "family_name"
           }
         ]

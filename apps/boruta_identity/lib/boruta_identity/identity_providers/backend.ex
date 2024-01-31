@@ -172,6 +172,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   "properties" => %{
                                     "credential_identifier" => %{"type" => "string"},
                                     "types" => %{"type" => "string"},
+                                    "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json"},
                                     "claims" => %{
                                       "type" => "array",
                                       "items" => %{
@@ -204,6 +205,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   },
                                   "required" => [
                                     "credential_identifier",
+                                    "format",
                                     "types",
                                     "claims",
                                     "display"

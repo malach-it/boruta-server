@@ -285,6 +285,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
               "text_color" => "#FFFFFF"
             },
             "credential_identifier" => "FederatedAttributes",
+            "format" => "jwt_vc",
             "types" => "VerifiableCredential BorutaCredential"
           }
         ]

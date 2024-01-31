@@ -220,6 +220,13 @@
             <input type="text" v-model="credential.credential_identifier" placeholder="BorutaCredential">
           </div>
           <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Format</label>
+            <select v-model="credential.format">
+              <option value="jwt_vc_json">jwt_vc_json</option>
+              <option value="jwt_vc">jwt_vc</option>
+            </select>
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
             <label>Types <i>(separated with a whitespace)</i></label>
             <input type="text" v-model="credential.types" placeholder="VerifiableCredential BorutaCredential">
           </div>
