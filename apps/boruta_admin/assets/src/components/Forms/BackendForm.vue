@@ -224,6 +224,7 @@
             <select v-model="credential.format">
               <option value="jwt_vc_json">jwt_vc_json</option>
               <option value="jwt_vc">jwt_vc</option>
+              <option value="vc+sd-jwt">vc+sd-jwt</option>
             </select>
           </div>
           <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
