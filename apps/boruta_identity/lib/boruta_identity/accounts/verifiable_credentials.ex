@@ -125,6 +125,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
             "types" => String.split(credential["types"], " "),
             "display" => [Map.put(credential["display"], "locale", "en-US")],
             "format" => credential["format"],
+            "claims" => Enum.map(credential["claims"], fn %{"name" => name} -> name end),
             "cryptographic_binding_methods_supported" => [
               "did:example"
             ]
