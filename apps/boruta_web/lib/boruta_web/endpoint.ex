@@ -7,6 +7,7 @@ defmodule BorutaWeb.Endpoint do
     signing_salt: "OCKBuS86"
   ]
 
+  plug RemoteIp
   plug Plug.Static,
     at: "/",
     from: :boruta_web,
