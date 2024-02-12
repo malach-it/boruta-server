@@ -7,7 +7,8 @@ config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
-  ]
+  ],
+  issuer: "https://oauth.boruta.patatoid.fr"
 
 config :boruta_auth, BorutaAuth.Scheduler,
   jobs: [
