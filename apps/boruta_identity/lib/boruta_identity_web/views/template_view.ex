@@ -1,6 +1,10 @@
 defmodule BorutaIdentityWeb.TemplateView do
   use BorutaIdentityWeb, :view
 
+  import Boruta.Config, only: [issuer: 0]
+
+  alias Boruta.ClientsAdapter
+  alias Boruta.Oauth.Client
   alias BorutaIdentity.IdentityProviders.Template
   alias BorutaIdentityWeb.ErrorHelpers
 
@@ -72,8 +76,17 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :totp_secret))
   end
 
+  def context(context, %{client: client} = assigns) do
+    client = Map.from_struct(client)
+
+    %{client: client}
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :client))
+  end
+
   def context(context, %{credential_offer: credential_offer} = assigns) do
-    {:ok, base64_credential_offer_qr_code} = text_from_credential_offer(credential_offer)
+    {:ok, base64_credential_offer_qr_code} =
+      text_from_credential_offer(credential_offer)
       |> QRCode.create()
       |> QRCode.render(:svg)
       |> QRCode.to_base64()
@@ -101,14 +114,6 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :current_user))
   end
 
-  def context(context, %{client: client} = assigns) do
-    client = Map.from_struct(client)
-
-    %{client: client}
-    |> Map.merge(context)
-    |> context(Map.delete(assigns, :client))
-  end
-
   def context(context, %{scopes: scopes} = assigns) do
     scopes = Enum.map(scopes, &Map.from_struct/1)
 
@@ -117,7 +122,69 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :scopes))
   end
 
-  def context(context, %{}), do: context
+  def context(context, %{}) do
+    client = ClientsAdapter.public!()
+
+    {:ok, base64_siopv2_qr_code} =
+      siopv2_request_from_client(client)
+      |> QRCode.create()
+      |> QRCode.render(:svg)
+      |> QRCode.to_base64()
+
+    %{base64_siopv2_qr_code: base64_siopv2_qr_code}
+    |> Map.merge(context)
+  end
+
+  defp siopv2_request_from_client(client) do
+    siopv2_request = %{
+      client_id: issuer(),
+      redirect_uri: issuer(),
+      response_type: "vp_token",
+      scope: "openid",
+      nonce: "nonce",
+      authorization_details: %{
+        type: "openid_credential",
+        format: "jwt_vc_json"
+      },
+      client_metadata: %{
+        "authorization_endpoint" => issuer() <> "/oauth/authorize",
+        "token_endpoint" => issuer() <> "/oauth/token",
+        "jwks_uri" => issuer() <> "/openid/jwks",
+        "credential_uri" => issuer() <> "/openid/credential"
+      }
+    }
+
+    query =
+      %{
+        request: Client.Crypto.id_token_sign(siopv2_request, client),
+        response_mode: "post",
+        client_id: "did:key:test",
+        presentation_definition: %{
+          input_descriptors: [
+            %{
+              id: "linkedin email",
+              format: %{
+                jwt_vc_json: %{
+                  proof_type: ["Ed25519Signature2018"]
+                }
+              },
+              constraints: %{
+                fields: [
+                  %{path: ["$.linkedin_email"]}
+                ]
+              }
+            }
+          ]
+        } |> Jason.encode!()
+      }
+      |> URI.encode_query()
+
+    %URI{
+      scheme: "siopv2",
+      host: "",
+      query: query
+    } |> URI.to_string()
+  end
 
   defp text_from_credential_offer(credential_offer) do
     "openid-credential-offer://?credential_offer=#{credential_offer |> Map.from_struct() |> Jason.encode!() |> URI.encode_www_form()}"
