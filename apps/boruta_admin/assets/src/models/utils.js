@@ -26,7 +26,7 @@ export function addClientErrorInterceptor(instance) {
 
           window.addEventListener('logged_in', retry)
           setTimeout(() => {
-            oauth.login()
+            oauth.logout()
             reject()
           }, 2000)
         })
