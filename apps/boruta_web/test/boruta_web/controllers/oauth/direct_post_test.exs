@@ -52,6 +52,7 @@ defmodule BorutaWeb.Integration.DirectPostTest do
 
       assert redirected_to(conn) =~ ~r/#{code.redirect_uri}/
       assert redirected_to(conn) =~ ~r/code=#{code.value}/
+      assert redirected_to(conn) =~ ~r/state=#{code.state}/
     end
   end
 end
