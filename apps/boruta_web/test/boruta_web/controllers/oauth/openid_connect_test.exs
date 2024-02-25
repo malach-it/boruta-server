@@ -221,10 +221,11 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   end
 
   describe "jwks endpoints" do
-    test "returns an empty list", %{conn: conn} do
+    test "returns public client key", %{conn: conn} do
       conn = get(conn, Routes.jwks_path(conn, :jwks_index))
 
-      assert json_response(conn, 200) == %{"keys" => []}
+      assert %{"keys" => keys} = json_response(conn, 200)
+      assert Enum.count(keys) == 1
     end
 
     test "returns all clients keys", %{conn: conn} do
@@ -233,8 +234,16 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn = get(conn, Routes.jwks_path(conn, :jwks_index))
 
       assert %{
-               "keys" => [%{"kid" => "Ac9ufCpgwReXGJ6LI", "kty" => "RSA"}]
+               "keys" => keys
              } = json_response(conn, 200)
+
+      assert Enum.member?(keys, %{
+               "e" => "AQAB",
+               "kid" => "Ac9ufCpgwReXGJ6LI",
+               "kty" => "RSA",
+               "n" =>
+                 "1PaP_gbXix5itjRCaegvI_B3aFOeoxlwPPLvfLHGA4QfDmVOf8cU8OuZFAYzLArW3PnnwWWy39nVJOx42QRVGCGdUCmV7shDHRsr86-2DlL7pwUa9QyHsTj84fAJn2Fv9h9mqrIvUzAtEYRlGFvjVTGCwzEullpsB0GJafopUTFby8WdSq3dGLJBB1r-Q8QtZnAxxvolhwOmYkBkkidefmm48X7hFXL2cSJm2G7wQyinOey_U8xDZ68mgTakiqS2RtjnFD0dnpBl5CYTe4s6oZKEyFiFNiW4KkR1GVjsKwY9oC2tpyQ0AEUMvk9T9VdIltSIiAvOKlwFzL49cgwZDw"
+             })
     end
   end
 
@@ -284,6 +293,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
               "name" => "Federation credential PoC",
               "text_color" => "#FFFFFF"
             },
+            "claims" => [],
             "credential_identifier" => "FederatedAttributes",
             "format" => "jwt_vc",
             "types" => "VerifiableCredential BorutaCredential"
@@ -294,83 +304,93 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn = get(conn, Routes.openid_path(conn, :well_known))
 
       assert json_response(conn, 200) == %{
-               "authorization_endpoint" => "boruta/oauth/authorize",
-               "id_token_signing_alg_values_supported" => [
-                 "RS256",
-                 "RS384",
-                 "RS512",
-                 "HS256",
-                 "HS384",
-                 "HS512"
-               ],
-               "issuer" => "boruta",
-               "jwks_uri" => "boruta/openid/jwks",
-               "registration_endpoint" => "boruta/openid/register",
-               "response_types_supported" => [
-                 "code",
-                 "token",
-                 "id_token",
-                 "code token",
-                 "code id_token",
-                 "token id_token",
-                 "code id_token token"
-               ],
-               "response_modes_supported" => ["query", "fragment"],
-               "subject_types_supported" => ["public"],
-               "token_endpoint_auth_methods_supported" => [
-                 "client_secret_basic",
-                 "client_secret_post",
-                 "client_secret_jwt",
-                 "private_key_jwt"
-               ],
-               "token_endpoint" => "boruta/oauth/token",
-               "userinfo_endpoint" => "boruta/oauth/userinfo",
-               "userinfo_signing_alg_values_supported" => [
-                 "RS256",
-                 "RS384",
-                 "RS512",
-                 "HS256",
-                 "HS384",
-                 "HS512"
-               ],
-               "request_object_signing_alg_values_supported" => [
-                 "RS256",
-                 "RS384",
-                 "RS512",
-                 "HS256",
-                 "HS384",
-                 "HS512"
-               ],
-               "grant_types_supported" => [
-                 "client_credentials",
-                 "password",
-                 "implicit",
-                 "authorization_code",
-                 "refresh_token"
-               ],
-               "credential_endpoint" => "boruta/openid/credential",
-               "credential_issuer" => "boruta",
-               "credentials_supported" => [
-                 %{
-                   "cryptographic_binding_methods_supported" => ["did:example"],
-                   "display" => [
-                     %{
-                       "background_color" => "#53b29f",
-                       "locale" => "en-US",
-                       "logo" => %{
-                         "alt_text" => "Boruta PoC logo",
-                         "url" => "https://io.malach.it/assets/images/logo.png"
-                       },
-                       "name" => "Federation credential PoC",
-                       "text_color" => "#FFFFFF"
-                     }
-                   ],
-                   "format" => "jwt_vc",
-                   "id" => "FederatedAttributes",
-                   "types" => ["VerifiableCredential", "BorutaCredential"]
-                 }
-               ]
-             }
+              "authorization_endpoint" => "boruta/oauth/authorize",
+              "credential_endpoint" => "boruta/openid/credential",
+              "credential_issuer" => "boruta",
+              "credentials_supported" => [
+                %{
+                  "cryptographic_binding_methods_supported" => ["did:example"],
+                  "display" => [
+                    %{
+                      "background_color" => "#53b29f",
+                      "locale" => "en-US",
+                      "logo" => %{
+                        "alt_text" => "Boruta PoC logo",
+                        "url" => "https://io.malach.it/assets/images/logo.png"
+                      },
+                      "name" => "Federation credential PoC",
+                      "text_color" => "#FFFFFF"
+                    }
+                  ],
+                  "format" => "jwt_vc",
+                  "id" => "FederatedAttributes",
+                  "types" => ["VerifiableCredential", "BorutaCredential"],
+                  "claims" => []
+                }
+              ],
+              "grant_types_supported" => [
+                "client_credentials",
+                "password",
+                "implicit",
+                "authorization_code",
+                "refresh_token"
+              ],
+              "id_token_signing_alg_values_supported" => [
+                "ES256",
+                "ES384",
+                "ES512",
+                "RS256",
+                "RS384",
+                "RS512",
+                "HS256",
+                "HS384",
+                "HS512"
+              ],
+              "issuer" => "boruta",
+              "jwks_uri" => "boruta/openid/jwks",
+              "registration_endpoint" => "boruta/openid/register",
+              "request_object_signing_alg_values_supported" => [
+                "ES256",
+                "ES384",
+                "ES512",
+                "RS256",
+                "RS384",
+                "RS512",
+                "HS256",
+                "HS384",
+                "HS512"
+              ],
+              "response_modes_supported" => ["query", "fragment"],
+              "response_types_supported" => [
+                "code",
+                "token",
+                "id_token",
+                "code token",
+                "code id_token",
+                "token id_token",
+                "code id_token token"
+              ],
+              "subject_types_supported" => ["public"],
+              "token_endpoint" => "boruta/oauth/token",
+              "token_endpoint_auth_methods_supported" => [
+                "client_secret_basic",
+                "client_secret_post",
+                "client_secret_jwt",
+                "private_key_jwt"
+              ],
+              "userinfo_endpoint" => "boruta/oauth/userinfo",
+              "userinfo_signing_alg_values_supported" => [
+                "ES256",
+                "ES384",
+                "ES512",
+                "RS256",
+                "RS384",
+                "RS512",
+                "HS256",
+                "HS384",
+                "HS512"
+              ]
+            }
     end
   end
 

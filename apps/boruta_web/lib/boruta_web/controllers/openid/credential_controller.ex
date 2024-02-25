@@ -8,8 +8,6 @@ defmodule BorutaWeb.Openid.CredentialController do
   alias BorutaIdentity.Accounts.VerifiableCredentials
 
   def credential(conn, params) do
-    dbg(params)
-
     Openid.credential(
       conn,
       params,
