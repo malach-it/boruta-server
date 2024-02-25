@@ -109,7 +109,6 @@ defmodule BorutaWeb.OauthView do
     }
     |> Map.put(:c_nonce, "boruta")
     |> Map.put(:c_nonce_expires_in, 3600)
-    |> dbg
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
@@ -148,7 +147,7 @@ defmodule BorutaWeb.OauthView do
         end
 
       Jason.Encode.map(
-        response |> dbg,
+        response,
         options
       )
     end

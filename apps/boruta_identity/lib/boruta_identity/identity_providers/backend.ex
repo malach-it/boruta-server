@@ -171,6 +171,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   "type" => "object",
                                   "properties" => %{
                                     "credential_identifier" => %{"type" => "string"},
+                                    "time_to_live" => %{"type" => "number"},
                                     "types" => %{"type" => "string"},
                                     "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
                                     "claims" => %{

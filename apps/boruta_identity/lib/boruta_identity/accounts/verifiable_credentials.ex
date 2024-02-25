@@ -179,21 +179,12 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   end
 
   def credential_configuration(%User{backend: %Backend{} = backend}) do
-    %{
-      "FederatedAttributes" => %{
-        types: [
-          "VerifiableCredential",
-          "BorutaCredential"
-        ],
-        claims: []
-      }
-    }
-
     Enum.map(backend.verifiable_credentials, fn credential ->
       {credential["credential_identifier"],
        %{
          types: String.split(credential["types"], " "),
          format: credential["format"],
+         time_to_live: credential["time_to_live"] || 31536000,
          claims:
            case credential["claims"] do
              claim when is_binary(claim) -> String.split(claim, " ")

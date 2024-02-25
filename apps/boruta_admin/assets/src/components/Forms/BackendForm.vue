@@ -231,6 +231,10 @@
             <label>Types <i>(separated with a whitespace)</i></label>
             <input type="text" v-model="credential.types" placeholder="VerifiableCredential BorutaCredential">
           </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Time to live <i>(in seconds)</i></label>
+            <input type="number" v-model="credential.time_to_live" placeholder="31536000">
+          </div>
           <h4>Claims</h4>
           <div class="ui claim segment" v-for="claim in credential.claims">
             <i class="ui large close icon" @click="deleteVerifiableCredentialClaim(credential, claim)"></i>
