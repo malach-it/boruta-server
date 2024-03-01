@@ -4,8 +4,8 @@ defmodule BorutaWeb.Openid.CredentialController do
 
   alias Boruta.Oauth.Error
   alias Boruta.Openid
-  alias BorutaWeb.OauthView
   alias BorutaIdentity.Accounts.VerifiableCredentials
+  alias BorutaWeb.OauthView
 
   def credential(conn, params) do
     Openid.credential(

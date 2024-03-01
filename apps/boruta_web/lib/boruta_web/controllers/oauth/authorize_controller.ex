@@ -13,8 +13,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     only: [request_param: 1, get_user_session: 1]
 
   alias Boruta.Oauth
-  alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.AuthorizationSuccess
+  alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Openid.CredentialOfferResponse
