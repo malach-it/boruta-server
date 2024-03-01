@@ -1,4 +1,6 @@
 defmodule BorutaAdminWeb.Logger do
+  @moduledoc false
+
   require Logger
   alias Plug.Conn
   @behaviour Plug

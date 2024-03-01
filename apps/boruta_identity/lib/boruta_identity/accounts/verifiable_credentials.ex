@@ -184,7 +184,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
        %{
          types: String.split(credential["types"], " "),
          format: credential["format"],
-         time_to_live: credential["time_to_live"] || 31536000,
+         time_to_live: credential["time_to_live"] || 31_536_000,
          claims:
            case credential["claims"] do
              claim when is_binary(claim) -> String.split(claim, " ")

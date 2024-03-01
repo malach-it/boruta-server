@@ -5,9 +5,9 @@ defmodule BorutaWeb.Oauth.TokenController do
   use BorutaWeb, :controller
 
   alias Boruta.Oauth
-  alias Boruta.Openid
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.TokenResponse
+  alias Boruta.Openid
   alias BorutaWeb.OauthView
 
   def token(%Plug.Conn{} = conn, _params) do
