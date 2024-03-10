@@ -22,6 +22,16 @@
           </div>
         </div>
       </div>
+      <div class="ui segment" v-for="(attributes, federatedServerName) in user.federated_metadata">
+        <h2>Federated attributes - {{ federatedServerName }}</h2>
+        <div class="ui attribute list">
+          <div class="item" v-for="(value, name) in attributes">
+            <span class="header">{{ name }}</span>
+            <span class="description">{{ value }}</span>
+          </div>
+        </div>
+      </div>
+
       <UserForm :user="user" @submit="updateUser()" @back="back()" action="Update" />
     </div>
   </div>
