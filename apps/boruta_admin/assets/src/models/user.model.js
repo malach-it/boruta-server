@@ -13,7 +13,8 @@ const defaults = {
   organizations: [],
   backend_id: '',
   backend: new Backend(),
-  metadata: {}
+  metadata: {},
+  federated_metadata: {}
 }
 
 const assign = {
@@ -22,6 +23,7 @@ const assign = {
   backend: function ({ backend }) { this.backend = backend },
   email: function ({ email }) { this.email = email },
   totp_registered_at: function ({ totp_registered_at }) { this.totp_registered_at = totp_registered_at },
+  federated_metadata: function ({ federated_metadata }) { this.federated_metadata = federated_metadata },
   metadata: function ({ metadata }) { this.metadata = metadata },
   group: function ({ group }) { this.group = group },
   authorized_scopes: function ({ authorized_scopes }) {
