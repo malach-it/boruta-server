@@ -241,11 +241,15 @@
             <h5>Claim definition</h5>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
               <label>Name</label>
-              <input type="text" v-model="claim.name" placeholder="family_name given_name">
+              <input type="text" v-model="claim.name" placeholder="family_name">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>Label</label>
+              <input type="text" v-model="claim.label" placeholder="Family name">
             </div>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
               <label>pointer</label>
-              <input type="text" v-model="claim.pointer" placeholder="family_name given_name">
+              <input type="text" v-model="claim.pointer" placeholder="family_name">
             </div>
           </div>
           <div class="field">
