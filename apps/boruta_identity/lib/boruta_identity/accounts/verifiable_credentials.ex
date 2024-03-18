@@ -1,97 +1,10 @@
 defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   @moduledoc false
 
+  alias Boruta.Oauth.Client
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
-
-  # @available_formats ["jwt_vc_json", "jwt_vc"]
-
-  # @credentials_supported_draft_11 [
-  #   %{
-  #     "id" => "FederatedAttributes",
-  #     "types" => [
-  #       "VerifiableCredential",
-  #       "BorutaCredential"
-  #     ],
-  #     "format" => "jwt_vc_json",
-  #     "cryptographic_binding_methods_supported" => [
-  #       "did:example"
-  #     ],
-  #     "display" => [
-  #       %{
-  #         "name" => "Federation credential PoC",
-  #         "locale" => "en-US",
-  #         "logo" => %{
-  #           "url" => "https://io.malach.it/assets/images/logo.png",
-  #           "alt_text" => "Boruta PoC logo"
-  #         },
-  #         "background_color" => "#53b29f",
-  #         "text_color" => "#FFFFFF"
-  #       }
-  #     ]
-  #   }
-  # ]
-
-  @credentials_supported_draft_12 %{
-    "UniversityDegreeCredential" => %{
-      "format" => "jwt_vc_json",
-      "scope" => "UniversityDegree",
-      "cryptographic_binding_methods_supported" => [
-        "did:example"
-      ],
-      "cryptographic_suites_supported" => [
-        "ES256K"
-      ],
-      "credential_definition" => %{
-        "type" => [
-          "VerifiableCredential",
-          "UniversityDegreeCredential"
-        ],
-        "credentialSubject" => %{
-          "given_name" => %{
-            "display" => [
-              %{
-                "name" => "Given Name",
-                "locale" => "en-US"
-              }
-            ]
-          },
-          "family_name" => %{
-            "display" => [
-              %{
-                "name" => "Surname",
-                "locale" => "en-US"
-              }
-            ]
-          },
-          "degree" => %{},
-          "gpa" => %{
-            "display" => [
-              %{
-                "name" => "GPA"
-              }
-            ]
-          }
-        }
-      },
-      "proof_types_supported" => [
-        "jwt"
-      ],
-      "display" => [
-        %{
-          "name" => "University Credential",
-          "locale" => "en-US",
-          "logo" => %{
-            "url" => "https://exampleuniversity.com/public/logo.png",
-            "alt_text" => "a square logo of a university"
-          },
-          "background_color" => "#12107c",
-          "text_color" => "#FFFFFF"
-        }
-      ]
-    }
-  }
 
   @authorization_details [
     %{
@@ -116,35 +29,40 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
     |> Enum.uniq()
   end
 
-  def credentials_supported do
+  def credential_configurations_supported do
     Repo.all(Backend)
     |> Enum.flat_map(fn %Backend{verifiable_credentials: credentials} ->
       Enum.map(credentials, fn credential ->
+        {credential["credential_identifier"],
           %{
-            "id" => credential["credential_identifier"],
-            "types" => String.split(credential["types"], " "),
-            "display" => [Map.put(credential["display"], "locale", "en-US")],
             "format" => credential["format"],
-            "claims" => Enum.map(credential["claims"], fn %{"name" => name} -> name end),
+            # TODO add scope to backends vc configuration
+            "scope" => credential["scope"],
             "cryptographic_binding_methods_supported" => [
-              "did:example"
-            ]
-          }
+                "did:jwk",
+                "did:key"
+            ],
+            "credential_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
+            "credential_definition" => %{
+              "type" => String.split(credential["types"], " "),
+              "credentialSubject" => Enum.map(credential["claims"], fn claim ->
+                {claim["name"], [%{"name" => claim["label"]}]}
+              end) |> Enum.into(%{})
+            },
+            "display" => [Map.put(credential["display"], "locale", "en-US")],
+          }}
       end)
     end)
+    |> Enum.into(%{})
   end
-
-  def credentials_supported_current, do: @credentials_supported_draft_12
 
   def authorization_details(%User{backend: %Backend{} = backend}) do
     Enum.map(backend.verifiable_credentials, fn credential ->
         %{
           "type" => "openid_credential",
           "format" => credential["format"],
-          "credential_definition" => %{
-            "type" => String.split(credential["types"], " ")
-          },
-          "credential_identifiers" => [credential["credential_identifier"]]
+          "credential_configuration_id" => credential["credential_identifier"],
+          "credential_identifiers" => String.split(credential["types"], " ")
         }
     end)
   end
@@ -153,16 +71,6 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
 
   def public_credential_configuration do
     backend = Backend.default!()
-
-    %{
-      "FederatedAttributes" => %{
-        types: [
-          "VerifiableCredential",
-          "BorutaCredential"
-        ],
-        claims: []
-      }
-    }
 
     Enum.map(backend.verifiable_credentials, fn credential ->
       {credential["credential_identifier"],

@@ -180,9 +180,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                         "type" => "object",
                                         "properties" => %{
                                           "name" => %{"type" => "string"},
+                                          "label" => %{"type" => "string"},
                                           "pointer" => %{"type" => "string"}
                                         },
-                                        "required" => ["name", "pointer"]
+                                        "required" => ["name", "label", "pointer"]
                                       }
                                     },
                                     "display" => %{
