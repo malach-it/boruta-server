@@ -137,16 +137,16 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   defp siopv2_request_from_client(client) do
     siopv2_request = %{
-      client_id: issuer(),
-      redirect_uri: issuer(),
-      response_type: "vp_token",
-      scope: "openid",
-      nonce: "nonce",
-      authorization_details: %{
-        type: "openid_credential",
-        format: "jwt_vc_json"
+      "client_id" => issuer(),
+      "redirect_uri" => issuer(),
+      "response_type" => "vp_token",
+      "scope" => "openid",
+      "nonce" => "nonce",
+      "authorization_details" => %{
+        "type" => "openid_credential",
+        "format" => "jwt_vc_json"
       },
-      client_metadata: %{
+      "client_metadata" => %{
         "authorization_endpoint" => issuer() <> "/oauth/authorize",
         "token_endpoint" => issuer() <> "/oauth/token",
         "jwks_uri" => issuer() <> "/openid/jwks",

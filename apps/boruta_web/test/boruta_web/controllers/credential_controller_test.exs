@@ -37,7 +37,8 @@ defmodule BorutaWeb.CredentialControllerTest do
     }
 
     credential_params = %{
-      "types" => ["VerifiableCredential", "BorutaCredential"],
+      "credential_identifier" => "VerifiableCredential",
+      "format" => "jwt_vc",
       "proof" => proof
     }
 
@@ -67,7 +68,7 @@ defmodule BorutaWeb.CredentialControllerTest do
     %Token{value: access_token} =
       insert(:token,
         sub: sub,
-        authorization_details: [%{"credential_identifiers" => ["identifier"]}]
+        authorization_details: [%{"credential_identifiers" => ["VerifiableCredential"]}]
       )
 
     conn =
