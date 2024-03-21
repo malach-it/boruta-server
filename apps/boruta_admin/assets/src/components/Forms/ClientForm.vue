@@ -124,6 +124,12 @@
         <h3>Authorization</h3>
         <div class="field">
           <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="client.enforce_dpop">
+            <label>Enforce Demonstration Proof-of-Possession (DPoP)</label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="ui toggle checkbox">
             <input type="checkbox" v-model="client.authorize_scope">
             <label>Authorize scopes</label>
           </div>

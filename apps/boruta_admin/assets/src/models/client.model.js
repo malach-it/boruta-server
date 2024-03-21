@@ -43,6 +43,7 @@ const assign = {
     this.identity_provider = { model: new IdentityProvider(identity_provider) }
   },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
+  enforce_dpop: function ({ enforce_dpop }) { this.enforce_dpop = enforce_dpop },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
       return { model: new Scope(scope) }
@@ -160,6 +161,7 @@ class Client {
       access_token_ttl,
       authorization_code_ttl,
       authorize_scope,
+      enforce_dpop,
       authorized_scopes,
       confidential,
       grantTypes,
@@ -185,6 +187,7 @@ class Client {
       access_token_ttl,
       authorization_code_ttl,
       authorize_scope,
+      enforce_dpop,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
       confidential,
       id,
