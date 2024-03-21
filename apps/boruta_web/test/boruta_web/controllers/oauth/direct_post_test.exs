@@ -1,8 +1,6 @@
 defmodule BorutaWeb.Integration.DirectPostTest do
   use BorutaWeb.ConnCase, async: false
 
-  alias Boruta.Ecto.OauthMapper
-  alias Boruta.Oauth.Client
   alias Boruta.VerifiableCredentials
 
   setup %{conn: conn} do
