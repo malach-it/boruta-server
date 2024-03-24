@@ -70,7 +70,7 @@ defmodule BorutaWeb.Application do
 
     Finch.build(
       :post,
-      "https://getform.io/f/f3907bc0-8ae5-46d6-b1ec-9e4253e2e4f1",
+      "https://gateway.boruta.patatoid.fr/store",
       [{"Content-Type", "application/json"}],
       %{
         company_name: company_name,
