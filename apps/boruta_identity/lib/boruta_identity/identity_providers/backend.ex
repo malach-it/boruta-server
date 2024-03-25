@@ -170,6 +170,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @verifiable_credential_schema ExJsonSchema.Schema.resolve(%{
                                   "type" => "object",
                                   "properties" => %{
+                                    "version" => %{"type" => "string"},
                                     "credential_identifier" => %{"type" => "string"},
                                     "time_to_live" => %{"type" => "number"},
                                     "types" => %{"type" => "string"},
@@ -206,6 +207,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                     }
                                   },
                                   "required" => [
+                                    "version",
                                     "credential_identifier",
                                     "format",
                                     "types",

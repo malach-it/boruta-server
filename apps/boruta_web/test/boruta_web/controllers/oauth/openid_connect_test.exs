@@ -307,6 +307,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                "authorization_endpoint" => "boruta/oauth/authorize",
                "credential_endpoint" => "boruta/openid/credential",
                "credential_issuer" => "boruta",
+               "credentials_supported" => [],
                "credential_configurations_supported" => %{
                  "FederatedAttributes" => %{
                    "credential_definition" => %{
