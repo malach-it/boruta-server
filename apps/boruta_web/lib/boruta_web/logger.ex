@@ -58,6 +58,8 @@ defmodule BorutaWeb.Logger do
   end
 
   def boruta_web_request_handler(_, %{duration: duration}, %{conn: conn} = metadata, _) do
+    remote_ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
+
     case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
@@ -79,6 +81,8 @@ defmodule BorutaWeb.Logger do
               connection_type(state),
               ?\s,
               status,
+              " from ",
+              remote_ip,
               " in ",
               duration(duration)
             ]

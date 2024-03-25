@@ -15,6 +15,7 @@ const defaults = {
   features: [],
   metadata_fields: [],
   federated_servers: [],
+  verifiable_credentials: [],
 };
 
 const assign = {
@@ -51,6 +52,17 @@ const assign = {
         ...federatedServer,
         isDiscovery: !!federatedServer.discovery_path,
       };
+    });
+  },
+  verifiable_credentials: function ({ verifiable_credentials }) {
+    this.verifiable_credentials = verifiable_credentials.map(credential => {
+      return {
+        ...credential,
+        // NOTE for retrocompatibility issues
+        claims: typeof credential.claims === "string" ?
+          credential.claims.split(' ').map(claim => ({ pointer: claim })) :
+          credential.claims
+      }
     });
   },
   features: function ({ features }) {
@@ -173,6 +185,7 @@ class Backend {
       password_hashing_opts,
       metadata_fields,
       federated_servers,
+      verifiable_credentials,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,
@@ -217,9 +230,11 @@ class Backend {
         if (!federated_server.isDiscovery) {
           delete federated_server.discovery_path;
         }
+        delete federated_server.clientSecretVisible
         delete federated_server.isDiscovery;
         return federated_server;
       }),
+      verifiable_credentials,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,

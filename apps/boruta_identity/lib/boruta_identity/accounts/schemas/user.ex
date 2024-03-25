@@ -17,6 +17,7 @@ defmodule BorutaIdentity.Accounts.User do
           username: String.t() | nil,
           password: String.t() | nil,
           metadata: map(),
+          federated_metadata: map(),
           totp_secret: String.t() | nil,
           confirmed_at: DateTime.t() | nil,
           authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
@@ -40,6 +41,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:confirmed_at, :utc_datetime_usec)
     field(:last_login_at, :utc_datetime_usec)
     field(:metadata, :map, default: %{})
+    field(:federated_metadata, :map, default: %{})
     field(:totp_secret, :string)
     field(:totp_registered_at, :utc_datetime_usec)
 
@@ -54,7 +56,7 @@ defmodule BorutaIdentity.Accounts.User do
 
   def implementation_changeset(attrs, backend) do
     %__MODULE__{}
-    |> cast(attrs, [:backend_id, :uid, :username, :group, :metadata])
+    |> cast(attrs, [:backend_id, :uid, :username, :group, :metadata, :federated_metadata])
     |> metadata_template_filter(backend)
     |> validate_required([:backend_id, :uid, :username])
     |> validate_group()

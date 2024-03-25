@@ -160,6 +160,21 @@
             </div>
           </div>
         </section>
+        <section v-show="identityProvider.isPersisted">
+          <h3>Credential offer</h3>
+          <div class="ui segment">
+            <div class=" field">
+              <p class="ui info message">
+                SSI credential offer page (compatible with Altme wallet)
+              </p>
+              <div>
+                <router-link
+                  :to="{ name: 'edit-credential-offer-template', params: { identityProviderId: identityProvider.id } }"
+                  class="ui fluid blue button">Edit credential offer template</router-link>
+              </div>
+            </div>
+          </div>
+        </section>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
         <a class="ui button" v-on:click="back()">Back</a>

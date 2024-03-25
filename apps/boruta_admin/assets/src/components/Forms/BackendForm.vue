@@ -159,6 +159,27 @@
             <label>Base URL</label>
             <input type="text" v-model="federatedServer.base_url">
           </div>
+          <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+            <label>scope <i>(separated with a whitespace)</i></label>
+            <input type="text" v-model="federatedServer.scope">
+          </div>
+          <h4>Federated metadata</h4>
+          <div class="ui federated-metadata-fields segment" v-for="metadataEndpoint in federatedServer.metadata_endpoints || []">
+            <h5>Metadata endpoint configuration</h5>
+            <i class="ui large close icon" @click="deleteMetadataEndpoint(federatedServer, metadataEndpoint)"></i>
+            <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+              <label>Metadata endpoint URL</label>
+              <input type="text" v-model="metadataEndpoint.endpoint">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.federated_servers }">
+              <label>Metadata endpoint claims <i>(separated with a whitespace)</i></label>
+              <input type="text" v-model="metadataEndpoint.claims">
+            </div>
+          </div>
+          <div class="field">
+            <a class="ui blue fluid button" @click="addMetadataEndpoint(federatedServer)">Add a federated metadata endpoint</a>
+          </div>
+          <h4>Federated server endpoints</h4>
           <div class="field">
             <div class="ui toggle checkbox">
               <input type="checkbox" v-model="federatedServer.isDiscovery">
@@ -188,6 +209,83 @@
         </div>
         <div class="field">
           <a class="ui blue fluid button" @click="addFederatedServer()">Add a federated server</a>
+        </div>
+        <hr />
+        <h2>Verifiable credentials</h2>
+        <div v-for="credential in backend.verifiable_credentials" class="ui credential-field segment">
+          <i class="ui large close icon" @click="deleteVerifiableCredential(credential)"></i>
+          <h3>Verifiable cerdential</h3>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Credential identifier</label>
+            <input type="text" v-model="credential.credential_identifier" placeholder="BorutaCredential">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Version</label>
+            <select v-model="credential.version">
+              <option value="11">11</option>
+              <option value="13">13</option>
+            </select>
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Format</label>
+            <select v-model="credential.format">
+              <option value="jwt_vc_json">jwt_vc_json</option>
+              <option value="jwt_vc">jwt_vc</option>
+              <option value="vc+sd-jwt">vc+sd-jwt</option>
+            </select>
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Types <i>(separated with a whitespace)</i></label>
+            <input type="text" v-model="credential.types" placeholder="VerifiableCredential BorutaCredential">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Time to live <i>(in seconds)</i></label>
+            <input type="number" v-model="credential.time_to_live" placeholder="31536000">
+          </div>
+          <h4>Claims</h4>
+          <div class="ui claim segment" v-for="claim in credential.claims">
+            <i class="ui large close icon" @click="deleteVerifiableCredentialClaim(credential, claim)"></i>
+            <h5>Claim definition</h5>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>Name</label>
+              <input type="text" v-model="claim.name" placeholder="family_name">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>Label</label>
+              <input type="text" v-model="claim.label" placeholder="Family name">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>pointer</label>
+              <input type="text" v-model="claim.pointer" placeholder="family_name">
+            </div>
+          </div>
+          <div class="field">
+            <a class="ui blue fluid button" @click="addVerifiableCredentialClaim(credential)">Add a claim</a>
+          </div>
+          <h4>Display</h4>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Name</label>
+            <input type="text" v-model="credential.display.name" placeholder="Boruta Credential">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Background color</label>
+            <input type="text" v-model="credential.display.background_color" placeholder="#53b29f">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Text color</label>
+            <input type="text" v-model="credential.display.text_color" placeholder="#ffffff">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Logo URL</label>
+            <input type="text" v-model="credential.display.logo.url" placeholder="https://io.malach.it/assets/images/logo.png">
+          </div>
+          <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+            <label>Logo alt text</label>
+            <input type="text" v-model="credential.display.logo.alt_text" placeholder="Boruta credential logo">
+          </div>
+        </div>
+        <div class="field">
+          <a class="ui blue fluid button" @click="addVerifiableCredential()">Add a verifiable credential</a>
         </div>
         <hr />
         <h2>User metadata configuration</h2>
@@ -273,6 +371,28 @@ export default {
     addFederatedServer () {
       this.backend.federated_servers.push({})
     },
+    addMetadataEndpoint (federatedServer) {
+      federatedServer.metadata_endpoints ||= []
+      federatedServer.metadata_endpoints.push({})
+    },
+    deleteMetadataEndpoint (federatedServer, endpoint) {
+      federatedServer.metadata_endpoints.splice(
+        federatedServer.metadata_endpoints.indexOf(endpoint),
+        1
+      )
+    },
+    addVerifiableCredentialClaim (credential) {
+      credential.claims.push({})
+    },
+    deleteVerifiableCredentialClaim (credential, claim) {
+      credential.claims.splice(
+        credential.claims.indexOf(claim),
+        1
+      )
+    },
+    addVerifiableCredential () {
+      this.backend.verifiable_credentials.push({display: {logo: {}}, claims: []})
+    },
     addMetadataField () {
       this.backend.metadata_fields.push({ scopes: [] })
     },
@@ -285,6 +405,12 @@ export default {
     deleteFederatedServer (federatedServer) {
       this.backend.federated_servers.splice(
         this.backend.federated_servers.indexOf(federatedServer),
+        1
+      )
+    },
+    deleteVerifiableCredential (credential) {
+      this.backend.verifiable_credentials.splice(
+        this.backend.verifiable_credentials.indexOf(credential),
         1
       )
     },
@@ -312,7 +438,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.metadata-field.segment, .federated-server-field.segment {
+.metadata-field.segment, .federated-server-field.segment, .credential-field.segment {
   .field {
     margin-bottom: 1em!important;
   }
