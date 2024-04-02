@@ -144,5 +144,5 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
     |> Enum.into(%{})
   end
 
-  def credential_configuration(_user), do: %{}
+  def credential_configuration(_user), do: public_credential_configuration()
 end
