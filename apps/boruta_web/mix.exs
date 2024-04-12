@@ -43,6 +43,7 @@ defmodule BorutaWeb.MixProject do
       {:ex_machina, "~> 2.4", only: :test},
       {:finch, "~> 0.8"},
       {:gettext, "~> 0.11"},
+      {:hammer, "~> 6.1"},
       {:jason, "~> 1.0"},
       {:joken, "~> 2.3"},
       {:libcluster, "~> 3.2.1"},
