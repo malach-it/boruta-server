@@ -255,8 +255,12 @@
               <input type="text" v-model="claim.label" placeholder="Family name">
             </div>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
-              <label>pointer</label>
+              <label>Pointer</label>
               <input type="text" v-model="claim.pointer" placeholder="family_name">
+            </div>
+            <div class="field" v-if="credential.format === 'vc+sd-jwt'" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>Expiration</label>
+              <input type="text" v-model="claim.expiration" placeholder="3784320000">
             </div>
           </div>
           <div class="field">
