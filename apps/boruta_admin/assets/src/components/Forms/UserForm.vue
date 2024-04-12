@@ -19,10 +19,25 @@
         </div>
         <section v-if="user.backend.metadata_fields.length">
           <h2>Metadata</h2>
-          <div v-for="field in user.backend.metadata_fields">
-            <div class="field">
-              <label>{{ field.attribute_name }}</label>
-              <input type="text" v-model="user.metadata[field.attribute_name]" placeholder="metadata" />
+          <div class="ui segment" v-for="field in user.backend.metadata_fields">
+            <h3>{{ field.attribute_name }}</h3>
+            <div class="ui two column stackable grid">
+              <div class="column">
+                <div class="field" :class="{ 'error': user.errors?.metadata }">
+                  <label>Value</label>
+                  <input type="text" v-model="user.metadata[field.attribute_name].value" placeholder="metadata" />
+                </div>
+              </div>
+              <div class="column">
+                <div class="field" :class="{ 'error': user.errors?.metadata }">
+                  <label>Verifiable credential status</label>
+                  <select v-model="user.metadata[field.attribute_name].status">
+                    <option value="valid">valid</option>
+                    <option value="suspended">suspended</option>
+                    <option value="revoked">revoked</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -117,6 +132,13 @@ export default {
         this.user.backend = this.backends.find(({ id }) => id === backend_id) || this.user.backend
       },
       deep: true
+    },
+    'user.backend': {
+      handler() {
+        this.user.backend.metadata_fields.forEach((field) => {
+          this.user.metadata[field.attribute_name] ||= { status: 'valid' }
+        })
+      }
     }
   }
 }

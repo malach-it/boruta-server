@@ -98,6 +98,11 @@ defmodule BorutaIdentity.ResourceOwners do
           metadata
           |> User.metadata_filter(backend)
           |> metadata_scope_filter(scope, backend)
+          |> Enum.map(fn
+            {key, value} when is_binary(value) -> {key, value}
+            {key, metadata} -> {key, metadata["value"]}
+          end)
+          |> Enum.into(%{})
 
         scope
         |> Scope.split()

@@ -86,14 +86,17 @@ defmodule BorutaIdentity.Accounts.Federated do
     |> String.split(" ")
     |> Enum.map(fn claim ->
       {String.replace(claim, ".", "-"),
-       get_in(
-         body,
-         String.split(claim, ".")
-         |> Enum.map(fn
-           ":all" -> Access.all()
-           claim -> claim
-         end)
-       )}
+       %{
+         "value" =>
+           get_in(
+             body,
+             String.split(claim, ".")
+             |> Enum.map(fn
+               ":all" -> Access.all()
+               claim -> claim
+             end)
+           )
+       }}
     end)
   end
 end

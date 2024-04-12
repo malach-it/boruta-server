@@ -151,6 +151,7 @@ defmodule BorutaIdentity.Accounts.User do
     |> Enum.into(%{})
   end
 
+  # TODO check metadata schema
   defp metadata_template_filter(
          %Ecto.Changeset{changes: %{metadata: %{} = metadata}} = changeset,
          backend
