@@ -389,7 +389,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       %{uri | path: Routes.token_path(conn, :direct_post, code)}
       |> URI.to_string()
     end))
-    |> dbg
   end
 
   def authorize_success(

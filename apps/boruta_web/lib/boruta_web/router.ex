@@ -53,6 +53,7 @@ defmodule BorutaWeb.Router do
 
     post("/token", TokenController, :token)
     post("/introspect", IntrospectController, :introspect)
+    post("/pushed_authorization_request", PushedAuthorizationRequestController, :pushed_authorization_request)
     post("/revoke", RevokeController, :revoke)
     options("/introspect", IntrospectController, :options)
     options("/revoke", RevokeController, :options)

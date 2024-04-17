@@ -86,7 +86,8 @@ defmodule BorutaWeb.OauthView do
       "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "credential_issuer" => issuer,
       "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
-      "credential_configurations_supported" => VerifiableCredentials.credential_configurations_supported(),
+      "credential_configurations_supported" =>
+        VerifiableCredentials.credential_configurations_supported(),
       "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
   end
@@ -99,7 +100,8 @@ defmodule BorutaWeb.OauthView do
       "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
       "credential_issuer" => issuer,
       "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
-      "credential_configurations_supported" => VerifiableCredentials.credential_configurations_supported(),
+      "credential_configurations_supported" =>
+        VerifiableCredentials.credential_configurations_supported(),
       "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
   end
@@ -111,6 +113,12 @@ defmodule BorutaWeb.OauthView do
     }
     |> Map.put(:c_nonce, "boruta")
     |> Map.put(:c_nonce_expires_in, 3600)
+  end
+
+  def render("pushed_authorization_request.json", %{
+        response: %Boruta.Oauth.PushedAuthorizationResponse{} = response
+      }) do
+    response
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
@@ -140,12 +148,14 @@ defmodule BorutaWeb.OauthView do
 
       response =
         case authorization_details do
-          nil -> response
+          nil ->
+            response
+
           _authorization_details ->
             response
-          |> Map.put(:authorization_details, authorization_details)
-          |> Map.put(:c_nonce, "boruta")
-          |> Map.put(:c_nonce_expires_in, 3600)
+            |> Map.put(:authorization_details, authorization_details)
+            |> Map.put(:c_nonce, "boruta")
+            |> Map.put(:c_nonce_expires_in, 3600)
         end
 
       Jason.Encode.map(
@@ -156,9 +166,12 @@ defmodule BorutaWeb.OauthView do
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.IntrospectResponse do
-    def encode(%Boruta.Oauth.IntrospectResponse{
-          active: false
-        }, options) do
+    def encode(
+          %Boruta.Oauth.IntrospectResponse{
+            active: false
+          },
+          options
+        ) do
       Jason.Encode.map(%{active: false}, options)
     end
 
@@ -185,6 +198,18 @@ defmodule BorutaWeb.OauthView do
           iss: iss,
           exp: exp,
           iat: iat
+        },
+        options
+      )
+    end
+  end
+
+  defimpl Jason.Encoder, for: Boruta.Oauth.PushedAuthorizationResponse do
+    def encode(%Boruta.Oauth.PushedAuthorizationResponse{} = response, options) do
+      Jason.Encode.map(
+        %{
+          request_uri: response.request_uri,
+          expires_in: response.expires_in
         },
         options
       )
