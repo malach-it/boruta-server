@@ -52,6 +52,10 @@
           <label>ID token TTL (seconds)</label>
           <input type="number" v-model="client.id_token_ttl" placeholder="3600" />
         </div>
+        <div class="field" :class="{ 'error': client.errors?.authorization_request_ttl }">
+          <label>Authorization request TTL (seconds)</label>
+          <input type="number" v-model="client.authorization_request_ttl" placeholder="60" />
+        </div>
         <div class="field" :class="{ 'error': client.errors?.redirect_uris }">
           <label>Redirect URIs</label>
           <div v-for="(redirectUri, index) in client.redirect_uris" class="field" :key="index">

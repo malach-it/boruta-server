@@ -33,6 +33,7 @@ const assign = {
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
   refresh_token_ttl: function ({ refresh_token_ttl }) { this.refresh_token_ttl = refresh_token_ttl },
   id_token_ttl: function ({ id_token_ttl }) { this.id_token_ttl = id_token_ttl },
+  authorization_request_ttl: function ({ authorization_request_ttl }) { this.authorization_request_ttl = authorization_request_ttl },
   secret: function ({ secret }) { this.secret = secret },
   redirect_uris: function ({ redirect_uris }) {
     this.redirect_uris = redirect_uris.map((uri) => ({ uri }))
@@ -160,6 +161,7 @@ class Client {
     const {
       access_token_ttl,
       authorization_code_ttl,
+      authorization_request_ttl,
       authorize_scope,
       enforce_dpop,
       authorized_scopes,
@@ -186,6 +188,7 @@ class Client {
     return {
       access_token_ttl,
       authorization_code_ttl,
+      authorization_request_ttl,
       authorize_scope,
       enforce_dpop,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
