@@ -188,7 +188,7 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   defp text_from_credential_offer(credential_offer) do
     # TODO Jason.Encode implementation for CredentialOfferResponse
-    "openid-credential-offer://?credential_offer=#{credential_offer |> Map.from_struct() |> Jason.encode!() |> URI.encode_www_form()}"
+    "openid-credential-offer://?credential_offer=#{credential_offer |> Map.from_struct() |> Map.delete(:credentials) |> Jason.encode!() |> URI.encode_www_form()}"
   end
 
   defp paths(conn, assigns) do
