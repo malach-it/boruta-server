@@ -137,7 +137,8 @@ defmodule BorutaWeb.OauthView do
         token_type: token_type,
         access_token: access_token,
         expires_in: expires_in,
-        refresh_token: refresh_token
+        refresh_token: refresh_token,
+        c_nonce: "boruta"
       }
 
       response =

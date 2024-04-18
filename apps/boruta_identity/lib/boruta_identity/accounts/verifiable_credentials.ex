@@ -54,27 +54,47 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
     |> Enum.flat_map(fn %Backend{verifiable_credentials: credentials} ->
       credentials
       |> Enum.reject(fn credential -> credential["version"] && credential["version"] != "13" end)
-      |> Enum.map(fn credential ->
-        {credential["credential_identifier"],
-         %{
-           "format" => credential["format"],
-           # TODO add scope to backends vc configuration
-           "scope" => credential["scope"],
-           "cryptographic_binding_methods_supported" => [
-             "did:jwk",
-             "did:key"
-           ],
-           "credential_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
-           "credential_definition" => %{
-             "type" => String.split(credential["types"], " "),
-             "credentialSubject" =>
+      |> Enum.map(fn
+        %{"format" => "vc+sd-jwt"} = credential ->
+          {credential["credential_identifier"],
+           %{
+             "format" => credential["format"],
+             "scope" => credential["credential_identifier"],
+             "cryptographic_binding_methods_supported" => [
+               "did:jwk",
+               "did:key"
+             ],
+             "credential_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
+             "vct" => credential["credential_identifier"],
+             "display" => [Map.put(credential["display"], "locale", "en-US")],
+             "claims" =>
                Enum.map(credential["claims"], fn claim ->
-                 {claim["name"], [%{"name" => claim["label"]}]}
+                 {claim["name"], %{"display" => [%{"name" => claim["label"]}]}}
                end)
                |> Enum.into(%{})
-           },
-           "display" => [Map.put(credential["display"], "locale", "en-US")]
-         }}
+           }}
+
+        credential ->
+          {credential["credential_identifier"],
+           %{
+             "format" => credential["format"],
+             # TODO add scope to backends vc configuration
+             "scope" => credential["credential_identifier"],
+             "cryptographic_binding_methods_supported" => [
+               "did:jwk",
+               "did:key"
+             ],
+             "credential_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
+             "credential_definition" => %{
+               "type" => String.split(credential["types"], " "),
+               "credentialSubject" =>
+                 Enum.map(credential["claims"], fn claim ->
+                   {claim["name"], [%{"name" => claim["label"]}]}
+                 end)
+                 |> Enum.into(%{})
+             },
+             "display" => [Map.put(credential["display"], "locale", "en-US")]
+           }}
       end)
     end)
     |> Enum.into(%{})
