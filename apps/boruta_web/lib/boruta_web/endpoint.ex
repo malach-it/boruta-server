@@ -8,7 +8,7 @@ defmodule BorutaWeb.Endpoint do
   ]
 
   plug RemoteIp
-  unless Mix.env() == :test, do: plug BorutaWeb.Plugs.RateLimit
+  # unless Mix.env() == :test, do: plug BorutaWeb.Plugs.RateLimit
   plug Plug.Static,
     at: "/",
     from: :boruta_web,
