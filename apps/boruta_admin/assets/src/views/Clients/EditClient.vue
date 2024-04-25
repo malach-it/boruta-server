@@ -10,6 +10,11 @@
           </div>
         </div>
       </div>
+      <div class="ui urls info message">
+        <div><strong>OpenIDConfiguration:</strong> {{ openidConfigurationUrl }}</div>
+        <div><strong>AuthorizeUrl:</strong> {{ authorizeUrl }}</div>
+        <div><strong>TokenUrl:</strong> {{ tokenUrl }}</div>
+      </div>
       <ClientForm :client="client" @submit="updateClient()" @back="back()" action="Update" />
     </div>
   </div>
@@ -39,6 +44,17 @@ export default {
       success: false,
       client: new Client()
     }
+  },
+  computed: {
+    authorizeUrl () {
+      return window.env.BORUTA_OAUTH_BASE_URL + '/oauth/authorize'
+    },
+    tokenUrl () {
+      return window.env.BORUTA_OAUTH_BASE_URL + '/oauth/token'
+    },
+    openidConfigurationUrl () {
+      return window.env.BORUTA_OAUTH_BASE_URL + '/.well-known/openid-configuration'
+    },
   },
   methods: {
     back () {
