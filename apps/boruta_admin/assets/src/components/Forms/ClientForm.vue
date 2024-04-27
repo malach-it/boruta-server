@@ -1,9 +1,14 @@
 <template>
-  <div class="client-form">
-    <div class="ui segment">
-      <FormErrors v-if="client.errors" :errors="client.errors" />
-      <form class="ui form" @submit.prevent="submit">
-        <h3>General configuration</h3>
+  <div class="ui client-form segment">
+    <FormErrors v-if="client.errors" :errors="client.errors" />
+    <form ref="form" class="ui form" @submit.prevent="submit">
+      <div ref="tabularMenu" class="ui top attached stackable tabular menu">
+        <a id="general-configuration" @click="openTab" class="active item">General configuration</a>
+        <a id="authentication" @click="openTab" class="item">Authentication</a>
+        <a id="security" @click="openTab" class="item">Security</a>
+        <a id="grant-types" @click="openTab" class="item">Grant types</a>
+      </div>
+      <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
         <div class="field" :class="{ 'error': client.errors?.name }">
           <label>Name</label>
           <input v-model="client.name" placeholder="Super client" autocomplete="new-password" />
@@ -66,28 +71,8 @@
           </div>
           <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
         </div>
-        <div class="ui segment">
-          <div class="inline fields" :class="{ 'error': client.errors?.id_token_signature_alg }">
-            <label>ID token signature algorithm</label>
-            <div class="field" v-for="alg in idTokenSignatureAlgorithms" :key="alg">
-              <div class="ui radio checkbox">
-                <label>{{ alg }}</label>
-                <input type="radio" v-model="client.id_token_signature_alg" :value="alg" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="ui segment">
-          <div class="inline fields" :class="{ 'error': client.errors?.userinfo_signed_response_alg }">
-            <label>Userinfo response signature algorithm</label>
-            <div class="field" v-for="alg in UserinfoResponseSignatureAlgorithms" :key="alg">
-              <div class="ui radio checkbox">
-                <label>{{ alg || 'none' }}</label>
-                <input type="radio" v-model="client.userinfo_signed_response_alg" :value="alg" />
-              </div>
-            </div>
-          </div>
-        </div>
+      </div>
+      <div ref="authentication" data-tab="authentication" class="ui bottom attached tab segment">
         <h3>Client authentication</h3>
         <div class="ui segment">
           <div class="inline fields" :class="{ 'error': client.errors?.token_endpoint_auth_methods }">
@@ -121,9 +106,34 @@
             <label>Confidential</label>
           </div>
         </div>
-        <h3>Authentication</h3>
+        <h3>User authentication</h3>
         <div class="field" :class="{ 'error': client.errors?.identity_provider_id }">
           <IdentityProviderField :identityProvider="client.identity_provider.model" @identityProviderChange="setIdentityProvider"/>
+        </div>
+      </div>
+      <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+        <h3>Token signatures</h3>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.id_token_signature_alg }">
+            <label>ID token signature algorithm</label>
+            <div class="field" v-for="alg in idTokenSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg }}</label>
+                <input type="radio" v-model="client.id_token_signature_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ui segment">
+          <div class="inline fields" :class="{ 'error': client.errors?.userinfo_signed_response_alg }">
+            <label>Userinfo response signature algorithm</label>
+            <div class="field" v-for="alg in UserinfoResponseSignatureAlgorithms" :key="alg">
+              <div class="ui radio checkbox">
+                <label>{{ alg || 'none' }}</label>
+                <input type="radio" v-model="client.userinfo_signed_response_alg" :value="alg" />
+              </div>
+            </div>
+          </div>
         </div>
         <h3>Authorization</h3>
         <div class="field">
@@ -160,20 +170,20 @@
             <label>Public revoke</label>
           </div>
         </div>
-        <div class="field">
-          <h3>Supported grant types</h3>
-          <div class="ui segment" v-for="grantType in client.grantTypes" :key="grantType.label">
-            <div class="ui toggle checkbox">
-              <input type="checkbox" v-model="grantType.value">
-              <label>{{ grantType.label }}</label>
-            </div>
+      </div>
+      <div ref="grant-types" data-tab="grant-types" class="ui bottom attached tab segment">
+        <h3>Supported grant types</h3>
+        <div class="ui segment" v-for="grantType in client.grantTypes" :key="grantType.label">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="grantType.value">
+            <label>{{ grantType.label }}</label>
           </div>
         </div>
-        <hr />
-        <button class="ui right floated violet button" type="submit">{{ action }}</button>
-        <a v-on:click="back()" class="ui button">Back</a>
-      </form>
-    </div>
+      </div>
+      <div class="actions">
+        <button class="ui violet button" type="submit">{{ action }}</button>
+      </div>
+    </form>
   </div>
 </template>
 
@@ -209,9 +219,6 @@ export default {
     })
   },
   methods: {
-    back () {
-      this.$emit('back')
-    },
     regenerateKeyPair () {
       if (confirm("Are you sure you want to regenerate this client key pair?")) {
         this.client.regenerateKeyPair().then(() => {
@@ -242,9 +249,48 @@ export default {
     },
     passwordVisibilityToggle () {
       this.passwordVisible = !this.passwordVisible
+    },
+    openTab (e) {
+      const tab = e.target.id
+      Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
+        if (e.id == tab) {
+          e.classList.add('active')
+          this.$refs[e.id].classList.add('active')
+        } else {
+          e.classList.remove('active')
+          this.$refs[e.id].classList.remove('active')
+        }
+      })
     }
   },
   watch: {
+    '$route.hash': {
+      handler (hash) {
+        console.log(this.$refs.tabularMenu)
+        Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
+          console.log(e.classList)
+          if (Array.from(e.classList).includes(hash.slice(1))) {
+            e.classList.add('active')
+          } else {
+            e.classList.remove('active')
+          }
+        })
+      }
+    },
+    'client.errors': {
+      deep: true,
+      handler (errors) {
+        setTimeout(() => {
+          Array.from(this.$refs.tabularMenu.getElementsByClassName('error')).forEach(e => {
+            e.classList.remove('error')
+          })
+          Array.from(this.$refs.form.getElementsByClassName('error')).forEach(elt => {
+            const tab = elt.closest('.tab').getAttribute('data-tab')
+            this.$refs.tabularMenu.querySelector('#' + tab).classList.add('error')
+          })
+        }, 100)
+      }
+    },
     'client.key_pair_id': {
       deep: true,
       handler (newKeyPairId) {

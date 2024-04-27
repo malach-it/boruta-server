@@ -1,8 +1,16 @@
 <template>
   <div class="new-user">
-    <Toaster :active="success" message="User has been created" type="success" />
-    <div class="ui container">
-      <UserForm :user="user" @submit="createUser()" @back="back()" action="Create" />
+    <div class="container">
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <router-link :to="{ name: 'user-list' }" class="ui right floated button">Back</router-link>
+          </div>
+        </div>
+        <div class="twelve wide column">
+          <UserForm :user="user" @submit="createUser()" @back="back()" action="Create" />
+        </div>
+      </div>
     </div>
   </div>
 </template>

@@ -1,21 +1,30 @@
 <template>
   <div class="edit-client">
     <Toaster :active="success" message="Client has been updated" type="success" />
-    <div class="ui container">
-      <div class="ui segment">
-        <div class="ui attribute list">
-          <div class="item">
-            <span class="header">Client ID</span>
-            <span class="description">{{ client.id }}</span>
+    <div class="container">
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <div class="ui segment">
+              <div class="ui attribute list">
+                <div class="item">
+                  <span class="header">Client ID</span>
+                  <span class="description">{{ client.id }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="ui urls info message">
+              <div><strong>OpenIDConfiguration:</strong> {{ openidConfigurationUrl }}</div>
+              <div><strong>AuthorizeUrl:</strong> {{ authorizeUrl }}</div>
+              <div><strong>TokenUrl:</strong> {{ tokenUrl }}</div>
+            </div>
+            <router-link :to="{ name: 'client-list' }" class="ui right floated button">Back</router-link>
           </div>
         </div>
+        <div class="twelve wide column">
+          <ClientForm :client="client" @submit="updateClient()" @back="back()" action="Update" />
+        </div>
       </div>
-      <div class="ui urls info message">
-        <div><strong>OpenIDConfiguration:</strong> {{ openidConfigurationUrl }}</div>
-        <div><strong>AuthorizeUrl:</strong> {{ authorizeUrl }}</div>
-        <div><strong>TokenUrl:</strong> {{ tokenUrl }}</div>
-      </div>
-      <ClientForm :client="client" @submit="updateClient()" @back="back()" action="Update" />
     </div>
   </div>
 </template>
@@ -57,9 +66,6 @@ export default {
     },
   },
   methods: {
-    back () {
-      this.$router.push({ name: 'client-list' })
-    },
     updateClient () {
       this.success = false
       return this.client.save().then(() => {
@@ -69,4 +75,3 @@ export default {
   }
 }
 </script>
-

@@ -1,16 +1,25 @@
 <template>
   <div class="edit-upstream">
     <Toaster :active="success" message="Upstream has been updated" type="success" />
-    <div class="ui container">
-      <div class="ui segment">
-        <div class="ui attribute list">
-          <div class="item">
-            <span class="header">Upstream ID</span>
-            <span class="description">{{ upstream.id }}</span>
+    <div class="container">
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <div class="ui segment">
+              <div class="ui attribute list">
+                <div class="item">
+                  <span class="header">Upstream ID</span>
+                  <span class="description">{{ upstream.id }}</span>
+                </div>
+              </div>
+            </div>
+            <router-link :to="{ name: 'upstream-list' }" class="ui right floated button">Back</router-link>
           </div>
         </div>
+        <div class="twelve wide column">
+          <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update" />
+        </div>
       </div>
-      <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update" />
     </div>
   </div>
 </template>

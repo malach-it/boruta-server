@@ -201,6 +201,8 @@ export default {
   }
   pre {
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   hr {
     border: none;
@@ -282,6 +284,7 @@ export default {
   }
   .actions {
     float: right;
+    margin-bottom: 1rem;
     &.main {
       margin: 1rem 0;
     }
@@ -441,12 +444,28 @@ export default {
       margin: 0;
     }
   }
+  .ui.tabular.menu {
+    .item.error {
+      color: #9f3a38;
+      background: #fff6f6;
+    }
+    @media (max-width: 1200px) {
+      flex-direction: column;
+      .item {
+        width: 100% !important
+      }
+    }
+  }
+  .ui.tab {
+    border-top: none;
+  }
   .ui.grid {
     margin: -1rem 0 0 0;
     .column {
       padding: 0;
       padding-top: 1rem;
       padding-right: 1rem;
+      padding-bottom: 1rem;
     }
     .column>.segment {
       height: 100%;
@@ -464,6 +483,11 @@ export default {
           padding-right: 0;
         }
       }
+    }
+  }
+  .ui.tab {
+    &:target {
+      display: block;
     }
   }
   .ui.form {
@@ -484,7 +508,7 @@ export default {
       width: 100%;
     }
     .inline.fields>.field {
-      margin: 0;
+      padding-bottom: 0;
     }
     .ui.icon.input>i.icon {
       cursor: pointer;
@@ -492,7 +516,7 @@ export default {
       position: absolute;
     }
     .field {
-      margin-bottom: 1em;
+      padding-bottom: 1em;
       &.error label {
         color: #9f3a38!important;
       }
@@ -626,6 +650,18 @@ export default {
     @media screen and (max-width: 1127px) {
       .menu .item {
         border-bottom: 1px solid rgba(255,255,255,.05);
+      }
+    }
+  }
+  .ui.tabular.menu {
+    .item {
+      color: white;
+      &.active {
+        background: rgba(255, 255, 255, .05);
+      }
+      &.error {
+        color: #e09494;
+        background: #493939;
       }
     }
   }
