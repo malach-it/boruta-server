@@ -101,7 +101,7 @@
           <h3>SMTP configuration</h3>
           <div class="field" :class="{ 'error': backend.errors?.smtp_from }">
             <label>From</label>
-            <input type="email" v-model="backend.smtp_from" placeholder="from@mail.example">
+            <input type="text" v-model="backend.smtp_from" placeholder="from@mail.example">
           </div>
           <div class="field" :class="{ 'error': backend.errors?.smtp_relay }">
             <label>Relay</label>
