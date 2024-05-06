@@ -127,6 +127,7 @@ defmodule BorutaWeb.OauthView do
             token_type: token_type,
             access_token: access_token,
             id_token: id_token,
+            c_nonce: c_nonce,
             expires_in: expires_in,
             refresh_token: refresh_token,
             authorization_details: authorization_details
@@ -138,7 +139,7 @@ defmodule BorutaWeb.OauthView do
         access_token: access_token,
         expires_in: expires_in,
         refresh_token: refresh_token,
-        c_nonce: "boruta"
+        c_nonce: c_nonce
       }
 
       response =
@@ -155,7 +156,6 @@ defmodule BorutaWeb.OauthView do
       #     _authorization_details ->
       #       response
       #       |> Map.put(:authorization_details, authorization_details)
-      #       |> Map.put(:c_nonce, "boruta")
       #       |> Map.put(:c_nonce_expires_in, 3600)
       #   end
 
