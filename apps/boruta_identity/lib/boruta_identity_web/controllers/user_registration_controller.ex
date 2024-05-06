@@ -91,6 +91,7 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
 
     conn
     |> put_layout(false)
+    |> put_flash(:info, "Confirmation email has been sent. Please go to your mailbox and follow the provided link.")
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
