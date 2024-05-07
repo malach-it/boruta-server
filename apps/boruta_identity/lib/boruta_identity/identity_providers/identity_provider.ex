@@ -160,6 +160,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     identity_provider
     |> Repo.preload(:templates)
     |> cast(attrs, [
+      :id,
       :name,
       :choose_session,
       :totpable,

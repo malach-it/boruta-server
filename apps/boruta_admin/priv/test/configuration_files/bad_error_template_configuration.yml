@@ -1,0 +1,5 @@
+---
+configuration:
+  error_template:
+    - type: "999"
+      content: test

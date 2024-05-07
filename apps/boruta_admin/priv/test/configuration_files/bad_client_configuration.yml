@@ -1,0 +1,4 @@
+---
+configuration:
+  client:
+    - access_token_ttl: 10

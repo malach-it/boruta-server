@@ -216,6 +216,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   ],
                                   "additionalProperties" => false
                                 })
+
   @spec backend_types() :: list(atom)
   def backend_types, do: @backend_types
 
@@ -475,6 +476,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   def changeset(backend, attrs) do
     backend
     |> cast(attrs, [
+      :id,
       :type,
       :name,
       :is_default,
