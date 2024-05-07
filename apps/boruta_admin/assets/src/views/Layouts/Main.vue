@@ -128,6 +128,11 @@
                     <span>Error templates</span>
                   </router-link>
                 </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'configuration-file-upload' }">
+                    <span>Upload a configuration file</span>
+                  </router-link>
+                </div>
               </div>
             </div>
           </router-link>
@@ -460,7 +465,7 @@ export default {
     border-top: none;
   }
   .ui.grid {
-    margin: -1rem 0 0 0;
+    margin: -1rem -1rem 0 0;
     .column {
       padding: 0;
       padding-top: 1rem;
@@ -469,20 +474,6 @@ export default {
     }
     .column>.segment {
       height: 100%;
-    }
-    &.two.column {
-      .column {
-        &:nth-child(2n) {
-          padding-right: 0;
-        }
-      }
-    }
-    &.three.column {
-      .column {
-        &:nth-child(3n) {
-          padding-right: 0;
-        }
-      }
     }
   }
   .ui.tab {

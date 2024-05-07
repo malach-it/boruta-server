@@ -60,6 +60,7 @@ const labels = {
   'new-role': 'Create',
   'role': ({ params }) => params.roleId,
   'configuration': 'Configuration',
+  'configuration-file-upload': 'Configuration file upload',
   'error-template-list': 'Error templates',
   'edit-bad-request-template': 'Edit bad request template',
   'edit-forbidden-template': 'Edit forbidden template',

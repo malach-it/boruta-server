@@ -501,6 +501,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :federated_servers,
       :verifiable_credentials
     ])
+    |> unique_constraint(:id, name: :backends_pkey)
     |> validate_required([:name, :password_hashing_alg])
     |> validate_metadata_fields()
     |> validate_federated_servers()

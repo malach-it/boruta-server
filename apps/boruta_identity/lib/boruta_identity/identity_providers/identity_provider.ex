@@ -171,6 +171,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
       :confirmable,
       :backend_id
     ])
+    |> unique_constraint(:id, name: :relying_parties_pkey)
     |> validate_required([:name, :backend_id])
     |> unique_constraint(:name)
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)

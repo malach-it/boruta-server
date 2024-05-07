@@ -39,10 +39,14 @@ defmodule BorutaAdmin.ConfigurationLoader do
   def from_file!(path) do
     %{"configuration" => configuration} = YamlElixir.read_from_file!(path)
 
+    load_configuration(configuration)
+  end
+
+  def load_configuration(configuration) do
     load_configuration(configuration, %{})
   end
 
-  defp load_configuration(%{"gateway" => gateway_configurations} = configuration, result) do
+  def load_configuration(%{"gateway" => gateway_configurations} = configuration, result) do
     result =
       Map.put(
         result,
@@ -71,7 +75,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "gateway"), result)
   end
 
-  defp load_configuration(%{"microgateway" => gateway_configurations} = configuration, result) do
+  def load_configuration(%{"microgateway" => gateway_configurations} = configuration, result) do
     result =
       Map.put(
         result,
@@ -110,7 +114,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "microgateway"), result)
   end
 
-  defp load_configuration(%{"backend" => backend_configurations} = configuration, result) do
+  def load_configuration(%{"backend" => backend_configurations} = configuration, result) do
     result =
       Map.put(
         result,
@@ -142,7 +146,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "backend"), result)
   end
 
-  defp load_configuration(
+  def load_configuration(
          %{"identity_provider" => identity_provider_configurations} = configuration,
          result
        ) do
@@ -177,7 +181,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "identity_provider"), result)
   end
 
-  defp load_configuration(%{"client" => client_configurations} = configuration, result) do
+  def load_configuration(%{"client" => client_configurations} = configuration, result) do
     result =
       Map.put(
         result,
@@ -209,7 +213,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "client"), result)
   end
 
-  defp load_configuration(%{"scope" => scope_configurations} = configuration, result) do
+  def load_configuration(%{"scope" => scope_configurations} = configuration, result) do
     result =
       Map.put(
         result,
@@ -241,7 +245,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "scope"), result)
   end
 
-  defp load_configuration(%{"role" => role_configurations} = configuration, result) do
+  def load_configuration(%{"role" => role_configurations} = configuration, result) do
     result =
       Map.put(
         result,
@@ -273,7 +277,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "role"), result)
   end
 
-  defp load_configuration(
+  def load_configuration(
          %{"error_template" => error_template_configurations} = configuration,
          result
        ) do
@@ -317,5 +321,5 @@ defmodule BorutaAdmin.ConfigurationLoader do
       load_configuration(Map.delete(configuration, "error_template"), result)
   end
 
-  defp load_configuration(%{}, result), do: result
+  def load_configuration(%{}, result), do: result
 end

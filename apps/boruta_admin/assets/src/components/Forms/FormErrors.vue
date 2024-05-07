@@ -1,5 +1,5 @@
 <template>
-  <div @click="hide()" class="form-errors ui error message" v-if="show">
+  <div @click="hide()" class="form-errors ui error message" v-if="show" :class="{ 'inline': inline }">
     <div class="header">
       Could not save current record
     </div>
@@ -36,7 +36,7 @@ const labels = {
 
 export default {
   name: 'FormErrors',
-  props: ['errors'],
+  props: ['errors', 'inline'],
   data () {
     return {
       show: true
@@ -54,7 +54,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.ui.error.message {
+.ui.error.message:not(.inline) {
   cursor: pointer;
   position: fixed;
   z-index: 1000;

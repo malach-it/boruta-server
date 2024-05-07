@@ -69,6 +69,7 @@ import NewRole from "./views/Roles/NewRole.vue";
 import EditRole from "./views/Roles/EditRole.vue";
 
 import Configuration from "./views/Configuration.vue";
+import ConfigurationFileUpload from "./views/Configuration/ConfigurationFileUpload.vue";
 import ErrorTemplateList from "./views/Configuration/ErrorTemplateList.vue";
 import EditBadRequestTemplate from "./views/Configuration/EditBadRequestTemplate.vue";
 import EditNotFoundTemplate from "./views/Configuration/EditNotFoundTemplate.vue";
@@ -445,6 +446,11 @@ const router = createRouter({
               path: "",
               name: "",
               component: Configuration,
+            },
+            {
+              path: "configuration-file-upload",
+              name: "configuration-file-upload",
+              component: ConfigurationFileUpload,
             },
             {
               path: "error-template-list",

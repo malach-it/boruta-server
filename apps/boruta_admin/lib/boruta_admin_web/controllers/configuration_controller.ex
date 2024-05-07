@@ -7,6 +7,7 @@ defmodule BorutaAdminWeb.ConfigurationController do
     ]
 
   alias BorutaIdentity.Configuration
+  alias BorutaAdmin.ConfigurationLoader
   alias BorutaIdentity.Configuration.ErrorTemplate
 
   action_fallback(BorutaAdminWeb.FallbackController)
@@ -33,5 +34,17 @@ defmodule BorutaAdminWeb.ConfigurationController do
   def delete_error_template(conn, %{"template_type" => template_type}) do
     template = Configuration.delete_error_template!(String.to_integer(template_type))
     render(conn, "show_error_template.json", template: template)
+  end
+
+  def upload_configuration_file(conn, %{"file" => %Plug.Upload{path: path}}) do
+    case YamlElixir.read_from_file(path) do
+      {:ok, %{"configuration" => configuration}} ->
+        dbg(configuration)
+        result = ConfigurationLoader.load_configuration(configuration) |> dbg
+
+        render(conn, "file_upload.json", result: result, file_content: File.read!(path))
+      {:error, _error} ->
+        {:error, :bad_request}
+    end
   end
 end
