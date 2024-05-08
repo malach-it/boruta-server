@@ -87,8 +87,8 @@ defmodule BorutaWeb.OauthView do
       "credential_issuer" => issuer,
       "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
       "credential_configurations_supported" =>
-        VerifiableCredentials.credential_configurations_supported()
-      # "credentials_supported" => VerifiableCredentials.credentials_supported()
+        VerifiableCredentials.credential_configurations_supported(),
+      "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
   end
 
@@ -101,8 +101,8 @@ defmodule BorutaWeb.OauthView do
       "credential_issuer" => issuer,
       "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
       "credential_configurations_supported" =>
-        VerifiableCredentials.credential_configurations_supported()
-      # "credentials_supported" => VerifiableCredentials.credentials_supported()
+        VerifiableCredentials.credential_configurations_supported(),
+      "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
   end
 
@@ -148,16 +148,16 @@ defmodule BorutaWeb.OauthView do
           id_token -> Map.put(response, :id_token, id_token)
         end
 
-      # response =
-      #   case authorization_details do
-      #     nil ->
-      #       response
+      response =
+        case authorization_details do
+          nil ->
+            response
 
-      #     _authorization_details ->
-      #       response
-      #       |> Map.put(:authorization_details, authorization_details)
-      #       |> Map.put(:c_nonce_expires_in, 3600)
-      #   end
+          _authorization_details ->
+            response
+            |> Map.put(:authorization_details, authorization_details)
+            |> Map.put(:c_nonce_expires_in, 3600)
+        end
 
       Jason.Encode.map(
         response,
