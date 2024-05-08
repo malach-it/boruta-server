@@ -6,7 +6,6 @@ export function addClientErrorInterceptor(instance) {
   instance.interceptors.response.use(function (response) {
       return response;
     }, function (error) {
-      if (error.response?.status === 404) return router.push({ name: 'not-found' })
       if (error.response?.status === 401) {
         return new Promise((resolve, reject) => {
           oauth.silentRefresh()

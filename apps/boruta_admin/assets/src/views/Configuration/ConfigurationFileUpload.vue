@@ -16,6 +16,8 @@
                 <div class="field">
                   <input type="file" @change="onFileChange" accept=".yml" :key="fileUpdates" />
                 </div>
+              </div>
+              <div class="ui segment">
                 <button type="submit" :to="{ name: 'new-backend' }" class="ui violet fluid create button">Upload <span v-if="edited">edited </span>file</button>
               </div>
             </form>
@@ -55,7 +57,7 @@ export default {
     }
   },
   mounted () {
-    ConfigurationFile.get().then(fileContent => {
+    ConfigurationFile.get(this.$route.params.type).then(fileContent => {
       this.fileContent = fileContent
       this.file = new Blob([fileContent], {type : 'text/plain'})
     })

@@ -448,7 +448,7 @@ const router = createRouter({
               component: Configuration,
             },
             {
-              path: "configuration-file-upload",
+              path: "configuration-file-upload/:type(example-configuration-file)?",
               name: "configuration-file-upload",
               component: ConfigurationFileUpload,
             },

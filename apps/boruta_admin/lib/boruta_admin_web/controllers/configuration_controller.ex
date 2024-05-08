@@ -48,6 +48,19 @@ defmodule BorutaAdminWeb.ConfigurationController do
     render(conn, "show_error_template.json", template: template)
   end
 
+  def example_configuration_file(conn, _params) do
+    content = :code.priv_dir(:boruta_admin)
+    |> Path.join("/examples/configuration.yml")
+    |> File.read!()
+
+    configurations = [%{
+      name: "configuration_file",
+      value: content
+    }]
+
+    render(conn, "configuration.json", configurations: configurations)
+  end
+
   def configuration(conn, _params) do
     configurations = Configurations.list_configurations()
 
@@ -57,7 +70,7 @@ defmodule BorutaAdminWeb.ConfigurationController do
   def upload_configuration_file(conn, %{"file" => %Plug.Upload{path: path}}) do
     file_content = File.read!(path)
 
-    with %{"configuration" => configuration, "version" => "1.0"} <-
+    with %{"configuration" => %{} = configuration, "version" => "1.0"} <-
            YamlElixir.read_from_file!(path),
          configuration <- filter_configuration(configuration, conn.assigns[:authorization]),
          result <- ConfigurationLoader.load_configuration(configuration) do

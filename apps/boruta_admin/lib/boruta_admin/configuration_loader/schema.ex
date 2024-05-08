@@ -102,37 +102,40 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
       "properties" => %{
         "create_default_organization" => %{"type" => "boolean"},
         "federated_servers" => %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string", "pattern" => "^[^\s]+$"},
-            "client_id" => %{"type" => "string"},
-            "client_secret" => %{"type" => "string"},
-            "base_url" => %{"type" => "string"},
-            "discovery_path" => %{"type" => "string"},
-            "userinfo_path" => %{"type" => "string"},
-            "authorize_path" => %{"type" => "string"},
-            "token_path" => %{"type" => "string"},
-            "scope" => %{"type" => "string"},
-            "federated_attributes" => %{"type" => "string"},
-            "metadata_endpoints" => %{
-              "type" => "array",
-              "items" => %{
-                "type" => "object",
-                "properties" => %{
-                  "endpoint" => %{"type" => "string"},
-                  "claims" => %{"type" => "string"}
-                },
-                "required" => ["endpoint", "claims"]
+          "type" => "array",
+          "items" => %{
+            "type" => "object",
+            "properties" => %{
+              "name" => %{"type" => "string", "pattern" => "^[^\s]+$"},
+              "client_id" => %{"type" => "string"},
+              "client_secret" => %{"type" => "string"},
+              "base_url" => %{"type" => "string"},
+              "discovery_path" => %{"type" => "string"},
+              "userinfo_path" => %{"type" => "string"},
+              "authorize_path" => %{"type" => "string"},
+              "token_path" => %{"type" => "string"},
+              "scope" => %{"type" => "string"},
+              "federated_attributes" => %{"type" => "string"},
+              "metadata_endpoints" => %{
+                "type" => "array",
+                "items" => %{
+                  "type" => "object",
+                  "properties" => %{
+                    "endpoint" => %{"type" => "string"},
+                    "claims" => %{"type" => "string"}
+                  },
+                  "required" => ["endpoint", "claims"]
+                }
               }
-            }
-          },
-          "required" => [
-            "name",
-            "client_id",
-            "client_secret",
-            "base_url"
-          ],
-          "additionalProperties" => false
+            },
+            "required" => [
+              "name",
+              "client_id",
+              "client_secret",
+              "base_url"
+            ],
+            "additionalProperties" => false
+          }
         },
         "id" => %{"type" => "string"},
         "is_default" => %{"type" => "boolean"},
@@ -177,53 +180,56 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
         "smtp_username" => %{"type" => "string"},
         "type" => %{"type" => "string"},
         "verifiable_credentials" => %{
-          "type" => "object",
-          "properties" => %{
-            "version" => %{"type" => "string"},
-            "credential_identifier" => %{"type" => "string"},
-            "time_to_live" => %{"type" => "number"},
-            "types" => %{"type" => "string"},
-            "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
-            "claims" => %{
-              "type" => "array",
-              "items" => %{
+          "type" => "array",
+          "items" => %{
+            "type" => "object",
+            "properties" => %{
+              "version" => %{"type" => "string"},
+              "credential_identifier" => %{"type" => "string"},
+              "time_to_live" => %{"type" => "number"},
+              "types" => %{"type" => "string"},
+              "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
+              "claims" => %{
+                "type" => "array",
+                "items" => %{
+                  "type" => "object",
+                  "properties" => %{
+                    "name" => %{"type" => "string"},
+                    "label" => %{"type" => "string"},
+                    "pointer" => %{"type" => "string"}
+                  },
+                  "required" => ["name", "label", "pointer"]
+                }
+              },
+              "display" => %{
                 "type" => "object",
                 "properties" => %{
                   "name" => %{"type" => "string"},
-                  "label" => %{"type" => "string"},
-                  "pointer" => %{"type" => "string"}
+                  "locale" => %{"type" => "string"},
+                  "background_color" => %{"type" => "string"},
+                  "text_color" => %{"type" => "string"},
+                  "logo" => %{
+                    "type" => "object",
+                    "properties" => %{
+                      "url" => %{"type" => "string"},
+                      "alt_text" => %{"type" => "string"}
+                    }
+                  }
                 },
-                "required" => ["name", "label", "pointer"]
+                "required" => ["name"],
+                "additionalProperties" => false
               }
             },
-            "display" => %{
-              "type" => "object",
-              "properties" => %{
-                "name" => %{"type" => "string"},
-                "locale" => %{"type" => "string"},
-                "background_color" => %{"type" => "string"},
-                "text_color" => %{"type" => "string"},
-                "logo" => %{
-                  "type" => "object",
-                  "properties" => %{
-                    "url" => %{"type" => "string"},
-                    "alt_text" => %{"type" => "string"}
-                  }
-                }
-              },
-              "required" => ["name"],
-              "additionalProperties" => false
-            }
-          },
-          "required" => [
-            "version",
-            "credential_identifier",
-            "format",
-            "types",
-            "claims",
-            "display"
-          ],
-          "additionalProperties" => false
+            "required" => [
+              "version",
+              "credential_identifier",
+              "format",
+              "types",
+              "claims",
+              "display"
+            ],
+            "additionalProperties" => false
+          }
         }
       },
       "required" => [],

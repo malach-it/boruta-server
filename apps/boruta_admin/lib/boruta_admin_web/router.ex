@@ -50,6 +50,8 @@ defmodule BorutaAdminWeb.Router do
     scope "/configuration", as: :configuration do
       get("/", ConfigurationController, :configuration, as: :configuration_list)
 
+      get("/example-configuration-file", ConfigurationController, :example_configuration_file)
+
       post("/upload-configuration-file", ConfigurationController, :upload_configuration_file,
         as: :upload_configuration_file
       )

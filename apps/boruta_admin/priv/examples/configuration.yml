@@ -1,0 +1,42 @@
+# Example configuration file
+# Uploading this will erase your current configuration
+---
+version: "1.0"
+configuration:
+  backend:
+    - id: 00000000-0000-0000-0000-000000000001
+      name: Example backend
+      verifiable_credentials:
+        - version: "13"
+          credential_identifier: BorutaCredentialSdJwt
+          format: vc+sd-jwt
+          types: VerifiableCredential BorutaCredentialSdJwt
+          claims:
+            - name: boruta_username
+              label: boruta username
+              pointer: email
+          display:
+            name: Boruta username (SD-JWT)
+            background_color: "#ffd758"
+            text_color: "#333333"
+            logo:
+              url: https://io.malach.it/assets/images/logo.png
+              alt_text: malachit logo
+  identity_provider:
+    - id: 00000000-0000-0000-0000-000000000001
+      name: Example identity provider
+      backend_id: 00000000-0000-0000-0000-000000000001
+      consentable: true
+      choose_session: true
+      registrable: true
+  client:
+    - id: 00000000-0000-0000-0000-000000000001
+      name: Example client
+      identity_provider:
+        id: 00000000-0000-0000-0000-000000000001
+      redirect_uris:
+        - https://redirect.uri.boruta
+  scope:
+    - name: BorutaCredentialSdJwt
+      label: boruta username
+      public: true

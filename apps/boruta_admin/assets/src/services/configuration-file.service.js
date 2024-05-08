@@ -27,11 +27,11 @@ export default class ConfigurationFile {
     }).then(({ data }) => data)
   }
 
-  static get () {
-    return this.api.get('/').then(({ data }) => {
+  static get (type = '') {
+    return this.api.get(`/${type}`).then(({ data }) => {
       const configuration = data.data.find(({ name }) => name == 'configuration_file')
       return configuration && configuration.value || this.baseConfiguration
-    })
+    }).catch(() => '')
   }
 
   static get baseConfiguration () {
