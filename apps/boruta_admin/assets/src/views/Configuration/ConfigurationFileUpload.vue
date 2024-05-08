@@ -18,7 +18,7 @@
                 </div>
               </div>
               <div class="ui segment">
-                <button type="submit" :to="{ name: 'new-backend' }" class="ui violet fluid create button">Upload <span v-if="edited">edited </span>file</button>
+                <button type="submit" :to="{ name: 'new-backend' }" class="ui violet fluid create button">Upload <span v-if="edited">edited </span>configuration</button>
               </div>
             </form>
             <div class="ui results segment">
@@ -98,7 +98,7 @@ export default {
   margin: 0 !important;
 }
 .results {
-  height: calc(100vh - 296px);
+  height: calc(100vh - 340px);
   margin: 0 !important;
   overflow: hidden;
   overflow-y: scroll;
