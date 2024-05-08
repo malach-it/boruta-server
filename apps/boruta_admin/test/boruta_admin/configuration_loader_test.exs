@@ -18,9 +18,8 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_gateway)
       |> Path.join("/test/configuration_files/bad_configuration.yml")
 
-    assert_raise MatchError, fn ->
-      ConfigurationLoader.from_file!(configuration_file_path)
-    end
+    assert ConfigurationLoader.from_file!(configuration_file_path) ==
+             {:error, "Bad configuration file."}
   end
 
   test "returns an error with a bad gateway configuration file" do
@@ -30,9 +29,11 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_gateway)
       |> Path.join("/test/configuration_files/bad_gateway_configuration.yml")
 
-    assert ConfigurationLoader.from_file!(configuration_file_path) == %{
-             gateway: ["Required properties scheme, host, port, uris are missing at #."]
-           }
+    assert ConfigurationLoader.from_file!(configuration_file_path) ==
+             {:ok,
+              %{
+                gateway: ["Required properties scheme, host, port, uris are missing at #."]
+              }}
   end
 
   test "returns an error with a bad microgateway configuration file" do
@@ -42,12 +43,14 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_gateway)
       |> Path.join("/test/configuration_files/bad_microgateway_configuration.yml")
 
-    assert ConfigurationLoader.from_file!(configuration_file_path) == %{
-             gateway: [],
-             microgateway: [
-               "Required properties scheme, host, port, uris are missing at #."
-             ]
-           }
+    assert ConfigurationLoader.from_file!(configuration_file_path) ==
+             {:ok,
+              %{
+                gateway: [],
+                microgateway: [
+                  "Required properties scheme, host, port, uris are missing at #."
+                ]
+              }}
   end
 
   test "returns an error with a bad identity provider configuration file" do
@@ -57,9 +60,11 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_admin)
       |> Path.join("/test/configuration_files/bad_identity_provider_configuration.yml")
 
-    assert ConfigurationLoader.from_file!(configuration_file_path) == %{
-             identity_provider: ["Schema does not allow additional properties: #/additional."]
-           }
+    assert ConfigurationLoader.from_file!(configuration_file_path) ==
+             {:ok,
+              %{
+                identity_provider: ["Schema does not allow additional properties: #/additional."]
+              }}
   end
 
   test "returns an error with a bad backend configuration file" do
@@ -69,9 +74,11 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_admin)
       |> Path.join("/test/configuration_files/bad_backend_configuration.yml")
 
-    assert ConfigurationLoader.from_file!(configuration_file_path) == %{
-             backend: ["Schema does not allow additional properties: #/additional."]
-           }
+    assert ConfigurationLoader.from_file!(configuration_file_path) ==
+             {:ok,
+              %{
+                backend: ["Schema does not allow additional properties: #/additional."]
+              }}
   end
 
   test "returns an error with a bad client configuration file" do
@@ -81,13 +88,14 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_admin)
       |> Path.join("/test/configuration_files/bad_client_configuration.yml")
 
-    assert %{
-             client: [
-               %Ecto.Changeset{
-                 errors: [identity_provider_id: {"can't be blank", [validation: :required]}]
-               }
-             ]
-           } = ConfigurationLoader.from_file!(configuration_file_path)
+    assert {:ok,
+            %{
+              client: [
+                %Ecto.Changeset{
+                  errors: [identity_provider_id: {"can't be blank", [validation: :required]}]
+                }
+              ]
+            }} = ConfigurationLoader.from_file!(configuration_file_path)
   end
 
   test "returns an error with a bad scope configuration file" do
@@ -97,9 +105,12 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_admin)
       |> Path.join("/test/configuration_files/bad_scope_configuration.yml")
 
-    assert %{
-             scope: [%Ecto.Changeset{errors: [name: {"can't be blank", [validation: :required]}]}]
-           } = ConfigurationLoader.from_file!(configuration_file_path)
+    assert {:ok,
+            %{
+              scope: [
+                %Ecto.Changeset{errors: [name: {"can't be blank", [validation: :required]}]}
+              ]
+            }} = ConfigurationLoader.from_file!(configuration_file_path)
   end
 
   test "returns an error with a bad role configuration file" do
@@ -109,9 +120,10 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_admin)
       |> Path.join("/test/configuration_files/bad_role_configuration.yml")
 
-    assert %{
-             role: [%Ecto.Changeset{errors: [name: {"can't be blank", [validation: :required]}]}]
-           } = ConfigurationLoader.from_file!(configuration_file_path)
+    assert {:ok,
+            %{
+              role: [%Ecto.Changeset{errors: [name: {"can't be blank", [validation: :required]}]}]
+            }} = ConfigurationLoader.from_file!(configuration_file_path)
   end
 
   test "returns an error with a bad error template configuration file" do
@@ -119,9 +131,10 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       :code.priv_dir(:boruta_admin)
       |> Path.join("/test/configuration_files/bad_error_template_configuration.yml")
 
-    assert %{
-             error_template: ["Error template does not exist."]
-           } = ConfigurationLoader.from_file!(configuration_file_path)
+    assert {:ok,
+            %{
+              error_template: ["Error template does not exist."]
+            }} = ConfigurationLoader.from_file!(configuration_file_path)
   end
 
   test "loads a file" do
@@ -194,6 +207,7 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
 
     assert %Role{name: "test"} = BorutaIdentity.Repo.all(Role) |> List.last()
 
-    assert %ErrorTemplate{type: "500", content: "test"} = BorutaIdentity.Repo.all(ErrorTemplate) |> List.last()
+    assert %ErrorTemplate{type: "500", content: "test"} =
+             BorutaIdentity.Repo.all(ErrorTemplate) |> List.last()
   end
 end

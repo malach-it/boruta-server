@@ -202,12 +202,14 @@ defmodule BorutaAdmin.Logs do
   def read(_start_at, _end_at, _application, _type), do: %{}
 
   defp log_stream(start_at, end_at, application, type) do
-    paths = log_dates(DateTime.to_date(start_at), DateTime.to_date(end_at))
-    |> Enum.map(&LogRotate.path(application, type, &1))
-    |> Enum.filter(&File.exists?/1)
+    paths =
+      log_dates(DateTime.to_date(start_at), DateTime.to_date(end_at))
+      |> Enum.map(&LogRotate.path(application, type, &1))
+      |> Enum.filter(&File.exists?/1)
 
     if Enum.reduce(paths, 0, fn path, _acc -> File.stat!(path).size end) > @max_file_size do
-      raise BorutaAdmin.Logs.FileTooLargeError, "Requested for more than #{@max_file_size} bytes of logs, could not perform the request."
+      raise BorutaAdmin.Logs.FileTooLargeError,
+            "Requested for more than #{@max_file_size} bytes of logs, could not perform the request."
     end
 
     paths

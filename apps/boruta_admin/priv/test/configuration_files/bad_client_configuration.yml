@@ -1,4 +1,5 @@
 ---
+version: "1.0"
 configuration:
   client:
     - access_token_ttl: 10

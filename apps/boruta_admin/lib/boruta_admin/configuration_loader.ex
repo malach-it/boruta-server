@@ -35,18 +35,23 @@ defmodule BorutaAdmin.ConfigurationLoader do
       node_name
   end
 
-  @spec from_file!(configuration_file_path :: String.t()) :: :ok
+  @spec from_file!(configuration_file_path :: String.t()) ::
+          {:ok, result :: map()} | {:error, reason :: String.t()}
   def from_file!(path) do
-    %{"configuration" => configuration} = YamlElixir.read_from_file!(path)
+    case YamlElixir.read_from_file!(path) do
+      %{"configuration" => configuration, "version" => "1.0"} ->
+        {:ok, load_configuration(configuration)}
 
-    load_configuration(configuration)
+      _ ->
+        {:error, "Bad configuration file."}
+    end
   end
 
   def load_configuration(configuration) do
     load_configuration(configuration, %{})
   end
 
-  def load_configuration(%{"gateway" => gateway_configurations} = configuration, result) do
+  def load_configuration(%{"gateway" => gateway_configurations} = configuration, result) when is_list(gateway_configurations) do
     result =
       Map.put(
         result,
@@ -75,7 +80,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "gateway"), result)
   end
 
-  def load_configuration(%{"microgateway" => gateway_configurations} = configuration, result) do
+  def load_configuration(%{"microgateway" => gateway_configurations} = configuration, result) when is_list(gateway_configurations) do
     result =
       Map.put(
         result,
@@ -114,7 +119,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "microgateway"), result)
   end
 
-  def load_configuration(%{"backend" => backend_configurations} = configuration, result) do
+  def load_configuration(%{"backend" => backend_configurations} = configuration, result) when is_list(backend_configurations) do
     result =
       Map.put(
         result,
@@ -147,9 +152,9 @@ defmodule BorutaAdmin.ConfigurationLoader do
   end
 
   def load_configuration(
-         %{"identity_provider" => identity_provider_configurations} = configuration,
-         result
-       ) do
+        %{"identity_provider" => identity_provider_configurations} = configuration,
+        result
+      ) when is_list(identity_provider_configurations) do
     result =
       Map.put(
         result,
@@ -181,7 +186,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "identity_provider"), result)
   end
 
-  def load_configuration(%{"client" => client_configurations} = configuration, result) do
+  def load_configuration(%{"client" => client_configurations} = configuration, result) when is_list(client_configurations) do
     result =
       Map.put(
         result,
@@ -213,7 +218,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "client"), result)
   end
 
-  def load_configuration(%{"scope" => scope_configurations} = configuration, result) do
+  def load_configuration(%{"scope" => scope_configurations} = configuration, result) when is_list(scope_configurations) do
     result =
       Map.put(
         result,
@@ -245,7 +250,7 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "scope"), result)
   end
 
-  def load_configuration(%{"role" => role_configurations} = configuration, result) do
+  def load_configuration(%{"role" => role_configurations} = configuration, result) when is_list(role_configurations) do
     result =
       Map.put(
         result,
@@ -278,9 +283,9 @@ defmodule BorutaAdmin.ConfigurationLoader do
   end
 
   def load_configuration(
-         %{"error_template" => error_template_configurations} = configuration,
-         result
-       ) do
+        %{"error_template" => error_template_configurations} = configuration,
+        result
+      ) when is_list(error_template_configurations) do
     result =
       Map.put(
         result,
@@ -292,7 +297,10 @@ defmodule BorutaAdmin.ConfigurationLoader do
                    error_template_configuration,
                    error_formatter: BorutaFormatter
                  ),
-               template <- Configuration.get_error_template!(String.to_integer(error_template_configuration["type"])),
+               template <-
+                 Configuration.get_error_template!(
+                   String.to_integer(error_template_configuration["type"])
+                 ),
                {:ok, %ErrorTemplate{} = template} <-
                  Configuration.upsert_error_template(template, error_template_configuration) do
             {:ok, template}
@@ -313,11 +321,13 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "error_template"), result)
   rescue
     _e in Ecto.NoResultsError ->
-      result = Map.put(
-        result,
-        :error_template,
-        ["Error template does not exist."]
-      )
+      result =
+        Map.put(
+          result,
+          :error_template,
+          ["Error template does not exist."]
+        )
+
       load_configuration(Map.delete(configuration, "error_template"), result)
   end
 

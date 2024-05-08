@@ -15,20 +15,27 @@ defmodule BorutaAdminWeb.ConfigurationView do
     }
   end
 
+  def render("configuration.json", %{configurations: configurations}) do
+    %{
+      data: Enum.map(configurations, &Map.take(&1, [:name, :value]))
+    }
+  end
+
   def render("file_upload.json", %{result: result, file_content: file_content}) do
-    errors = Enum.map(result, fn {key, errors} ->
-      errors =
-        Enum.map(errors, fn
-          %Ecto.Changeset{} = changeset ->
-            ChangesetView.translate_errors(changeset)
+    errors =
+      Enum.map(result, fn {key, errors} ->
+        errors =
+          Enum.map(errors, fn
+            %Ecto.Changeset{} = changeset ->
+              ChangesetView.translate_errors(changeset)
 
-          "" <> error ->
-            %{validation: [error]}
-        end)
+            "" <> error ->
+              %{validation: [error]}
+          end)
 
-      {key, errors}
-    end)
-    |> Enum.into(%{})
+        {key, errors}
+      end)
+      |> Enum.into(%{})
 
     %{
       errors: errors,

@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import ConfigurationFileUploader from '../../services/configuration-file-uploader.service.js'
+import ConfigurationFile from '../../services/configuration-file.service.js'
 import TextEditor from '../../components/Forms/TextEditor.vue'
 import FormErrors from '../../components/Forms/FormErrors.vue'
 
@@ -54,10 +54,15 @@ export default {
       edited: false
     }
   },
+  mounted () {
+    ConfigurationFile.get().then(fileContent => {
+      this.fileContent = fileContent
+    })
+  },
   methods: {
     submit () {
       this.errors = null
-      ConfigurationFileUploader.upload(this.file).then(result => {
+      ConfigurationFile.upload(this.file).then(result => {
         this.result = result
         this.fileContent = result.file_content
         this.edited = false
@@ -69,7 +74,6 @@ export default {
       this.file = event.target.files[0]
       new Response(this.file).text().then(fileContent => {
           this.fileContent = fileContent
-        console.log(this.fileContent)
       })
     },
     setContent (content) {
