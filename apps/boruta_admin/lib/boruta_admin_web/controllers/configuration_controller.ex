@@ -15,6 +15,17 @@ defmodule BorutaAdminWeb.ConfigurationController do
 
   plug(:authorize, ["configuration:manage:all"])
 
+  @resource %{
+    "client" => "clients",
+    "identity_provider" => "identity-providers",
+    "backend" => "identity-providers",
+    "role" => "scopes",
+    "scope" => "scopes",
+    "gateway" => "upstreams",
+    "microgateway" => "upstreams",
+    "error_template" => "configuration"
+  }
+
   def error_template(conn, %{"template_type" => template_type}) do
     template = Configuration.get_error_template!(String.to_integer(template_type))
     render(conn, "show_error_template.json", template: template)
@@ -46,13 +57,23 @@ defmodule BorutaAdminWeb.ConfigurationController do
   def upload_configuration_file(conn, %{"file" => %Plug.Upload{path: path}}) do
     file_content = File.read!(path)
 
-    case ConfigurationLoader.from_file!(path) do
-      {:ok, result} ->
-        # TODO perform a transaction
-        Configurations.upsert_configuration("configuration_file", file_content)
-        render(conn, "file_upload.json", result: result, file_content: file_content)
-      {:error, _error} ->
+    with %{"configuration" => configuration, "version" => "1.0"} <-
+           YamlElixir.read_from_file!(path),
+         configuration <- filter_configuration(configuration, conn.assigns[:authorization]),
+         result <- ConfigurationLoader.load_configuration(configuration) do
+      # TODO perform a transaction
+      Configurations.upsert_configuration("configuration_file", file_content)
+      render(conn, "file_upload.json", result: result, file_content: file_content)
+    else
+      _ ->
         {:error, :bad_request}
     end
+  end
+
+  defp filter_configuration(configuration, %{"scope" => scope}) do
+    Enum.filter(configuration, fn {key, _value} ->
+      Regex.match?(~r{#{@resource[key]}:manage:all}, scope)
+    end)
+    |> Enum.into(%{})
   end
 end

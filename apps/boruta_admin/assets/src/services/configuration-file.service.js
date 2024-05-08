@@ -37,7 +37,7 @@ export default class ConfigurationFile {
   static get baseConfiguration () {
     return `
 ---
-version: 0.1.0
+version: "1.0"
 configuration:
   client:
   identity_provider:

@@ -57,6 +57,7 @@ export default {
   mounted () {
     ConfigurationFile.get().then(fileContent => {
       this.fileContent = fileContent
+      this.file = new Blob([fileContent], {type : 'text/plain'})
     })
   },
   methods: {
