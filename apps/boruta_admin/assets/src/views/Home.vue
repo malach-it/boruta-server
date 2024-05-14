@@ -70,7 +70,7 @@ export default {
   name: 'home',
   computed: {
     preauthorizeUrl () {
-     return window.env.BORUTA_ADMIN_OAUTH_BASE_URL +
+     return "https://" + window.env.BORUTA_OAUTH_HOST +
       "/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=https%3A%2F%2Fredirect.uri.boruta&scope=BorutaCredentialSdJwt&response_type=urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4xm&prompt=login"
     }
   }
