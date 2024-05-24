@@ -2,6 +2,12 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [unreleased]
+
+### Security
+
+- [admin] instance authenticated admins are sub or organization restricted
+
 ## [0.3.0] 2024-01-18
 
 ### Added

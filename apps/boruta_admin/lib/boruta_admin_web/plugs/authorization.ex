@@ -6,23 +6,33 @@ defmodule BorutaAdminWeb.Authorization do
 
   require Logger
 
+  alias Boruta.Oauth.Authorization.ResourceOwner
   use BorutaAdminWeb, :controller
 
+  alias Boruta.Oauth.ResourceOwner
   alias Boruta.Openid.UserinfoResponse
   alias BorutaAdminWeb.ErrorView
+  alias BorutaIdentity.ResourceOwners
 
   def require_authenticated(conn, _opts \\ []) do
-        with [authorization_header] <- get_req_header(conn, "authorization"),
-             [_authorization_header, access_token] <-
-               Regex.run(~r/Bearer (.+)/, authorization_header),
-             {:ok, token} <- Boruta.Oauth.Authorization.AccessToken.authorize(value: access_token) do
-        conn
-        |> assign(:authorization, %{
-          "scope" => token.scope,
-          "sub" => token.sub
-        })
+    with [authorization_header] <- get_req_header(conn, "authorization"),
+         [_authorization_header, access_token] <-
+           Regex.run(~r/Bearer (.+)/, authorization_header),
+         {:ok, token} <- Boruta.Oauth.Authorization.AccessToken.authorize(value: access_token) do
+      userinfo = ResourceOwners.claims(%ResourceOwner{sub: token.sub}, "profile")
 
-        else
+      case maybe_validate_user(userinfo) do
+        :ok ->
+          conn
+          |> assign(:authorization, %{
+            "scope" => token.scope,
+            "sub" => token.sub
+          })
+
+        error ->
+          respond_unauthorized(conn, error)
+      end
+    else
       {:error, _error} ->
         with [authorization_header] <- get_req_header(conn, "authorization"),
              [_authorization_header, access_token] <-
