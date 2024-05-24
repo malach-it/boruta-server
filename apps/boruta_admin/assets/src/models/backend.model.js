@@ -2,10 +2,7 @@ import axios from "axios";
 import { addClientErrorInterceptor } from "./utils";
 import Role from './role.model'
 
-const DEFAULT_ID = "non-existing";
-
 const defaults = {
-  id: DEFAULT_ID,
   name: null,
   roles: [],
   type: "Elixir.BorutaIdentity.Accounts.Internal",
@@ -129,7 +126,7 @@ class Backend {
   }
 
   get isPersisted() {
-    return this.id && this.id != DEFAULT_ID;
+    return this.id
   }
 
   save() {
