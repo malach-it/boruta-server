@@ -48,6 +48,14 @@ defmodule BorutaAdminWeb.Router do
     resources("/upstreams", UpstreamController, except: [:new, :edit])
 
     scope "/configuration", as: :configuration do
+      get("/", ConfigurationController, :configuration, as: :configuration_list)
+
+      get("/example-configuration-file", ConfigurationController, :example_configuration_file)
+
+      post("/upload-configuration-file", ConfigurationController, :upload_configuration_file,
+        as: :upload_configuration_file
+      )
+
       get("/error-templates/:template_type", ConfigurationController, :error_template,
         as: :error_template
       )

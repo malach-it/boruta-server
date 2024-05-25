@@ -1,20 +1,33 @@
 <template>
   <div class="edit-identity-provider">
     <Toaster :active="success" message="identity provider has been updated" type="success" />
-    <div class="ui container">
-      <div class="ui segment">
-        <div class="ui attribute list">
-          <div class="item">
-            <span class="header">identity provider ID</span>
-            <span class="description">{{ identityProvider.id }}</span>
-          </div>
-          <div class="item">
-            <span class="header">Name</span>
-            <span class="description">{{ identityProvider.name }}</span>
+    <div class="container">
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <div class="ui segment">
+              <div class="ui attribute list">
+                <div class="item">
+                  <span class="header">Name</span>
+                  <span class="description">{{ identityProvider.name }}</span>
+                </div>
+                <div class="item">
+                  <span class="header">identity provider ID</span>
+                  <span class="description">{{ identityProvider.id }}</span>
+                </div>
+                <div class="item">
+                  <span class="header">Backend</span>
+                  <span class="description"><router-link :to="{ name: 'edit-backend', params: { backendId: identityProvider.backend.id } }">{{ identityProvider.backend.name }}</router-link></span>
+                </div>
+              </div>
+            </div>
+            <router-link :to="{ name: 'identity-provider-list' }" class="ui right floated button">Back</router-link>
           </div>
         </div>
+        <div class="twelve wide column">
+          <IdentityProviderForm :identityProvider="identityProvider" @submit="updateIdentityProvider()" @back="back()" action="Update" />
+        </div>
       </div>
-      <IdentityProviderForm :identityProvider="identityProvider" @submit="updateIdentityProvider()" @back="back()" action="Update" />
     </div>
   </div>
 </template>

@@ -3,7 +3,7 @@ import Scope from './scope.model'
 import IdentityProvider from './identity-provider.model'
 import { addClientErrorInterceptor } from './utils'
 
-const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit', 'revoke', 'introspect']
+const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit', 'preauthorized_code', 'revoke', 'introspect']
 
 const defaults = {
   errors: null,
@@ -33,6 +33,7 @@ const assign = {
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
   refresh_token_ttl: function ({ refresh_token_ttl }) { this.refresh_token_ttl = refresh_token_ttl },
   id_token_ttl: function ({ id_token_ttl }) { this.id_token_ttl = id_token_ttl },
+  authorization_request_ttl: function ({ authorization_request_ttl }) { this.authorization_request_ttl = authorization_request_ttl },
   secret: function ({ secret }) { this.secret = secret },
   redirect_uris: function ({ redirect_uris }) {
     this.redirect_uris = redirect_uris.map((uri) => ({ uri }))
@@ -43,6 +44,7 @@ const assign = {
     this.identity_provider = { model: new IdentityProvider(identity_provider) }
   },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
+  enforce_dpop: function ({ enforce_dpop }) { this.enforce_dpop = enforce_dpop },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
       return { model: new Scope(scope) }
@@ -159,7 +161,9 @@ class Client {
     const {
       access_token_ttl,
       authorization_code_ttl,
+      authorization_request_ttl,
       authorize_scope,
+      enforce_dpop,
       authorized_scopes,
       confidential,
       grantTypes,
@@ -184,7 +188,9 @@ class Client {
     return {
       access_token_ttl,
       authorization_code_ttl,
+      authorization_request_ttl,
       authorize_scope,
+      enforce_dpop,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
       confidential,
       id,

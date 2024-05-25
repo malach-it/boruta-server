@@ -2,6 +2,7 @@ defmodule BorutaWeb.OauthView do
   use BorutaWeb, :view
 
   alias Boruta.Oauth.Client
+  alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaWeb.Token
 
   def render("token.json", %{response: %Boruta.Oauth.TokenResponse{} = response}) do
@@ -82,8 +83,42 @@ defmodule BorutaWeb.OauthView do
       ],
       "request_object_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "id_token_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
-      "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms()
+      "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
+      "credential_issuer" => issuer,
+      "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
+      "credential_configurations_supported" =>
+        VerifiableCredentials.credential_configurations_supported(),
+      "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
+  end
+
+  def render("openid_credential_issuer.json", %{routes: routes}) do
+    issuer = Boruta.Config.issuer()
+
+    %{
+      "issuer" => issuer,
+      "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
+      "credential_issuer" => issuer,
+      "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
+      "credential_configurations_supported" =>
+        VerifiableCredentials.credential_configurations_supported(),
+      "credentials_supported" => VerifiableCredentials.credentials_supported()
+    }
+  end
+
+  def render("credential.json", %{credential_response: credential_response}) do
+    %{
+      format: credential_response.format,
+      credential: credential_response.credential
+    }
+    |> Map.put(:c_nonce, "boruta")
+    |> Map.put(:c_nonce_expires_in, 3600)
+  end
+
+  def render("pushed_authorization_request.json", %{
+        response: %Boruta.Oauth.PushedAuthorizationResponse{} = response
+      }) do
+    response
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
@@ -92,8 +127,10 @@ defmodule BorutaWeb.OauthView do
             token_type: token_type,
             access_token: access_token,
             id_token: id_token,
+            c_nonce: c_nonce,
             expires_in: expires_in,
-            refresh_token: refresh_token
+            refresh_token: refresh_token,
+            authorization_details: authorization_details
           },
           options
         ) do
@@ -101,13 +138,25 @@ defmodule BorutaWeb.OauthView do
         token_type: token_type,
         access_token: access_token,
         expires_in: expires_in,
-        refresh_token: refresh_token
+        refresh_token: refresh_token,
+        c_nonce: c_nonce
       }
 
       response =
         case id_token do
           nil -> response
           id_token -> Map.put(response, :id_token, id_token)
+        end
+
+      response =
+        case authorization_details do
+          nil ->
+            response
+
+          _authorization_details ->
+            response
+            |> Map.put(:authorization_details, authorization_details)
+            |> Map.put(:c_nonce_expires_in, 3600)
         end
 
       Jason.Encode.map(
@@ -118,9 +167,12 @@ defmodule BorutaWeb.OauthView do
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.IntrospectResponse do
-    def encode(%Boruta.Oauth.IntrospectResponse{
-          active: false
-        }, options) do
+    def encode(
+          %Boruta.Oauth.IntrospectResponse{
+            active: false
+          },
+          options
+        ) do
       Jason.Encode.map(%{active: false}, options)
     end
 
@@ -147,6 +199,18 @@ defmodule BorutaWeb.OauthView do
           iss: iss,
           exp: exp,
           iat: iat
+        },
+        options
+      )
+    end
+  end
+
+  defimpl Jason.Encoder, for: Boruta.Oauth.PushedAuthorizationResponse do
+    def encode(%Boruta.Oauth.PushedAuthorizationResponse{} = response, options) do
+      Jason.Encode.map(
+        %{
+          request_uri: response.request_uri,
+          expires_in: response.expires_in
         },
         options
       )

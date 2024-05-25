@@ -1,21 +1,20 @@
 <template>
-  <div class="organization-form">
-    <div class="ui segment">
-      <FormErrors :errors="organization.errors" v-if="organization.errors" />
-      <form class="ui form" @submit.prevent="submit">
-        <div class="field">
-          <label>Name</label>
-          <input type="text" v-model="organization.name" placeholder="wonder-organization" />
-        </div>
-        <div class="field">
-          <label>Label</label>
-          <input type="text" v-model="organization.label" placeholder="Wonder organization" />
-        </div>
-        <hr />
-        <button class="ui right floated violet button" type="submit">{{ action }}</button>
-        <a v-on:click="back()" class="ui button">Back</a>
-      </form>
-    </div>
+  <div class="ui organization-form segment">
+    <FormErrors :errors="organization.errors" v-if="organization.errors" />
+    <form class="ui form" @submit.prevent="submit">
+      <h2>General configuration</h2>
+      <div class="field">
+        <label>Name</label>
+        <input type="text" v-model="organization.name" placeholder="wonder-organization" />
+      </div>
+      <div class="field">
+        <label>Label</label>
+        <input type="text" v-model="organization.label" placeholder="Wonder organization" />
+      </div>
+      <div class="actions">
+        <button class="ui violet button" type="submit">{{ action }}</button>
+      </div>
+    </form>
   </div>
 </template>
 
@@ -27,11 +26,6 @@ export default {
   props: ['organization', 'action'],
   components: {
     FormErrors
-  },
-  methods: {
-    back () {
-      this.$emit('back')
-    }
   }
 }
 </script>

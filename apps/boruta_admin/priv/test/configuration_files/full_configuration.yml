@@ -1,0 +1,64 @@
+---
+version: "1.0"
+configuration:
+  node_name: "full-configuration"
+  gateway:
+    - authorize: true
+      error_content_type: "test"
+      forbidden_response: "test"
+      unauthorized_response: "test"
+      forwarded_token_secret: "test"
+      forwarded_token_signature_alg: "HS384"
+      host: "httpbin.patatoid.fr"
+      port: 80
+      uris: ["/httpbin"]
+      max_idle_time: 10
+      pool_count: 1
+      pool_size: 10
+      required_scopes:
+        GET: ["test"]
+      scheme: "http"
+      strip_uri: true
+  microgateway:
+    - authorize: true
+      error_content_type: "test"
+      forbidden_response: "test"
+      unauthorized_response: "test"
+      forwarded_token_secret: "test"
+      forwarded_token_signature_alg: "HS384"
+      host: "httpbin.patatoid.fr"
+      port: 80
+      uris: ["/httpbin"]
+      max_idle_time: 10
+      pool_count: 1
+      pool_size: 10
+      required_scopes:
+        GET: ["test"]
+      scheme: "http"
+      strip_uri: true
+  backend:
+    - id: 21b90c7e-8658-44c9-94c5-7a1af32045c4
+      name: test
+  identity_provider:
+    - id: dce4eec9-db5c-4f08-abbd-fc57c6a11f99
+      backend_id: 21b90c7e-8658-44c9-94c5-7a1af32045c4
+      name: test
+      templates:
+        - type: layout
+          content: test
+  client:
+    - identity_provider:
+        id: dce4eec9-db5c-4f08-abbd-fc57c6a11f99
+      name: test
+  role:
+    - id: 1582534e-098d-4221-9c53-4a3631da9d78
+      name: test
+      scopes:
+        - id: 9f163ee9-2d1b-4209-9dd2-f319cd063a9b
+  scope:
+    - id: 9f163ee9-2d1b-4209-9dd2-f319cd063a9b
+      name: test
+      name: test
+  error_template:
+    - type: "500"
+      content: test

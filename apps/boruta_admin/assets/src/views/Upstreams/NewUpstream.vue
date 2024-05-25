@@ -1,7 +1,16 @@
 <template>
   <div class="new-upstream">
-    <div class="ui container">
-      <UpstreamForm :upstream="upstream" @submit="createUpstream()" @back="back()" action="Create" />
+    <div class="container">
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <router-link :to="{ name: 'upstream-list' }" class="ui right floated button">Back</router-link>
+          </div>
+        </div>
+        <div class="twelve wide column">
+          <UpstreamForm :upstream="upstream" @submit="createUpstream()" @back="back()" action="Create" />
+        </div>
+      </div>
     </div>
   </div>
 </template>

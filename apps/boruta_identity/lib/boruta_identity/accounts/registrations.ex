@@ -117,6 +117,12 @@ defmodule BorutaIdentity.Accounts.Registrations do
           template: new_registration_template(client_idp)
         })
 
+      {:error, reason} ->
+        module.registration_failure(context, %RegistrationError{
+          message: inspect(reason),
+          template: new_confirmation_instructions_template(client_idp)
+        })
+
       {:user_not_confirmed, user, reason} ->
         module.registration_failure(context, %RegistrationError{
           user: user,

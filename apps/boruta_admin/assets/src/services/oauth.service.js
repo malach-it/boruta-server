@@ -69,6 +69,7 @@ class Oauth {
     return this.implicitClient.callback().then(response => {
       this.authenticate(response)
     }).catch((error) => {
+      console.log(error)
       this.login()
       throw error
     })

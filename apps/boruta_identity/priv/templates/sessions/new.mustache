@@ -30,6 +30,12 @@
 
 </form>
 
+<span class="ui horizontal divider">or</span>
+
+<div class="ui center aligned segment">
+  <img width="300" src="data:image/svg+xml; base64, {{ base64_siopv2_qr_code }}" alt="QR code" />
+</div>
+
 <p>
   {{#registrable?}}<a href="{{ new_user_registration_path }}">Register</a> | {{/registrable?}}<a href="{{ new_user_reset_password_path }}">Forgot your password?</a>
 </p>

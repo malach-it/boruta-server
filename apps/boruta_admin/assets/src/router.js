@@ -37,6 +37,7 @@ import EditNewConfirmationTemplate from "./views/IdentityProviders/EditNewConfir
 import EditNewResetPasswordTemplate from "./views/IdentityProviders/EditNewResetPasswordTemplate.vue";
 import EditEditResetPasswordTemplate from "./views/IdentityProviders/EditEditResetPasswordTemplate.vue";
 import EditEditUserTemplate from "./views/IdentityProviders/EditEditUserTemplate.vue";
+import EditCredentialOfferTemplate from "./views/IdentityProviders/EditCredentialOfferTemplate.vue";
 import NewIdentityProvider from "./views/IdentityProviders/NewIdentityProvider.vue";
 
 import Users from "./views/IdentityProviders/Users.vue";
@@ -68,6 +69,7 @@ import NewRole from "./views/Roles/NewRole.vue";
 import EditRole from "./views/Roles/EditRole.vue";
 
 import Configuration from "./views/Configuration.vue";
+import ConfigurationFileUpload from "./views/Configuration/ConfigurationFileUpload.vue";
 import ErrorTemplateList from "./views/Configuration/ErrorTemplateList.vue";
 import EditBadRequestTemplate from "./views/Configuration/EditBadRequestTemplate.vue";
 import EditNotFoundTemplate from "./views/Configuration/EditNotFoundTemplate.vue";
@@ -210,6 +212,11 @@ const router = createRouter({
                   path: "edit/send-confirmation-instructions-template",
                   name: "edit-new-confirmation-template",
                   component: EditNewConfirmationTemplate,
+                },
+                {
+                  path: "edit/credential-offer-template",
+                  name: "edit-credential-offer-template",
+                  component: EditCredentialOfferTemplate,
                 },
               ],
             },
@@ -441,6 +448,11 @@ const router = createRouter({
               component: Configuration,
             },
             {
+              path: "configuration-file-upload/:type(example-configuration-file)?",
+              name: "configuration-file-upload",
+              component: ConfigurationFileUpload,
+            },
+            {
               path: "error-template-list",
               name: "error-template-list",
               component: ErrorTemplateList,
@@ -491,7 +503,7 @@ router.beforeEach((to, _from, next) => {
     window.addEventListener("logged_in", continueNavigation);
 
     oauth.silentRefresh();
-    return next(false);
+    return next(new Error('Not logged in'));
   } else {
     return next();
   }

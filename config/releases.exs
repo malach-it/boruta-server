@@ -58,7 +58,7 @@ config :boruta_web, BorutaWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  url: [scheme: "https", host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts"],
+  url: [scheme: "https", host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts", port: 443],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,

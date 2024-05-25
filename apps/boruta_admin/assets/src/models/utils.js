@@ -6,8 +6,6 @@ export function addClientErrorInterceptor(instance) {
   instance.interceptors.response.use(function (response) {
       return response;
     }, function (error) {
-      if (error.response?.status === 404) return router.push({ name: 'not-found' })
-      if (error.response?.status === 400) return router.push({ name: 'bad-request' })
       if (error.response?.status === 401) {
         return new Promise((resolve, reject) => {
           oauth.silentRefresh()
@@ -26,7 +24,7 @@ export function addClientErrorInterceptor(instance) {
 
           window.addEventListener('logged_in', retry)
           setTimeout(() => {
-            oauth.login()
+            oauth.logout()
             reject()
           }, 2000)
         })

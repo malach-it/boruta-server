@@ -17,7 +17,7 @@ defmodule BorutaAuth.Application do
   end
   def setup_database do
     Enum.each([BorutaAuth.Repo], fn repo ->
-      repo.__adapter__.storage_up(repo.config) |> dbg
+      repo.__adapter__.storage_up(repo.config)
     end)
 
     :ok
