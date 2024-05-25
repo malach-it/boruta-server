@@ -51,8 +51,10 @@ class Oauth {
     localStorage.setItem('id_token', id_token)
     localStorage.setItem('token_expires_at', expires_at)
 
-    const loggedIn = new Event('logged_in')
-    window.dispatchEvent(loggedIn)
+    setTimeout(() => {
+      const loggedIn = new Event('logged_in')
+      window.dispatchEvent(loggedIn)
+    }, 100)
   }
 
   login () {
