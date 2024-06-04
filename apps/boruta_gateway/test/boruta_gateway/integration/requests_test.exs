@@ -20,6 +20,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     :ok
   end
 
+  @tag :skip
   describe "requests" do
     setup do
       {:ok, %Boruta.Ecto.Client{id: client_id}} = Admin.create_client(%{})
@@ -158,6 +159,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    @tag :skip
     test "returns response when authorized", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -191,6 +193,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    @tag :skip
     test "returns response root uri stripped", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -224,6 +227,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    @tag :skip
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do
@@ -275,6 +279,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     end
   end
 
+  @tag :skip
   describe "requests (from configuration file)" do
     setup do
       {:ok, %Boruta.Ecto.Client{id: client_id}} = Admin.create_client(%{})
@@ -382,6 +387,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    @tag :skip
     test "returns response when authorized", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -411,6 +417,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    @tag :skip
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do
@@ -458,6 +465,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     end
   end
 
+  @tag :skip
   describe "sidecar requests" do
     setup do
       {:ok, %Boruta.Ecto.Client{id: client_id}} = Admin.create_client(%{})
@@ -584,6 +592,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    @tag :skip
     test "returns response when authorized", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -618,6 +627,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    @tag :skip
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do

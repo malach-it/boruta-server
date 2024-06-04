@@ -35,7 +35,7 @@ defmodule BorutaIdentity.Accounts.Users do
   end
 
   @spec get_user(id :: String.t()) :: user :: User.t() | nil
-  def get_user(id) do
+  def get_user(id) when is_binary(id) do
     Repo.one(
       from(u in User,
         left_join: as in assoc(u, :authorized_scopes),
@@ -45,6 +45,7 @@ defmodule BorutaIdentity.Accounts.Users do
       )
     )
   end
+  def get_user(_), do: nil
 
   @doc """
   Gets the user with the given signed token.
