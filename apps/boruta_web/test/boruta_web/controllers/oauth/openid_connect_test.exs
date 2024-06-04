@@ -272,6 +272,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
   describe "discovery 1.0" do
     test "returns required keys", %{conn: conn} do
+      Boruta.Factory.insert(:scope, name: "well_known")
+
       conn = get(conn, Routes.openid_path(conn, :well_known))
 
       assert json_response(conn, 200) == %{
@@ -297,6 +299,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "code id_token token"
                ],
                "response_modes_supported" => ["query", "fragment"],
+               "scopes_supported" => ["well_known"],
                "subject_types_supported" => ["public"],
                "token_endpoint_auth_methods_supported" => [
                  "client_secret_basic",
