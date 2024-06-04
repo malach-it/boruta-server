@@ -225,7 +225,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn = get(conn, Routes.jwks_path(conn, :jwks_index))
 
       assert %{"keys" => keys} = json_response(conn, 200)
-      assert Enum.count(keys) == 1
+      assert Enum.empty?(keys)
     end
 
     test "returns all clients keys", %{conn: conn} do
