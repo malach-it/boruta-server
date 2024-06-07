@@ -50,6 +50,7 @@ config :boruta_gateway,
 config :boruta_web, BorutaWeb.Endpoint,
   http: [
     port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer(),
+    ip: System.get_env("BORUTA_OAUTH_BIND", "::") |> String.to_charlist() |> :inet.parse_address() |> elem(1),
     transport_options: [
       num_acceptors: String.to_integer(System.get_env("WEB_ACCEPTORS", "64"))
     ]
@@ -64,6 +65,7 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
 config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [
     port: System.get_env("BORUTA_ADMIN_PORT") |> String.to_integer(),
+    ip: System.get_env("BORUTA_ADMIN_BIND", "::") |> String.to_charlist() |> :inet.parse_address() |> elem(1),
     protocol_options: [idle_timeout: 3_600_000, inactivity_timeout: 3_600_000]
   ],
   url: [scheme: "https", host: System.get_env("BORUTA_ADMIN_HOST")],
