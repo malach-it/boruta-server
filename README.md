@@ -85,7 +85,7 @@ Admin credentials are the one seeded and available in environment file.
 You can build and run the docker images as follow:
 
 ```bash
-docker-compose run boruta
+docker-compose up
 ```
 
 The applications will be available on different ports (depending on the docker compose environment configuration):
