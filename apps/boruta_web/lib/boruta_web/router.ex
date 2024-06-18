@@ -72,6 +72,12 @@ defmodule BorutaWeb.Router do
     get("/authorize", AuthorizeController, :authorize)
   end
 
+  scope "/did", BorutaWeb do
+    pipe_through([:api])
+
+    get("/resolve_status/:status", DidController, :resolve_status)
+  end
+
   scope "/openid", BorutaWeb.Oauth do
     pipe_through([:api])
 
