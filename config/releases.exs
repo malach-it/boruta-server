@@ -54,11 +54,11 @@ config :boruta_web, BorutaWeb.Endpoint,
       num_acceptors: String.to_integer(System.get_env("WEB_ACCEPTORS", "64"))
     ]
   ],
-  url: [scheme: "https", host: System.get_env("BORUTA_OAUTH_HOST")],
+  url: [scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"), host: System.get_env("BORUTA_OAUTH_HOST")],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  url: [scheme: "https", host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts", port: 443],
+  url: [scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"), host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts", port: System.get_env("BORUTA_OAUTH_PORT")],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,

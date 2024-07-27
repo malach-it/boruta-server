@@ -203,6 +203,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_ADMIN_HOST`                | The host that represent the host where boruta admin server will be deployed to. |
 | `BORUTA_ADMIN_PORT`                | The port where boruta admin server will be exposed on. |
 | `BORUTA_ADMIN_BASE_URL`            | The base URL where boruta admin server http endpoint will be deployed to (without trailing slash). |
+| `BORUTA_OAUTH_SCHEME`              | The scheme that will be used for URL building, default to https. |
 | `BORUTA_OAUTH_HOST`                | The host where boruta oauth server will be deployed to. |
 | `BORUTA_OAUTH_PORT`                | The port where boruta oauth server will be exposed on. |
 | `BORUTA_OAUTH_BASE_URL`            | The base URL where boruta oauth server http endpoint will be deployed to (without trailing slash). |
