@@ -43,7 +43,6 @@ defmodule BorutaWeb.Application do
 
     if need_seeding? do
       seed()
-      register_application_repl()
     end
 
     :ok
@@ -51,33 +50,5 @@ defmodule BorutaWeb.Application do
 
   defp seed do
     Code.eval_file(Path.join(:code.priv_dir(:boruta_auth), "/repo/boruta.seeds.exs"))
-  end
-
-  defp register_application_repl do
-    Finch.start_link(name: RegistrationHttp)
-    Application.ensure_started(:telemetry)
-
-    IO.puts("====================")
-    IO.puts("Please provide information about boruta package usage for statistical purposes")
-    IO.puts("")
-    IO.puts("These informations are optional, that said,")
-    IO.puts("the owners would be thankful if you could provide those information")
-    IO.puts("")
-    IO.puts("Thank you for using boruta")
-    IO.puts("====================")
-    company_name = Owl.IO.input(label: "Your company name:", optional: true)
-    purpose = Owl.IO.input(label: "Purpose of the installation:", optional: true)
-
-    Finch.build(
-      :post,
-      "https://gateway.boruta.patatoid.fr/store",
-      [{"Content-Type", "application/json"}],
-      %{
-        company_name: company_name,
-        purpose: purpose
-      }
-      |> Jason.encode!()
-    )
-    |> Finch.request(RegistrationHttp)
   end
 end

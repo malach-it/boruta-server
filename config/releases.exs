@@ -69,6 +69,10 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
   url: [scheme: "https", host: System.get_env("BORUTA_ADMIN_HOST")],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
+config :boruta_admin,
+  configuration_path:
+    System.get_env("BORUTA_CONFIGURATION_PATH")
+
 config :boruta_web, BorutaAdminWeb.Authorization,
   oauth2: [
     site: System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL")
