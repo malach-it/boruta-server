@@ -4,6 +4,10 @@
 
 ## [unreleased]
 
+### Added
+
+- server ip address bindings configuration via environment variables
+
 ### Security
 
 - [admin] instance authenticated admins are sub or organization restricted

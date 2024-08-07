@@ -46,7 +46,7 @@ defmodule BorutaWeb.OauthView do
     }
   end
 
-  def render("well_known.json", %{routes: routes}) do
+  def render("well_known.json", %{routes: routes, scopes: scopes}) do
     issuer = Boruta.Config.issuer()
 
     %{
@@ -73,6 +73,7 @@ defmodule BorutaWeb.OauthView do
         "token id_token",
         "code id_token token"
       ],
+      "scopes_supported" => Enum.map(scopes, fn scope -> scope.name end),
       "response_modes_supported" => ["query", "fragment"],
       "subject_types_supported" => ["public"],
       "token_endpoint_auth_methods_supported" => [

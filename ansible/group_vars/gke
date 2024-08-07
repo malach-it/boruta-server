@@ -1,0 +1,20 @@
+---
+postgresql_password: OkOUbFpONLd6xCz9n8lE82dQERQSRe1vff37fnvjQNJw6XJayuwWNzChoQ73UF
+
+admin_host: admin.boruta.patatoid.fr
+oauth_host: oauth.boruta.patatoid.fr
+gateway_host: gateway.boruta.patatoid.fr
+httpbin_sidecar_host: httpbin.boruta.patatoid.fr
+protected_httpbin_sidecar_host: protected-httpbin.boruta.patatoid.fr
+
+admin_client_id: 41846447-e178-4953-87ef-caf0b538f047
+admin_client_secret: 4lkeYmFlvxKzAFrEYGyNZEO2ut0oa3gXZ7a5eqUR8n56ISc4V5Av63UKPDMa57uC6W4tiblkvzfBzm2aw4xu7r
+oauth_base_url: https://oauth.boruta.patatoid.fr
+admin_email: test@test.test
+admin_password: micro-ondeschipsettoit
+
+boruta_base_url: https://admin.boruta.patatoid.fr
+
+secret_key_base: f0LxYV9updl0rO+HRjB3dfBucoXVb7CpAHzT8Epa+r59GsLDKcLnyik/iYOuWWom
+
+organization_id: b75d128b-6744-4a94-b6a9-6a6cb2135a2b
