@@ -21,6 +21,8 @@ defmodule BorutaIdentity.FederatedAccounts do
   @moduledoc false
   import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
 
+  require Logger
+
   alias BorutaIdentity.Accounts.Federated
   alias BorutaIdentity.Accounts.IdentityProviderError
   alias BorutaIdentity.Accounts.SessionError
@@ -76,7 +78,9 @@ defmodule BorutaIdentity.FederatedAccounts do
           message: error.message,
           template: new_session_template(client_idp)
         })
-      _ ->
+      error ->
+        Logger.error("Federation failed " <> inspect(error))
+
         module.authentication_failure(context, %SessionError{
           message: "Could not fetch user information.",
           template: new_session_template(client_idp)

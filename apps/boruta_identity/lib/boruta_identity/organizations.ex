@@ -15,7 +15,7 @@ defmodule BorutaIdentity.Organizations do
   @spec list_organizations(params :: map()) :: Scrivener.Page.t()
   def list_organizations(params \\ %{}) do
     from(o in Organization)
-    |> Repo.paginate(params)
+    |> Repo.paginate(Map.merge(params, %{"page_size" => 500}))
   end
 
   # @spec search_organizations(query :: String.t(), params :: map()) :: Scrivener.Page.t()

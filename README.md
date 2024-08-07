@@ -204,6 +204,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_ADMIN_BIND`                | The IP address the boruta admin server will be bound to. |
 | `BORUTA_ADMIN_PORT`                | The port where boruta admin server will be exposed on. |
 | `BORUTA_ADMIN_BASE_URL`            | The base URL where boruta admin server http endpoint will be deployed to (without trailing slash). |
+| `BORUTA_OAUTH_SCHEME`              | The scheme that will be used for URL building, default to https. |
 | `BORUTA_OAUTH_HOST`                | The host where boruta oauth server will be deployed to. |
 | `BORUTA_OAUTH_BIND`                | The IP address the boruta oauth server will be bound to. |
 | `BORUTA_OAUTH_PORT`                | The port where boruta oauth server will be exposed on. |
@@ -211,6 +212,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_GATEWAY_PORT`              | The port where boruta gateway will be exposed on. |
 | `BORUTA_GATEWAY_SIDECAR_PORT`      | The port where boruta microgateway will be exposed on. |
 | `BORUTA_GATEWAY_CONFIGURATION_PATH`| The path containing the gateway static configuration. |
+| `BORUTA_CONFIGURATION_PATH`        | The path containing the boruta static configuration. |
 | `BORUTA_SUB_RESTRICTED`            | If set, the uid of the only user to have access to the administration interface. |
 | `BORUTA_ORGANIZATION_RESTRICTED`            | If set, the uid of the only organization to have access to the administration interface. |
 

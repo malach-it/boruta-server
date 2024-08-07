@@ -70,6 +70,33 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
     )
   end
 
+  @impl BorutaIdentity.Accounts.RegistrationApplication
+  def registration_failure(%Plug.Conn{} = conn, %RegistrationError{
+        message: message,
+        template: template
+      }) do
+    client_id = client_id_from_request(conn)
+
+    :telemetry.execute(
+      [:registration, :create, :failure],
+      %{},
+      %{
+        client_id: client_id,
+        error: message
+      }
+    )
+
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        errors: [message]
+      }
+    )
+  end
+
   def registration_failure(%Plug.Conn{} = conn, %RegistrationError{
         user: user,
         message: message,
@@ -91,6 +118,7 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
 
     conn
     |> put_layout(false)
+    |> put_flash(:info, "Confirmation email has been sent. Please go to your mailbox and follow the provided link.")
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,

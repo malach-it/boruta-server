@@ -1,0 +1,6 @@
+---
+version: "1.0"
+configuration:
+  identity_provider:
+    - name: bad backend
+      additional: error

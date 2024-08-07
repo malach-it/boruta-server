@@ -2,10 +2,7 @@ import axios from 'axios'
 import { addClientErrorInterceptor } from './utils'
 import Backend from './backend.model'
 
-const DEFAULT_ID = 'non-existing'
-
 const defaults = {
-  id: DEFAULT_ID,
   name: null,
   type: 'internal',
   errors: null,
@@ -38,7 +35,7 @@ class IdentityProvider {
   }
 
   get isPersisted () {
-    return this.id && this.id != DEFAULT_ID
+    return this.id
   }
 
   save () {

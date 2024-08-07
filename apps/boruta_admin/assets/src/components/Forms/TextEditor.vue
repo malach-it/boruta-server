@@ -50,8 +50,9 @@ export default {
   .codejar-wrap {
     height: 100%;
     .codejar-linenumbers {
-      color: inherit;
+      color: orange !important;
       height: 100%;
+      padding-left: .5em !important;
     }
     .editor {
       background: #f5f2f0;

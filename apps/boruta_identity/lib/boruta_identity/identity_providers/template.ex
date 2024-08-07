@@ -27,7 +27,8 @@ defmodule BorutaIdentity.IdentityProviders.Template do
     :new_reset_password,
     :edit_reset_password,
     :new_confirmation_instructions,
-    :edit_user
+    :edit_user,
+    :credential_offer
   ]
   @type template_type ::
           :layout
@@ -41,6 +42,7 @@ defmodule BorutaIdentity.IdentityProviders.Template do
           | :edit_reset_password
           | :new_confirmation_instructions
           | :edit_user
+          | :credential_offer
 
   @default_templates %{
     layout:
@@ -87,6 +89,10 @@ defmodule BorutaIdentity.IdentityProviders.Template do
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/settings/edit_user.mustache")
       |> File.read!(),
+    credential_offer:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/settings/credential_offer.mustache")
+      |> File.read!()
   }
 
   @foreign_key_type :binary_id

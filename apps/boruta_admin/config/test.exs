@@ -57,5 +57,11 @@ config :boruta_web, BorutaAdminWeb.Authorization,
   sub_restricted: System.get_env("BORUTA_SUB_RESTRICTED", nil),
   organization_restricted: System.get_env("BORUTA_ORGANIZATION_RESTRICTED", nil)
 
+config :boruta_identity, BorutaIdentity.SMTP,
+  adapter: Swoosh.Adapters.Test
+
+config :boruta_identity, BorutaIdentity.LdapRepo,
+  adapter: BorutaIdentity.LdapRepoMock
+
 # Print only warnings and errors during test
 config :logger, level: :warn
