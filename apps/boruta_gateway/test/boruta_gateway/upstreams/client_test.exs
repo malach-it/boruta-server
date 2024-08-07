@@ -41,6 +41,7 @@ defmodule BorutaGateway.Upstreams.ClientTest do
 
   # TODO change for an internal server
   describe "external http calls" do
+    @tag :skip
     test "should request an external url (httpbin.patatoid.fr/status) given a Plug.Conn" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -63,6 +64,7 @@ defmodule BorutaGateway.Upstreams.ClientTest do
       end)
     end
 
+    @tag :skip
     test "should request an external url (httpbin.patatoid.fr/headers) given a Plug.Conn" do
       Sandbox.unboxed_run(Repo, fn ->
         try do

@@ -1,0 +1,5 @@
+[gke]
+localhost
+
+[gke:vars]
+ansible_connection=local

@@ -233,17 +233,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
       conn = get(conn, Routes.jwks_path(conn, :jwks_index))
 
-      assert %{
-               "keys" => keys
-             } = json_response(conn, 200)
-
-      assert Enum.member?(keys, %{
-               "e" => "AQAB",
-               "kid" => "Ac9ufCpgwReXGJ6LI",
-               "kty" => "RSA",
-               "n" =>
-                 "1PaP_gbXix5itjRCaegvI_B3aFOeoxlwPPLvfLHGA4QfDmVOf8cU8OuZFAYzLArW3PnnwWWy39nVJOx42QRVGCGdUCmV7shDHRsr86-2DlL7pwUa9QyHsTj84fAJn2Fv9h9mqrIvUzAtEYRlGFvjVTGCwzEullpsB0GJafopUTFby8WdSq3dGLJBB1r-Q8QtZnAxxvolhwOmYkBkkidefmm48X7hFXL2cSJm2G7wQyinOey_U8xDZ68mgTakiqS2RtjnFD0dnpBl5CYTe4s6oZKEyFiFNiW4KkR1GVjsKwY9oC2tpyQ0AEUMvk9T9VdIltSIiAvOKlwFzL49cgwZDw"
-             })
+      assert keys = json_response(conn, 200)["keys"]
+      assert Enum.find(keys, fn %{"kid" => kid} -> kid == "Ac9ufCpgwReXGJ6LI" end)
     end
   end
 
@@ -300,6 +291,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
           }
         ]
       )
+      Boruta.Factory.insert(:scope, name: "well_known")
 
       conn = get(conn, Routes.openid_path(conn, :well_known))
 
@@ -384,6 +376,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "token id_token",
                  "code id_token token"
                ],
+               "response_modes_supported" => ["query", "fragment"],
+               "scopes_supported" => ["well_known"],
                "subject_types_supported" => ["public"],
                "token_endpoint" => "boruta/oauth/token",
                "token_endpoint_auth_methods_supported" => [

@@ -85,7 +85,7 @@ Admin credentials are the one seeded and available in environment file.
 You can build and run the docker images as follow:
 
 ```bash
-docker-compose run boruta
+docker-compose up
 ```
 
 The applications will be available on different ports (depending on the docker compose environment configuration):
@@ -201,10 +201,12 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_ADMIN_EMAIL`               | The first admin email. It will be part of the user seeded in the setup task. |
 | `BORUTA_ADMIN_PASSWORD`            | The first admin password. It will be part of the user seeded in the setup task. |
 | `BORUTA_ADMIN_HOST`                | The host that represent the host where boruta admin server will be deployed to. |
+| `BORUTA_ADMIN_BIND`                | The IP address the boruta admin server will be bound to. |
 | `BORUTA_ADMIN_PORT`                | The port where boruta admin server will be exposed on. |
 | `BORUTA_ADMIN_BASE_URL`            | The base URL where boruta admin server http endpoint will be deployed to (without trailing slash). |
 | `BORUTA_OAUTH_SCHEME`              | The scheme that will be used for URL building, default to https. |
 | `BORUTA_OAUTH_HOST`                | The host where boruta oauth server will be deployed to. |
+| `BORUTA_OAUTH_BIND`                | The IP address the boruta oauth server will be bound to. |
 | `BORUTA_OAUTH_PORT`                | The port where boruta oauth server will be exposed on. |
 | `BORUTA_OAUTH_BASE_URL`            | The base URL where boruta oauth server http endpoint will be deployed to (without trailing slash). |
 | `BORUTA_GATEWAY_PORT`              | The port where boruta gateway will be exposed on. |
