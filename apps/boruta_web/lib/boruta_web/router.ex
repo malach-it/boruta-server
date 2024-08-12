@@ -42,6 +42,7 @@ defmodule BorutaWeb.Router do
     pipe_through(:api)
 
     post("/credential", Openid.CredentialController, :credential)
+    post("/defered-credential", Openid.CredentialController, :defered_credential)
     get("/jwks", Openid.JwksController, :jwks_index)
     get("/jwks/:client_id", Openid.JwksController, :jwks_show)
 

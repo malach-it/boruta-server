@@ -86,6 +86,90 @@ defmodule BorutaWeb.CredentialControllerTest do
     assert credential
   end
 
+  test "returns a defered credential with a valid credential type", %{conn: conn} do
+    {_, public_jwk} = public_key_fixture() |> JOSE.JWK.from_pem() |> JOSE.JWK.to_map()
+
+    signer =
+      Joken.Signer.create("RS256", %{"pem" => private_key_fixture()}, %{
+        "jwk" => public_jwk,
+        "typ" => "openid4vci-proof+jwt"
+      })
+
+    {:ok, token, _claims} =
+      VerifiableCredentials.Token.generate_and_sign(
+        %{
+          "aud" => Config.issuer(),
+          "iat" => :os.system_time(:seconds)
+        },
+        signer
+      )
+
+    proof = %{
+      "proof_type" => "jwt",
+      "jwt" => token
+    }
+
+    credential_params = %{
+      "credential_identifier" => "VerifiableCredential",
+      "format" => "jwt_vc",
+      "proof" => proof
+    }
+
+    backend =
+      BorutaIdentity.Factory.insert(:backend,
+        verifiable_credentials: [
+          %{
+            "display" => %{
+              "background_color" => "#53b29f",
+              "logo" => %{
+                "alt_text" => "Boruta PoC logo",
+                "url" => "https://io.malach.it/assets/images/logo.png"
+              },
+              "name" => "Federation credential PoC",
+              "text_color" => "#FFFFFF"
+            },
+            "credential_identifier" => "FederatedAttributes",
+            "types" => "VerifiableCredential BorutaCredential",
+            "format" => "jwt_vc",
+            "defered" => true,
+            "claims" => "family_name"
+          }
+        ]
+      )
+
+    %User{id: sub} = user_fixture(%{backend: backend, metadata: %{"family_name" => "family_name"}})
+
+    %Token{value: access_token} =
+      insert(:token,
+        sub: sub,
+        authorization_details: [%{"credential_identifiers" => ["VerifiableCredential"]}]
+      )
+
+    conn =
+      conn
+      |> put_req_header("authorization", "Bearer #{access_token}")
+
+    defered_conn =
+      post(
+        conn,
+        Routes.credential_path(conn, :credential),
+        credential_params
+      )
+
+    assert %{"acceptance_token" => acceptance_token} = json_response(defered_conn, 200)
+    assert acceptance_token
+
+    conn =
+      post(
+        conn,
+        Routes.credential_path(conn, :defered_credential),
+        credential_params
+      )
+
+    assert %{"credential" => credential} = json_response(conn, 200)
+    assert credential
+  end
+
   def public_key_fixture do
     "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA1PaP/gbXix5itjRCaegvI/B3aFOeoxlwPPLvfLHGA4QfDmVOf8cU\n8OuZFAYzLArW3PnnwWWy39nVJOx42QRVGCGdUCmV7shDHRsr86+2DlL7pwUa9QyH\nsTj84fAJn2Fv9h9mqrIvUzAtEYRlGFvjVTGCwzEullpsB0GJafopUTFby8WdSq3d\nGLJBB1r+Q8QtZnAxxvolhwOmYkBkkidefmm48X7hFXL2cSJm2G7wQyinOey/U8xD\nZ68mgTakiqS2RtjnFD0dnpBl5CYTe4s6oZKEyFiFNiW4KkR1GVjsKwY9oC2tpyQ0\nAEUMvk9T9VdIltSIiAvOKlwFzL49cgwZDwIDAQAB\n-----END RSA PUBLIC KEY-----\n\n"
   end

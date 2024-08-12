@@ -251,6 +251,12 @@
                 <option value="vc+sd-jwt">vc+sd-jwt</option>
               </select>
             </div>
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="credential.defered">
+                <label>Defered</label>
+              </div>
+            </div>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
               <label>Types <i>(separated with a whitespace)</i></label>
               <input type="text" v-model="credential.types" placeholder="VerifiableCredential BorutaCredential">
