@@ -4,6 +4,8 @@ defmodule BorutaWeb.Openid.CredentialController do
 
   alias Boruta.Oauth.Error
   alias Boruta.Openid
+  alias Boruta.Openid.CredentialResponse
+  alias Boruta.Openid.DeferedCredentialResponse
   alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaWeb.OauthView
 
@@ -16,11 +18,21 @@ defmodule BorutaWeb.Openid.CredentialController do
     )
   end
 
+  def defered_credential(conn, _params) do
+    Openid.defered_credential(conn, __MODULE__)
+  end
+
   @impl Boruta.Openid.CredentialApplication
-  def credential_created(conn, credential_response) do
+  def credential_created(conn, %CredentialResponse{} = credential_response) do
     conn
     |> put_view(OauthView)
     |> render("credential.json", credential_response: credential_response)
+  end
+
+  def credential_created(conn, %DeferedCredentialResponse{} = credential_response) do
+    conn
+    |> put_view(OauthView)
+    |> render("defered_credential.json", credential_response: credential_response)
   end
 
   @impl Boruta.Openid.CredentialApplication

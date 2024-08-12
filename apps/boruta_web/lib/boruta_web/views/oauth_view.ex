@@ -87,6 +87,7 @@ defmodule BorutaWeb.OauthView do
       "userinfo_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
       "credential_issuer" => issuer,
       "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
+      "defered_credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :defered_credential),
       "credential_configurations_supported" =>
         VerifiableCredentials.credential_configurations_supported(),
       "credentials_supported" => VerifiableCredentials.credentials_supported()
@@ -112,8 +113,17 @@ defmodule BorutaWeb.OauthView do
       format: credential_response.format,
       credential: credential_response.credential
     }
+    # TODO use associated access token c_nonce
     |> Map.put(:c_nonce, "boruta")
     |> Map.put(:c_nonce_expires_in, 3600)
+  end
+
+  def render("defered_credential.json", %{credential_response: credential_response}) do
+    %{
+      acceptance_token: credential_response.acceptance_token,
+      c_nonce: credential_response.c_nonce,
+      c_nonce_expires_in: credential_response.c_nonce_expires_in
+    }
   end
 
   def render("pushed_authorization_request.json", %{

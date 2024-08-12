@@ -298,6 +298,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert json_response(conn, 200) == %{
                "authorization_endpoint" => "boruta/oauth/authorize",
                "credential_endpoint" => "boruta/openid/credential",
+               "defered_credential_endpoint" => "boruta/openid/defered-credential",
                "credential_issuer" => "boruta",
                "credentials_supported" => [],
                "credential_configurations_supported" => %{
@@ -331,7 +332,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                      }
                    ],
                    "format" => "jwt_vc",
-                   "scope" => nil
+                   "scope" => "FederatedAttributes"
                  }
                },
                "grant_types_supported" => [
@@ -376,7 +377,6 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "token id_token",
                  "code id_token token"
                ],
-               "response_modes_supported" => ["query", "fragment"],
                "scopes_supported" => ["well_known"],
                "subject_types_supported" => ["public"],
                "token_endpoint" => "boruta/oauth/token",

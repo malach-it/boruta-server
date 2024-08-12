@@ -175,6 +175,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                     "time_to_live" => %{"type" => "number"},
                                     "types" => %{"type" => "string"},
                                     "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
+                                    "defered" => %{"type" => "boolean"},
                                     "claims" => %{
                                       "type" => "array",
                                       "items" => %{
@@ -210,6 +211,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                     "version",
                                     "credential_identifier",
                                     "format",
+                                    "defered",
                                     "types",
                                     "claims",
                                     "display"

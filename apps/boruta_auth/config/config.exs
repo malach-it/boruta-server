@@ -8,7 +8,7 @@ config :boruta, Boruta.Oauth,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
   ],
-  issuer: "https://oauth.boruta.patatoid.fr"
+  issuer: System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000")
 
 config :boruta_auth, BorutaAuth.Scheduler,
   jobs: [
