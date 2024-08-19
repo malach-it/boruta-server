@@ -95,14 +95,25 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :credential_offer))
   end
 
+  def context(context, %{webauthn_options: webauthn_options} = assigns) do
+    options = Map.from_struct(webauthn_options)
+
+    %{webauthn_options: options}
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :webauthn_options))
+  end
+
   def context(context, %{current_user: current_user} = assigns) do
-    current_user = Map.take(current_user, [:username, :totp_registered_at, :metadata])
+    current_user = Map.take(current_user, [:username, :webauthn_registered_at, :totp_registered_at, :metadata])
 
     current_user = %{
       current_user
       | totp_registered_at:
           current_user.totp_registered_at &&
-            current_user.totp_registered_at |> DateTime.truncate(:second) |> DateTime.to_string()
+            current_user.totp_registered_at |> DateTime.truncate(:second) |> DateTime.to_string(),
+      webauthn_registered_at:
+          current_user.webauthn_registered_at &&
+            current_user.webauthn_registered_at |> DateTime.truncate(:second) |> DateTime.to_string()
     }
 
     %{current_user: current_user}
@@ -152,6 +163,10 @@ defmodule BorutaIdentityWeb.TemplateView do
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_totp, %{
           request: request
         }),
+      create_user_session_webauthn_authentication_path:
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_webauthn, %{
+          request: request
+        }),
       delete_user_session_path:
         Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{request: request}),
       edit_user_path:
@@ -160,6 +175,10 @@ defmodule BorutaIdentityWeb.TemplateView do
         Routes.totp_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       create_user_totp_registration_path:
         Routes.totp_path(BorutaIdentityWeb.Endpoint, :register, %{request: request}),
+      new_user_webauthn_registration_path:
+        Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+      create_user_webauthn_registration_path:
+        Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :register, %{request: request}),
       new_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
       new_user_reset_password_path:

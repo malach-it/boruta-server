@@ -15,7 +15,15 @@
 </div>
 {{/current_user.totp_registered_at}}
 
+{{#current_user.webauthn_registered_at}}
+<div class="ui big right aligned segment">
+  Passkey registered at {{ . }}
+</div>
+{{/current_user.webauthn_registered_at}}
+
 <a href="{{ new_user_totp_registration_path }}" class="ui fluid blue button">Register a TOTP authenticator</a>
+<hr />
+<a href="{{ new_user_webauthn_registration_path }}" class="ui fluid blue button">Register a Passkey</a>
 <hr />
 
 <form class="ui form" action="{{ update_user_path }}" method="POST">

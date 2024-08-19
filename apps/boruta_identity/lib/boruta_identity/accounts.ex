@@ -164,4 +164,5 @@ defmodule BorutaIdentity.Accounts do
   defdelegate get_user_roles(user_id), to: Users
   defdelegate get_user_scopes(user_id), to: Users
   defdelegate get_user_organizations(user_id), to: Users
+  defdelegate put_user_webauthn_challenge(user), to: Users
 end

@@ -24,6 +24,8 @@ defmodule BorutaAdminWeb.IdentityProviderView do
       choose_session: identity_provider.choose_session,
       totpable: identity_provider.totpable,
       enforce_totp: identity_provider.enforce_totp,
+      webauthnable: identity_provider.webauthnable,
+      enforce_webauthn: identity_provider.enforce_webauthn,
       registrable: identity_provider.registrable,
       user_editable: identity_provider.user_editable,
       consentable: identity_provider.consentable,

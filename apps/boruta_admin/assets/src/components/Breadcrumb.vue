@@ -28,6 +28,8 @@ const labels = {
   'edit-session-template': 'Edit login template',
   'edit-totp-registration-template': 'Edit TOTP registration template',
   'edit-totp-authentication-template': 'Edit TOTP authentication template',
+  'edit-webauthn-registration-template': 'Edit Webauthn registration template',
+  'edit-webauthn-authentication-template': 'Edit Webauthn authentication template',
   'edit-choose-session-template': 'Edit choose session template',
   'edit-registration-template': 'Edit registration template',
   'edit-edit-user-template': 'Edit user edition template',
