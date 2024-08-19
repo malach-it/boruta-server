@@ -1,4 +1,6 @@
 defmodule Boruta.Did.StatusResolver do
-  def resolve(status) do
+  @moduledoc false
+
+  def resolve(_status) do
   end
 end

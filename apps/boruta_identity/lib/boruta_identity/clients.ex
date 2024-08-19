@@ -1,4 +1,6 @@
 defmodule BorutaIdentity.Clients do
+  @moduledoc false
+
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Client
   alias BorutaAuth.KeyPairs
