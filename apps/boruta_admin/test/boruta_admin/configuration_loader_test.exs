@@ -6,10 +6,10 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
   alias BorutaAdmin.ConfigurationLoader
   alias BorutaGateway.Upstreams.Upstream
   alias BorutaIdentity.Accounts.Role
+  alias BorutaIdentity.Configuration.ErrorTemplate
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
-  alias BorutaIdentity.Configuration.ErrorTemplate
 
   test "returns an error with a bad configuration file" do
     assert BorutaGateway.Repo.all(Upstream) |> Enum.empty?()

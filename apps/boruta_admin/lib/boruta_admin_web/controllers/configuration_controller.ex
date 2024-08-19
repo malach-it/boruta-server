@@ -6,9 +6,9 @@ defmodule BorutaAdminWeb.ConfigurationController do
       authorize: 2
     ]
 
-  alias BorutaIdentity.Configuration
   alias BorutaAdmin.ConfigurationLoader
   alias BorutaAdmin.Configurations
+  alias BorutaIdentity.Configuration
   alias BorutaIdentity.Configuration.ErrorTemplate
 
   action_fallback(BorutaAdminWeb.FallbackController)
