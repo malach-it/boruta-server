@@ -1,0 +1,67 @@
+{{#user_editable?}}<a href="{{ edit_user_path }}">Edit your information</a>{{/user_editable?}}
+
+<h1>Register a passkey</h1>
+
+{{^valid?}}
+<div class="ui error message">
+{{#errors}}
+  <li>{{ message }}</li>
+{{/errors}}
+</div>
+{{/valid?}}
+
+<form id="register" action="{{ create_user_webauthn_registration_path }}" method="post">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+  <input type="hidden" id="identifier" name="identifier" />
+  <input type="hidden" id="type" name="type" />
+  <input type="hidden" id="clientData" name="client_data" />
+  <input type="hidden" id="attestation" name="attestation" />
+</form>
+
+<script>
+  function _arrayBufferToString( buffer ) {
+      var binary = ''
+      var bytes = new Uint8Array( buffer )
+      var len = bytes.byteLength
+      for (var i = 0; i < len; i++) {
+          binary += String.fromCharCode( bytes[ i ] )
+        }
+      return binary
+    }
+
+  const publicKeyCredentialCreationOptions = {
+      challenge: Uint8Array.from(
+          "{{webauthn_options.challenge}}", c => c.charCodeAt(0)),
+      rp: {
+          id: "{{webauthn_options.rp.id}}",
+          name: "{{webauthn_options.rp.name}}"
+        },
+      user: {
+          id: Uint8Array.from(
+              "{{webauthn_options.user.id}}", c => c.charCodeAt(0)),
+          name: "{{webauthn_options.user.name}}",
+          displayName: "{{webauthn_options.user.displayName}}"
+        },
+      pubKeyCredParams: [{alg:{{webauthn_options.publicKeyCredParams.alg}}, type: "{{webauthn_options.publicKeyCredParams.type}}"}],
+      authenticatorSelection: {
+          authenticatorAttachment: "cross-platform"
+        },
+      timeout: 60000,
+      attestation: "direct"
+    }
+
+  const credential = navigator.credentials.create({
+      publicKey: publicKeyCredentialCreationOptions
+    }).then(credential => {
+        const utf8Decoder = new TextDecoder('utf-8')
+        const decodedClientData = utf8Decoder.decode(credential.response.clientDataJSON)
+
+        document.getElementById('identifier').value = btoa(_arrayBufferToString(credential.rawId))
+        document.getElementById('type').value = credential.type;
+        document.getElementById('clientData').value = decodedClientData
+        document.getElementById('attestation').value =
+          btoa(_arrayBufferToString(credential.response.attestationObject))
+
+        document.getElementById('register').submit()
+      })
+</script>

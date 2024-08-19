@@ -1,6 +1,17 @@
 defmodule BorutaIdentity.Accounts.User do
   @moduledoc false
 
+  defmodule CoseKey do
+    @behaviour Ecto.Type
+
+    def type, do: :binary
+    def cast(bin), do: {:ok, Base.decode64!(bin) |> :erlang.binary_to_term()}
+    def load(bin), do: {:ok, Base.decode64!(bin) |> :erlang.binary_to_term()}
+    def dump(bin), do: {:ok, :erlang.term_to_binary(bin) |> Base.encode64()}
+    def equal?(a, b), do: a == b
+    def embed_as(_a), do: :self
+  end
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -19,6 +30,7 @@ defmodule BorutaIdentity.Accounts.User do
           metadata: map(),
           federated_metadata: map(),
           totp_secret: String.t() | nil,
+          webauthn_challenge: String.t() | nil,
           confirmed_at: DateTime.t() | nil,
           authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
           consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
@@ -44,6 +56,10 @@ defmodule BorutaIdentity.Accounts.User do
     field(:federated_metadata, :map, default: %{})
     field(:totp_secret, :string)
     field(:totp_registered_at, :utc_datetime_usec)
+    field(:webauthn_challenge, :string)
+    field(:webauthn_identifier, :string)
+    field(:webauthn_public_key, CoseKey)
+    field(:webauthn_registered_at, :utc_datetime_usec)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:roles, UserRole)
@@ -74,19 +90,25 @@ defmodule BorutaIdentity.Accounts.User do
     |> validate_required([:backend_id])
   end
 
-  @doc """
-  Confirms the account by setting `confirmed_at`.
-  """
   def confirm_changeset(user) do
     now = DateTime.utc_now()
     change(user, confirmed_at: now)
   end
 
-  @doc """
-  Reset confirmation of the account by unsetting `confirmed_at`.
-  """
   def unconfirm_changeset(user) do
     change(user, confirmed_at: nil)
+  end
+
+  def webauthn_challenge_changeset(user) do
+    change(user, webauthn_challenge: SecureRandom.hex())
+  end
+
+  def webauthn_public_key_changeset(user, cose_key, identifier) do
+    change(user,
+      webauthn_public_key: cose_key,
+      webauthn_registered_at: DateTime.utc_now(),
+      webauthn_identifier: identifier
+    )
   end
 
   def totp_changeset(user, totp_secret) do
