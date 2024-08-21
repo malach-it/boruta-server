@@ -5,7 +5,9 @@ defmodule BorutaIdentityWeb.TotpController do
 
   import BorutaIdentityWeb.Authenticable,
     only: [
-      client_id_from_request: 1
+      get_user_session: 1,
+      client_id_from_request: 1,
+      after_sign_in_path: 1
     ]
 
   alias BorutaIdentity.Totp
@@ -89,11 +91,16 @@ defmodule BorutaIdentityWeb.TotpController do
   end
 
   @impl BorutaIdentity.TotpRegistrationApplication
-  def totp_registration_success(%Plug.Conn{query_params: query_params} = conn, _user) do
+  def totp_registration_success(%Plug.Conn{} = conn, _user) do
     conn
     |> put_flash(:info, "TOTP authenticator registered successfully.")
+    |> put_session(
+      :totp_authenticated,
+      (get_session(conn, :totp_authenticated) || %{})
+      |> Map.put(get_user_session(conn), true)
+    )
     |> redirect(
-      to: Routes.choose_session_path(conn, :index, request: Map.get(query_params, "request"))
+      to: after_sign_in_path(conn)
     )
   end
 end

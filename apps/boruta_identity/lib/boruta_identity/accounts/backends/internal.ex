@@ -20,6 +20,7 @@ defmodule BorutaIdentity.Accounts.Internal do
   @features [
     :authenticable,
     :totpable,
+    :webauthnable,
     :registrable,
     :user_editable,
     :confirmable,

@@ -62,7 +62,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       :ok ->
         {:unchanged, conn}
 
-      {:error, reason} ->
+      {:error, action, reason} ->
         case get_session(conn, :session_chosen) do
           true ->
             conn =
@@ -72,7 +72,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
                 to:
                   IdentityRoutes.user_session_path(
                     BorutaIdentityWeb.Endpoint,
-                    :initialize_totp,
+                    action,
                     %{
                       request: request_param(conn)
                     }
@@ -102,69 +102,81 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"])
 
     totp_authenticated = (get_session(conn, :totp_authenticated) || %{})[get_user_session(conn)]
+    webauthn_authenticated = (get_session(conn, :webauthn_authenticated) || %{})[get_user_session(conn)]
 
-    do_enforce_mfa(identity_provider, current_user, totp_authenticated)
+    do_enforce_mfa(identity_provider, current_user, totp_authenticated, webauthn_authenticated)
   end
 
   defp do_enforce_mfa(
-         %IdentityProvider{enforce_totp: false},
+         %IdentityProvider{enforce_totp: false, enforce_webauthn: false},
          %User{totp_registered_at: nil},
-         _totp_authenticated
+         _totp_authenticated,
+         _webauthn_authenticated
        ) do
     :ok
   end
 
   defp do_enforce_mfa(
+         %IdentityProvider{webauthnable: true},
+         %User{webauthn_registered_at: %DateTime{}},
+         _totp_authenticated,
+         webauthn_authenticated
+       ) do
+    case webauthn_authenticated do
+      true ->
+        :ok
+
+      _ ->
+        {:error, :initialize_webauthn, "Multi factor authentication required."}
+    end
+  end
+
+  defp do_enforce_mfa(
          %IdentityProvider{totpable: true},
          %User{totp_registered_at: %DateTime{}},
-         totp_authenticated
+         totp_authenticated,
+         _webauthn_authenticated
        ) do
     case totp_authenticated do
       true ->
         :ok
 
       _ ->
-        {:error, "Multi factor authentication required."}
+        {:error, :initialize_totp, "Multi factor authentication required."}
+    end
+  end
+
+  defp do_enforce_mfa(
+         %IdentityProvider{enforce_webauthn: true},
+         %User{webauthn_registered_at: nil},
+         _totp_authenticated,
+         webauthn_authenticated
+       ) do
+    case webauthn_authenticated do
+      true ->
+        :ok
+
+      _ ->
+        {:error, :initialize_webauthn, "Multi factor authentication required."}
     end
   end
 
   defp do_enforce_mfa(
          %IdentityProvider{enforce_totp: true},
          %User{totp_registered_at: nil},
-         totp_authenticated
+         totp_authenticated,
+         _webauthn_authenticated
        ) do
     case totp_authenticated do
       true ->
         :ok
 
       _ ->
-        {:error, "Multi factor authentication required."}
+        {:error, :initialize_totp, "Multi factor authentication required."}
     end
   end
 
-  defp do_enforce_mfa(
-         %IdentityProvider{enforce_totp: false},
-         %User{},
-         _totp_authenticated
-       ) do
-    :ok
-  end
-
-  defp do_enforce_mfa(
-         %IdentityProvider{},
-         %User{totp_registered_at: %DateTime{}},
-         totp_authenticated
-       ) do
-    case totp_authenticated do
-      true ->
-        :ok
-
-      _ ->
-        {:error, "Multi factor authentication required."}
-    end
-  end
-
-  defp do_enforce_mfa(_identity_provider, _user, _totp_authenticated) do
+  defp do_enforce_mfa(_identity_provider, _user, _totp_authenticated, _webauthn_authenticated) do
     :ok
   end
 

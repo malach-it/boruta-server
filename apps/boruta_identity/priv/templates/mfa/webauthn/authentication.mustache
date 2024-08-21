@@ -1,0 +1,58 @@
+<h1>Authenticate with a passkey</h1>
+
+{{^valid?}}
+<div class="ui error message">
+{{#errors}}
+  <li>{{ message }}</li>
+{{/errors}}
+</div>
+{{/valid?}}
+
+<form id="authenticate" action="{{ create_user_session_webauthn_authentication_path }}" method="post">
+  <input type="hidden" name="_csrf_token" value="{{ _csrf_token }}" />
+  <input type="hidden" id="identifier" name="identifier" />
+  <input type="hidden" id="type" name="type" />
+  <input type="hidden" id="signature" name="signature" />
+  <input type="hidden" id="clientData" name="client_data" />
+  <input type="hidden" id="authenticatorData" name="authenticator_data" />
+</form>
+<span class="ui horizontal divider">or</span>
+<a href="{{ new_user_webauthn_registration_path }}">Register a passkey</a>
+
+<script>
+  function _arrayBufferToString( buffer ) {
+      var binary = ''
+      var bytes = new Uint8Array( buffer )
+      var len = bytes.byteLength
+      for (var i = 0; i < len; i++) {
+          binary += String.fromCharCode( bytes[ i ] )
+        }
+      return binary
+    }
+
+  const publicKeyCredentialGetOptions = {
+      challenge: Uint8Array.from("{{webauthn_options.challenge}}", c => c.charCodeAt(0)),
+      allowCredentials: [{
+          id: Uint8Array.from(atob("{{webauthn_options.credential_id}}"), c => c.charCodeAt(0)),
+          type: "public-key"
+        }],
+      timeout: 60000
+    }
+
+  const credential = navigator.credentials.get({
+      publicKey: publicKeyCredentialGetOptions
+    }).then(credential => {
+        const utf8Decoder = new TextDecoder('utf-8')
+        const decodedClientData = utf8Decoder.decode(credential.response.clientDataJSON)
+        console.log(credential.response.userHandle)
+
+        document.getElementById('identifier').value = btoa(_arrayBufferToString(credential.rawId))
+        document.getElementById('type').value = credential.type;
+        document.getElementById('clientData').value = decodedClientData
+        document.getElementById('authenticatorData').value =
+          btoa(_arrayBufferToString(credential.response.authenticatorData))
+        document.getElementById('signature').value =
+          btoa(_arrayBufferToString(credential.response.signature))
+        document.getElementById('authenticate').submit()
+      })
+</script>

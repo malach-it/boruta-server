@@ -31,6 +31,8 @@ import EditSessionTemplate from "./views/IdentityProviders/EditSessionTemplate.v
 import EditNewChooseSessionTemplate from "./views/IdentityProviders/EditNewChooseSessionTemplate.vue";
 import EditTotpRegistrationTemplate from "./views/IdentityProviders/EditTotpRegistrationTemplate.vue";
 import EditTotpAuthenticationTemplate from "./views/IdentityProviders/EditTotpAuthenticationTemplate.vue";
+import EditWebauthnAuthenticationTemplate from "./views/IdentityProviders/EditWebauthnAuthenticationTemplate.vue";
+import EditWebauthnRegistrationTemplate from "./views/IdentityProviders/EditWebauthnRegistrationTemplate.vue";
 import EditRegistrationTemplate from "./views/IdentityProviders/EditRegistrationTemplate.vue";
 import EditNewConsentTemplate from "./views/IdentityProviders/EditNewConsentTemplate.vue";
 import EditNewConfirmationTemplate from "./views/IdentityProviders/EditNewConfirmationTemplate.vue";
@@ -182,6 +184,16 @@ const router = createRouter({
                   path: "edit/totp-authentication-template",
                   name: "edit-totp-authentication-template",
                   component: EditTotpAuthenticationTemplate,
+                },
+                {
+                  path: "edit/webauthn-registration-template",
+                  name: "edit-webauthn-registration-template",
+                  component: EditWebauthnRegistrationTemplate,
+                },
+                {
+                  path: "edit/webauthn-authentication-template",
+                  name: "edit-webauthn-authentication-template",
+                  component: EditWebauthnAuthenticationTemplate,
                 },
                 {
                   path: "edit/registration-template",

@@ -22,6 +22,8 @@ defmodule BorutaIdentity.IdentityProviders.Template do
     :choose_session,
     :new_totp_registration,
     :new_totp_authentication,
+    :new_webauthn_registration,
+    :new_webauthn_authentication,
     :new_registration,
     :new_consent,
     :new_reset_password,
@@ -37,6 +39,8 @@ defmodule BorutaIdentity.IdentityProviders.Template do
           | :new_consent
           | :new_totp_registration
           | :new_totp_authentication
+          | :new_webauthn_registration
+          | :new_webauthn_authentication
           | :new_registration
           | :new_reset_password
           | :edit_reset_password
@@ -64,6 +68,14 @@ defmodule BorutaIdentity.IdentityProviders.Template do
     new_totp_authentication:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/mfa/totp/authentication.mustache")
+      |> File.read!(),
+    new_webauthn_registration:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/mfa/webauthn/registration.mustache")
+      |> File.read!(),
+    new_webauthn_authentication:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/mfa/webauthn/authentication.mustache")
       |> File.read!(),
     new_registration:
       :code.priv_dir(:boruta_identity)
@@ -152,7 +164,7 @@ defmodule BorutaIdentity.IdentityProviders.Template do
       _ ->
         change(
           changeset,
-          content: default_template(changeset |> fetch_field!(:type) |> String.to_atom())
+          content: default_template(changeset |> fetch_field!(:type) |> String.to_atom()).content
         )
     end
   end
