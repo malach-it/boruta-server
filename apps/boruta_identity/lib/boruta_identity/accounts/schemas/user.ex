@@ -170,6 +170,9 @@ defmodule BorutaIdentity.Accounts.User do
       nil -> true
       _ -> false
     end)
+    |> Enum.map(fn {key, value} ->
+      {key, %{value: value, status: "valid"}}
+    end)
     |> Enum.into(%{})
   end
 
