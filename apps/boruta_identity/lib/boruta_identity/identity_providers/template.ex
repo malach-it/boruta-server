@@ -164,7 +164,7 @@ defmodule BorutaIdentity.IdentityProviders.Template do
       _ ->
         change(
           changeset,
-          content: default_template(changeset |> fetch_field!(:type) |> String.to_atom())
+          content: default_template(changeset |> fetch_field!(:type) |> String.to_atom()).content
         )
     end
   end
