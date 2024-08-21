@@ -95,11 +95,8 @@ defmodule BorutaIdentity.Webauthn do
       "EdDSA" => -8
     }
 
-    @enforce_keys [:user, :challenge]
-    defstruct rp: %{
-                id: Config.issuer() |> URI.parse() |> Map.get(:host),
-                name: "boruta"
-              },
+    @enforce_keys [:rp, :user, :challenge]
+    defstruct rp: nil,
               user: nil,
               challenge: nil,
               credential_id: nil,
@@ -124,6 +121,10 @@ defmodule BorutaIdentity.Webauthn do
   def options(user, true) do
     with {:ok, user} <- Accounts.put_user_webauthn_challenge(user) do
       options = %Options{
+        rp: %{
+          id: Config.issuer() |> URI.parse() |> Map.get(:host),
+          name: "boruta"
+        },
         user: %{
           id: user.id,
           name: user.username,
@@ -139,6 +140,10 @@ defmodule BorutaIdentity.Webauthn do
 
   def options(user, false) do
     options = %Options{
+      rp: %{
+        id: Config.issuer() |> URI.parse() |> Map.get(:host),
+        name: "boruta"
+      },
       user: %{
         id: user.id,
         name: user.username,
@@ -202,7 +207,7 @@ defmodule BorutaIdentity.Webauthn do
       Wax.new_registration_challenge(
         origin: Config.issuer(),
         attestation: "direct",
-        rp_id: "localhost",
+        rp_id: Config.issuer() |> URI.parse() |> Map.get(:host),
         trusted_attestation_types: [:basic, :uncertain, :attca, :anonca],
         verify_trust_root: false
       )
@@ -250,29 +255,32 @@ defmodule BorutaIdentity.Webauthn do
       signature: signature,
       authenticator_data: authenticator_data,
       client_data: client_data,
-      identifier: identifier,
+      identifier: identifier
     } = webauthn_params
 
-    wax_challenge = Wax.new_registration_challenge([
-      origin: "http://localhost:4000",
-      attestation: "direct",
-      rp_id: "localhost",
-      trusted_attestation_types: [:basic, :uncertain, :attca, :anonca],
-      verify_trust_root: false,
-      allow_credentials: [{current_user.webauthn_identifier, current_user.webauthn_public_key}]
-    ])
-    wax_challenge = %{wax_challenge|bytes: current_user.webauthn_challenge}
+    wax_challenge =
+      Wax.new_registration_challenge(
+        origin: Config.issuer(),
+        attestation: "direct",
+        rp_id: Config.issuer() |> URI.parse() |> Map.get(:host),
+        trusted_attestation_types: [:basic, :uncertain, :attca, :anonca],
+        verify_trust_root: false,
+        allow_credentials: [{current_user.webauthn_identifier, current_user.webauthn_public_key}]
+      )
+
+    wax_challenge = %{wax_challenge | bytes: current_user.webauthn_challenge}
 
     case Wax.authenticate(
-       identifier,
-       Base.decode64!(authenticator_data),
-       Base.decode64!(signature),
-       client_data,
-      wax_challenge,
-      []
-    ) do
+           identifier,
+           Base.decode64!(authenticator_data),
+           Base.decode64!(signature),
+           client_data,
+           wax_challenge,
+           []
+         ) do
       {:ok, _auth_data} ->
         module.webauthn_authenticated(context, current_user)
+
       {:error, _error} ->
         case options(current_user, true) do
           {:ok, webauthn_options} ->
@@ -288,7 +296,6 @@ defmodule BorutaIdentity.Webauthn do
             raise WebauthnError, "Authenticator registration could not be initialized."
         end
     end
-
   end
 
   defp new_webauthn_registration_template(identity_provider) do
