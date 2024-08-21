@@ -125,7 +125,7 @@ defmodule BorutaIdentityWeb.TotpControllerTest do
         |> log_in(user)
         |> post(Routes.totp_path(conn, :register, request: request), %{"totp" => totp_params})
 
-      assert redirected_to(conn) =~ Routes.choose_session_path(conn, :index)
+      assert redirected_to(conn) =~ "/user_return_to"
     end
   end
 end

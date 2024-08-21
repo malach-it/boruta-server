@@ -51,7 +51,7 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
 
       assert redirected_to(conn, 302) == Routes.user_settings_path(conn, :edit, request: request)
 
-      assert %User{metadata: %{"test" => "test value"}} = Repo.reload(user)
+      assert %User{metadata: %{"test" => %{"value" => "test value", "status" => "valid"}}} = Repo.reload(user)
     end
 
     test "updates an user without metadata (do not override)", %{

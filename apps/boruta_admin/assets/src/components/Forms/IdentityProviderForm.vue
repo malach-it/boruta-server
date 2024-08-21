@@ -61,6 +61,36 @@
             </div>
           </div>
         </section>
+        <section v-show="displayWebauthnable">
+          <h3>Webauthn</h3>
+          <div class="ui segment">
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="identityProvider.webauthnable">
+                <label>enable Webauthn</label>
+              </div>
+            </div>
+            <hr />
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="identityProvider.enforce_webauthn">
+                <label>enforce Webauthn</label>
+              </div>
+            </div>
+            <p class="ui info message">
+              Give the ability for end users to register an authentication second factor with Passkeys.
+            </p>
+            <div v-if="identityProvider.webauthnable">
+              <router-link
+                :to="{ name: 'edit-webauthn-registration-template', params: { identityProviderId: identityProvider.id } }"
+                class="ui fluid blue button">Edit Webauthn registration template</router-link>
+              <hr />
+              <router-link
+                :to="{ name: 'edit-webauthn-authentication-template', params: { identityProviderId: identityProvider.id } }"
+                class="ui fluid blue button">Edit Webauthn authentication template</router-link>
+            </div>
+          </div>
+        </section>
         <section v-show="displayTotpable">
           <h3>Time based One Time Password</h3>
           <div class="ui segment">
@@ -210,6 +240,9 @@ export default {
     },
     displayRegistrable () {
       return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('registrable')
+    },
+    displayWebauthnable () {
+      return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('webauthnable')
     },
     displayTotpable () {
       return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('totpable')
