@@ -65,7 +65,11 @@ defmodule BorutaIdentity.WebauthnAuthenticationApplication do
 end
 
 defmodule BorutaIdentity.Webauthn do
+  @moduledoc false
+
   defmodule Options do
+    @moduledoc false
+
     alias Boruta.Config
 
     @type t :: %__MODULE__{
