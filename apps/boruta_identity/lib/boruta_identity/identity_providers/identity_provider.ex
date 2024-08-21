@@ -105,7 +105,6 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     field(:choose_session, :boolean, default: true)
     field(:totpable, :boolean, default: false)
     field(:enforce_totp, :boolean, default: false)
-    # TODO persistence
     field(:webauthnable, :boolean, default: true)
     field(:enforce_webauthn, :boolean, default: true)
     field(:registrable, :boolean, default: false)

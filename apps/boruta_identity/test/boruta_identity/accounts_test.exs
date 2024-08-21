@@ -447,7 +447,7 @@ defmodule BorutaIdentity.AccountsTest do
                  DummyRegistration
                )
 
-      assert user.metadata == metadata
+      assert user.metadata == %{"test" => %{"value" => "test value", "status" => "valid"}}
     end
 
     test "registers users with default organization", %{client_id: client_id, backend: backend} do
@@ -1632,7 +1632,11 @@ defmodule BorutaIdentity.AccountsTest do
       updated_email = "updated@email.test"
       confirmation_url_fun = fn -> "" end
 
-      assert {:user_updated, :context, %User{username: ^updated_email, metadata: ^metadata}} =
+      assert {:user_updated, :context,
+              %User{
+                username: ^updated_email,
+                metadata: %{"test" => %{"value" => "test value", "status" => "valid"}}
+              }} =
                Accounts.update_user(
                  :context,
                  client_id,
@@ -1686,8 +1690,12 @@ defmodule BorutaIdentity.AccountsTest do
                  DummySettings
                )
 
-      assert %User{metadata: %{"test" => "test value", "restricted_field" => "restricted"}} =
-               Repo.reload(user)
+      assert %User{
+               metadata: %{
+                 "restricted_field" => %{"status" => "valid", "value" => "restricted"},
+                 "test" => %{"status" => "valid", "value" => "test value"}
+               }
+             } = Repo.reload(user)
     end
 
     @tag :skip
@@ -1868,7 +1876,11 @@ defmodule BorutaIdentity.AccountsTest do
       |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
       |> expect(:modify, fn _handle, _backend, _user, ^updated_email -> :ok end)
 
-      assert {:user_updated, :context, %User{username: ^updated_email, metadata: ^metadata}} =
+      assert {:user_updated, :context,
+              %User{
+                username: ^updated_email,
+                metadata: %{"test" => %{"value" => "test value", "status" => "valid"}}
+              }} =
                Accounts.update_user(
                  :context,
                  client_id,
@@ -1908,7 +1920,11 @@ defmodule BorutaIdentity.AccountsTest do
       |> expect(:simple_bind, fn _handle, _master_dn, _master_password -> :ok end)
       |> expect(:modify, fn _handle, _backend, _user, ^updated_email -> :ok end)
 
-      assert {:user_updated, :context, %User{username: ^updated_email, metadata: ^metadata}} =
+      assert {:user_updated, :context,
+              %User{
+                username: ^updated_email,
+                metadata: %{"test" => %{"value" => "test value", "status" => "valid"}}
+              }} =
                Accounts.update_user(
                  :context,
                  client_id,
