@@ -2,6 +2,8 @@ defmodule BorutaIdentity.Accounts.User do
   @moduledoc false
 
   defmodule CoseKey do
+    @moduledoc false
+
     @behaviour Ecto.Type
 
     def type, do: :binary
