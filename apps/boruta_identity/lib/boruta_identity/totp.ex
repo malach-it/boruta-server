@@ -2,7 +2,7 @@ defmodule BorutaIdentity.TotpError do
   @moduledoc false
 
   @enforce_keys [:message, :totp_secret]
-  defexception [:message, :totp_secret, :changeset, :template]
+  defexception [:message, :totp_secret, :changeset, :template, plug_status: 400]
 
   @type t :: %__MODULE__{
           message: String.t(),
@@ -157,14 +157,25 @@ defmodule BorutaIdentity.Totp do
   alias BorutaIdentity.Repo
   alias BorutaIdentity.TotpError
 
-  defwithclientidp initialize_totp_registration(context, client_id, module) do
+  defwithclientidp initialize_totp_registration(context, client_id, totp_authenticated, current_user, module) do
     totp_secret = Admin.generate_secret()
 
-    module.totp_registration_initialized(
-      context,
-      totp_secret,
-      new_totp_registration_template(client_idp)
-    )
+    case {totp_authenticated, current_user.totp_registered_at} do
+      {true, _} ->
+        module.totp_registration_initialized(
+          context,
+          totp_secret,
+          new_totp_registration_template(client_idp)
+        )
+      {false, nil} ->
+        module.totp_registration_initialized(
+          context,
+          totp_secret,
+          new_totp_registration_template(client_idp)
+        )
+      _ ->
+        raise TotpError, "Authenticator registration could not be initialized."
+    end
   end
 
   defwithclientidp register_totp(context, client_id, current_user, totp_params, module) do

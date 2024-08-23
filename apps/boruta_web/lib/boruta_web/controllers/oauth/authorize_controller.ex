@@ -234,7 +234,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       :ok ->
         {:authorize, do_authorize(conn, current_user)}
 
-      {:error, reason} ->
+      {:error, _action, reason} ->
         {:redirected,
          authorize_error(conn, %Error{
            status: :unauthorized,

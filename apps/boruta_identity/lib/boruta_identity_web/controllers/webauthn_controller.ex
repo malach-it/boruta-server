@@ -18,7 +18,12 @@ defmodule BorutaIdentityWeb.WebauthnController do
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
 
-    Webauthn.initialize_webauthn_registration(conn, client_id, current_user, __MODULE__)
+    webauthn_authenticated = Map.get(
+      get_session(conn, :webauthn_authenticated) || %{},
+      get_user_session(conn),
+      false
+    )
+    Webauthn.initialize_webauthn_registration(conn, client_id, webauthn_authenticated, current_user, __MODULE__)
   end
 
   def register(conn, params) do
