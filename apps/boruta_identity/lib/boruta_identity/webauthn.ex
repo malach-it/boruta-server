@@ -2,7 +2,7 @@ defmodule BorutaIdentity.WebauthnError do
   @moduledoc false
 
   @enforce_keys [:message]
-  defexception [:message, :webauthn_options, :template, plug_status: 500]
+  defexception [:message, :webauthn_options, :template, plug_status: 400]
 
   @type t :: %__MODULE__{
           message: String.t(),
@@ -155,16 +155,35 @@ defmodule BorutaIdentity.Webauthn do
     {:ok, options}
   end
 
-  defwithclientidp initialize_webauthn_registration(context, client_id, current_user, module) do
+  defwithclientidp initialize_webauthn_registration(
+                     context,
+                     client_id,
+                     webauthn_authenticated,
+                     current_user,
+                     module
+                   ) do
     case options(current_user, true) do
       {:ok, webauthn_options} ->
-        module.webauthn_registration_initialized(
-          context,
-          webauthn_options,
-          new_webauthn_registration_template(client_idp)
-        )
+        case {webauthn_authenticated, current_user.webauthn_registered_at} do
+          {true, _} ->
+            module.webauthn_registration_initialized(
+              context,
+              webauthn_options,
+              new_webauthn_registration_template(client_idp)
+            )
 
-      {:error, %Ecto.Changeset{}} ->
+          {false, nil} ->
+            module.webauthn_registration_initialized(
+              context,
+              webauthn_options,
+              new_webauthn_registration_template(client_idp)
+            )
+
+          _error ->
+            raise WebauthnError, "Authenticator registration could not be initialized."
+        end
+
+      _error ->
         raise WebauthnError, "Authenticator registration could not be initialized."
     end
   end

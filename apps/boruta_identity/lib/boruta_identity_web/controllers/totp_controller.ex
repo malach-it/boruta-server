@@ -16,8 +16,14 @@ defmodule BorutaIdentityWeb.TotpController do
 
   def new(conn, _params) do
     client_id = client_id_from_request(conn)
+    current_user = conn.assigns[:current_user]
 
-    Totp.initialize_totp_registration(conn, client_id, __MODULE__)
+    totp_authenticated = Map.get(
+      get_session(conn, :totp_authenticated) || %{},
+      get_user_session(conn),
+      false
+    )
+    Totp.initialize_totp_registration(conn, client_id, totp_authenticated, current_user, __MODULE__)
   end
 
   def register(conn, %{"totp" => totp_params}) do
