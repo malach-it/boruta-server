@@ -87,7 +87,11 @@ config :boruta, Boruta.Oauth,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
   ],
-  issuer: System.get_env("BORUTA_OAUTH_BASE_URL")
+  issuer: System.get_env("BORUTA_OAUTH_BASE_URL"),
+  universal_did_auth: %{
+    type: "bearer",
+    token: System.get_env("UNIVERSAL_API_KEY")
+  }
 
 config :boruta_auth, BorutaAuth.LogRotate,
   max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60"))

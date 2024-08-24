@@ -41,6 +41,14 @@
             <pre>{{ clientPublicKey }}</pre>
           </div>
         </div>
+        <div class="ui segment">
+          <a class="ui fluid orange button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
+          <hr />
+          <div class="field" v-if="client.did">
+            <label>Client did</label>
+            <pre>{{ client.did }}</pre>
+          </div>
+        </div>
         <div class="field" :class="{ 'error': client.errors?.access_token_ttl }">
           <label>Access token TTL (seconds)</label>
           <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
@@ -226,6 +234,13 @@ export default {
         })
       }
     },
+    regenerateDid () {
+      if (confirm("Are you sure you want to regenerate this client did?")) {
+        this.client.regenerateDid().then(() => {
+          this.$emit('submit')
+        })
+      }
+    },
     addRedirectUri () {
       this.client.redirect_uris.push({})
     },
@@ -289,6 +304,12 @@ export default {
             this.$refs.tabularMenu.querySelector('#' + tab).classList.add('error')
           })
         }, 100)
+      }
+    },
+    'client.public_key': {
+      deep: true,
+      handler (newPublicKey) {
+        this.clientPublicKey = newPublicKey
       }
     },
     'client.key_pair_id': {

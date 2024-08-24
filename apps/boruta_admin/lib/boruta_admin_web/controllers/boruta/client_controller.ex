@@ -69,6 +69,14 @@ defmodule BorutaAdminWeb.ClientController do
     Admin.update_client(client, client_params)
   end
 
+  def regenerate_did(conn, %{"id" => client_id}) do
+    client = get_client(client_id)
+
+    with {:ok, client} <- Admin.regenerate_client_did(client) do
+      render(conn, "show.json", client: client)
+    end
+  end
+
   def regenerate_key_pair(conn, %{"id" => client_id}) do
     client = get_client(client_id)
 
