@@ -29,6 +29,7 @@ const assign = {
   confidential: function ({ confidential }) { this.confidential = confidential },
   pkce: function ({ pkce }) { this.pkce = pkce },
   public_key: function ({ public_key }) { this.public_key = public_key },
+  did: function ({ did }) { this.did = did },
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
   refresh_token_ttl: function ({ refresh_token_ttl }) { this.refresh_token_ttl = refresh_token_ttl },
@@ -117,6 +118,27 @@ class Client {
           this[key] = params[key]
           assign[key].bind(this)(params)
         })
+        return this
+      })
+      .catch((error) => {
+        const { errors } = error.response.data
+        this.errors = errors
+        throw errors
+      })
+  }
+
+  async regenerateDid () {
+    const { id } = this
+    this.constructor.api().post(`/${id}/regenerate_did`)
+      .then(({ data }) => {
+        const params = data.data
+
+        Object.keys(params).forEach((key) => {
+          this[key] = params[key]
+          assign[key].bind(this)(params)
+        })
+
+        this.key_pair_id = null
         return this
       })
       .catch((error) => {

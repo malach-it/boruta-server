@@ -214,7 +214,8 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_GATEWAY_CONFIGURATION_PATH`| The path containing the gateway static configuration. |
 | `BORUTA_CONFIGURATION_PATH`        | The path containing the boruta static configuration. |
 | `BORUTA_SUB_RESTRICTED`            | If set, the uid of the only user to have access to the administration interface. |
-| `BORUTA_ORGANIZATION_RESTRICTED`            | If set, the uid of the only organization to have access to the administration interface. |
+| `BORUTA_ORGANIZATION_RESTRICTED`   | If set, the uid of the only organization to have access to the administration interface. |
+| `UNIVERSAL_API_KEY`                | API key granting access to universal revolver and registrar services. |
 
 ## Code of Conduct
 
