@@ -30,7 +30,7 @@ defmodule BorutaIdentity.WebauthnRegistrationApplication do
 
   @callback webauthn_registration_error(
               context :: any(),
-              error :: BorutaIdentity.TotpError.t()
+              error :: BorutaIdentity.WebauthnError.t()
             ) :: any()
 
   @callback webauthn_registration_success(
@@ -60,7 +60,7 @@ defmodule BorutaIdentity.WebauthnAuthenticationApplication do
 
   @callback webauthn_authentication_failure(
               context :: any(),
-              error :: BorutaIdentity.TotpError.t()
+              error :: BorutaIdentity.WebauthnError.t()
             ) :: any()
 end
 
@@ -116,8 +116,6 @@ defmodule BorutaIdentity.Webauthn do
   alias BorutaIdentity.Repo
   alias BorutaIdentity.WebauthnError
 
-  @spec options(user :: User.t(), create_challenge :: boolean()) ::
-          {:ok, options :: Options.t()} | {:error, changeset :: Ecto.Changeset.t()}
   def options(user, true) do
     with {:ok, user} <- Accounts.put_user_webauthn_challenge(user) do
       options = %Options{
@@ -263,6 +261,7 @@ defmodule BorutaIdentity.Webauthn do
     end
   end
 
+  @dialyzer {:no_return, {:authenticate_webauthn, 5}}
   defwithclientidp authenticate_webauthn(
                      context,
                      client_id,
