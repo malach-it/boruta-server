@@ -74,6 +74,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
     |> Webauthn.initialize_webauthn(client_id, current_user, __MODULE__)
   end
 
+  @dialyzer {:no_return, {:authenticate_webauthn, 2}}
   def authenticate_webauthn(conn, params) do
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
