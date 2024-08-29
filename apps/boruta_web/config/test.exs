@@ -45,3 +45,6 @@ config :libcluster,
       list_nodes: {:erlang, :nodes, [:connected]},
     ]
   ]
+
+config :boruta, Boruta.Oauth,
+  did_resolver_base_url: "https://universalresolver.boruta.patatoid.fr/1.0"
