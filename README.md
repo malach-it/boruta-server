@@ -223,7 +223,9 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_CONFIGURATION_PATH`        | The path containing the boruta static configuration. |
 | `BORUTA_SUB_RESTRICTED`            | If set, the uid of the only user to have access to the administration interface. |
 | `BORUTA_ORGANIZATION_RESTRICTED`   | If set, the uid of the only organization to have access to the administration interface. |
-| `UNIVERSAL_API_KEY`                | API key granting access to universal revolver and registrar services. |
+| `DID_RESOLVER_BASE_URL`            | Did resolver API endpoint, accroding to the [W3C DID resolution specification](https://w3c.github.io/did-resolution/) |
+| `DID_REGISTRAR_BASE_URL`           | Did registrar API endpoint, accroding to the [W3C DID registration specification](https://identity.foundation/did-registration/) |
+| `DID_SERVICES_API_KEY`             | API key granting access to DID revolver and registrar services. |
 
 ## Code of Conduct
 
