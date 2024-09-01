@@ -20,7 +20,7 @@ defmodule BorutaAdminWeb.Logger do
         Logger.log(
           level,
           fn ->
-            remote_ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
+            remote_ip = :inet.ntoa(conn.remote_ip)
             stop = System.monotonic_time()
             duration = System.convert_time_unit(stop - start, :native, :microsecond)
             status = Integer.to_string(conn.status)

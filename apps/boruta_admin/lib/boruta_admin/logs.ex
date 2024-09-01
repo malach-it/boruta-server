@@ -22,7 +22,7 @@ defmodule BorutaAdmin.Logs do
 
   @max_file_size 100_000_000
   @max_log_lines 10_000
-  @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ((\d+\.?){4}) in (\d+)(\w+)/
+  @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(\w+)/
   @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(( ([^\=]+)\=((\".+\")|([^\s]+)))+)/
 
   @spec read(
@@ -249,7 +249,6 @@ defmodule BorutaAdmin.Logs do
         path,
         _state,
         status_code,
-        _,
         ip_address,
         duration,
         duration_unit
