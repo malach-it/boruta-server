@@ -23,12 +23,12 @@
                 <span class="description">{{ backend.name }}</span>
               </div>
               <div class="item">
-                <span class="header">Type</span>
-                <span class="description">{{ backend.type }}</span>
-              </div>
-              <div class="item">
                 <span class="header">Backend ID</span>
                 <span class="description">{{ backend.id }}</span>
+              </div>
+              <div class="item">
+                <span class="header">Type</span>
+                <span class="description">{{ backend.type }}</span>
               </div>
             </div>
             <div class="ui default label" v-if="backend.is_default">default</div>

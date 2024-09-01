@@ -53,6 +53,13 @@
             </router-link>
           </div>
         </div>
+        <div class="ui segment">
+          <router-link class="ui fluid blue button" :to="{ name: 'configuration-file-upload', params: { type: 'example-configuration-file' } }">Load example configuration</router-link>
+        </div>
+        <div class="ui segment">
+          <a class="ui fluid blue button" :href="preauthorizeUrl">Trigger example pre-authorized code flow (load example data first)</a>
+        </div>
+
       </div>
     </div>
   </div>
@@ -60,7 +67,13 @@
 
 <script>
 export default {
-  name: 'home'
+  name: 'home',
+  computed: {
+    preauthorizeUrl () {
+     return "https://" + window.env.BORUTA_OAUTH_HOST +
+      "/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=https%3A%2F%2Fredirect.uri.boruta&scope=BorutaCredentialSdJwt&response_type=urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4xm&prompt=login"
+    }
+  }
 }
 </script>
 

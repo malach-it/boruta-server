@@ -1,0 +1,6 @@
+---
+version: "1.0"
+configuration:
+  scope:
+    - name: ""
+      label: bad scope

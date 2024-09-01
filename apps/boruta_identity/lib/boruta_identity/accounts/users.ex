@@ -45,6 +45,7 @@ defmodule BorutaIdentity.Accounts.Users do
       )
     )
   end
+
   def get_user(_), do: nil
 
   @doc """
@@ -120,5 +121,13 @@ defmodule BorutaIdentity.Accounts.Users do
       )
     )
     |> Enum.map(fn %{organization: organization} -> organization end)
+  end
+
+  @spec put_user_webauthn_challenge(user :: User.t()) ::
+          {:ok, user :: User.t()} | {:error, changset :: Ecto.Changeset.t()}
+  def put_user_webauthn_challenge(user) do
+    user
+    |> User.webauthn_challenge_changeset()
+    |> Repo.update()
   end
 end

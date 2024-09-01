@@ -37,6 +37,7 @@ defmodule BorutaAdmin.DataCase do
     :ok = Sandbox.checkout(BorutaWeb.Repo)
 
     unless tags[:async] do
+      Sandbox.mode(BorutaAuth.Repo, {:shared, self()})
       Sandbox.mode(BorutaAdmin.Repo, {:shared, self()})
       Sandbox.mode(BorutaGateway.Repo, {:shared, self()})
       Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})

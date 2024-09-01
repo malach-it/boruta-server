@@ -8,8 +8,7 @@ defmodule BorutaAdminWeb.ClientController do
 
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Client
-  alias BorutaAuth.KeyPairs
-  alias BorutaAuth.KeyPairs.KeyPair
+  alias BorutaIdentity.Clients
   alias BorutaIdentity.IdentityProviders
 
   plug(:authorize, ["clients:manage:all"])
@@ -23,31 +22,12 @@ defmodule BorutaAdminWeb.ClientController do
   end
 
   def create(conn, %{"client" => client_params}) do
-    with {:ok, %Client{} = client} <- create_client(client_params) do
+    with {:ok, %Client{} = client} <- Clients.create_client(client_params) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.admin_client_path(conn, :show, client))
       |> render("show.json", client: client)
     end
-  end
-
-  defp create_client(client_params) do
-    identity_provider_id = get_in(client_params, ["identity_provider", "id"])
-
-    BorutaAuth.Repo.transaction(fn ->
-      with {:ok, client} <- Admin.create_client(client_params),
-           {:ok, client} <- insert_global_key_pair(client, client_params["key_pair_id"]),
-           {:ok, _client_identity_provider} <-
-             IdentityProviders.upsert_client_identity_provider(
-               client.id,
-               identity_provider_id
-             ) do
-        client
-      else
-        {:error, error} ->
-          BorutaAuth.Repo.rollback(error)
-      end
-    end)
   end
 
   def show(conn, %{"id" => client_id}) do
@@ -61,7 +41,7 @@ defmodule BorutaAdminWeb.ClientController do
 
     with :ok <- ensure_open_for_edition(client_id),
          {:ok, %Client{} = client} <- update_client(client, client_params),
-         {:ok, client} <- insert_global_key_pair(client, client_params["key_pair_id"]) do
+         {:ok, client} <- Clients.insert_global_key_pair(client, client_params["key_pair_id"]) do
       render(conn, "show.json", client: client)
     end
   end
@@ -87,6 +67,14 @@ defmodule BorutaAdminWeb.ClientController do
 
   defp update_client(client, client_params) do
     Admin.update_client(client, client_params)
+  end
+
+  def regenerate_did(conn, %{"id" => client_id}) do
+    client = get_client(client_id)
+
+    with {:ok, client} <- Admin.regenerate_client_did(client) do
+      render(conn, "show.json", client: client)
+    end
   end
 
   def regenerate_key_pair(conn, %{"id" => client_id}) do
@@ -115,6 +103,7 @@ defmodule BorutaAdminWeb.ClientController do
     Admin.get_client!(client_id)
   end
 
+  # TODO protect public client
   defp ensure_open_for_edition(client_id) do
     admin_ui_client_id =
       System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
@@ -135,13 +124,5 @@ defmodule BorutaAdminWeb.ClientController do
       IdentityProviders.remove_client_identity_provider(client_id)
     end)
     |> BorutaAuth.Repo.transaction()
-  end
-
-  defp insert_global_key_pair(%Client{} = client, nil), do: {:ok, client}
-  defp insert_global_key_pair(%Client{} = client, key_pair_id) do
-    %KeyPair{public_key: public_key, private_key: private_key} =
-      KeyPairs.get_key_pair!(key_pair_id)
-
-    Admin.regenerate_client_key_pair(client, public_key, private_key)
   end
 end

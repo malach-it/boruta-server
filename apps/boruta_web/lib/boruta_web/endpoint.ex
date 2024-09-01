@@ -7,6 +7,8 @@ defmodule BorutaWeb.Endpoint do
     signing_salt: "OCKBuS86"
   ]
 
+  plug RemoteIp
+  # unless Mix.env() == :test, do: plug BorutaWeb.Plugs.RateLimit
   plug Plug.Static,
     at: "/",
     from: :boruta_web,
@@ -38,6 +40,7 @@ defmodule BorutaWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+  plug CORSPlug
   plug BorutaWeb.Router
 
   def log_level(%{private: %{BorutaIdentityWeb.Router => {["accounts"], _}}}), do: false # logs are handled by boruta_identity

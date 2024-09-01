@@ -133,11 +133,47 @@ defmodule BorutaIdentity.TotpTest do
       {:ok, client_id: client_identity_provider.client_id}
     end
 
-    test "returns a secret and the registration template", %{client_id: client_id} do
+    test "raises an error", %{client_id: client_id} do
+      assert_raise BorutaIdentity.TotpError, fn ->
+        Totp.initialize_totp_registration(
+          :context,
+          client_id,
+          false,
+          %User{totp_registered_at: DateTime.utc_now()},
+          DummyTotpRegistrationApplication
+        )
+      end
+    end
+
+    test "returns a secret and the registration template when not registered", %{client_id: client_id} do
       assert {:totp_registration_initialized, :context, totp_secret, template} =
                Totp.initialize_totp_registration(
                  :context,
                  client_id,
+                 false,
+                 %User{},
+                 DummyTotpRegistrationApplication
+               )
+
+      # secret is hashed from an uuid
+      assert {:ok, _} =
+               totp_secret
+               |> Base.decode32!(padding: false)
+               |> Ecto.UUID.cast()
+
+      assert Regex.match?(
+               ~r/Add TOTP authentication from an authenticator/,
+               template.content
+             )
+    end
+
+    test "returns a secret and the registration template when totp authenticated", %{client_id: client_id} do
+      assert {:totp_registration_initialized, :context, totp_secret, template} =
+               Totp.initialize_totp_registration(
+                 :context,
+                 client_id,
+                 true,
+                 %User{},
                  DummyTotpRegistrationApplication
                )
 

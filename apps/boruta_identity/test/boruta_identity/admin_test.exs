@@ -365,7 +365,7 @@ defmodule BorutaIdentity.AdminTest do
 
         assert Admin.list_organizations() == %Scrivener.Page{
                  page_number: 1,
-                 page_size: 12,
+                 page_size: 500,
                  total_entries: 1,
                  total_pages: 1,
                  entries: [organization]

@@ -17,5 +17,6 @@ erl_crash.dump
 tags*
 
 apps/*/priv/static/**
+apps/*/priv/ssl/**
 
 .vscode

@@ -63,11 +63,13 @@ defmodule BorutaIdentity.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
       {:qr_code, "~> 3.0.0"},
+      {:remote_ip, "~> 1.1"},
       {:scrivener_ecto, "~> 2.7"},
       {:secure_random, "~> 0.5"},
       {:swoosh, "~> 1.5"},
       {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 0.5"}
+      {:telemetry_poller, "~> 0.5"},
+      {:wax_, "~> 0.6.0"}
     ]
   end
 

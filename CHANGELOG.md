@@ -6,11 +6,24 @@
 
 ### Added
 
-- server ip address bindings configuration via environment variables
+- [ssi] Configurable verifiable credentials issuance with oid4vci implementation
+- [ssi] Siopv2 same device implementation
+- [auth] Demonstration proof of possession implementation
+- [auth] Pushed Authorization Request implementation
+- [infra] Server ip address bindings configuration via environment variables
+- [infra]Infrastructure as Code with static file configuration
+- [admin] Admin ui improvements
+- [auth] Better identity federation
+- [identity] Webauthn integration
+- [infra] Remote IP logging
 
 ### Security
 
 - [admin] instance authenticated admins are sub or organization restricted
+
+### Fixed
+
+- [infra] Fix organization and sub admin access restriction
 
 ## [0.3.0] 2024-01-18
 
@@ -20,9 +33,9 @@
 - [identity] TOTP second factor support
 - [identity] user roles management
 - [infra] split auth/admin/gateway/all docker images
-- {infra] split gateway, admin, auth releases
-- {infra] system wide installation script
-- {infra] gather statistical info on installation
+- [infra] split gateway, admin, auth releases
+- [infra] system wide installation script
+- [infra] gather statistical info on installation
 
 ## [0.2.0] - 2023-05-17
 

@@ -52,6 +52,16 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
       # BorutaIdentity.Totp
       :authenticate_totp
     ],
+    webauthnable: [
+      # BorutaIdentity.Totp
+      :initialize_webauthn_registration,
+      # BorutaIdentity.Webauthn
+      :register_webauthn,
+      # BorutaIdentity.Webauthn
+      :initialize_webauthn,
+      # BorutaIdentity.Webauthn
+      :authenticate_webauthn
+    ],
     registrable: [
       # BorutaIdentity.Accounts.Registrations
       :initialize_registration,
@@ -95,6 +105,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     field(:choose_session, :boolean, default: true)
     field(:totpable, :boolean, default: false)
     field(:enforce_totp, :boolean, default: false)
+    field(:webauthnable, :boolean, default: false)
+    field(:enforce_webauthn, :boolean, default: false)
     field(:registrable, :boolean, default: false)
     field(:user_editable, :boolean, default: false)
     field(:confirmable, :boolean, default: false)
@@ -160,16 +172,20 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     identity_provider
     |> Repo.preload(:templates)
     |> cast(attrs, [
+      :id,
       :name,
       :choose_session,
       :totpable,
       :enforce_totp,
+      :webauthnable,
+      :enforce_webauthn,
       :registrable,
       :user_editable,
       :consentable,
       :confirmable,
       :backend_id
     ])
+    |> unique_constraint(:id, name: :relying_parties_pkey)
     |> validate_required([:name, :backend_id])
     |> unique_constraint(:name)
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)

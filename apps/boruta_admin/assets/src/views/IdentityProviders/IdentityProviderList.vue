@@ -23,12 +23,12 @@
                 <span class="description">{{ identityProvider.name }}</span>
               </div>
               <div class="item">
-                <span class="header">Type</span>
-                <span class="description">{{ identityProvider.type }}</span>
-              </div>
-              <div class="item">
                 <span class="header">IdentityProvider ID</span>
                 <span class="description">{{ identityProvider.id }}</span>
+              </div>
+              <div class="item">
+                <span class="header">Backend</span>
+                <span class="description"><router-link :to="{ name: 'edit-backend', params: { backendId: identityProvider.backend.id } }">{{ identityProvider.backend.name }}</router-link></span>
               </div>
             </div>
           </div>

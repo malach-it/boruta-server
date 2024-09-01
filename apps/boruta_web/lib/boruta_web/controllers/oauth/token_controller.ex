@@ -1,11 +1,13 @@
 defmodule BorutaWeb.Oauth.TokenController do
   @behaviour Boruta.Oauth.TokenApplication
+  @behaviour Boruta.Openid.DirectPostApplication
 
   use BorutaWeb, :controller
 
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.TokenResponse
+  alias Boruta.Openid
   alias BorutaWeb.OauthView
 
   def token(%Plug.Conn{} = conn, _params) do
@@ -52,5 +54,36 @@ defmodule BorutaWeb.Oauth.TokenController do
     |> put_status(status)
     |> put_view(OauthView)
     |> render("error.json", error: error, error_description: error_description)
+  end
+
+  def direct_post(conn, %{"code_id" => code_id} = params) do
+    direct_post_params = %{
+      code_id: code_id,
+      id_token: params["id_token"]
+    }
+
+    Openid.direct_post(conn, direct_post_params, __MODULE__)
+  end
+
+  @impl Boruta.Openid.DirectPostApplication
+  def code_not_found(conn) do
+    send_resp(conn, 404, "")
+  end
+
+  @impl Boruta.Openid.DirectPostApplication
+  def authentication_failure(conn, %Error{
+        status: status,
+        error: error,
+        error_description: error_description
+      }) do
+    conn
+    |> put_status(status)
+    |> put_view(OauthView)
+    |> render("error.json", error: error, error_description: error_description)
+  end
+
+  @impl Boruta.Openid.DirectPostApplication
+  def direct_post_success(conn, callback_uri) do
+    redirect(conn, external: callback_uri)
   end
 end

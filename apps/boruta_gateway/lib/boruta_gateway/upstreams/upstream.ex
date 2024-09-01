@@ -32,7 +32,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
           host: String.t(),
           port: integer(),
           uris: list(String.t()),
-          required_scopes: list(String.t()),
+          required_scopes: map(),
           strip_uri: boolean(),
           authorize: boolean(),
           error_content_type: String.t() | nil,

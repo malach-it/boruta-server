@@ -36,6 +36,7 @@ defmodule BorutaIdentity.DataCase do
 
     unless tags[:async] do
       Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
+      Sandbox.mode(BorutaAuth.Repo, {:shared, self()})
     end
 
     :ok

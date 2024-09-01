@@ -71,10 +71,10 @@ defmodule BorutaAdminWeb.ConfigurationControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
@@ -87,10 +87,10 @@ defmodule BorutaAdminWeb.ConfigurationControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
@@ -103,10 +103,10 @@ defmodule BorutaAdminWeb.ConfigurationControllerTest do
                )
              )
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
     end
@@ -154,7 +154,9 @@ defmodule BorutaAdminWeb.ConfigurationControllerTest do
     @tag authorized: ["configuration:manage:all"]
     test "renders errors when data is invalid", %{conn: conn} do
       conn =
-        patch(conn, Routes.admin_configuration_error_template_path(conn, :update_error_template, "400"),
+        patch(
+          conn,
+          Routes.admin_configuration_error_template_path(conn, :update_error_template, "400"),
           template: @invalid_attrs
         )
 
@@ -198,8 +200,67 @@ defmodule BorutaAdminWeb.ConfigurationControllerTest do
           )
         )
 
-      assert %{"id" => nil, "type" => "400"} =
-               json_response(conn, 200)["data"]
+      assert %{"id" => nil, "type" => "400"} = json_response(conn, 200)["data"]
+    end
+  end
+
+  describe "upsert configuration" do
+    @tag authorized: ["configuration:manage:all", "clients:manage:all"]
+    test "apply configuration file", %{conn: conn} do
+      conn =
+        post(
+          conn,
+          Routes.admin_configuration_upload_configuration_file_path(
+            conn,
+            :upload_configuration_file
+          ),
+          %{
+            "file" => %Plug.Upload{
+              path:
+                :code.priv_dir(:boruta_admin)
+                |> Path.join("/test/configuration_files/bad_client_configuration.yml"),
+              filename: "file.yml"
+            },
+            "options" => %{
+              "hash_password" => "true"
+            }
+          }
+        )
+
+      assert json_response(conn, 200) == %{
+               "errors" => %{"client" => [%{"identity_provider_id" => ["can't be blank"]}]},
+               "file_content" =>
+                 "---\nversion: \"1.0\"\nconfiguration:\n  client:\n    - access_token_ttl: 10\n"
+             }
+    end
+
+    @tag authorized: ["configuration:manage:all"]
+    test "does apply not authorized resources", %{conn: conn} do
+      conn =
+        post(
+          conn,
+          Routes.admin_configuration_upload_configuration_file_path(
+            conn,
+            :upload_configuration_file
+          ),
+          %{
+            "file" => %Plug.Upload{
+              path:
+                :code.priv_dir(:boruta_admin)
+                |> Path.join("/test/configuration_files/bad_client_configuration.yml"),
+              filename: "file.yml"
+            },
+            "options" => %{
+              "hash_password" => "true"
+            }
+          }
+        )
+
+      assert json_response(conn, 200) == %{
+               "errors" => %{},
+               "file_content" =>
+                 "---\nversion: \"1.0\"\nconfiguration:\n  client:\n    - access_token_ttl: 10\n"
+             }
     end
   end
 end

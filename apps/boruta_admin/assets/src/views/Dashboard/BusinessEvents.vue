@@ -471,6 +471,9 @@ function stringToColor(str) {
     overflow-x: scroll;
     overflow-y: scroll;
     max-height: 30vh;
+    pre {
+      overflow: visible !important;
+    }
   }
   .dates.form {
     button {
