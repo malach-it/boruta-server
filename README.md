@@ -19,16 +19,24 @@ As it, boruta server aim to follow the RFCs from IETF:
 - [RFC 7636 - Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
 - [RFC 7521 - Assertion Framework for OAuth 2.0 Client Authentication and Authorization Grants](https://www.rfc-editor.org/rfc/rfc7521)
 - [RFC 7523 - JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants](https://tools.ietf.org/html/rfc7523)
+- [RFC 9449 - OAuth 2.0 Demonstrating Proof-of-Possession at the Application Layer (DPoP)](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop)
+- [RFC 9126 - OAuth 2.0 Pushed Authorization Requests](https://datatracker.ietf.org/doc/html/rfc9126)
 
 And the specifications from the OpenID Foundation:
 - [OpenID Connect core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
 - [OpenID Connect Dynamic Client Registration 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-registration-1_0.html)
+- [OpenID for Verifiable Credential Issuance](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html)
+- [Self-Issued OpenID Provider v2](https://openid.net/specs/openid-connect-self-issued-v2-1_0.html)
 
 This server has been certified for the Basic, Implicit, and Hybrid OpenID Provider profiles by the OpenID Foundation on October, 18th 2022 for the tagged version 0.1.0
 
-This server has been also certified for the Config and Dynamic OpenID Provider profiles by the OpenID Foundation on May, 16th 2023 for the tagged version 0.2.0
+This server has been certified for the Config and Dynamic OpenID Provider profiles by the OpenID Foundation on May, 16th 2023 for the tagged version 0.2.0
 
 ![OpenID certified](https://github.com/malach-it/boruta-server/blob/master/images/oid-certification-mark.png?raw=true)
+
+This server has also been certified against the [European Blockchain Service Infrastructure (EBSI)](https://ec.europa.eu/digital-building-blocks/sites/display/EBSI) issuance test suite for the tagged version 0.4.0.
+
+![EBSI certified](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-issuance.png?raw=true)
 
 ## Installation
 
@@ -204,6 +212,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_ADMIN_BIND`                | The IP address the boruta admin server will be bound to. |
 | `BORUTA_ADMIN_PORT`                | The port where boruta admin server will be exposed on. |
 | `BORUTA_ADMIN_BASE_URL`            | The base URL where boruta admin server http endpoint will be deployed to (without trailing slash). |
+| `BORUTA_OAUTH_SCHEME`              | The scheme that will be used for URL building, default to https. |
 | `BORUTA_OAUTH_HOST`                | The host where boruta oauth server will be deployed to. |
 | `BORUTA_OAUTH_BIND`                | The IP address the boruta oauth server will be bound to. |
 | `BORUTA_OAUTH_PORT`                | The port where boruta oauth server will be exposed on. |
@@ -211,8 +220,12 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_GATEWAY_PORT`              | The port where boruta gateway will be exposed on. |
 | `BORUTA_GATEWAY_SIDECAR_PORT`      | The port where boruta microgateway will be exposed on. |
 | `BORUTA_GATEWAY_CONFIGURATION_PATH`| The path containing the gateway static configuration. |
+| `BORUTA_CONFIGURATION_PATH`        | The path containing the boruta static configuration. |
 | `BORUTA_SUB_RESTRICTED`            | If set, the uid of the only user to have access to the administration interface. |
-| `BORUTA_ORGANIZATION_RESTRICTED`            | If set, the uid of the only organization to have access to the administration interface. |
+| `BORUTA_ORGANIZATION_RESTRICTED`   | If set, the uid of the only organization to have access to the administration interface. |
+| `DID_RESOLVER_BASE_URL`            | Did resolver API endpoint, accroding to the [W3C DID resolution specification](https://w3c.github.io/did-resolution/) |
+| `DID_REGISTRAR_BASE_URL`           | Did registrar API endpoint, accroding to the [W3C DID registration specification](https://identity.foundation/did-registration/) |
+| `DID_SERVICES_API_KEY`             | API key granting access to DID revolver and registrar services. |
 
 ## Code of Conduct
 

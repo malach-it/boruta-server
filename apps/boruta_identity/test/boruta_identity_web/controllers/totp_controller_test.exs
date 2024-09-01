@@ -2,6 +2,10 @@ defmodule BorutaIdentityWeb.TotpControllerTest do
   use BorutaIdentityWeb.ConnCase, async: true
 
   import BorutaIdentity.AccountsFixtures
+  import BorutaIdentityWeb.Authenticable,
+    only: [
+      get_user_session: 1
+    ]
 
   alias BorutaIdentity.Accounts.IdentityProviderError
   alias BorutaIdentity.Repo
@@ -50,9 +54,12 @@ defmodule BorutaIdentityWeb.TotpControllerTest do
     } do
       Ecto.Changeset.change(identity_provider, %{totpable: true}) |> Repo.update!()
 
-      conn =
-        conn
-        |> log_in(user)
+      conn = log_in(conn, user)
+      conn = conn
+        |> put_session(
+          :totp_authenticated,
+          %{conn |> fetch_session() |> get_user_session() => true}
+        )
         |> get(Routes.totp_path(conn, :new, request: request))
 
       assert html_response(conn, 200) =~ "Add TOTP authentication from an authenticator"
@@ -125,7 +132,7 @@ defmodule BorutaIdentityWeb.TotpControllerTest do
         |> log_in(user)
         |> post(Routes.totp_path(conn, :register, request: request), %{"totp" => totp_params})
 
-      assert redirected_to(conn) =~ Routes.choose_session_path(conn, :index)
+      assert redirected_to(conn) =~ "/user_return_to"
     end
   end
 end

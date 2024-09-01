@@ -70,7 +70,7 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     new()
     |> from(user.backend.smtp_from)
     |> to(user.username)
-    |> subject("Confirm your account.")
+    |> subject("Welcome to boruta service beta preview")
     |> text_body(text_body)
     |> html_body(html_body)
   rescue

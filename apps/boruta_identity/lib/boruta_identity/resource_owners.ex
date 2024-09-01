@@ -10,6 +10,7 @@ defmodule BorutaIdentity.ResourceOwners do
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.Organization
 
@@ -26,6 +27,7 @@ defmodule BorutaIdentity.ResourceOwners do
          sub: id,
          username: email,
          last_login_at: last_login_at,
+         # TODO find out why the impl user in extra_claims
          extra_claims: %{user: impl_user}
        }}
     else
@@ -36,8 +38,22 @@ defmodule BorutaIdentity.ResourceOwners do
 
   def get_by(sub: sub) when not is_nil(sub) do
     case Accounts.get_user(sub) do
-      %User{id: id, username: email, last_login_at: last_login_at} ->
-        {:ok, %ResourceOwner{sub: id, username: email, last_login_at: last_login_at}}
+      %User{
+        id: id,
+        username: email,
+        last_login_at: last_login_at,
+        metadata: metadata,
+        federated_metadata: federated_metadata
+      } = user ->
+        {:ok,
+         %ResourceOwner{
+           sub: id,
+           username: email,
+           last_login_at: last_login_at,
+           extra_claims: Map.merge(metadata, federated_metadata),
+           authorization_details: VerifiableCredentials.authorization_details(user),
+           credential_configuration: VerifiableCredentials.credential_configuration(user)
+         }}
 
       _ ->
         {:error, "Invalid username or password."}
@@ -82,6 +98,11 @@ defmodule BorutaIdentity.ResourceOwners do
           metadata
           |> User.metadata_filter(backend)
           |> metadata_scope_filter(scope, backend)
+          |> Enum.map(fn
+            {key, value} when is_binary(value) -> {key, value}
+            {key, metadata} -> {key, metadata["value"]}
+          end)
+          |> Enum.into(%{})
 
         scope
         |> Scope.split()

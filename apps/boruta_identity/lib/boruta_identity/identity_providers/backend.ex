@@ -1,6 +1,40 @@
 defmodule BorutaIdentity.IdentityProviders.Backend do
   @moduledoc false
 
+  defmodule AuthCodeStrategy do
+    @moduledoc false
+
+    use OAuth2.Strategy
+
+    @impl true
+    def authorize_url(client, params) do
+      client
+      |> put_param(:response_type, "code")
+      |> put_param(:client_id, client.client_id)
+      |> put_param(:redirect_uri, client.redirect_uri)
+      |> merge_params(params)
+    end
+
+    @impl true
+    def get_token(client, params, headers) do
+      {code, params} = Keyword.pop(params, :code, client.params["code"])
+
+      unless code do
+        raise OAuth2.Error, reason: "Missing required key `code` for `#{inspect(__MODULE__)}`"
+      end
+
+      client
+      |> put_param(:code, code)
+      |> put_param(:grant_type, "authorization_code")
+      |> put_param(:client_id, client.client_id)
+      |> put_param(:client_secret, client.client_secret)
+      |> put_param(:redirect_uri, client.redirect_uri)
+      |> merge_params(params)
+      |> basic_auth()
+      |> put_headers(headers)
+    end
+  end
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -95,7 +129,20 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                "discovery_path" => %{"type" => "string"},
                                "userinfo_path" => %{"type" => "string"},
                                "authorize_path" => %{"type" => "string"},
-                               "token_path" => %{"type" => "string"}
+                               "token_path" => %{"type" => "string"},
+                               "scope" => %{"type" => "string"},
+                               "federated_attributes" => %{"type" => "string"},
+                               "metadata_endpoints" => %{
+                                 "type" => "array",
+                                 "items" => %{
+                                   "type" => "object",
+                                   "properties" => %{
+                                     "endpoint" => %{"type" => "string"},
+                                     "claims" => %{"type" => "string"}
+                                   },
+                                   "required" => ["endpoint", "claims"]
+                                 }
+                               }
                              },
                              "required" => [
                                "name",
@@ -119,6 +166,58 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                               "additionalProperties" => false
                             }
                           })
+
+  @verifiable_credential_schema ExJsonSchema.Schema.resolve(%{
+                                  "type" => "object",
+                                  "properties" => %{
+                                    "version" => %{"type" => "string"},
+                                    "credential_identifier" => %{"type" => "string"},
+                                    "time_to_live" => %{"type" => "number"},
+                                    "types" => %{"type" => "string"},
+                                    "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
+                                    "defered" => %{"type" => "boolean"},
+                                    "claims" => %{
+                                      "type" => "array",
+                                      "items" => %{
+                                        "type" => "object",
+                                        "properties" => %{
+                                          "name" => %{"type" => "string"},
+                                          "label" => %{"type" => "string"},
+                                          "pointer" => %{"type" => "string"}
+                                        },
+                                        "required" => ["name", "label", "pointer"]
+                                      }
+                                    },
+                                    "display" => %{
+                                      "type" => "object",
+                                      "properties" => %{
+                                        "name" => %{"type" => "string"},
+                                        "locale" => %{"type" => "string"},
+                                        "background_color" => %{"type" => "string"},
+                                        "text_color" => %{"type" => "string"},
+                                        "logo" => %{
+                                          "type" => "object",
+                                          "properties" => %{
+                                            "url" => %{"type" => "string"},
+                                            "alt_text" => %{"type" => "string"}
+                                          }
+                                        }
+                                      },
+                                      "required" => ["name"],
+                                      "additionalProperties" => false
+                                    }
+                                  },
+                                  "required" => [
+                                    "version",
+                                    "credential_identifier",
+                                    "format",
+                                    "defered",
+                                    "types",
+                                    "claims",
+                                    "display"
+                                  ],
+                                  "additionalProperties" => false
+                                })
 
   @spec backend_types() :: list(atom)
   def backend_types, do: @backend_types
@@ -155,6 +254,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
     # identity federation
     field(:federated_servers, {:array, :map}, default: [])
+
+    # verifiable credentials
+    field(:verifiable_credentials, {:array, :map}, default: [])
 
     has_many(:email_templates, EmailTemplate)
     has_many(:users, User)
@@ -220,7 +322,13 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
         ""
 
       client ->
-        OAuth2.Client.authorize_url!(client, scope: "email")
+        OAuth2.Client.authorize_url!(client,
+          scope:
+            Enum.join(
+              [federated_server_scope(backend, federated_server_name)],
+              " "
+            )
+        )
     end
   end
 
@@ -244,8 +352,15 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
             nil ->
               %{
                 authorize_url:
-                  URI.to_string(%{base_url | path: federated_server["authorize_path"]}),
-                token_url: URI.to_string(%{base_url | path: federated_server["token_path"]})
+                  URI.to_string(%{
+                    base_url
+                    | path: federated_server["authorize_path"]
+                  }),
+                token_url:
+                  URI.to_string(%{
+                    base_url
+                    | path: federated_server["token_path"]
+                  })
               }
 
             discovery_path ->
@@ -254,17 +369,35 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
         client =
           OAuth2.Client.new(
-            strategy: OAuth2.Strategy.AuthCode,
+            strategy: AuthCodeStrategy,
+            token_method: :post,
             client_id: federated_server["client_id"],
             client_secret: federated_server["client_secret"],
             site: base_url,
-            request_opts: [],
+            request_opts: [state: "boruta"],
             authorize_url: endpoints[:authorize_url] || "",
             token_url: endpoints[:token_url] || "",
             redirect_uri: federated_redirect_url(backend, federated_server_name)
           )
 
         OAuth2.Client.put_serializer(client, "application/json", Jason)
+    end
+  end
+
+  @spec federated_server_scope(backend :: t(), federated_server_name :: String.t()) ::
+          server_scope :: String.t()
+  def federated_server_scope(
+        %__MODULE__{federated_servers: federated_servers},
+        federated_server_name
+      ) do
+    case Enum.find(federated_servers, fn federated_server ->
+           federated_server["name"] == federated_server_name
+         end) do
+      nil ->
+        ""
+
+      federated_server ->
+        federated_server["scope"] || ""
     end
   end
 
@@ -284,20 +417,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       {:ok, %Finch.Response{status: 200, body: body}} ->
         discovery = Jason.decode!(body)
 
-        authorize_path =
-          discovery["authorization_endpoint"]
-          |> URI.parse()
-          |> Map.get(:path)
+        authorize_url = discovery["authorization_endpoint"]
 
-        token_path =
-          discovery["token_endpoint"]
-          |> URI.parse()
-          |> Map.get(:path)
+        token_url = discovery["token_endpoint"]
 
-        userinfo_path =
-          discovery["userinfo_endpoint"]
-          |> URI.parse()
-          |> Map.get(:path)
+        userinfo_url = discovery["userinfo_endpoint"]
 
         change(backend, %{
           federated_servers:
@@ -305,9 +429,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
               case name == federated_server["name"] do
                 true ->
                   current_federated_server
-                  |> Map.put("authorize_path", authorize_path)
-                  |> Map.put("token_path", token_path)
-                  |> Map.put("userinfo_path", userinfo_path)
+                  |> Map.put("authorize_path", authorize_url)
+                  |> Map.put("token_path", token_url)
+                  |> Map.put("userinfo_path", userinfo_url)
 
                 false ->
                   current_federated_server
@@ -332,10 +456,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   def federated_redirect_url(%__MODULE__{id: backend_id}, federated_server_name) do
     base_url = URI.parse(BorutaIdentityWeb.Endpoint.url())
 
-    base_url = case base_url.port do
-      80 -> %{base_url|port: nil}
-      _ -> base_url
-    end
+    base_url =
+      case base_url.port do
+        80 -> %{base_url | port: nil}
+        _ -> base_url
+      end
 
     URI.to_string(%{
       base_url
@@ -353,6 +478,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   def changeset(backend, attrs) do
     backend
     |> cast(attrs, [
+      :id,
       :type,
       :name,
       :is_default,
@@ -374,11 +500,14 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :smtp_ssl,
       :smtp_tls,
       :smtp_port,
-      :federated_servers
+      :federated_servers,
+      :verifiable_credentials
     ])
+    |> unique_constraint(:id, name: :backends_pkey)
     |> validate_required([:name, :password_hashing_alg])
     |> validate_metadata_fields()
     |> validate_federated_servers()
+    |> validate_verifiable_credentials()
     |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
     |> validate_inclusion(:smtp_tls, Enum.map(@smtp_tls_types, &Atom.to_string/1))
     |> foreign_key_constraint(:identity_provider, name: :identity_providers_backend_id_fkey)
@@ -439,6 +568,24 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   defp validate_federated_servers(changeset), do: changeset
+
+  defp validate_verifiable_credentials(
+         %Ecto.Changeset{changes: %{verifiable_credentials: verifiable_credentials}} = changeset
+       ) do
+    Enum.reduce(verifiable_credentials, changeset, fn verifiable_credential, changeset ->
+      case ExJsonSchema.Validator.validate(@verifiable_credential_schema, verifiable_credential) do
+        :ok ->
+          changeset
+
+        {:error, errors} ->
+          Enum.reduce(errors, changeset, fn {message, path}, changeset ->
+            add_error(changeset, :verifiable_credentials, "#{message} at #{path}")
+          end)
+      end
+    end)
+  end
+
+  defp validate_verifiable_credentials(changeset), do: changeset
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: false}} = changeset) do
     Ecto.Changeset.add_error(

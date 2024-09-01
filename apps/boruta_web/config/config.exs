@@ -26,4 +26,8 @@ config :boruta, Boruta.Oauth,
 config :boruta_auth, BorutaAuth.LogRotate,
   max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60"))
 
+config :hammer,
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4,
+                                 cleanup_interval_ms: 60_000 * 10]}
+
 import_config "#{Mix.env()}.exs"

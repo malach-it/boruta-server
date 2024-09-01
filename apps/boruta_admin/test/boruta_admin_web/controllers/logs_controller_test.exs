@@ -4,9 +4,9 @@ defmodule BorutaAdminWeb.LogsControllerTest do
   alias BorutaAuth.LogRotate
 
   @request_log_lines [
-    "request_id=Fwd0KILP8T4HsB4AAA3h [info] boruta_web POST /oauth/introspect - sent 200 in 2ms",
-    "request_id=FweNn-2vW71XZiUAAljD [info] boruta_web GET /oauth/authorize - sent 200 in 16ms",
-    "request_id=FweINeYU7G053agAAApG [info] boruta_web POST /oauth/token - sent 401 in 952µs"
+    "request_id=Fwd0KILP8T4HsB4AAA3h [info] boruta_web POST /oauth/introspect - sent 200 from 0.0.0.0 in 2ms",
+    "request_id=FweNn-2vW71XZiUAAljD [info] boruta_web GET /oauth/authorize - sent 200 from 0.0.0.0 in 16ms",
+    "request_id=FweINeYU7G053agAAApG [info] boruta_web POST /oauth/token - sent 401 from 0.0.0.0 in 952µs"
   ]
 
   @business_log_lines [

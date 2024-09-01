@@ -20,12 +20,23 @@ defmodule BorutaAdmin.Application do
       :ok
     )
 
+    setup_database()
     opts = [strategy: :one_for_one, name: BorutaAdmin.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
-  # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
+  def setup_database do
+    Enum.each([BorutaAdmin.Repo], fn repo ->
+      repo.__adapter__.storage_up(repo.config)
+    end)
+
+    Enum.each([BorutaAdmin.Repo], fn repo ->
+      Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+    end)
+
+    :ok
+  end
+
   def config_change(changed, _new, removed) do
     BorutaAdminWeb.Endpoint.config_change(changed, removed)
     :ok

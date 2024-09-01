@@ -8,6 +8,7 @@ defmodule BorutaAdminWeb.Endpoint do
     signing_salt: "OCKBuS86"
   ]
 
+  plug RemoteIp
   plug Plug.Static,
     at: "/",
     from: :boruta_admin,
@@ -22,9 +23,7 @@ defmodule BorutaAdminWeb.Endpoint do
   end
 
   plug Plug.RequestId
-  plug Plug.Telemetry,
-    event_prefix: [:boruta_admin, :endpoint],
-    log: {__MODULE__, :log_level, []}
+  plug BorutaAdminWeb.Logger
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

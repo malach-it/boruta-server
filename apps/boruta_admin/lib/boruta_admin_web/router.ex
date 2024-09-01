@@ -41,6 +41,7 @@ defmodule BorutaAdminWeb.Router do
     resources("/key-pairs", KeyPairController, except: [:new, :edit])
     post("/key-pairs/:id/rotate", KeyPairController, :rotate)
     resources("/clients", ClientController, except: [:new, :edit])
+    post("/clients/:id/regenerate_did", ClientController, :regenerate_did)
     post("/clients/:id/regenerate_key_pair", ClientController, :regenerate_key_pair)
     resources("/users", UserController, except: [:new, :edit])
     resources("/organizations", OrganizationController, except: [:new, :edit])
@@ -48,6 +49,14 @@ defmodule BorutaAdminWeb.Router do
     resources("/upstreams", UpstreamController, except: [:new, :edit])
 
     scope "/configuration", as: :configuration do
+      get("/", ConfigurationController, :configuration, as: :configuration_list)
+
+      get("/example-configuration-file", ConfigurationController, :example_configuration_file)
+
+      post("/upload-configuration-file", ConfigurationController, :upload_configuration_file,
+        as: :upload_configuration_file
+      )
+
       get("/error-templates/:template_type", ConfigurationController, :error_template,
         as: :error_template
       )

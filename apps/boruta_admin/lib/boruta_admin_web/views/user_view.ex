@@ -35,6 +35,7 @@ defmodule BorutaAdminWeb.UserView do
       email: user.username,
       totp_registered_at: user.totp_registered_at,
       metadata: user.metadata,
+      federated_metadata: user.federated_metadata,
       group: user.group,
       authorized_scopes: Accounts.get_user_scopes(user.id),
       organizations: Accounts.get_user_organizations(user.id),

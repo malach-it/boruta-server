@@ -2,10 +2,7 @@ import axios from 'axios'
 import { addClientErrorInterceptor } from './utils'
 import Backend from './backend.model'
 
-const DEFAULT_ID = 'non-existing'
-
 const defaults = {
-  id: DEFAULT_ID,
   name: null,
   type: 'internal',
   errors: null,
@@ -21,6 +18,8 @@ const assign = {
   choose_session: function ({ choose_session }) { this.choose_session = choose_session },
   totpable: function ({ totpable }) { this.totpable = totpable },
   enforce_totp: function ({ enforce_totp }) { this.enforce_totp = enforce_totp },
+  webauthnable: function ({ webauthnable }) { this.webauthnable = webauthnable },
+  enforce_webauthn: function ({ enforce_webauthn }) { this.enforce_webauthn = enforce_webauthn },
   registrable: function ({ registrable }) { this.registrable = registrable },
   user_editable: function ({ user_editable }) { this.user_editable = user_editable },
   consentable: function ({ consentable }) { this.consentable = consentable },
@@ -38,7 +37,7 @@ class IdentityProvider {
   }
 
   get isPersisted () {
-    return this.id && this.id != DEFAULT_ID
+    return this.id
   }
 
   save () {
@@ -86,6 +85,8 @@ class IdentityProvider {
       choose_session,
       totpable,
       enforce_totp,
+      webauthnable,
+      enforce_webauthn,
       registrable,
       user_editable,
       consentable,
@@ -100,6 +101,8 @@ class IdentityProvider {
       user_editable,
       totpable,
       enforce_totp,
+      webauthnable,
+      enforce_webauthn,
       registrable,
       consentable,
       confirmable

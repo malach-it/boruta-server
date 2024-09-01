@@ -13,13 +13,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     only: [request_param: 1, get_user_session: 1]
 
   alias Boruta.Oauth
+  alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.ResourceOwner
+  alias Boruta.Openid.CredentialOfferResponse
+  alias Boruta.Openid.SiopV2Response
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
+  alias BorutaIdentityWeb.TemplateView
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -57,7 +62,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       :ok ->
         {:unchanged, conn}
 
-      {:error, reason} ->
+      {:error, action, reason} ->
         case get_session(conn, :session_chosen) do
           true ->
             conn =
@@ -67,7 +72,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
                 to:
                   IdentityRoutes.user_session_path(
                     BorutaIdentityWeb.Endpoint,
-                    :initialize_totp,
+                    action,
                     %{
                       request: request_param(conn)
                     }
@@ -97,69 +102,81 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"])
 
     totp_authenticated = (get_session(conn, :totp_authenticated) || %{})[get_user_session(conn)]
+    webauthn_authenticated = (get_session(conn, :webauthn_authenticated) || %{})[get_user_session(conn)]
 
-    do_enforce_mfa(identity_provider, current_user, totp_authenticated)
+    do_enforce_mfa(identity_provider, current_user, totp_authenticated, webauthn_authenticated)
   end
 
   defp do_enforce_mfa(
-         %IdentityProvider{enforce_totp: false},
+         %IdentityProvider{enforce_totp: false, enforce_webauthn: false},
          %User{totp_registered_at: nil},
-         _totp_authenticated
+         _totp_authenticated,
+         _webauthn_authenticated
        ) do
     :ok
   end
 
   defp do_enforce_mfa(
+         %IdentityProvider{webauthnable: true},
+         %User{webauthn_registered_at: %DateTime{}},
+         _totp_authenticated,
+         webauthn_authenticated
+       ) do
+    case webauthn_authenticated do
+      true ->
+        :ok
+
+      _ ->
+        {:error, :initialize_webauthn, "Multi factor authentication required."}
+    end
+  end
+
+  defp do_enforce_mfa(
          %IdentityProvider{totpable: true},
          %User{totp_registered_at: %DateTime{}},
-         totp_authenticated
+         totp_authenticated,
+         _webauthn_authenticated
        ) do
     case totp_authenticated do
       true ->
         :ok
 
       _ ->
-        {:error, "Multi factor authentication required."}
+        {:error, :initialize_totp, "Multi factor authentication required."}
+    end
+  end
+
+  defp do_enforce_mfa(
+         %IdentityProvider{enforce_webauthn: true},
+         %User{webauthn_registered_at: nil},
+         _totp_authenticated,
+         webauthn_authenticated
+       ) do
+    case webauthn_authenticated do
+      true ->
+        :ok
+
+      _ ->
+        {:error, :initialize_webauthn, "Multi factor authentication required."}
     end
   end
 
   defp do_enforce_mfa(
          %IdentityProvider{enforce_totp: true},
          %User{totp_registered_at: nil},
-         totp_authenticated
+         totp_authenticated,
+         _webauthn_authenticated
        ) do
     case totp_authenticated do
       true ->
         :ok
 
       _ ->
-        {:error, "Multi factor authentication required."}
+        {:error, :initialize_totp, "Multi factor authentication required."}
     end
   end
 
-  defp do_enforce_mfa(
-         %IdentityProvider{enforce_totp: false},
-         %User{},
-         _totp_authenticated
-       ) do
-    :ok
-  end
-
-  defp do_enforce_mfa(
-         %IdentityProvider{},
-         %User{totp_registered_at: %DateTime{}},
-         totp_authenticated
-       ) do
-    case totp_authenticated do
-      true ->
-        :ok
-
-      _ ->
-        {:error, "Multi factor authentication required."}
-    end
-  end
-
-  defp do_enforce_mfa(_identity_provider, _user, _totp_authenticated) do
+  defp do_enforce_mfa(_identity_provider, _user, _totp_authenticated, _webauthn_authenticated) do
     :ok
   end
 
@@ -217,7 +234,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       :ok ->
         {:authorize, do_authorize(conn, current_user)}
 
-      {:error, reason} ->
+      {:error, _action, reason} ->
         {:redirected,
          authorize_error(conn, %Error{
            status: :unauthorized,
@@ -249,7 +266,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     resource_owner = %ResourceOwner{
       sub: current_user.id,
       username: current_user.username,
-      last_login_at: current_user.last_login_at
+      last_login_at: current_user.last_login_at,
+      authorization_details: VerifiableCredentials.authorization_details(current_user)
     }
 
     conn =
@@ -268,7 +286,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     resource_owner = %ResourceOwner{
       sub: current_user.id,
       username: current_user.username,
-      last_login_at: current_user.last_login_at
+      last_login_at: current_user.last_login_at,
+      authorization_details: VerifiableCredentials.authorization_details(current_user)
     }
 
     conn
@@ -280,6 +299,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
+  def preauthorize_success(conn, %AuthorizationSuccess{sub: "did:" <> _key = sub}) do
+    Oauth.authorize(conn, %ResourceOwner{sub: sub}, __MODULE__)
+  end
+
   def preauthorize_success(conn, _authorization) do
     session_chosen? = get_session(conn, :session_chosen) || false
     preauthorizations = get_session(conn, :preauthorizations) || %{}
@@ -338,7 +361,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
-  def authorize_success(%Plug.Conn{query_params: query_params} = conn, response) do
+  def authorize_success(
+        %Plug.Conn{query_params: query_params} = conn,
+        %AuthorizeResponse{} = response
+      ) do
     # TODO get client_id, grant_type and resource_owner from response
     client_id = query_params["client_id"]
     current_user = conn.assigns[:current_user]
@@ -360,6 +386,43 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     conn
     |> delete_session(:session_chosen)
     |> redirect(external: AuthorizeResponse.redirect_to_url(response))
+  end
+
+  def authorize_success(
+        %Plug.Conn{} = conn,
+        %SiopV2Response{} = response
+      ) do
+    # TODO log business event
+
+    conn
+    |> redirect(external: SiopV2Response.redirect_to_deeplink(response, fn code ->
+      uri = URI.parse(Boruta.Config.issuer())
+
+      %{uri | path: Routes.token_path(conn, :direct_post, code)}
+      |> URI.to_string()
+    end))
+  end
+
+  def authorize_success(
+        %Plug.Conn{query_params: query_params} = conn,
+        %CredentialOfferResponse{} = response
+      ) do
+    case IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"]) do
+      %IdentityProvider{} = identity_provider ->
+        template = IdentityProviders.get_identity_provider_template!(
+          identity_provider.id,
+          :credential_offer
+        )
+
+        conn
+        |> delete_session(:session_chosen)
+        |> put_layout(false)
+        |> put_view(TemplateView)
+        |> render("template.html", template: template, assigns: %{credential_offer: response})
+
+      nil ->
+        raise BorutaIdentity.Accounts.IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator."
+    end
   end
 
   @impl Boruta.Oauth.AuthorizeApplication

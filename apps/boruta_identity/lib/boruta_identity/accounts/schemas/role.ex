@@ -21,7 +21,8 @@ defmodule BorutaIdentity.Accounts.Role do
   def changeset(role, attrs) do
     role
     |> Repo.preload(:role_scopes)
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:id, :name])
+    |> unique_constraint(:id, name: :roles_pkey)
     |> put_assoc(
       :role_scopes,
       (attrs[:scopes] || attrs["scopes"] || [])

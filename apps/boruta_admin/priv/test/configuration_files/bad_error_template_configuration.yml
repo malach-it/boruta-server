@@ -1,0 +1,6 @@
+---
+version: "1.0"
+configuration:
+  error_template:
+    - type: "999"
+      content: test

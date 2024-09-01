@@ -1,6 +1,7 @@
 defmodule BorutaIdentityWeb.UserSessionController do
   @behaviour BorutaIdentity.Accounts.SessionApplication
   @behaviour BorutaIdentity.TotpAuthenticationApplication
+  @behaviour BorutaIdentity.WebauthnAuthenticationApplication
 
   use BorutaIdentityWeb, :controller
 
@@ -18,6 +19,8 @@ defmodule BorutaIdentityWeb.UserSessionController do
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Totp
   alias BorutaIdentity.TotpError
+  alias BorutaIdentity.Webauthn
+  alias BorutaIdentity.WebauthnError
   alias BorutaIdentityWeb.TemplateView
 
   def new(conn, _params) do
@@ -61,6 +64,39 @@ defmodule BorutaIdentityWeb.UserSessionController do
     }
 
     Totp.authenticate_totp(conn, client_id, current_user, totp_params, __MODULE__)
+  end
+
+  def initialize_webauthn(conn, _params) do
+    client_id = client_id_from_request(conn)
+    current_user = conn.assigns[:current_user]
+
+    conn
+    |> Webauthn.initialize_webauthn(client_id, current_user, __MODULE__)
+  end
+
+  @dialyzer {:no_return, {:authenticate_webauthn, 2}}
+  def authenticate_webauthn(conn, params) do
+    client_id = client_id_from_request(conn)
+    current_user = conn.assigns[:current_user]
+
+    webauthn_params = %{
+      signature: params["signature"],
+      authenticator_data: params["authenticator_data"],
+      client_data: params["client_data"],
+      identifier: params["identifier"],
+      type: params["type"]
+    }
+
+    Webauthn.authenticate_webauthn(conn, client_id, current_user, webauthn_params, __MODULE__)
+  end
+
+  @impl BorutaIdentity.WebauthnAuthenticationApplication
+  def webauthn_registration_missing(%Plug.Conn{query_params: query_params} = conn) do
+    conn
+    |> put_flash(:warning, "You need to register a TOTP authenticator before continue.")
+    |> redirect(
+      to: Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :new, %{request: query_params["request"]})
+    )
   end
 
   @impl BorutaIdentity.Accounts.SessionApplication
@@ -173,6 +209,22 @@ defmodule BorutaIdentityWeb.UserSessionController do
     )
   end
 
+  @impl BorutaIdentity.WebauthnAuthenticationApplication
+  def webauthn_initialized(%Plug.Conn{} = conn, webauthn_options, template) do
+    current_user = conn.assigns[:current_user]
+
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        current_user: current_user,
+        webauthn_options: webauthn_options
+      }
+    )
+  end
+
   @impl BorutaIdentity.TotpAuthenticationApplication
   def totp_authenticated(%Plug.Conn{} = conn, _user) do
     conn
@@ -200,6 +252,47 @@ defmodule BorutaIdentityWeb.UserSessionController do
       template: template,
       assigns: %{
         errors: [message],
+        current_user: current_user
+      }
+    )
+  end
+
+  @impl BorutaIdentity.WebauthnAuthenticationApplication
+  def webauthn_not_required(conn) do
+    conn
+    |> put_session(:session_chosen, true)
+    |> redirect(to: after_sign_in_path(conn))
+  end
+
+  @impl BorutaIdentity.WebauthnAuthenticationApplication
+  def webauthn_authenticated(%Plug.Conn{} = conn, _user) do
+    conn
+    |> put_session(
+      :webauthn_authenticated,
+      (get_session(conn, :webauthn_authenticated) || %{})
+      |> Map.put(get_user_session(conn), true)
+    )
+    |> put_session(:session_chosen, true)
+    |> redirect(to: after_sign_in_path(conn))
+  end
+
+  @impl BorutaIdentity.WebauthnAuthenticationApplication
+  def webauthn_authentication_failure(%Plug.Conn{} = conn, %WebauthnError{
+        message: message,
+        webauthn_options: webauthn_options,
+        template: template
+      }) do
+    current_user = conn.assigns.current_user
+
+    conn
+    |> put_layout(false)
+    |> put_status(:unauthorized)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        errors: [message],
+        webauthn_options: webauthn_options,
         current_user: current_user
       }
     )

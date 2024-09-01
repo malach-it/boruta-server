@@ -1,7 +1,16 @@
 <template>
   <div class="new-client">
-    <div class="ui container">
-      <ClientForm :client="client" @submit="createClient()" @back="back()" action="Create" />
+    <div class="container">
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <router-link :to="{ name: 'client-list' }" class="ui right floated button">Back</router-link>
+          </div>
+        </div>
+        <div class="twelve wide column">
+          <ClientForm :client="client" @submit="createClient()" @back="back()" action="Create" />
+        </div>
+      </div>
     </div>
   </div>
 </template>

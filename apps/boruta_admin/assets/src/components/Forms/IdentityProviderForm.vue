@@ -1,26 +1,27 @@
 <template>
-  <div class="identity-provider-form">
-    <div class="ui segment">
-      <FormErrors v-if="identityProvider.errors" :errors="identityProvider.errors" />
-      <form class="ui form" @submit.prevent="submit">
-        <section>
-          <h3>General configuration</h3>
-          <div class="field">
-            <label>Name</label>
-            <input type="text" v-model="identityProvider.name" placeholder="Super identity provider">
-          </div>
-          <div class="field">
-            <label>Backend</label>
-            <select v-model="identityProvider.backend_id">
-              <option :value="backend.id" v-for="backend in backends">{{ backend.name }}</option>
-            </select>
-          </div>
-          <div v-if="identityProvider.isPersisted" class="ui segment">
-            <router-link
-              :to="{ name: 'edit-layout-template', params: { identityProviderId: identityProvider.id } }"
-              class="ui fluid blue button">Edit layout template</router-link>
-          </div>
-        </section>
+  <div class="ui identity-provider-form segment">
+    <FormErrors v-if="identityProvider.errors" :errors="identityProvider.errors" />
+    <form ref="form" class="ui form" @submit.prevent="submit">
+      <div ref="tabularMenu" class="ui top attached stackable tabular menu">
+        <a id="general-configuration" @click="openTab" class="active item">General configuration</a>
+        <a id="features" @click="openTab" class="item">Features</a>
+      </div>
+      <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
+        <div class="field" :class="{ 'error': identityProvider.errors?.name }">
+          <label>Name</label>
+          <input type="text" v-model="identityProvider.name" placeholder="Super identity provider">
+        </div>
+        <div class="field" :class="{ 'error': identityProvider.errors?.backend_id }">
+          <label>Backend</label>
+          <select v-model="identityProvider.backend_id">
+            <option :value="backend.id" v-for="backend in backends">{{ backend.name }}</option>
+          </select>
+        </div>
+        <div v-if="identityProvider.isPersisted" class="ui segment">
+          <router-link
+            :to="{ name: 'edit-layout-template', params: { identityProviderId: identityProvider.id } }"
+            class="ui fluid blue button">Edit layout template</router-link>
+        </div>
         <section v-if="identityProvider.isPersisted">
           <h3>Sessions</h3>
           <div class="ui segment">
@@ -41,6 +42,8 @@
             </div>
           </div>
         </section>
+      </div>
+      <div ref="features" data-tab="features" class="ui bottom attached tab segment">
         <section v-if="identityProvider.isPersisted">
           <h3>Choose session</h3>
           <div class="ui segment">
@@ -55,6 +58,36 @@
               <router-link
                 :to="{ name: 'edit-choose-session-template', params: { identityProviderId: identityProvider.id } }"
                 class="ui fluid blue button">Edit choose session template</router-link>
+            </div>
+          </div>
+        </section>
+        <section v-show="displayWebauthnable">
+          <h3>Webauthn</h3>
+          <div class="ui segment">
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="identityProvider.webauthnable">
+                <label>enable Webauthn</label>
+              </div>
+            </div>
+            <hr />
+            <div class="field">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="identityProvider.enforce_webauthn">
+                <label>enforce Webauthn</label>
+              </div>
+            </div>
+            <p class="ui info message">
+              Give the ability for end users to register an authentication second factor with Passkeys.
+            </p>
+            <div v-if="identityProvider.webauthnable">
+              <router-link
+                :to="{ name: 'edit-webauthn-registration-template', params: { identityProviderId: identityProvider.id } }"
+                class="ui fluid blue button">Edit Webauthn registration template</router-link>
+              <hr />
+              <router-link
+                :to="{ name: 'edit-webauthn-authentication-template', params: { identityProviderId: identityProvider.id } }"
+                class="ui fluid blue button">Edit Webauthn authentication template</router-link>
             </div>
           </div>
         </section>
@@ -160,11 +193,26 @@
             </div>
           </div>
         </section>
-        <hr />
-        <button class="ui right floated violet button" type="submit">{{ action }}</button>
-        <a class="ui button" v-on:click="back()">Back</a>
-      </form>
-    </div>
+        <section v-show="identityProvider.isPersisted">
+          <h3>Credential offer</h3>
+          <div class="ui segment">
+            <div class=" field">
+              <p class="ui info message">
+                SSI credential offer page (compatible with Altme wallet)
+              </p>
+              <div>
+                <router-link
+                  :to="{ name: 'edit-credential-offer-template', params: { identityProviderId: identityProvider.id } }"
+                  class="ui fluid blue button">Edit credential offer template</router-link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="actions">
+        <button class="ui violet button" type="submit">{{ action }}</button>
+      </div>
+    </form>
   </div>
 </template>
 
@@ -193,6 +241,9 @@ export default {
     displayRegistrable () {
       return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('registrable')
     },
+    displayWebauthnable () {
+      return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('webauthnable')
+    },
     displayTotpable () {
       return this.identityProvider.isPersisted && this.identityProvider.backend.features?.includes('totpable')
     },
@@ -207,8 +258,17 @@ export default {
     Backend.all().then(backends => this.backends = backends)
   },
   methods: {
-    back () {
-      this.$emit('back')
+    openTab (e) {
+      const tab = e.target.id
+      Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
+        if (e.id == tab) {
+          e.classList.add('active')
+          this.$refs[e.id].classList.add('active')
+        } else {
+          e.classList.remove('active')
+          this.$refs[e.id].classList.remove('active')
+        }
+      })
     }
   },
   watch: {
@@ -217,6 +277,20 @@ export default {
         this.identityProvider.backend = this.backends.find(({ id }) => id === backend_id) || this.identityProvider.backend
       },
       deep: true
+    },
+    'identityProvider.errors': {
+      deep: true,
+      handler (errors) {
+        setTimeout(() => {
+          Array.from(this.$refs.tabularMenu.getElementsByClassName('error')).forEach(e => {
+            e.classList.remove('error')
+          })
+          Array.from(this.$refs.form.getElementsByClassName('error')).forEach(elt => {
+            const tab = elt.closest('.tab').getAttribute('data-tab')
+            this.$refs.tabularMenu.querySelector('#' + tab).classList.add('error')
+          })
+        }, 100)
+      }
     }
   }
 }
