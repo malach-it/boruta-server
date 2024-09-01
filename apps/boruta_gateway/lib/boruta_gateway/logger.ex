@@ -62,7 +62,7 @@ defmodule BorutaGateway.Logger do
     %{method: method, request_path: path, status: status_code} = conn
     node_name = conn.assigns[:node_name]
     status_code = Integer.to_string(status_code)
-    remote_ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
+    remote_ip = :inet.ntoa(conn.remote_ip)
 
     status = business_status(conn)
 

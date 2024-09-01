@@ -8,7 +8,7 @@ defmodule BorutaWeb.Plugs.RateLimit do
   def init(options), do: options
 
   def call(conn, options) do
-    remote_ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
+    remote_ip = :inet.ntoa(conn.remote_ip)
 
     # TODO fix rate limiting, the request is denied once but not for a duration
     case Hammer.check_rate("request:#{remote_ip}", options[:duration] || 1000, options[:limit] || 10) do

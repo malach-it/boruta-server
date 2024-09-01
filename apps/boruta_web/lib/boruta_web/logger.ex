@@ -58,7 +58,7 @@ defmodule BorutaWeb.Logger do
   end
 
   def boruta_web_request_handler(_, %{duration: duration}, %{conn: conn} = metadata, _) do
-    remote_ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
+    remote_ip = :inet.ntoa(conn.remote_ip)
 
     case log_level(metadata[:options][:log], conn) do
       false ->
