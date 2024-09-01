@@ -18,5 +18,6 @@ tags*
 
 apps/*/priv/static/**
 apps/*/priv/ssl/**
+apps/*/log/**
 
 .vscode
