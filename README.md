@@ -77,7 +77,7 @@ wget https://raw.githubusercontent.com/malach-it/boruta-server/master/.env.dev
 Once done you will be able to launch the server.
 
 ```bash
-docker run -it --env-file .env.dev --network=host malachit/boruta-server:0.3.0
+docker run -it --env-file .env.dev --network=host malachit/boruta-server:0.4.0
 ```
 
 The applications will be available on different ports (depending on the values provided in `.env.dev`):
