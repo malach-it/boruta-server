@@ -27,11 +27,11 @@ defmodule BorutaGateway.Application do
           [
             %{
               start:
-                {BorutaGateway.Server, :start_link,
+                {BorutaGateway.Gateway, :start,
                  [
                    [
                      port: Application.fetch_env!(:boruta_gateway, :port),
-                     router: BorutaGateway.Router
+                     num_acceptors: 10
                    ]
                  ]},
               id: :server
@@ -43,30 +43,8 @@ defmodule BorutaGateway.Application do
           children
       end
 
-    children =
-      case Application.get_env(:boruta_gateway, :sidecar_server) do
-        true ->
-          [
-            %{
-              start:
-                {BorutaGateway.Server, :start_link,
-                 [
-                   [
-                     port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
-                     router: BorutaGateway.SidecarRouter
-                   ]
-                 ]},
-              id: :sidecar_server
-            }
-            | children
-          ]
-
-        _ ->
-          children
-      end
-
     setup_database()
-    Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor)
+    Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor, shutdown: 5_000)
   end
 
   def setup_database do
