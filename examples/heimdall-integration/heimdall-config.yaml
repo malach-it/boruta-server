@@ -1,0 +1,75 @@
+log:
+  level: trace
+
+tracing:
+  enabled: false
+
+metrics:
+  enabled: false
+
+mechanisms:
+  authenticators:
+  - id: deny_all
+    type: unauthorized
+  - id: anon
+    type: anonymous
+  - id: auth
+    type: generic
+    config:
+      identity_info_endpoint: http://boruta:8082/oauth/userinfo
+      authentication_data_source:
+        - cookie: sid
+      forward_cookies:
+        - sid
+      subject:
+        id: "sub"
+      cache_ttl: 1m
+  - id: at_jwt
+    type: jwt
+    config:
+      jwks_endpoint:
+        url: http://boruta:8080/openid/jwks
+      assertions:
+        issuers:
+          - http://localhost:8080
+  authorizers:
+    - id: cel
+      type: cel
+      config:
+        expressions:
+          - expression: "true == false"
+
+  finalizers:
+  - id: create_jwt
+    type: jwt
+    config:
+      signer:
+        key_store:
+          path: /etc/heimdall/keys/signer.pem
+      claims: |
+        {{- dict "attrs" .Subject.Attributes | toJson -}}
+  - id: noop
+    type: noop
+
+  error_handlers:
+    - id: redirect_to_idp
+      type: redirect
+      if: type(Error) == authentication_error && Request.Header("Accept").contains("text/html")
+      config:
+        to: http://127.0.0.1:4180/oauth2/start?rd={{ .Request.URL | urlenc }}
+    - id: redirect_to_error_page
+      type: redirect
+      if: type(Error) == authorization_error && Request.Header("Accept").contains("text/html")
+      config:
+        to: https://google.com
+
+default_rule:
+  execute:
+  - authenticator: deny_all
+  - finalizer: create_jwt
+
+providers:
+  file_system:
+    src: /etc/heimdall/rules.yaml
+    watch: true
+

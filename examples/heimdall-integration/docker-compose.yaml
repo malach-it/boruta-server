@@ -1,0 +1,90 @@
+version: '3.7'
+
+services:
+  oauth2-proxy:
+    depends_on:
+      - boruta
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0-amd64
+    ports:
+      - "4180:4180"
+    command:
+      - --http-address
+      - 0.0.0.0:4180
+    environment:
+        OAUTH2_PROXY_CLIENT_ID: e9f68387-95f7-478a-8a85-9bfe2f872255
+        OAUTH2_PROXY_CLIENT_SECRET: VeryInsecure!!
+        OAUTH2_PROXY_REDIRECT_URL: http://127.0.0.1:4180/oauth2/callback
+        OAUTH2_PROXY_PROVIDER: oidc
+        OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: true
+        OAUTH2_PROXY_EMAIL_DOMAINS: '*'
+        OAUTH2_PROXY_COOKIE_SECRET: VerySecure!!!!!!
+        OAUTH2_PROXY_COOKIE_NAME: SESSION
+        OAUTH2_PROXY_WHITELIST_DOMAINS: 127.0.0.1:9090
+        # the below is only required if kc is used as idp
+        OAUTH2_PROXY_OIDC_ISSUER_URL: http://boruta:4000/
+        OAUTH2_PROXY_LOGIN_URL: http://localhost:4000/oauth/authorize
+        OAUTH2_PROXY_OIDC_JWKS_URL: http://boruta:4000/openid/jwks
+        OAUTH2_PROXY_REDEEM_URL: http://boruta:4000/oauth/token
+        OAUTH2_PROXY_INSECURE_OIDC_SKIP_ISSUER_VERIFICATION: true
+        OAUTH2_PROXY_SKIP_OIDC_DISCOVERY: true
+        OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL: true
+
+  upstream:
+    image: containous/whoami:latest
+    command: --port=8081
+
+  heimdall-init:
+    image: finalgene/openssh
+    command: /tmp/generate_keys.sh
+    volumes:
+      - ./generate_keys.sh:/tmp/generate_keys.sh:ro
+      - heimdall-keys:/etc/heimdall/keys
+
+  heimdall:
+    image: dadrus/heimdall:dev
+    depends_on:
+      heimdall-init:
+        condition: service_started
+    ports:
+      - "9090:4455"
+    command: -c /etc/heimdall/config.yaml serve proxy
+    volumes:
+      - ./heimdall-config.yaml:/etc/heimdall/config.yaml:ro
+      - ./upstream-rules.yaml:/etc/heimdall/rules.yaml:ro
+      - heimdall-keys:/etc/heimdall/keys:ro
+
+  postgresql:
+    image: postgres:13.11
+    ports:
+      - "5432:5432"
+    volumes:
+      - type: volume
+        source: postgres-db
+        target: /var/lib/postgresql/data
+        read_only: false
+      - ./initdb:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  boruta:
+    build:
+      context: ../..
+      dockerfile: Dockerfile.full
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+    env_file: "../../.env.example"
+    environment:
+      MIX_ENV: "prod"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DATABASE: "boruta_release"
+      POSTGRES_HOST: "postgresql"
+
+volumes:
+  heimdall-keys:
+  postgres-db:
+
+
