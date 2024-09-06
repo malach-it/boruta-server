@@ -1,0 +1,45 @@
+version: "1alpha4"
+rules:
+  - id: demo:public
+    match:
+      path: /public
+      with:
+        methods: [ GET, POST ]
+    forward_to:
+      host: upstream:8081
+    execute:
+    - authenticator: anon
+    - finalizer: noop
+
+  - id: demo:favicon
+    match:
+      path: /favicon.ico
+      with:
+        methods: [ GET ]
+    forward_to:
+      host: upstream:8081
+    execute:
+      - authenticator: anon
+      - finalizer: noop
+
+  - id: demo:protected
+    match:
+      path: /:user
+      with:
+        path_regex: ^/(user|admin)
+        methods: [ GET, POST ]
+    forward_to:
+      host: upstream:8081
+    execute:
+    - authenticator: auth
+    - authorizer: cel
+      if: Request.URL.Captures.user == "admin"
+      config:
+        expressions:
+          - expression: |
+              has(Subject.Attributes.groups) &&
+              Subject.Attributes.groups.exists(g, g == "role:admin")
+            message: User is not admin
+    on_error:
+      - error_handler: redirect_to_idp
+      - error_handler: redirect_to_error_page
