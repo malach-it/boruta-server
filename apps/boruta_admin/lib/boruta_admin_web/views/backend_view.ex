@@ -28,6 +28,7 @@ defmodule BorutaAdminWeb.BackendView do
       metadata_fields: backend.metadata_fields,
       federated_servers: backend.federated_servers,
       verifiable_credentials: backend.verifiable_credentials,
+      verifiable_presentations: backend.verifiable_presentations,
       password_hashing_alg: backend.password_hashing_alg,
       password_hashing_opts: backend.password_hashing_opts,
       ldap_pool_size: backend.ldap_pool_size,

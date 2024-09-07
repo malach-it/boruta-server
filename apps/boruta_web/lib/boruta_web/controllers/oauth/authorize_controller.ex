@@ -19,8 +19,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Openid.CredentialOfferResponse
   alias Boruta.Openid.SiopV2Response
+  alias Boruta.Openid.VerifiablePresentationResponse
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.VerifiableCredentials
+  alias BorutaIdentity.Accounts.VerifiablePresentations
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
@@ -102,7 +104,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"])
 
     totp_authenticated = (get_session(conn, :totp_authenticated) || %{})[get_user_session(conn)]
-    webauthn_authenticated = (get_session(conn, :webauthn_authenticated) || %{})[get_user_session(conn)]
+
+    webauthn_authenticated =
+      (get_session(conn, :webauthn_authenticated) || %{})[get_user_session(conn)]
 
     do_enforce_mfa(identity_provider, current_user, totp_authenticated, webauthn_authenticated)
   end
@@ -300,7 +304,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, %AuthorizationSuccess{sub: "did:" <> _key = sub}) do
-    Oauth.authorize(conn, %ResourceOwner{sub: sub}, __MODULE__)
+    Oauth.authorize(
+      conn,
+      %ResourceOwner{
+        sub: sub,
+        presentation_configuration: VerifiablePresentations.public_presentation_configuration()
+      },
+      __MODULE__
+    )
   end
 
   def preauthorize_success(conn, _authorization) do
@@ -392,12 +403,31 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     # TODO log business event
 
     conn
-    |> redirect(external: SiopV2Response.redirect_to_deeplink(response, fn code ->
-      uri = URI.parse(Boruta.Config.issuer())
+    |> redirect(
+      external:
+        SiopV2Response.redirect_to_deeplink(response, fn code ->
+          uri = URI.parse(Boruta.Config.issuer())
 
-      %{uri | path: Routes.token_path(conn, :direct_post, code)}
-      |> URI.to_string()
-    end))
+          %{uri | path: Routes.token_path(conn, :direct_post, code)}
+          |> URI.to_string()
+        end))
+  end
+
+  def authorize_success(
+        %Plug.Conn{} = conn,
+        %VerifiablePresentationResponse{} = response
+      ) do
+    # TODO log business event
+
+    conn
+    |> redirect(
+      external:
+        VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
+          uri = URI.parse(Boruta.Config.issuer())
+
+          %{uri | path: Routes.token_path(conn, :direct_post, code)}
+          |> URI.to_string()
+        end))
   end
 
   def authorize_success(
@@ -406,10 +436,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       ) do
     case IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"]) do
       %IdentityProvider{} = identity_provider ->
-        template = IdentityProviders.get_identity_provider_template!(
-          identity_provider.id,
-          :credential_offer
-        )
+        template =
+          IdentityProviders.get_identity_provider_template!(
+            identity_provider.id,
+            :credential_offer
+          )
 
         conn
         |> delete_session(:session_chosen)
@@ -418,7 +449,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         |> render("template.html", template: template, assigns: %{credential_offer: response})
 
       nil ->
-        raise BorutaIdentity.Accounts.IdentityProviderError, "identity provider not configured for given OAuth client. Please contact your administrator."
+        raise BorutaIdentity.Accounts.IdentityProviderError,
+              "identity provider not configured for given OAuth client. Please contact your administrator."
     end
   end
 

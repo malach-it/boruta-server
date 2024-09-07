@@ -231,7 +231,7 @@
           <h2>Verifiable credentials</h2>
           <div v-for="credential in backend.verifiable_credentials" class="ui credential-field segment">
             <i class="ui large close icon" @click="deleteVerifiableCredential(credential)"></i>
-            <h3>Verifiable cerdential</h3>
+            <h3>Verifiable credential</h3>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
               <label>Credential identifier</label>
               <input type="text" v-model="credential.credential_identifier" placeholder="BorutaCredential">
@@ -313,6 +313,18 @@
           </div>
           <div class="field">
             <a class="ui blue fluid button" @click="addVerifiableCredential()">Add a verifiable credential</a>
+          </div>
+          <h2>Verifiable presentations</h2>
+          <div v-for="presentation in backend.verifiable_presentations" class="ui presentation-field segment">
+            <i class="ui large close icon" @click="deleteVerifiablePresentation(presentation)"></i>
+            <h3>Verifiable presentation</h3>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_presentations }">
+              <label>Presentation identifier</label>
+              <input type="text" v-model="presentation.presentation_identifier" placeholder="BorutaCredential">
+            </div>
+          </div>
+          <div class="field">
+            <a class="ui blue fluid button" @click="addVerifiablePresentation()">Add a verifiable presentation</a>
           </div>
         </div>
         <div ref="user-metadata" data-tab="user-metadata" class="ui bottom attached tab segment">
@@ -422,6 +434,9 @@ export default {
     addVerifiableCredential () {
       this.backend.verifiable_credentials.push({display: {logo: {}}, claims: []})
     },
+    addVerifiablePresentation () {
+      this.backend.verifiable_presentations.push({})
+    },
     addMetadataField () {
       this.backend.metadata_fields.push({ scopes: [] })
     },
@@ -440,6 +455,12 @@ export default {
     deleteVerifiableCredential (credential) {
       this.backend.verifiable_credentials.splice(
         this.backend.verifiable_credentials.indexOf(credential),
+        1
+      )
+    },
+    deleteVerifiablePresentation (presentation) {
+      this.backend.verifiable_presentations.splice(
+        this.backend.verifiable_presentations.indexOf(presentation),
         1
       )
     },

@@ -219,6 +219,17 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   "additionalProperties" => false
                                 })
 
+  @verifiable_presentation_schema ExJsonSchema.Schema.resolve(%{
+                                  "type" => "object",
+                                  "properties" => %{
+                                    "presentation_identifier" => %{"type" => "string"},
+                                  },
+                                  "required" => [
+                                    "presentation_identifier"
+                                  ],
+                                  "additionalProperties" => false
+  })
+
   @spec backend_types() :: list(atom)
   def backend_types, do: @backend_types
 
@@ -257,6 +268,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
     # verifiable credentials
     field(:verifiable_credentials, {:array, :map}, default: [])
+
+    # verifiable presentations
+    field(:verifiable_presentations, {:array, :map}, default: [])
 
     has_many(:email_templates, EmailTemplate)
     has_many(:users, User)
@@ -501,13 +515,15 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       :smtp_tls,
       :smtp_port,
       :federated_servers,
-      :verifiable_credentials
+      :verifiable_credentials,
+      :verifiable_presentations
     ])
     |> unique_constraint(:id, name: :backends_pkey)
     |> validate_required([:name, :password_hashing_alg])
     |> validate_metadata_fields()
     |> validate_federated_servers()
     |> validate_verifiable_credentials()
+    |> validate_verifiable_presentations()
     |> validate_inclusion(:type, Enum.map(@backend_types, &Atom.to_string/1))
     |> validate_inclusion(:smtp_tls, Enum.map(@smtp_tls_types, &Atom.to_string/1))
     |> foreign_key_constraint(:identity_provider, name: :identity_providers_backend_id_fkey)
@@ -586,6 +602,24 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   defp validate_verifiable_credentials(changeset), do: changeset
+
+  defp validate_verifiable_presentations(
+         %Ecto.Changeset{changes: %{verifiable_presentations: verifiable_presentations}} = changeset
+       ) do
+    Enum.reduce(verifiable_presentations, changeset, fn verifiable_presentation, changeset ->
+      case ExJsonSchema.Validator.validate(@verifiable_presentation_schema, verifiable_presentation) do
+        :ok ->
+          changeset
+
+        {:error, errors} ->
+          Enum.reduce(errors, changeset, fn {message, path}, changeset ->
+            add_error(changeset, :verifiable_presentations, "#{message} at #{path}")
+          end)
+      end
+    end)
+  end
+
+  defp validate_verifiable_presentations(changeset), do: changeset
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: false}} = changeset) do
     Ecto.Changeset.add_error(
