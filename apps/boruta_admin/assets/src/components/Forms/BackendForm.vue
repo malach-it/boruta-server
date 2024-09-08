@@ -320,7 +320,12 @@
             <h3>Verifiable presentation</h3>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_presentations }">
               <label>Presentation identifier</label>
-              <input type="text" v-model="presentation.presentation_identifier" placeholder="BorutaCredential">
+              <input type="text" v-model="presentation.presentation_identifier" placeholder="BorutaPresentation">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_presentations }">
+              <label>Presentation definition</label>
+
+              <TextEditor :content="presentation.presentation_definition" @codeUpdate="setPresentationDefitiion($event, presentation)" />
             </div>
           </div>
           <div class="field">
@@ -366,6 +371,7 @@ import Role from '../../models/role.model'
 import Scope from '../../models/scope.model'
 import FormErrors from './FormErrors.vue'
 import ScopesFieldByName from './ScopesFieldByName.vue'
+import TextEditor from '../../components/Forms/TextEditor.vue'
 
 export default {
   name: 'backend-form',
@@ -373,7 +379,8 @@ export default {
   components: {
     FormErrors,
     RolesField,
-    ScopesFieldByName
+    ScopesFieldByName,
+    TextEditor
   },
   data () {
     return {
@@ -463,6 +470,9 @@ export default {
         this.backend.verifiable_presentations.indexOf(presentation),
         1
       )
+    },
+    setPresentationDefitiion (content, presentation) {
+      presentation.presentation_definition = content
     },
     addMetadataFieldScope (field) {
       field.scopes ||= []

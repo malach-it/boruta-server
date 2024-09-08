@@ -7,7 +7,9 @@ defmodule BorutaIdentity.Accounts.VerifiablePresentations do
     backend = Backend.default!()
 
     Enum.map(backend.verifiable_presentations, fn presentation ->
-      {presentation["presentation_identifier"], %{}}
+      {presentation["presentation_identifier"], %{
+        definition: Jason.decode!(presentation["presentation_definition"])
+      }}
     end)
     |> Enum.into(%{})
   end

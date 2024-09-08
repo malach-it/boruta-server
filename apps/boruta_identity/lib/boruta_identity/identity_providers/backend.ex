@@ -223,9 +223,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   "type" => "object",
                                   "properties" => %{
                                     "presentation_identifier" => %{"type" => "string"},
+                                    "presentation_definition" => %{"type" => "string"}
                                   },
                                   "required" => [
-                                    "presentation_identifier"
+                                    "presentation_identifier",
+                                    "presentation_definition"
                                   ],
                                   "additionalProperties" => false
   })
@@ -609,7 +611,12 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     Enum.reduce(verifiable_presentations, changeset, fn verifiable_presentation, changeset ->
       case ExJsonSchema.Validator.validate(@verifiable_presentation_schema, verifiable_presentation) do
         :ok ->
-          changeset
+          case Jason.decode(verifiable_presentation["presentation_definition"]) do
+            {:ok, _map} ->
+              changeset
+            {:error, _error} ->
+              add_error(changeset, :verifiable_presentations, "Verifiable presentation definition must be a valid JSON object")
+          end
 
         {:error, errors} ->
           Enum.reduce(errors, changeset, fn {message, path}, changeset ->

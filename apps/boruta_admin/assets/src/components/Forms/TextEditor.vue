@@ -28,16 +28,9 @@ export default {
       this.$emit('codeUpdate', code)
     })
 
+    editor.updateCode(this.content)
+
     this.editor = editor
-  },
-  watch: {
-    content: {
-      handler (code) {
-        this.editor?.updateCode(code)
-      },
-      immediate: true,
-      deep: true
-    }
   }
 }
 </script>
