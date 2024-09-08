@@ -59,8 +59,13 @@ defmodule BorutaWeb.Oauth.TokenController do
   def direct_post(conn, %{"code_id" => code_id} = params) do
     direct_post_params = %{
       code_id: code_id,
-      id_token: params["id_token"]
     }
+
+    direct_post_params = case params do
+      %{"id_token" => id_token} -> Map.put(direct_post_params, :id_token, id_token)
+      %{"vp_token" => vp_token} -> Map.put(direct_post_params, :vp_token, vp_token)
+      %{} -> direct_post_params
+    end
 
     Openid.direct_post(conn, direct_post_params, __MODULE__)
   end
