@@ -3,7 +3,18 @@ import Scope from './scope.model'
 import IdentityProvider from './identity-provider.model'
 import { addClientErrorInterceptor } from './utils'
 
-const allGrantTypes = ['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit', 'preauthorized_code', 'revoke', 'introspect']
+const allGrantTypes = [
+  'client_credentials',
+  'password',
+  'authorization_code',
+  'refresh_token',
+  'implicit',
+  'preauthorized_code',
+  'id_token',
+  'vp_token',
+  'revoke',
+  'introspect'
+]
 
 const defaults = {
   errors: null,

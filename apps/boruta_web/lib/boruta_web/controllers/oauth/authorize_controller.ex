@@ -36,6 +36,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     with {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- public_client?(conn),
+         {:unchanged, conn} <- verifiable_presentation?(conn),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
          {:unchanged, conn} <- check_preauthorized(conn),
          {:unchanged, conn} <- redirect_if_mfa_required(conn, current_user),
@@ -64,6 +65,15 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   def public_client?(conn) do
     case conn.query_params["client_id"] do
       "did:" <> _key ->
+        {:preauthorized, conn}
+      _ ->
+        {:unchanged, conn}
+    end
+  end
+
+  def verifiable_presentation?(conn) do
+    case conn.query_params["client_metadata"] do
+      "" <> _key ->
         {:preauthorized, conn}
       _ ->
         {:unchanged, conn}
