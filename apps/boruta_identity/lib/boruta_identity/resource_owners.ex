@@ -11,6 +11,7 @@ defmodule BorutaIdentity.ResourceOwners do
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.VerifiableCredentials
+  alias BorutaIdentity.Accounts.VerifiablePresentations
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.Organization
 
@@ -53,8 +54,7 @@ defmodule BorutaIdentity.ResourceOwners do
            extra_claims: Map.merge(metadata, federated_metadata),
            authorization_details: VerifiableCredentials.authorization_details(user),
            credential_configuration: VerifiableCredentials.credential_configuration(user),
-           # TODO custom presentation configuration
-           # presentation_configuration: VerifiablePresentations.presentation_configuration(user)
+           presentation_configuration: VerifiablePresentations.presentation_configuration(user)
          }}
 
       _ ->

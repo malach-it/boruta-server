@@ -79,6 +79,13 @@
           </div>
           <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
         </div>
+        <div class="field" :class="{ 'error': client.errors?.response_mode }">
+          <label>Response mode</label>
+          <select v-model="client.response_mode">
+            <option value="post">post</option>
+            <option value="direct_post">direct_post</option>
+          </select>
+        </div>
       </div>
       <div ref="authentication" data-tab="authentication" class="ui bottom attached tab segment">
         <h3>Client authentication</h3>

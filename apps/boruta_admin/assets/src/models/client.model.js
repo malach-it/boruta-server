@@ -65,6 +65,7 @@ const assign = {
   jwt_public_key: function ({ jwt_public_key }) { this.jwt_public_key = jwt_public_key },
   id_token_signature_alg: function ({ id_token_signature_alg }) { this.id_token_signature_alg = id_token_signature_alg },
   userinfo_signed_response_alg: function ({ userinfo_signed_response_alg }) { this.userinfo_signed_response_alg = userinfo_signed_response_alg },
+  response_mode: function ({ response_mode }) { this.response_mode = response_mode },
 }
 
 class Client {
@@ -204,7 +205,8 @@ class Client {
       token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods,
       jwt_public_key,
-      key_pair_id
+      key_pair_id,
+      response_mode
     } = this
 
     return {
@@ -233,7 +235,8 @@ class Client {
       token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods,
       jwt_public_key,
-      key_pair_id
+      key_pair_id,
+      response_mode
     }
   }
 }

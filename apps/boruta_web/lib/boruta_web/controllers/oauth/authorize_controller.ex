@@ -20,6 +20,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Openid.CredentialOfferResponse
   alias Boruta.Openid.SiopV2Response
   alias Boruta.Openid.VerifiablePresentationResponse
+  alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaIdentity.Accounts.VerifiablePresentations
@@ -34,6 +35,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     conn = put_unsigned_request(conn)
 
     with {:unchanged, conn} <- prompt_redirection(conn, current_user),
+         {:unchanged, conn} <- public_client?(conn),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
          {:unchanged, conn} <- check_preauthorized(conn),
          {:unchanged, conn} <- redirect_if_mfa_required(conn, current_user),
@@ -56,6 +58,15 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
       {:redirected, conn} ->
         conn
+    end
+  end
+
+  def public_client?(conn) do
+    case conn.query_params["client_id"] do
+      "did:" <> _key ->
+        {:preauthorized, conn}
+      _ ->
+        {:unchanged, conn}
     end
   end
 
@@ -268,10 +279,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     current_user = current_user || %User{}
 
     resource_owner = %ResourceOwner{
-      sub: current_user.id,
+      sub: current_user.id || conn.query_params["client_id"],
       username: current_user.username,
       last_login_at: current_user.last_login_at,
-      authorization_details: VerifiableCredentials.authorization_details(current_user)
+      authorization_details: VerifiableCredentials.authorization_details(current_user),
+      presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
     }
 
     conn =
@@ -288,10 +300,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     current_user = current_user || %User{}
 
     resource_owner = %ResourceOwner{
-      sub: current_user.id,
+      sub: current_user.id || conn.query_params["client_id"],
       username: current_user.username,
       last_login_at: current_user.last_login_at,
-      authorization_details: VerifiableCredentials.authorization_details(current_user)
+      authorization_details: VerifiableCredentials.authorization_details(current_user),
+      presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
     }
 
     conn
@@ -398,7 +411,29 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def authorize_success(
         %Plug.Conn{} = conn,
-        %SiopV2Response{} = response
+        %SiopV2Response{response_mode: "post"} = response
+      ) do
+    {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
+    template = IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{presentation_deeplink: SiopV2Response.redirect_to_deeplink(response, fn code ->
+          uri = URI.parse(Boruta.Config.issuer())
+
+          %{uri | path: Routes.token_path(conn, :direct_post, code)}
+          |> URI.to_string()
+        end)
+      }
+    )
+  end
+
+  def authorize_success(
+        %Plug.Conn{} = conn,
+        %SiopV2Response{response_mode: "direct_post"} = response
       ) do
     # TODO log business event
 
@@ -415,7 +450,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def authorize_success(
         %Plug.Conn{} = conn,
-        %VerifiablePresentationResponse{} = response
+        %VerifiablePresentationResponse{response_mode: "direct_post"} = response
       ) do
     # TODO log business event
 
@@ -428,6 +463,28 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           %{uri | path: Routes.token_path(conn, :direct_post, code)}
           |> URI.to_string()
         end))
+  end
+
+  def authorize_success(
+        %Plug.Conn{} = conn,
+        %VerifiablePresentationResponse{response_mode: "post"} = response
+      ) do
+    {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
+    template = IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{presentation_deeplink: VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
+          uri = URI.parse(Boruta.Config.issuer())
+
+          %{uri | path: Routes.token_path(conn, :direct_post, code)}
+          |> URI.to_string()
+        end)
+      }
+    )
   end
 
   def authorize_success(
