@@ -8,6 +8,10 @@
 
 - ipv6 log display
 
+### Security
+
+- remove .env.example.sig as suspicious file
+
 ## [0.4.0] 2024-09-01
 
 ### Added
