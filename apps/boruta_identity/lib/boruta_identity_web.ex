@@ -22,7 +22,6 @@ defmodule BorutaIdentityWeb do
       use Phoenix.Controller, namespace: BorutaIdentityWeb
 
       import Plug.Conn
-      import BorutaIdentityWeb.Gettext
       alias BorutaIdentityWeb.Router.Helpers, as: Routes
     end
   end
@@ -54,7 +53,6 @@ defmodule BorutaIdentityWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import BorutaIdentityWeb.Gettext
     end
   end
 
@@ -67,7 +65,6 @@ defmodule BorutaIdentityWeb do
       import Phoenix.View
 
       import BorutaIdentityWeb.ErrorHelpers
-      import BorutaIdentityWeb.Gettext
       alias BorutaIdentityWeb.Router.Helpers, as: Routes
     end
   end
