@@ -36,7 +36,8 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :mime, :types, %{
-  "application/jwt" => ["jwt"]
+  "application/jwt" => ["jwt"],
+  "text/event-stream" => ["event-stream"]
 }
 
 import_config "#{Mix.env()}.exs"

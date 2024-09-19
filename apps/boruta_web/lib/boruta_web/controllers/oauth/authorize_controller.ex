@@ -30,6 +30,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.ResourceOwners
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
+  alias BorutaWeb.PresentationServer
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -428,9 +429,26 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             %{uri | path: Routes.token_path(conn, :direct_post, code)}
             |> URI.to_string()
-          end)
+          end),
+        code: response.code.value
       }
     )
+  end
+
+  def authenticated?(conn, %{"code" => code}) do
+    PresentationServer.start_presentation(code)
+
+    conn =
+      conn
+      |> put_resp_header("content-type", "text/event-stream")
+      |> send_chunked(200)
+
+    receive do
+      {:authenticated, redirect_uri} ->
+        chunk(conn, "event: \"message\"\n\ndata: #{redirect_uri}")
+    end
+
+    conn
   end
 
   def authorize_success(
@@ -490,7 +508,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             %{uri | path: Routes.token_path(conn, :direct_post, code)}
             |> URI.to_string()
-          end)
+          end),
+        code: response.code.value
       }
     )
   end
