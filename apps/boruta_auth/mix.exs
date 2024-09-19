@@ -24,7 +24,7 @@ defmodule BorutaAuth.MixProject do
 
   defp deps do
     [
-      {:boruta, "~> 3.0.0-beta.2"},
+      {:boruta, git: "https://github.com/malach-it/boruta_auth.git", branch: "poc-hybrid-vp-token"},
       {:logger_file_backend, "~> 0.0.13"},
       {:quantum, "~> 3.0"}
     ]

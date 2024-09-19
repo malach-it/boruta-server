@@ -28,6 +28,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
+  alias BorutaWeb.PresentationServer
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -66,6 +67,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     case conn.query_params["client_id"] do
       "did:" <> _key ->
         {:preauthorized, conn}
+
       _ ->
         {:unchanged, conn}
     end
@@ -75,6 +77,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     case conn.query_params["client_metadata"] do
       "" <> _key ->
         {:preauthorized, conn}
+
       _ ->
         {:unchanged, conn}
     end
@@ -404,21 +407,42 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %SiopV2Response{response_mode: "post"} = response
       ) do
     {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
-    template = IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+
+    template =
+      IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
 
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
-      assigns: %{presentation_deeplink: SiopV2Response.redirect_to_deeplink(response, fn code ->
-          uri = URI.parse(Boruta.Config.issuer())
+      assigns: %{
+        presentation_deeplink:
+          SiopV2Response.redirect_to_deeplink(response, fn code ->
+            uri = URI.parse(Boruta.Config.issuer())
 
-          %{uri | path: Routes.token_path(conn, :direct_post, code)}
-          |> URI.to_string()
-        end)
+            %{uri | path: Routes.token_path(conn, :direct_post, code)}
+            |> URI.to_string()
+          end),
+        code: response.code.value
       }
     )
+  end
+
+  def authenticated?(conn, %{"code" => code}) do
+    PresentationServer.start_presentation(code)
+
+    conn =
+      conn
+      |> put_resp_header("content-type", "text/event-stream")
+      |> send_chunked(200)
+
+    receive do
+      {:authenticated, redirect_uri} ->
+        chunk(conn, "event: \"message\"\n\ndata: #{redirect_uri}")
+    end
+
+    conn
   end
 
   def authorize_success(
@@ -435,7 +459,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
           %{uri | path: Routes.token_path(conn, :direct_post, code)}
           |> URI.to_string()
-        end))
+        end)
+    )
   end
 
   def authorize_success(
@@ -452,7 +477,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
           %{uri | path: Routes.token_path(conn, :direct_post, code)}
           |> URI.to_string()
-        end))
+        end)
+    )
   end
 
   def authorize_success(
@@ -460,19 +486,24 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %VerifiablePresentationResponse{response_mode: "post"} = response
       ) do
     {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
-    template = IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+
+    template =
+      IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
 
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
-      assigns: %{presentation_deeplink: VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
-          uri = URI.parse(Boruta.Config.issuer())
+      assigns: %{
+        presentation_deeplink:
+          VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
+            uri = URI.parse(Boruta.Config.issuer())
 
-          %{uri | path: Routes.token_path(conn, :direct_post, code)}
-          |> URI.to_string()
-        end)
+            %{uri | path: Routes.token_path(conn, :direct_post, code)}
+            |> URI.to_string()
+          end),
+        code: response.code.value
       }
     )
   end
