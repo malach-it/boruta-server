@@ -24,7 +24,7 @@ defmodule BorutaWeb.Router do
   end
 
   pipeline :api do
-    plug(:accepts, ["json", "jwt"])
+    plug(:accepts, ["json", "jwt", "event-stream"])
   end
 
   scope "/", BorutaWeb do
@@ -83,6 +83,8 @@ defmodule BorutaWeb.Router do
     pipe_through([:api])
 
     post("/direct_post/:code_id", TokenController, :direct_post)
+    options("/presentation_sse", AuthorizeController, :options)
+    get("/presentation_sse", AuthorizeController, :authenticated?)
   end
 
   @impl Plug.ErrorHandler
