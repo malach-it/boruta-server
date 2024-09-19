@@ -31,7 +31,7 @@ rules:
     forward_to:
       host: upstream:8081
     execute:
-    - authenticator: auth
+    - authenticator: boruta
     - authorizer: cel
       if: Request.URL.Captures.user == "admin"
       config:
