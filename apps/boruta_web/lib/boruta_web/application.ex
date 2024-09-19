@@ -10,6 +10,10 @@ defmodule BorutaWeb.Application do
       BorutaWeb.Endpoint,
       BorutaWeb.Repo,
       BorutaWeb.Plugs.RateLimit.Counter,
+      %{
+        id: BorutaWeb.PresentationServer,
+        start: {BorutaWeb.PresentationServer, :start_link, []}
+      },
       {Finch, name: FinchHttp},
       {Cluster.Supervisor,
        [Application.get_env(:libcluster, :topologies), [name: BorutaWeb.ClusterSupervisor]]},
