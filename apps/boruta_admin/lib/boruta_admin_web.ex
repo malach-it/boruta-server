@@ -22,7 +22,6 @@ defmodule BorutaAdminWeb do
       use Phoenix.Controller, namespace: BorutaAdminWeb
 
       import Plug.Conn
-      import BorutaAdminWeb.Gettext
       alias BorutaAdminWeb.Router.Helpers, as: Routes
     end
   end
@@ -54,7 +53,6 @@ defmodule BorutaAdminWeb do
   def channel do
     quote do
       use Phoenix.Channel, log_join: false
-      import BorutaAdminWeb.Gettext
     end
   end
 
@@ -67,7 +65,6 @@ defmodule BorutaAdminWeb do
       import Phoenix.View
 
       import BorutaAdminWeb.ErrorHelpers
-      import BorutaAdminWeb.Gettext
       alias BorutaAdminWeb.Router.Helpers, as: Routes
     end
   end
