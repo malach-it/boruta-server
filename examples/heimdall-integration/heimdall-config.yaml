@@ -13,17 +13,23 @@ mechanisms:
     type: unauthorized
   - id: anon
     type: anonymous
-  - id: auth
-    type: generic
+  - id: boruta
+    type: oauth2_introspection
     config:
-      identity_info_endpoint: http://boruta:8082/oauth/userinfo
-      authentication_data_source:
-        - cookie: sid
-      forward_cookies:
-        - sid
-      subject:
-        id: "sub"
-      cache_ttl: 1m
+      token_source:
+        - header: Authorization
+          scheme: bearer
+      introspection_endpoint:
+        url: http://boruta:8080/oauth/introspect
+        auth:
+          type: basic_auth
+          config:
+            user: caa4b641-8bda-4f97-aebf-6fd538a12314
+            password: L5Hz5hYoPMPPKAEL47VZnCXjqwaJMK65CFtfAeEcmPl891EJ2BInWhTloEwzTU1l8ZsvoCPW6gA51ClUyCLaMn
+      assertions:
+        issuers:
+          - http://localhost:8080
+
   - id: at_jwt
     type: jwt
     config:
