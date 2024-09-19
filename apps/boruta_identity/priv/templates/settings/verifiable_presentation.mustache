@@ -18,3 +18,13 @@
 </div>
 <hr />
 <a href="#" onclick="window.location.reload()" class="ui fluid button">Reload</a>
+
+<script>
+  var source = new EventSource('{{ issuer }}/openid/presentation_sse?code={{ code }}');
+
+  source.addEventListener('message', function(event) {
+      console.log(event)
+      window.location.href = event.data
+    })
+  source.addEventListener("error", console.log);
+</script>

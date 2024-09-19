@@ -10,6 +10,7 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
   alias BorutaWeb.OauthView
+  alias BorutaWeb.PresentationServer
 
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
@@ -123,18 +124,23 @@ defmodule BorutaWeb.Oauth.TokenController do
 
     case response.id_token do
       nil ->
+        PresentationServer.authenticated(response.token.previous_code, response.token.redirect_uri)
+
         redirect(conn, external: callback_uri)
       id_token ->
         {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
-
-        redirect(conn, external: issuer() <> Routes.authorize_path(conn, :authorize, %{
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, %{
           "client_id" => kid,
           "response_type" => "vp_token",
           "client_metadata" => "{}",
           "scope" => response.code.scope,
           "redirect_uri" => response.redirect_uri,
           "code" => response.code.value
-        }))
+        })
+
+        PresentationServer.authenticated(response.token.previous_code, redirect_uri)
+
+        redirect(conn, external: redirect_uri)
     end
   end
 end
