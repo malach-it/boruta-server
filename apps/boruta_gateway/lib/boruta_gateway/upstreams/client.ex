@@ -72,7 +72,7 @@ defmodule BorutaGateway.Upstreams.Client do
       transform_headers(upstream, conn),
       transform_body(conn)
     )
-    |> Finch.request(http_client)
+    |> Finch.request(http_client) |> dbg
   end
 
   @impl GenServer
