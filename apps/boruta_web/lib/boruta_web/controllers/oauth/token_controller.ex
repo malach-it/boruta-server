@@ -9,6 +9,7 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
   alias BorutaWeb.OauthView
+  alias BorutaWeb.PresentationServer
 
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
@@ -105,7 +106,9 @@ defmodule BorutaWeb.Oauth.TokenController do
   end
 
   @impl Boruta.Openid.DirectPostApplication
-  def direct_post_success(conn, callback_uri) do
+  def direct_post_success(conn, callback_uri, token) do
+    PresentationServer.authenticated(token.previous_code, token.redirect_uri)
+
     redirect(conn, external: callback_uri)
   end
 end
