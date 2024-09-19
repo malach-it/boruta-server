@@ -9,6 +9,10 @@ defmodule BorutaWeb.Application do
     children = [
       BorutaWeb.Endpoint,
       BorutaWeb.Repo,
+      %{
+        id: BorutaWeb.PresentationServer,
+        start: {BorutaWeb.PresentationServer, :start_link, []}
+      },
       {Finch, name: FinchHttp},
       {Cluster.Supervisor,
        [Application.get_env(:libcluster, :topologies), [name: BorutaWeb.ClusterSupervisor]]},
