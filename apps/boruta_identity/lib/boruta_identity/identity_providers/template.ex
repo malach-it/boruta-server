@@ -30,7 +30,8 @@ defmodule BorutaIdentity.IdentityProviders.Template do
     :edit_reset_password,
     :new_confirmation_instructions,
     :edit_user,
-    :credential_offer
+    :credential_offer,
+    :cross_device_presentation
   ]
   @type template_type ::
           :layout
@@ -47,6 +48,7 @@ defmodule BorutaIdentity.IdentityProviders.Template do
           | :new_confirmation_instructions
           | :edit_user
           | :credential_offer
+          | :cross_device_presentation
 
   @default_templates %{
     layout:
@@ -104,6 +106,10 @@ defmodule BorutaIdentity.IdentityProviders.Template do
     credential_offer:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/settings/credential_offer.mustache")
+      |> File.read!(),
+    cross_device_presentation:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/settings/cross_device_presentation.mustache")
       |> File.read!()
   }
 

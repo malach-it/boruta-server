@@ -13,6 +13,7 @@ const defaults = {
   metadata_fields: [],
   federated_servers: [],
   verifiable_credentials: [],
+  verifiable_presentations: [],
 };
 
 const assign = {
@@ -61,6 +62,9 @@ const assign = {
           credential.claims
       }
     });
+  },
+  verifiable_presentations: function ({ verifiable_presentations }) {
+    this.verifiable_presentations = verifiable_presentations;
   },
   features: function ({ features }) {
     this.features = features;
@@ -183,6 +187,7 @@ class Backend {
       metadata_fields,
       federated_servers,
       verifiable_credentials,
+      verifiable_presentations,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,
@@ -232,6 +237,7 @@ class Backend {
         return federated_server;
       }),
       verifiable_credentials,
+      verifiable_presentations,
       ldap_pool_size,
       ldap_host,
       ldap_user_rdn_attribute,

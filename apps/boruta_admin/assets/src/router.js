@@ -40,6 +40,7 @@ import EditNewResetPasswordTemplate from "./views/IdentityProviders/EditNewReset
 import EditEditResetPasswordTemplate from "./views/IdentityProviders/EditEditResetPasswordTemplate.vue";
 import EditEditUserTemplate from "./views/IdentityProviders/EditEditUserTemplate.vue";
 import EditCredentialOfferTemplate from "./views/IdentityProviders/EditCredentialOfferTemplate.vue";
+import EditCrossDevicePresentationTemplate from "./views/IdentityProviders/EditCrossDevicePresentationTemplate.vue";
 import NewIdentityProvider from "./views/IdentityProviders/NewIdentityProvider.vue";
 
 import Users from "./views/IdentityProviders/Users.vue";
@@ -229,6 +230,11 @@ const router = createRouter({
                   path: "edit/credential-offer-template",
                   name: "edit-credential-offer-template",
                   component: EditCredentialOfferTemplate,
+                },
+                {
+                  path: "edit/cross-device-presentation-template",
+                  name: "edit-cross-device-presentation-template",
+                  component: EditCrossDevicePresentationTemplate,
                 },
               ],
             },

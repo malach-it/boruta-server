@@ -198,12 +198,25 @@
           <div class="ui segment">
             <div class=" field">
               <p class="ui info message">
-                SSI credential offer page (compatible with Altme wallet)
+                SSI credential offer page
               </p>
               <div>
                 <router-link
                   :to="{ name: 'edit-credential-offer-template', params: { identityProviderId: identityProvider.id } }"
                   class="ui fluid blue button">Edit credential offer template</router-link>
+              </div>
+            </div>
+          </div>
+          <h3>Credential presentation (cross device)</h3>
+          <div class="ui segment">
+            <div class=" field">
+              <p class="ui info message">
+                SSI credential presentation page
+              </p>
+              <div>
+                <router-link
+                  :to="{ name: 'edit-cross-device-presentation-template', params: { identityProviderId: identityProvider.id } }"
+                  class="ui fluid blue button">Edit cross device presentation template</router-link>
               </div>
             </div>
           </div>

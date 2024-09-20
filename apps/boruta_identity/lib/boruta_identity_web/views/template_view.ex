@@ -95,6 +95,20 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :credential_offer))
   end
 
+  def context(context, %{presentation_deeplink: presentation_deeplink} = assigns) do
+    {:ok, base64_presentation_qr_code} = presentation_deeplink
+      |> QRCode.create()
+      |> QRCode.render(:svg)
+      |> QRCode.to_base64()
+
+    %{
+      base64_presentation_qr_code: base64_presentation_qr_code,
+      presentation_deeplink: presentation_deeplink
+    }
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :presentation_deeplink))
+  end
+
   def context(context, %{webauthn_options: webauthn_options} = assigns) do
     options = Map.from_struct(webauthn_options)
 
