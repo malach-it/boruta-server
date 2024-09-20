@@ -88,7 +88,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
         )
 
       # NOTE Path will be scoped in production with configuration and be forwarded to
-      assert redirected_to(conn) =~ "/users/log_in"
+      assert redirected_to(conn) =~ "/users/choose_session"
     end
 
     test "redirects to redirect_uri with token if current_user is set", %{

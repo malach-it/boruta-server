@@ -2,6 +2,12 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [0.4.2] - 2024-09-20
+
+### Fixed
+
+- fix authorize entrypoint
+
 ## [0.4.1] - 2024-09-18
 
 ### Fixed

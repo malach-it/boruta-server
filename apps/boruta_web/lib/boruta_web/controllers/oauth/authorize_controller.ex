@@ -340,9 +340,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       {true, _current_user} ->
         authorize_error(conn, error)
 
-      {false, nil} ->
-        authorize_error(conn, error)
-
       {false, _current_user} ->
         case request_param(conn) do
           "" ->
