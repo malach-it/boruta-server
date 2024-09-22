@@ -7,8 +7,13 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
+  alias Boruta.Oauth.IdToken
+  alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
+  alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.Accounts.Wallet
+  alias BorutaIdentity.IdentityProviders
   alias BorutaWeb.OauthView
   alias BorutaWeb.PresentationServer
 
