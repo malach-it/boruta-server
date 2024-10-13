@@ -448,6 +448,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       {:authenticated, redirect_uri, session_token} ->
         conn =
           conn
+          |> fetch_session()
           |> store_user_session(session_token)
           |> put_resp_header("content-type", "text/event-stream")
           |> send_chunked(200)
