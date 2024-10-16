@@ -430,7 +430,7 @@ export default {
       )
     },
     addVerifiableCredentialClaim (credential) {
-      credential.claims.push({})
+      credential.claims.push({defered: false})
     },
     deleteVerifiableCredentialClaim (credential, claim) {
       credential.claims.splice(
