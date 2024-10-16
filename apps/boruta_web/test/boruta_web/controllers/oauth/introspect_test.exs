@@ -86,7 +86,7 @@ defmodule BorutaWeb.Oauth.IntrospectTest do
                "client_id" => client.id,
                "exp" => token.expires_at,
                "iat" => DateTime.to_unix(token.inserted_at),
-               "iss" => "boruta",
+               "iss" => "http://localhost:4000",
                "scope" => token.scope,
                "sub" => nil,
                "username" => nil
@@ -111,7 +111,7 @@ defmodule BorutaWeb.Oauth.IntrospectTest do
                "client_id" => client.id,
                "exp" => token.expires_at,
                "iat" => DateTime.to_unix(token.inserted_at),
-               "iss" => "boruta",
+               "iss" => "http://localhost:4000",
                "scope" => token.scope,
                "sub" => resource_owner.id,
                "username" => resource_owner.username
@@ -140,7 +140,7 @@ defmodule BorutaWeb.Oauth.IntrospectTest do
                    "client_id" => client.id,
                    "exp" => token.expires_at,
                    "iat" => DateTime.to_unix(token.inserted_at),
-                   "iss" => "boruta",
+                   "iss" => "http://localhost:4000",
                    "scope" => token.scope,
                    "sub" => nil,
                    "username" => nil

@@ -286,20 +286,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp prompt_redirection(conn, _current_user), do: {:unchanged, conn}
 
   defp preauthorize(conn, current_user) do
-    current_user = current_user || %User{}
-
-    resource_owner = %ResourceOwner{
-      sub: current_user.id || conn.query_params["client_id"],
-      username: current_user.username,
-      last_login_at: current_user.last_login_at,
-      authorization_details: VerifiableCredentials.authorization_details(current_user),
-      presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
-    }
-
     conn =
       conn
       |> Oauth.preauthorize(
-        resource_owner,
+        resource_owner(conn, current_user),
         __MODULE__
       )
 
@@ -307,20 +297,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp do_authorize(conn, current_user) do
-    current_user = current_user || %User{}
-
-    resource_owner = %ResourceOwner{
-      sub: current_user.id || conn.query_params["client_id"],
-      username: current_user.username,
-      last_login_at: current_user.last_login_at,
-      authorization_details: VerifiableCredentials.authorization_details(current_user),
-      presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
-    }
-
     conn
     |> delete_session(:preauthorizations)
     |> Oauth.authorize(
-      resource_owner,
+      resource_owner(conn, current_user),
       __MODULE__
     )
   end
@@ -612,5 +592,21 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     query_params = Map.merge(query_params, unsigned_request)
 
     %{conn | query_params: query_params}
+  end
+
+  defp resource_owner(conn, current_user) do
+    current_user = current_user || %User{}
+    anonymous_sub =  case conn.query_params["client_id"] do
+      "did:" <> _key = did -> did
+      _ -> nil
+    end
+
+    %ResourceOwner{
+      sub: current_user.id || anonymous_sub,
+      username: current_user.username,
+      last_login_at: current_user.last_login_at,
+      authorization_details: VerifiableCredentials.authorization_details(current_user),
+      presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
+    }
   end
 end

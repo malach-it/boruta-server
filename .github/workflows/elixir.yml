@@ -98,6 +98,7 @@ jobs:
       - name: Run test
         run: mix test --trace
         env:
+          MIX_ENV: test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DATABASE: boruta_test

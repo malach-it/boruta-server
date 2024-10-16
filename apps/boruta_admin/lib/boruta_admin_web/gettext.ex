@@ -20,5 +20,5 @@ defmodule BorutaAdminWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :boruta_admin
+  use Gettext.Backend, otp_app: :boruta_admin
 end
