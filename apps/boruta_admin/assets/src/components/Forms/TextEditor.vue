@@ -31,12 +31,8 @@ export default {
     this.editor = editor
   },
   watch: {
-    content: {
-      handler (code) {
-        this.editor?.updateCode(code)
-      },
-      immediate: true,
-      deep: true
+    content(newContent, content) {
+      if (!content) this.editor.updateCode(this.content)
     }
   }
 }

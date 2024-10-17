@@ -52,7 +52,8 @@ defmodule BorutaAdminWeb.ClientView do
       userinfo_signed_response_alg: client.userinfo_signed_response_alg,
       token_endpoint_jwt_auth_alg: client.token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods: client.token_endpoint_auth_methods,
-      jwt_public_key: client.jwt_public_key
+      jwt_public_key: client.jwt_public_key,
+      response_mode: client.response_mode
     }
   end
 end

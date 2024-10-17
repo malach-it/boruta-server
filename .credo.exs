@@ -137,6 +137,7 @@
         {Credo.Check.Warning.UnusedStringOperation, []},
         {Credo.Check.Warning.UnusedTupleOperation, []},
         {Credo.Check.Warning.SpecWithStruct, false},
+        {Credo.Check.Warning.MissedMetadataKeyInLoggerConfig, false},
 
         #
         # Controversial and experimental checks (opt-in, just replace `false` with `[]`)

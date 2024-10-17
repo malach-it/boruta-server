@@ -4,14 +4,21 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias Boruta.ClientsAdapter
+  alias Boruta.Ecto.Admin
+  alias Boruta.Ecto.Client
+  alias Boruta.Ecto.ClientStore
+  alias Boruta.Oauth
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Authenticable
 
-  alias Boruta.Ecto.Client
-
   describe "OpenID Connect flows" do
     setup %{conn: conn} do
+      public_client = Admin.get_client!(ClientsAdapter.public!().id)
+      {:ok, _client} = Admin.update_client(public_client, %{supported_grant_types: Oauth.Client.grant_types()})
+      ClientStore.invalidate_public()
+
       resource_owner = user_fixture()
       redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
@@ -56,6 +63,52 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         )
 
       assert redirected_to(conn) =~ ~r/error=login_required/
+    end
+
+    test "authorizes with prompt=none with anonymous client (verifiable presentation - wallet)", %{
+      conn: conn,
+      redirect_uri: redirect_uri
+    } do
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "vp_token",
+            client_id: "did:key:test",
+            redirect_uri: redirect_uri,
+            client_metadata: "{}",
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+      assert redirected_to(conn) =~ ~r/request=/
+      assert redirected_to(conn) =~ ~r/redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fopenid%2Fdirect_post%2F/
+      assert redirected_to(conn) =~ ~r/#{redirect_uri}/
+    end
+
+    test "authorizes with prompt=none with anonymous client (siopv2 - wallet)", %{
+      conn: conn,
+      redirect_uri: redirect_uri
+    } do
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: "did:key:test",
+            redirect_uri: redirect_uri,
+            client_metadata: "{}",
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+      assert redirected_to(conn) =~ ~r/request=/
+      assert redirected_to(conn) =~ ~r/redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fopenid%2Fdirect_post%2F/
+      assert redirected_to(conn) =~ ~r/#{redirect_uri}/
     end
 
     test "returns an error with prompt=none without any current_user (preauthorized)", %{
@@ -266,7 +319,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         |> put_req_header("authorization", "bearer #{token.value}")
         |> post(Routes.userinfo_path(conn, :userinfo))
 
-      assert response(conn, 200)
+      assert String.starts_with?(response(conn, 200), "ey")
     end
   end
 
@@ -296,10 +349,10 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       conn = get(conn, Routes.openid_path(conn, :well_known))
 
       assert json_response(conn, 200) == %{
-               "authorization_endpoint" => "boruta/oauth/authorize",
-               "credential_endpoint" => "boruta/openid/credential",
-               "defered_credential_endpoint" => "boruta/openid/defered-credential",
-               "credential_issuer" => "boruta",
+               "authorization_endpoint" => "http://localhost:4000/oauth/authorize",
+               "credential_endpoint" => "http://localhost:4000/openid/credential",
+               "defered_credential_endpoint" => "http://localhost:4000/openid/defered-credential",
+               "credential_issuer" => "http://localhost:4000",
                "credentials_supported" => [],
                "credential_configurations_supported" => %{
                  "FederatedAttributes" => %{
@@ -353,9 +406,9 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "HS384",
                  "HS512"
                ],
-               "issuer" => "boruta",
-               "jwks_uri" => "boruta/openid/jwks",
-               "registration_endpoint" => "boruta/openid/register",
+               "issuer" => "http://localhost:4000",
+               "jwks_uri" => "http://localhost:4000/openid/jwks",
+               "registration_endpoint" => "http://localhost:4000/openid/register",
                "request_object_signing_alg_values_supported" => [
                  "ES256",
                  "ES384",
@@ -379,14 +432,14 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                ],
                "scopes_supported" => ["well_known"],
                "subject_types_supported" => ["public"],
-               "token_endpoint" => "boruta/oauth/token",
+               "token_endpoint" => "http://localhost:4000/oauth/token",
                "token_endpoint_auth_methods_supported" => [
                  "client_secret_basic",
                  "client_secret_post",
                  "client_secret_jwt",
                  "private_key_jwt"
                ],
-               "userinfo_endpoint" => "boruta/oauth/userinfo",
+               "userinfo_endpoint" => "http://localhost:4000/oauth/userinfo",
                "userinfo_signing_alg_values_supported" => [
                  "ES256",
                  "ES384",
