@@ -7,6 +7,9 @@ defmodule BorutaIdentity.Accounts.Federated do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
 
+  @account_type "federated"
+  def account_type, do: @account_type
+
   @impl BorutaIdentity.FederatedAccounts
   def domain_user!(federated_server_name, access_token, backend) do
     federated_server =
@@ -40,6 +43,7 @@ defmodule BorutaIdentity.Accounts.Federated do
       uid: to_string(userinfo["sub"] || userinfo["id"]),
       username: userinfo["email"] || "#{userinfo["sub"]}@#{federated_server["name"]}",
       federated_metadata: %{federated_server_name => Map.merge(userinfo, federated_metadata)},
+      account_type: @account_type,
       backend_id: backend.id
     }
 
@@ -63,6 +67,8 @@ defmodule BorutaIdentity.Accounts.Federated do
     )
     |> Repo.preload([:authorized_scopes, :consents, :backend, :organizations])
   end
+
+  def delete_user(_uid), do: :ok
 
   defp get_resource!(url, access_token) do
     case Finch.build(:get, url, [

@@ -43,6 +43,10 @@ defmodule BorutaIdentity.Accounts.Ldap do
     :confirmable
   ]
 
+  @account_type "ldap"
+
+  def account_type, do: "ldap"
+
   @ldap_timeout 10_000
 
   def features, do: @features
@@ -69,7 +73,8 @@ defmodule BorutaIdentity.Accounts.Ldap do
     impl_user_params = %{
       uid: uid,
       username: username,
-      backend_id: backend_id
+      backend_id: backend_id,
+      account_type: @account_type
     }
 
     {replace, impl_user_params} =

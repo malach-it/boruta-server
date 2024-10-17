@@ -101,10 +101,22 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns deleted user" do
-      %User{id: user_id, uid: user_uid} = user_fixture()
+      %User{id: user_id, uid: user_uid} = user_fixture(%{}, "internal")
       assert {:ok, %User{id: ^user_id}} = Admin.delete_user(user_id)
       refute Repo.get(User, user_id)
       refute Repo.get(Internal.User, user_uid)
+    end
+  end
+
+  describe "delete_user/1 with federated backend" do
+    test "returns an error" do
+      assert Admin.delete_user(Ecto.UUID.generate()) == {:error, :not_found}
+    end
+
+    test "returns deleted user" do
+      %User{id: user_id} = user_fixture(%{}, "federated")
+      assert {:ok, %User{id: ^user_id}} = Admin.delete_user(user_id)
+      refute Repo.get(User, user_id)
     end
   end
 

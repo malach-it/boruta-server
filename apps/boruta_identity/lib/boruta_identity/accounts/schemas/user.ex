@@ -43,6 +43,12 @@ defmodule BorutaIdentity.Accounts.User do
           updated_at: DateTime.t() | nil
         }
 
+  def account_types, do: [
+    BorutaIdentity.Accounts.Federated.account_type(),
+    BorutaIdentity.Accounts.Internal.account_type(),
+    BorutaIdentity.Accounts.Ldap.account_type()
+  ]
+
   @derive {Inspect, except: [:password]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @foreign_key_type Ecto.UUID
@@ -62,6 +68,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:webauthn_identifier, :string)
     field(:webauthn_public_key, CoseKey)
     field(:webauthn_registered_at, :utc_datetime_usec)
+    field(:account_type, :string)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:roles, UserRole)
@@ -74,9 +81,18 @@ defmodule BorutaIdentity.Accounts.User do
 
   def implementation_changeset(attrs, backend) do
     %__MODULE__{}
-    |> cast(attrs, [:backend_id, :uid, :username, :group, :metadata, :federated_metadata])
+    |> cast(attrs, [
+      :backend_id,
+      :uid,
+      :username,
+      :group,
+      :metadata,
+      :federated_metadata,
+      :account_type
+    ])
     |> metadata_template_filter(backend)
-    |> validate_required([:backend_id, :uid, :username])
+    |> validate_required([:backend_id, :uid, :username, :account_type])
+    |> validate_inclusion(:account_type, account_types())
     |> validate_group()
   end
 

@@ -317,7 +317,7 @@ defmodule BorutaIdentity.Admin do
       user ->
         # TODO delete both provider and domain users in a transaction
         # TODO manage identity federated users
-        with :ok <- apply(Backend.implementation(user.backend), :delete_user, [user.uid]) do
+        with :ok <- apply(Backend.implementation(user.backend, user.account_type), :delete_user, [user.uid]) do
           Repo.delete(user)
         end
     end
