@@ -2,11 +2,16 @@ defmodule BorutaIdentity.Accounts.Wallet do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
 
+  @account_type "wallet"
+
+  def account_type, do: @account_type
+
   def domain_user!(resource_owner, backend) do
     impl_user_params = %{
       uid: resource_owner.sub,
       username: resource_owner.sub,
-      backend_id: backend.id
+      backend_id: backend.id,
+      account_type: @account_type
     }
 
     metadata = resource_owner.extra_claims
@@ -27,4 +32,6 @@ defmodule BorutaIdentity.Accounts.Wallet do
     )
     |> Repo.preload([:authorized_scopes, :consents, :backend, :organizations])
   end
+
+  def delete_user(_uid), do: :ok
 end
