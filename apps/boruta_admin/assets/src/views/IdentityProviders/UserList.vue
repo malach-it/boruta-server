@@ -154,7 +154,10 @@ export default {
       this.errorMessage = false
       this.deleted = false
       user.destroy().then(() => {
-        this.getUsers(this.currentPage, this.userQuery)
+        this.deleted = true
+        this.getUsers(this.currentPage, this.userQuery).then(() => {
+          this.deleted = false
+        })
       }).catch((error) => {
         this.errorMessage = error.response.data.message
       })
