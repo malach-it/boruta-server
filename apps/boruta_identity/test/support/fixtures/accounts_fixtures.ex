@@ -16,20 +16,22 @@ defmodule BorutaIdentity.AccountsFixtures do
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
   def valid_user_password, do: @password
 
-  def user_fixture(attrs \\ %{}) do
+  def user_fixture(attrs \\ %{}, account_type \\ "internal") do
     backend = attrs[:backend] || insert(:backend)
     user = insert(:internal_user, Map.merge(%{backend: backend}, attrs))
 
     insert(:user,
       username: user.email,
       uid: user.id,
-      backend: backend
+      backend: backend,
+      account_type: account_type
     )
     |> Repo.preload([:authorized_scopes, :roles, :organizations])
   end
 
   def user_scopes_fixture(user, attrs \\ %{}) do
     {:ok, scope} = Admin.create_scope(%{name: "name"})
+
     {:ok, scope} =
       Repo.insert(
         %UserAuthorizedScope{

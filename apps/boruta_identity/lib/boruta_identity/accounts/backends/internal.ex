@@ -30,6 +30,10 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   def features, do: @features
 
+  @account_type "internal"
+
+  def account_type, do: @account_type
+
   @impl BorutaIdentity.Accounts.Registrations
   def register(backend, registration_params) do
     with {:ok, user} <-
@@ -71,7 +75,8 @@ defmodule BorutaIdentity.Accounts.Internal do
       uid: id,
       username: email,
       group: group,
-      backend_id: backend_id
+      backend_id: backend_id,
+      account_type: @account_type
     }
 
     {replace, impl_user_params} =
@@ -163,8 +168,8 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   @impl BorutaIdentity.Admin
-  def delete_user(user_id) do
-    case Repo.delete_all(from(u in Internal.User, where: u.id == ^user_id)) do
+  def delete_user(uid) do
+    case Repo.delete_all(from(u in Internal.User, where: u.id == ^uid)) do
       {1, nil} -> :ok
       _ -> {:error, "User could not be deleted."}
     end
