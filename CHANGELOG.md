@@ -2,21 +2,27 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [0.5.0] - 2024-10-17
+
+### Added
+
+- [ssi] OpenID for Verifiable Credentials Presentation implementation
+
 ## [0.4.2] - 2024-09-20
 
 ### Fixed
 
-- fix authorize entrypoint
+- [auth] fix authorize entrypoint
 
 ## [0.4.1] - 2024-09-18
 
 ### Fixed
 
-- ipv6 log display
+- [admin] ipv6 log display
 
 ### Security
 
-- remove .env.example.sig as suspicious file
+- [infra] remove .env.example.sig as suspicious file
 
 ## [0.4.0] 2024-09-01
 
