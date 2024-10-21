@@ -34,17 +34,16 @@ This server has been certified for the Config and Dynamic OpenID Provider profil
 
 ![OpenID certified](https://github.com/malach-it/boruta-server/blob/master/images/oid-certification-mark.png?raw=true)
 
-This server has also been certified against the [European Blockchain Service Infrastructure (EBSI)](https://ec.europa.eu/digital-building-blocks/sites/display/EBSI) issuance test suite for the tagged version 0.4.0.
+This server has also been certified against the [European Blockchain Service Infrastructure (EBSI)](https://ec.europa.eu/digital-building-blocks/sites/display/EBSI) issuance test suite for the tagged version 0.4.0 and for verifiable credential verification for the tagged version 0.5.0.
 
-![EBSI certified](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-issuance.png?raw=true)
+![EBSI certified - issue](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-issuance.png?raw=true)
+![EBSI certified - verify](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-verify.png?raw=true)
 
 ## Installation
 
 A [loom presentation](https://www.loom.com/share/77006360fdac44bc9113fab9cf30aba5) about how to get a server up and running.
 
 Note that the easiest way to try the server is by using docker compose.
-
-> During the installation, an optional prompt will ask for statistical info, it would be great if you could fill them.
 
 ### System wide setup (Debian based)
 
