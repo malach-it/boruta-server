@@ -127,6 +127,23 @@
         </div>
       </div>
       <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+        <h3>Key type</h3>
+        <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
+          <select v-model="client.key_pair_type.type">
+            <option v-for="keyPairType in Object.keys(keyPairTypes)" :value="keyPairType" :key="keyPairType">
+              {{ keyPairType }}
+            </option>
+          </select>
+        </div>
+        <div v-for="(value, param) in keyPairTypes[client.key_pair_type.type]" class="field" :class="{ 'error': client.errors?.key_pair_type }">
+          <label>{{ param }}</label>
+          <select v-if="value instanceof Array" v-model="client.key_pair_type[param]">
+            <option v-for="option in value" :value="option" :key="option">
+              {{ option }}
+            </option>
+          </select>
+          <input v-else type="text" v-model="client.key_pair_type[param]" />
+        </div>
         <h3>Token signatures</h3>
         <div class="ui segment">
           <div class="inline fields" :class="{ 'error': client.errors?.id_token_signature_alg }">
@@ -220,6 +237,7 @@ export default {
   },
   data() {
     return {
+      keyPairTypes: Client.keyPairTypes,
       keyPairs: [],
       idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
       UserinfoResponseSignatureAlgorithms: Client.UserinfoResponseSignatureAlgorithms,

@@ -16,9 +16,15 @@ const allGrantTypes = [
   'introspect'
 ]
 
+const keyPairTypes = {
+  'ec': { curve: ['P-256', 'P-384', 'P-512'] },
+  'rsa': { modulus_size: '1024', exponent_size: '65537' }
+}
+
 const defaults = {
   errors: null,
   key_pair_id: null,
+  key_pair_type: { type: 'rsa', modulus_size: '1024', exponent_size: '65537' },
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
@@ -40,6 +46,7 @@ const assign = {
   confidential: function ({ confidential }) { this.confidential = confidential },
   pkce: function ({ pkce }) { this.pkce = pkce },
   public_key: function ({ public_key }) { this.public_key = public_key },
+  key_pair_type: function ({ key_pair_type }) { this.key_pair_type = key_pair_type },
   did: function ({ did }) { this.did = did },
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
@@ -217,6 +224,7 @@ class Client {
       token_endpoint_auth_methods,
       jwt_public_key,
       key_pair_id,
+      key_pair_type,
       response_mode
     } = this
 
@@ -247,10 +255,13 @@ class Client {
       token_endpoint_auth_methods,
       jwt_public_key,
       key_pair_id,
+      key_pair_type,
       response_mode
     }
   }
 }
+
+Client.keyPairTypes = keyPairTypes
 
 Client.api = function () {
   const accessToken = localStorage.getItem('access_token')
@@ -280,6 +291,9 @@ Client.get = function (id) {
 }
 
 Client.idTokenSignatureAlgorithms = [
+  "ES256",
+  "ES384",
+  "ES512",
   "HS256",
   "HS384",
   "HS512",
@@ -289,6 +303,9 @@ Client.idTokenSignatureAlgorithms = [
 ]
 
 Client.clientJwtAuthenticationSignatureAlgorithms = [
+  "ES256",
+  "ES384",
+  "ES512",
   "HS256",
   "HS384",
   "HS512",
@@ -299,6 +316,9 @@ Client.clientJwtAuthenticationSignatureAlgorithms = [
 
 Client.UserinfoResponseSignatureAlgorithms = [
   null,
+  "ES256",
+  "ES384",
+  "ES512",
   "HS256",
   "HS384",
   "HS512",

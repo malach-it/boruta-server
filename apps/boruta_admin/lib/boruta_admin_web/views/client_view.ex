@@ -34,6 +34,7 @@ defmodule BorutaAdminWeb.ClientView do
       id_token_ttl: client.id_token_ttl,
       pkce: client.pkce,
       public_key: client.public_key,
+      key_pair_type: client.key_pair_type,
       did: client.did,
       identity_provider: %{
         id: identity_provider.id,
