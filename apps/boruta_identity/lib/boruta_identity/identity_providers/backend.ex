@@ -38,8 +38,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias BorutaIdentity.Accounts.Federated
   alias BorutaIdentity.Accounts.EmailTemplate
+  alias BorutaIdentity.Accounts.Federated
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Accounts.User
