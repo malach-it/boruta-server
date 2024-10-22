@@ -32,12 +32,11 @@ This server has been certified for the Basic, Implicit, and Hybrid OpenID Provid
 
 This server has been certified for the Config and Dynamic OpenID Provider profiles by the OpenID Foundation on May, 16th 2023 for the tagged version 0.2.0
 
-![OpenID certified](https://github.com/malach-it/boruta-server/blob/master/images/oid-certification-mark.png?raw=true)
-
 This server has also been certified against the [European Blockchain Service Infrastructure (EBSI)](https://ec.europa.eu/digital-building-blocks/sites/display/EBSI) issuance test suite for the tagged version 0.4.0 and for verifiable credential verification for the tagged version 0.5.0.
 
 ![EBSI certified - issue](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-issuance.png?raw=true)
 ![EBSI certified - verify](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-verify.png?raw=true)
+![OpenID certified](https://github.com/malach-it/boruta-server/blob/master/images/oid-certification-mark.png?raw=true)
 
 ## Installation
 
