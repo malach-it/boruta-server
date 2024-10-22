@@ -119,6 +119,38 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "microgateway"), result)
   end
 
+  def load_configuration(%{"organization" => organization_configurations} = configuration, result) when is_list(organization_configurations) do
+    result =
+      Map.put(
+        result,
+        :organization,
+        Enum.map(organization_configurations, fn organization_configuration ->
+          with :ok <-
+                 ExJsonSchema.Validator.validate(
+                   Schema.organization(),
+                   organization_configuration,
+                   error_formatter: BorutaFormatter
+                 ),
+               {:ok, organization} <-
+                 BorutaIdentity.Admin.create_organization(organization_configuration) do
+            {:ok, organization}
+          else
+            {:error, %Ecto.Changeset{} = changeset} ->
+              {:error, [changeset]}
+
+            {:error, errors} ->
+              {:error, errors}
+          end
+        end)
+        |> Enum.flat_map(fn
+          {:ok, _organization} -> []
+          {:error, errors} -> errors
+        end)
+      )
+
+    load_configuration(Map.delete(configuration, "organization"), result)
+  end
+
   def load_configuration(%{"backend" => backend_configurations} = configuration, result) when is_list(backend_configurations) do
     result =
       Map.put(

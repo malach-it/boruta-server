@@ -62,3 +62,5 @@ configuration:
   error_template:
     - type: "500"
       content: test
+  organization:
+    - name: test
