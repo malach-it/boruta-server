@@ -34,7 +34,7 @@
                 </div>
               </div>
             </div>
-            <router-link :to="{ name: 'client-list' }" class="ui right floated button">Back</router-link>
+            <router-link :to="{ name: 'user-list' }" class="ui right floated button">Back</router-link>
           </div>
         </div>
         <div class="twelve wide column">

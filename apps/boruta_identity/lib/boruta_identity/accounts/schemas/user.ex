@@ -43,6 +43,15 @@ defmodule BorutaIdentity.Accounts.User do
           updated_at: DateTime.t() | nil
         }
 
+  @user_metadata_schema %{
+    "type" => "object",
+    "properties" => %{
+      "value" => %{"type" => "string"},
+      "status" => %{"type" => "string"},
+      "display" => %{"type" => "array", "items" => %{"type" => "string"}}
+    }
+  }
+
   def account_types, do: [
     BorutaIdentity.Accounts.Federated.account_type(),
     BorutaIdentity.Accounts.Internal.account_type(),
@@ -188,8 +197,10 @@ defmodule BorutaIdentity.Accounts.User do
       nil -> true
       _ -> false
     end)
-    |> Enum.map(fn {key, value} ->
-      {key, %{value: value, status: "valid"}}
+    |> Enum.map(fn
+      {key, value} when is_map(value) -> value
+      {key, value} ->
+      {key, %{"value" => value, "status" => "valid"}}
     end)
     |> Enum.into(%{})
   end
