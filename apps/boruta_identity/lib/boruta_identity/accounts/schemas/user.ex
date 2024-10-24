@@ -43,6 +43,17 @@ defmodule BorutaIdentity.Accounts.User do
           updated_at: DateTime.t() | nil
         }
 
+  @metadata_schema %{
+    "type" => "object",
+    "properties" => %{
+      "value" => %{"type" => "string"},
+      "status" => %{"type" => "string"},
+      "display" => %{"type" => "array", "items" => %{"type" => "string"}}
+    },
+    "required" => ["value", "status"],
+    "additionalProperties" => false
+  }
+
   def account_types, do: [
     BorutaIdentity.Accounts.Federated.account_type(),
     BorutaIdentity.Accounts.Internal.account_type(),
@@ -93,6 +104,7 @@ defmodule BorutaIdentity.Accounts.User do
     |> metadata_template_filter(backend)
     |> validate_required([:backend_id, :uid, :username, :account_type])
     |> validate_inclusion(:account_type, account_types())
+    |> validate_metadata()
     |> validate_group()
   end
 
@@ -100,6 +112,7 @@ defmodule BorutaIdentity.Accounts.User do
     user
     |> cast(attrs, [:metadata, :group])
     |> validate_group()
+    |> validate_metadata()
   end
 
   def login_changeset(user) do
@@ -188,8 +201,10 @@ defmodule BorutaIdentity.Accounts.User do
       nil -> true
       _ -> false
     end)
-    |> Enum.map(fn {key, value} ->
-      {key, %{value: value, status: "valid"}}
+    |> Enum.map(fn
+      {_key, value} when is_map(value) -> value
+      {key, value} ->
+      {key, %{"value" => value, "status" => "valid"}}
     end)
     |> Enum.into(%{})
   end
@@ -226,4 +241,22 @@ defmodule BorutaIdentity.Accounts.User do
         end
     end
   end
+
+  defp validate_metadata(
+         %Ecto.Changeset{changes: %{metadata: metadata}} = changeset
+       ) do
+    Enum.reduce_while(metadata, changeset, fn {_attribute, value}, changeset ->
+      case ExJsonSchema.Validator.validate(@metadata_schema, value) do
+        :ok ->
+          {:cont, changeset}
+
+        {:error, errors} ->
+          {:halt, Enum.reduce(errors, changeset, fn {message, path}, changeset ->
+            add_error(changeset, :metadata, "#{message} at #{path}")
+          end)}
+      end
+    end)
+  end
+
+  defp validate_metadata(changeset), do: changeset
 end
