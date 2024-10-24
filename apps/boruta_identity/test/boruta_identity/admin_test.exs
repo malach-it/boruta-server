@@ -158,13 +158,51 @@ defmodule BorutaIdentity.AdminTest do
       params = %{
         username: "test@created.email",
         password: "a valid password",
-        metadata: %{"attribute_test" => "attribute_test value"}
+        metadata: %{
+          "attribute_test" => %{
+            "value" => "attribute_test value",
+            "status" => "valid"
+          }
+        }
       }
 
       assert {:ok,
               %User{
-                metadata: %{"attribute_test" => "attribute_test value"}
+                metadata: %{
+                  "attribute_test" => %{
+                    "value" => "attribute_test value",
+                    "status" => "valid"
+                  }
+                }
               }} = Admin.create_user(backend, params)
+    end
+
+    test "returns an error with invalid metadata", %{backend: backend} do
+      metadata_field = %{
+        "attribute_name" => "attribute_test"
+      }
+
+      {:ok, backend} =
+        Ecto.Changeset.change(backend, %{
+          metadata_fields: [
+            metadata_field
+          ]
+        })
+        |> Repo.update()
+
+      params = %{
+        username: "test@created.email",
+        password: "a valid password",
+        metadata: %{
+          "attribute_test" => %{
+            "value" => "attribute_test value"
+          }
+        }
+      }
+
+      assert_raise Ecto.InvalidChangesetError, fn ->
+        Admin.create_user(backend, params)
+      end
     end
 
     test "creates a user with a group", %{backend: backend} do
@@ -239,10 +277,35 @@ defmodule BorutaIdentity.AdminTest do
         Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
         |> Repo.update()
 
-      metadata = %{"test" => "test value"}
+      metadata = %{
+        "attribute_test" => %{
+          "value" => "attribute_test value",
+          "status" => "valid"
+        }
+      }
+
       user_params = %{metadata: metadata}
 
       assert {:ok, %User{metadata: ^metadata}} = Admin.update_user(user, user_params)
+    end
+
+    test "returns an error with invalid metadata", %{user: user} do
+      {:ok, _backend} =
+        Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
+        |> Repo.update()
+
+      metadata = %{
+        "attribute_test" => %{
+          "value" => "attribute_test value"
+        }
+      }
+
+      user_params = %{metadata: metadata}
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [metadata: {"Required property status was not present. at #", []}]
+              }} = Admin.update_user(user, user_params)
     end
 
     test "returns an error if group is not unique", %{user: user} do
