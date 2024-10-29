@@ -50,8 +50,7 @@ defmodule BorutaIdentity.Accounts.User do
       "status" => %{"type" => "string"},
       "display" => %{"type" => "array", "items" => %{"type" => "string"}}
     },
-    "required" => ["value", "status"],
-    "additionalProperties" => false
+    "required" => ["value", "status"]
   }
 
   def account_types, do: [

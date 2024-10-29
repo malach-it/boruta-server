@@ -189,6 +189,10 @@ User.upload = function ({ backendId, file, options }) {
   if (options.hashPassword && options.hashPassword !== '')
     formData.append("options[hash_password]", options.hashPassword)
 
+  options.metadataHeaders.forEach(header => {
+    formData.append("options[metadata_headers][]", `${header.origin}>${header.target}`)
+  })
+
   return this.api().post('/', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'

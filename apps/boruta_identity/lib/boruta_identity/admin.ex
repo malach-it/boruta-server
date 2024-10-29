@@ -149,7 +149,19 @@ defmodule BorutaIdentity.Admin do
         password_index =
           Enum.find_index(headers, fn header -> header == opts[:password_header] end)
 
-        %{username: username_index, password: password_index}
+        metadata_headers = Enum.map(opts[:metadata_headers] || [], fn metadata_header ->
+          [origin, target] = String.split(metadata_header, ">")
+
+          header_index = Enum.find_index(headers, fn header -> header == origin end)
+          {target, header_index}
+        end)
+        |> Enum.into(%{})
+
+        %{
+          username: {"username", username_index},
+          password: {"password", password_index},
+          metadata: metadata_headers
+        }
       end)
 
     File.stream!(csv_path)
@@ -158,16 +170,23 @@ defmodule BorutaIdentity.Admin do
       case opts[:hash_password] do
         true ->
           create_params = %{
-            username: headers[:username] && Enum.at(row, headers[:username]),
-            password: headers[:password] && Enum.at(row, headers[:password])
-          }
+            username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
+            password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
+          } |> Map.put(:metadata, Enum.map(headers[:metadata], fn header ->
+            {elem(header, 0), %{
+              "value" => Enum.at(row, elem(header, 1)),
+              "status" => "valid",
+              "display" => ["status", "origin"],
+              "origin" => "import - #{:os.system_time(:second)}"
+            }}
+          end) |> Enum.into(%{}))
 
           create_user(backend, create_params)
 
         false ->
           create_params = %{
-            username: headers[:username] && Enum.at(row, headers[:username]),
-            hashed_password: headers[:password] && Enum.at(row, headers[:password])
+            username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
+            password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
           }
 
           create_raw_user(backend, create_params)

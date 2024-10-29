@@ -124,6 +124,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Accounts.Settings
   def update_user(backend, user, params) do
+    # TODO database transaction
     with {:ok, user} <-
            %{user | metadata: params[:metadata], group: params[:group]}
            |> Internal.User.update_changeset(params, %{backend: backend})
@@ -134,6 +135,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Admin
   def create_user(backend, params) do
+    # TODO database transaction
     with {:ok, user} <-
            Internal.User.registration_changeset(
              %Internal.User{
@@ -153,6 +155,7 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Admin
   def create_raw_user(backend, params) do
+    # TODO database transaction
     with {:ok, user} <-
            Internal.User.raw_registration_changeset(
              %Internal.User{},
