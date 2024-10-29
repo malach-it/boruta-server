@@ -69,7 +69,8 @@ defmodule BorutaIdentity.Accounts.Internal do
         %Internal.User{id: id, email: email, metadata: metadata, group: group},
         %Backend{
           id: backend_id
-        } = backend
+        } = backend,
+        repo \\ Repo
       ) do
     impl_user_params = %{
       uid: id,
@@ -89,7 +90,7 @@ defmodule BorutaIdentity.Accounts.Internal do
       end
 
     User.implementation_changeset(impl_user_params, backend)
-    |> Repo.insert!(
+    |> repo.insert!(
       on_conflict: {:replace, replace},
       returning: true,
       conflict_target: [:backend_id, :uid]
@@ -124,33 +125,40 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Accounts.Settings
   def update_user(backend, user, params) do
-    # TODO database transaction
-    with {:ok, user} <-
-           %{user | metadata: params[:metadata], group: params[:group]}
-           |> Internal.User.update_changeset(params, %{backend: backend})
-           |> Repo.update() do
-      {:ok, domain_user!(user, backend)}
-    end
+    Repo.transaction(fn repo ->
+      case %{user | metadata: params[:metadata], group: params[:group]}
+             |> Internal.User.update_changeset(params, %{backend: backend})
+             |> repo.update() do
+        {:ok, user} ->
+          domain_user!(user, backend, repo)
+        {:error, error} ->
+          Repo.rollback(error)
+      end
+    end)
   end
 
   @impl BorutaIdentity.Admin
   def create_user(backend, params) do
-    # TODO database transaction
-    with {:ok, user} <-
-           Internal.User.registration_changeset(
-             %Internal.User{
-               group: params[:group],
-               metadata: params[:metadata]
-             },
-             %{
-               email: params[:username],
-               password: params[:password]
-             },
-             %{backend: backend}
-           )
-           |> Repo.insert() do
-      {:ok, domain_user!(user, backend)}
-    end
+    Repo.transaction(fn repo ->
+      case Internal.User.registration_changeset(
+               %Internal.User{
+                 group: params[:group],
+                 metadata: params[:metadata]
+               },
+               %{
+                 email: params[:username],
+                 password: params[:password]
+               },
+               %{backend: backend}
+             )
+             |> repo.insert() do
+
+        {:ok, user} ->
+          domain_user!(user, backend, repo)
+        {:error, error} ->
+          Repo.rollback(error)
+      end
+    end)
   end
 
   @impl BorutaIdentity.Admin

@@ -200,9 +200,8 @@ defmodule BorutaIdentity.AdminTest do
         }
       }
 
-      assert_raise Ecto.InvalidChangesetError, fn ->
-        Admin.create_user(backend, params)
-      end
+      assert Enum.empty?(Repo.all(Internal.User))
+      assert Admin.create_user(backend, params) == {:error, %Ecto.Changeset{}}
     end
 
     test "creates a user with a group", %{backend: backend} do
