@@ -1,7 +1,8 @@
 import Config
 
 config :boruta_web,
-  ecto_repos: [BorutaAuth.Repo, BorutaWeb.Repo]
+  ecto_repos: [BorutaAuth.Repo, BorutaWeb.Repo],
+  generators: [binary_id: true]
 
 config :boruta_web, BorutaWeb.Endpoint,
   url: [host: "localhost"],
