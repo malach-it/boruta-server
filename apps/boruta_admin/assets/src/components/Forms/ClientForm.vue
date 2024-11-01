@@ -243,6 +243,10 @@
             <label>Public revoke</label>
           </div>
         </div>
+        <h3>Federation entity</h3>
+        <div class="field" :class="{ 'error': client.errors?.federation_entity_id }">
+          <FederationEntityField :federationEntity="client.federation_entity.model" @federationEntityChange="setFederationEntity"/>
+        </div>
       </div>
       <div ref="grant-types" data-tab="grant-types" class="ui bottom attached tab segment">
         <h3>Supported grant types</h3>
@@ -266,6 +270,7 @@ import KeyPair from '../../models/key-pair.model'
 import Client from '../../models/client.model'
 import ScopesField from './ScopesField.vue'
 import IdentityProviderField from './IdentityProviderField.vue'
+import FederationEntityField from './FederationEntityField.vue'
 import FormErrors from './FormErrors.vue'
 
 export default {
@@ -274,6 +279,7 @@ export default {
   components: {
     ScopesField,
     IdentityProviderField,
+    FederationEntityField,
     FormErrors
   },
   data() {
@@ -324,6 +330,9 @@ export default {
     },
     setIdentityProvider (identityProvider) {
       this.client.identity_provider = { model: identityProvider }
+    },
+    setFederationEntity (federationEntity) {
+      this.client.federation_entity = { model: federationEntity }
     },
     addScope () {
       this.client.authorized_scopes.push({ model: new Scope() })

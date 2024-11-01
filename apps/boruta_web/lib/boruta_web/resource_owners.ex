@@ -1,4 +1,4 @@
-defmodule BorutaIdentity.ResourceOwners do
+defmodule BorutaWeb.ResourceOwners do
   @moduledoc false
 
   @behaviour Boruta.Oauth.ResourceOwners
@@ -7,6 +7,8 @@ defmodule BorutaIdentity.ResourceOwners do
 
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Scope
+  alias BorutaFederation.FederationEntities
+  alias BorutaFederation.TrustChains
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
@@ -168,5 +170,15 @@ defmodule BorutaIdentity.ResourceOwners do
       end)
     end)
     |> Enum.into(%{})
+  end
+
+  @impl Boruta.Oauth.ResourceOwners
+  def trust_chain(client) do
+    case FederationEntities.get_federation_entity_by_client_id(client.id) do
+      nil ->
+        {:ok, []}
+      entity ->
+        TrustChains.generate_trust_chain(entity)
+    end
   end
 end
