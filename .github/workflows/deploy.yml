@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - ebsi-verify-conformance
+      - openid-federation
   workflow_run:
     workflows:
       - Continuous Integration
     branches:
       - master
-      - ebsi-verify-conformance
     types:
       - completed
 
