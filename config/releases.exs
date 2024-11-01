@@ -36,6 +36,13 @@ config :boruta_admin, BorutaAdmin.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 1
 
+config :boruta_federation, BorutaFederation.Repo,
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_admin",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
+  pool_size: 1
+
 config :boruta_identity, Boruta.Accounts, secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.SMTP
@@ -59,6 +66,10 @@ config :boruta_web, BorutaWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
+  url: [scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"), host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts", port: System.get_env("BORUTA_OAUTH_PORT")],
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
+
+config :boruta_federation, BorutaFederationWeb.Endpoint,
   url: [scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"), host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts", port: System.get_env("BORUTA_OAUTH_PORT")],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
