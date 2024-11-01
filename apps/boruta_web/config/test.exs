@@ -31,6 +31,13 @@ config :boruta_auth, BorutaAuth.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :boruta_federation, BorutaFederation.Repo,
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_web_test",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox
+
 config :boruta_identity, Boruta.Accounts, secret_key_base: "secret"
 
 config :logger, level: :warn

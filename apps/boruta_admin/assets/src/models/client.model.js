@@ -1,6 +1,7 @@
 import axios from 'axios'
 import Scope from './scope.model'
 import IdentityProvider from './identity-provider.model'
+import FederationEntity from './federation-entity.model'
 import { addClientErrorInterceptor } from './utils'
 
 const allGrantTypes = [
@@ -38,6 +39,7 @@ const defaults = {
   token_endpoint_jwt_auth_alg: 'HS256',
   token_endpoint_auth_methods: ["client_secret_basic", "client_secret_post"],
   identity_provider: { model: new IdentityProvider() },
+  federation_entity: { model: new FederationEntity() },
   grantTypes: allGrantTypes.map((label) => {
     return {
       value: true,
@@ -68,6 +70,9 @@ const assign = {
   public_revoke: function ({ public_revoke }) { this.public_revoke = public_revoke },
   identity_provider: function ({ identity_provider }) {
     this.identity_provider = { model: new IdentityProvider(identity_provider) }
+  },
+  federation_entity: function ({ federation_entity }) {
+    this.federation_entity = { model: new FederationEntity(federation_entity) }
   },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
   enforce_dpop: function ({ enforce_dpop }) { this.enforce_dpop = enforce_dpop },
@@ -226,6 +231,7 @@ class Client {
       redirect_uris,
       refresh_token_ttl,
       identity_provider,
+      federation_entity,
       secret,
       id_token_signature_alg,
       userinfo_signed_response_alg,
@@ -256,6 +262,7 @@ class Client {
       redirect_uris: redirect_uris.map(({ uri }) => uri),
       refresh_token_ttl,
       identity_provider: identity_provider.model,
+      federation_entity: federation_entity.model,
       secret,
       supported_grant_types: grantTypes
         .filter(({ value }) => value)

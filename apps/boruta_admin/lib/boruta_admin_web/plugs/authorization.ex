@@ -12,7 +12,7 @@ defmodule BorutaAdminWeb.Authorization do
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Openid.UserinfoResponse
   alias BorutaAdminWeb.ErrorView
-  alias BorutaIdentity.ResourceOwners
+  alias BorutaWeb.ResourceOwners
 
   def require_authenticated(conn, _opts \\ []) do
     with [authorization_header] <- get_req_header(conn, "authorization"),

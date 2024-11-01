@@ -16,6 +16,9 @@ import NewClient from "./views/Clients/NewClient.vue";
 import Client from "./views/Clients/Client.vue";
 import EditClient from "./views/Clients/EditClient.vue";
 
+import FederationEntityList from "./views/FederationEntities/FederationEntityList.vue";
+import NewFederationEntity from "./views/FederationEntities/NewFederationEntity.vue";
+
 import Upstreams from "./views/Upstreams.vue";
 import UpstreamList from "./views/Upstreams/UpstreamList.vue";
 import Upstream from "./views/Upstreams/Upstream.vue";
@@ -356,6 +359,16 @@ const router = createRouter({
               path: "key-pairs",
               name: "key-pair-list",
               component: KeyPairList,
+            },
+            {
+              path: "federation-entities",
+              name: "federation-entity-list",
+              component: FederationEntityList,
+            },
+            {
+              path: "federation-entities/new",
+              name: "new-federation-entity",
+              component: NewFederationEntity,
             },
             {
               path: "/clients/new",

@@ -10,7 +10,8 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     redirect_uris: ["http://redirect.uri"],
     access_token_ttl: 10,
     authorization_code_ttl: 10,
-    identity_provider: nil
+    identity_provider: nil,
+    federation_entity: nil
   }
   @update_attrs %{
     redirect_uris: ["http://updated.redirect.uri"]
@@ -84,6 +85,24 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
       assert %{"id" => _id} = json_response(create, 201)["data"]
+    end
+
+    @tag authorized: ["clients:manage:all"]
+    test "renders client with a federation entity", %{
+      conn: conn,
+      identity_provider: identity_provider
+    } do
+      entity = BorutaFederation.Factory.insert(:entity)
+
+      create_attrs = %{
+        @create_attrs
+        | identity_provider: %{id: identity_provider.id},
+          federation_entity: %{id: entity.id}
+      }
+
+      entity_id = entity.id
+      create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
+      assert %{"id" => _id, "federation_entity" => %{"id" => ^entity_id}} = json_response(create, 201)["data"]
     end
   end
 
@@ -174,9 +193,12 @@ defmodule BorutaAdminWeb.ClientControllerTest do
       public_key = client.public_key
 
       conn = post(conn, Routes.admin_client_path(conn, :regenerate_key_pair, client))
-      assert %{"data" => %{
-        "public_key" => new_public_key
-      }} = json_response(conn, 200)
+
+      assert %{
+               "data" => %{
+                 "public_key" => new_public_key
+               }
+             } = json_response(conn, 200)
 
       assert new_public_key != public_key
     end

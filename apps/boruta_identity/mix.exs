@@ -40,6 +40,7 @@ defmodule BorutaIdentity.MixProject do
       {:argon2_elixir, "~> 2.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:boruta_auth, in_umbrella: true},
+      {:boruta_federation, in_umbrella: true},
       {:bypass, "~> 2.1.0", only: :test},
       {:decorator, "~> 1.2"},
       {:ecto_sql, "~> 3.4"},
