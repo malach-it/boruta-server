@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - signatures-adapter
+      - ebsi-verify-conformance
+      - openid-federation
   workflow_run:
     workflows:
       - Continuous Integration
     branches:
       - master
-      - signatures-adapter
     types:
       - completed
 
