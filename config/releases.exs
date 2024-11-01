@@ -85,7 +85,7 @@ config :boruta_web, BorutaAdminWeb.Authorization,
 config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
-    resource_owners: BorutaIdentity.ResourceOwners
+    resource_owners: BorutaWeb.ResourceOwners
   ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL"),
   did_resolver_base_url: System.get_env("DID_RESOLVER_BASE_URL", "https://api.godiddy.com/1.0.0/universal-resolver"),

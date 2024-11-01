@@ -13,7 +13,7 @@ class Oauth {
     this.implicitClient = new oauth.Implicit({
       clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID,
       redirectUri: `${window.env.BORUTA_ADMIN_BASE_URL}/oauth-callback`,
-      scope: 'openid email profile scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all',
+      scope: 'openid email profile scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all federation-entities:manage:all configuration:manage:all logs:read:all',
       silentRefresh: true,
       silentRefreshCallback: this.authenticate.bind(this),
       responseType: 'id_token token'

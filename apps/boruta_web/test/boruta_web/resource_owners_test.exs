@@ -1,4 +1,4 @@
-defmodule BorutaIdentity.ResourceOwnersTest do
+defmodule BorutaWeb.ResourceOwnersTest do
   use BorutaIdentity.DataCase
 
   import BorutaIdentity.AccountsFixtures
@@ -9,7 +9,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.OrganizationUser
   alias BorutaIdentity.Repo
-  alias BorutaIdentity.ResourceOwners
+  alias BorutaWeb.ResourceOwners
 
   doctest BorutaIdentity
 
