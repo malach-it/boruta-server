@@ -5,12 +5,12 @@ on:
     branches:
       - ebsi-verify-conformance
       - poc-hybrid-vp-token
+      - openid-federation
   workflow_run:
     workflows:
       - Continuous Integration
     branches:
       - master
-      - ebsi-verify-conformance
     types:
       - completed
 
