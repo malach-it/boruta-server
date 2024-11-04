@@ -22,6 +22,10 @@
                 <span class="header">Organization name</span>
                 <span class="description">{{ federationEntity.organization_name }}</span>
               </div>
+              <div class="item">
+                <span class="header">Trust mark logo uri</span>
+                <span class="description">{{ federationEntity.trust_mark_logo_uri }}</span>
+              </div>
             </div>
             <h3>Public key</h3>
             <pre>{{ federationEntity.public_key }}</pre>

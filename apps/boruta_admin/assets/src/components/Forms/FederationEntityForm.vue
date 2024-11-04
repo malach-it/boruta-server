@@ -5,13 +5,17 @@
       <form class="ui form" @submit.prevent="submit">
         <div class="field" :class="{ 'error': federationEntity.errors?.organization_name }">
           <label>Organization name</label>
-          <input type="text" v-model="federationEntity.organization_name" placeholder="administrator">
+          <input type="text" v-model="federationEntity.organization_name" placeholder="administrator" />
         </div>
         <div class="field" :class="{ 'error': federationEntity.errors?.type }">
           <label>Type</label>
           <select v-model="federationEntity.type">
             <option v-for="type in entityTypes" :value="type">{{ type }}</option>
           </select>
+        </div>
+        <div class="field" :class="{ 'error': federationEntity.errors?.trust_mark_logo_uri }">
+          <label>Trust mark logo uri</label>
+          <input type="text" v-model="federationEntity.trust_mark_logo_uri" placeholder="https://io.malach.it/assets/images/logo.png" />
         </div>
         <h3>Key type</h3>
         <div class="field" :class="{ 'error': federationEntity.errors?.key_pair_type }">
@@ -40,6 +44,10 @@
               </div>
             </div>
           </div>
+        </div>
+        <div class="field" :class="{ 'error': federationEntity.errors?.trust_chain_statement_ttl }">
+          <label>Trust chain statement TTL</label>
+          <input type="number" v-model="federationEntity.trust_chain_statement_ttl" />
         </div>
         <hr />
         <button class="ui right floated violet button" type="submit">{{ action }}</button>

@@ -12,6 +12,8 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     organization_name: String.t(),
     type: String.t(),
     trust_chain_statement_alg: String.t(),
+    trust_chain_statement_ttl: integer(),
+    trust_mark_logo_uri: String.t() | nil,
     key_pair_type: map(),
     public_key: String.t(),
     private_key: String.t(),
@@ -64,6 +66,8 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     field(:public_key, :string)
     field(:private_key, :string)
     field(:trust_chain_statement_alg, :string)
+    field(:trust_chain_statement_ttl, :integer, default: 3600 * 24)
+    field(:trust_mark_logo_uri, :string)
     field(:key_pair_type, :map,
       default: %{
         "type" => "rsa",
@@ -83,7 +87,9 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
       :organization_name,
       :type,
       :key_pair_type,
-      :trust_chain_statement_alg
+      :trust_chain_statement_alg,
+      :trust_chain_statement_ttl,
+      :trust_mark_logo_uri
     ])
     |> validate_key_pair_type()
     |> validate_inclusion(:type, @types)
