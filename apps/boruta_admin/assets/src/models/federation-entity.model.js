@@ -4,7 +4,8 @@ import { addClientErrorInterceptor } from './utils'
 const defaults = {
   key_pair_type: { type: 'rsa', modulus_size: '1024', exponent_size: '65537' },
   type: 'Elixir.BorutaFederation.FederationEntities.LeafEntity',
-  trust_chain_statement_alg: 'RS256'
+  trust_chain_statement_alg: 'RS256',
+  trust_chain_statement_ttl: 3600 * 24,
 }
 
 const keyPairTypes = {
@@ -30,6 +31,8 @@ const assign = {
   organization_name: function ({ organization_name }) { this.organization_name = organization_name },
   type: function ({ type }) { this.type = type },
   trust_chain_statement_alg: function ({ trust_chain_statement_alg }) { this.trust_chain_statement_alg = trust_chain_statement_alg },
+  trust_chain_statement_ttl: function ({ trust_chain_statement_ttl }) { this.trust_chain_statement_ttl = trust_chain_statement_ttl },
+  trust_mark_logo_uri: function ({ trust_mark_logo_uri }) { this.trust_mark_logo_uri = trust_mark_logo_uri },
   key_pair_type: function ({ key_pair_type }) { this.key_pair_type = key_pair_type },
   public_key: function ({ public_key }) { this.public_key = public_key }
 }
@@ -83,6 +86,8 @@ class FederationEntity {
       organization_name,
       type,
       trust_chain_statement_alg,
+      trust_chain_statement_ttl,
+      trust_mark_logo_uri,
       key_pair_type
     } = this
 
@@ -91,6 +96,8 @@ class FederationEntity {
       organization_name,
       type,
       trust_chain_statement_alg,
+      trust_chain_statement_ttl,
+      trust_mark_logo_uri,
       key_pair_type
     }
   }
