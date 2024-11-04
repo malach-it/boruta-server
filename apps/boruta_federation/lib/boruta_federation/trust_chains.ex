@@ -1,6 +1,8 @@
 defmodule BorutaFederation.TrustChains do
   @moduledoc false
 
+  import Boruta.Config, only: [issuer: 0]
+
   alias BorutaFederation.FederationEntities.FederationEntity
 
   @spec generate_statement(entity :: FederationEntity.t()) ::
@@ -9,10 +11,18 @@ defmodule BorutaFederation.TrustChains do
     signer = Joken.Signer.create(entity.trust_chain_statement_alg, %{"pem" => entity.private_key})
 
     with {:ok, metadata} <- apply(String.to_atom(entity.type), :metadata, [entity]),
+         {:ok, trust_marks} <- apply(String.to_atom(entity.type), :trust_marks, [entity]),
          {:ok, jwks} <- apply(String.to_atom(entity.type), :jwks, [entity]) do
+      now = :os.system_time(:second)
+
       payload = %{
+        "iss" => issuer(),
+        "sub" => entity.id,
+        "iat" => now,
+        "exp" => now + entity.trust_chain_statement_ttl,
         "jwks" => jwks,
-        "metadata" => metadata
+        "metadata" => metadata,
+        "trust_marks" => trust_marks
       }
 
       case Joken.encode_and_sign(payload, signer) do

@@ -16,6 +16,8 @@ defmodule BorutaAdminWeb.FederationEntityView do
       id: entity.id,
       type: entity.type,
       trust_chain_statement_alg: entity.trust_chain_statement_alg,
+      trust_chain_statement_ttl: entity.trust_chain_statement_ttl,
+      trust_mark_logo_uri: entity.trust_mark_logo_uri,
       organization_name: entity.organization_name,
       public_key: entity.public_key
     }
