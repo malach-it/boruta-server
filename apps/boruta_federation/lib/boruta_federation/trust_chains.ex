@@ -16,12 +16,12 @@ defmodule BorutaFederation.TrustChains do
       now = :os.system_time(:second)
 
       payload = %{
-        "iss" => issuer(),
-        "sub" => entity.id,
-        "iat" => now,
         "exp" => now + entity.trust_chain_statement_ttl,
+        "iat" => now,
+        "iss" => issuer(),
         "jwks" => jwks,
         "metadata" => metadata,
+        "sub" => entity.id,
         "trust_marks" => trust_marks
       }
 

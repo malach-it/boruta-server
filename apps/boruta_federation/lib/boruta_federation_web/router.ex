@@ -11,8 +11,9 @@ defmodule BorutaFederationWeb.Router do
   end
 
   scope "/", BorutaFederationWeb do
-    pipe_through :browser
+    pipe_through :api
 
     get "/", PageController, :index
+    get "/resolve", ResolveController, :resolve
   end
 end
