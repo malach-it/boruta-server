@@ -1,17 +1,24 @@
-defmodule BorutaFederation.TrustChainsTest do
-  use BorutaFederation.DataCase
+defmodule BorutaFederationWeb.ResolveControllerTest do
+  use BorutaFederationWeb.ConnCase
 
   import BorutaFederation.Factory
 
   alias BorutaFederation.FederationEntities.LeafEntity.Token
-  alias BorutaFederation.TrustChains
 
-  describe "generate_statement/1" do
-    test "generates a statement" do
+  describe "GET /resolve" do
+    test "retruns not found", %{conn: conn} do
+      conn = get(conn, Routes.resolve_path(conn, :resolve, %{sub: "sub", anchor: "anchor"}))
+      assert json_response(conn, 404) == %{
+        "error" => "not_found",
+        "error_description" => "Federation entity could not be found."
+      }
+    end
+
+    test "retruns a statement", %{conn: conn} do
       entity = insert(:entity)
 
-      assert {:ok, statement} = TrustChains.generate_statement(entity)
-      assert statement
+      conn = get(conn, Routes.resolve_path(conn, :resolve, %{sub: entity.id, anchor: "anchor"}))
+      assert statement = response(conn, 200)
 
       entity_id = entity.id
 

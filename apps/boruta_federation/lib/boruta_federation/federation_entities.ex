@@ -14,7 +14,12 @@ defmodule BorutaFederation.FederationEntities do
 
   @spec get_entity(id :: Ecto.UUID.t()) :: federation_entity :: FederationEntity.t() | nil
   def get_entity(id) do
-    Repo.get(FederationEntity, id)
+    case Ecto.UUID.cast(id) do
+      {:ok, _} ->
+        Repo.get(FederationEntity, id)
+      _ ->
+        nil
+    end
   end
 
   @spec create_entity(
