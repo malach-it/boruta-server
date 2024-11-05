@@ -15,5 +15,6 @@ defmodule BorutaFederationWeb.Router do
 
     get "/", PageController, :index
     get "/resolve", ResolveController, :resolve
+    get "/fetch", FetchController, :fetch
   end
 end
