@@ -38,6 +38,8 @@ defmodule BorutaWeb.Router do
 
   forward("/accounts", BorutaIdentityWeb.Endpoint)
 
+  forward("/federation", BorutaFederationWeb.Endpoint)
+
   scope "/openid", BorutaWeb do
     pipe_through(:api)
 
