@@ -6,6 +6,7 @@ const defaults = {
   type: 'Elixir.BorutaFederation.FederationEntities.LeafEntity',
   trust_chain_statement_alg: 'RS256',
   trust_chain_statement_ttl: 3600 * 24,
+  authorities: []
 }
 
 const keyPairTypes = {
@@ -30,6 +31,8 @@ const assign = {
   id: function ({ id }) { this.id = id },
   organization_name: function ({ organization_name }) { this.organization_name = organization_name },
   type: function ({ type }) { this.type = type },
+  authorities: function ({ authorities }) { this.authorities = authorities.map((url) => ({ url })) },
+  is_default: function ({ is_default }) { this.is_default = is_default },
   trust_chain_statement_alg: function ({ trust_chain_statement_alg }) { this.trust_chain_statement_alg = trust_chain_statement_alg },
   trust_chain_statement_ttl: function ({ trust_chain_statement_ttl }) { this.trust_chain_statement_ttl = trust_chain_statement_ttl },
   trust_mark_logo_uri: function ({ trust_mark_logo_uri }) { this.trust_mark_logo_uri = trust_mark_logo_uri },
@@ -84,6 +87,7 @@ class FederationEntity {
     const {
       id,
       organization_name,
+      authorities,
       type,
       trust_chain_statement_alg,
       trust_chain_statement_ttl,
@@ -94,6 +98,7 @@ class FederationEntity {
     return {
       id,
       organization_name,
+      authorities: authorities.map(({ url }) => url),
       type,
       trust_chain_statement_alg,
       trust_chain_statement_ttl,

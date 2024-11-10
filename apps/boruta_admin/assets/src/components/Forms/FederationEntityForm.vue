@@ -13,9 +13,15 @@
             <option v-for="type in entityTypes" :value="type">{{ type }}</option>
           </select>
         </div>
-        <div class="field" :class="{ 'error': federationEntity.errors?.trust_mark_logo_uri }">
-          <label>Trust mark logo uri</label>
-          <input type="text" v-model="federationEntity.trust_mark_logo_uri" placeholder="https://io.malach.it/assets/images/logo.png" />
+        <div class="field" :class="{ 'error': federationEntity.errors?.authorities }">
+          <label>Authorities</label>
+          <div v-for="(authority, index) in federationEntity.authorities" class="field" :key="index">
+            <div class="ui right icon input">
+              <input type="text" v-model="authority.url" placeholder="http://authority.uri" />
+              <i v-on:click="deleteAuthority(authority)" class="close icon"></i>
+            </div>
+          </div>
+          <a v-on:click.prevent="addAuthority()" class="ui blue fluid button">Add an authority</a>
         </div>
         <h3>Key type</h3>
         <div class="field" :class="{ 'error': federationEntity.errors?.key_pair_type }">
@@ -74,9 +80,14 @@ export default {
       statementSignatureAlgorithms: FederationEntity.statementSignatureAlgorithms
     }
   },
-  mounted () {
-  },
   methods: {
+    addAuthority () {
+      this.federationEntity.authorities.push({})
+    },
+    deleteAuthority (authority) {
+    console.log(this.federationEntity)
+      this.federationEntity.authorities.splice(this.federationEntity.authorities.indexOf(authority), 1)
+    },
     back () {
       this.$emit('back')
     }
