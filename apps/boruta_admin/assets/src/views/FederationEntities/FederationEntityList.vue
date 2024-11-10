@@ -23,6 +23,10 @@
                 <span class="description">{{ federationEntity.organization_name }}</span>
               </div>
               <div class="item">
+                <span class="header">Authorities</span>
+                <span class="description" v-for="authority in federationEntity.authorities">{{ authority.url }}</span>
+              </div>
+              <div class="item">
                 <span class="header">Trust mark logo uri</span>
                 <span class="description">{{ federationEntity.trust_mark_logo_uri }}</span>
               </div>
