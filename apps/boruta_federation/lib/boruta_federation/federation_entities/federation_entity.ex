@@ -14,6 +14,8 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     trust_chain_statement_alg: String.t(),
     trust_chain_statement_ttl: integer(),
     trust_mark_logo_uri: String.t() | nil,
+    authorities: list(String.t()),
+    default: boolean(),
     key_pair_type: map(),
     public_key: String.t(),
     private_key: String.t(),
@@ -67,6 +69,8 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     field(:private_key, :string)
     field(:trust_chain_statement_alg, :string)
     field(:trust_chain_statement_ttl, :integer, default: 3600 * 24)
+    field(:authorities, {:array, :string}, default: [])
+    field(:default, :boolean, default: false)
     field(:trust_mark_logo_uri, :string)
     field(:key_pair_type, :map,
       default: %{
@@ -89,12 +93,15 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
       :key_pair_type,
       :trust_chain_statement_alg,
       :trust_chain_statement_ttl,
-      :trust_mark_logo_uri
+      :trust_mark_logo_uri,
+      :authorities,
+      :default
     ])
     |> validate_key_pair_type()
     |> validate_inclusion(:type, @types)
     |> validate_inclusion(:trust_chain_statement_alg, @trust_chain_statement_algs)
     |> generate_key_pair()
+    |> validate_authorities()
     |> validate_required([:organization_name, :type, :public_key, :private_key])
   end
 
@@ -146,6 +153,27 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
         changeset
         |> put_change(:public_key, public_pem)
         |> put_change(:private_key, private_pem)
+    end
+  end
+
+  defp validate_authorities(changeset) do
+    validate_change(changeset, :authorities, fn field, values ->
+      Enum.map(values, &validate_url/1)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.map(fn error -> {field, error} end)
+    end)
+  end
+
+  defp validate_url(nil), do: "empty values are not allowed"
+
+  defp validate_url("" <> url) do
+    case URI.parse(url) do
+      %URI{scheme: scheme, host: host, fragment: fragment}
+      when not is_nil(scheme) and not is_nil(host) and is_nil(fragment) ->
+        nil
+
+      _ ->
+        "`#{url}` is invalid"
     end
   end
 end
