@@ -17,6 +17,7 @@ defmodule BorutaFederation.FederationEntities do
     case Ecto.UUID.cast(id) do
       {:ok, _} ->
         Repo.get(FederationEntity, id)
+
       _ ->
         nil
     end
@@ -55,7 +56,12 @@ defmodule BorutaFederation.FederationEntities do
         ) ::
           {:ok, client_federation_entity :: ClientFederationEntity.t() | nil}
           | {:error, changeset :: Ecto.Changeset.t()}
-  def upsert_client_federation_entity(_client_id, nil), do: {:ok, nil}
+  def upsert_client_federation_entity(client_id, nil) do
+    with {1, _} <-
+           Repo.delete_all(from cfe in ClientFederationEntity, where: cfe.client_id == ^client_id) do
+      {:ok, nil}
+    end
+  end
 
   def upsert_client_federation_entity(client_id, federation_entity_id) do
     %ClientFederationEntity{}
@@ -69,7 +75,8 @@ defmodule BorutaFederation.FederationEntities do
     )
   end
 
-  @spec get_federation_entity_by_client_id(client_id :: String.t()) :: federation_entity :: FederationEntity.t() | nil
+  @spec get_federation_entity_by_client_id(client_id :: String.t()) ::
+          federation_entity :: FederationEntity.t() | nil
   def get_federation_entity_by_client_id(client_id) do
     case Ecto.UUID.cast(client_id) do
       {:ok, client_id} ->
