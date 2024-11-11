@@ -1,13 +1,17 @@
 defmodule BorutaFederation.TrustChains do
   @moduledoc false
 
+  use Nebulex.Caching
+
   import Boruta.Config, only: [issuer: 0]
 
   alias BorutaFederation.FederationEntities.FederationEntity
 
+  @trust_chain_ttl 3600
+
   @spec generate_statement(entity :: FederationEntity.t()) ::
           {:ok, trust_chain :: list(String.t())} | {:error, reason :: String.t()}
-  def generate_statement(entity) do
+  def generate_statement(entity, opts \\ []) do
     signer = Joken.Signer.create(entity.trust_chain_statement_alg, %{"pem" => entity.private_key})
 
     with {:ok, metadata} <- apply(String.to_atom(entity.type), :metadata, [entity]),
@@ -25,15 +29,39 @@ defmodule BorutaFederation.TrustChains do
         "trust_marks" => trust_marks
       }
 
-      case Joken.encode_and_sign(payload, signer) do
-        {:ok, statement, _payload} ->
-          {:ok, statement}
+      with true <- opts[:include_trust_chain],
+           {:ok, chain_statements} <-
+             apply(String.to_atom(entity.type), :resolve_parents_chain, [entity]) do
+        payload = Map.put(payload, "trust_chain", chain_statements)
+
+        case Joken.encode_and_sign(payload, signer) do
+          {:ok, statement, _payload} ->
+            {:ok, statement}
+
+          {:error, error} ->
+            {:error, to_string(error)}
+        end
+      else
         {:error, error} ->
-          {:error, to_string(error)}
+          {:error, error}
+
+        _ ->
+          case Joken.encode_and_sign(payload, signer) do
+            {:ok, statement, _payload} ->
+              {:ok, statement}
+
+            {:error, error} ->
+              {:error, to_string(error)}
+          end
       end
     end
   end
 
+  @decorate cacheable(
+              cache: BorutaFederation.Cache,
+              key: {__MODULE__, entity.id},
+              opts: [ttl: @trust_chain_ttl]
+            )
   @spec generate_trust_chain(entity :: FederationEntity.t()) ::
           {:ok, trust_chain :: list(String.t())} | {:error, reason :: String.t()}
   def generate_trust_chain(entity) do

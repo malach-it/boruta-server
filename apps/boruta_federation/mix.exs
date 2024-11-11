@@ -38,11 +38,13 @@ defmodule BorutaFederation.MixProject do
   defp deps do
     [
       {:boruta_auth, in_umbrella: true},
+      {:decorator, "~> 1.4"},
       {:ecto_sql, "~> 3.6"},
       {:ex_json_schema, "~> 0.9"},
       {:ex_machina, "~> 2.4", only: :test},
       {:jason, "~> 1.0"},
       {:logger_file_backend, "~> 0.0.13"},
+      {:nebulex, "~> 2.6"},
       {:phoenix, "~> 1.6.0", override: true},
       {:phoenix_ecto, "~> 4.1"},
       {:phoenix_html, "~> 3.0"},

@@ -60,6 +60,15 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     ]
   }
 
+  @authority_schema %{
+    "type" => "object",
+    "properties" => %{
+      "issuer" => %{"type" => "string"},
+      "sub" => %{"type" => "string"}
+    },
+    "required" => ["issuer", "sub"]
+  }
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "federation_entities" do
@@ -69,7 +78,7 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     field(:private_key, :string)
     field(:trust_chain_statement_alg, :string)
     field(:trust_chain_statement_ttl, :integer, default: 3600 * 24)
-    field(:authorities, {:array, :string}, default: [])
+    field(:authorities, {:array, :map}, default: [])
     field(:default, :boolean, default: false)
     field(:trust_mark_logo_uri, :string)
     field(:key_pair_type, :map,
@@ -157,10 +166,23 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
   end
 
   defp validate_authorities(changeset) do
-    validate_change(changeset, :authorities, fn field, values ->
-      Enum.map(values, &validate_url/1)
-      |> Enum.reject(&is_nil/1)
-      |> Enum.map(fn error -> {field, error} end)
+    Enum.reduce(get_field(changeset, :authorities), changeset, fn authority, changeset ->
+      case ExJsonSchema.Validator.validate(
+        @authority_schema,
+        authority,
+        error_formatter: BorutaFormatter
+      ) do
+        :ok ->
+          case validate_url(authority["issuer"]) do
+            nil ->
+              changeset
+            error ->
+              add_error(changeset, :authorities, error)
+          end
+
+        {:error, errors} ->
+          add_error(changeset, :authorities, "validation failed: #{Enum.join(errors, " ")}")
+      end
     end)
   end
 

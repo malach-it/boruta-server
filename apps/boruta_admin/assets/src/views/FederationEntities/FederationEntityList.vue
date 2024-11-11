@@ -24,7 +24,7 @@
               </div>
               <div class="item">
                 <span class="header">Authorities</span>
-                <span class="description" v-for="authority in federationEntity.authorities">{{ authority.url }}</span>
+                <span class="description" v-for="authority in federationEntity.authorities">{{ authority.issuer }} - {{ authority.sub }}</span>
               </div>
               <div class="item">
                 <span class="header">Trust mark logo uri</span>

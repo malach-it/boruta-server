@@ -6,6 +6,7 @@ defmodule BorutaFederation.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      BorutaFederation.Cache,
       BorutaFederation.Repo,
       BorutaFederationWeb.Endpoint
     ]

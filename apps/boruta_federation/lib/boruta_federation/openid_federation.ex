@@ -41,7 +41,7 @@ defmodule BorutaFederation.OpenidFederation do
         module.resolve_failure(context, error)
 
       entity ->
-        case TrustChains.generate_statement(entity) do
+        case TrustChains.generate_statement(entity, include_trust_chain: true) do
           {:ok, statement} ->
             module.resolve_success(context, statement)
 

@@ -2,6 +2,7 @@
   <div class="field">
     <label>federation entity</label>
     <select v-model="currentFederationEntityId">
+      <option></option>
       <option v-for="federationEntityOption in federationEntities" :value="federationEntityOption.id" :key="federationEntityOption.id" :selected="federationEntityOption.id == currentFederationEntityId">
         {{ federationEntityOption.organization_name }}
       </option>
@@ -31,7 +32,7 @@ export default {
         return this.federationEntity.id
       },
       set (federationEntityId) {
-        return this.$emit('federationEntityChange', this.federationEntities.find(({ id }) => id === federationEntityId))
+        return this.$emit('federationEntityChange', this.federationEntities.find(({ id }) => id === federationEntityId) || new FederationEntity())
       }
     }
   }

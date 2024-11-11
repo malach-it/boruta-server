@@ -34,6 +34,12 @@ defmodule BorutaWeb.Router do
     get("/.well-known/openid-credential-issuer", OpenidController, :openid_credential_issuer)
   end
 
+  scope "/", BorutaFederationWeb do
+    pipe_through(:api)
+
+    get("/.well-known/openid-federation", OpenidController, :well_known)
+  end
+
   get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck, log: false)
 
   forward("/accounts", BorutaIdentityWeb.Endpoint)
