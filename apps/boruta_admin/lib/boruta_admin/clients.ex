@@ -54,16 +54,10 @@ defmodule BorutaAdmin.Clients do
                   )
               end),
            {:ok, _client_federation_entity} <-
-             (case federation_entity_id do
-                nil ->
-                  {:ok, nil}
-
-                federation_entity_id ->
-                  FederationEntities.upsert_client_federation_entity(
-                    client.id,
-                    federation_entity_id
-                  )
-              end) do
+             FederationEntities.upsert_client_federation_entity(
+               client.id,
+               federation_entity_id
+             ) do
         client
       else
         {:error, error} ->

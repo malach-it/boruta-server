@@ -45,6 +45,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
   alias BorutaIdentityWeb.Router.Helpers, as: Routes
+  alias ExJsonSchema.Validator.Error.BorutaFormatter
 
   @type t :: %__MODULE__{
           type: String.t(),
@@ -576,7 +577,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   defp validate_metadata_fields(
          %Ecto.Changeset{changes: %{metadata_fields: metadata_fields}} = changeset
        ) do
-    case ExJsonSchema.Validator.validate(@metadata_fields_schema, metadata_fields) do
+    case ExJsonSchema.Validator.validate(@metadata_fields_schema, metadata_fields, error_formatter: BorutaFormatter) do
       :ok ->
         changeset
 
@@ -593,7 +594,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
          %Ecto.Changeset{changes: %{federated_servers: federated_servers}} = changeset
        ) do
     Enum.reduce(federated_servers, changeset, fn federated_server, changeset ->
-      case ExJsonSchema.Validator.validate(@federated_server_schema, federated_server) do
+      case ExJsonSchema.Validator.validate(@federated_server_schema, federated_server, error_formatter: BorutaFormatter) do
         :ok ->
           changeset
 
@@ -611,7 +612,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
          %Ecto.Changeset{changes: %{verifiable_credentials: verifiable_credentials}} = changeset
        ) do
     Enum.reduce(verifiable_credentials, changeset, fn verifiable_credential, changeset ->
-      case ExJsonSchema.Validator.validate(@verifiable_credential_schema, verifiable_credential) do
+      case ExJsonSchema.Validator.validate(@verifiable_credential_schema, verifiable_credential, error_formatter: BorutaFormatter) do
         :ok ->
           changeset
 
@@ -629,7 +630,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
          %Ecto.Changeset{changes: %{verifiable_presentations: verifiable_presentations}} = changeset
        ) do
     Enum.reduce(verifiable_presentations, changeset, fn verifiable_presentation, changeset ->
-      case ExJsonSchema.Validator.validate(@verifiable_presentation_schema, verifiable_presentation) do
+      case ExJsonSchema.Validator.validate(@verifiable_presentation_schema, verifiable_presentation, error_formatter: BorutaFormatter) do
         :ok ->
           case Jason.decode(verifiable_presentation["presentation_definition"]) do
             {:ok, _map} ->

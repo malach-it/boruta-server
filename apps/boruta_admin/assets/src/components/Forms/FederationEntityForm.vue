@@ -13,12 +13,17 @@
             <option v-for="type in entityTypes" :value="type">{{ type }}</option>
           </select>
         </div>
+        <h3>Authorities</h3>
         <div class="field" :class="{ 'error': federationEntity.errors?.authorities }">
-          <label>Authorities</label>
-          <div v-for="(authority, index) in federationEntity.authorities" class="field" :key="index">
-            <div class="ui right icon input">
-              <input type="text" v-model="authority.url" placeholder="http://authority.uri" />
-              <i v-on:click="deleteAuthority(authority)" class="close icon"></i>
+          <div v-for="(authority, index) in federationEntity.authorities" class="ui segment field" :key="index">
+            <i v-on:click="deleteAuthority(authority)" class="close icon"></i>
+            <div class="field">
+              <label>Issuer</label>
+              <input type="text" v-model="authority.issuer" placeholder="http://authority.uri" />
+            </div>
+            <div class="field">
+              <label>Subject</label>
+              <input type="text" v-model="authority.sub" placeholder="sub" />
             </div>
           </div>
           <a v-on:click.prevent="addAuthority()" class="ui blue fluid button">Add an authority</a>
@@ -97,16 +102,18 @@ export default {
 
 <style scoped lang="scss">
 .federation-entity-form {
+  .segment .close {
+    z-index: 10;
+    cursor: pointer;
+    position: absolute;
+    top: 1em;
+    right: 1em;
+  }
   .field {
     position: relative;
     &.federation-entitys input {
       margin-right: 3em;
     }
-  }
-  .ui.icon.input>i.icon.close {
-    cursor: pointer;
-    pointer-events: all;
-    position: absolute;
   }
   .authorized-scopes-select {
     margin-right: 3em;
