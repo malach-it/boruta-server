@@ -21,6 +21,11 @@ const keyPairTypes = {
   'rsa': { modulus_size: '1024', exponent_size: '65537' }
 }
 
+const signaturesBackends = [
+  'Elixir.Boruta.Internal.Signatures',
+  'Elixir.Boruta.Universal.Signatures'
+]
+
 const defaults = {
   errors: null,
   key_pair_id: null,
@@ -37,7 +42,8 @@ const defaults = {
       value: true,
       label
     }
-  })
+  }),
+  signatures_backend: 'Elixir.Boruta.Internal.Signatures'
 }
 
 const assign = {
@@ -265,6 +271,8 @@ class Client {
 }
 
 Client.keyPairTypes = keyPairTypes
+
+Client.signaturesBackends = signaturesBackends
 
 Client.api = function () {
   const accessToken = localStorage.getItem('access_token')

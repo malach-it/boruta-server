@@ -24,31 +24,6 @@
             <i class="eye icon" :class="{ 'slash': passwordVisible }" @click="passwordVisibilityToggle()"></i>
           </div>
         </div>
-        <div class="ui segment">
-          <a class="ui fluid orange button" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</a>
-          <hr />
-          <div class="field">
-            <select v-model="client.key_pair_id">
-              <option :value="null">Custom key pair</option>
-              <option v-for="keyPair in keyPairs" :value="keyPair.id" :key="keyPair.id">
-                {{ keyPair.id }}
-              </option>
-            </select>
-          </div>
-          <hr />
-          <div class="field" v-if="clientPublicKey">
-            <label>Client public key</label>
-            <pre>{{ clientPublicKey }}</pre>
-          </div>
-        </div>
-        <div class="ui segment">
-          <a class="ui fluid orange button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
-          <hr />
-          <div class="field" v-if="client.did">
-            <label>Client did</label>
-            <pre>{{ client.did }}</pre>
-          </div>
-        </div>
         <div class="field" :class="{ 'error': client.errors?.access_token_ttl }">
           <label>Access token TTL (seconds)</label>
           <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
@@ -127,22 +102,79 @@
         </div>
       </div>
       <div ref="security" data-tab="security" class="ui bottom attached tab segment">
-        <h3>Key type</h3>
-        <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
-          <select v-model="client.key_pair_type.type">
-            <option v-for="keyPairType in Object.keys(keyPairTypes)" :value="keyPairType" :key="keyPairType">
-              {{ keyPairType }}
-            </option>
+        <h3>Signatures backend</h3>
+        <div class="field" :class="{ 'error': client.errors?.signatures_backend }">
+          <select v-model="client.signatures_backend">
+            <option v-for="backend in signaturesBackends" :value="backend">{{ backend }}</option>
           </select>
         </div>
-        <div v-for="(value, param) in keyPairTypes[client.key_pair_type.type]" class="field" :class="{ 'error': client.errors?.key_pair_type }">
-          <label>{{ param }}</label>
-          <select v-if="value instanceof Array" v-model="client.key_pair_type[param]">
-            <option v-for="option in value" :value="option" :key="option">
-              {{ option }}
-            </option>
-          </select>
-          <input v-else type="text" v-model="client.key_pair_type[param]" />
+
+        <div class="ui segment" v-if="client.signatures_backend == 'Elixir.Boruta.Universal.Signatures'">
+          <div class="ui info message">
+            The usage of the Universal backend requires an account, please contact Godiddy services <a href="https://godiddy.com/contact" target="_blank">https://godiddy.com/contact</a>
+          </div>
+          <div class="field" :class="{ 'error': client.errors?.universal_api_key }">
+            <label>Universal API key</label>
+            <input type="text" v-model="client.universal_api_key" placeholder="00000000-0000-0000-0000-000000000000">
+          </div>
+          <h4>Key management</h4>
+          <div class="field">
+            <label>method</label>
+            <select>
+              <option value="key">key</option>
+              <option value="indy">indy</option>
+            </select>
+          </div>
+          <hr />
+          <div class="field" v-if="client.did">
+            <label>Client did</label>
+            <pre>{{ client.did }}</pre>
+          </div>
+          <div class="field" v-if="clientPublicKey">
+            <label>Client public key</label>
+            <pre>{{ clientPublicKey }}</pre>
+          </div>
+          <a class="ui fluid orange button" v-if="client.isPersisted">Regenerate Universal client did</a>
+        </div>
+        <div class="ui segment" v-if="client.signatures_backend == 'Elixir.Boruta.Internal.Signatures'">
+          <h4>Key type</h4>
+          <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
+            <select v-model="client.key_pair_type.type">
+              <option v-for="keyPairType in Object.keys(keyPairTypes)" :value="keyPairType" :key="keyPairType">
+                {{ keyPairType }}
+              </option>
+            </select>
+          </div>
+          <div v-for="(value, param) in keyPairTypes[client.key_pair_type.type]" class="field" :class="{ 'error': client.errors?.key_pair_type }">
+            <label>{{ param }}</label>
+            <select v-if="value instanceof Array" v-model="client.key_pair_type[param]">
+              <option v-for="option in value" :value="option" :key="option">
+                {{ option }}
+              </option>
+            </select>
+            <input v-else type="text" v-model="client.key_pair_type[param]" />
+          </div>
+          <h4>Key management</h4>
+          <div class="field">
+            <select v-model="client.key_pair_id">
+              <option :value="null">Custom key pair</option>
+              <option v-for="keyPair in keyPairs" :value="keyPair.id" :key="keyPair.id">
+                {{ keyPair.id }}
+              </option>
+            </select>
+          </div>
+          <hr />
+          <div class="field" v-if="client.did">
+            <label>Client did</label>
+            <pre>{{ client.did }}</pre>
+          </div>
+          <div class="field" v-if="clientPublicKey">
+            <label>Client public key</label>
+            <pre>{{ clientPublicKey }}</pre>
+          </div>
+          <a class="ui fluid orange button" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</a>
+          <hr />
+          <a class="ui fluid orange button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
         </div>
         <h3>Token signatures</h3>
         <div class="ui segment">
@@ -244,6 +276,7 @@ export default {
   data() {
     return {
       keyPairTypes: Client.keyPairTypes,
+      signaturesBackends: Client.signaturesBackends,
       keyPairs: [],
       idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
       UserinfoResponseSignatureAlgorithms: Client.UserinfoResponseSignatureAlgorithms,
