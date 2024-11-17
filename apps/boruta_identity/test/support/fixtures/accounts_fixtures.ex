@@ -26,7 +26,7 @@ defmodule BorutaIdentity.AccountsFixtures do
       backend: backend,
       account_type: account_type
     )
-    |> Repo.preload([:authorized_scopes, :roles, :organizations])
+    |> Repo.preload([:backend, :authorized_scopes, :roles, :organizations])
   end
 
   def user_scopes_fixture(user, attrs \\ %{}) do

@@ -26,6 +26,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.Accounts.VerifiablePresentations
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
+  alias BorutaIdentity.ResourceOwners
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
 
@@ -600,11 +601,16 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       "did:" <> _key = did -> did
       _ -> nil
     end
+    scope = case conn.query_params["scope"] do
+      nil -> ""
+      scope -> scope
+    end
 
     %ResourceOwner{
       sub: current_user.id || anonymous_sub,
       username: current_user.username,
       last_login_at: current_user.last_login_at,
+      extra_claims: Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata),
       authorization_details: VerifiableCredentials.authorization_details(current_user),
       presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
     }

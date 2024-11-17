@@ -98,7 +98,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
     client_impl = IdentityProvider.implementation(client_idp)
 
     with {:ok, user} <-
-           apply(client_impl, :get_user, [client_idp.backend, authentication_params]),
+      apply(client_impl, :get_user, [client_idp.backend, authentication_params]),
          {:ok, user} <-
            apply(client_impl, :check_user_against, [
              client_idp.backend,

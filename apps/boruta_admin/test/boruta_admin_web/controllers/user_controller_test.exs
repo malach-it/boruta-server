@@ -116,7 +116,8 @@ defmodule BorutaAdminWeb.UserControllerTest do
       organization = insert(:organization)
       insert(:role_scope, role_id: role.id, scope_id: scope.id)
 
-      {:ok, conn: conn, existing_scope: scope, existing_role: role, existing_organization: organization}
+      {:ok,
+       conn: conn, existing_scope: scope, existing_role: role, existing_organization: organization}
     end
 
     @tag authorized: ["users:manage:all"]
@@ -410,7 +411,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
         Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})
         |> Repo.update()
 
-      metadata = %{"test" => "test value"}
+      metadata = %{"test" => %{"value" => "test value", "status" => "valid", "display" => []}}
 
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
@@ -419,8 +420,12 @@ defmodule BorutaAdminWeb.UserControllerTest do
           }
         )
 
-      assert %{"id" => ^id, "metadata" => %{"test" => "test value"}} =
-               json_response(conn, 200)["data"]
+      assert %{
+               "id" => ^id,
+               "metadata" => %{
+                 "test" => %{"value" => "test value", "status" => "valid", "display" => []}
+               }
+             } = json_response(conn, 200)["data"]
 
       assert %User{metadata: ^metadata} = Repo.get!(User, id)
     end

@@ -37,13 +37,12 @@ defmodule BorutaIdentity.ResourceOwners do
     end
   end
 
-  def get_by(sub: sub) when not is_nil(sub) do
+  def get_by(sub: sub, scope: scope) when not is_nil(sub) do
     case Accounts.get_user(sub) do
       %User{
         id: id,
         username: email,
         last_login_at: last_login_at,
-        metadata: metadata,
         federated_metadata: federated_metadata
       } = user ->
         {:ok,
@@ -51,7 +50,7 @@ defmodule BorutaIdentity.ResourceOwners do
            sub: id,
            username: email,
            last_login_at: last_login_at,
-           extra_claims: Map.merge(metadata, federated_metadata),
+           extra_claims: Map.merge(metadata(user, scope), federated_metadata),
            authorization_details: VerifiableCredentials.authorization_details(user),
            credential_configuration: VerifiableCredentials.credential_configuration(user),
            presentation_configuration: VerifiablePresentations.presentation_configuration(user)
@@ -92,36 +91,36 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def claims(%ResourceOwner{sub: sub}, scope) do
     case Accounts.get_user(sub) do
-      %User{
-        metadata: metadata,
-        backend: backend
-      } = user ->
-        metadata =
-          metadata
-          |> User.metadata_filter(backend)
-          |> metadata_scope_filter(scope, backend)
-          |> Enum.into(%{})
-
+      %User{} = user ->
         scope
         |> Scope.split()
         |> Enum.reduce(%{}, fn scope, acc -> merge_claims(scope, acc, user, sub) end)
         |> Map.put("scope", scope)
-        |> Map.merge(metadata)
 
       _ ->
         %{}
     end
   end
 
+  @spec metadata(user :: User.t(), scope :: String.t()) :: metadata :: map()
+  def metadata(%User{metadata: %{} = metadata}, _scope) when metadata == %{}, do: %{}
+
+  def metadata(user, scope) do
+    user.metadata
+    |> User.metadata_filter(user.backend)
+    |> metadata_scope_filter(scope, user.backend)
+    |> Enum.into(%{})
+  end
+
   defp merge_claims(
-         "email",
-         acc,
-         %User{
-           username: username,
-           confirmed_at: confirmed_at
-         },
-         _sub
-       ) do
+    "email",
+    acc,
+    %User{
+      username: username,
+      confirmed_at: confirmed_at
+    },
+    _sub
+  ) do
     Map.merge(acc, %{
       "email" => username,
       "email_verified" => !!confirmed_at
