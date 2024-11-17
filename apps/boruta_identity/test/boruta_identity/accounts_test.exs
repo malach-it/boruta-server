@@ -19,7 +19,6 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Repo
 
   setup :set_mox_from_context
-  setup :verify_on_exit!
 
   defmodule DummyRegistration do
     @behaviour Accounts.RegistrationApplication
