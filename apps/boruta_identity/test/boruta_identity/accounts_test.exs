@@ -446,7 +446,9 @@ defmodule BorutaIdentity.AccountsTest do
                  DummyRegistration
                )
 
-      assert user.metadata == %{"test" => %{"value" => "test value", "status" => "valid"}}
+      assert user.metadata == %{
+               "test" => %{"value" => "test value", "status" => "valid", "display" => []}
+             }
     end
 
     test "registers users with default organization", %{client_id: client_id, backend: backend} do
@@ -1620,10 +1622,19 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "updates user with metadata", %{client_id: client_id, user: user, backend: backend} do
+    test "updates user with metadata", %{client_id: client_id, backend: backend} do
+      user =
+        user_fixture(%{
+          backend: backend,
+          metadata: %{"other" => %{"value" => "other", "status" => "valid", "display" => []}}
+        })
+
       {:ok, _backend} =
         Ecto.Changeset.change(backend, %{
-          metadata_fields: [%{"attribute_name" => "test", "user_editable" => true}]
+          metadata_fields: [
+            %{"attribute_name" => "other", "user_editable" => false},
+            %{"attribute_name" => "test", "user_editable" => true}
+          ]
         })
         |> Repo.update()
 
@@ -1634,7 +1645,10 @@ defmodule BorutaIdentity.AccountsTest do
       assert {:user_updated, :context,
               %User{
                 username: ^updated_email,
-                metadata: %{"test" => %{"value" => "test value", "status" => "valid"}}
+                metadata: %{
+                  "test" => %{"value" => "test value", "status" => "valid", "display" => []},
+                  "other" => %{"value" => "other", "status" => "valid", "display" => []}
+                }
               }} =
                Accounts.update_user(
                  :context,

@@ -201,9 +201,10 @@ defmodule BorutaIdentity.Accounts.User do
       _ -> false
     end)
     |> Enum.map(fn
-      {_key, value} when is_map(value) -> value
+      {key, value} when is_map(value) -> {key, value}
       {key, value} ->
-      {key, %{"value" => value, "status" => "valid"}}
+      # TODO default display
+      {key, %{"value" => value, "status" => "valid", "display" => []}}
     end)
     |> Enum.into(%{})
   end

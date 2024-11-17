@@ -24,7 +24,8 @@ defmodule BorutaIdentity.AccountsFixtures do
       username: user.email,
       uid: user.id,
       backend: backend,
-      account_type: account_type
+      account_type: account_type,
+      metadata: attrs[:metadata] || %{}
     )
     |> Repo.preload([:backend, :authorized_scopes, :roles, :organizations])
   end
