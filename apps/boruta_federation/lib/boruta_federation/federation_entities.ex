@@ -57,7 +57,7 @@ defmodule BorutaFederation.FederationEntities do
           {:ok, client_federation_entity :: ClientFederationEntity.t() | nil}
           | {:error, changeset :: Ecto.Changeset.t()}
   def upsert_client_federation_entity(client_id, nil) do
-    with {1, _} <-
+    with {_, _} <-
            Repo.delete_all(from cfe in ClientFederationEntity, where: cfe.client_id == ^client_id) do
       {:ok, nil}
     end
