@@ -27,7 +27,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.Accounts.VerifiablePresentations
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
-  alias BorutaIdentity.ResourceOwners
+  alias BorutaWeb.ResourceOwners
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
 
