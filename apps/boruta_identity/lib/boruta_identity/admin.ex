@@ -183,10 +183,10 @@ defmodule BorutaIdentity.Admin do
 
           create_user(backend, create_params)
 
-        false ->
+        _ ->
           create_params = %{
             username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
-            password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
+            hashed_password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
           }
 
           create_raw_user(backend, create_params)

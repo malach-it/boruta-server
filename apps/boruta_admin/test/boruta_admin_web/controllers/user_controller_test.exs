@@ -367,7 +367,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
             filename: "users.csv"
           },
           "options" => %{
-            "hash_password" => "false"
+            "hash_password" => false
           }
         })
 
