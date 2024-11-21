@@ -2,6 +2,22 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [0.5.1] - 2024-11-21
+
+### Added
+
+- [admin] user csv import metadata
+- [infra] organization creation in static configuration
+- [admin] client key pair configuration + support for EC keys
+
+### Fixed
+
+- [ssi] several verifiable credentials issuance and presentation fixes
+- [auth] configurable status display in id_token claims
+- [admin] user with empty metadata save
+- [admin] federated users deletion
+
+
 ## [0.5.0] - 2024-10-17
 
 ### Added
