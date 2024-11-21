@@ -638,7 +638,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     current_user = current_user || %User{}
     anonymous_sub =  case conn.query_params["client_id"] do
       "did:" <> _key = did -> did
-      _ -> nil
+      client_id -> client_id
     end
     scope = case conn.query_params["scope"] do
       nil -> ""
