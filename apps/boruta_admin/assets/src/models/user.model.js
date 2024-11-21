@@ -124,10 +124,12 @@ class User {
     const metadata = {}
 
     for (const key in rawMetadata) {
-      metadata[key] = {
-        display: rawMetadata[key].displayStatus ? ['status'] : [],
-        value: rawMetadata[key].value,
-        status: rawMetadata[key].status
+      if (rawMetadata[key]?.value) {
+        metadata[key] = {
+          display: rawMetadata[key].displayStatus ? ['status'] : [],
+          value: rawMetadata[key].value,
+          status: rawMetadata[key].status
+        }
       }
     }
 
