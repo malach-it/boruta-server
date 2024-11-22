@@ -673,21 +673,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp resource_owner(conn, current_user) do
     current_user = current_user || %User{}
-
-    anonymous_sub =
-      case conn.query_params["client_id"] do
-        "did:" <> _key = did -> did
-        _ -> nil
-      end
-
-    scope =
-      case conn.query_params["scope"] do
-        nil -> ""
-        scope -> scope
-      end
+    scope = case conn.query_params["scope"] do
+      nil -> ""
+      scope -> scope
+    end
 
     %ResourceOwner{
-      sub: current_user.id || anonymous_sub,
+      sub: current_user.id,
       username: current_user.username,
       code_verifier: current_user.code_verifier,
       last_login_at: current_user.last_login_at,
