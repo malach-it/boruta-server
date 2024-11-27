@@ -307,7 +307,7 @@
             <a class="ui blue fluid button" @click="addVerifiableCredential()">Add a verifiable credential</a>
           </div>
           <h2>Verifiable presentations</h2>
-          <div v-for="presentation in backend.verifiable_presentations" class="ui presentation-field segment">
+          <div v-for="presentation in backend.verifiable_presentations" class="ui presentation-field segment" :index="presentation.presentation_identifier">
             <i class="ui large close icon" @click="deleteVerifiablePresentation(presentation)"></i>
             <h3>Verifiable presentation</h3>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_presentations }">

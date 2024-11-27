@@ -11,6 +11,7 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
   alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.Accounts.Wallet
   alias BorutaIdentity.IdentityProviders
   alias BorutaWeb.OauthView
@@ -111,11 +112,8 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   @impl Boruta.Openid.DirectPostApplication
   def direct_post_success(conn, callback_uri, token) do
-    user = Wallet.domain_user!(token.resource_owner, IdentityProviders.get_identity_provider_by_client_id(token.client.id).backend)
-    token = %{token|resource_owner: %ResourceOwner{sub: user.id}}
-    ecto_token = struct(Boruta.Ecto.Token, Map.from_struct(token))
-    Boruta.Ecto.TokenStore.invalidate(ecto_token)
-    {:ok, ecto_token} = Ecto.Changeset.change(ecto_token, %{sub: user.id}) |> BorutaAuth.Repo.update()
+    # user = Wallet.domain_user!(token.resource_owner, IdentityProviders.get_identity_provider_by_client_id(token.client.id).backend)
+    user = Users.get_user(token.resource_owner.sub)
     {:ok, _user, session_token} = Sessions.create_user_session(user)
 
     PresentationServer.authenticated(token.previous_code, "#{token.redirect_uri}#access_token=#{token.value}&id_token=#{IdToken.generate(%{token: token}, token.nonce).value}&expires_in=#{token.expires_at - :os.system_time(:second)}&state=#{token.state}" |> dbg, session_token)
