@@ -28,6 +28,7 @@ export default {
       this.$emit('codeUpdate', code)
     })
 
+    editor.updateCode(this.content)
     this.editor = editor
   },
   watch: {
