@@ -12,6 +12,7 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
   alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.Accounts.Users
   alias BorutaIdentity.Accounts.Wallet
   alias BorutaIdentity.IdentityProviders
   alias BorutaWeb.OauthView
@@ -120,6 +121,8 @@ defmodule BorutaWeb.Oauth.TokenController do
         state: response.state
       }
       |> URI.encode_query()
+    user = Users.get_user(response.token.resource_owner.sub)
+    {:ok, _user, session_token} = Sessions.create_user_session(user)
 
     callback_uri = URI.parse(response.redirect_uri)
 

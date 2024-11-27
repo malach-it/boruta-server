@@ -18,6 +18,11 @@ defmodule BorutaIdentity.Accounts.Wallet do
     {replace, impl_user_params} =
       case metadata do
         %{} = metadata ->
+          metadata = Enum.map(metadata, fn {key, value} ->
+            {key, %{"value" => value, "display" => [], "status" => "valid"}}
+          end)
+          |> Enum.into(%{})
+
           {[:username, :metadata, :group], Map.put(impl_user_params, :metadata, metadata)}
 
         _ ->

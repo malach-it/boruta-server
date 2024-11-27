@@ -68,6 +68,12 @@ export default {
   .main.menu {
     border-radius: 0;
   }
+  .item.email {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+  }
   @media screen and (max-width: 768px) {
     .item.email {
       display: none;
