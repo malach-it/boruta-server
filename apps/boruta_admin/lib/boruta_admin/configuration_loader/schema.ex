@@ -96,6 +96,19 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
     |> Schema.resolve()
   end
 
+  def organization do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "id" => %{"type" => "string"},
+        "name" => %{"type" => "string"},
+        "label" => %{"type" => "string"}
+      },
+      "required" => ["name"],
+      "additionalProperties" => false
+    }
+  end
+
   def backend do
     %{
       "type" => "object",

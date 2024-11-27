@@ -1,0 +1,7 @@
+---
+version: "1.0"
+configuration:
+  organization:
+    - name: ""
+      label: bad organization
+      additional: true

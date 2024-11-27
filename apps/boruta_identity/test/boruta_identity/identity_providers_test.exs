@@ -14,7 +14,6 @@ defmodule BorutaIdentity.IdentityProvidersTest do
   alias BorutaIdentity.Repo
 
   setup :set_mox_global
-  setup :verify_on_exit!
 
   describe "identity_providers" do
     setup do

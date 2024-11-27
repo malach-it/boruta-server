@@ -10,6 +10,7 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.IdentityProviders.Template
+  alias BorutaIdentity.Organizations.Organization
 
   test "returns an error with a bad configuration file" do
     assert BorutaGateway.Repo.all(Upstream) |> Enum.empty?()
@@ -50,6 +51,20 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
                 microgateway: [
                   "Required properties scheme, host, port, uris are missing at #."
                 ]
+              }}
+  end
+
+  test "returns an error with a bad organization configuration file" do
+    assert BorutaIdentity.Repo.all(Backend) |> Enum.count() == 1
+
+    configuration_file_path =
+      :code.priv_dir(:boruta_admin)
+      |> Path.join("/test/configuration_files/bad_organization_configuration.yml")
+
+    assert ConfigurationLoader.from_file!(configuration_file_path) ==
+             {:ok,
+              %{
+                organization: ["Schema does not allow additional properties: #/additional."]
               }}
   end
 
@@ -206,6 +221,8 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
     assert %Scope{name: "test"} = BorutaAuth.Repo.all(Scope) |> List.last()
 
     assert %Role{name: "test"} = BorutaIdentity.Repo.all(Role) |> List.last()
+
+    assert %Organization{name: "test"} = BorutaIdentity.Repo.all(Organization) |> List.last()
 
     assert %ErrorTemplate{type: "500", content: "test"} =
              BorutaIdentity.Repo.all(ErrorTemplate) |> List.last()
