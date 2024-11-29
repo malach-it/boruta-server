@@ -46,7 +46,7 @@ defmodule BorutaIdentity.Accounts.User do
   @metadata_schema %{
     "type" => "object",
     "properties" => %{
-      "value" => %{"type" => "string"},
+      "value" => %{},
       "status" => %{"type" => "string"},
       "display" => %{"type" => "array", "items" => %{"type" => "string"}}
     },
