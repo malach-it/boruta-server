@@ -543,13 +543,21 @@ defmodule BorutaIdentity.AccountsTest do
           identity_provider: insert(:identity_provider, confirmable: true)
         )
 
+      no_password_client_identity_provider =
+        BorutaIdentity.Factory.insert(
+          :client_identity_provider,
+          identity_provider: insert(:identity_provider, check_password: false)
+        )
+
       client_identity_provider = BorutaIdentity.Factory.insert(:client_identity_provider)
 
       {:ok,
        backend: client_identity_provider.identity_provider.backend,
        client_id: client_identity_provider.client_id,
        confirmable_backend: confirmable_client_identity_provider.identity_provider.backend,
-       confirmable_client_id: confirmable_client_identity_provider.client_id}
+       confirmable_client_id: confirmable_client_identity_provider.client_id,
+       no_password_backend: no_password_client_identity_provider.identity_provider.backend,
+       no_password_client_id: no_password_client_identity_provider.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -705,6 +713,29 @@ defmodule BorutaIdentity.AccountsTest do
                 username: ^username,
                 backend: ^backend,
                 uid: ^uid,
+                last_login_at: last_login_at
+              },
+              session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert last_login_at
+      assert session_token
+    end
+
+    test "authenticates the user with no password", %{no_password_client_id: client_id, no_password_backend: backend} do
+      context = :context
+      username = "no_password@test.test"
+      authentication_params = %{email: username}
+
+      assert {:user_authenticated, ^context,
+              %User{
+                username: ^username,
+                backend: ^backend,
                 last_login_at: last_login_at
               },
               session_token} =

@@ -79,6 +79,14 @@ defmodule BorutaIdentity.Accounts.Sessions do
             ) ::
               {:ok, user :: User.t()} | {:error, reason :: String.t()}
 
+  # NOTE duplicate of BorutaIdentity.Accounts.Registrations
+  # @callback register(
+  #             backend :: BorutaIdentity.IdentityProviders.Backend.t(),
+  #             registration_params :: registration_params()
+  #           ) ::
+  #             {:ok, user :: User.t()}
+  #             | {:error, changeset :: Ecto.Changeset.t()}
+
   @spec initialize_session(
           context :: any(),
           client_id :: String.t(),
@@ -95,17 +103,8 @@ defmodule BorutaIdentity.Accounts.Sessions do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientidp create_session(context, client_id, authentication_params, module) do
-    client_impl = IdentityProvider.implementation(client_idp)
-
-    with {:ok, user} <-
-      apply(client_impl, :get_user, [client_idp.backend, authentication_params]),
-         {:ok, user} <-
-           apply(client_impl, :check_user_against, [
-             client_idp.backend,
-             user,
-             authentication_params
-           ]),
-         %User{} = user <- apply(client_impl, :domain_user!, [user, client_idp.backend]),
+    with {:ok, user} <- get_user(authentication_params, client_idp),
+         {:ok, user} <- maybe_check_password(user, authentication_params, client_idp),
          :ok <- ensure_user_confirmed(user, client_idp),
          {:ok, user, session_token} <- create_user_session(user) do
       module.user_authenticated(context, user, session_token)
@@ -121,6 +120,36 @@ defmodule BorutaIdentity.Accounts.Sessions do
           template: new_confirmation_instructions_template(client_idp),
           message: reason
         })
+    end
+  end
+
+  def get_user(%{email: email}, %IdentityProvider{check_password: false} = client_idp) do
+    client_impl = IdentityProvider.implementation(client_idp)
+
+    apply(client_impl, :register, [client_idp.backend, %{
+      email: email,
+      password: SecureRandom.hex(),
+      metadata: %{"check_password" => %{"value" => false, "display" => [], "status" => "valid"}}
+    }])
+  end
+
+  def get_user(authentication_params, %IdentityProvider{check_password: true} = client_idp) do
+    client_impl = IdentityProvider.implementation(client_idp)
+
+    apply(client_impl, :get_user, [client_idp.backend, authentication_params])
+  end
+
+  def maybe_check_password(user, _authentication_params, %IdentityProvider{check_password: false}), do: {:ok, user}
+
+  def maybe_check_password(user, authentication_params, %IdentityProvider{backend: backend, check_password: true} = client_idp) do
+    client_impl = IdentityProvider.implementation(client_idp)
+
+    with {:ok, user} <- apply(client_impl, :check_user_against, [
+      backend,
+      user,
+      authentication_params
+    ]) do
+      {:ok, apply(client_impl, :domain_user!, [user, client_idp.backend])}
     end
   end
 

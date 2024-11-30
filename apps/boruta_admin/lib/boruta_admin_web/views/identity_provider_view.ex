@@ -21,6 +21,7 @@ defmodule BorutaAdminWeb.IdentityProviderView do
       name: identity_provider.name,
       backend: render_one(identity_provider.backend, BackendView, "backend.json", backend: identity_provider.backend),
       backend_id: identity_provider.backend_id,
+      check_password: identity_provider.check_password,
       choose_session: identity_provider.choose_session,
       totpable: identity_provider.totpable,
       enforce_totp: identity_provider.enforce_totp,
