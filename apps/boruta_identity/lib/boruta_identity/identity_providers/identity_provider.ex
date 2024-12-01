@@ -96,6 +96,10 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     consentable: [
       # BorutaIdentity.Accounts.Consents
       :consent
+    ],
+    destroyable: [
+      # BorutaIdentity.Accounts.Settings
+      :destroy_user
     ]
   }
 
@@ -113,6 +117,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     field(:confirmable, :boolean, default: false)
     field(:consentable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
+    field(:destroyable, :boolean, default: true, virtual: true)
     field(:check_password, :boolean, default: true)
     field(:reset_password, :boolean, default: true, virtual: true)
 

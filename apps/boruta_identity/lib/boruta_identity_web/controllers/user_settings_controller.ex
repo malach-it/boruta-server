@@ -5,7 +5,9 @@ defmodule BorutaIdentityWeb.UserSettingsController do
 
   import BorutaIdentityWeb.Authenticable,
     only: [
-      client_id_from_request: 1
+      client_id_from_request: 1,
+      remove_user_session: 1,
+      after_sign_out_path: 1
     ]
 
   alias BorutaIdentity.Accounts
@@ -17,14 +19,6 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     current_user = conn.assigns[:current_user]
 
     Accounts.initialize_edit_user(conn, client_id, current_user, __MODULE__)
-  end
-
-  @impl BorutaIdentity.Accounts.SettingsApplication
-  def edit_user_initialized(conn, user, template) do
-    conn
-    |> put_layout(false)
-    |> put_view(TemplateView)
-    |> render("template.html", template: template, assigns: %{current_user: user})
   end
 
   def update(%Plug.Conn{query_params: query_params} = conn, %{"user" => user_params}) do
@@ -45,6 +39,21 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       &Routes.user_confirmation_url(conn, :confirm, &1, %{request: request}),
       __MODULE__
     )
+  end
+
+  def destroy(conn, _params) do
+    client_id = client_id_from_request(conn)
+    current_user = conn.assigns[:current_user]
+
+    Accounts.destroy_user(conn, client_id, current_user, __MODULE__)
+  end
+
+  @impl BorutaIdentity.Accounts.SettingsApplication
+  def edit_user_initialized(conn, user, template) do
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> render("template.html", template: template, assigns: %{current_user: user})
   end
 
   @impl BorutaIdentity.Accounts.SettingsApplication
@@ -118,6 +127,59 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        errors: [message]
+      }
+    )
+  end
+
+  @impl BorutaIdentity.Accounts.SettingsApplication
+  def user_destroyed(conn, user) do
+    client_id = client_id_from_request(conn)
+
+    :telemetry.execute(
+      [:registration, :destroy, :success],
+      %{},
+      %{
+        client_id: client_id,
+        uid: user.uid,
+        id: user.id,
+        backend: user.backend
+      }
+    )
+
+    conn
+    |> remove_user_session()
+    |> put_flash(:info, "User data destroyed.")
+    |> redirect(to: after_sign_out_path(conn))
+  end
+
+  @impl BorutaIdentity.Accounts.SettingsApplication
+  def user_destroy_failure(%Plug.Conn{} = conn, %SettingsError{
+        message: message,
+        template: template
+      }) do
+    client_id = client_id_from_request(conn)
+    user = conn.assigns[:current_user]
+
+    :telemetry.execute(
+      [:registration, :destroy, :failure],
+      %{},
+      %{
+        client_id: client_id,
+        uid: user.uid,
+        id: user.id,
+        backend: user.backend,
+        error: message
+      }
+    )
+
+    conn
+    |> put_layout(false)
+    |> put_view(TemplateView)
+    |> put_status(:unprocessable_entity)
     |> render("template.html",
       template: template,
       assigns: %{

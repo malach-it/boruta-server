@@ -25,7 +25,8 @@ defmodule BorutaIdentity.Accounts.Internal do
     :user_editable,
     :confirmable,
     :reset_password,
-    :consentable
+    :consentable,
+    :destroyable
   ]
 
   def features, do: @features
@@ -137,6 +138,14 @@ defmodule BorutaIdentity.Accounts.Internal do
     end)
   end
 
+  @impl BorutaIdentity.Accounts.Settings
+  def delete_user(uid) do
+    case Repo.delete_all(from(u in Internal.User, where: u.id == ^uid)) do
+      {1, nil} -> :ok
+      _ -> {:error, "User could not be deleted."}
+    end
+  end
+
   @impl BorutaIdentity.Admin
   def create_user(backend, params) do
     Repo.transaction(fn repo ->
@@ -175,14 +184,6 @@ defmodule BorutaIdentity.Accounts.Internal do
            )
            |> Repo.insert() do
       {:ok, domain_user!(user, backend)}
-    end
-  end
-
-  @impl BorutaIdentity.Admin
-  def delete_user(uid) do
-    case Repo.delete_all(from(u in Internal.User, where: u.id == ^uid)) do
-      {1, nil} -> :ok
-      _ -> {:error, "User could not be deleted."}
     end
   end
 

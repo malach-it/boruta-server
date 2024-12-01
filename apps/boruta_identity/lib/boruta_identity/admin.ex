@@ -30,7 +30,9 @@ defmodule BorutaIdentity.Admin do
           hashed_password: String.t()
         }
 
-  @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: String.t()}
+  # NOTE emits a compilation warning since callback is already defined in BorutaIdentity.Accounts.Settings
+  # @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: String.t()}
+
   @callback create_user(
               backend :: Backend.t(),
               params :: user_params()

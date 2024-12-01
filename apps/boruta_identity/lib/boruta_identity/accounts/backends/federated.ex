@@ -7,7 +7,14 @@ defmodule BorutaIdentity.Accounts.Federated do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
 
+  @features [
+    :destroyable
+  ]
+
+  def features, do: @features
+
   @account_type "federated"
+
   def account_type, do: @account_type
 
   @impl BorutaIdentity.FederatedAccounts

@@ -101,6 +101,16 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     @impl Accounts.SettingsApplication
+    def user_destroy_failure(context, error) do
+      {:user_destroy_failure, context, error}
+    end
+
+    @impl Accounts.SettingsApplication
+    def user_destroyed(context, user) do
+      {:user_destroyed, context, user}
+    end
+
+    @impl Accounts.SettingsApplication
     def user_update_failure(context, error) do
       {:user_update_failure, context, error}
     end
@@ -727,7 +737,10 @@ defmodule BorutaIdentity.AccountsTest do
       assert session_token
     end
 
-    test "authenticates the user with no password", %{no_password_client_id: client_id, no_password_backend: backend} do
+    test "authenticates the user with no password", %{
+      no_password_client_id: client_id,
+      no_password_backend: backend
+    } do
       context = :context
       username = "no_password@test.test"
       authentication_params = %{email: username}
@@ -2085,4 +2098,48 @@ defmodule BorutaIdentity.AccountsTest do
 
   @tag :skip
   test "consent/5"
+
+  describe "destroy_user/4" do
+    setup do
+      backend = insert(:backend)
+
+      identity_provider =
+        build(
+          :identity_provider,
+          user_editable: true,
+          backend: backend
+        )
+
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider: identity_provider
+        )
+
+      user = user_fixture(%{backend: backend})
+
+      {:ok, client_id: client_identity_provider.client_id, user: user, backend: backend}
+    end
+
+    test "returns an error", %{client_id: client_id} do
+      assert {:user_destroy_failure, :context,
+                %SettingsError{
+                  message: "User could not be deleted, please contact an administrator."
+                }} = Accounts.destroy_user(
+               :context,
+               client_id,
+               %User{uid: SecureRandom.uuid()},
+               DummySettings
+             )
+    end
+
+    test "destroys user", %{client_id: client_id, user: user} do
+      assert {:user_destroyed, :context, %User{}} =
+               Accounts.destroy_user(
+                 :context,
+                 client_id,
+                 user,
+                 DummySettings
+               )
+    end
+  end
 end

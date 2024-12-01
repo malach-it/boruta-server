@@ -35,6 +35,16 @@ defmodule BorutaIdentity.Accounts.SettingsApplication do
               context :: any(),
               error :: BorutaIdentity.Accounts.SettingsError.t()
             ) :: any()
+
+  @callback user_destroyed(
+              context :: any(),
+              user :: BorutaIdentity.Accounts.User.t()
+            ) :: any()
+
+  @callback user_destroy_failure(
+              context :: any(),
+              error :: BorutaIdentity.Accounts.SettingsError.t()
+            ) :: any()
 end
 
 defmodule BorutaIdentity.Accounts.Settings do
@@ -75,6 +85,8 @@ defmodule BorutaIdentity.Accounts.Settings do
   #             identity_provider :: IdentityProvider.t()
   #           ) ::
   #             {:ok, user :: User.t()} | {:error, reason :: String.t()}
+
+  @callback delete_user(id :: String.t()) :: :ok | {:error, reason :: String.t()}
 
   @spec initialize_edit_user(
           context :: any(),
@@ -152,6 +164,28 @@ defmodule BorutaIdentity.Accounts.Settings do
         module.user_update_failure(context, %SettingsError{
           template: edit_user_template(client_idp),
           message: reason
+        })
+    end
+  end
+
+  @spec destroy_user(
+          context :: any(),
+          client_id :: String.t(),
+          user :: User.t(),
+          module :: atom()
+        ) ::
+          callback_result :: any() | {:error, reason :: String.t()} | {:error, Ecto.Changeset.t()}
+  defwithclientidp destroy_user(context, client_id, user, module) do
+    client_impl = IdentityProvider.implementation(client_idp)
+
+    with :ok <- apply(client_impl, :delete_user, [user.uid]),
+         {:ok, user} <- Repo.delete(user) do
+      module.user_destroyed(context, user)
+    else
+      {:error, _error} ->
+        module.user_destroy_failure(context, %SettingsError{
+          template: edit_user_template(client_idp),
+          message: "User could not be deleted, please contact an administrator.",
         })
     end
   end
