@@ -35,10 +35,6 @@ defmodule BorutaWeb.ErrorHelpers do
     # Note we use the "errors" domain, which means translations
     # should be written to the errors.po file. The :count option is
     # set by Ecto and indicates we should also apply plural rules.
-    if count = opts[:count] do
-      Gettext.dngettext(BorutaWeb.Gettext, "errors", msg, msg, count, opts)
-    else
-      Gettext.dgettext(BorutaWeb.Gettext, "errors", msg, opts)
-    end
+    msg
   end
 end

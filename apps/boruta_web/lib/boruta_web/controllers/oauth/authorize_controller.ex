@@ -10,7 +10,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   use BorutaWeb, :controller
 
   import BorutaIdentityWeb.Authenticable,
-    only: [request_param: 1, get_user_session: 1]
+    only: [request_param: 1, get_user_session: 1, store_user_session: 2]
 
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizationSuccess
@@ -26,9 +26,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.Accounts.VerifiablePresentations
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
-  alias BorutaIdentity.ResourceOwners
+  alias BorutaWeb.ResourceOwners
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
+  alias BorutaWeb.PresentationServer
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -67,6 +68,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     case conn.query_params["client_id"] do
       "did:" <> _key ->
         {:preauthorized, conn}
+
       _ ->
         {:unchanged, conn}
     end
@@ -76,6 +78,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     case conn.query_params["client_metadata"] do
       "" <> _key ->
         {:preauthorized, conn}
+
       _ ->
         {:unchanged, conn}
     end
@@ -308,11 +311,17 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, %AuthorizationSuccess{sub: "did:" <> _key = sub}) do
+    current_user = conn.assigns[:current_user]
+
     Oauth.authorize(
       conn,
       %ResourceOwner{
-        sub: sub,
-        presentation_configuration: VerifiablePresentations.public_presentation_configuration()
+        sub: current_user.id || conn.query_params["client_id"],
+        username: current_user.username,
+        last_login_at: current_user.last_login_at,
+        authorization_details: VerifiableCredentials.authorization_details(current_user),
+        presentation_configuration:
+          VerifiablePresentations.presentation_configuration(current_user)
       },
       __MODULE__
     )
@@ -405,21 +414,44 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %SiopV2Response{response_mode: "post"} = response
       ) do
     {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
-    template = IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+
+    template =
+      IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
 
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
-      assigns: %{presentation_deeplink: SiopV2Response.redirect_to_deeplink(response, fn code ->
-          uri = URI.parse(Boruta.Config.issuer())
+      assigns: %{
+        presentation_deeplink:
+          SiopV2Response.redirect_to_deeplink(response, fn code ->
+            uri = URI.parse(Boruta.Config.issuer())
 
-          %{uri | path: Routes.token_path(conn, :direct_post, code)}
-          |> URI.to_string()
-        end)
+            %{uri | path: Routes.token_path(conn, :direct_post, code)}
+            |> URI.to_string()
+          end),
+        code: response.code.value
       }
     )
+  end
+
+  def authenticated?(conn, %{"code" => code}) do
+    PresentationServer.start_presentation(code)
+
+    receive do
+      {:authenticated, redirect_uri, session_token} ->
+        conn =
+          conn
+          |> fetch_session()
+          |> store_user_session(session_token)
+          |> put_resp_header("content-type", "text/event-stream")
+          |> send_chunked(200)
+
+        chunk(conn, "event: message\ndata: #{redirect_uri}\n\n")
+    end
+
+    conn
   end
 
   def authorize_success(
@@ -436,7 +468,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
           %{uri | path: Routes.token_path(conn, :direct_post, code)}
           |> URI.to_string()
-        end))
+        end)
+    )
   end
 
   def authorize_success(
@@ -453,7 +486,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
           %{uri | path: Routes.token_path(conn, :direct_post, code)}
           |> URI.to_string()
-        end))
+        end)
+    )
   end
 
   def authorize_success(
@@ -461,19 +495,24 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %VerifiablePresentationResponse{response_mode: "post"} = response
       ) do
     {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
-    template = IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+
+    template =
+      IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
 
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
       template: template,
-      assigns: %{presentation_deeplink: VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
-          uri = URI.parse(Boruta.Config.issuer())
+      assigns: %{
+        presentation_deeplink:
+          VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
+            uri = URI.parse(Boruta.Config.issuer())
 
-          %{uri | path: Routes.token_path(conn, :direct_post, code)}
-          |> URI.to_string()
-        end)
+            %{uri | path: Routes.token_path(conn, :direct_post, code)}
+            |> URI.to_string()
+          end),
+        code: response.code.value
       }
     )
   end
@@ -597,17 +636,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp resource_owner(conn, current_user) do
     current_user = current_user || %User{}
-    anonymous_sub =  case conn.query_params["client_id"] do
-      "did:" <> _key = did -> did
-      _ -> nil
-    end
     scope = case conn.query_params["scope"] do
       nil -> ""
       scope -> scope
     end
 
     %ResourceOwner{
-      sub: current_user.id || anonymous_sub,
+      sub: current_user.id,
       username: current_user.username,
       last_login_at: current_user.last_login_at,
       extra_claims: Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata),

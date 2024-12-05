@@ -24,7 +24,7 @@ defmodule BorutaWeb.Router do
   end
 
   pipeline :api do
-    plug(:accepts, ["json", "jwt"])
+    plug(:accepts, ["json", "jwt", "event-stream"])
   end
 
   scope "/", BorutaWeb do
@@ -34,9 +34,17 @@ defmodule BorutaWeb.Router do
     get("/.well-known/openid-credential-issuer", OpenidController, :openid_credential_issuer)
   end
 
+  scope "/", BorutaFederationWeb do
+    pipe_through(:api)
+
+    get("/.well-known/openid-federation", OpenidController, :well_known)
+  end
+
   get("/healthcheck", BorutaWeb.MonitoringController, :healthcheck, log: false)
 
   forward("/accounts", BorutaIdentityWeb.Endpoint)
+
+  forward("/federation", BorutaFederationWeb.Endpoint)
 
   scope "/openid", BorutaWeb do
     pipe_through(:api)
@@ -83,6 +91,8 @@ defmodule BorutaWeb.Router do
     pipe_through([:api])
 
     post("/direct_post/:code_id", TokenController, :direct_post)
+    options("/presentation_sse", AuthorizeController, :options)
+    get("/presentation_sse", AuthorizeController, :authenticated?)
   end
 
   @impl Plug.ErrorHandler

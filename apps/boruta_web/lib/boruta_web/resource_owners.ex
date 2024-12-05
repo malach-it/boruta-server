@@ -1,4 +1,4 @@
-defmodule BorutaIdentity.ResourceOwners do
+defmodule BorutaWeb.ResourceOwners do
   @moduledoc false
 
   @behaviour Boruta.Oauth.ResourceOwners
@@ -7,6 +7,8 @@ defmodule BorutaIdentity.ResourceOwners do
 
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Scope
+  alias BorutaFederation.FederationEntities
+  alias BorutaFederation.TrustChains
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.User
@@ -83,7 +85,7 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do
     Accounts.get_user_scopes(sub) ++
-      Enum.flat_map(Accounts.get_user_roles(sub), fn %{scopes: scopes} -> scopes end)
+      Enum.flat_map(Accounts.get_user_roles(sub), fn %{scopes: scopes} -> scopes end) |> dbg
   end
 
   def authorized_scopes(_), do: []
@@ -102,14 +104,24 @@ defmodule BorutaIdentity.ResourceOwners do
     end
   end
 
+  @impl Boruta.Oauth.ResourceOwners
+  def from_holder(%{presentation_claims: presentation_claims, sub: sub, scope: scope}) do
+    get_by(sub: presentation_claims["boruta_uid"], scope: scope)
+  end
+
   @spec metadata(user :: User.t(), scope :: String.t()) :: metadata :: map()
-  def metadata(%User{metadata: %{} = metadata}, _scope) when metadata == %{}, do: %{}
+  def metadata(%User{metadata: %{} = metadata} = user, _scope) when metadata == %{}, do: %{
+    "boruta_uid" => user.id,
+    "boruta_username" => user.username
+  }
 
   def metadata(user, scope) do
     user.metadata
     |> User.metadata_filter(user.backend)
     |> metadata_scope_filter(scope, user.backend)
     |> Enum.into(%{})
+    |> Map.put("boruta_uid", user.id)
+    |> Map.put("boruta_username", user.username)
   end
 
   defp merge_claims(
@@ -165,5 +177,15 @@ defmodule BorutaIdentity.ResourceOwners do
       end)
     end)
     |> Enum.into(%{})
+  end
+
+  @impl Boruta.Oauth.ResourceOwners
+  def trust_chain(client) do
+    case FederationEntities.get_federation_entity_by_client_id(client.id) do
+      nil ->
+        {:ok, []}
+      entity ->
+        TrustChains.generate_trust_chain(entity)
+    end
   end
 end

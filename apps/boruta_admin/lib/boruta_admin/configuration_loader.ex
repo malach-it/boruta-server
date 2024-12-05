@@ -2,9 +2,9 @@ defmodule BorutaAdmin.ConfigurationLoader do
   @moduledoc false
 
   alias Boruta.Ecto.Admin
+  alias BorutaAdmin.Clients
   alias BorutaAdmin.ConfigurationLoader.Schema
   alias BorutaGateway.Upstreams
-  alias BorutaIdentity.Clients
   alias BorutaIdentity.Configuration
   alias BorutaIdentity.Configuration.ErrorTemplate
   alias BorutaIdentity.IdentityProviders

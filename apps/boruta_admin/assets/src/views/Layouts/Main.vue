@@ -57,6 +57,11 @@
                     <span>Key pair list</span>
                   </router-link>
                 </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'federation-entity-list' }">
+                    <span>Federation entities</span>
+                  </router-link>
+                </div>
               </div>
             </div>
           </router-link>
