@@ -13,6 +13,7 @@ defmodule BorutaGateway.Application do
   def start(_type, _args) do
     children = [
       BorutaGateway.Repo,
+      {Finch, name: OauthHttpClient},
       %{
         id: Upstreams.Store,
         start: {Upstreams.Store, :start_link, []}
@@ -21,6 +22,7 @@ defmodule BorutaGateway.Application do
     ]
 
     Logger.start()
+    :ets.new(:session, [:named_table, :public, read_concurrency: true])
 
     children =
       case Application.get_env(:boruta_gateway, :server) do
