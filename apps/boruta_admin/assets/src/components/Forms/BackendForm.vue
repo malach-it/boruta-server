@@ -343,6 +343,10 @@
               <label>Attribute name</label>
               <input type="text" v-model="field.attribute_name" placeholder="family_name">
             </div>
+            <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
+              <label>Default value</label>
+              <input type="text" v-model="field.default_value" placeholder="Polya">
+            </div>
           </div>
           <div class="field">
             <a class="ui blue fluid button" @click="addMetadataField()">Add a metadata field</a>
