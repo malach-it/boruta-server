@@ -18,7 +18,8 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
 
   @template_types [
     :confirmation_instructions,
-    :reset_password_instructions
+    :reset_password_instructions,
+    :tx_code
   ]
 
   @type template_type :: :confirmation_instructions | :reset_password_instructions
@@ -39,6 +40,14 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
     html_reset_password_instructions:
       :code.priv_dir(:boruta_identity)
       |> Path.join("templates/emails/reset_password_instructions.html.mustache")
+      |> File.read!(),
+    txt_tx_code:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/emails/tx_code.txt.mustache")
+      |> File.read!(),
+    html_tx_code:
+      :code.priv_dir(:boruta_identity)
+      |> Path.join("templates/emails/tx_code.html.mustache")
       |> File.read!()
   }
 

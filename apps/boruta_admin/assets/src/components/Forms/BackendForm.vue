@@ -147,6 +147,11 @@
               :to="{ name: 'edit-reset-password-instructions-email-template', params: { backendId: backend.id } }"
               class="ui fluid blue button">Edit reset password template</router-link>
           </div>
+          <div v-if="backend.isPersisted" class="ui segment">
+            <router-link
+              :to="{ name: 'edit-tx-code-email-template', params: { backendId: backend.id } }"
+              class="ui fluid blue button">Edit transaction code template</router-link>
+          </div>
         </div>
         <div ref="identity-federation" data-tab="identity-federation" class="ui bottom attached tab segment">
           <h2>Identity federation (login with)</h2>

@@ -21,3 +21,5 @@ apps/*/priv/ssl/**
 apps/*/log/**
 
 .vscode
+
+/ansible/group_vars

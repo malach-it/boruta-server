@@ -64,6 +64,7 @@ const assign = {
   },
   authorize_scope: function ({ authorize_scope }) { this.authorize_scope = authorize_scope },
   enforce_dpop: function ({ enforce_dpop }) { this.enforce_dpop = enforce_dpop },
+  enforce_tx_code: function ({ enforce_tx_code }) { this.enforce_tx_code = enforce_tx_code },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
       return { model: new Scope(scope) }
@@ -205,6 +206,7 @@ class Client {
       authorization_request_ttl,
       authorize_scope,
       enforce_dpop,
+      enforce_tx_code,
       authorized_scopes,
       confidential,
       grantTypes,
@@ -234,6 +236,7 @@ class Client {
       authorization_request_ttl,
       authorize_scope,
       enforce_dpop,
+      enforce_tx_code,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
       confidential,
       id,

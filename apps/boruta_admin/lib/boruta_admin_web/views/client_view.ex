@@ -27,6 +27,7 @@ defmodule BorutaAdminWeb.ClientView do
       public_revoke: client.public_revoke,
       authorize_scope: client.authorize_scope,
       enforce_dpop: client.enforce_dpop,
+      enforce_tx_code: client.enforce_tx_code,
       access_token_ttl: client.access_token_ttl,
       authorization_code_ttl: client.authorization_code_ttl,
       authorization_request_ttl: client.authorization_request_ttl,

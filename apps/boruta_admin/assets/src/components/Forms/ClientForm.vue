@@ -176,6 +176,12 @@
         </div>
         <div class="field">
           <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="client.enforce_tx_code">
+            <label>Enforce pre-authorized code transaction code</label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="ui toggle checkbox">
             <input type="checkbox" v-model="client.authorize_scope">
             <label>Authorize scopes</label>
           </div>
