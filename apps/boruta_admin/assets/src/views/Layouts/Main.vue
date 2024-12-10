@@ -147,6 +147,7 @@
       <a @click="toggleDarkMode()" class="dark-mode">
         <i class="sun icon" :class="{ 'outline': currentMode }"></i>
       </a>
+      <Feedback />
       &copy; 2024 malachit
     </footer>
   </div>
@@ -154,12 +155,14 @@
 
 <script>
 import Header from '../../components/Header.vue'
+import Feedback from '../../components/Feedback.vue'
 import Breadcrumb from '../../components/Breadcrumb.vue'
 
 export default {
   name: 'Main',
   components: {
     Header,
+    Feedback,
     Breadcrumb
   },
   data () {
@@ -236,6 +239,7 @@ export default {
     cursor: default;
   }
   footer {
+    position: relative;
     z-index: 200;
     text-align: right;
     padding: 1rem;
