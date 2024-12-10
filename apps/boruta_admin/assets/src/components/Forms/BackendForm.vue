@@ -242,6 +242,10 @@
               <input type="text" v-model="credential.credential_identifier" placeholder="BorutaCredential">
             </div>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>Verifiable credential type</label>
+              <input type="text" v-model="credential.vct" placeholder="urn:boruta:verifiable-credential-type">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
               <label>Version</label>
               <select v-model="credential.version">
                 <option value="11">11</option>
@@ -444,7 +448,7 @@ export default {
       )
     },
     addVerifiableCredential () {
-      this.backend.verifiable_credentials.push({display: {logo: {}}, claims: []})
+      this.backend.verifiable_credentials.push({defered: false, display: {logo: {}}, claims: []})
     },
     addVerifiablePresentation () {
       this.backend.verifiable_presentations.push({})

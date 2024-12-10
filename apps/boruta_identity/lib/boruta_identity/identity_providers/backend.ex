@@ -180,6 +180,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   "properties" => %{
                                     "version" => %{"type" => "string"},
                                     "credential_identifier" => %{"type" => "string"},
+                                    "vct" => %{"type" => "string"},
                                     "time_to_live" => %{"type" => "number"},
                                     "types" => %{"type" => "string"},
                                     "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
