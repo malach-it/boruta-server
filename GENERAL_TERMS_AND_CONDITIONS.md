@@ -89,7 +89,7 @@ Users agree to indemnify and hold harmless Malachit, its affiliates, and contrib
 ---
 
 #### **12. Termination**
-Malachit reserves the right to terminate or modify the beta program at any time. Access to the beta may be discontinued without notice. Upon termination, users must discontinue use of Boruta.
+Malachit reserves the right to terminate or modify the beta program at any time. Upon termination, Boruta will remain accessible as software under the Apache 2.0 license.
 
 ---
 

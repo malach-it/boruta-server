@@ -1,14 +1,10 @@
 ![logo-yellow](images/logo-yellow.png)
 
-Boruta is a standalone authorization server implementing OAuth 2.0 and Openid Connect specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also a gateway to apply access rules to incoming traffic.
+boruta is a standalone authorization server aims to implement OAuth 2.0 and Openid Connect up to decentralized identity specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also an experimental gateway to apply access rules to incoming traffic.
 
 ## Status
 
-This server is on an ongoing beta stage. Developments are moving fast on master then are keen to be less stable. Tagged versions are said to be more stable and sanity tested.
-
-## Documentation
-
-The documentation of boruta server is available [here](https://boruta-developers.malach.it/docs/intro) it provides insights about its usage.
+boruta is currently in an __open beta phase__, allowing users to explore its features, provide feedback, and contribute to its development. While the software is stable for general testing, it may not yet fully meet all production use case requirements, and updates may include breaking changes. Users are encouraged to report issues and suggest improvements and to exercise caution when deploying the software, please read the [General Terms and Conditions](GENERAL_TERMS_AND_CONDITIONS.md).
 
 ## Implemented specifications and certification
 
@@ -29,7 +25,7 @@ And the specifications from the OpenID Foundation:
 - [Self-Issued OpenID Provider v2](https://openid.net/specs/openid-connect-self-issued-v2-1_0.html)
 - [OpenID for Verifiable Presentations - draft 21](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html)
 
-This server has been certified for the Basic, Implicit, and Hybrid OpenID Provider profiles by the OpenID Foundation on October, 18th 2022 for the tagged version 0.1.0
+This server has been certified for the Basic, Implicit, and Hybrid OpenID Provider profiles by the OpenID Foundation on October, 18th 2022 for the tagged versions 0.1.0 and 0.5.0
 
 This server has been certified for the Config and Dynamic OpenID Provider profiles by the OpenID Foundation on May, 16th 2023 for the tagged version 0.2.0
 
