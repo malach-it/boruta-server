@@ -234,6 +234,10 @@ This product community follows the code of conduct available [here](https://io.m
 
 This code is released under the [Apache 2.0](LICENSE.md) license.
 
+## General Terms and Conditions
+
+By using Boruta, you agree to the [General Terms and Conditions](GENERAL_TERMS_AND_CONDITIONS.md), which complement the software's Apache 2.0 License.
+
 ## About boruta
 
 The name boruta comes from a polish legend where he is a gentle devil (an angel, maybe) that is such evil that having him at home makes you safe. He was living during the middle ages in the castle of the little town of Leczyca, since then the people from there have a little figurine of him at home helping the house to be protected from bad fate.
