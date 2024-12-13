@@ -513,8 +513,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
             |> put_view(TemplateView)
             |> render("template.html", template: template, assigns: %{credential_offer: response})
 
-          {:error, error} ->
-            dbg(error)
+          {:error, _error} ->
             {:error, :bad_request}
         end
 
