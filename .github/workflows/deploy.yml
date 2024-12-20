@@ -3,13 +3,13 @@ name: Deployment
 on:
   push:
     branches:
-      - ebsi-verify-conformance
+      - signatures-adapter
   workflow_run:
     workflows:
       - Continuous Integration
     branches:
       - master
-      - ebsi-verify-conformance
+      - signatures-adapter
     types:
       - completed
 
