@@ -6,7 +6,7 @@ defmodule BorutaWeb.CredentialControllerTest do
 
   alias Boruta.Config
   alias Boruta.Ecto.Token
-  alias Boruta.VerifiableCredentials
+  alias Boruta.Internal.Signatures
   alias BorutaIdentity.Accounts.User
 
   setup %{conn: conn} do
@@ -24,7 +24,7 @@ defmodule BorutaWeb.CredentialControllerTest do
       })
 
     {:ok, token, _claims} =
-      VerifiableCredentials.Token.generate_and_sign(
+      Signatures.Token.generate_and_sign(
         %{
           "aud" => Config.issuer(),
           "iat" => :os.system_time(:seconds)
@@ -98,7 +98,7 @@ defmodule BorutaWeb.CredentialControllerTest do
       })
 
     {:ok, token, _claims} =
-      VerifiableCredentials.Token.generate_and_sign(
+      Signatures.Token.generate_and_sign(
         %{
           "aud" => Config.issuer(),
           "iat" => :os.system_time(:seconds)
