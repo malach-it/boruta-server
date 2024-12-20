@@ -1,7 +1,7 @@
 defmodule BorutaWeb.DidController do
   use BorutaWeb, :controller
 
-  alias Boruta.VerifiableCredentials
+  alias Boruta.Openid.VerifiableCredentials
 
   def resolve_status(conn, %{"status" => salt}) do
     clients = Boruta.Ecto.Admin.list_clients()
