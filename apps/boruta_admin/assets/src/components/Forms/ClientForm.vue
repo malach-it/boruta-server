@@ -102,27 +102,30 @@
         </div>
       </div>
       <div ref="security" data-tab="security" class="ui bottom attached tab segment">
-        <h3>Signatures backend</h3>
-        <div class="field" :class="{ 'error': client.errors?.signatures_backend }">
-          <select v-model="client.signatures_backend">
-            <option v-for="backend in signaturesBackends" :value="backend">{{ backend }}</option>
+        <h3>Signatures adapter</h3>
+        <div class="field" :class="{ 'error': client.errors?.signatures_adapter }">
+          <select v-model="client.signatures_adapter">
+            <option v-for="adapter in signaturesAdapters" :value="adapter">{{ adapter }}</option>
           </select>
         </div>
 
-        <div class="ui segment" v-if="client.signatures_backend == 'Elixir.Boruta.Universal.Signatures'">
+        <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Universal.Signatures'">
           <div class="ui info message">
-            The usage of the Universal backend requires an account, please contact Godiddy services <a href="https://godiddy.com/contact" target="_blank">https://godiddy.com/contact</a>
-          </div>
-          <div class="field" :class="{ 'error': client.errors?.universal_api_key }">
-            <label>Universal API key</label>
-            <input type="text" v-model="client.universal_api_key" placeholder="00000000-0000-0000-0000-000000000000">
+            The usage of the Universal adapter requires an account, please contact Godiddy services <a href="https://godiddy.com/contact" target="_blank">https://godiddy.com/contact</a> and set the API key as an environment variable.
           </div>
           <h4>Key management</h4>
+          <h4>Key type</h4>
+          <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
+            <select v-model="client.key_pair_type.type">
+              <option value="universal">
+                universal
+              </option>
+            </select>
+          </div>
           <div class="field">
             <label>method</label>
             <select>
               <option value="key">key</option>
-              <option value="indy">indy</option>
             </select>
           </div>
           <hr />
@@ -134,9 +137,9 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <a class="ui fluid orange button" v-if="client.isPersisted">Regenerate Universal client did</a>
+          <a class="ui fluid orange button" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</a>
         </div>
-        <div class="ui segment" v-if="client.signatures_backend == 'Elixir.Boruta.Internal.Signatures'">
+        <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Internal.Signatures'">
           <h4>Key type</h4>
           <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
             <select v-model="client.key_pair_type.type">
@@ -276,7 +279,7 @@ export default {
   data() {
     return {
       keyPairTypes: Client.keyPairTypes,
-      signaturesBackends: Client.signaturesBackends,
+      signaturesAdapters: Client.signaturesAdapters,
       keyPairs: [],
       idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
       UserinfoResponseSignatureAlgorithms: Client.UserinfoResponseSignatureAlgorithms,

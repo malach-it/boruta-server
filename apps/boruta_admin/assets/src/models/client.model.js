@@ -21,7 +21,7 @@ const keyPairTypes = {
   'rsa': { modulus_size: '1024', exponent_size: '65537' }
 }
 
-const signaturesBackends = [
+const signaturesAdapters = [
   'Elixir.Boruta.Internal.Signatures',
   'Elixir.Boruta.Universal.Signatures'
 ]
@@ -30,6 +30,7 @@ const defaults = {
   errors: null,
   key_pair_id: null,
   key_pair_type: { type: 'rsa', modulus_size: '1024', exponent_size: '65537' },
+  signatures_adapter: 'Elixir.Boruta.Internal.Signatures',
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
@@ -42,8 +43,7 @@ const defaults = {
       value: true,
       label
     }
-  }),
-  signatures_backend: 'Elixir.Boruta.Internal.Signatures'
+  })
 }
 
 const assign = {
@@ -53,6 +53,7 @@ const assign = {
   pkce: function ({ pkce }) { this.pkce = pkce },
   public_key: function ({ public_key }) { this.public_key = public_key },
   key_pair_type: function ({ key_pair_type }) { this.key_pair_type = key_pair_type },
+  signatures_adapter: function ({ signatures_adapter }) { this.signatures_adapter = signatures_adapter },
   did: function ({ did }) { this.did = did },
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
@@ -233,6 +234,7 @@ class Client {
       jwt_public_key,
       key_pair_id,
       key_pair_type,
+      signatures_adapter,
       response_mode
     } = this
 
@@ -265,6 +267,7 @@ class Client {
       jwt_public_key,
       key_pair_id,
       key_pair_type,
+      signatures_adapter,
       response_mode
     }
   }
@@ -272,7 +275,7 @@ class Client {
 
 Client.keyPairTypes = keyPairTypes
 
-Client.signaturesBackends = signaturesBackends
+Client.signaturesAdapters = signaturesAdapters
 
 Client.api = function () {
   const accessToken = localStorage.getItem('access_token')
@@ -302,6 +305,7 @@ Client.get = function (id) {
 }
 
 Client.idTokenSignatureAlgorithms = [
+  "EdDSA",
   "ES256",
   "ES384",
   "ES512",
@@ -327,6 +331,7 @@ Client.clientJwtAuthenticationSignatureAlgorithms = [
 
 Client.UserinfoResponseSignatureAlgorithms = [
   null,
+  "EdDSA",
   "ES256",
   "ES384",
   "ES512",
