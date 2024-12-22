@@ -5,8 +5,10 @@ import { addClientErrorInterceptor } from './utils'
 
 const allGrantTypes = [
   'client_credentials',
+  'agent_credentials',
   'password',
   'authorization_code',
+  'agent_code',
   'refresh_token',
   'implicit',
   'preauthorized_code',
@@ -56,6 +58,7 @@ const assign = {
   signatures_adapter: function ({ signatures_adapter }) { this.signatures_adapter = signatures_adapter },
   did: function ({ did }) { this.did = did },
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
+  agent_token_ttl: function ({ agent_token_ttl }) { this.agent_token_ttl = agent_token_ttl },
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
   refresh_token_ttl: function ({ refresh_token_ttl }) { this.refresh_token_ttl = refresh_token_ttl },
   id_token_ttl: function ({ id_token_ttl }) { this.id_token_ttl = id_token_ttl },
@@ -209,6 +212,7 @@ class Client {
   get serialized () {
     const {
       access_token_ttl,
+      agent_token_ttl,
       authorization_code_ttl,
       authorization_request_ttl,
       authorize_scope,
@@ -240,6 +244,7 @@ class Client {
 
     return {
       access_token_ttl,
+      agent_token_ttl,
       authorization_code_ttl,
       authorization_request_ttl,
       authorize_scope,
