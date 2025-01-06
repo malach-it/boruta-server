@@ -111,7 +111,7 @@ defmodule BorutaIdentity.IdentityProviders do
   alias BorutaIdentity.IdentityProviders.Template
 
   def get_identity_provider_template!(identity_provider_id, type) do
-    with %IdentityProvider{} = identity_provider <-
+    with %IdentityProvider{} = identity_provider_with_templates <-
            Repo.one(
              from(idp in IdentityProvider,
                left_join: t in assoc(idp, :templates),
@@ -120,8 +120,8 @@ defmodule BorutaIdentity.IdentityProviders do
                preload: [backend: b, templates: t]
              )
            ),
-         %Template{} = template <- IdentityProvider.template(identity_provider, type) do
-      %{template | layout: IdentityProvider.template(identity_provider, :layout)}
+         %Template{} = template <- IdentityProvider.template(identity_provider_with_templates, type) do
+      %{template | layout: IdentityProvider.template(identity_provider_with_templates, :layout)}
     else
       nil -> raise Ecto.NoResultsError, queryable: Template
     end
