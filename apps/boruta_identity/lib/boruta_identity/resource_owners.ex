@@ -110,6 +110,7 @@ defmodule BorutaIdentity.ResourceOwners do
     |> User.metadata_filter(user.backend)
     |> metadata_scope_filter(scope, user.backend)
     |> Enum.into(%{})
+    |> Map.put("email", user.username)
   end
 
   defp merge_claims(
