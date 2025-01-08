@@ -1,6 +1,6 @@
 ![logo-yellow](images/logo-yellow.png)
 
-boruta is a standalone authorization server aims to implement OAuth 2.0 and Openid Connect up to decentralized identity specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also an experimental gateway to apply access rules to incoming traffic.
+boruta is a standalone authorization server that aims to implement OAuth 2.0 and Openid Connect up to decentralized identity specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also an experimental gateway to apply access rules to incoming traffic.
 
 ## Status
 
