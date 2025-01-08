@@ -369,7 +369,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                      "RS512",
                      "HS256",
                      "HS384",
-                     "HS512"
+                     "HS512",
+                     "EdDSA"
                    ],
                    "cryptographic_binding_methods_supported" => ["did:jwk", "did:key"],
                    "display" => [
@@ -404,7 +405,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "RS512",
                  "HS256",
                  "HS384",
-                 "HS512"
+                 "HS512",
+                 "EdDSA"
                ],
                "issuer" => "http://localhost:4000",
                "jwks_uri" => "http://localhost:4000/openid/jwks",
@@ -418,7 +420,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "RS512",
                  "HS256",
                  "HS384",
-                 "HS512"
+                 "HS512",
+                 "EdDSA"
                ],
                "response_modes_supported" => ["query", "fragment"],
                "response_types_supported" => [
@@ -449,7 +452,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  "RS512",
                  "HS256",
                  "HS384",
-                 "HS512"
+                 "HS512",
+                 "EdDSA"
                ]
              }
     end
