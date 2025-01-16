@@ -31,6 +31,16 @@ defmodule BorutaWeb.Logger do
         &__MODULE__.authorization_token_failure_handler/4
       },
       {
+        :authorization_credential_success,
+        [:authorization, :credential, :success],
+        &__MODULE__.authorization_credential_success_handler/4
+      },
+      {
+        :authorization_credential_failure,
+        [:authorization, :credential, :failure],
+        &__MODULE__.authorization_credential_failure_handler/4
+      },
+      {
         :authorization_introspect_success,
         [:authorization, :introspect, :success],
         &__MODULE__.authorization_introspect_success_handler/4
@@ -204,6 +214,58 @@ defmodule BorutaWeb.Logger do
       "authorization",
       ?\s,
       "token",
+      " - ",
+      "failure",
+      log_attribute("status", status),
+      log_attribute("error", error),
+      log_attribute("error_description", ~s{"#{error_description}"})
+    ]
+
+    Logger.log(:info, fn -> log_line end, type: :business)
+  end
+
+  def authorization_credential_success_handler(
+        _,
+        _measurements,
+        %{
+          client_id: client_id,
+          sub: sub,
+          access_token: access_token
+        },
+        _
+      ) do
+    log_line = [
+      "boruta_web",
+      ?\s,
+      "authorization",
+      ?\s,
+      "credential",
+      " - ",
+      "success",
+      log_attribute("client_id", client_id),
+      log_attribute("sub", sub),
+      log_attribute("access_token", access_token)
+    ]
+
+    Logger.log(:info, fn -> log_line end, type: :business)
+  end
+
+  def authorization_credential_failure_handler(
+        _,
+        _measurements,
+        %{
+          status: status,
+          error: error,
+          error_description: error_description
+        },
+        _
+      ) do
+    log_line = [
+      "boruta_web",
+      ?\s,
+      "authorization",
+      ?\s,
+      "credential",
       " - ",
       "failure",
       log_attribute("status", status),

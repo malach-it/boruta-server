@@ -23,7 +23,17 @@ defmodule BorutaWeb.Openid.CredentialController do
   end
 
   @impl Boruta.Openid.CredentialApplication
-  def credential_created(conn, %CredentialResponse{} = credential_response) do
+  def credential_created(conn, %CredentialResponse{token: token} = credential_response) do
+    :telemetry.execute(
+      [:authorization, :credential, :success],
+      %{},
+      %{
+        client_id: token.client.id,
+        sub: token.sub,
+        access_token: token.value
+      }
+    )
+
     conn
     |> put_view(OauthView)
     |> render("credential.json", credential_response: credential_response)
@@ -41,6 +51,16 @@ defmodule BorutaWeb.Openid.CredentialController do
         error: error,
         error_description: error_description
       }) do
+    :telemetry.execute(
+      [:authorization, :credential, :failure],
+      %{},
+      %{
+        status: status,
+        error: error,
+        error_description: error_description
+      }
+    )
+
     conn
     |> put_status(status)
     |> put_view(OauthView)
