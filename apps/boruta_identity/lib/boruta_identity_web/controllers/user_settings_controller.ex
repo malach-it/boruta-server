@@ -6,6 +6,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
   import BorutaIdentityWeb.Authenticable,
     only: [
       client_id_from_request: 1,
+      get_user_session: 1,
       remove_user_session: 1,
       after_sign_out_path: 1
     ]
@@ -138,6 +139,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
   @impl BorutaIdentity.Accounts.SettingsApplication
   def user_destroyed(conn, user) do
     client_id = client_id_from_request(conn)
+    session_token = get_user_session(conn)
 
     :telemetry.execute(
       [:registration, :destroy, :success],
@@ -153,6 +155,26 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     conn
     |> remove_user_session()
     |> put_flash(:info, "User data destroyed.")
+    Accounts.delete_session(conn, client_id, session_token, __MODULE__)
+  end
+
+  def session_deleted(conn) do
+    client_id = client_id_from_request(conn)
+    user = conn.assigns[:current_user]
+
+    :telemetry.execute(
+      [:authentication, :log_out, :success],
+      %{},
+      %{
+        sub: user && user.uid,
+        backend: user && user.backend,
+        client_id: client_id
+      }
+    )
+
+    conn
+    |> remove_user_session()
+    |> put_flash(:info, "Your data has been deleted.")
     |> redirect(to: after_sign_out_path(conn))
   end
 
