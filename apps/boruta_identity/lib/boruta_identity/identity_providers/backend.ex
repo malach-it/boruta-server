@@ -220,7 +220,6 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                     "version",
                                     "credential_identifier",
                                     "format",
-                                    "defered",
                                     "types",
                                     "claims",
                                     "display"

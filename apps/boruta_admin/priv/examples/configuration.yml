@@ -9,7 +9,6 @@ configuration:
       verifiable_credentials:
         - version: "13"
           credential_identifier: BorutaCredentialSdJwt
-          defered: false
           format: vc+sd-jwt
           types: VerifiableCredential BorutaCredentialSdJwt
           claims:

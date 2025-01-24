@@ -197,6 +197,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     |> validate_required([:name, :backend_id])
     |> unique_constraint(:name)
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)
+    |> foreign_key_constraint(:backend_id, name: :identity_providers_backend_id_fkey)
   end
 
   @doc false

@@ -227,4 +227,74 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
     assert %ErrorTemplate{type: "500", content: "test"} =
              BorutaIdentity.Repo.all(ErrorTemplate) |> List.last()
   end
+
+  test "loads example file" do
+    assert BorutaGateway.Repo.all(Upstream) |> Enum.empty?()
+
+    Application.delete_env(ConfigurationLoader, :node_name)
+
+    configuration_file_path =
+      :code.priv_dir(:boruta_admin)
+      |> Path.join("/examples/configuration.yml")
+
+    ConfigurationLoader.from_file!(configuration_file_path)
+
+    assert %Backend{
+             name: "Example backend",
+             id: "00000000-0000-0000-0000-000000000001",
+             verifiable_credentials: [
+               %{
+                 "claims" => [
+                   %{
+                     "label" => "boruta username",
+                     "name" => "boruta_username",
+                     "pointer" => "email"
+                   }
+                 ],
+                 "credential_identifier" => "BorutaCredentialSdJwt",
+                 "display" => %{
+                   "background_color" => "#ffd758",
+                   "logo" => %{
+                     "alt_text" => "malachit logo",
+                     "url" => "https://io.malach.it/assets/images/logo.png"
+                   },
+                   "name" => "Boruta username (SD-JWT)",
+                   "text_color" => "#333333"
+                 },
+                 "format" => "vc+sd-jwt",
+                 "types" => "VerifiableCredential BorutaCredentialSdJwt",
+                 "version" => "13"
+               }
+             ]
+           } = BorutaIdentity.Repo.all(Backend) |> List.last()
+
+    assert %IdentityProvider{
+             id: "00000000-0000-0000-0000-000000000001",
+             backend_id: "00000000-0000-0000-0000-000000000001",
+             name: "Example identity provider",
+             consentable: true,
+             choose_session: true,
+             registrable: true
+           } =
+             BorutaIdentity.Repo.all(IdentityProvider)
+             |> List.last()
+             |> BorutaIdentity.Repo.preload(:templates)
+
+    assert %Client{
+             id: "00000000-0000-0000-0000-000000000001",
+             name: "Example client",
+             redirect_uris: ["https://redirect.uri.boruta"],
+    } = BorutaAuth.Repo.all(Client) |> List.last()
+
+    # assert %ClientIdentityProvider{
+    #          client_id: "00000000-0000-0000-0000-000000000001",
+    #          identity_provider_id: "00000000-0000-0000-0000-000000000001",
+    # } = BorutaAuth.Repo.all(ClientIdentityProvider) |> List.last()
+
+    assert %Scope{
+             name: "BorutaCredentialSdJwt",
+             label: "boruta username",
+             public: true
+           } = BorutaAuth.Repo.all(Scope) |> List.last()
+  end
 end
