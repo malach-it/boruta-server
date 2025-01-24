@@ -90,7 +90,7 @@ defmodule BorutaWeb.OauthView do
       "defered_credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :defered_credential),
       "credential_configurations_supported" =>
         VerifiableCredentials.credential_configurations_supported(),
-      "credentials_supported" => VerifiableCredentials.credentials_supported()
+      # "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
   end
 
@@ -104,7 +104,7 @@ defmodule BorutaWeb.OauthView do
       "credential_endpoint" => issuer <> routes.credential_path(BorutaWeb.Endpoint, :credential),
       "credential_configurations_supported" =>
         VerifiableCredentials.credential_configurations_supported(),
-      "credentials_supported" => VerifiableCredentials.credentials_supported()
+      # "credentials_supported" => VerifiableCredentials.credentials_supported()
     }
   end
 
