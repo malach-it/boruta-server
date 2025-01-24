@@ -103,13 +103,16 @@ defmodule BorutaIdentity.ResourceOwners do
   end
 
   @spec metadata(user :: User.t(), scope :: String.t()) :: metadata :: map()
-  def metadata(%User{metadata: %{} = metadata}, _scope) when metadata == %{}, do: %{}
+  def metadata(%User{username: username, metadata: %{} = metadata}, _scope) when metadata == %{}, do: %{
+    "email" => username
+  }
 
   def metadata(user, scope) do
     user.metadata
     |> User.metadata_filter(user.backend)
     |> metadata_scope_filter(scope, user.backend)
     |> Enum.into(%{})
+    |> Map.put("email", user.username)
   end
 
   defp merge_claims(
