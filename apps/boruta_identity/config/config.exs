@@ -18,7 +18,7 @@ config :logger, :console,
 
 config :phoenix, :json_library, Jason
 
-config :boruta, Boruta.Oauth,
+config :boruta_ssi, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners

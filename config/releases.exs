@@ -82,7 +82,7 @@ config :boruta_web, BorutaAdminWeb.Authorization,
   sub_restricted: System.get_env("BORUTA_SUB_RESTRICTED", nil),
   organization_restricted: System.get_env("BORUTA_ORGANIZATION_RESTRICTED", nil)
 
-config :boruta, Boruta.Oauth,
+config :boruta_ssi, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
