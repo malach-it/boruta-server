@@ -148,7 +148,7 @@
         <i class="sun icon" :class="{ 'outline': currentMode }"></i>
       </a>
       <Feedback />
-      &copy; 2024 malachit
+      &copy; 2025 malachit
     </footer>
   </div>
 </template>
