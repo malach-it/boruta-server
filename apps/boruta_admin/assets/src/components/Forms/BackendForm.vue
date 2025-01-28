@@ -248,6 +248,7 @@
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
               <label>Version</label>
               <select v-model="credential.version">
+                <option value="11">11</option>
                 <option value="13">13</option>
               </select>
             </div>
