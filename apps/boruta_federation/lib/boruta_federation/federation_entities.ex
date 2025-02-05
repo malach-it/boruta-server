@@ -13,9 +13,20 @@ defmodule BorutaFederation.FederationEntities do
     Repo.all(FederationEntity)
   end
 
-  @spec get_entity(sub :: Ecto.UUID.t()) :: federation_entity :: FederationEntity.t() | nil
+  @spec get_entity(sub :: String.t()) :: federation_entity :: FederationEntity.t() | nil
   def get_entity(sub) do
     id = String.replace_prefix(sub, issuer() <> "/federation/federation_entities/", "")
+    case Ecto.UUID.cast(id) do
+      {:ok, _} ->
+        Repo.get(FederationEntity, id)
+
+      _ ->
+        nil
+    end
+  end
+
+  @spec get_entity_by_id(id :: Ecto.UUID.t()) :: federation_entity :: FederationEntity.t() | nil
+  def get_entity_by_id(id) do
     case Ecto.UUID.cast(id) do
       {:ok, _} ->
         Repo.get(FederationEntity, id)
