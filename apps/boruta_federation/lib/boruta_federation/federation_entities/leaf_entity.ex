@@ -87,7 +87,8 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
 
   defp resolve_chain(authority) do
     with {:ok, %Finch.Response{status: 200, body: configuration}} <- Finch.build(:get, authority["issuer"] <> @federation_configuration_path) |> Finch.request(OpenIDHttpClient),
-         {:ok, %{"federation_resolve_endpoint" => resolve_url}} <- Jason.decode(configuration) do
+         # TODO verify configuration signature
+         {:ok, %{"federation_resolve_endpoint" => resolve_url}} <- Joken.peek_claims(configuration) do
       case Finch.build(:get, resolve_url <> "?sub=#{authority["sub"]}") |> Finch.request(OpenIDHttpClient) do
         {:ok, %Finch.Response{status: 200, body: statement}} ->
           with {:ok, %{"jwks" => %{"keys" => [jwk]}, "trust_chain" => trust_chain}} <-
