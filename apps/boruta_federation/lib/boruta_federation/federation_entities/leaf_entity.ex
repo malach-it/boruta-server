@@ -28,7 +28,7 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
 
   @spec jwks(entity :: FederationEntity.t()) :: {:ok, jwks :: map()}
   def jwks(entity) do
-    {:ok, [JOSE.JWK.from_pem(entity.public_key) |> JOSE.JWK.to_map() |> elem(1)]}
+    {:ok, %{"keys" => [JOSE.JWK.from_pem(entity.public_key) |> JOSE.JWK.to_map() |> elem(1)]}}
   end
 
   @spec trust_marks(entity :: FederationEntity.t()) :: {:ok, trust_mark :: list(String.t())}
@@ -90,7 +90,7 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
          {:ok, %{"federation_resolve_endpoint" => resolve_url}} <- Jason.decode(configuration) do
       case Finch.build(:get, resolve_url <> "?sub=#{authority["sub"]}") |> Finch.request(OpenIDHttpClient) do
         {:ok, %Finch.Response{status: 200, body: statement}} ->
-          with {:ok, %{"jwks" => [jwk], "trust_chain" => trust_chain}} <-
+          with {:ok, %{"jwks" => %{"keys" => [jwk]}, "trust_chain" => trust_chain}} <-
             Joken.peek_claims(statement),
                {:ok, %{"alg" => alg}} <- Joken.peek_header(statement),
                {_, pem} <- JOSE.JWK.from_map(jwk) |> JOSE.JWK.to_pem(),
@@ -121,7 +121,7 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
          {:ok, %{"federation_fetch_endpoint" => fetch_url}} <- Jason.decode(configuration) do
     with {:ok, %Finch.Response{status: 200, body: statement}} <-
       Finch.build(:get, fetch_url <> "?sub=#{sub}") |> Finch.request(OpenIDHttpClient),
-         {:ok, %{"jwks" => [jwk]}} <- Joken.peek_claims(statement),
+         {:ok, %{"jwks" => %{"keys" => [jwk]}}} <- Joken.peek_claims(statement),
          {:ok, %{"alg" => alg}} <- Joken.peek_header(statement),
          {_, pem} <- JOSE.JWK.from_map(jwk) |> JOSE.JWK.to_pem(),
          signer <- Joken.Signer.create(alg, %{"pem" => pem}),
