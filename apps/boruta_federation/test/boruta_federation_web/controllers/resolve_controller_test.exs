@@ -21,7 +21,7 @@ defmodule BorutaFederationWeb.ResolveControllerTest do
       conn = get(conn, Routes.resolve_path(conn, :resolve, %{sub: entity.id, anchor: "anchor"}))
       assert statement = response(conn, 200)
 
-      sub = issuer() <> "/federation/fereration_entities/#{entity.id}"
+      sub = issuer() <> "/federation/federation_entities/#{entity.id}"
 
       assert {:ok,
               %{

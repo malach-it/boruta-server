@@ -60,7 +60,7 @@ defmodule BorutaFederation.TrustChains do
         "iat" => now,
         "iss" => issuer(),
         "jwks" => jwks,
-        "sub" => issuer() <> "/federation/fereration_entities/#{entity.id}",
+        "sub" => issuer() <> "/federation/federation_entities/#{entity.id}",
       }
       payload = Map.merge(base, payload)
 
