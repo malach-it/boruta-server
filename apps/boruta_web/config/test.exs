@@ -46,5 +46,5 @@ config :libcluster,
     ]
   ]
 
-config :boruta_ssi, Boruta.Oauth,
+config :boruta, Boruta.Oauth,
   did_resolver_base_url: "https://universalresolver.boruta.patatoid.fr/1.0"

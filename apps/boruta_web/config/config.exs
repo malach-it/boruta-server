@@ -17,7 +17,7 @@ config :phoenix, :json_library, Jason
 
 config :swoosh, :api_client, Swoosh.ApiClient.Finch
 
-config :boruta_ssi, Boruta.Oauth,
+config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners

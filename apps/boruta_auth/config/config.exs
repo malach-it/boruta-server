@@ -3,7 +3,7 @@ import Config
 config :boruta_auth,
   ecto_repos: [BorutaAuth.Repo]
 
-config :boruta_ssi, Boruta.Oauth,
+config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
