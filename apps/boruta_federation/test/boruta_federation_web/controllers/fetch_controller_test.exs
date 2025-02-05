@@ -2,6 +2,7 @@ defmodule BorutaFederationWeb.FetchControllerTest do
   use BorutaFederationWeb.ConnCase
 
   import BorutaFederation.Factory
+  import Boruta.Config, only: [issuer: 0]
 
   alias BorutaFederation.FederationEntities.LeafEntity.Token
 
@@ -20,7 +21,7 @@ defmodule BorutaFederationWeb.FetchControllerTest do
       conn = get(conn, Routes.fetch_path(conn, :fetch, %{sub: entity.id}))
       assert statement = response(conn, 200)
 
-      entity_id = entity.id
+      sub = issuer() <> "/fereration_entities/#{entity.id}"
 
       assert {:ok,
               %{
@@ -29,7 +30,7 @@ defmodule BorutaFederationWeb.FetchControllerTest do
                 "iss" => "http://localhost:4000",
                 "jwks" => %{"keys" => [jwk]},
                 "metadata" => %{"openid_provider" => %{"issuer" => "http://localhost:4000"}},
-                "sub" => ^entity_id,
+                "sub" => ^sub,
                 "trust_marks" => [trust_mark]
               }} = Joken.peek_claims(statement)
 

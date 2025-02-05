@@ -2,6 +2,7 @@ defmodule BorutaFederation.FederationEntities do
   @moduledoc false
 
   import Ecto.Query
+  import Boruta.Config, only: [issuer: 0]
 
   alias BorutaFederation.FederationEntities.ClientFederationEntity
   alias BorutaFederation.FederationEntities.FederationEntity
@@ -12,8 +13,9 @@ defmodule BorutaFederation.FederationEntities do
     Repo.all(FederationEntity)
   end
 
-  @spec get_entity(id :: Ecto.UUID.t()) :: federation_entity :: FederationEntity.t() | nil
-  def get_entity(id) do
+  @spec get_entity(sub :: Ecto.UUID.t()) :: federation_entity :: FederationEntity.t() | nil
+  def get_entity(sub) do
+    id = String.replace_prefix(sub, issuer() <> "/federation_entities/", "")
     case Ecto.UUID.cast(id) do
       {:ok, _} ->
         Repo.get(FederationEntity, id)
