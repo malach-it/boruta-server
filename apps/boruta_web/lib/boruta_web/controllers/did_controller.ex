@@ -6,7 +6,7 @@ defmodule BorutaWeb.DidController do
   def resolve_status(conn, %{"status" => salt}) do
     clients = Boruta.Ecto.Admin.list_clients()
     status = Enum.reduce_while(clients, :invaild, fn client, _acc ->
-      case VerifiableCredentials.verify_salt(client.private_key, salt) do
+      case VerifiableCredentials.Status.verify_status_token(client.private_key, salt) do
         :expired -> {:cont, :expired}
         :invalid -> {:cont, :invalid}
         status -> {:halt, status}
