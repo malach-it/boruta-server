@@ -14,7 +14,7 @@ defmodule BorutaFederation.TrustChainsTest do
       assert {:ok, statement} = TrustChains.generate_statement(entity)
       assert statement
 
-      sub = issuer() <> "/fereration_entities/#{entity.id}"
+      sub = issuer() <> "/federation/fereration_entities/#{entity.id}"
 
       assert {:ok,
               %{

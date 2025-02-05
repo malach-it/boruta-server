@@ -21,7 +21,7 @@ defmodule BorutaFederationWeb.FetchControllerTest do
       conn = get(conn, Routes.fetch_path(conn, :fetch, %{sub: entity.id}))
       assert statement = response(conn, 200)
 
-      sub = issuer() <> "/fereration_entities/#{entity.id}"
+      sub = issuer() <> "/federation/fereration_entities/#{entity.id}"
 
       assert {:ok,
               %{
