@@ -16,5 +16,6 @@ defmodule BorutaFederationWeb.Router do
     get "/", PageController, :index
     get "/resolve", ResolveController, :resolve
     get "/fetch", FetchController, :fetch
+    get "/.well-known/openid-federation", OpenidController, :well_known
   end
 end
