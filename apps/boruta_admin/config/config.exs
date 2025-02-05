@@ -19,7 +19,7 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
   pubsub_server: BorutaAdmin.PubSub,
   live_view: [signing_salt: "mtlt3we/"]
 
-config :boruta_ssi, Boruta.Oauth,
+config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners

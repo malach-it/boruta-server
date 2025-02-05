@@ -24,7 +24,7 @@ defmodule BorutaAuth.MixProject do
 
   defp deps do
     [
-      {:boruta_ssi, git: "https://github.com/malach-it/boruta_auth", branch: "agent-credentials"},
+      {:boruta, git: "https://github.com/malach-it/boruta_auth", branch: "agent-credentials"},
       {:logger_file_backend, "~> 0.0.13"},
       {:quantum, "~> 3.0"}
     ]
