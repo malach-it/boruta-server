@@ -6,6 +6,7 @@ defmodule BorutaFederation.FederationEntitiesTest do
   alias BorutaFederation.FederationEntities
   alias BorutaFederation.FederationEntities.FederationEntity
   alias BorutaFederation.FederationEntities.LeafEntity
+  alias BorutaFederation.Repo
 
   @entity_valid_attrs %{
     organization_name: "test",
@@ -121,4 +122,11 @@ defmodule BorutaFederation.FederationEntitiesTest do
 
   @tag :skip
   test "delete_entity/1"
+
+  describe "create_example_tree/2" do
+    test "creates the entities" do
+      FederationEntities.create_example_tree()
+      assert Repo.all(FederationEntity) |> Enum.count() == 10
+    end
+  end
 end

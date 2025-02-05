@@ -16,6 +16,7 @@ defmodule BorutaFederation.FederationEntities do
   @spec get_entity(sub :: String.t()) :: federation_entity :: FederationEntity.t() | nil
   def get_entity(sub) do
     id = String.replace_prefix(sub, issuer() <> "/federation/federation_entities/", "")
+
     case Ecto.UUID.cast(id) do
       {:ok, _} ->
         Repo.get(FederationEntity, id)
@@ -102,6 +103,45 @@ defmodule BorutaFederation.FederationEntities do
 
       :error ->
         nil
+    end
+  end
+
+  def create_example_tree(nodes \\ [], count \\ 10)
+  def create_example_tree(_nodes, 0), do: :ok
+
+  def create_example_tree([], count) do
+    with {:ok, node} <-
+           create_entity(%{
+             organization_name: SecureRandom.hex(),
+             authorities: []
+           }) do
+      create_example_tree([node], count - 1)
+    end
+  end
+
+  def create_example_tree(nodes, count) do
+    authority_entities =
+      Enum.map(
+        0..Enum.random(1..10),
+        fn _i ->
+          entity = Enum.random(nodes)
+        end
+      ) |> Enum.uniq()
+
+    authorities =
+      Enum.map(authority_entities, fn entity ->
+        %{
+          "issuer" => issuer(),
+          "sub" => issuer() <> "/federation/federation_entities/" <> entity.id
+        }
+      end)
+
+    with {:ok, node} <-
+           create_entity(%{
+             organization_name: SecureRandom.hex(),
+             authorities: authorities
+           }) do
+      create_example_tree([node | nodes], count - 1)
     end
   end
 end
