@@ -116,6 +116,8 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
 
   defp fetch_statement(authority, sub) do
     with {:ok, %Finch.Response{status: 200, body: configuration}} <- Finch.build(:get, authority["issuer"] <> @federation_configuration_path) |> Finch.request(OpenIDHttpClient),
+         # TODO verify configuration signature
+         {:ok, configuration} <- Joken.peek_claims(configuration),
          {:ok, %{"federation_fetch_endpoint" => fetch_url}} <- Jason.decode(configuration) do
     with {:ok, %Finch.Response{status: 200, body: statement}} <-
       Finch.build(:get, fetch_url <> "?sub=#{sub}") |> Finch.request(OpenIDHttpClient),
