@@ -2,6 +2,7 @@ defmodule BorutaFederation.TrustChainsTest do
   use BorutaFederation.DataCase
 
   import BorutaFederation.Factory
+  import Boruta.Config, only: [issuer: 0]
 
   alias BorutaFederation.FederationEntities.LeafEntity.Token
   alias BorutaFederation.TrustChains
@@ -13,7 +14,7 @@ defmodule BorutaFederation.TrustChainsTest do
       assert {:ok, statement} = TrustChains.generate_statement(entity)
       assert statement
 
-      entity_id = entity.id
+      sub = issuer() <> "/fereration_entities/#{entity.id}"
 
       assert {:ok,
               %{
@@ -22,7 +23,7 @@ defmodule BorutaFederation.TrustChainsTest do
                 "iss" => "http://localhost:4000",
                 "jwks" => %{"keys" => [jwk]},
                 "metadata" => %{"openid_provider" => %{"issuer" => "http://localhost:4000"}},
-                "sub" => ^entity_id,
+                "sub" => ^sub,
                 "trust_marks" => [trust_mark]
               }} = Joken.peek_claims(statement)
 
