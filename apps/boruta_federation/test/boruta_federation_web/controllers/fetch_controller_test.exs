@@ -27,7 +27,7 @@ defmodule BorutaFederationWeb.FetchControllerTest do
                 "exp" => exp,
                 "iat" => iat,
                 "iss" => "http://localhost:4000",
-                "jwks" => [jwk],
+                "jwks" => %{"keys" => [jwk]},
                 "metadata" => %{"openid_provider" => %{"issuer" => "http://localhost:4000"}},
                 "sub" => ^entity_id,
                 "trust_marks" => [trust_mark]
