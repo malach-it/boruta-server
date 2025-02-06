@@ -19,9 +19,6 @@ defmodule BorutaIdentityWeb.Endpoint do
     only: ~w(images wallet manifest.json favicon.ico robots.txt semantic-ui.min.css)
 
   plug Plug.RequestId
-  plug Plug.Telemetry,
-    event_prefix: [:boruta_identity, :endpoint],
-    log: {__MODULE__, :log_level, []}
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
