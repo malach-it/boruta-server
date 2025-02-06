@@ -38,4 +38,10 @@ defmodule BorutaFederation.TrustChainsTest do
       assert exp
     end
   end
+
+  @tag :skip
+  test "resolve_chain/1"
+
+  @tag :skip
+  test "fetch_statement/1"
 end

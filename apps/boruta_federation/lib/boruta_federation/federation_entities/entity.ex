@@ -1,8 +1,7 @@
 defmodule BorutaFederation.FederationEntities.Entity do
   @moduledoc false
 
-  use Nebulex.Caching
-
+  alias BorutaFederation.Cache
   alias BorutaFederation.FederationEntities.FederationEntity
 
   import Boruta.Config, only: [issuer: 0]
@@ -56,34 +55,30 @@ defmodule BorutaFederation.FederationEntities.Entity do
     end
   end
 
-  @decorate cacheable(
-              cache: BorutaFederation.Cache,
-              key: {:resolve_parents_chain, entity},
-              opts: [ttl: @cache_ttl]
-            )
   @spec resolve_parents_chain(entity :: FederationEntity.t()) :: {:ok, chain :: list(String.t())}
   def resolve_parents_chain(entity) do
     Enum.reduce_while(entity.authorities, {:ok, []}, fn authority, {:ok, acc} ->
       case resolve_chain(authority) do
         {:ok, statement, trust_chain} ->
           case Enum.reduce_while(
-            trust_chain ++ [statement],
-            {:ok, acc},
-            fn statement, {:ok, acc} ->
-              # TODO
-              {:ok, %{"sub" => sub}} = Joken.peek_claims(statement)
+                 trust_chain ++ [statement],
+                 {:ok, acc},
+                 fn statement, {:ok, acc} ->
+                   # TODO
+                   {:ok, %{"sub" => sub}} = Joken.peek_claims(statement)
 
-              case fetch_statement(authority, sub) do
-                {:ok, statement} ->
-                  {:cont, {:ok, acc ++ [statement]}}
+                   case fetch_statement(authority, sub) do
+                     {:ok, statement} ->
+                       {:cont, {:ok, acc ++ [statement]}}
 
-                {:error, error} ->
-                  {:halt, {:error, error}}
-              end
-            end
-          ) do
+                     {:error, error} ->
+                       {:halt, {:error, error}}
+                   end
+                 end
+               ) do
             {:ok, chain} ->
               {:cont, {:ok, acc ++ chain}}
+
             {:error, error} ->
               {:halt, {:error, error}}
           end
@@ -94,65 +89,85 @@ defmodule BorutaFederation.FederationEntities.Entity do
     end)
   end
 
-  @decorate cacheable(
-              cache: BorutaFederation.Cache,
-              key: {:resolve_chain, authority},
-              opts: [ttl: @cache_ttl]
-            )
   defp resolve_chain(authority) do
-    with {:ok, %Finch.Response{status: 200, body: configuration}} <- Finch.build(:get, authority["issuer"] <> @federation_configuration_path) |> Finch.request(OpenIDHttpClient),
-         # TODO verify configuration signature
-         {:ok, %{"federation_resolve_endpoint" => resolve_url}} <- Joken.peek_claims(configuration) do
-      case Finch.build(:get, resolve_url <> "?sub=#{authority["sub"]}") |> Finch.request(OpenIDHttpClient, receive_timeout: @resolve_timeout) do
-        {:ok, %Finch.Response{status: 200, body: statement}} ->
-          with {:ok, %{"jwks" => %{"keys" => [jwk]}, "trust_chain" => trust_chain}} <-
-            Joken.peek_claims(statement),
-               {:ok, %{"alg" => alg}} <- Joken.peek_header(statement),
-               {_, pem} <- JOSE.JWK.from_map(jwk) |> JOSE.JWK.to_pem(),
-               signer <- Joken.Signer.create(alg, %{"pem" => pem}),
-               {:ok, _claims} <- Token.verify_and_validate(statement, signer) do
-            {:ok, statement, trust_chain}
-          else
-            {:ok, []} ->
-              {:ok, statement, []}
+    case Cache.get({:entity_resolve_statement, authority}) do
+      nil ->
+        with {:ok, %Finch.Response{status: 200, body: configuration}} <-
+               Finch.build(:get, authority["issuer"] <> @federation_configuration_path)
+               |> Finch.request(OpenIDHttpClient),
+             # TODO verify configuration signature
+             {:ok, %{"federation_resolve_endpoint" => resolve_url}} <-
+               Joken.peek_claims(configuration) do
+          case Finch.build(:get, resolve_url <> "?sub=#{authority["sub"]}")
+               |> Finch.request(OpenIDHttpClient, receive_timeout: @resolve_timeout) do
+            {:ok, %Finch.Response{status: 200, body: statement}} ->
+              with {:ok,
+                    %{"exp" => exp, "jwks" => %{"keys" => [jwk]}, "trust_chain" => trust_chain}} <-
+                     Joken.peek_claims(statement),
+                   {:ok, %{"alg" => alg}} <- Joken.peek_header(statement),
+                   {_, pem} <- JOSE.JWK.from_map(jwk) |> JOSE.JWK.to_pem(),
+                   signer <- Joken.Signer.create(alg, %{"pem" => pem}),
+                   {:ok, _claims} <- Token.verify_and_validate(statement, signer),
+                   :ok <-
+                     Cache.put(
+                       {:entity_resolve_statement, authority},
+                       {statement, trust_chain},
+                       ttl: (exp - :os.system_time(:second)) * 1000
+                     ) do
+                {:ok, statement, trust_chain}
+              else
+                _ ->
+                  {:error, "Could not resolve parent trust chain."}
+              end
 
             _ ->
-              {:error, "Could not resolve parent trust chain."}
+              {:error, "Could not resolve #{authority["issuer"]} parent trust chain."}
           end
+        else
+          _ ->
+            {:error, "Could not resolve #{authority["issuer"]} configuration."}
+        end
 
-        _ ->
-          {:error, "Could not resolve #{authority["issuer"]} parent trust chain."}
-      end
-    else
-      _ ->
-        {:error, "Could not resolve #{authority["issuer"]} configuration."}
+      {statement, trust_chain} ->
+        {:ok, statement, trust_chain}
     end
   end
 
-  @decorate cacheable(
-              cache: BorutaFederation.Cache,
-              key: {:fetch_statement, sub},
-              opts: [ttl: @cache_ttl]
-            )
   defp fetch_statement(authority, sub) do
-    with {:ok, %Finch.Response{status: 200, body: configuration}} <- Finch.build(:get, authority["issuer"] <> @federation_configuration_path) |> Finch.request(OpenIDHttpClient),
-         # TODO verify configuration signature
-         {:ok, %{"federation_fetch_endpoint" => fetch_url}} <- Joken.peek_claims(configuration) do
-    with {:ok, %Finch.Response{status: 200, body: statement}} <-
-      Finch.build(:get, fetch_url <> "?sub=#{sub}") |> Finch.request(OpenIDHttpClient),
-         {:ok, %{"jwks" => %{"keys" => [jwk]}}} <- Joken.peek_claims(statement),
-         {:ok, %{"alg" => alg}} <- Joken.peek_header(statement),
-         {_, pem} <- JOSE.JWK.from_map(jwk) |> JOSE.JWK.to_pem(),
-         signer <- Joken.Signer.create(alg, %{"pem" => pem}),
-         {:ok, _claims} <- Token.verify_and_validate(statement, signer) do
-      {:ok, statement}
-    else
-      _ ->
-        {:error, "Could not fetch #{authority["issuer"]} statement"}
-    end
-    else
-      _ ->
-        {:error, "Could not resolve #{authority["issuer"]} configuration."}
+    case Cache.get({:entity_fetch_statement, sub}) do
+      nil ->
+        with {:ok, %Finch.Response{status: 200, body: configuration}} <-
+               Finch.build(:get, authority["issuer"] <> @federation_configuration_path)
+               |> Finch.request(OpenIDHttpClient),
+             # TODO verify configuration signature
+             {:ok, %{"federation_fetch_endpoint" => fetch_url}} <-
+               Joken.peek_claims(configuration) do
+          with {:ok, %Finch.Response{status: 200, body: statement}} <-
+                 Finch.build(:get, fetch_url <> "?sub=#{sub}") |> Finch.request(OpenIDHttpClient),
+               {:ok, %{"exp" => exp, "jwks" => %{"keys" => [jwk]}}} <-
+                 Joken.peek_claims(statement),
+               {:ok, %{"alg" => alg}} <- Joken.peek_header(statement),
+               {_, pem} <- JOSE.JWK.from_map(jwk) |> JOSE.JWK.to_pem(),
+               signer <- Joken.Signer.create(alg, %{"pem" => pem}),
+               {:ok, _claims} <- Token.verify_and_validate(statement, signer),
+               :ok <-
+                 Cache.put(
+                   {:entity_fetch_statement, sub},
+                   statement,
+                   ttl: (exp - :os.system_time(:second)) * 1000
+                 ) do
+            {:ok, statement}
+          else
+            _ ->
+              {:error, "Could not fetch #{authority["issuer"]} statement"}
+          end
+        else
+          _ ->
+            {:error, "Could not resolve #{authority["issuer"]} configuration."}
+        end
+
+      statement ->
+        {:ok, statement}
     end
   end
 end
