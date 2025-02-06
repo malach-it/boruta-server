@@ -3,7 +3,7 @@ import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
   key_pair_type: { type: 'rsa', modulus_size: '1024', exponent_size: '65537' },
-  type: 'Elixir.BorutaFederation.FederationEntities.LeafEntity',
+  type: 'Elixir.BorutaFederation.FederationEntities.Entity',
   trust_chain_statement_alg: 'RS256',
   trust_chain_statement_ttl: 3600 * 24,
   authorities: []
@@ -15,7 +15,7 @@ const keyPairTypes = {
 }
 
 const types = [
-  'Elixir.BorutaFederation.FederationEntities.LeafEntity'
+  'Elixir.BorutaFederation.FederationEntities.Entity'
 ]
 
 const statementSignatureAlgorithms = [

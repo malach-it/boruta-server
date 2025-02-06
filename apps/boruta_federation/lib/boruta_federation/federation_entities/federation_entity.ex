@@ -5,7 +5,7 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
   import Ecto.Changeset
 
   alias BorutaFederation.FederationEntities.ClientFederationEntity
-  alias BorutaFederation.FederationEntities.LeafEntity
+  alias BorutaFederation.FederationEntities.Entity
   alias ExJsonSchema.Validator.Error.BorutaFormatter
 
   @type t :: %__MODULE__{
@@ -35,7 +35,7 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
   }
 
   @types [
-    Atom.to_string(LeafEntity)
+    Atom.to_string(Entity)
   ]
 
   @trust_chain_statement_algs [
@@ -73,7 +73,7 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
   @foreign_key_type :binary_id
   schema "federation_entities" do
     field(:organization_name, :string)
-    field(:type, :string, default: "Elixir.BorutaFederation.FederationEntities.LeafEntity")
+    field(:type, :string, default: "Elixir.BorutaFederation.FederationEntities.Entity")
     field(:public_key, :string)
     field(:private_key, :string)
     field(:trust_chain_statement_alg, :string)

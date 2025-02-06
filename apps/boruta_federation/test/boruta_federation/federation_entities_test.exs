@@ -5,7 +5,7 @@ defmodule BorutaFederation.FederationEntitiesTest do
 
   alias BorutaFederation.FederationEntities
   alias BorutaFederation.FederationEntities.FederationEntity
-  alias BorutaFederation.FederationEntities.LeafEntity
+  alias BorutaFederation.FederationEntities.Entity
   alias BorutaFederation.Repo
 
   @entity_valid_attrs %{
@@ -36,7 +36,7 @@ defmodule BorutaFederation.FederationEntitiesTest do
     end
 
     test "creates an entity" do
-      type = Atom.to_string(LeafEntity)
+      type = Atom.to_string(Entity)
 
       assert {:ok, %FederationEntity{
         organization_name: "test",

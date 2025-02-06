@@ -4,7 +4,7 @@ defmodule BorutaFederationWeb.ResolveControllerTest do
   import BorutaFederation.Factory
   import Boruta.Config, only: [issuer: 0]
 
-  alias BorutaFederation.FederationEntities.LeafEntity.Token
+  alias BorutaFederation.FederationEntities.Entity.Token
 
   describe "GET /resolve" do
     test "retruns not found", %{conn: conn} do
