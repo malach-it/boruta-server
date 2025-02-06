@@ -43,8 +43,8 @@ defmodule BorutaFederation.TrustChains do
 
   @decorate cacheable(
               cache: BorutaFederation.Cache,
-              key: {__MODULE__, entity.id},
-              opts: [ttl: @trust_chain_ttl]
+              key: {:generate_trust_chain, entity},
+              opts: [ttl: 3600]
             )
   @spec generate_trust_chain(entity :: FederationEntity.t()) ::
           {:ok, trust_chain :: list(String.t())} | {:error, reason :: String.t()}
