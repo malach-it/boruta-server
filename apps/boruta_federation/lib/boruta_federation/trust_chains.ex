@@ -1,8 +1,6 @@
 defmodule BorutaFederation.TrustChains do
   @moduledoc false
 
-  use Nebulex.Caching
-
   import Boruta.Config, only: [issuer: 0]
 
   alias BorutaFederation.FederationEntities.FederationEntity
@@ -41,11 +39,6 @@ defmodule BorutaFederation.TrustChains do
     end
   end
 
-  @decorate cacheable(
-              cache: BorutaFederation.Cache,
-              key: {:generate_trust_chain, entity},
-              opts: [ttl: 3600]
-            )
   @spec generate_trust_chain(entity :: FederationEntity.t()) ::
           {:ok, trust_chain :: list(String.t())} | {:error, reason :: String.t()}
   def generate_trust_chain(entity) do

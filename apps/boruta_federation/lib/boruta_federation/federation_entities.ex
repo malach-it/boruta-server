@@ -122,11 +122,12 @@ defmodule BorutaFederation.FederationEntities do
   def create_example_tree(nodes, count) do
     authority_entities =
       Enum.map(
-        0..Enum.random(1..10),
+        1..Enum.random(1..2),
         fn _i ->
           entity = Enum.random(nodes)
         end
-      ) |> Enum.uniq()
+      )
+      |> Enum.uniq()
 
     authorities =
       Enum.map(authority_entities, fn entity ->
