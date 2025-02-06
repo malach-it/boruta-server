@@ -1,11 +1,14 @@
 defmodule BorutaFederation.FederationEntities.LeafEntity do
   @moduledoc false
 
+  use Nebulex.Caching
+
   alias BorutaFederation.FederationEntities.FederationEntity
 
   import Boruta.Config, only: [issuer: 0]
 
   @federation_configuration_path "/.well-known/openid-federation"
+  @resolve_timeout 120_000
 
   defmodule Token do
     @moduledoc false
@@ -52,6 +55,11 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
     end
   end
 
+  @decorate cacheable(
+              cache: BorutaFederation.Cache,
+              key: {:resolve_parents_chain, entity},
+              opts: [ttl: 3600]
+            )
   @spec resolve_parents_chain(entity :: FederationEntity.t()) :: {:ok, chain :: list(String.t())}
   def resolve_parents_chain(entity) do
     Enum.reduce_while(entity.authorities, {:ok, []}, fn authority, {:ok, acc} ->
@@ -85,11 +93,16 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
     end)
   end
 
+  @decorate cacheable(
+              cache: BorutaFederation.Cache,
+              key: {:resolve_chain, authority},
+              opts: [ttl: 3600]
+            )
   defp resolve_chain(authority) do
     with {:ok, %Finch.Response{status: 200, body: configuration}} <- Finch.build(:get, authority["issuer"] <> @federation_configuration_path) |> Finch.request(OpenIDHttpClient),
          # TODO verify configuration signature
          {:ok, %{"federation_resolve_endpoint" => resolve_url}} <- Joken.peek_claims(configuration) do
-      case Finch.build(:get, resolve_url <> "?sub=#{authority["sub"]}") |> Finch.request(OpenIDHttpClient) do
+      case Finch.build(:get, resolve_url <> "?sub=#{authority["sub"]}") |> Finch.request(OpenIDHttpClient, receive_timeout: @resolve_timeout) do
         {:ok, %Finch.Response{status: 200, body: statement}} ->
           with {:ok, %{"jwks" => %{"keys" => [jwk]}, "trust_chain" => trust_chain}} <-
             Joken.peek_claims(statement),
@@ -115,6 +128,11 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
     end
   end
 
+  @decorate cacheable(
+              cache: BorutaFederation.Cache,
+              key: {:fetch_statement, sub},
+              opts: [ttl: 3600]
+            )
   defp fetch_statement(authority, sub) do
     with {:ok, %Finch.Response{status: 200, body: configuration}} <- Finch.build(:get, authority["issuer"] <> @federation_configuration_path) |> Finch.request(OpenIDHttpClient),
          # TODO verify configuration signature
