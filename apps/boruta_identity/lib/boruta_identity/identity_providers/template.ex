@@ -163,8 +163,8 @@ defmodule BorutaIdentity.IdentityProviders.Template do
   end
 
   defp put_default(changeset) do
-    case fetch_change(changeset, :content) do
-      {:ok, content} when not is_nil(content) ->
+    case get_field(changeset, :content) do
+      content when not is_nil(content) ->
         changeset
 
       _ ->

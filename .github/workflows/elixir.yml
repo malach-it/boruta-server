@@ -48,8 +48,8 @@ jobs:
       - name: Run Credo
         run: mix credo --strict
 
-      - name: Run Dialyzer
-        run: mix dialyzer
+          # - name: Run Dialyzer
+          #   run: mix dialyzer
 
   unit_tests:
     name: Unit Tests

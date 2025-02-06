@@ -133,6 +133,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
       {credential["credential_identifier"],
        %{
          version: credential["version"] || "13",
+         vct: credential["vct"],
          types: String.split(credential["types"], " "),
          format: credential["format"],
          time_to_live: credential["time_to_live"] || 31_536_000,
@@ -151,6 +152,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
       {credential["credential_identifier"],
        %{
          version: credential["version"] || "13",
+         vct: credential["vct"],
          types: String.split(credential["types"], " "),
          format: credential["format"],
          defered: credential["defered"],

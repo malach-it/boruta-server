@@ -43,6 +43,10 @@ defmodule BorutaIdentity.Accounts.Ldap do
     :confirmable
   ]
 
+  @account_type "ldap"
+
+  def account_type, do: "ldap"
+
   @ldap_timeout 10_000
 
   def features, do: @features
@@ -69,7 +73,8 @@ defmodule BorutaIdentity.Accounts.Ldap do
     impl_user_params = %{
       uid: uid,
       username: username,
-      backend_id: backend_id
+      backend_id: backend_id,
+      account_type: @account_type
     }
 
     {replace, impl_user_params} =
@@ -132,6 +137,11 @@ defmodule BorutaIdentity.Accounts.Ldap do
     )
   end
 
+  @impl BorutaIdentity.Accounts.Settings
+  def delete_user(_id) do
+    {:error, "LDAP backends does not support user deletion."}
+  end
+
   @impl BorutaIdentity.Accounts.ResetPasswords
   def reset_password(backend, reset_password_params) do
     lazy_start(backend)
@@ -164,11 +174,6 @@ defmodule BorutaIdentity.Accounts.Ldap do
   @impl BorutaIdentity.Admin
   def create_raw_user(_backend, _params) do
     raise LdapError, "LDAP backends does not support user creation."
-  end
-
-  @impl BorutaIdentity.Admin
-  def delete_user(_id) do
-    {:error, "LDAP backends does not support user deletion."}
   end
 
   @spec pool_name(backend :: Backend.t()) :: pool_name :: atom()

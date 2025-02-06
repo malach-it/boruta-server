@@ -1,14 +1,10 @@
 ![logo-yellow](images/logo-yellow.png)
 
-Boruta is a standalone authorization server implementing OAuth 2.0 and Openid Connect specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also a gateway to apply access rules to incoming traffic.
+boruta is a standalone authorization server that aims to implement OAuth 2.0 and Openid Connect up to decentralized identity specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also an experimental gateway to apply access rules to incoming traffic.
 
 ## Status
 
-This server is on an ongoing beta stage. Developments are moving fast on master then are keen to be less stable. Tagged versions are said to be more stable and sanity tested.
-
-## Documentation
-
-The documentation of boruta server is available [here](https://boruta-developers.malach.it/docs/intro) it provides insights about its usage.
+boruta is currently in an __open beta phase__, allowing users to explore its features, provide feedback, and contribute to its development. While the software is stable for general testing, it may not yet fully meet all production use case requirements, and updates may include breaking changes. Users are encouraged to report issues and suggest improvements and to exercise caution when deploying the software, please read the [General Terms and Conditions](GENERAL_TERMS_AND_CONDITIONS.md).
 
 ## Implemented specifications and certification
 
@@ -27,24 +23,23 @@ And the specifications from the OpenID Foundation:
 - [OpenID Connect Dynamic Client Registration 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-registration-1_0.html)
 - [OpenID for Verifiable Credential Issuance](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html)
 - [Self-Issued OpenID Provider v2](https://openid.net/specs/openid-connect-self-issued-v2-1_0.html)
+- [OpenID for Verifiable Presentations - draft 21](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html)
 
-This server has been certified for the Basic, Implicit, and Hybrid OpenID Provider profiles by the OpenID Foundation on October, 18th 2022 for the tagged version 0.1.0
+This server has been certified for the Basic, Implicit, and Hybrid OpenID Provider profiles by the OpenID Foundation on October, 18th 2022 for the tagged versions 0.1.0 and 0.5.0
 
 This server has been certified for the Config and Dynamic OpenID Provider profiles by the OpenID Foundation on May, 16th 2023 for the tagged version 0.2.0
 
+This server has also been certified against the [European Blockchain Service Infrastructure (EBSI)](https://ec.europa.eu/digital-building-blocks/sites/display/EBSI) issuance test suite for the tagged version 0.4.0 and for verifiable credential verification for the tagged version 0.5.0.
+
+![EBSI certified - issue](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-issuance.png?raw=true)
+![EBSI certified - verify](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-verify.png?raw=true)
 ![OpenID certified](https://github.com/malach-it/boruta-server/blob/master/images/oid-certification-mark.png?raw=true)
-
-This server has also been certified against the [European Blockchain Service Infrastructure (EBSI)](https://ec.europa.eu/digital-building-blocks/sites/display/EBSI) issuance test suite for the tagged version 0.4.0.
-
-![EBSI certified](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-issuance.png?raw=true)
 
 ## Installation
 
 A [loom presentation](https://www.loom.com/share/77006360fdac44bc9113fab9cf30aba5) about how to get a server up and running.
 
 Note that the easiest way to try the server is by using docker compose.
-
-> During the installation, an optional prompt will ask for statistical info, it would be great if you could fill them.
 
 ### System wide setup (Debian based)
 
@@ -234,6 +229,10 @@ This product community follows the code of conduct available [here](https://io.m
 ## License
 
 This code is released under the [Apache 2.0](LICENSE.md) license.
+
+## General Terms and Conditions
+
+By using Boruta, you agree to the [General Terms and Conditions](GENERAL_TERMS_AND_CONDITIONS.md), which complement the software's Apache 2.0 License.
 
 ## About boruta
 

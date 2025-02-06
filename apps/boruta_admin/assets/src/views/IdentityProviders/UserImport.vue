@@ -4,12 +4,7 @@
       <div class="ui segment">
         <FormErrors :errors="importErrors" v-if="importErrors" />
         <form class="ui form" @submit.prevent="upload()">
-          <div class="field">
-            <label>Backend</label>
-            <select v-model="backendId">
-              <option :value="backend.id" v-for="backend in backends" :key="backend.id">{{ backend.name }}</option>
-            </select>
-          </div>
+          <h3>Base fields</h3>
           <div class="field">
             <label>username header</label>
             <input type="text" v-model="options.usernameHeader" placeholder="username" />
@@ -23,6 +18,27 @@
               <input type="checkbox" v-model="options.hashPassword">
               <label>Hash password</label>
             </div>
+          </div>
+          <h3>Metadata fields</h3>
+          <div class="field">
+            <div v-for="header in options.metadataHeaders" class="metadata-header">
+              <div class="field">
+                <label>metadata header</label>
+                <input type="text" v-model="header.origin" placeholder="origin" />
+              </div>
+              <div class="field">
+                <label>metadata field</label>
+                <input type="text" v-model="header.target" placeholder="target" />
+              </div>
+              <hr />
+            </div>
+            <a class="ui blue fluid button" @click="addMetadataHeader()">Add metadataHeader</a>
+          </div>
+          <div class="field">
+            <label>Backend</label>
+            <select v-model="backendId">
+              <option :value="backend.id" v-for="backend in backends" :key="backend.id">{{ backend.name }}</option>
+            </select>
           </div>
           <div class="field">
             <label>CSV file</label>
@@ -83,7 +99,7 @@ export default {
     return {
       fileUpdates: 0,
       file: null,
-      options: {},
+      options: {metadataHeaders: []},
       backends: [],
       backendId: null,
       pending: false,
@@ -99,6 +115,9 @@ export default {
   methods: {
     setFile (event) {
       this.file = event.target.files[0]
+    },
+    addMetadataHeader () {
+      this.options.metadataHeaders.push({})
     },
     upload () {
       const { backendId, file, options } = this

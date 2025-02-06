@@ -28,9 +28,9 @@
         </div>
         <section v-if="user.backend.metadata_fields.length">
           <h3>Metadata</h3>
-          <div class="ui segment" v-for="field in user.backend.metadata_fields">
+          <div class="ui metadata segment" v-for="field in user.backend.metadata_fields">
             <h4>{{ field.attribute_name }}</h4>
-            <div class="ui two column stackable grid">
+            <div class="ui three column stackable grid">
               <div class="column">
                 <div class="field" :class="{ 'error': user.errors?.metadata }">
                   <label>Value</label>
@@ -45,6 +45,15 @@
                     <option value="suspended">suspended</option>
                     <option value="revoked">revoked</option>
                   </select>
+                </div>
+              </div>
+              <div class="column">
+                <div class="field">
+                  <label>Claim format</label>
+                  <div class="ui toggle checkbox">
+                    <input type="checkbox" v-model="user.metadata[field.attribute_name].displayStatus">
+                    <label>display status</label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -172,3 +181,9 @@ export default {
   }
 }
 </script>
+
+<style lang="scss">
+.metadata .toggle {
+  padding: 8px;
+}
+</style>

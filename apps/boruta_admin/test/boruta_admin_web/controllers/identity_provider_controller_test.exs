@@ -343,6 +343,62 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
              } = json_response(conn, 200)["data"]
     end
 
+    # NOTE the transaction sandbox avoids the test
+    @tag :skip
+    @tag authorized: ["identity-providers:manage:all"]
+    test "do not reset when updated twice with same content", %{
+      conn: conn,
+      identity_provider: %IdentityProvider{id: identity_provider_id}
+    } do
+      conn =
+        patch(
+          conn,
+          Routes.admin_identity_provider_template_path(
+            conn,
+            :update_template,
+            identity_provider_id,
+            "new_registration"
+          ),
+          template: @update_template_attrs
+        )
+
+      assert %{"id" => template_id, "content" => "some updated content"} =
+               json_response(conn, 200)["data"]
+
+      conn =
+        patch(
+          conn,
+          Routes.admin_identity_provider_template_path(
+            conn,
+            :update_template,
+            identity_provider_id,
+            "new_registration"
+          ),
+          template: Map.put(@update_template_attrs, :id, template_id)
+        )
+
+      assert %{"id" => template_id, "content" => "some updated content"} =
+               json_response(conn, 200)["data"]
+
+      conn =
+        get(
+          conn,
+          Routes.admin_identity_provider_template_path(
+            conn,
+            :template,
+            identity_provider_id,
+            "new_registration"
+          )
+        )
+
+      assert %{
+               "id" => ^template_id,
+               "content" => "some updated content",
+               "type" => "new_registration",
+               "identity_provider_id" => ^identity_provider_id
+             } = json_response(conn, 200)["data"]
+    end
+
     @tag authorized: ["identity-providers:manage:all"]
     test "renders errors when data is invalid", %{
       conn: conn,
@@ -449,7 +505,7 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
 
       assert %{
                "id" => ^id,
-               "name" => "some updated name",
+               "name" => "some updated name"
              } = json_response(conn, 200)["data"]
     end
 

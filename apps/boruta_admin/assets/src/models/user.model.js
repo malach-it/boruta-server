@@ -24,7 +24,17 @@ const assign = {
   email: function ({ email }) { this.email = email },
   totp_registered_at: function ({ totp_registered_at }) { this.totp_registered_at = totp_registered_at },
   federated_metadata: function ({ federated_metadata }) { this.federated_metadata = federated_metadata },
-  metadata: function ({ metadata }) { this.metadata = metadata },
+  metadata: function ({ metadata: rawMetadata }) {
+    const metadata = {}
+
+    for (const key in rawMetadata) {
+      metadata[key] = {
+        displayStatus: rawMetadata[key].display?.includes('status'),
+        ...rawMetadata[key]
+      }
+    }
+    this.metadata = metadata
+  },
   group: function ({ group }) { this.group = group },
   authorized_scopes: function ({ authorized_scopes }) {
     this.authorized_scopes = authorized_scopes.map((scope) => {
@@ -109,7 +119,19 @@ class User {
   }
 
   get serialized () {
-    const { id, email, password, metadata, group, authorized_scopes, roles, organizations } = this
+    const { id, email, password, metadata: rawMetadata, group, authorized_scopes, roles, organizations } = this
+
+    const metadata = {}
+
+    for (const key in rawMetadata) {
+      if (rawMetadata[key]?.value) {
+        metadata[key] = {
+          display: rawMetadata[key].displayStatus ? ['status'] : [],
+          value: rawMetadata[key].value,
+          status: rawMetadata[key].status
+        }
+      }
+    }
 
     return {
       id,
@@ -168,6 +190,10 @@ User.upload = function ({ backendId, file, options }) {
     formData.append("options[password_header]", options.passwordHeader)
   if (options.hashPassword && options.hashPassword !== '')
     formData.append("options[hash_password]", options.hashPassword)
+
+  options.metadataHeaders.forEach(header => {
+    formData.append("options[metadata_headers][]", `${header.origin}>${header.target}`)
+  })
 
   return this.api().post('/', formData, {
     headers: {

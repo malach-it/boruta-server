@@ -39,9 +39,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   import Ecto.Changeset
 
   alias BorutaIdentity.Accounts.EmailTemplate
+  alias BorutaIdentity.Accounts.Federated
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.Wallet
   alias BorutaIdentity.Repo
   alias BorutaIdentityWeb.Router.Helpers, as: Routes
 
@@ -72,6 +74,13 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
         }
 
   @backend_types [Internal, Ldap]
+
+  def account_implementations do
+    Enum.map([Internal, Federated, Ldap, Wallet], fn module ->
+      {apply(module, :account_type, []), module}
+    end)
+    |> Enum.into(%{})
+  end
 
   @smtp_tls_types [
     :always,
@@ -172,6 +181,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                   "properties" => %{
                                     "version" => %{"type" => "string"},
                                     "credential_identifier" => %{"type" => "string"},
+                                    "vct" => %{"type" => "string"},
                                     "time_to_live" => %{"type" => "number"},
                                     "types" => %{"type" => "string"},
                                     "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
@@ -211,7 +221,6 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                     "version",
                                     "credential_identifier",
                                     "format",
-                                    "defered",
                                     "types",
                                     "claims",
                                     "display"
@@ -286,8 +295,14 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   @spec implementation(t()) :: atom()
-  def implementation(%__MODULE__{type: type}) do
-    String.to_atom(type)
+  @spec implementation(t(), account_type :: String.t()) :: atom()
+  def implementation(%__MODULE__{type: type}, account_type \\ nil) do
+    case account_type do
+      nil ->
+        String.to_atom(type)
+      account_type ->
+        account_implementations()[account_type]
+    end
   end
 
   @spec features(backend :: t()) :: list(atom())

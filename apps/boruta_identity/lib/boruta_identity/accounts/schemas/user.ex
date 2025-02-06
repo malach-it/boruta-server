@@ -43,6 +43,25 @@ defmodule BorutaIdentity.Accounts.User do
           updated_at: DateTime.t() | nil
         }
 
+  @metadata_schema %{
+    "type" => "object",
+    "properties" => %{
+      "value" => %{},
+      "status" => %{"type" => "string"},
+      "display" => %{"type" => "array", "items" => %{"type" => "string"}}
+    },
+    "required" => ["value", "status"]
+  }
+
+  def account_types, do: [
+    # user registries
+    BorutaIdentity.Accounts.Internal.account_type(),
+    BorutaIdentity.Accounts.Ldap.account_type(),
+    # user interfaces
+    BorutaIdentity.Accounts.Federated.account_type(),
+    BorutaIdentity.Accounts.Wallet.account_type()
+  ]
+
   @derive {Inspect, except: [:password]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @foreign_key_type Ecto.UUID
@@ -62,6 +81,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:webauthn_identifier, :string)
     field(:webauthn_public_key, CoseKey)
     field(:webauthn_registered_at, :utc_datetime_usec)
+    field(:account_type, :string)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:roles, UserRole)
@@ -74,9 +94,19 @@ defmodule BorutaIdentity.Accounts.User do
 
   def implementation_changeset(attrs, backend) do
     %__MODULE__{}
-    |> cast(attrs, [:backend_id, :uid, :username, :group, :metadata, :federated_metadata])
+    |> cast(attrs, [
+      :backend_id,
+      :uid,
+      :username,
+      :group,
+      :metadata,
+      :federated_metadata,
+      :account_type
+    ])
     |> metadata_template_filter(backend)
-    |> validate_required([:backend_id, :uid, :username])
+    |> validate_required([:backend_id, :uid, :username, :account_type])
+    |> validate_inclusion(:account_type, account_types())
+    |> validate_metadata()
     |> validate_group()
   end
 
@@ -84,6 +114,7 @@ defmodule BorutaIdentity.Accounts.User do
     user
     |> cast(attrs, [:metadata, :group])
     |> validate_group()
+    |> validate_metadata()
   end
 
   def login_changeset(user) do
@@ -172,8 +203,11 @@ defmodule BorutaIdentity.Accounts.User do
       nil -> true
       _ -> false
     end)
-    |> Enum.map(fn {key, value} ->
-      {key, %{value: value, status: "valid"}}
+    |> Enum.map(fn
+      {key, value} when is_map(value) -> {key, value}
+      {key, value} ->
+      # TODO default display
+      {key, %{"value" => value, "status" => "valid", "display" => []}}
     end)
     |> Enum.into(%{})
   end
@@ -210,4 +244,22 @@ defmodule BorutaIdentity.Accounts.User do
         end
     end
   end
+
+  defp validate_metadata(
+         %Ecto.Changeset{changes: %{metadata: metadata}} = changeset
+       ) do
+    Enum.reduce_while(metadata, changeset, fn {_attribute, value}, changeset ->
+      case ExJsonSchema.Validator.validate(@metadata_schema, value) do
+        :ok ->
+          {:cont, changeset}
+
+        {:error, errors} ->
+          {:halt, Enum.reduce(errors, changeset, fn {message, path}, changeset ->
+            add_error(changeset, :metadata, "#{message} at #{path}")
+          end)}
+      end
+    end)
+  end
+
+  defp validate_metadata(changeset), do: changeset
 end

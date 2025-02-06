@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - ebsi-verify-conformance
+      - poc-hybrid-vp-token
   workflow_run:
     workflows:
       - Continuous Integration

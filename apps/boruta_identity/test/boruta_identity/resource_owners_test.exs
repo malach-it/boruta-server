@@ -43,7 +43,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
           backend: Backend.default!()
         })
 
-      {:ok, result} = ResourceOwners.get_by(sub: user.id)
+      {:ok, result} = ResourceOwners.get_by(sub: user.id, scope: "")
 
       user_id = user.id
       user_username = user.username
@@ -133,23 +133,6 @@ defmodule BorutaIdentity.ResourceOwnersTest do
   end
 
   describe "claims/2" do
-    test "returns user metadata" do
-      user = user_fixture()
-
-      {:ok, backend} =
-        Ecto.Changeset.change(user.backend, %{
-          metadata_fields: [%{"attribute_name" => "metadata"}]
-        })
-        |> Repo.update()
-
-      user = %{user | backend: backend}
-
-      {:ok, user} =
-        Ecto.Changeset.change(user, %{metadata: %{"metadata" => "true"}}) |> Repo.update()
-
-      assert %{"metadata" => "true"} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "")
-    end
-
     test "returns user roles with profile in scope" do
       user = user_fixture()
       role = BorutaIdentity.Factory.insert(:role)
@@ -180,6 +163,25 @@ defmodule BorutaIdentity.ResourceOwnersTest do
                ]
              } = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "profile")
     end
+  end
+
+  describe "metadata/2" do
+    test "returns user metadata" do
+      user = user_fixture()
+
+      {:ok, backend} =
+        Ecto.Changeset.change(user.backend, %{
+          metadata_fields: [%{"attribute_name" => "metadata"}]
+        })
+        |> Repo.update()
+
+      user = %{user | backend: backend}
+
+      {:ok, user} =
+        Ecto.Changeset.change(user, %{metadata: %{"metadata" => "true"}}) |> Repo.update()
+
+      assert %{"metadata" => "true"} = ResourceOwners.metadata(user, "")
+    end
 
     test "filters user metadata" do
       user = user_fixture()
@@ -196,7 +198,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
         Ecto.Changeset.change(user, %{metadata: %{"filtered" => "true", "metadata" => "true"}})
         |> Repo.update()
 
-      assert %{"metadata" => "true"} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "")
+      assert %{"metadata" => "true"} = ResourceOwners.metadata(user, "")
     end
 
     test "filters user metadata according to scopes" do
@@ -221,7 +223,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
         |> Repo.update()
 
       assert %{"without_scopes" => "true", "test_scope" => "true"} =
-               ResourceOwners.claims(%ResourceOwner{sub: user.id}, "test")
+               ResourceOwners.metadata(user, "test")
     end
   end
 end

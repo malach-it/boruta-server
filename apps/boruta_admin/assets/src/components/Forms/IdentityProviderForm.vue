@@ -25,6 +25,11 @@
         <section v-if="identityProvider.isPersisted">
           <h3>Sessions</h3>
           <div class="ui segment">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="identityProvider.check_password">
+              <label>check password</label>
+            </div>
+            <hr />
             <router-link
               :to="{ name: 'edit-session-template', params: { identityProviderId: identityProvider.id } }"
               class="ui fluid blue button">Edit login template</router-link>

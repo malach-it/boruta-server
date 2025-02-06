@@ -9,18 +9,6 @@ defmodule BorutaIdentity.Accounts.Deliveries do
 
   @type callback_function :: (token :: String.t() -> String.t())
 
-  @doc """
-  Delivers the confirmation email instructions to the given user.
-
-  ## Examples
-
-      iex> deliver_user_confirmation_instructions(user, &Routes.user_confirmation_url(conn, :confirm, &1))
-      {:ok, %{to: ..., body: ...}}
-
-      iex> deliver_user_confirmation_instructions(confirmed_user, &Routes.user_confirmation_url(conn, :confirm, &1))
-      {:error, "User is already confirmed."}
-
-  """
   @spec deliver_user_confirmation_instructions(
           backend :: Backend.t(),
           user :: User.t(),
@@ -48,15 +36,6 @@ defmodule BorutaIdentity.Accounts.Deliveries do
     end
   end
 
-  @doc """
-  Delivers the reset password email to the given user.
-
-  ## Examples
-
-      iex> deliver_user_reset_password_instructions(user, &Routes.user_reset_password_url(conn, :edit, &1))
-      {:ok, %{to: ..., body: ...}}
-
-  """
   @spec deliver_user_reset_password_instructions(
           backend :: Backend.t(),
           user :: User.t(),
@@ -69,5 +48,24 @@ defmodule BorutaIdentity.Accounts.Deliveries do
       reset_password_url
     )
     |> UserNotifier.deliver(backend)
+  end
+
+  @spec deliver_tx_code(
+          backend :: Backend.t(),
+          user :: User.t(),
+          tx_code :: String.t()
+        ) ::
+          :ok
+          | {:error, reason :: String.t() | Ecto.Changeset.t()}
+  def deliver_tx_code(backend, %User{} = user, tx_code) do
+    with {:ok, _email} <-
+           UserNotifier.deliver_tx_code(
+             backend,
+             user,
+             tx_code
+           )
+           |> UserNotifier.deliver(backend) do
+      :ok
+    end
   end
 end

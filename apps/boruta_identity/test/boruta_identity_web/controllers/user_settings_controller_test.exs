@@ -74,4 +74,13 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
       assert %User{metadata: %{"test" => "test value"}} = Repo.reload(user)
     end
   end
+
+  describe "POST /users/destroy" do
+    setup :with_a_request
+
+    test "redirects to log in", %{conn: conn, request: request} do
+      conn = post(conn, Routes.user_settings_path(conn, :destroy, request: request))
+      assert redirected_to(conn) =~ ~r"/users/log_in"
+    end
+  end
 end
