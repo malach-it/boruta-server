@@ -4,7 +4,7 @@ defmodule BorutaFederation.TrustChainsTest do
   import BorutaFederation.Factory
   import Boruta.Config, only: [issuer: 0]
 
-  alias BorutaFederation.FederationEntities.LeafEntity.Token
+  alias BorutaFederation.FederationEntities.Entity.Token
   alias BorutaFederation.TrustChains
 
   describe "generate_statement/1" do

@@ -1,4 +1,4 @@
-defmodule BorutaFederation.FederationEntities.LeafEntity do
+defmodule BorutaFederation.FederationEntities.Entity do
   @moduledoc false
 
   use Nebulex.Caching
