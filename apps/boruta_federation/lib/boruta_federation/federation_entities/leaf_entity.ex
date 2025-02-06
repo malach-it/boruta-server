@@ -9,6 +9,7 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
 
   @federation_configuration_path "/.well-known/openid-federation"
   @resolve_timeout 120_000
+  @cache_ttl 24 * 3600 * 1000
 
   defmodule Token do
     @moduledoc false
@@ -58,7 +59,7 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
   @decorate cacheable(
               cache: BorutaFederation.Cache,
               key: {:resolve_parents_chain, entity},
-              opts: [ttl: 3600]
+              opts: [ttl: @cache_ttl]
             )
   @spec resolve_parents_chain(entity :: FederationEntity.t()) :: {:ok, chain :: list(String.t())}
   def resolve_parents_chain(entity) do
@@ -96,7 +97,7 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
   @decorate cacheable(
               cache: BorutaFederation.Cache,
               key: {:resolve_chain, authority},
-              opts: [ttl: 3600]
+              opts: [ttl: @cache_ttl]
             )
   defp resolve_chain(authority) do
     with {:ok, %Finch.Response{status: 200, body: configuration}} <- Finch.build(:get, authority["issuer"] <> @federation_configuration_path) |> Finch.request(OpenIDHttpClient),
@@ -131,7 +132,7 @@ defmodule BorutaFederation.FederationEntities.LeafEntity do
   @decorate cacheable(
               cache: BorutaFederation.Cache,
               key: {:fetch_statement, sub},
-              opts: [ttl: 3600]
+              opts: [ttl: @cache_ttl]
             )
   defp fetch_statement(authority, sub) do
     with {:ok, %Finch.Response{status: 200, body: configuration}} <- Finch.build(:get, authority["issuer"] <> @federation_configuration_path) |> Finch.request(OpenIDHttpClient),
