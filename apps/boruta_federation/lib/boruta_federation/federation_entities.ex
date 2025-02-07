@@ -106,10 +106,10 @@ defmodule BorutaFederation.FederationEntities do
     end
   end
 
-  def create_example_tree(nodes \\ [], count \\ 10)
-  def create_example_tree(_nodes, 0), do: :ok
+  def create_example_tree(nodes \\ [], count \\ 10, max_degree \\ 2)
+  def create_example_tree(_nodes, 0, _max_degree), do: :ok
 
-  def create_example_tree([], count) do
+  def create_example_tree([], count, _max_degree) do
     with {:ok, node} <-
            create_entity(%{
              organization_name: SecureRandom.hex(),
@@ -119,10 +119,10 @@ defmodule BorutaFederation.FederationEntities do
     end
   end
 
-  def create_example_tree(nodes, count) do
+  def create_example_tree(nodes, count, max_degree) do
     authority_entities =
       Enum.map(
-        1..Enum.random(1..2),
+        1..Enum.random(1..max_degree),
         fn _i ->
           Enum.random(nodes)
         end
