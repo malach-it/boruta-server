@@ -4,8 +4,8 @@ defmodule BorutaFederation.FederationEntitiesTest do
   import BorutaFederation.Factory
 
   alias BorutaFederation.FederationEntities
-  alias BorutaFederation.FederationEntities.FederationEntity
   alias BorutaFederation.FederationEntities.Entity
+  alias BorutaFederation.FederationEntities.FederationEntity
   alias BorutaFederation.Repo
 
   @entity_valid_attrs %{

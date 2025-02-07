@@ -49,24 +49,28 @@ defmodule BorutaFederation.TrustChains do
     end
   end
 
-  @spec sign(payload :: map(), entity :: FederationEntity.t()) :: {:ok, jwt :: String.t(), payload :: map()} | {:error, reason :: String.t()}
+  @spec sign(payload :: map(), entity :: FederationEntity.t()) ::
+          {:ok, jwt :: String.t(), payload :: map()} | {:error, reason :: String.t()}
   def sign(payload, entity) do
     signer = Joken.Signer.create(entity.trust_chain_statement_alg, %{"pem" => entity.private_key})
 
     with {:ok, jwks} <- apply(String.to_atom(entity.type), :jwks, [entity]) do
       now = :os.system_time(:second)
+
       base = %{
         "exp" => now + entity.trust_chain_statement_ttl,
         "iat" => now,
         "iss" => issuer(),
         "jwks" => jwks,
-        "sub" => issuer() <> "/federation/federation_entities/#{entity.id}",
+        "sub" => issuer() <> "/federation/federation_entities/#{entity.id}"
       }
+
       payload = Map.merge(base, payload)
 
       case Joken.encode_and_sign(payload, signer) do
         {:ok, jwt, claims} ->
           {:ok, jwt, claims}
+
         {:error, error} ->
           {:error, to_string(error)}
       end
