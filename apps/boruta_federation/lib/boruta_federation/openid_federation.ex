@@ -1,14 +1,20 @@
 defmodule BorutaFederation.OpenidFederationFetchApplication do
+  @moduledoc false
+
   @callback fetch_success(context :: any, federation_entity_statement :: String.t()) :: any()
   @callback fetch_failure(context :: any, error :: Boruta.Oauth.Error.t()) :: any()
 end
 
 defmodule BorutaFederation.OpenidFederationResolveApplication do
+  @moduledoc false
+
   @callback resolve_success(context :: any, federation_entity_statement :: String.t()) :: any()
   @callback resolve_failure(context :: any, error :: Boruta.Oauth.Error.t()) :: any()
 end
 
 defmodule BorutaFederation.OpenidFederationApplication do
+  @moduledoc false
+
   @callback resolve_success(context :: any, federation_entity_statement :: String.t()) :: any()
   @callback resolve_failure(context :: any, error :: Boruta.Oauth.Error.t()) :: any()
   @callback fetch_success(context :: any, federation_entity_statement :: String.t()) :: any()
@@ -16,6 +22,8 @@ defmodule BorutaFederation.OpenidFederationApplication do
 end
 
 defmodule BorutaFederation.OpenidFederation do
+  @moduledoc false
+
   alias Boruta.Oauth.Error
   alias BorutaFederation.FederationEntities
   alias BorutaFederation.TrustChains

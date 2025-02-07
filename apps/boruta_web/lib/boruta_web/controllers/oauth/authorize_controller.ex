@@ -27,9 +27,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.Accounts.VerifiablePresentations
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
-  alias BorutaWeb.ResourceOwners
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
+  alias BorutaWeb.ResourceOwners
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
