@@ -184,7 +184,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                     "vct" => %{"type" => "string"},
                                     "time_to_live" => %{"type" => "number"},
                                     "types" => %{"type" => "string"},
-                                    "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
+                                    "format" => %{
+                                      "type" => "string",
+                                      "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"
+                                    },
                                     "defered" => %{"type" => "boolean"},
                                     "claims" => %{
                                       "type" => "array",
@@ -235,17 +238,17 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                 })
 
   @verifiable_presentation_schema ExJsonSchema.Schema.resolve(%{
-                                  "type" => "object",
-                                  "properties" => %{
-                                    "presentation_identifier" => %{"type" => "string"},
-                                    "presentation_definition" => %{"type" => "string"}
-                                  },
-                                  "required" => [
-                                    "presentation_identifier",
-                                    "presentation_definition"
-                                  ],
-                                  "additionalProperties" => false
-  })
+                                    "type" => "object",
+                                    "properties" => %{
+                                      "presentation_identifier" => %{"type" => "string"},
+                                      "presentation_definition" => %{"type" => "string"}
+                                    },
+                                    "required" => [
+                                      "presentation_identifier",
+                                      "presentation_definition"
+                                    ],
+                                    "additionalProperties" => false
+                                  })
 
   @spec backend_types() :: list(atom)
   def backend_types, do: @backend_types
@@ -306,6 +309,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     case account_type do
       nil ->
         String.to_atom(type)
+
       account_type ->
         account_implementations()[account_type]
     end
@@ -577,13 +581,15 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   defp validate_metadata_fields(
          %Ecto.Changeset{changes: %{metadata_fields: metadata_fields}} = changeset
        ) do
-    case ExJsonSchema.Validator.validate(@metadata_fields_schema, metadata_fields, error_formatter: BorutaFormatter) do
+    case ExJsonSchema.Validator.validate(@metadata_fields_schema, metadata_fields,
+           error_formatter: BorutaFormatter
+         ) do
       :ok ->
         changeset
 
       {:error, errors} ->
-        Enum.reduce(errors, changeset, fn {message, path}, changeset ->
-          add_error(changeset, :metadata_fields, "#{message} at #{path}")
+        Enum.reduce(errors, changeset, fn message, changeset ->
+          add_error(changeset, :metadata_fields, message)
         end)
     end
   end
@@ -594,13 +600,15 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
          %Ecto.Changeset{changes: %{federated_servers: federated_servers}} = changeset
        ) do
     Enum.reduce(federated_servers, changeset, fn federated_server, changeset ->
-      case ExJsonSchema.Validator.validate(@federated_server_schema, federated_server, error_formatter: BorutaFormatter) do
+      case ExJsonSchema.Validator.validate(@federated_server_schema, federated_server,
+             error_formatter: BorutaFormatter
+           ) do
         :ok ->
           changeset
 
         {:error, errors} ->
-          Enum.reduce(errors, changeset, fn {message, path}, changeset ->
-            add_error(changeset, :federated_servers, "#{message} at #{path}")
+          Enum.reduce(errors, changeset, fn message, changeset ->
+            add_error(changeset, :federated_servers, message)
           end)
       end
     end)
@@ -612,7 +620,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
          %Ecto.Changeset{changes: %{verifiable_credentials: verifiable_credentials}} = changeset
        ) do
     Enum.reduce(verifiable_credentials, changeset, fn verifiable_credential, changeset ->
-      case ExJsonSchema.Validator.validate(@verifiable_credential_schema, verifiable_credential, error_formatter: BorutaFormatter) do
+      case ExJsonSchema.Validator.validate(@verifiable_credential_schema, verifiable_credential,
+             error_formatter: BorutaFormatter
+           ) do
         :ok ->
           changeset
 
@@ -627,16 +637,26 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   defp validate_verifiable_credentials(changeset), do: changeset
 
   defp validate_verifiable_presentations(
-         %Ecto.Changeset{changes: %{verifiable_presentations: verifiable_presentations}} = changeset
+         %Ecto.Changeset{changes: %{verifiable_presentations: verifiable_presentations}} =
+           changeset
        ) do
     Enum.reduce(verifiable_presentations, changeset, fn verifiable_presentation, changeset ->
-      case ExJsonSchema.Validator.validate(@verifiable_presentation_schema, verifiable_presentation, error_formatter: BorutaFormatter) do
+      case ExJsonSchema.Validator.validate(
+             @verifiable_presentation_schema,
+             verifiable_presentation,
+             error_formatter: BorutaFormatter
+           ) do
         :ok ->
           case Jason.decode(verifiable_presentation["presentation_definition"]) do
             {:ok, _map} ->
               changeset
+
             {:error, _error} ->
-              add_error(changeset, :verifiable_presentations, "Verifiable presentation definition must be a valid JSON object")
+              add_error(
+                changeset,
+                :verifiable_presentations,
+                "Verifiable presentation definition must be a valid JSON object"
+              )
           end
 
         {:error, errors} ->

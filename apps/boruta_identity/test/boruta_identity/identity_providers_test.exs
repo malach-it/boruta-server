@@ -610,7 +610,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
               %Ecto.Changeset{
                 errors: [
                   federated_servers:
-                    {"Required properties name, client_id, client_secret, base_url were not present. at #",
+                    {"Required properties name, client_id, client_secret, base_url are missing at #.",
                      []}
                 ]
               }} = IdentityProviders.create_backend(attrs)

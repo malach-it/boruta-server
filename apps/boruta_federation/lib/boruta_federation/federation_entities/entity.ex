@@ -8,7 +8,6 @@ defmodule BorutaFederation.FederationEntities.Entity do
 
   @federation_configuration_path "/.well-known/openid-federation"
   @resolve_timeout 120_000
-  @cache_ttl 24 * 3600 * 1000
 
   defmodule Token do
     @moduledoc false
@@ -60,22 +59,7 @@ defmodule BorutaFederation.FederationEntities.Entity do
     Enum.reduce_while(entity.authorities, {:ok, []}, fn authority, {:ok, acc} ->
       case resolve_chain(authority) do
         {:ok, statement, trust_chain} ->
-          case Enum.reduce_while(
-                 trust_chain ++ [statement],
-                 {:ok, acc},
-                 fn statement, {:ok, acc} ->
-                   # TODO
-                   {:ok, %{"sub" => sub}} = Joken.peek_claims(statement)
-
-                   case fetch_statement(authority, sub) do
-                     {:ok, statement} ->
-                       {:cont, {:ok, acc ++ [statement]}}
-
-                     {:error, error} ->
-                       {:halt, {:error, error}}
-                   end
-                 end
-               ) do
+          case fetch_chain_statements(authority, trust_chain ++ [statement]) do
             {:ok, chain} ->
               {:cont, {:ok, acc ++ chain}}
 
@@ -168,6 +152,26 @@ defmodule BorutaFederation.FederationEntities.Entity do
 
       statement ->
         {:ok, statement}
+    end
+  end
+
+  defp fetch_chain_statements(authority, trust_chain, acc \\ [])
+
+  defp fetch_chain_statements(_authority, _trust_chain, {:error, error}), do: {:error, error}
+
+  defp fetch_chain_statements(_authority, [], acc), do: {:ok, Enum.reverse(acc)}
+
+  defp fetch_chain_statements(authority, [statement|trust_chain] = current, acc) do
+    case Joken.peek_claims(statement) do
+      {:ok, %{"sub" => sub}} ->
+        case fetch_statement(authority, sub) do
+          {:ok, statement} ->
+            fetch_chain_statements(authority, trust_chain, [statement|acc])
+
+          {:error, error} ->
+            fetch_chain_statements(authority, current, {:error, error})
+        end
+      _ -> fetch_chain_statements(authority, current, {:error, "Invalid trust chain statement."})
     end
   end
 end

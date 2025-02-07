@@ -124,7 +124,7 @@ defmodule BorutaFederation.FederationEntities do
       Enum.map(
         1..Enum.random(1..2),
         fn _i ->
-          entity = Enum.random(nodes)
+          Enum.random(nodes)
         end
       )
       |> Enum.uniq()

@@ -3,12 +3,12 @@ defmodule BorutaFederationWeb.OpenidView do
 
   import Boruta.Config, only: [issuer: 0]
 
-  alias BorutaFederation.TrustChains
   alias BorutaFederation.FederationEntities
+  alias BorutaFederation.TrustChains
 
   def render("well_known.jwt", %{entity: entity}) do
     entity = entity || FederationEntities.list_entities() |> List.first()
-    with {:ok, well_known, _claims} <- TrustChains.sign(
+    case TrustChains.sign(
       %{
         federation_fetch_endpoint: issuer() <> "/federation/fetch",
         federation_resolve_endpoint: issuer() <> "/federation/resolve",
@@ -16,8 +16,8 @@ defmodule BorutaFederationWeb.OpenidView do
       },
       entity
     ) do
-      well_known
-    else
+      {:ok, well_known, _claims} ->
+        well_known
       _ -> ""
     end
   end
