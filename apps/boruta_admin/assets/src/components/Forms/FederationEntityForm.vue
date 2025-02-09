@@ -13,6 +13,11 @@
             <option v-for="type in entityTypes" :value="type">{{ type }}</option>
           </select>
         </div>
+        <h3>Constraints</h3>
+        <div class="field" :class="{ 'error': federationEntity.errors?.max_depth }">
+          <label>Max depth</label>
+          <input type="number" v-model="federationEntity.max_depth" />
+        </div>
         <h3>Authorities</h3>
         <div class="field" :class="{ 'error': federationEntity.errors?.authorities }">
           <div v-for="(authority, index) in federationEntity.authorities" class="ui segment field" :key="index">

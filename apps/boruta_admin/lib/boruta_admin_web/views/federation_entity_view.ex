@@ -21,7 +21,8 @@ defmodule BorutaAdminWeb.FederationEntityView do
       organization_name: entity.organization_name,
       authorities: entity.authorities,
       is_default: entity.default,
-      public_key: entity.public_key
+      public_key: entity.public_key,
+      max_depth: entity.max_depth
     }
   end
 end
