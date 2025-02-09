@@ -19,9 +19,10 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     key_pair_type: map(),
     public_key: String.t(),
     private_key: String.t(),
-    max_depth: integer(),
-    excluded: list(String.t()),
-    permitted: list(String.t()),
+    max_depth: integer() | nil,
+    permitted: list(String.t()) | nil,
+    excluded: list(String.t()) | nil,
+    allowed_entity_types: list(String.t()) | nil,
     inserted_at: DateTime.t(),
     updated_at: DateTime.t()
   }
@@ -94,6 +95,7 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     field(:max_depth, :integer)
     field(:permitted, {:array, :string})
     field(:excluded, {:array, :string})
+    field(:allowed_entity_types, {:array, :string})
 
     has_many(:client_federation_entities, ClientFederationEntity)
 
@@ -113,7 +115,8 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
       :default,
       :max_depth,
       :permitted,
-      :excluded
+      :excluded,
+      :allowed_entity_types
     ])
     |> validate_key_pair_type()
     |> validate_inclusion(:type, @types)

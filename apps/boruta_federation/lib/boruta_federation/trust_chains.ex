@@ -97,10 +97,10 @@ defmodule BorutaFederation.TrustChains do
            {:ok, _claims} <- Entity.Token.verify_and_validate(statement, signer) do
         {:cont, {:ok, acc ++ [statement]}}
       else
-        _ ->
+        {:error, error} ->
           case Joken.peek_claims(statement) do
             {:ok, %{"sub" => sub}} ->
-              {:halt, {:error, "Trust chain is invalid at #{sub}"}}
+              {:halt, {:error, "Trust chain is invalid at #{sub} - #{error}."}}
 
             _ ->
               {:halt, {:error, "Trust chain is invalid."}}
@@ -115,10 +115,10 @@ defmodule BorutaFederation.TrustChains do
            :ok <- validate_constraints(trust_chain -- acc, statement, claims["constraints"]) do
         {:cont, {:ok, acc ++ [statement]}}
       else
-        _ ->
+        {:error, error} ->
           case Joken.peek_claims(statement) do
             {:ok, %{"sub" => sub}} ->
-              {:halt, {:error, "Trust chain is invalid at #{sub}."}}
+              {:halt, {:error, "Trust chain is invalid at #{sub} - #{error}."}}
 
             _ ->
               {:halt, {:error, "Trust chain is invalid."}}
@@ -197,6 +197,25 @@ defmodule BorutaFederation.TrustChains do
          %{"naming_constraints" => %{}} = constraints
        ) do
     validate_constraints(trust_chain, statement, Map.delete(constraints, "naming_constraints"))
+  end
+
+  defp validate_constraints(
+         trust_chain,
+         statement,
+         %{"allowed_entity_types" => allowed_entity_types} = constraints
+       ) do
+    with :ok <-
+           Enum.reduce_while(trust_chain, :ok, fn current, _acc ->
+             with {:ok, %{"metadata" => metadata}} <- Joken.peek_claims(current),
+                  true <- Enum.empty?(Map.keys(metadata) -- allowed_entity_types) do
+                {:cont, :ok}
+             else
+               _ ->
+                 {:halt, {:error, "Trust chain invalid, server entity type is not allowed."}}
+             end
+           end) do
+      validate_constraints(trust_chain, statement, Map.delete(constraints, "allowed_entity_types"))
+    end
   end
 
   defp validate_constraints(_trust_chain, _statement, %{}), do: :ok

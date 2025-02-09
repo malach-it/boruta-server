@@ -44,6 +44,15 @@ defmodule BorutaFederation.FederationEntities.Entity do
       end
 
     constraints =
+      case entity.allowed_entity_types do
+        nil ->
+          constraints
+
+        allowed_entity_types ->
+          Map.put(constraints, "allowed_entity_types", allowed_entity_types)
+      end
+
+    constraints =
       case entity.excluded do
         nil ->
           constraints

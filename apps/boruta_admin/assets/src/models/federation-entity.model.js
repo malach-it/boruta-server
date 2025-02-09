@@ -39,8 +39,9 @@ const assign = {
   key_pair_type: function ({ key_pair_type }) { this.key_pair_type = key_pair_type },
   public_key: function ({ public_key }) { this.public_key = public_key },
   max_depth: function ({ max_depth }) { this.max_depth = max_depth },
-  permitted: function ({ permitted }) { this.permitted = permitted.join(' ') },
-  excluded: function ({ excluded }) { this.excluded = excluded.join(' ') }
+  permitted: function ({ permitted }) { this.permitted = permitted && permitted.join(' ') },
+  excluded: function ({ excluded }) { this.excluded = excluded && excluded.join(' ') },
+  allowed_entity_types: function ({ allowed_entity_types }) { this.allowed_entity_types = allowed_entity_types && allowed_entity_types.join(' ') }
 }
 
 class FederationEntity {
@@ -98,7 +99,8 @@ class FederationEntity {
       key_pair_type,
       max_depth,
       permitted,
-      excluded
+      excluded,
+      allowed_entity_types
     } = this
 
     return {
@@ -112,7 +114,8 @@ class FederationEntity {
       key_pair_type,
       max_depth,
       permitted: permitted && permitted.split(' '),
-      excluded: excluded && excluded.split(' ')
+      excluded: excluded && excluded.split(' '),
+      allowed_entity_types: allowed_entity_types && allowed_entity_types.split(' ')
     }
   }
 }
