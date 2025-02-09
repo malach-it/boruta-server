@@ -111,11 +111,9 @@ defmodule BorutaFederation.TrustChains do
 
   defp validate_trust_chain_constraints(trust_chain) do
     Enum.reduce_while(trust_chain, {:ok, []}, fn statement, {:ok, acc} ->
-      acc = acc ++ [statement]
-
-      with {:ok, claims} <- Joken.peek_claims(statement) |> dbg,
+      with {:ok, claims} <- Joken.peek_claims(statement),
            :ok <- validate_constraints(trust_chain -- acc, statement, claims["constraints"]) do
-        {:cont, {:ok, acc}}
+        {:cont, {:ok, acc ++ [statement]}}
       else
         _ ->
           case Joken.peek_claims(statement) do
@@ -134,13 +132,62 @@ defmodule BorutaFederation.TrustChains do
          statement,
          %{"max_path_length" => max_path_length} = constraints
        ) do
-    dbg max_path_length
     case Enum.count(trust_chain) > max_path_length do
       true ->
-        {:error, "Trust chain invalid."}
+        {:error, "Trust chain depth is invalid."}
 
       false ->
         validate_constraints(trust_chain, statement, Map.delete(constraints, "max_path_length"))
+    end
+  end
+
+  defp validate_constraints(
+         trust_chain,
+         statement,
+         %{"naming_constraints" => %{"permitted" => permitted}} = constraints
+       ) do
+    with :ok <-
+           Enum.reduce_while(trust_chain, :ok, fn current, _acc ->
+             with {:ok, %{"sub" => sub}} <- Joken.peek_claims(current),
+                  true <-
+                    Enum.any?(permitted, fn base ->
+                      Regex.match?(~r[^#{base}], sub)
+                    end) do
+               {:cont, :ok}
+             else
+               _ ->
+                 {:halt, {:error, "Trust chain invalid, server is not permitted."}}
+             end
+           end) do
+      validate_constraints(trust_chain, statement, %{
+        constraints
+        | "naming_constraints" => Map.delete(constraints["naming_constraints"], "permitted")
+      })
+    end
+  end
+
+  defp validate_constraints(
+         trust_chain,
+         statement,
+         %{"naming_constraints" => %{"excluded" => excluded}} = constraints
+       ) do
+    with :ok <-
+           Enum.reduce_while(trust_chain, :ok, fn current, _acc ->
+             with {:ok, %{"sub" => sub}} <- Joken.peek_claims(current),
+                  true <-
+                    Enum.any?(excluded, fn base ->
+                      Regex.match?(~r[^#{base}], sub)
+                    end) do
+               {:halt, {:error, "Trust chain invalid, server is excluded."}}
+             else
+               _ ->
+               {:cont, :ok}
+             end
+           end) do
+      validate_constraints(trust_chain, statement, %{
+        constraints
+        | "naming_constraints" => Map.delete(constraints["naming_constraints"], "excluded")
+      })
     end
   end
 
