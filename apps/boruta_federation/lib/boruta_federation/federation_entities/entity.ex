@@ -17,6 +17,20 @@ defmodule BorutaFederation.FederationEntities.Entity do
     def token_config, do: %{}
   end
 
+  @spec constraints(entity :: FederationEntity.t()) :: {:ok, constraints :: map()}
+  def constraints(entity) do
+    constraints = %{}
+
+    constraints = case entity.max_depth do
+      nil ->
+        constraints
+      max_depth ->
+        Map.put(constraints, "max_path_length", max_depth)
+    end
+
+    {:ok, constraints}
+  end
+
   @spec metadata(entity :: FederationEntity.t()) :: {:ok, metadata :: map()}
   def metadata(entity) do
     {:ok,
