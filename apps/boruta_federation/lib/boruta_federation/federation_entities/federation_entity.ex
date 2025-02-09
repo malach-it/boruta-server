@@ -19,6 +19,7 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
     key_pair_type: map(),
     public_key: String.t(),
     private_key: String.t(),
+    max_depth: integer(),
     inserted_at: DateTime.t(),
     updated_at: DateTime.t()
   }
@@ -88,6 +89,7 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
         "exponent_size" => "65537"
       }
     )
+    field(:max_depth, :integer)
 
     has_many(:client_federation_entities, ClientFederationEntity)
 
@@ -104,7 +106,8 @@ defmodule BorutaFederation.FederationEntities.FederationEntity do
       :trust_chain_statement_ttl,
       :trust_mark_logo_uri,
       :authorities,
-      :default
+      :default,
+      :max_depth
     ])
     |> validate_key_pair_type()
     |> validate_inclusion(:type, @types)

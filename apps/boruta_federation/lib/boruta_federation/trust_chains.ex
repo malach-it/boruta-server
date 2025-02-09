@@ -3,16 +3,19 @@ defmodule BorutaFederation.TrustChains do
 
   import Boruta.Config, only: [issuer: 0]
 
+  alias BorutaFederation.FederationEntities.Entity
   alias BorutaFederation.FederationEntities.FederationEntity
 
   @spec generate_statement(entity :: FederationEntity.t()) ::
           {:ok, trust_chain :: list(String.t())} | {:error, reason :: String.t()}
   def generate_statement(entity, opts \\ []) do
     with {:ok, metadata} <- apply(String.to_atom(entity.type), :metadata, [entity]),
-         {:ok, trust_marks} <- apply(String.to_atom(entity.type), :trust_marks, [entity]) do
+         {:ok, trust_marks} <- apply(String.to_atom(entity.type), :trust_marks, [entity]),
+         {:ok, constraints} <- apply(String.to_atom(entity.type), :constraints, [entity]) do
       payload = %{
         "metadata" => metadata,
-        "trust_marks" => trust_marks
+        "trust_marks" => trust_marks,
+        "constraints" => constraints
       }
 
       with true <- opts[:include_trust_chain],
@@ -44,8 +47,9 @@ defmodule BorutaFederation.TrustChains do
   def generate_trust_chain(entity) do
     with {:ok, statement} <- generate_statement(entity),
          {:ok, chain_statements} <-
-           apply(String.to_atom(entity.type), :resolve_parents_chain, [entity]) do
-      {:ok, chain_statements ++ [statement]}
+           apply(String.to_atom(entity.type), :resolve_parents_chain, [entity]),
+         {:ok, trust_chain} <- validate_trust_chain(chain_statements ++ [statement]) do
+      {:ok, trust_chain}
     end
   end
 
@@ -76,4 +80,79 @@ defmodule BorutaFederation.TrustChains do
       end
     end
   end
+
+  defp validate_trust_chain(trust_chain) do
+    with {:ok, trust_chain} <- validate_trust_chain_signatures(trust_chain),
+         {:ok, trust_chain} <- validate_trust_chain_constraints(trust_chain) do
+      {:ok, trust_chain}
+    end
+  end
+
+  defp validate_trust_chain_signatures(trust_chain) do
+    Enum.reduce_while(trust_chain, {:ok, []}, fn statement, {:ok, acc} ->
+      with {:ok, %{"jwks" => %{"keys" => [jwk]}}} <- Joken.peek_claims(statement),
+           {:ok, %{"alg" => alg}} <- Joken.peek_header(statement),
+           signer <-
+             Joken.Signer.create(alg, %{"pem" => JOSE.JWK.from_map(jwk) |> JOSE.JWK.to_pem()}),
+           {:ok, _claims} <- Entity.Token.verify_and_validate(statement, signer) do
+        {:cont, {:ok, acc ++ [statement]}}
+      else
+        _ ->
+          case Joken.peek_claims(statement) do
+            {:ok, %{"sub" => sub}} ->
+              {:halt, {:error, "Trust chain is invalid at #{sub}"}}
+
+            _ ->
+              {:halt, {:error, "Trust chain is invalid."}}
+          end
+      end
+    end)
+  end
+
+  defp validate_trust_chain_constraints(trust_chain) do
+    Enum.reduce_while(trust_chain, {:ok, []}, fn statement, {:ok, acc} ->
+      acc = acc ++ [statement]
+
+      with {:ok, claims} <- Joken.peek_claims(statement) |> dbg,
+           :ok <- validate_constraints(trust_chain -- acc, statement, claims["constraints"]) do
+        {:cont, {:ok, acc}}
+      else
+        _ ->
+          case Joken.peek_claims(statement) do
+            {:ok, %{"sub" => sub}} ->
+              {:halt, {:error, "Trust chain is invalid at #{sub}."}}
+
+            _ ->
+              {:halt, {:error, "Trust chain is invalid."}}
+          end
+      end
+    end)
+  end
+
+  defp validate_constraints(
+         trust_chain,
+         statement,
+         %{"max_path_length" => max_path_length} = constraints
+       ) do
+    dbg max_path_length
+    case Enum.count(trust_chain) > max_path_length do
+      true ->
+        {:error, "Trust chain invalid."}
+
+      false ->
+        validate_constraints(trust_chain, statement, Map.delete(constraints, "max_path_length"))
+    end
+  end
+
+  defp validate_constraints(
+         trust_chain,
+         statement,
+         %{"naming_constraints" => %{}} = constraints
+       ) do
+    validate_constraints(trust_chain, statement, Map.delete(constraints, "naming_constraints"))
+  end
+
+  defp validate_constraints(_trust_chain, _statement, %{}), do: :ok
+
+  defp validate_constraints(_trust_chain, _statement, nil), do: :ok
 end
