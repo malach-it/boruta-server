@@ -19,9 +19,6 @@ defmodule BorutaIdentityWeb.Endpoint do
     only: ~w(css fonts images js favicon.ico robots.txt)
 
   plug Plug.RequestId
-  plug Plug.Telemetry,
-    event_prefix: [:boruta_identity, :endpoint],
-    log: {__MODULE__, :log_level, []}
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

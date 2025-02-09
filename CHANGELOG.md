@@ -1,6 +1,6 @@
 # Changelog
 
-> Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
+> Note that 0.X.X releases are reserved for the beta version of the server and may include breaking changes.
 
 ## [unreleased]
 
@@ -11,6 +11,7 @@
 - [ssi] transaction code in OID4VCI preauthorized code flow
 - [ssi] vct configuration in verifiable credentials
 - [admin] feedback form
+- [federation] OpenID Federation implementation (core features)
 
 ### Changed
 
