@@ -20,11 +20,15 @@
         </div>
         <div class="field" :class="{ 'error': federationEntity.errors?.permitted }">
           <label>Permitted servers <i>(separated by a whitespace)</i></label>
-          <input type="number" v-model="federationEntity.permitted" />
+          <input type="text" v-model="federationEntity.permitted" />
         </div>
         <div class="field" :class="{ 'error': federationEntity.errors?.excluded }">
           <label>Excluded servers <i>(separated by a whitespace)</i></label>
-          <input type="number" v-model="federationEntity.excluded" />
+          <input type="text" v-model="federationEntity.excluded" />
+        </div>
+        <div class="field" :class="{ 'error': federationEntity.errors?.allowed_entity_types }">
+          <label>Allowed entity types <i>(separated by a whitespace)</i></label>
+          <input type="text" v-model="federationEntity.allowed_entity_types" />
         </div>
         <h3>Authorities</h3>
         <div class="field" :class="{ 'error': federationEntity.errors?.authorities }">

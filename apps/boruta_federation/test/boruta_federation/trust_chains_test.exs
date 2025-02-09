@@ -44,4 +44,7 @@ defmodule BorutaFederation.TrustChainsTest do
 
   @tag :skip
   test "fetch_statement/1"
+
+  @tag :skip
+  test "trust chain validation"
 end
