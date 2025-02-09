@@ -2,6 +2,25 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [unreleased]
+
+### Added
+
+- [identity] passwordless user creation (WIP)
+- [identity] destroy user
+- [ssi] transaction code in OID4VCI preauthorized code flow
+- [ssi] vct configuration in verifiable credentials
+- [admin] feedback form
+
+### Changed
+
+- [identity] remove user metadata value constraints
+
+### Fixed
+
+- [admin] defered configuration
+- [admin] example credential issuance link
+
 ## [0.5.1] - 2024-11-21
 
 ### Added
