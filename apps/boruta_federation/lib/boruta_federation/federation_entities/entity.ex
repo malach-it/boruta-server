@@ -21,12 +21,40 @@ defmodule BorutaFederation.FederationEntities.Entity do
   def constraints(entity) do
     constraints = %{}
 
-    constraints = case entity.max_depth do
-      nil ->
-        constraints
-      max_depth ->
-        Map.put(constraints, "max_path_length", max_depth)
-    end
+    constraints =
+      case entity.max_depth do
+        nil ->
+          constraints
+
+        max_depth ->
+          Map.put(constraints, "max_path_length", max_depth)
+      end
+
+    constraints =
+      case entity.permitted do
+        nil ->
+          constraints
+
+        permitted ->
+          Map.put(
+            constraints,
+            "naming_constraints",
+            Map.get(constraints, "naming_constraints", %{}) |> Map.put("permitted", permitted)
+          )
+      end
+
+    constraints =
+      case entity.excluded do
+        nil ->
+          constraints
+
+        excluded ->
+          Map.put(
+            constraints,
+            "naming_constraints",
+            Map.get(constraints, "naming_constraints", %{}) |> Map.put("excluded", excluded)
+          )
+      end
 
     {:ok, constraints}
   end
@@ -175,17 +203,19 @@ defmodule BorutaFederation.FederationEntities.Entity do
 
   defp fetch_chain_statements(_authority, [], acc), do: {:ok, Enum.reverse(acc)}
 
-  defp fetch_chain_statements(authority, [statement|trust_chain] = current, acc) do
+  defp fetch_chain_statements(authority, [statement | trust_chain] = current, acc) do
     case Joken.peek_claims(statement) do
       {:ok, %{"sub" => sub}} ->
         case fetch_statement(authority, sub) do
           {:ok, statement} ->
-            fetch_chain_statements(authority, trust_chain, [statement|acc])
+            fetch_chain_statements(authority, trust_chain, [statement | acc])
 
           {:error, error} ->
             fetch_chain_statements(authority, current, {:error, error})
         end
-      _ -> fetch_chain_statements(authority, current, {:error, "Invalid trust chain statement."})
+
+      _ ->
+        fetch_chain_statements(authority, current, {:error, "Invalid trust chain statement."})
     end
   end
 end

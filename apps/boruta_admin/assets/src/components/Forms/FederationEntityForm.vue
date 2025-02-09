@@ -18,6 +18,14 @@
           <label>Max depth</label>
           <input type="number" v-model="federationEntity.max_depth" />
         </div>
+        <div class="field" :class="{ 'error': federationEntity.errors?.permitted }">
+          <label>Permitted servers <i>(separated by a whitespace)</i></label>
+          <input type="number" v-model="federationEntity.permitted" />
+        </div>
+        <div class="field" :class="{ 'error': federationEntity.errors?.excluded }">
+          <label>Excluded servers <i>(separated by a whitespace)</i></label>
+          <input type="number" v-model="federationEntity.excluded" />
+        </div>
         <h3>Authorities</h3>
         <div class="field" :class="{ 'error': federationEntity.errors?.authorities }">
           <div v-for="(authority, index) in federationEntity.authorities" class="ui segment field" :key="index">
