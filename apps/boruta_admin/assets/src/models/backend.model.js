@@ -59,7 +59,9 @@ const assign = {
         // NOTE for retrocompatibility issues
         claims: typeof credential.claims === "string" ?
           credential.claims.split(' ').map(claim => ({ pointer: claim })) :
-          credential.claims
+          credential.claims.map(claim => {
+            return new Claim(claim)
+          })
       }
     });
   },
@@ -211,6 +213,11 @@ class Backend {
       }
     });
 
+    function serializeClaim (claim) {
+      const { type, name, label, pointer, claims } = claim
+      return { type, name, label, pointer, claims: claims.map(serializeClaim) }
+    }
+
     return {
       id,
       name,
@@ -236,7 +243,10 @@ class Backend {
         delete federated_server.isDiscovery;
         return federated_server;
       }),
-      verifiable_credentials,
+      verifiable_credentials: verifiable_credentials.map(verifiableCredential => {
+        verifiableCredential.claims = verifiableCredential.claims.map(serializeClaim)
+        return verifiableCredential
+      }),
       verifiable_presentations,
       ldap_pool_size,
       ldap_host,
@@ -373,6 +383,69 @@ class Backend {
       .then(({ data }) => {
         return new Backend(data.data);
       });
+  }
+}
+
+export class Claim {
+  constructor (attrs = {}) {
+    const claim = Object.assign(Claim.baseClaim(attrs.type), attrs)
+    Object.assign(this, claim)
+    mapClaims(this)
+
+    function mapClaims(claim) {
+      if (!claim.claims.length) return claim
+
+      const result = claim.claims.map(claim => new Claim(claim))
+      claim.claims = result.map(mapClaims)
+
+      return claim
+    }
+  }
+
+  static build (claimType) {
+    return Object.assign(new Claim(), Claim.baseClaim(claimType))
+  }
+
+  assignType (claimType) {
+    Object.assign(this, Claim.baseClaim(claimType))
+  }
+
+  static get attributeTypes () {
+    return ['attribute']
+  }
+
+  static get objectTypes () {
+    return ['object']
+  }
+
+  get isAttribute () {
+    return Claim.attributeTypes.includes(this.type)
+  }
+
+  get isObject () {
+    return Claim.objectTypes.includes(this.type)
+  }
+
+  static baseClaim(claimType) {
+    switch (claimType) {
+      case 'attribute':
+        return {
+          type: 'attribute',
+          name: '',
+          label: '',
+          freeze: false,
+          claims: []
+        }
+      case 'object':
+        return {
+          type: 'object',
+          name: '',
+          freeze: false,
+          claims: []
+        }
+      default:
+        return { claims: [] }
+    }
   }
 }
 

@@ -190,11 +190,14 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                       "items" => %{
                                         "type" => "object",
                                         "properties" => %{
+                                          "type" => %{"type" => "string"},
                                           "name" => %{"type" => "string"},
                                           "label" => %{"type" => "string"},
-                                          "pointer" => %{"type" => "string"}
+                                          "pointer" => %{"type" => "string"},
+                                          # TODO check claims schema
+                                          "claims" => %{"type" => "array"}
                                         },
-                                        "required" => ["name", "label", "pointer"]
+                                        "required" => ["name"]
                                       }
                                     },
                                     "display" => %{
@@ -212,7 +215,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                           }
                                         }
                                       },
-                                      "required" => ["name"],
+                                      "required" => ["name", "logo"],
                                       "additionalProperties" => false
                                     }
                                   },

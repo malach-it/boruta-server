@@ -275,25 +275,8 @@
               <input type="number" v-model="credential.time_to_live" placeholder="31536000">
             </div>
             <h4>Claims</h4>
-            <div class="ui claim segment" v-for="claim in credential.claims">
-              <i class="ui large close icon" @click="deleteVerifiableCredentialClaim(credential, claim)"></i>
-              <h5>Claim definition</h5>
-              <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
-                <label>Name</label>
-                <input type="text" v-model="claim.name" placeholder="family_name">
-              </div>
-              <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
-                <label>Label</label>
-                <input type="text" v-model="claim.label" placeholder="Family name">
-              </div>
-              <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
-                <label>Pointer</label>
-                <input type="text" v-model="claim.pointer" placeholder="family_name">
-              </div>
-              <div class="field" v-if="credential.format === 'vc+sd-jwt'" :class="{ 'error': backend.errors?.verifiable_credentials }">
-                <label>Expiration</label>
-                <input type="text" v-model="claim.expiration" placeholder="3784320000">
-              </div>
+            <div class="claim"  v-for="claim in credential.claims">
+              <VerifiableCredentialClaim :format="credential.format" :credential="credential" :claim="claim" :errors="backend.errors"></VerifiableCredentialClaim>
             </div>
             <div class="field">
               <a class="ui blue fluid button" @click="addVerifiableCredentialClaim(credential)">Add a claim</a>
@@ -374,13 +357,14 @@
 </template>
 
 <script>
-import Backend from '../../models/backend.model'
+import Backend, { Claim } from '../../models/backend.model'
 import RolesField from './RolesField.vue'
 import Role from '../../models/role.model'
 import Scope from '../../models/scope.model'
 import FormErrors from './FormErrors.vue'
 import ScopesFieldByName from './ScopesFieldByName.vue'
 import TextEditor from '../../components/Forms/TextEditor.vue'
+import VerifiableCredentialClaim from '../../components/VerifiableCredentialClaim.vue'
 
 export default {
   name: 'backend-form',
@@ -389,7 +373,8 @@ export default {
     FormErrors,
     RolesField,
     ScopesFieldByName,
-    TextEditor
+    TextEditor,
+    VerifiableCredentialClaim
   },
   data () {
     return {
@@ -439,13 +424,7 @@ export default {
       )
     },
     addVerifiableCredentialClaim (credential) {
-      credential.claims.push({defered: false})
-    },
-    deleteVerifiableCredentialClaim (credential, claim) {
-      credential.claims.splice(
-        credential.claims.indexOf(claim),
-        1
-      )
+      credential.claims.push(Claim.build('attribute'))
     },
     addVerifiableCredential () {
       this.backend.verifiable_credentials.push({defered: false, display: {logo: {}}, claims: []})
