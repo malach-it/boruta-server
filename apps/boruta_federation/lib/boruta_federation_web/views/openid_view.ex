@@ -17,7 +17,7 @@ defmodule BorutaFederationWeb.OpenidView do
       entity
     ) do
       {:ok, well_known, _claims} ->
-        well_known
+        String.trim(well_known)
       _ -> ""
     end
   end
