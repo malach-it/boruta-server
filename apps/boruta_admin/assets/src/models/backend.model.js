@@ -214,8 +214,15 @@ class Backend {
     });
 
     function serializeClaim (claim) {
-      const { type, name, label, pointer, claims } = claim
-      return { type, name, label, pointer, claims: claims.map(serializeClaim) }
+      const { type, name, label, pointer, claims, items } = claim
+      return {
+        type,
+        name,
+        label,
+        pointer,
+        claims: claims.map(serializeClaim),
+        items: items.map(serializeClaim)
+      }
     }
 
     return {
@@ -391,12 +398,22 @@ export class Claim {
     const claim = Object.assign(Claim.baseClaim(attrs.type), attrs)
     Object.assign(this, claim)
     mapClaims(this)
+    mapItems(this)
 
     function mapClaims(claim) {
       if (!claim.claims.length) return claim
 
       const result = claim.claims.map(claim => new Claim(claim))
       claim.claims = result.map(mapClaims)
+
+      return claim
+    }
+
+    function mapItems(claim) {
+      if (!claim.items.length) return claim
+
+      const result = claim.items.map(claim => new Claim(claim))
+      claim.items = result.map(mapClaims)
 
       return claim
     }
@@ -418,12 +435,20 @@ export class Claim {
     return ['object']
   }
 
+  static get arrayTypes () {
+    return ['array']
+  }
+
   get isAttribute () {
     return Claim.attributeTypes.includes(this.type)
   }
 
   get isObject () {
     return Claim.objectTypes.includes(this.type)
+  }
+
+  get isArray () {
+    return Claim.arrayTypes.includes(this.type)
   }
 
   static baseClaim(claimType) {
@@ -434,17 +459,27 @@ export class Claim {
           name: '',
           label: '',
           freeze: false,
-          claims: []
+          claims: [],
+          items: []
         }
       case 'object':
         return {
           type: 'object',
           name: '',
           freeze: false,
-          claims: []
+          claims: [],
+          items: []
+        }
+      case 'array':
+        return {
+          type: 'array',
+          name: '',
+          freeze: false,
+          claims: [],
+          items: []
         }
       default:
-        return { claims: [] }
+        return { claims: [], items: [] }
     }
   }
 }

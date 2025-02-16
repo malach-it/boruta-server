@@ -11,6 +11,9 @@
         <optgroup label="object">
           <option :value="type" v-for="type in objectClaimTypes">{{ type }}</option>
         </optgroup>
+        <optgroup label="array">
+          <option :value="type" v-for="type in arrayClaimTypes">{{ type }}</option>
+        </optgroup>
       </select>
     </div>
     <div v-if="isAttribute">
@@ -46,6 +49,21 @@
         </div>
       </div>
     </div>
+    <div v-if="isArray">
+      <div class="field" :class="{ 'error': errors?.verifiable_credentials }">
+        <label>Name</label>
+        <input :disabled="claim.freeze" type="text" v-model="claim.name" placeholder="family_name">
+      </div>
+      <div class="field">
+        <h5>Items</h5>
+        <div v-for="childItem in claim.items">
+          <VerifiableCredentialClaim :format="format" :credential="claim" :claim="childItem" :errors="errors"></VerifiableCredentialClaim>
+        </div>
+        <div class="field">
+          <a class="ui blue fluid button" @click="addChildItem(claim)">Add a claim</a>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -58,7 +76,8 @@ export default {
   data () {
     return {
       attributeClaimTypes: Claim.attributeTypes,
-      objectClaimTypes: Claim.objectTypes
+      objectClaimTypes: Claim.objectTypes,
+      arrayClaimTypes: Claim.arrayTypes
     }
   },
   computed: {
@@ -67,6 +86,9 @@ export default {
     },
     isObject () {
       return this.claim.isObject
+    },
+    isArray () {
+      return this.claim.isArray
     }
   },
   methods: {
@@ -78,6 +100,11 @@ export default {
     },
     addChildClaim(claim) {
       claim.claims.push(
+        Claim.build('attribute')
+      )
+    },
+    addChildItem(claim) {
+      claim.items.push(
         Claim.build('attribute')
       )
     }

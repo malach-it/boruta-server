@@ -195,9 +195,12 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                           "label" => %{"type" => "string"},
                                           "pointer" => %{"type" => "string"},
                                           # TODO check claims schema
-                                          "claims" => %{"type" => "array"}
+                                          "claims" => %{"type" => "array"},
+                                          # TODO check items schema
+                                          "items" => %{"type" => "array"}
                                         },
-                                        "required" => ["name"]
+                                        "required" => ["name"],
+                                        "additionalProperties" => false
                                       }
                                     },
                                     "display" => %{
