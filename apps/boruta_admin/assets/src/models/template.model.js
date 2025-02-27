@@ -68,9 +68,10 @@ class Template {
   }
 
   get serialized () {
-    const { content } = this
+    const { id, content } = this
 
     return {
+      id,
       content
     }
   }

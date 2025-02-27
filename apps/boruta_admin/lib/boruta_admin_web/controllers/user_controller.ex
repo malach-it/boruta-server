@@ -73,11 +73,12 @@ defmodule BorutaAdminWeb.UserController do
     import_users_opts =
       (import_params["options"] || %{})
       |> Enum.map(fn
+        {"metadata_headers" = k, v} -> {String.to_atom(k), v}
         {"username_header" = k, v} -> {String.to_atom(k), v}
         {"password_header" = k, v} -> {String.to_atom(k), v}
-        {"hash_password" = k, v} when is_boolean(v) -> {String.to_atom(k), true}
         {"hash_password" = k, "true"} -> {String.to_atom(k), true}
         {"hash_password" = k, "false"} -> {String.to_atom(k), false}
+        {"hash_password" = k, v} when is_boolean(v) -> {String.to_atom(k), v}
         {_k, _v} -> nil
       end)
       |> Enum.reject(&is_nil/1)

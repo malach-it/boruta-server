@@ -104,4 +104,28 @@ defmodule BorutaIdentity.Accounts.UserNotifier do
     _error ->
       {:error, "Bad SMTP configuration."}
   end
+
+  def deliver_tx_code(backend, user, tx_code) do
+    template = Enum.find(backend.email_templates, fn %EmailTemplate{type: type} ->
+      type == "tx_code"
+    end) || EmailTemplate.default_template(:tx_code)
+
+    context = %{
+      user: Map.from_struct(user),
+      tx_code: tx_code
+    }
+
+    text_body = Mustachex.render(template.txt_content, context)
+    html_body = Mustachex.render(template.html_content, context)
+
+    new()
+    |> from(user.backend.smtp_from)
+    |> to(user.username)
+    |> subject("Wallet transaction code")
+    |> text_body(text_body)
+    |> html_body(html_body)
+  rescue
+    _error ->
+      {:error, "Bad SMTP configuration."}
+  end
 end

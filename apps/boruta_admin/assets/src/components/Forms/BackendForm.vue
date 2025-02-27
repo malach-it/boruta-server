@@ -147,6 +147,11 @@
               :to="{ name: 'edit-reset-password-instructions-email-template', params: { backendId: backend.id } }"
               class="ui fluid blue button">Edit reset password template</router-link>
           </div>
+          <div v-if="backend.isPersisted" class="ui segment">
+            <router-link
+              :to="{ name: 'edit-tx-code-email-template', params: { backendId: backend.id } }"
+              class="ui fluid blue button">Edit transaction code template</router-link>
+          </div>
         </div>
         <div ref="identity-federation" data-tab="identity-federation" class="ui bottom attached tab segment">
           <h2>Identity federation (login with)</h2>
@@ -237,6 +242,10 @@
               <input type="text" v-model="credential.credential_identifier" placeholder="BorutaCredential">
             </div>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>Verifiable credential type</label>
+              <input type="text" v-model="credential.vct" placeholder="urn:boruta:verifiable-credential-type">
+            </div>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
               <label>Version</label>
               <select v-model="credential.version">
                 <option value="11">11</option>
@@ -315,7 +324,7 @@
             <a class="ui blue fluid button" @click="addVerifiableCredential()">Add a verifiable credential</a>
           </div>
           <h2>Verifiable presentations</h2>
-          <div v-for="presentation in backend.verifiable_presentations" class="ui presentation-field segment">
+          <div v-for="presentation in backend.verifiable_presentations" class="ui presentation-field segment" :index="presentation.presentation_identifier">
             <i class="ui large close icon" @click="deleteVerifiablePresentation(presentation)"></i>
             <h3>Verifiable presentation</h3>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_presentations }">
@@ -439,7 +448,7 @@ export default {
       )
     },
     addVerifiableCredential () {
-      this.backend.verifiable_credentials.push({display: {logo: {}}, claims: []})
+      this.backend.verifiable_credentials.push({defered: false, display: {logo: {}}, claims: []})
     },
     addVerifiablePresentation () {
       this.backend.verifiable_presentations.push({})

@@ -42,6 +42,7 @@ const labels = {
   'new-backend': 'Create',
   'edit-confirmation-instructions-email-template': 'Edit confirmation instructions email template',
   'edit-reset-password-instructions-email-template': 'Edit reset password instructions email template',
+  'edit-tx-code-email-template': 'Edit transaction code email template',
   'users': 'Users',
   'new-user': 'Create',
   'user-import': 'Import',

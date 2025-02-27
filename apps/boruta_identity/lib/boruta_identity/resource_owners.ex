@@ -37,13 +37,12 @@ defmodule BorutaIdentity.ResourceOwners do
     end
   end
 
-  def get_by(sub: sub) when not is_nil(sub) do
+  def get_by(sub: sub, scope: scope) when not is_nil(sub) do
     case Accounts.get_user(sub) do
       %User{
         id: id,
         username: email,
         last_login_at: last_login_at,
-        metadata: metadata,
         federated_metadata: federated_metadata
       } = user ->
         {:ok,
@@ -51,7 +50,7 @@ defmodule BorutaIdentity.ResourceOwners do
            sub: id,
            username: email,
            last_login_at: last_login_at,
-           extra_claims: Map.merge(metadata, federated_metadata),
+           extra_claims: Map.merge(metadata(user, scope), federated_metadata),
            authorization_details: VerifiableCredentials.authorization_details(user),
            credential_configuration: VerifiableCredentials.credential_configuration(user),
            presentation_configuration: VerifiablePresentations.presentation_configuration(user)
@@ -84,7 +83,7 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do
     Accounts.get_user_scopes(sub) ++
-      Enum.flat_map(Accounts.get_user_roles(sub), fn %{scopes: scopes} -> scopes end)
+      Enum.flat_map(Accounts.get_user_roles(sub), fn %{scopes: scopes} -> scopes end) |> dbg
   end
 
   def authorized_scopes(_), do: []
@@ -92,40 +91,48 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def claims(%ResourceOwner{sub: sub}, scope) do
     case Accounts.get_user(sub) do
-      %User{
-        metadata: metadata,
-        backend: backend
-      } = user ->
-        metadata =
-          metadata
-          |> User.metadata_filter(backend)
-          |> metadata_scope_filter(scope, backend)
-          |> Enum.map(fn
-            {key, value} when is_binary(value) -> {key, value}
-            {key, metadata} -> {key, metadata["value"]}
-          end)
-          |> Enum.into(%{})
-
+      %User{} = user ->
         scope
         |> Scope.split()
         |> Enum.reduce(%{}, fn scope, acc -> merge_claims(scope, acc, user, sub) end)
         |> Map.put("scope", scope)
-        |> Map.merge(metadata)
 
       _ ->
         %{}
     end
   end
 
+  @impl Boruta.Oauth.ResourceOwners
+  def from_holder(%{presentation_claims: presentation_claims, sub: sub, scope: scope}) do
+    get_by(sub: presentation_claims["boruta_uid"], scope: scope)
+  end
+
+  @spec metadata(user :: User.t(), scope :: String.t()) :: metadata :: map()
+  def metadata(%User{metadata: %{} = metadata} = user, _scope) when metadata == %{}, do: %{
+    "boruta_uid" => user.id,
+    "boruta_username" => user.username,
+    "email" => user.username
+  }
+
+  def metadata(user, scope) do
+    user.metadata
+    |> User.metadata_filter(user.backend)
+    |> metadata_scope_filter(scope, user.backend)
+    |> Enum.into(%{})
+    |> Map.put("boruta_uid", user.id)
+    |> Map.put("boruta_username", user.username)
+    |> Map.put("email", user.username)
+  end
+
   defp merge_claims(
-         "email",
-         acc,
-         %User{
-           username: username,
-           confirmed_at: confirmed_at
-         },
-         _sub
-       ) do
+    "email",
+    acc,
+    %User{
+      username: username,
+      confirmed_at: confirmed_at
+    },
+    _sub
+  ) do
     Map.merge(acc, %{
       "email" => username,
       "email_verified" => !!confirmed_at

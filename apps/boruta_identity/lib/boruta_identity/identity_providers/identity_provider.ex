@@ -18,6 +18,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
           enforce_totp: boolean(),
           confirmable: boolean(),
           authenticable: boolean(),
+          check_password: boolean(),
           reset_password: boolean(),
           client_identity_providers:
             list(ClientIdentityProvider.t()) | Ecto.Association.NotLoaded.t(),
@@ -95,6 +96,10 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     consentable: [
       # BorutaIdentity.Accounts.Consents
       :consent
+    ],
+    destroyable: [
+      # BorutaIdentity.Accounts.Settings
+      :destroy_user
     ]
   }
 
@@ -112,6 +117,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     field(:confirmable, :boolean, default: false)
     field(:consentable, :boolean, default: false)
     field(:authenticable, :boolean, default: true, virtual: true)
+    field(:destroyable, :boolean, default: true, virtual: true)
+    field(:check_password, :boolean, default: true)
     field(:reset_password, :boolean, default: true, virtual: true)
 
     has_many(:client_identity_providers, ClientIdentityProvider)
@@ -174,6 +181,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     |> cast(attrs, [
       :id,
       :name,
+      :check_password,
       :choose_session,
       :totpable,
       :enforce_totp,
@@ -189,6 +197,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     |> validate_required([:name, :backend_id])
     |> unique_constraint(:name)
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)
+    |> foreign_key_constraint(:backend_id, name: :identity_providers_backend_id_fkey)
   end
 
   @doc false

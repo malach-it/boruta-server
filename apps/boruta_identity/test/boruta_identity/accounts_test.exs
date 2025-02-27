@@ -19,7 +19,6 @@ defmodule BorutaIdentity.AccountsTest do
   alias BorutaIdentity.Repo
 
   setup :set_mox_from_context
-  setup :verify_on_exit!
 
   defmodule DummyRegistration do
     @behaviour Accounts.RegistrationApplication
@@ -99,6 +98,16 @@ defmodule BorutaIdentity.AccountsTest do
     @impl Accounts.SettingsApplication
     def user_updated(context, user) do
       {:user_updated, context, user}
+    end
+
+    @impl Accounts.SettingsApplication
+    def user_destroy_failure(context, error) do
+      {:user_destroy_failure, context, error}
+    end
+
+    @impl Accounts.SettingsApplication
+    def user_destroyed(context, user) do
+      {:user_destroyed, context, user}
     end
 
     @impl Accounts.SettingsApplication
@@ -447,7 +456,9 @@ defmodule BorutaIdentity.AccountsTest do
                  DummyRegistration
                )
 
-      assert user.metadata == %{"test" => %{"value" => "test value", "status" => "valid"}}
+      assert user.metadata == %{
+               "test" => %{"value" => "test value", "status" => "valid", "display" => []}
+             }
     end
 
     test "registers users with default organization", %{client_id: client_id, backend: backend} do
@@ -542,13 +553,21 @@ defmodule BorutaIdentity.AccountsTest do
           identity_provider: insert(:identity_provider, confirmable: true)
         )
 
+      no_password_client_identity_provider =
+        BorutaIdentity.Factory.insert(
+          :client_identity_provider,
+          identity_provider: insert(:identity_provider, check_password: false)
+        )
+
       client_identity_provider = BorutaIdentity.Factory.insert(:client_identity_provider)
 
       {:ok,
        backend: client_identity_provider.identity_provider.backend,
        client_id: client_identity_provider.client_id,
        confirmable_backend: confirmable_client_identity_provider.identity_provider.backend,
-       confirmable_client_id: confirmable_client_identity_provider.client_id}
+       confirmable_client_id: confirmable_client_identity_provider.client_id,
+       no_password_backend: no_password_client_identity_provider.identity_provider.backend,
+       no_password_client_id: no_password_client_identity_provider.client_id}
     end
 
     test "returns an error with nil client_id" do
@@ -704,6 +723,32 @@ defmodule BorutaIdentity.AccountsTest do
                 username: ^username,
                 backend: ^backend,
                 uid: ^uid,
+                last_login_at: last_login_at
+              },
+              session_token} =
+               Accounts.create_session(
+                 context,
+                 client_id,
+                 authentication_params,
+                 DummySession
+               )
+
+      assert last_login_at
+      assert session_token
+    end
+
+    test "authenticates the user with no password", %{
+      no_password_client_id: client_id,
+      no_password_backend: backend
+    } do
+      context = :context
+      username = "no_password@test.test"
+      authentication_params = %{email: username}
+
+      assert {:user_authenticated, ^context,
+              %User{
+                username: ^username,
+                backend: ^backend,
                 last_login_at: last_login_at
               },
               session_token} =
@@ -1621,10 +1666,19 @@ defmodule BorutaIdentity.AccountsTest do
                )
     end
 
-    test "updates user with metadata", %{client_id: client_id, user: user, backend: backend} do
+    test "updates user with metadata", %{client_id: client_id, backend: backend} do
+      user =
+        user_fixture(%{
+          backend: backend,
+          metadata: %{"other" => %{"value" => "other", "status" => "valid", "display" => []}}
+        })
+
       {:ok, _backend} =
         Ecto.Changeset.change(backend, %{
-          metadata_fields: [%{"attribute_name" => "test", "user_editable" => true}]
+          metadata_fields: [
+            %{"attribute_name" => "other", "user_editable" => false},
+            %{"attribute_name" => "test", "user_editable" => true}
+          ]
         })
         |> Repo.update()
 
@@ -1635,7 +1689,10 @@ defmodule BorutaIdentity.AccountsTest do
       assert {:user_updated, :context,
               %User{
                 username: ^updated_email,
-                metadata: %{"test" => %{"value" => "test value", "status" => "valid"}}
+                metadata: %{
+                  "test" => %{"value" => "test value", "status" => "valid", "display" => []},
+                  "other" => %{"value" => "other", "status" => "valid", "display" => []}
+                }
               }} =
                Accounts.update_user(
                  :context,
@@ -2041,4 +2098,48 @@ defmodule BorutaIdentity.AccountsTest do
 
   @tag :skip
   test "consent/5"
+
+  describe "destroy_user/4" do
+    setup do
+      backend = insert(:backend)
+
+      identity_provider =
+        build(
+          :identity_provider,
+          user_editable: true,
+          backend: backend
+        )
+
+      client_identity_provider =
+        BorutaIdentity.Factory.insert(:client_identity_provider,
+          identity_provider: identity_provider
+        )
+
+      user = user_fixture(%{backend: backend})
+
+      {:ok, client_id: client_identity_provider.client_id, user: user, backend: backend}
+    end
+
+    test "returns an error", %{client_id: client_id} do
+      assert {:user_destroy_failure, :context,
+                %SettingsError{
+                  message: "User could not be deleted, please contact an administrator."
+                }} = Accounts.destroy_user(
+               :context,
+               client_id,
+               %User{uid: SecureRandom.uuid()},
+               DummySettings
+             )
+    end
+
+    test "destroys user", %{client_id: client_id, user: user} do
+      assert {:user_destroyed, :context, %User{}} =
+               Accounts.destroy_user(
+                 :context,
+                 client_id,
+                 user,
+                 DummySettings
+               )
+    end
+  end
 end

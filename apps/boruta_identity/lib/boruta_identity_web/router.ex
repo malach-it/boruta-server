@@ -61,6 +61,7 @@ defmodule BorutaIdentityWeb.Router do
     post("/users/consent", UserConsentController, :consent)
     get("/users/settings", UserSettingsController, :edit)
     put("/users/settings", UserSettingsController, :update)
+    post("/users/destroy", UserSettingsController, :destroy)
   end
 
   scope "/", BorutaIdentityWeb do

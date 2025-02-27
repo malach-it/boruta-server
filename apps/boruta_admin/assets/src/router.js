@@ -61,6 +61,7 @@ import NewBackend from "./views/IdentityProviders/NewBackend.vue";
 import EditBackend from "./views/IdentityProviders/EditBackend.vue";
 import EditConfirmationInstructionsEmailTemplate from "./views/IdentityProviders/Backends/EditConfirmationInstructionsEmailTemplate.vue";
 import EditResetPasswordInstructionsEmailTemplate from "./views/IdentityProviders/Backends/EditResetPasswordInstructionsEmailTemplate.vue";
+import EditTxCodeEmailTemplate from "./views/IdentityProviders/Backends/EditTxCodeEmailTemplate.vue";
 
 import Scopes from "./views/Scopes.vue";
 import ScopeList from "./views/Scopes/ScopeList.vue";
@@ -277,6 +278,11 @@ const router = createRouter({
                       path: "edit/reset-password-instructions-email-template",
                       name: "edit-reset-password-instructions-email-template",
                       component: EditResetPasswordInstructionsEmailTemplate,
+                    },
+                    {
+                      path: "edit/tx-code-email-template",
+                      name: "edit-tx-code-email-template",
+                      component: EditTxCodeEmailTemplate,
                     },
                   ],
                 },
