@@ -37,13 +37,15 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { BorutaOauth, KeyStore, extractKeys } from 'boruta-client'
+import { storage } from '../store'
 import Consent from '../components/Consent.vue'
 
 const oauth = new BorutaOauth({
   host: window.env.BORUTA_OAUTH_BASE_URL,
   tokenPath: '/oauth/token',
   credentialPath: '/openid/credential',
-  window: window
+  window,
+  storage
 })
 
 
@@ -121,10 +123,7 @@ export default defineComponent({
         this.insertConsentEventKey = this.credentialId
       })
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {
-        this.$store.commit('addCredential', {
-          credential_configuration_id,
-          ...credential
-        })
+        this.$store.commit('refreshCredentials')
         this.$router.push({ name: 'home' })
       })
     }

@@ -11,11 +11,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { BorutaOauth } from 'boruta-client'
+import { storage } from '../store'
 
 const oauth = new BorutaOauth({
   host: 'https://oauth.boruta.patatoid.fr',
   jwksPath: '/openid/jwks',
-  window: window
+  window,
+  storage
 })
 
 const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })

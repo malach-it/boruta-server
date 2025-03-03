@@ -1,11 +1,12 @@
 import { createStore } from 'vuex'
-import { CredentialsStore } from 'boruta-client'
+import { CredentialsStore, BrowserStorage } from 'boruta-client'
 
-const credentialsStore = new CredentialsStore(window)
+export const storage = new BrowserStorage(window)
+const credentialsStore = new CredentialsStore(window, storage)
 
-export default createStore({
+const store = createStore({
   state: {
-    credentials: credentialsStore.credentials
+    credentials: []
   },
   getters: {
     credentials ({ credentials }) {
@@ -13,8 +14,8 @@ export default createStore({
     }
   },
   mutations: {
-    addCredential(state, credential) {
-      state.credentials = credentialsStore.credentials
+    async refreshCredentials(state) {
+      state.credentials = await credentialsStore.credentials()
     },
     deleteCredential(state, credential) {
       credentialsStore.deleteCredential(credential.credential).then(credentials => {
@@ -27,3 +28,7 @@ export default createStore({
   modules: {
   }
 })
+
+store.commit('refreshCredentials')
+
+export default store
