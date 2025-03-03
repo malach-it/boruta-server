@@ -36,6 +36,7 @@ configuration:
         id: 00000000-0000-0000-0000-000000000001
       redirect_uris:
         - https://redirect.uri.boruta
+        - {{REDIRECT_URI}}
   scope:
     - name: BorutaCredentialSdJwt
       label: boruta username

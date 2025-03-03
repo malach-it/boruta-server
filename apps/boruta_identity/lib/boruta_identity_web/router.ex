@@ -62,6 +62,7 @@ defmodule BorutaIdentityWeb.Router do
     get("/users/settings", UserSettingsController, :edit)
     put("/users/settings", UserSettingsController, :update)
     post("/users/destroy", UserSettingsController, :destroy)
+    get("/wallet", WalletController, :index)
   end
 
   scope "/", BorutaIdentityWeb do
@@ -75,6 +76,12 @@ defmodule BorutaIdentityWeb.Router do
     get("/users/confirm/:token", UserConfirmationController, :confirm)
     get("/users/reset_password/:token", UserResetPasswordController, :edit)
     put("/users/reset_password/:token", UserResetPasswordController, :update)
+  end
+
+  scope "/wallet", BorutaIdentityWeb do
+    pipe_through(:browser)
+
+    match(:get, "/*path", WalletController, :index)
   end
 
   @impl Plug.ErrorHandler

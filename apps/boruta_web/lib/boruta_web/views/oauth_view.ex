@@ -166,7 +166,7 @@ defmodule BorutaWeb.OauthView do
 
           _authorization_details ->
             response
-            # |> Map.put(:authorization_details, authorization_details)
+            |> Map.put(:authorization_details, authorization_details)
             |> Map.put(:c_nonce_expires_in, 3600)
         end
 

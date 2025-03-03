@@ -1,4 +1,4 @@
-FROM node:17.4.0 AS assets
+FROM node:17.4.0 AS admin_assets
 
 # For packages not compatible with OpenSSL 3.0 https://nodejs.org/en/blog/release/v17.0.0/
 ENV NODE_OPTIONS=--openssl-legacy-provider
@@ -6,6 +6,19 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 WORKDIR /app
 
 COPY ./apps/boruta_admin/assets /app
+
+RUN npm ci
+RUN npm run build
+
+FROM node:17.4.0 AS identity_assets
+
+# For packages not compatible with OpenSSL 3.0 https://nodejs.org/en/blog/release/v17.0.0/
+ENV NODE_OPTIONS=--openssl-legacy-provider
+ENV BORUTA_OAUTH_BASE_URL=$BORUTA_OAUTH_BASE_URL
+
+WORKDIR /app/wallet
+
+COPY ./apps/boruta_identity/assets /app
 
 RUN npm ci
 RUN npm run build
@@ -21,10 +34,12 @@ RUN mix local.rebar --force
 
 WORKDIR /app
 COPY . .
-COPY --from=assets /priv/static/assets ./apps/boruta_admin/priv/static/assets
 RUN rm -rf deps
 RUN mix do clean, deps.get
 RUN mix compile
+
+COPY --from=admin_assets /priv/static/assets ./apps/boruta_admin/priv/static/assets
+COPY --from=identity_assets /priv/static/wallet ./apps/boruta_identity/priv/static/wallet
 
 WORKDIR /app/apps/boruta_admin
 RUN mix phx.digest

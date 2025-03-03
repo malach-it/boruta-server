@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Boruta · Administration panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
+    <script>
+      window.env = {
+        BORUTA_ADMIN_OAUTH_CLIENT_ID: '<%= System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20") %>',
+        BORUTA_ADMIN_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL", "http://localhost:4000") %>',
+        BORUTA_ADMIN_BASE_URL: '<%= System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4001") %>',
+        BORUTA_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000") %>',
+      }
+    </script>
+    <link rel="manifest" type="text/css" href="<%= Routes.static_path(@conn, "/wallet/manifest.webmanifest") %>" media="all"/>
+    <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/wallet/style.css") %>" media="all"/>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but boruta-admin doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+
+    <script type="module" src="<%= Routes.static_path(@conn, "/wallet/app.es.js") %>"></script>
+  </body>
+</html>
