@@ -13,7 +13,7 @@ const manifest = {
   "background_color": "#333333",
   "display": "standalone",
   "scope": "/accounts/wallet",
-  "start_url": "./",
+  "start_url": "/accounts/wallet",
   "intent_filters": {
     "scope_url_scheme": base_url.protocol.slice(0, -1),
     "scope_url_host": base_url.host,

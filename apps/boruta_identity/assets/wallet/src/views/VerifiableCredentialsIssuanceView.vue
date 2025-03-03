@@ -1,28 +1,32 @@
 <template>
   <div class="ui verifiable-credentials-issuance container">
-    <h1>{{ credentialIssuer }} offer those credentials</h1>
-    <div class="ui error message" v-show="error">
-      {{ error }}
-    </div>
-    <div class="ui center aligned segment" v-if="displayConsent">
-      <h2>You are about to use your cryptographic key</h2>
-      <div class="ui fluid two buttons">
-        <button class="ui orange button" @click="abort()">Abort</button>
-        <button class="ui green button" @click="consent()">Proceed</button>
+    <div class="ui segment" v-if="error">
+      <div class="ui placeholder segment">
+        <div class="ui icon header">
+          <i class="exclamation icon"></i>
+          {{ error }}
+        </div>
       </div>
+      <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
-    <div class="ui center aligned segment" v-if="displayInsert">
-      <h2>You are about to insert a credential to your wallet</h2>
-      <div class="ui fluid two buttons">
-        <button class="ui orange button" @click="abort()">Abort</button>
-        <button class="ui green button" @click="insert()">Proceed</button>
-      </div>
-    </div>
-    <div class="ui segments">
+    <div v-else>
+      <h1 v-if="credentialIssuer">{{ credentialIssuer }} offer those credentials</h1>
+      <Consent
+        message="You are about to use your cryptographic key"
+        :event-key="keyConsentEventKey"
+        @abort="abortKeyConsent"
+        @consent="keyConsent"
+      />
+      <Consent
+        message="You are about to insert a credential to your wallet"
+        :event-key="insertConsentEventKey"
+        @abort="abortInsertConsent"
+        @consent="insertConsent"
+      />
       <div class="ui segment" v-for="authorizationDetail in authorizationDetails">
         <h2>
           {{ authorizationDetail.credential_configuration_id }}
-          <span class="ui orange label">{{ authorizationDetail.format }}</span>
+          <span class="ui brown label">{{ authorizationDetail.format }}</span>
         </h2>
         <button :disabled="fetchingCredential" class="ui fluid violet button" @click="getCredential(authorizationDetail)" :class="{ 'loading': fetchingCredential }">Get credential</button>
       </div>
@@ -33,6 +37,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { BorutaOauth, KeyStore, extractKeys } from 'boruta-client'
+import Consent from '../components/Consent.vue'
 
 const oauth = new BorutaOauth({
   host: window.env.BORUTA_OAUTH_BASE_URL,
@@ -44,7 +49,7 @@ const oauth = new BorutaOauth({
 
 export default defineComponent({
   name: 'VerifiableCredentialsIssuanceView',
-  components: {},
+  components: { Consent },
   data () {
     return {
       client: null,
@@ -52,8 +57,8 @@ export default defineComponent({
       tokenResponse: null,
       credentialId: null,
       authorizationDetails: [],
-      displayConsent: null,
-      displayInsert: false,
+      keyConsentEventKey: null,
+      insertConsentEventKey: null,
       fetchingCredential: false,
       error: null
     }
@@ -61,7 +66,7 @@ export default defineComponent({
   async mounted () {
     const keyStore = new KeyStore(window)
     window.addEventListener('extract_key-request~client', () => {
-      this.displayConsent = 'client'
+      setTimeout(() => window.dispatchEvent(new Event('extract_key-approval~client')), 0)
     })
     const { did } = await extractKeys(keyStore, 'client')
 
@@ -80,7 +85,7 @@ export default defineComponent({
       this.tokenResponse = tokenResponse
       this.authorizationDetails = authorization_details
       window.addEventListener('extract_key-request~' + tokenResponse.access_token, () => {
-        this.displayConsent = tokenResponse.access_token
+        this.keyConsentEventKey = tokenResponse.access_token
       })
     }).catch(({ error_description }) => {
       this.error = error_description
@@ -92,25 +97,28 @@ export default defineComponent({
     }
   },
   methods: {
-    consent () {
-      window.dispatchEvent(new Event('extract_key-approval~' + this.displayConsent))
-      this.displayConsent = false
+    keyConsent (eventKey) {
+      window.dispatchEvent(new Event('extract_key-approval~' + eventKey))
+      this.keyConsentEventKey = null
     },
-    abort () {
+    insertConsent (eventKey) {
+      window.dispatchEvent(new Event('insert_credential-approval~' + eventKey))
+      this.keyConsentEventKey = null
+    },
+    abortKeyConsent () {
+      this.keyConsentEventKey = null
       this.fetchingCredential = false
-      this.displayConsent = false
-      this.displayInsert = false
     },
-    insert () {
-      window.dispatchEvent(new Event('insert_credential-approval~' + this.credentialId))
-      this.displayConsent = false
+    abortInsertConsent () {
+      this.insertConsentEventKey = null
+      this.fetchingCredential = false
     },
     getCredential({ credential_configuration_id, format }) {
       this.fetchingCredential = true
 
       this.credentialId = credential_configuration_id
       window.addEventListener('insert_credential-request~' + this.credentialId, () => {
-        this.displayInsert = true
+        this.insertConsentEventKey = this.credentialId
       })
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {
         this.$store.commit('addCredential', {
@@ -126,6 +134,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .verifiable-credentials-issuance {
+  padding: 1.5em 0;
   h1 {
     padding: 1em .5em;
     text-align: center

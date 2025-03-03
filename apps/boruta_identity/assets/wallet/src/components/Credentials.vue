@@ -1,13 +1,12 @@
 <template>
   <div class="credentials">
     <div class="ui container">
-      <div class="ui center aligned segment" v-if="displayDelete">
-        <h2>You are about to remove a credential from your wallet</h2>
-        <div class="ui fluid two buttons">
-          <button class="ui orange button" @click="displayDelete = false">Abort</button>
-          <button class="ui green button" @click="confirmDelete()">Proceed</button>
-        </div>
-      </div>
+      <Consent
+        message="You are about to remove a credential from your wallet"
+        :event-key="deleteConsentEventKey"
+        @abort="abortDelete"
+        @consent="deleteConsent"
+      />
       <div class="ui cards">
         <div class="card" v-for="credential in credentials">
           <div class="content">
@@ -63,16 +62,17 @@
 import { defineComponent } from 'vue'
 import { mapGetters } from 'vuex'
 import { decodeSdJwt } from '@sd-jwt/decode'
+import Consent from './Consent.vue'
 
 export default defineComponent({
   name: 'CredentialsView',
-  components: {},
+  components: { Consent },
   data () {
     return {
       formattedCredentials: [],
       credential: null,
       credentialToDelete: null,
-      displayDelete: false
+      deleteConsentEventKey: null
     }
   },
   computed: {
@@ -82,19 +82,21 @@ export default defineComponent({
     showCredential (credential) {
       this.credential = credential
     },
-    hideCredential () {
+    hideCredential (credential) {
       this.credential = null
     },
     deleteCredential (credential) {
-      this.credentialToDelete = credential
-      window.addEventListener('delete_credential-request~' + this.credentialToDelete.credential, () => {
-        this.displayDelete = true
+      window.addEventListener('delete_credential-request~' + credential.credential, () => {
+        this.deleteConsentEventKey = credential.credential
       })
       this.$store.commit('deleteCredential', credential)
     },
-    confirmDelete () {
-      window.dispatchEvent(new Event('delete_credential-approval~' + this.credentialToDelete.credential))
-      this.displayDelete = false
+    deleteConsent (eventKey) {
+      window.dispatchEvent(new Event('delete_credential-approval~' + eventKey))
+      this.deleteConsentEventKey = null
+    },
+    abortDelete (eventKey) {
+      this.deleteConsentEventKey = null
     },
   }
 })

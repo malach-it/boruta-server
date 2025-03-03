@@ -77,7 +77,8 @@ export default defineComponent({
       }
       #reader {
         border-radius: 1em;
-        max-width: 90%;
+        max-height: 80%;
+        max-width: 80%;
         border: 7px solid white;
       }
       .close {
