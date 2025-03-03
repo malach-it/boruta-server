@@ -36,16 +36,18 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { BorutaOauth, KeyStore, extractKeys } from 'boruta-client'
+import { BorutaOauth, KeyStore, extractKeys, BrowserEventHandler } from 'boruta-client'
 import { storage } from '../store'
 import Consent from '../components/Consent.vue'
 
+const eventHandler = new BrowserEventHandler(window)
 const oauth = new BorutaOauth({
   host: window.env.BORUTA_OAUTH_BASE_URL,
   tokenPath: '/oauth/token',
   credentialPath: '/openid/credential',
   window,
-  storage
+  storage,
+  eventHandler
 })
 
 
@@ -66,7 +68,7 @@ export default defineComponent({
     }
   },
   async mounted () {
-    const keyStore = new KeyStore(window)
+    const keyStore = new KeyStore(eventHandler, storage)
     window.addEventListener('extract_key-request~client', () => {
       setTimeout(() => window.dispatchEvent(new Event('extract_key-approval~client')), 0)
     })

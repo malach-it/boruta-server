@@ -10,14 +10,16 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { BorutaOauth } from 'boruta-client'
+import { BorutaOauth, BrowserEventHandler } from 'boruta-client'
 import { storage } from '../store'
 
+const eventHandler = new BrowserEventHandler(window)
 const oauth = new BorutaOauth({
   host: 'https://oauth.boruta.patatoid.fr',
   jwksPath: '/openid/jwks',
   window,
-  storage
+  storage,
+  eventHandler
 })
 
 const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })

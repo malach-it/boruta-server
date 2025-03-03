@@ -1,8 +1,9 @@
 import { createStore } from 'vuex'
-import { CredentialsStore, BrowserStorage } from 'boruta-client'
+import { CredentialsStore, BrowserStorage, BrowserEventHandler } from 'boruta-client'
 
 export const storage = new BrowserStorage(window)
-const credentialsStore = new CredentialsStore(window, storage)
+const eventHandler = new BrowserEventHandler(window)
+const credentialsStore = new CredentialsStore(eventHandler, storage)
 
 const store = createStore({
   state: {
