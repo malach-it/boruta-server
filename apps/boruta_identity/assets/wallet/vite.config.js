@@ -22,7 +22,7 @@ const manifest = {
   "capture_links": "existing-client-navigate",
   "url_handlers": [
     {
-      "origin": "http://localhost:4000/accounts/wallet"
+      "origin": `${base_url.toString()}/accounts/wallet`
     }
   ],
   "icons": [{

@@ -51,6 +51,8 @@ jobs:
         with:
           file: Dockerfile.full
           context: .
+          build-args: |
+            BORUTA_OAUTH_BASE_URL=https://oauth.boruta.patatoid.fr
           push: true
           tags: |
             ${{ env.REGISTRY }}/malach-it/boruta-server:${{ steps.short-sha.outputs.sha }},
