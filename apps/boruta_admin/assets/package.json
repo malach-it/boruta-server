@@ -20,7 +20,7 @@
     "moment": "^2.29.4",
     "phoenix": "^1.5.7",
     "phoenix-socket": "^1.2.3",
-    "prismjs": "^1.26.0",
+    "prismjs": "^1.30.0",
     "semantic-ui-css": "^2.4.1",
     "socket.io-client": "^4.2.0",
     "vue": "^3.2.25",
