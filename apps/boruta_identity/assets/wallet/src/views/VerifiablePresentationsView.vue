@@ -1,25 +1,37 @@
 <template>
   <div class="ui verifiable-presentations container">
     <h1>Verifiable presentation</h1>
-    <div v-if="error">
-      <div class="ui error message">
-        {{ error }}
+    <Consent
+      message="You are about to use your cryptographic key"
+      :event-key="keyConsentEventKey"
+      @abort="abortKeyConsent"
+      @consent="keyConsent"
+    />
+    <div class="ui segment" v-if="error">
+      <div class="ui placeholder segment">
+        <div class="ui icon header">
+          <i class="exclamation icon"></i>
+          {{ error }}
+        </div>
       </div>
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
-    <div v-if="success">
-      <div class="ui success message">
-        {{ success }}
+    <div class="ui segment" v-if="success">
+      <div class="ui placeholder segment">
+        <div class="ui icon header">
+          <i class="check icon"></i>
+          {{ success }}
+        </div>
       </div>
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
     <div v-if="!error && !success">
-      <Credentials :credentials="credentials" />
+      <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
       <div class="ui segment">
         <form :action="redirect_uri" method="POST">
           <input type="hidden" name="vp_token" :value="vp_token" />
           <input type="hidden" name="presentation_submission" :value="presentation_submission" />
-          <button class="ui violet large fluid button" type="submit">Present your credential</button>
+          <button class="ui violet large fluid button" type="submit">Present your credential to {{ host }}</button>
         </form>
       </div>
     </div>
@@ -49,12 +61,15 @@ export default defineComponent({
   data () {
     return {
       client: null,
+      hots: null,
       error: null,
       success: null,
+      presentation: null,
       credentials: [],
       redirect_uri: null,
       vp_token: null,
-      presentation_submission: null
+      presentation_submission: null,
+      keyConsentEventKey: null
     }
   },
   async mounted () {
@@ -71,15 +86,17 @@ export default defineComponent({
     this.client = client
 
     client.parseVerifiablePresentationAuthorization(window.location).then((presentation) => {
-      window.addEventListener('extract_key-request~vp_token~' + presentation.id, () => {
-        setTimeout(() => window.dispatchEvent(new Event('extract_key-approval~vp_token~' + presentation.id)), 0)
+      this.presentation = presentation
+      const eventKey = 'vp_token~' + presentation.id
+
+      window.addEventListener('extract_key-request~' + eventKey, () => {
+        this.keyConsentEventKey = eventKey
       })
-      window.addEventListener('extract_key-request~presentation_submission~' + presentation.id, () => {
-        setTimeout(() => window.dispatchEvent(new Event('extract_key-approval~presentation_submission~' + presentation.id)), 0)
-      })
+
       return client.generatePresentation(presentation)
     }).then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
       this.redirect_uri = redirect_uri
+      this.host = new URL(redirect_uri).host
       this.vp_token = vp_token
       this.presentation_submission = presentation_submission
       this.credentials = credentials
@@ -94,6 +111,30 @@ export default defineComponent({
   computed: {
   },
   methods: {
+    deleteCredential (credential) {
+      this.credentials.splice(this.credentials.indexOf(credential), 1)
+
+      this.client.generatePresentation(this.presentation, this.credentials)
+        .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
+          console.log('changed')
+          this.redirect_uri = redirect_uri
+          this.host = new URL(redirect_uri).host
+          this.vp_token = vp_token
+          this.presentation_submission = presentation_submission
+          this.credentials = credentials
+        }).catch(response => {
+          if (response.error) {
+            this.error = response.error_description
+          }
+        })
+    },
+    keyConsent () {
+      window.dispatchEvent(new Event('extract_key-approval~' + this.keyConsentEventKey))
+      this.keyConsentEventKey = null
+    },
+    abortConsent () {
+      this.keyConsentEventKey = null
+    }
   }
 })
 </script>

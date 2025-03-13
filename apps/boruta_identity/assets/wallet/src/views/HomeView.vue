@@ -1,6 +1,12 @@
 <template>
   <div class="home">
-    <Credentials :credentials="credentials" />
+    <Consent
+      message="You are about to remove a credential from your wallet"
+      :event-key="deleteConsentEventKey"
+      @abort="abortDelete"
+      @consent="deleteConsent"
+    />
+    <Credentials :credentials="credentials" @deleteCredential="deleteCredential" />
     <div class="reader-overlay" :class="{ 'hidden': !scanning }">
       <i class="ui large close icon" @click="hide()"></i>
       <video ref="reader" id="reader"></video>
@@ -16,15 +22,17 @@ import { defineComponent } from 'vue'
 import { mapGetters } from 'vuex'
 import QrScanner from 'qr-scanner'
 import Credentials from '../components/Credentials.vue'
+import Consent from '../components/Consent.vue'
 
 export default defineComponent({
   name: 'HomeView',
-  components: { Credentials },
+  components: { Credentials, Consent },
   data () {
     return {
       qrScanner: null,
       code: '',
-      scanning: false
+      scanning: false,
+      deleteConsentEventKey: null
     }
   },
   mounted () {
@@ -49,6 +57,19 @@ export default defineComponent({
     hide () {
       this.scanning = false
       this.qrScanner?.stop()
+    },
+    deleteCredential (credential) {
+      window.addEventListener('delete_credential-request~' + credential.credential, () => {
+        this.deleteConsentEventKey = credential.credential
+      })
+      this.$store.commit('deleteCredential', credential)
+    },
+    deleteConsent (eventKey) {
+      window.dispatchEvent(new Event('delete_credential-approval~' + eventKey))
+      this.deleteConsentEventKey = null
+    },
+    abortDelete (eventKey) {
+      this.deleteConsentEventKey = null
     }
   }
 })

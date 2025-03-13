@@ -1,12 +1,6 @@
 <template>
   <div class="credentials">
     <div class="ui container">
-      <Consent
-        message="You are about to remove a credential from your wallet"
-        :event-key="deleteConsentEventKey"
-        @abort="abortDelete"
-        @consent="deleteConsent"
-      />
       <div class="ui cards">
         <div class="card" v-for="credential in credentials">
           <div class="content">
@@ -30,7 +24,9 @@
           </div>
           <div class="extra content">
             <div class="ui fluid buttons">
-              <button class="ui basic red button" @click="deleteCredential(credential)">Delete</button>
+              <button class="ui basic red button" @click="$emit('deleteCredential', credential)">
+              {{ deleteLabel || 'Delete' }}
+              </button>
               <button class="ui basic blue button" @click="showCredential(credential)">Show</button>
             </div>
           </div>
@@ -65,14 +61,12 @@ import Consent from './Consent.vue'
 
 export default defineComponent({
   name: 'CredentialsView',
-  props: ['credentials'],
+  props: ['credentials', 'deleteLabel'],
   components: { Consent },
   data () {
     return {
       formattedCredentials: [],
-      credential: null,
-      credentialToDelete: null,
-      deleteConsentEventKey: null
+      credential: null
     }
   },
   methods: {
@@ -81,20 +75,7 @@ export default defineComponent({
     },
     hideCredential (credential) {
       this.credential = null
-    },
-    deleteCredential (credential) {
-      window.addEventListener('delete_credential-request~' + credential.credential, () => {
-        this.deleteConsentEventKey = credential.credential
-      })
-      this.$store.commit('deleteCredential', credential)
-    },
-    deleteConsent (eventKey) {
-      window.dispatchEvent(new Event('delete_credential-approval~' + eventKey))
-      this.deleteConsentEventKey = null
-    },
-    abortDelete (eventKey) {
-      this.deleteConsentEventKey = null
-    },
+    }
   }
 })
 </script>
