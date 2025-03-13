@@ -60,12 +60,12 @@
 
 <script>
 import { defineComponent } from 'vue'
-import { mapGetters } from 'vuex'
 import { decodeSdJwt } from '@sd-jwt/decode'
 import Consent from './Consent.vue'
 
 export default defineComponent({
   name: 'CredentialsView',
+  props: ['credentials'],
   components: { Consent },
   data () {
     return {
@@ -74,9 +74,6 @@ export default defineComponent({
       credentialToDelete: null,
       deleteConsentEventKey: null
     }
-  },
-  computed: {
-    ...mapGetters(['credentials'])
   },
   methods: {
     showCredential (credential) {
@@ -105,6 +102,10 @@ export default defineComponent({
 <style scoped lang="scss">
 .ui.cards {
   justify-content: center;
+}
+.card .item {
+  overflow: hidden
+
 }
 pre {
   white-space: pre-wrap;

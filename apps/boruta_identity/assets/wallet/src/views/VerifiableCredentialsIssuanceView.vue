@@ -72,7 +72,7 @@ export default defineComponent({
     window.addEventListener('extract_key-request~client', () => {
       setTimeout(() => window.dispatchEvent(new Event('extract_key-approval~client')), 0)
     })
-    const { did } = await extractKeys(keyStore, 'client')
+    const { did } = await keyStore.extractKeys('client')
 
     const client = new oauth.VerifiableCredentialsIssuance({
       clientId: did,

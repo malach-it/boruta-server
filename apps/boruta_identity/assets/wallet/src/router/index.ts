@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import Siopv2View from '../views/Siopv2View.vue'
 import VerifiableCredentialsIssuanceView from '../views/VerifiableCredentialsIssuanceView.vue'
+import VerifiablePresentationsView from '../views/VerifiablePresentationsView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -18,6 +19,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/preauthorized-code',
     name: 'preauthorized-code',
     component: VerifiableCredentialsIssuanceView
+  },
+  {
+    path: '/verifiable-presentation',
+    name: 'verifiable-presentation',
+    component: VerifiablePresentationsView
   },
   {
     path: '/callback',

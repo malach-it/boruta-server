@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <Credentials />
+    <Credentials :credentials="credentials" />
     <div class="reader-overlay" :class="{ 'hidden': !scanning }">
       <i class="ui large close icon" @click="hide()"></i>
       <video ref="reader" id="reader"></video>
@@ -13,6 +13,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapGetters } from 'vuex'
 import QrScanner from 'qr-scanner'
 import Credentials from '../components/Credentials.vue'
 
@@ -37,7 +38,8 @@ export default defineComponent({
   computed: {
     params () {
       return this.$route.query
-    }
+    },
+    ...mapGetters(['credentials'])
   },
   methods: {
     scan () {
