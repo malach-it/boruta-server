@@ -2,6 +2,7 @@ defmodule BorutaAdminWeb.ConfigurationController do
   use BorutaAdminWeb, :controller
 
   import Boruta.Config, only: [issuer: 0]
+
   import BorutaAdminWeb.Authorization,
     only: [
       authorize: 2
@@ -50,16 +51,26 @@ defmodule BorutaAdminWeb.ConfigurationController do
   end
 
   def example_configuration_file(conn, _params) do
-    content = :code.priv_dir(:boruta_admin)
-    |> Path.join("/examples/configuration.yml")
-    |> File.read!()
+    content =
+      :code.priv_dir(:boruta_admin)
+      |> Path.join("/examples/configuration.yml")
+      |> File.read!()
 
-    content = String.replace(content, "{{REDIRECT_URI}}", issuer() <> BorutaIdentityWeb.Router.Helpers.wallet_path(BorutaIdentityWeb.Endpoint, :index) <> "/preauthorized-code")
+    content =
+      String.replace(
+        content,
+        "{{REDIRECT_URI}}",
+        issuer() <>
+          BorutaIdentityWeb.Router.Helpers.wallet_path(BorutaIdentityWeb.Endpoint, :index) <>
+          "/preauthorized-code"
+      )
 
-    configurations = [%{
-      name: "configuration_file",
-      value: content
-    }]
+    configurations = [
+      %{
+        name: "configuration_file",
+        value: content
+      }
+    ]
 
     render(conn, "configuration.json", configurations: configurations)
   end

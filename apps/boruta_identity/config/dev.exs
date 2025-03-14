@@ -16,7 +16,6 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
   check_origin: false,
   server: false
 
-
 config :boruta_identity, BorutaIdentity.SMTP,
   adapter: Swoosh.Adapters.SMTP
 
