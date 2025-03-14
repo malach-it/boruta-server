@@ -4,6 +4,9 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
     <title>Boruta · Identity provider</title>
     <style>
@@ -27,9 +30,20 @@
     header {
       height: 100%;
       width: 50%;
-      background-image: url('https://picsum.photos/1920/1080?grayscale');
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background-size: cover;
       background-position: center;
+      font-family: 'Source Code Pro';
+      font-size: 2.7em;
+      line-height: 1.2em;
+      border-right: 1px solid #eee;
+    }
+
+    header>div {
+      border: 5px solid black;
+      padding: .7em 1em;
     }
 
     main {
@@ -72,7 +86,13 @@
   </head>
   <body>
     <div class="wrapper">
-      <header></header>
+      <header>
+        <div>
+          <div><strong>N</strong>o</div>
+          <div><strong>L</strong>earning</div>
+          <div><strong>P</strong>aradox</div>
+        </div>
+      </header>
       <main role="main" class="container">
         <div class="content">
           <div class="main messages">
