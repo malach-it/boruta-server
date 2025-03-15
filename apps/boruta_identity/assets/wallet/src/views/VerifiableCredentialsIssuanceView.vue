@@ -80,8 +80,8 @@ export default defineComponent({
     this.client = client
 
     client.parsePreauthorizedCodeResponse(window.location).then(({ credential_issuer, preauthorized_code }) => {
-      this.credentialIssuer = credential_issuer
-      oauth.host = new URL(credential_issuer).host
+      this.credentialIssuer = new URL(credential_issuer).host
+      oauth.host = credential_issuer
       return client.getToken(preauthorized_code)
     }).then((tokenResponse) => {
       const { authorization_details } = tokenResponse
