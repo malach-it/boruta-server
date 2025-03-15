@@ -59,10 +59,19 @@ defmodule BorutaAdminWeb.ConfigurationController do
     content =
       String.replace(
         content,
-        "{{REDIRECT_URI}}",
+        "{{PREAUTHORIZED_CODE_REDIRECT_URI}}",
         issuer() <>
           BorutaIdentityWeb.Router.Helpers.wallet_path(BorutaIdentityWeb.Endpoint, :index) <>
           "/preauthorized-code"
+      )
+
+    content =
+      String.replace(
+        content,
+        "{{PRESENTATION_REDIRECT_URI}}",
+        issuer() <>
+          BorutaIdentityWeb.Router.Helpers.wallet_path(BorutaIdentityWeb.Endpoint, :index) <>
+          "/verifiable-presentation"
       )
 
     configurations = [
