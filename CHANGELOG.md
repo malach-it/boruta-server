@@ -2,7 +2,7 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
-## [unreleased]
+## [0.6.0] - 2025-03-15
 
 ### Added
 
@@ -11,7 +11,7 @@
 - [ssi] transaction code in OID4VCI preauthorized code flow
 - [ssi] vct configuration in verifiable credentials
 - [admin] feedback form
-- [wallet] web identity wallet (PWA)
+- [wallet] web identity wallet bootstrap (PWA)
 - [identity] scope user emails per backend
 - [admin] decentralized identity example flows
 - [ssi] verifiable credentials nested claims

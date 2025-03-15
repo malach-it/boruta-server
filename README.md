@@ -41,22 +41,6 @@ A [loom presentation](https://www.loom.com/share/77006360fdac44bc9113fab9cf30aba
 
 Note that the easiest way to try the server is by using docker compose.
 
-### System wide setup (Debian based)
-
-You can perform a system wide installation performing the following command. It will create a systemd service to run the server. During the installation, you will be asked to fill out the environment variables for the server. The environment takes `.env.example` as a basis.
-
-> Remember to change admin username / password for the install to be secured
-
-```
-curl -s https://raw.githubusercontent.com/malach-it/boruta-server/master/scripts/setup.debian.sh | sudo sh
-```
-
-The applications will be available on different ports (depending on the filled out environment configuration):
-- http://localhost:8080 for the authorization server
-- http://localhost:8081 for the admin interface
-- http://localhost:8082 for the gateway
-- http://localhost:8083 for the microgateway
-
 ### Run an instance from docker
 
 > Note this image is built for x86_64 architecture, for other architectures build yourself the image or use docker compose install that will build the image for your architecture.
