@@ -4,7 +4,6 @@
       <div class="ui cards">
         <div class="card" v-for="credential in credentials">
           <div class="content">
-            <!-- <img class="right floated mini ui image" src="/images/avatar/large/elliot.jpg"> -->
             <div class="header">
               {{ credential.credentialId }}
             </div>

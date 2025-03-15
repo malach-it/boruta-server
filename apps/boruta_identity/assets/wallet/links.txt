@@ -1,1 +1,0 @@
-http://localhost:4000/oauth/authorize?client_id=8020f8e5-9d2d-4a15-8eab-aa3fb29330e3&redirect_uri=http://localhost:8080/preauthorized-code&scope=BorutaCredentialSdJwt&response_type=urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4
