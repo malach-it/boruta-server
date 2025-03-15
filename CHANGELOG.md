@@ -11,6 +11,10 @@
 - [ssi] transaction code in OID4VCI preauthorized code flow
 - [ssi] vct configuration in verifiable credentials
 - [admin] feedback form
+- [wallet] web identity wallet (PWA)
+- [identity] scope user emails per backend
+- [admin] decentralized identity example flows
+- [ssi] verifiable credentials nested claims
 
 ### Changed
 
@@ -20,6 +24,12 @@
 
 - [admin] defered configuration
 - [admin] example credential issuance link
+- [ssi] oauth clients did persistence
+
+### Security
+
+- [admin] remove cdnjs dependency
+- [identity] remove picsum dependency
 
 ## [0.5.1] - 2024-11-21
 
@@ -35,7 +45,6 @@
 - [auth] configurable status display in id_token claims
 - [admin] user with empty metadata save
 - [admin] federated users deletion
-
 
 ## [0.5.0] - 2024-10-17
 
