@@ -2,6 +2,12 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [0.6.1] - 2025-03-15
+
+### Security
+
+- [admin] update verifiable presentations default template
+
 ## [0.6.0] - 2025-03-15
 
 ### Added
