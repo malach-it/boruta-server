@@ -2,8 +2,7 @@
   <div class="ui verifiable-credentials-issuance container">
     <div class="ui segment" v-if="error">
       <div class="ui placeholder segment">
-        <div class="ui icon header">
-          <i class="exclamation icon"></i>
+        <div class="ui header">
           {{ error }}
         </div>
       </div>
@@ -82,7 +81,7 @@ export default defineComponent({
 
     client.parsePreauthorizedCodeResponse(window.location).then(({ credential_issuer, preauthorized_code }) => {
       this.credentialIssuer = credential_issuer
-      oauth.host = credential_issuer
+      oauth.host = new URL(credential_issuer).host
       return client.getToken(preauthorized_code)
     }).then((tokenResponse) => {
       const { authorization_details } = tokenResponse

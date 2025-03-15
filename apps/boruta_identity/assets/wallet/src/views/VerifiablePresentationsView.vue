@@ -9,8 +9,7 @@
     />
     <div class="ui segment" v-if="error">
       <div class="ui placeholder segment">
-        <div class="ui icon header">
-          <i class="exclamation icon"></i>
+        <div class="ui header">
           {{ error }}
         </div>
       </div>
@@ -18,8 +17,7 @@
     </div>
     <div class="ui segment" v-if="success">
       <div class="ui placeholder segment">
-        <div class="ui icon header">
-          <i class="check icon"></i>
+        <div class="ui header">
           {{ success }}
         </div>
       </div>
