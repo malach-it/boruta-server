@@ -43,9 +43,8 @@
           </div>
         </div>
         <div class="actions">
-          <button class="ui positive right labeled icon button" @click="hideCredential()">
+          <button class="ui positive right button" @click="hideCredential()">
             Done
-            <i class="checkmark icon"></i>
           </button>
         </div>
       </div>

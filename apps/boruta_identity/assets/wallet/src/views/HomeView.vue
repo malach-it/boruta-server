@@ -7,8 +7,7 @@
       @consent="deleteConsent"
     />
     <Credentials :credentials="credentials" @deleteCredential="deleteCredential" />
-    <div class="reader-overlay" :class="{ 'hidden': !scanning }">
-      <i class="ui large close icon" @click="hide()"></i>
+    <div class="reader-overlay" :class="{ 'hidden': !scanning }" @click="hide()">
       <video ref="reader" id="reader"></video>
     </div>
     <div>
