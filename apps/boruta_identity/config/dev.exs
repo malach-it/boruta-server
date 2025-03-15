@@ -11,20 +11,10 @@ config :boruta_identity, BorutaIdentity.Repo,
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   http: [port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer(), path: "/accounts"],
-  url: [host: "localhost"],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  server: false,
-  watchers: [
-    node: [
-      "node_modules/webpack/bin/webpack.js",
-      "--mode",
-      "development",
-      "--watch-stdin",
-      cd: Path.expand("../assets", __DIR__)
-    ]
-  ]
+  server: false
 
 config :boruta_identity, BorutaIdentity.SMTP,
   adapter: Swoosh.Adapters.SMTP

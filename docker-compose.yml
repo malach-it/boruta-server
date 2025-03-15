@@ -22,6 +22,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.full
+      args:
+        BORUTA_OAUTH_BASE_URL: "http://localhost:8080"
     ports:
       - "8080:8080"
       - "8081:8081"

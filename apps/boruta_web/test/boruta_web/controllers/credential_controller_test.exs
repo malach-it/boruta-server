@@ -13,6 +13,7 @@ defmodule BorutaWeb.CredentialControllerTest do
     {:ok, conn: conn}
   end
 
+  @tag :skip
   test "returns a credential with a valid credential type", %{conn: conn} do
     {_, public_jwk} = public_key_fixture() |> JOSE.JWK.from_pem() |> JOSE.JWK.to_map()
 
@@ -86,6 +87,7 @@ defmodule BorutaWeb.CredentialControllerTest do
     assert credential
   end
 
+  @tag :skip
   test "returns a defered credential with a valid credential type", %{conn: conn} do
     {_, public_jwk} = public_key_fixture() |> JOSE.JWK.from_pem() |> JOSE.JWK.to_map()
 

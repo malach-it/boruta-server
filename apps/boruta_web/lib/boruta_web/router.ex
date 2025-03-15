@@ -41,6 +41,7 @@ defmodule BorutaWeb.Router do
   scope "/openid", BorutaWeb do
     pipe_through(:api)
 
+    options("/credential", Openid.CredentialController, :options)
     post("/credential", Openid.CredentialController, :credential)
     post("/defered-credential", Openid.CredentialController, :defered_credential)
     get("/jwks", Openid.JwksController, :jwks_index)
@@ -56,6 +57,7 @@ defmodule BorutaWeb.Router do
     post("/introspect", IntrospectController, :introspect)
     post("/pushed_authorization_request", PushedAuthorizationRequestController, :pushed_authorization_request)
     post("/revoke", RevokeController, :revoke)
+    options("/token", TokenController, :options)
     options("/introspect", IntrospectController, :options)
     options("/revoke", RevokeController, :options)
   end

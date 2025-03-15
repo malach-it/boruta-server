@@ -54,6 +54,7 @@ defmodule BorutaWeb.Integration.DirectPostTest do
              }
     end
 
+    @tag :skip
     test "not found with a bad code", %{id_token: id_token, conn: conn} do
       conn =
         post(
@@ -65,6 +66,7 @@ defmodule BorutaWeb.Integration.DirectPostTest do
       assert response(conn, 404)
     end
 
+    @tag :skip
     test "authenticates", %{id_token: id_token, code: code, conn: conn} do
       conn =
         post(

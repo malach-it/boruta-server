@@ -53,13 +53,25 @@
             </router-link>
           </div>
         </div>
+      </div>
+      <div class="ui center aligned segment">
         <div class="ui segment">
           <router-link class="ui fluid blue button" :to="{ name: 'configuration-file-upload', params: { type: 'example-configuration-file' } }">Load example configuration</router-link>
         </div>
-        <div class="ui segment">
-          <a class="ui fluid blue button" :href="preauthorizeUrl">Trigger example pre-authorized code flow (load example data first)</a>
+        <div class="ui info message">
+          <h2>Example decentralized identity flow</h2>
+          <p>Use integrated <a target="_blank" :href="walletUrl">web wallet</a> to request, store, and present verifiable credentials</p>
+          <p>In order to execute example decentralized identity flows, you must generate client did first - <router-link :to="{ name: 'edit-client', params: { clientId: '00000000-0000-0000-0000-000000000001' } }">client configuration</router-link></p>
+          <hr />
+          <div class="ui segment">
+            <h3>Verifiable credential issuance</h3>
+            <a class="ui fluid blue button" target="_blank" :href="preauthorizeUrl">Trigger example pre-authorized code flow with associated boruta wallet (load example data first)</a>
+          </div>
+          <div class="ui segment">
+            <h3>Verifiable credential presentation</h3>
+            <a class="ui fluid blue button" target="_blank" :href="presentationUrl">Trigger example presentation with associated boruta wallet (issue example credential first)</a>
+          </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -69,9 +81,17 @@
 export default {
   name: 'home',
   computed: {
+    walletUrl () {
+     return window.env.BORUTA_OAUTH_BASE_URL +
+      '/accounts/wallet'
+    },
+    presentationUrl () {
+     return window.env.BORUTA_OAUTH_BASE_URL +
+      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/verifiable-presentation&scope=BorutaCredentialJwtVc&response_type=vp_token&client_metadata={}&state=qrm0c4xm&prompt=login`
+    },
     preauthorizeUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
-      "/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=https%3A%2F%2Fredirect.uri.boruta&scope=BorutaCredentialSdJwt&response_type=urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4xm&prompt=login"
+      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/preauthorized-code&scope=BorutaCredentialJwtVc&response_type=urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4xm&prompt=login`
     }
   }
 }

@@ -29,6 +29,7 @@ export default {
     })
 
     this.editor = editor
+    this.editor.updateCode(this.content)
   },
   watch: {
     content(newContent, content) {

@@ -1,3 +1,17 @@
+FROM node:17.4.0 AS identity_assets
+
+ARG BORUTA_OAUTH_BASE_URL
+
+# For packages not compatible with OpenSSL 3.0 https://nodejs.org/en/blog/release/v17.0.0/
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+WORKDIR /app/wallet
+
+COPY ./apps/boruta_identity/assets /app
+
+RUN npm ci
+RUN npm run build
+
 FROM elixir:1.14-otp-25-alpine AS builder
 
 RUN apk --no-cache --update add build-base git
@@ -13,6 +27,7 @@ RUN rm -rf deps
 RUN mix do clean, deps.get
 RUN mix compile
 
+COPY --from=identity_assets /priv ./apps/boruta_identity/priv/
 WORKDIR /app/apps/boruta_identity
 RUN mix phx.digest
 WORKDIR /app/apps/boruta_web
