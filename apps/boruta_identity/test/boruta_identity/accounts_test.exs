@@ -372,10 +372,17 @@ defmodule BorutaIdentity.AccountsTest do
     end
 
     test "validates email uniqueness", %{client_id: client_id} do
-      %{username: email} = user_fixture()
+      email = "test@test.test"
       context = :context
-      user_params = %{email: email}
+      user_params = %{email: email, password: "imaynotknowthat"}
       confirmation_callback_fun = & &1
+      Accounts.register(
+        context,
+        client_id,
+        user_params,
+        confirmation_callback_fun,
+        DummyRegistration
+      )
 
       assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
                Accounts.register(
@@ -389,7 +396,7 @@ defmodule BorutaIdentity.AccountsTest do
       assert "has already been taken" in errors_on(changeset).email
 
       # Now try with the upper cased email too, to check that email case is ignored.
-      user_params = %{email: String.upcase(email)}
+      user_params = %{email: String.upcase(email), password: "imaynotknowthat"}
       confirmation_callback_fun = & &1
 
       assert {:registration_failure, ^context, %RegistrationError{changeset: changeset}} =
