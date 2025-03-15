@@ -243,6 +243,21 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
             ],
             "additionalProperties" => false
           }
+        },
+        "verifiable_presentations" => %{
+          "type" => "array",
+          "items" => %{
+            "type" => "object",
+            "properties" => %{
+              "presentation_identifier" => %{"type" => "string"},
+              "presentation_definition" => %{"type" => "string"}
+            },
+            "required" => [
+              "presentation_identifier",
+              "presentation_definition"
+            ],
+            "additionalProperties" => false
+          }
         }
       },
       "required" => [],
