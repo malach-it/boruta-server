@@ -19,12 +19,14 @@
 ### Changed
 
 - [identity] remove user metadata value constraints
+- [admin] verifiable credentials claim format
 
 ### Fixed
 
 - [admin] defered configuration
 - [admin] example credential issuance link
 - [ssi] oauth clients did persistence
+- [admin] verifiable presentation definition text edition
 
 ### Security
 
