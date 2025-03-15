@@ -40,7 +40,7 @@ export default defineComponent({
       const url = new URL(result)
       this.qrScanner?.stop()
       this.scanning = false
-      this.$router.push('/preauthorized-code' + url.search)
+      this.$router.push(url.pathname + url.search)
     })
   },
   computed: {
