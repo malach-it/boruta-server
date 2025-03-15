@@ -514,7 +514,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.metadata-field.segment, .federated-server-field.segment, .credential-field.segment {
+.metadata-field.segment, .federated-server-field.segment, .credential-field.segment, .presentation-field.segment {
   .field {
     margin-bottom: 1em!important;
   }
