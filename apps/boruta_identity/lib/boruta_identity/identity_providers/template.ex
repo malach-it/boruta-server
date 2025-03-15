@@ -109,7 +109,7 @@ defmodule BorutaIdentity.IdentityProviders.Template do
       |> File.read!(),
     cross_device_presentation:
       :code.priv_dir(:boruta_identity)
-      |> Path.join("templates/settings/cross_device_presentation.mustache")
+      |> Path.join("templates/settings/verifiable_presentation.mustache")
       |> File.read!()
   }
 

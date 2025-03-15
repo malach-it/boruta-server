@@ -212,7 +212,7 @@
               </div>
             </div>
           </div>
-          <h3>Credential presentation (cross device)</h3>
+          <h3>Credential presentation</h3>
           <div class="ui segment">
             <div class=" field">
               <p class="ui info message">
