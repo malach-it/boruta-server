@@ -21,7 +21,7 @@ RUN mix local.rebar --force
 
 WORKDIR /app
 COPY . .
-COPY --from=assets /priv ./apps/boruta_admin/priv/
+COPY --from=assets /priv/static/assets ./apps/boruta_admin/priv/static/assets
 RUN rm -rf deps
 RUN mix do clean, deps.get
 RUN mix compile

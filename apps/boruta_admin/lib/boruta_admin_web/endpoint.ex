@@ -13,7 +13,7 @@ defmodule BorutaAdminWeb.Endpoint do
     at: "/",
     from: :boruta_admin,
     gzip: false,
-    only: ~w(assets favicon.ico)
+    only: ~w(assets favicon.ico semantic-ui.min.css prism-dark.min.css themes)
 
   if code_reloading? do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
