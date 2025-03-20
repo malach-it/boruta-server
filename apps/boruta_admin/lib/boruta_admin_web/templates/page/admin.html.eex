@@ -15,7 +15,7 @@
         BORUTA_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000") %>',
       }
     </script>
-    <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/assets/style.css") %>" media="all"/>
+    <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/assets/boruta-admin.css") %>" media="all"/>
   </head>
   <body>
     <noscript>

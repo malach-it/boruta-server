@@ -15,7 +15,7 @@
       }
     </script>
     <link rel="manifest" type="text/css" href="<%= Routes.static_path(@conn, "/wallet/manifest.webmanifest") %>" media="all"/>
-    <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/wallet/style.css") %>" media="all"/>
+    <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/wallet/boruta-wallet.css") %>" media="all"/>
   </head>
   <body>
     <noscript>
