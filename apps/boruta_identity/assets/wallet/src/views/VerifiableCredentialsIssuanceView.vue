@@ -75,7 +75,7 @@ export default defineComponent({
 
     const client = new oauth.VerifiableCredentialsIssuance({
       clientId: did,
-      redirectUri: 'http://localhost:8080/preauthorized-code'
+      redirectUri: ''
     })
     this.client = client
 
@@ -88,6 +88,7 @@ export default defineComponent({
       this.tokenResponse = tokenResponse
       this.authorizationDetails = authorization_details
       window.addEventListener('extract_key-request~' + tokenResponse.access_token, () => {
+        setTimeout(() => window.dispatchEvent(new Event('extract_key-approval~' + tokenResponse.access_token)), 0)
         this.keyConsentEventKey = tokenResponse.access_token
       })
     }).catch(({ error_description }) => {
