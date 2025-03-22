@@ -16,3 +16,13 @@
 <div class="ui center aligned deeplink segment">
   <a class="ui blue fluid button" href="{{ presentation_deeplink }}">Present your credentials</a>
 </div>
+
+<script>
+  var source = new EventSource('{{ issuer }}/openid/presentation_sse?code={{ code }}');
+
+  source.addEventListener('message', function(event) {
+      console.log(event)
+      window.location.href = event.data
+    })
+  source.addEventListener("error", console.log);
+</script>

@@ -54,9 +54,12 @@ defmodule BorutaIdentity.Accounts.User do
   }
 
   def account_types, do: [
-    BorutaIdentity.Accounts.Federated.account_type(),
+    # user registries
     BorutaIdentity.Accounts.Internal.account_type(),
-    BorutaIdentity.Accounts.Ldap.account_type()
+    BorutaIdentity.Accounts.Ldap.account_type(),
+    # user interfaces
+    BorutaIdentity.Accounts.Federated.account_type(),
+    BorutaIdentity.Accounts.Wallet.account_type()
   ]
 
   @derive {Inspect, except: [:password]}
