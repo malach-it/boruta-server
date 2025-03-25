@@ -15,6 +15,14 @@
       </div>
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
+    <div class="ui segment" v-if="!success && presentation_submission && !credentials.length">
+      <div class="ui placeholder segment">
+        <div class="ui header">
+          No credential match the presentation
+        </div>
+      </div>
+      <router-link to="/" class="ui large fluid blue button">Back</router-link>
+    </div>
     <div class="ui segment" v-if="success">
       <div class="ui placeholder segment">
         <div class="ui header">
@@ -23,7 +31,7 @@
       </div>
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
-    <div v-if="!error && !success">
+    <div v-if="credentials.length">
       <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
       <div class="ui segment">
         <form :action="redirect_uri" method="POST">
