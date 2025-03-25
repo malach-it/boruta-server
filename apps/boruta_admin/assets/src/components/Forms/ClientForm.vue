@@ -116,7 +116,7 @@
           <h4>Key management</h4>
           <h4>Key type</h4>
           <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
-            <select v-model="client.key_pair_type.type">
+            <select v-model="client.key_pair_type.type" @change="keyPairTypeChanged = true">
               <option value="universal">
                 universal
               </option>
@@ -137,12 +137,12 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <a class="ui fluid orange button" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</a>
+          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
         </div>
         <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Internal.Signatures'">
           <h4>Key type</h4>
           <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
-            <select v-model="client.key_pair_type.type">
+            <select v-model="client.key_pair_type.type" @change="keyPairTypeChanged = true">
               <option v-for="keyPairType in Object.keys(keyPairTypes)" :value="keyPairType" :key="keyPairType">
                 {{ keyPairType }}
               </option>
@@ -175,7 +175,7 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <a class="ui fluid orange button" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</a>
+          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
           <hr />
           <a class="ui fluid orange button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
         </div>
@@ -281,6 +281,7 @@ export default {
       keyPairTypes: Client.keyPairTypes,
       signaturesAdapters: Client.signaturesAdapters,
       keyPairs: [],
+      keyPairTypeChanged: false,
       idTokenSignatureAlgorithms: Client.idTokenSignatureAlgorithms,
       UserinfoResponseSignatureAlgorithms: Client.UserinfoResponseSignatureAlgorithms,
       clientJwtAuthenticationSignatureAlgorithms: Client.clientJwtAuthenticationSignatureAlgorithms,
@@ -307,6 +308,10 @@ export default {
           this.$emit('submit')
         })
       }
+    },
+    submit () {
+      this.keyPairTypeChanged = false
+      this.$emit('submit')
     },
     addRedirectUri () {
       this.client.redirect_uris.push({})
