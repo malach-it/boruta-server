@@ -103,7 +103,7 @@ defmodule BorutaIdentity.ResourceOwners do
   end
 
   @impl Boruta.Oauth.ResourceOwners
-  def from_holder(%{presentation_claims: presentation_claims, sub: sub, scope: scope}) do
+  def from_holder(%{presentation_claims: presentation_claims, scope: scope}) do
     get_by(sub: presentation_claims["boruta_uid"], scope: scope)
   end
 
