@@ -120,7 +120,6 @@ defmodule BorutaIdentity.AdminTest do
     end
   end
 
-
   describe "delete_user/1 with wallet backend" do
     test "returns an error" do
       assert Admin.delete_user("did:key:test") == {:error, :not_found}

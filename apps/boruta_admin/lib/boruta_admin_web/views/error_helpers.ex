@@ -17,10 +17,12 @@ defmodule BorutaAdminWeb.ErrorHelpers do
     end)
   end
 
-  @doc """
-  Translates an error message using gettext.
-  """
   def translate_error({msg, opts}) do
-    msg
+    case opts[:count] do
+      nil ->
+        msg
+      count ->
+        String.replace(msg, "%{count}", to_string(count))
+    end
   end
 end
