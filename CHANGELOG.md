@@ -2,6 +2,20 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [0.7.0] - 2025-03-26
+
+### Added
+
+- [admin] signatures adapter
+- [wallet] display an error when no credential match presentation
+- [identity] add reload button in credentials temapltes
+- [wallet] close qr code scanner on click
+
+### Security
+
+- [wallet] fix npm vulnerabilities
+- [admin] fix npm vulnerabilities
+
 ## [0.6.1] - 2025-03-15
 
 ### Security
