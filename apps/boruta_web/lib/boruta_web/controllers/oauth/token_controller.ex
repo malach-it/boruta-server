@@ -8,13 +8,10 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.IdToken
-  alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
   alias BorutaIdentity.Accounts.Sessions
   alias BorutaIdentity.Accounts.Users
-  alias BorutaIdentity.Accounts.Wallet
-  alias BorutaIdentity.IdentityProviders
   alias BorutaWeb.OauthView
   alias BorutaWeb.PresentationServer
 
@@ -132,7 +129,8 @@ defmodule BorutaWeb.Oauth.TokenController do
 
     case response.id_token do
       nil ->
-        PresentationServer.authenticated(response.token.previous_code, response.token.redirect_uri)
+        token = response.token
+        PresentationServer.authenticated(token.previous_code, "#{token.redirect_uri}#access_token=#{token.value}&id_token=#{IdToken.generate(%{token: token}, token.nonce).value}&expires_in=#{token.expires_at - :os.system_time(:second)}&state=#{token.state}", session_token)
 
         redirect(conn, external: callback_uri)
       id_token ->

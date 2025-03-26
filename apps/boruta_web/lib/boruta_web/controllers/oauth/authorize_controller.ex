@@ -315,7 +315,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
-  def preauthorize_success(conn, %AuthorizationSuccess{sub: "did:" <> _key = sub}) do
+  def preauthorize_success(conn, %AuthorizationSuccess{sub: "did:" <> _key}) do
     current_user = conn.assigns[:current_user]
 
     Oauth.authorize(
@@ -441,24 +441,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     )
   end
 
-  def authenticated?(conn, %{"code" => code}) do
-    PresentationServer.start_presentation(code)
-
-    receive do
-      {:authenticated, redirect_uri, session_token} ->
-        conn =
-          conn
-          |> fetch_session()
-          |> store_user_session(session_token)
-          |> put_resp_header("content-type", "text/event-stream")
-          |> send_chunked(200)
-
-        chunk(conn, "event: message\ndata: #{redirect_uri}\n\n")
-    end
-
-    conn
-  end
-
   def authorize_success(
         %Plug.Conn{} = conn,
         %SiopV2Response{response_mode: "direct_post"} = response
@@ -576,6 +558,24 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         raise BorutaIdentity.Accounts.IdentityProviderError,
               "identity provider not configured for given OAuth client. Please contact your administrator."
     end
+  end
+
+  def authenticated?(conn, %{"code" => code}) do
+    PresentationServer.start_presentation(code)
+
+    receive do
+      {:authenticated, redirect_uri, session_token} ->
+        conn =
+          conn
+          |> fetch_session()
+          |> store_user_session(session_token)
+          |> put_resp_header("content-type", "text/event-stream")
+          |> send_chunked(200)
+
+        chunk(conn, "event: message\ndata: #{redirect_uri}\n\n")
+    end
+
+    conn
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
