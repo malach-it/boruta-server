@@ -1,4 +1,6 @@
 defmodule BorutaIdentity.Accounts.Wallet do
+  @moduledoc false
+
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
 

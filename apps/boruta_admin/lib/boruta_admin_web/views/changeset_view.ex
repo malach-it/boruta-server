@@ -8,7 +8,14 @@ defmodule BorutaAdminWeb.ChangesetView do
   `BorutaWeb.ErrorHelpers.translate_error/1` for more details.
   """
   def translate_errors(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      case opts[:count] do
+        nil ->
+          msg
+        count ->
+          String.replace(msg, "%{count}", to_string(count))
+      end
+    end)
   end
 
   def render("error.json", %{changeset: changeset}) do
