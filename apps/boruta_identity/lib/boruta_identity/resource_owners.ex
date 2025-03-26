@@ -83,7 +83,7 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do
     Accounts.get_user_scopes(sub) ++
-      Enum.flat_map(Accounts.get_user_roles(sub), fn %{scopes: scopes} -> scopes end) |> dbg
+      Enum.flat_map(Accounts.get_user_roles(sub), fn %{scopes: scopes} -> scopes end)
   end
 
   def authorized_scopes(_), do: []
