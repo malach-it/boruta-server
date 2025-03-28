@@ -16,7 +16,7 @@ defmodule BorutaIdentityWeb.Endpoint do
     at: "/",
     from: :boruta_identity,
     gzip: false,
-    only: ~w(wallet manifest.json favicon.ico robots.txt semantic-ui.min.css)
+    only: ~w(images wallet manifest.json favicon.ico robots.txt semantic-ui.min.css)
 
   plug Plug.RequestId
   plug Plug.Telemetry,
