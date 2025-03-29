@@ -28,6 +28,10 @@
           <label>Access token TTL (seconds)</label>
           <input type="number" v-model="client.access_token_ttl" placeholder="3600" />
         </div>
+        <div class="field" :class="{ 'error': client.errors?.agent_token_ttl }">
+          <label>Agent token TTL (seconds)</label>
+          <input type="number" v-model="client.agent_token_ttl" placeholder="3600" />
+        </div>
         <div class="field" :class="{ 'error': client.errors?.authorization_code_ttl }">
           <label>Authorization code TTL (seconds)</label>
           <input type="number" v-model="client.authorization_code_ttl" placeholder="60" />
