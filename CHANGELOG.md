@@ -2,6 +2,13 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [0.7.1] - 2025-04-05
+
+### Fixed
+
+- [ssi] do not use ES256 alg to verify EdDSA JWTs
+- [identity] expose default templates static assets
+
 ## [0.7.0] - 2025-03-26
 
 ### Added
