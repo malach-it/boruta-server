@@ -59,7 +59,8 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   def direct_post(conn, %{"code_id" => code_id} = params) do
     direct_post_params = %{
-      code_id: code_id
+      code_id: code_id,
+      code_verifier: params["code_verifier"]
     }
 
     direct_post_params =
