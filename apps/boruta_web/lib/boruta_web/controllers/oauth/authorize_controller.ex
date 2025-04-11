@@ -10,7 +10,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   use BorutaWeb, :controller
 
   import BorutaIdentityWeb.Authenticable,
-    only: [request_param: 1, get_user_session: 1]
+    only: [request_param: 1, get_user_session: 1, store_user_session: 2]
 
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizationSuccess
@@ -30,6 +30,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.ResourceOwners
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
+  alias BorutaWeb.PresentationServer
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -310,12 +311,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
-  def preauthorize_success(conn, %AuthorizationSuccess{sub: "did:" <> _key = sub}) do
+  def preauthorize_success(conn, %AuthorizationSuccess{sub: "did:" <> _key}) do
+    current_user = conn.assigns[:current_user]
+
     Oauth.authorize(
       conn,
       %ResourceOwner{
-        sub: sub,
-        presentation_configuration: VerifiablePresentations.public_presentation_configuration()
+        sub: current_user.id || conn.query_params["client_id"],
+        username: current_user.username,
+        last_login_at: current_user.last_login_at,
+        authorization_details: VerifiableCredentials.authorization_details(current_user),
+        presentation_configuration:
+          VerifiablePresentations.presentation_configuration(current_user)
       },
       __MODULE__
     )
@@ -424,7 +431,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             %{uri | path: Routes.token_path(conn, :direct_post, code)}
             |> URI.to_string()
-          end)
+          end),
+        code: response.code.value
       }
     )
   end
@@ -486,7 +494,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             %{uri | path: Routes.token_path(conn, :direct_post, code)}
             |> URI.to_string()
-          end)
+          end),
+        code: response.code.value
       }
     )
   end
@@ -545,6 +554,24 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         raise BorutaIdentity.Accounts.IdentityProviderError,
               "identity provider not configured for given OAuth client. Please contact your administrator."
     end
+  end
+
+  def authenticated?(conn, %{"code" => code}) do
+    PresentationServer.start_presentation(code)
+
+    receive do
+      {:authenticated, redirect_uri, session_token} ->
+        conn =
+          conn
+          |> fetch_session()
+          |> store_user_session(session_token)
+          |> put_resp_header("content-type", "text/event-stream")
+          |> send_chunked(200)
+
+        chunk(conn, "event: message\ndata: #{redirect_uri}\n\n")
+    end
+
+    conn
   end
 
   @impl Boruta.Oauth.AuthorizeApplication
@@ -642,21 +669,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp resource_owner(conn, current_user) do
     current_user = current_user || %User{}
-
-    anonymous_sub =
-      case conn.query_params["client_id"] do
-        "did:" <> _key = did -> did
-        _ -> nil
-      end
-
-    scope =
-      case conn.query_params["scope"] do
-        nil -> ""
-        scope -> scope
-      end
+    scope = case conn.query_params["scope"] do
+      nil -> ""
+      scope -> scope
+    end
 
     %ResourceOwner{
-      sub: current_user.id || anonymous_sub,
+      sub: current_user.id,
       username: current_user.username,
       code_verifier: current_user.code_verifier,
       last_login_at: current_user.last_login_at,

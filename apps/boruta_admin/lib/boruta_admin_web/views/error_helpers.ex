@@ -17,14 +17,12 @@ defmodule BorutaAdminWeb.ErrorHelpers do
     end)
   end
 
-  @doc """
-  Translates an error message using gettext.
-  """
   def translate_error({msg, opts}) do
-    if count = opts[:count] do
-      Gettext.dngettext(BorutaAdminWeb.Gettext, "errors", msg, msg, count, opts)
-    else
-      Gettext.dgettext(BorutaAdminWeb.Gettext, "errors", msg, opts)
+    case opts[:count] do
+      nil ->
+        msg
+      count ->
+        String.replace(msg, "%{count}", to_string(count))
     end
   end
 end
