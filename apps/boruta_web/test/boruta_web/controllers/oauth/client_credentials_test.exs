@@ -32,7 +32,7 @@ defmodule BorutaWeb.Oauth.ClientCredentialsTest do
       assert json_response(conn, 400) == %{
                "error" => "invalid_request",
                "error_description" =>
-                 "Request body validation failed. #/grant_type do match required pattern /^(client_credentials|agent_credentials|password|agent_code|authorization_code|refresh_token)$/."
+                 "Request body validation failed. #/grant_type do match required pattern /^(client_credentials|password|authorization_code|refresh_token)$/."
              }
     end
 

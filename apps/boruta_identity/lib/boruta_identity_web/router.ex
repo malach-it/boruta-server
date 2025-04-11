@@ -6,8 +6,7 @@ defmodule BorutaIdentityWeb.Router do
     only: [
       fetch_current_user: 2,
       redirect_if_user_is_authenticated: 2,
-      require_authenticated_user: 2,
-      redirect_to_public_if_not_authenticated: 2
+      require_authenticated_user: 2
     ]
   require Logger
 
@@ -76,10 +75,11 @@ defmodule BorutaIdentityWeb.Router do
     get("/users/confirm/:token", UserConfirmationController, :confirm)
     get("/users/reset_password/:token", UserResetPasswordController, :edit)
     put("/users/reset_password/:token", UserResetPasswordController, :update)
+    get("/wallet", WalletController, :index)
   end
 
   scope "/wallet", BorutaIdentityWeb do
-    pipe_through([:browser, :redirect_to_public_if_not_authenticated])
+    pipe_through(:browser)
 
     match(:get, "/*path", WalletController, :index)
   end

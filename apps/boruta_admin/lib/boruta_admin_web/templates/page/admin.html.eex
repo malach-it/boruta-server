@@ -12,7 +12,7 @@
         BORUTA_ADMIN_OAUTH_CLIENT_ID: '<%= System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20") %>',
         BORUTA_ADMIN_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL", "http://localhost:4000") %>',
         BORUTA_ADMIN_BASE_URL: '<%= System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4001") %>',
-        BORUTA_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000") %>'
+        BORUTA_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000") %>',
       }
     </script>
     <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/assets/boruta-admin.css") %>" media="all"/>

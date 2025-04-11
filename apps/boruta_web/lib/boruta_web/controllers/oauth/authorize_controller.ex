@@ -658,7 +658,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     %ResourceOwner{
       sub: current_user.id || anonymous_sub,
       username: current_user.username,
-      code_verifier: current_user.code_verifier,
       last_login_at: current_user.last_login_at,
       extra_claims:
         Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata),

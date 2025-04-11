@@ -35,7 +35,6 @@
       <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
       <div class="ui segment">
         <form :action="redirect_uri" method="POST">
-          <input type="hidden" name="code_verifier" :value="codeVerifier" />
           <input type="hidden" name="vp_token" :value="vp_token" />
           <input type="hidden" name="presentation_submission" :value="presentation_submission" />
           <button class="ui violet large fluid button" type="submit">Present your credential to {{ host }}</button>
@@ -76,8 +75,7 @@ export default defineComponent({
       redirect_uri: null,
       vp_token: null,
       presentation_submission: null,
-      keyConsentEventKey: null,
-      codeVerifier: window.env.BORUTA_WALLET_CODE_VERIFIER
+      keyConsentEventKey: null
     }
   },
   async mounted () {
@@ -115,6 +113,8 @@ export default defineComponent({
         this.success = response
       }
     })
+  },
+  computed: {
   },
   methods: {
     deleteCredential (credential) {
