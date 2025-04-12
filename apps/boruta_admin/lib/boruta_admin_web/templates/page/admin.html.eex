@@ -13,11 +13,17 @@
         BORUTA_ADMIN_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_ADMIN_OAUTH_BASE_URL", "http://localhost:4000") %>',
         BORUTA_ADMIN_BASE_URL: '<%= System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4001") %>',
         BORUTA_OAUTH_BASE_URL: '<%= System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000") %>',
+        CSRF_TOKEN: '<%= Phoenix.Controller.get_csrf_token() %>'
       }
     </script>
     <link rel="stylesheet" type="text/css" href="<%= Routes.static_path(@conn, "/assets/boruta-admin.css") %>" media="all"/>
   </head>
   <body>
+    <%= if get_flash(@conn, :error) do %>
+    <div class="ui error message" style="position: absolute; top: 100px; right: 1em; left: 214px; text-align: center; z-index: 1000">
+      <%= get_flash(@conn, :error) %>
+    </div>
+    <% end %>
     <noscript>
       <strong>We're sorry but boruta-admin doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
