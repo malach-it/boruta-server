@@ -2,6 +2,12 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [0.7.2] - 2025-04-13
+
+### Fixed
+
+- [auth] fix boruta core migration
+
 ## [0.7.1] - 2025-04-05
 
 ### Fixed
