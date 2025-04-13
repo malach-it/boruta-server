@@ -208,7 +208,7 @@ In order to authenticate to the administration interface you will be asked for c
 
 ## Code of Conduct
 
-This product community follows the code of conduct available [here](https://io.malach.it/code-of-conduct.html)
+This product community follows the code of conduct available [here](CODE_OF_CONDUCT.md)
 
 ## License
 
