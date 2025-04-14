@@ -31,12 +31,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
 
-  def authorize(%Plug.Conn{} = conn, _params) do
+  def authorize(%Plug.Conn{} = conn, params) do
     current_user = conn.assigns[:current_user]
 
     conn = put_unsigned_request(conn)
 
     with {:unchanged, conn} <- prompt_redirection(conn, current_user),
+         {:unchanged, conn} <- check_method(conn, params),
          {:unchanged, conn} <- public_client?(conn),
          {:unchanged, conn} <- verifiable_presentation?(conn),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
@@ -59,9 +60,34 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       {:authorize, conn} ->
         conn
 
+      {:error, conn} ->
+        conn
+
       {:redirected, conn} ->
         conn
     end
+  end
+
+  def check_method(%Plug.Conn{method: "POST"} = conn, %{"response_type" => "vp_token"}) do
+    {:unchanged, %{conn | query_params: Map.merge(conn.query_params, conn.body_params)}}
+  end
+
+  def check_method(%Plug.Conn{method: "GET"} = conn, %{"response_type" => "vp_token"}) do
+    {:error, authorize_error(conn, %Error{
+      status: :bad_request,
+      error: :invalid_request,
+      error_description: "Presentation requests requires POST method"
+    })}
+  end
+
+  def check_method(%Plug.Conn{method: "GET"} = conn, _params), do: {:unchanged, conn}
+
+  def check_method(%Plug.Conn{method: "POST"} = conn, %{"response_type" => response_type}) do
+    {:error, authorize_error(conn, %Error{
+      status: :bad_request,
+      error: :invalid_request,
+      error_description: "#{response_type} requests require GET method"
+    })}
   end
 
   def public_client?(conn) do

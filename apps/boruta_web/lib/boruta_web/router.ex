@@ -73,6 +73,7 @@ defmodule BorutaWeb.Router do
     pipe_through([:browser, :fetch_current_user])
 
     get("/authorize", AuthorizeController, :authorize)
+    post("/authorize", AuthorizeController, :authorize)
   end
 
   scope "/did", BorutaWeb do
