@@ -70,7 +70,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       redirect_uri: redirect_uri
     } do
       conn =
-        get(
+        post(
           conn,
           Routes.authorize_path(conn, :authorize, %{
             response_type: "vp_token",

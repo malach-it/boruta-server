@@ -36,8 +36,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = put_unsigned_request(conn)
 
-    with {:unchanged, conn} <- prompt_redirection(conn, current_user),
-         {:unchanged, conn} <- check_method(conn, params),
+    with {:unchanged, conn} <- check_method(conn, params),
+         {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- public_client?(conn),
          {:unchanged, conn} <- verifiable_presentation?(conn),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
