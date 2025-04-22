@@ -163,6 +163,7 @@ defmodule BorutaWeb.Logger do
           client_id: client_id,
           sub: sub,
           access_token: access_token,
+          agent_token: agent_token,
           token_type: token_type,
           expires_in: expires_in,
           refresh_token: refresh_token
@@ -180,6 +181,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
       log_attribute("access_token", access_token),
+      log_attribute("agent_token", agent_token),
       log_attribute("token_type", token_type),
       log_attribute("expires_in", expires_in),
       log_attribute("refresh_token", refresh_token)

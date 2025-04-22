@@ -112,5 +112,29 @@ defmodule BorutaWeb.Oauth.ClientCredentialsTest do
       assert expires_in
       assert refresh_token
     end
+
+    test "returns a token response with valid agent token request", %{
+      conn: conn,
+      client: client
+    } do
+      conn =
+        post(
+          conn,
+          "/oauth/token",
+          "grant_type=agent_credentials&client_id=#{client.id}&client_secret=#{client.secret}&bind_data={}&bind_configuration={}"
+        )
+
+      %{
+        "agent_token" => agent_token,
+        "token_type" => token_type,
+        "expires_in" => expires_in,
+        "refresh_token" => refresh_token
+      } = json_response(conn, 200)
+
+      assert agent_token
+      assert token_type == "bearer"
+      assert expires_in
+      assert refresh_token
+    end
   end
 end

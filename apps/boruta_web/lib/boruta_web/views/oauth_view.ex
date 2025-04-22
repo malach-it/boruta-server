@@ -137,6 +137,7 @@ defmodule BorutaWeb.OauthView do
           %Boruta.Oauth.TokenResponse{
             token_type: token_type,
             access_token: access_token,
+            agent_token: agent_token,
             id_token: id_token,
             c_nonce: c_nonce,
             expires_in: expires_in,
@@ -147,7 +148,6 @@ defmodule BorutaWeb.OauthView do
         ) do
       response = %{
         token_type: token_type,
-        access_token: access_token,
         expires_in: expires_in,
         refresh_token: refresh_token,
         c_nonce: c_nonce
@@ -157,6 +157,18 @@ defmodule BorutaWeb.OauthView do
         case id_token do
           nil -> response
           id_token -> Map.put(response, :id_token, id_token)
+        end
+
+      response =
+        case access_token do
+          nil -> response
+          access_token -> Map.put(response, :access_token, access_token)
+        end
+
+      response =
+        case agent_token do
+          nil -> response
+          agent_token -> Map.put(response, :agent_token, agent_token)
         end
 
       response =
