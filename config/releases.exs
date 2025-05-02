@@ -91,9 +91,9 @@ config :boruta, Boruta.Oauth,
     authorization_code: 600
   ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL"),
-  did_resolver_base_url: System.get_env("DID_RESOLVER_BASE_URL", "https://api.godiddy.com/1.0.0/universal-resolver"),
-  did_registrar_base_url: System.get_env("DID_REGISTRAR_BASE_URL", "https://api.godiddy.com/1.0.0/universal-registrar"),
-  universal_did_auth: %{
+  did_resolver_base_url: System.get_env("DID_RESOLVER_BASE_URL", "http://localhost:8080"),
+  did_registrar_base_url: System.get_env("DID_REGISTRAR_BASE_URL", "http://localhost:8081"),
+  did_auth: %{
     type: "bearer",
     token: System.get_env("DID_SERVICES_API_KEY")
   }
