@@ -112,37 +112,6 @@
             <option v-for="adapter in signaturesAdapters" :value="adapter">{{ adapter }}</option>
           </select>
         </div>
-
-        <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Universal.Signatures'">
-          <div class="ui info message">
-            The usage of the Universal adapter requires an account, please contact Godiddy services <a href="https://godiddy.com/contact" target="_blank">https://godiddy.com/contact</a> and set the API key as an environment variable.
-          </div>
-          <h4>Key management</h4>
-          <h4>Key type</h4>
-          <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
-            <select v-model="client.key_pair_type.type" @change="keyPairTypeChanged = true">
-              <option value="universal">
-                universal
-              </option>
-            </select>
-          </div>
-          <div class="field">
-            <label>method</label>
-            <select>
-              <option value="key">key</option>
-            </select>
-          </div>
-          <hr />
-          <div class="field" v-if="client.did">
-            <label>Client did</label>
-            <pre>{{ client.did }}</pre>
-          </div>
-          <div class="field" v-if="clientPublicKey">
-            <label>Client public key</label>
-            <pre>{{ clientPublicKey }}</pre>
-          </div>
-          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
-        </div>
         <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Internal.Signatures'">
           <h4>Key type</h4>
           <div class="field" :class="{ 'error': client.errors?.key_pair_type }">
