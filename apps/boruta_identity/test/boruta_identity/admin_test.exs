@@ -55,15 +55,15 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns paginated users" do
-      user = insert(:user) |> Repo.preload([:authorized_scopes, :roles, :organizations])
+      insert(:user) |> Repo.preload([:authorized_scopes, :roles, :organizations])
 
-      assert Admin.list_users() == %Scrivener.Page{
-               entries: [user],
+      assert %Scrivener.Page{
+               entries: [_user],
                page_number: 1,
                page_size: 12,
                total_entries: 1,
                total_pages: 1
-             }
+             } = Admin.list_users()
     end
   end
 
@@ -79,19 +79,19 @@ defmodule BorutaIdentity.AdminTest do
     end
 
     test "returns user search" do
-      _other = insert(:user) |> Repo.preload(:authorized_scopes)
+      insert(:user) |> Repo.preload(:authorized_scopes)
 
-      user =
-        insert(:user, username: "match")
-        |> Repo.preload([:authorized_scopes, :roles, :organizations])
+      insert(:user, username: "match")
+      |> Repo.reload()
+      |> Repo.preload([:authorized_scopes, :roles, :organizations])
 
-      assert Admin.search_users("match") == %Scrivener.Page{
-               entries: [user],
+      assert %Scrivener.Page{
+               entries: [_user],
                page_number: 1,
                page_size: 12,
                total_entries: 1,
                total_pages: 1
-             }
+             } = Admin.search_users("match")
     end
   end
 
@@ -115,6 +115,18 @@ defmodule BorutaIdentity.AdminTest do
 
     test "returns deleted user" do
       %User{id: user_id} = user_fixture(%{}, "federated")
+      assert {:ok, %User{id: ^user_id}} = Admin.delete_user(user_id)
+      refute Repo.get(User, user_id)
+    end
+  end
+
+  describe "delete_user/1 with wallet backend" do
+    test "returns an error" do
+      assert Admin.delete_user("did:key:test") == {:error, :not_found}
+    end
+
+    test "returns deleted user" do
+      %User{id: user_id} = user_fixture(%{}, "wallet")
       assert {:ok, %User{id: ^user_id}} = Admin.delete_user(user_id)
       refute Repo.get(User, user_id)
     end
@@ -201,6 +213,7 @@ defmodule BorutaIdentity.AdminTest do
       }
 
       assert Enum.empty?(Repo.all(Internal.User))
+
       assert_raise Ecto.InvalidChangesetError, fn ->
         Admin.create_user(backend, params) == {:error, %Ecto.Changeset{}}
       end

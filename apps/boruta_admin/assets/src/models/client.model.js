@@ -22,8 +22,7 @@ const keyPairTypes = {
 }
 
 const signaturesAdapters = [
-  'Elixir.Boruta.Internal.Signatures',
-  'Elixir.Boruta.Universal.Signatures'
+  'Elixir.Boruta.Internal.Signatures'
 ]
 
 const defaults = {

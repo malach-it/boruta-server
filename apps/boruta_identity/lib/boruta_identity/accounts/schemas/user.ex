@@ -33,6 +33,7 @@ defmodule BorutaIdentity.Accounts.User do
           federated_metadata: map(),
           totp_secret: String.t() | nil,
           webauthn_challenge: String.t() | nil,
+          code_verifier: String.t(),
           confirmed_at: DateTime.t() | nil,
           authorized_scopes: Ecto.Association.NotLoaded.t() | list(UserAuthorizedScope.t()),
           consents: Ecto.Association.NotLoaded.t() | list(Consent.t()),
@@ -54,9 +55,12 @@ defmodule BorutaIdentity.Accounts.User do
   }
 
   def account_types, do: [
-    BorutaIdentity.Accounts.Federated.account_type(),
+    # user registries
     BorutaIdentity.Accounts.Internal.account_type(),
-    BorutaIdentity.Accounts.Ldap.account_type()
+    BorutaIdentity.Accounts.Ldap.account_type(),
+    # user interfaces
+    BorutaIdentity.Accounts.Federated.account_type(),
+    BorutaIdentity.Accounts.Wallet.account_type()
   ]
 
   @derive {Inspect, except: [:password]}
@@ -79,6 +83,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:webauthn_public_key, CoseKey)
     field(:webauthn_registered_at, :utc_datetime_usec)
     field(:account_type, :string)
+    field(:code_verifier, :string)
 
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:roles, UserRole)
