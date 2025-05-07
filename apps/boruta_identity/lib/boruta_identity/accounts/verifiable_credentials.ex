@@ -65,8 +65,23 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
                "did:key"
              ],
              "credential_signing_alg_values_supported" => Client.Crypto.signature_algorithms(),
+             "proof_types_supported" => %{
+               "jwt" => %{
+                 "proof_signing_alg_values_supported" => [
+                    "ES256",
+                    "EdDSA"
+                  ]
+                }
+             },
              "vct" => credential["credential_identifier"],
-             "display" => [Map.put(credential["display"], "locale", "en-US")],
+             "display" => [
+               credential["display"]
+               |> Map.put("locale", "en-US")
+               |> Map.merge(
+                 %{"logo" => %{"uri" => credential["display"]["logo"]["url"]}},
+                 fn _k, a, b -> Map.merge(a, b) end
+               )
+             ],
              "claims" =>
                Enum.map(credential["claims"], fn claim ->
                  {claim["name"], %{"display" => [%{"name" => claim["label"]}]}}

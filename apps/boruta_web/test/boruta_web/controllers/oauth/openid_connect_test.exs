@@ -352,6 +352,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                "authorization_endpoint" => "http://localhost:4000/oauth/authorize",
                "credential_endpoint" => "http://localhost:4000/openid/credential",
                "defered_credential_endpoint" => "http://localhost:4000/openid/defered-credential",
+               "pushed_authorization_request_endpoint" => "http://localhost:4000/oauth/pushed_authorization_request",
                "credential_issuer" => "http://localhost:4000",
                "credentials_supported" => [],
                "credential_configurations_supported" => %{

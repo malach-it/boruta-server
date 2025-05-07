@@ -30,6 +30,7 @@ defmodule BorutaWeb.Router do
   scope "/", BorutaWeb do
     pipe_through(:api)
 
+    get("/.well-known/oauth-authorization-server", OpenidController, :well_known)
     get("/.well-known/openid-configuration", OpenidController, :well_known)
     get("/.well-known/openid-credential-issuer", OpenidController, :openid_credential_issuer)
   end
