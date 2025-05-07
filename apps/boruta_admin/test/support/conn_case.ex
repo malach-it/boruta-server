@@ -42,6 +42,7 @@ defmodule BorutaAdminWeb.ConnCase do
     :ok = Sandbox.checkout(BorutaAuth.Repo)
     :ok = Sandbox.checkout(BorutaGateway.Repo)
     :ok = Sandbox.checkout(BorutaIdentity.Repo)
+    :ok = Sandbox.checkout(BorutaFederation.Repo)
     :ok = Sandbox.checkout(BorutaWeb.Repo)
 
     unless tags[:async] do
@@ -49,6 +50,7 @@ defmodule BorutaAdminWeb.ConnCase do
       Sandbox.mode(BorutaAdmin.Repo, {:shared, self()})
       Sandbox.mode(BorutaGateway.Repo, {:shared, self()})
       Sandbox.mode(BorutaIdentity.Repo, {:shared, self()})
+      Sandbox.mode(BorutaFederation.Repo, {:shared, self()})
       Sandbox.mode(BorutaWeb.Repo, {:shared, self()})
     end
 

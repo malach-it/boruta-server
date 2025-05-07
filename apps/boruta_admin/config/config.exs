@@ -6,6 +6,7 @@ config :boruta_admin,
     BorutaAuth.Repo,
     BorutaIdentity.Repo,
     BorutaGateway.Repo,
+    BorutaFederation.Repo,
     BorutaWeb.Repo
   ]
 
@@ -22,7 +23,7 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
 config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
-    resource_owners: BorutaIdentity.ResourceOwners
+    resource_owners: BorutaWeb.ResourceOwners
   ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000")
 

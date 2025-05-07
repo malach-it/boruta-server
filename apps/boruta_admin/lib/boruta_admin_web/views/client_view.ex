@@ -2,6 +2,8 @@ defmodule BorutaAdminWeb.ClientView do
   use BorutaAdminWeb, :view
 
   alias BorutaAdminWeb.ClientView
+  alias BorutaFederation.FederationEntities
+  alias BorutaFederation.FederationEntities.FederationEntity
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
 
@@ -16,6 +18,8 @@ defmodule BorutaAdminWeb.ClientView do
   def render("client.json", %{client: client}) do
     identity_provider =
       IdentityProviders.get_identity_provider_by_client_id(client.id) || %IdentityProvider{}
+    federation_entity =
+      FederationEntities.get_federation_entity_by_client_id(client.id) || %FederationEntity{}
 
     %{
       id: client.id,
@@ -41,6 +45,10 @@ defmodule BorutaAdminWeb.ClientView do
       identity_provider: %{
         id: identity_provider.id,
         name: identity_provider.name
+      },
+      federation_entity: %{
+        id: federation_entity.id,
+        organization_name: federation_entity.organization_name
       },
       authorized_scopes:
         Enum.map(client.authorized_scopes, fn scope ->

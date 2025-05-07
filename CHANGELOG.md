@@ -1,6 +1,12 @@
 # Changelog
 
-> Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
+> Note that 0.X.X releases are reserved for the beta version of the server and may include breaking changes.
+
+## [unreleased]
+
+### Added
+
+- [federation] OpenID Federation implementation (core features)
 
 ## [0.7.2] - 2025-04-13
 

@@ -23,9 +23,6 @@ defmodule BorutaWeb.Endpoint do
   end
 
   plug Plug.RequestId
-  plug Plug.Telemetry,
-    event_prefix: [:boruta_web, :endpoint],
-    log: {__MODULE__, :log_level, []}
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

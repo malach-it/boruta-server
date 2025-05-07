@@ -41,6 +41,7 @@ defmodule BorutaAdmin.MixProject do
       {:boruta_gateway, in_umbrella: true},
       {:boruta_identity, in_umbrella: true},
       {:boruta_web, in_umbrella: true},
+      {:boruta_federation, in_umbrella: true},
       {:bypass, "~> 2.1.0", only: :test},
       {:ecto_sql, "~> 3.4"},
       {:ex_machina, "~> 2.4", only: :test},

@@ -1,7 +1,8 @@
 import Config
 
 config :boruta_web,
-  ecto_repos: [BorutaAuth.Repo, BorutaWeb.Repo]
+  ecto_repos: [BorutaAuth.Repo, BorutaWeb.Repo],
+  generators: [binary_id: true]
 
 config :boruta_web, BorutaWeb.Endpoint,
   url: [host: "localhost"],
@@ -20,7 +21,7 @@ config :swoosh, :api_client, Swoosh.ApiClient.Finch
 config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,
   contexts: [
-    resource_owners: BorutaIdentity.ResourceOwners
+    resource_owners: BorutaWeb.ResourceOwners
   ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000")
 

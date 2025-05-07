@@ -75,6 +75,14 @@ BorutaAuth.Repo.insert(
 
 BorutaAuth.Repo.insert(
   %Boruta.Ecto.Scope{
+    name: "federation-entities:manage:all",
+    label: "Manage all federation entities"
+  },
+  on_conflict: :nothing
+)
+
+BorutaAuth.Repo.insert(
+  %Boruta.Ecto.Scope{
     name: "configuration:manage:all",
     label: "Manage all configuration"
   },
@@ -155,6 +163,7 @@ user =
         "roles:manage:all",
         "upstreams:manage:all",
         "identity-providers:manage:all",
+        "federation-entities:manage:all",
         "configuration:manage:all",
         "logs:read:all"
       ])
