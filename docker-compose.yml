@@ -16,9 +16,6 @@ services:
       timeout: 5s
       retries: 5
 
-  universalresolver:
-    image: ghcr.io/malach-it/uni-resolver-driver-did-key:main
-
   boruta:
     stdin_open: true
     tty: true
@@ -41,7 +38,6 @@ services:
       POSTGRES_PASSWORD: "postgres"
       POSTGRES_DATABASE: "boruta_release"
       POSTGRES_HOST: "postgres"
-      DID_RESOLVER_BASE_URL: "http://universalresolver:8080/1.0"
     depends_on:
       postgres:
         condition: service_healthy
