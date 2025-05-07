@@ -69,7 +69,16 @@
           </div>
           <div class="ui segment">
             <h3>Verifiable credential presentation</h3>
-            <a class="ui fluid blue button" target="_blank" :href="presentationUrl">Trigger example presentation with associated boruta wallet (issue example credential first)</a>
+            <form :action="presentationUrl" method="POST">
+              <input type="hidden" name="_csrf_token" :value="csrf_token" />
+              <input type="hidden" name="client_id" value="00000000-0000-0000-0000-000000000001" />
+              <input type="hidden" name="redirect_uri" :value="presentationRedirectUri" />
+              <input type="hidden" name="scope" value="BorutaCredentialJwtVc" />
+              <input type="hidden" name="response_type" value="vp_token" />
+              <input type="hidden" name="client_metadata" value="{}" />
+              <input type="hidden" name="prompt" value="login" />
+              <button class="ui fluid blue button" type="submit">Trigger example presentation with associated boruta wallet (issue example credential first)</button>
+            </form>
           </div>
         </div>
       </div>
@@ -81,13 +90,19 @@
 export default {
   name: 'home',
   computed: {
+    csrf_token () {
+      return window.env.CSRF_TOKEN
+    },
     walletUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
       '/accounts/wallet'
     },
     presentationUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
-      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/verifiable-presentation&scope=BorutaCredentialJwtVc&response_type=vp_token&client_metadata={}&state=qrm0c4xm&prompt=login`
+      `/oauth/authorize`
+    },
+    presentationRedirectUri () {
+      return `${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/verifiable-presentation`
     },
     preauthorizeUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
