@@ -1,25 +1,63 @@
 defmodule BorutaWeb.Plugs.RateLimit do
   @moduledoc false
 
-  use BorutaWeb, :controller
+  defmodule Counter do
+    use Agent
 
-  alias BorutaWeb.OauthView
+    @base_unit :millisecond
+
+    @time_unit_stamps [
+      millisecond: 1,
+      second: 1_000,
+      minute: 60 * 1_000
+    ]
+
+    def start_link(_args) do
+      Agent.start_link(fn -> %{} end, name: __MODULE__)
+    end
+
+    def get(ip, time_unit) do
+      Agent.get(__MODULE__, fn counter ->
+        Map.get(counter, ip, [])
+        |> Enum.filter(fn timestamp ->
+          timestamp > :os.system_time(@base_unit) - @time_unit_stamps[time_unit]
+        end)
+        |> Enum.count()
+      end)
+    end
+
+    def increment(ip, time_unit) do
+      Agent.update(__MODULE__, fn counter ->
+        timestamps =
+          Map.get(counter, ip, [])
+          |> Enum.filter(fn timestamp ->
+            timestamp > :os.system_time(@base_unit) - @time_unit_stamps[time_unit]
+          end)
+
+        Map.put(
+          counter,
+          ip,
+          [:os.system_time(@base_unit) | timestamps]
+        )
+      end)
+    end
+  end
+
+  use BorutaWeb, :controller
 
   def init(options), do: options
 
   def call(conn, options) do
     remote_ip = :inet.ntoa(conn.remote_ip)
 
-    # TODO fix rate limiting, the request is denied once but not for a duration
-    case Hammer.check_rate("request:#{remote_ip}", options[:duration] || 1000, options[:limit] || 10) do
-      {:allow, _count} ->
+    Counter.increment(remote_ip, options[:time_unit])
+
+    case Counter.get(remote_ip, options[:time_unit]) > options[:count] do
+      false ->
         conn
-      {:deny, limit} ->
-        conn
-        |> put_status(:too_many_requests)
-        |> put_view(OauthView)
-        |> render("error.json", %{error: "too many requests", error_description: "Rate limit reached: #{limit}"})
-        |> halt()
+
+      true ->
+        send_resp(conn, 429, "")
     end
   end
 end
