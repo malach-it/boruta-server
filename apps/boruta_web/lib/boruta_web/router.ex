@@ -2,6 +2,8 @@ defmodule BorutaWeb.Router do
   use BorutaWeb, :router
   use Plug.ErrorHandler
 
+  alias BorutaWeb.Plugs.RateLimit
+
   import BorutaIdentityWeb.Sessions,
     only: [
       fetch_current_user: 2
@@ -25,6 +27,7 @@ defmodule BorutaWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json", "jwt"])
+    plug RateLimit, count: 10, time_unit: :second, penality: 500, timeout: 5_000
   end
 
   scope "/", BorutaWeb do
