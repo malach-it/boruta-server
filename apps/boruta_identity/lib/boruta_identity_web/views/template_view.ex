@@ -143,6 +143,13 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :scopes))
   end
 
+  def context(context, %{code: code} = assigns) do
+
+    %{code: code}
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :code))
+  end
+
   def context(context, %{}), do: context
 
   defp text_from_credential_offer(credential_offer) do

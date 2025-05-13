@@ -3,7 +3,11 @@ defmodule BorutaIdentityWeb.Sessions do
 
   use BorutaIdentityWeb, :controller
 
-  import BorutaIdentityWeb.Authenticable, only: [remember_me_cookie: 0, after_sign_in_path: 1]
+  import BorutaIdentityWeb.Authenticable, only: [
+    remember_me_cookie: 0,
+    after_sign_in_path: 1,
+    public_client_request_param: 1
+  ]
 
   alias BorutaIdentity.Accounts
 
@@ -60,6 +64,20 @@ defmodule BorutaIdentityWeb.Sessions do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> redirect(to: Routes.user_session_path(conn, :new, conn.query_params))
+      |> halt()
+    end
+  end
+
+  @spec redirect_to_public_if_not_authenticated(conn :: Plug.Conn.t(), list()) :: conn :: Plug.Conn.t()
+  def redirect_to_public_if_not_authenticated(conn, _opts) do
+    if conn.assigns[:current_user] do
+      conn
+    else
+      conn
+      |> put_flash(:error, "You must log in to access this page.")
+      |> redirect(
+        to: Routes.user_session_path(conn, :new, %{request: public_client_request_param(conn)})
+      )
       |> halt()
     end
   end
