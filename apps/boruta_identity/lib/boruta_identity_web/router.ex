@@ -86,17 +86,14 @@ defmodule BorutaIdentityWeb.Router do
 
   @impl Plug.ErrorHandler
   def handle_errors(conn, %{reason: %Plug.CSRFProtection.InvalidCSRFTokenError{message: message}}) do
-    with [referer] <- Plug.Conn.get_req_header(conn, "referer"),
-         %URI{path: path, query: query} <- URI.parse(referer) do
-      uri = %URI{path: path, query: query}
-
-      conn
-      |> Plug.Conn.fetch_session()
-      |> Phoenix.Controller.fetch_flash()
-      |> Phoenix.Controller.put_flash(:error, message)
-      |> Plug.Conn.put_status(:found)
-      |> Phoenix.Controller.redirect(to: URI.to_string(uri))
-    else
+    case Plug.Conn.get_req_header(conn, "referer") do
+      [referer] ->
+        conn
+        |> Plug.Conn.fetch_session()
+        |> Phoenix.Controller.fetch_flash()
+        |> Phoenix.Controller.put_flash(:error, message)
+        |> Plug.Conn.put_status(:found)
+        |> Phoenix.Controller.redirect(external: referer)
       _ ->
         render_error(conn, message)
     end
