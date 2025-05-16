@@ -49,12 +49,12 @@
               <div class="dropdown">
                 <div class="subitem">
                   <router-link :to="{ name: 'client-list' }">
-                    <span>Client list</span>
+                    <span>client list</span>
                   </router-link>
                 </div>
                 <div class="subitem">
                   <router-link :to="{ name: 'key-pair-list' }">
-                    <span>Key pair list</span>
+                    <span>key pair list</span>
                   </router-link>
                 </div>
               </div>
@@ -125,12 +125,12 @@
               <div class="dropdown">
                 <div class="subitem">
                   <router-link :to="{ name: 'error-template-list' }">
-                    <span>Error templates</span>
+                    <span>error templates</span>
                   </router-link>
                 </div>
                 <div class="subitem">
                   <router-link :to="{ name: 'configuration-file-upload' }">
-                    <span>Upload a configuration file</span>
+                    <span>upload a configuration file</span>
                   </router-link>
                 </div>
               </div>
