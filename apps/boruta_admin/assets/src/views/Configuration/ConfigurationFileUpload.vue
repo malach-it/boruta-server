@@ -57,6 +57,7 @@ export default {
     }
   },
   mounted () {
+    this.fileContent = null
     ConfigurationFile.get(this.$route.params.type).then(fileContent => {
       this.fileContent = fileContent
       this.file = new Blob([fileContent], {type : 'text/plain'})
@@ -74,6 +75,7 @@ export default {
       })
     },
     onFileChange (event) {
+      this.fileContent = null
       this.file = event.target.files[0]
       new Response(this.file).text().then(fileContent => {
           this.fileContent = fileContent
