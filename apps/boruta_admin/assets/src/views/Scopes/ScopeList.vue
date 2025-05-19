@@ -167,6 +167,7 @@ export default {
       flex-direction: column;
       width: 100%;
       margin-bottom: 0;
+      padding-bottom: 0;
       .error-message {
         color: #9f3a38;
       }
