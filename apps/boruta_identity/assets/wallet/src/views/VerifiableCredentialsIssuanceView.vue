@@ -11,10 +11,10 @@
     <div v-else>
       <h1 v-if="credentialIssuer">{{ credentialIssuer }} offer those credentials</h1>
       <Consent
-        message="You are about to use your cryptographic key"
-        :event-key="keyConsentEventKey"
+        message="You are about to add a new cryptographic key"
+        :event-key="generateKeyConsentEventKey"
         @abort="abortKeyConsent"
-        @consent="keyConsent"
+        @consent="generateKeyConsent"
       />
       <Consent
         message="You are about to insert a credential to your wallet"
@@ -22,12 +22,13 @@
         @abort="abortInsertConsent"
         @consent="insertConsent"
       />
+      <KeySelect v-if="keyConsentEventKey && !error" @selected="selectKey" @abort="keyConsentEventKey = null"/>
       <div class="ui segment" v-for="authorizationDetail in authorizationDetails">
         <h2>
           {{ authorizationDetail.credential_configuration_id }}
           <span class="ui brown label">{{ authorizationDetail.format }}</span>
         </h2>
-        <button :disabled="fetchingCredential" class="ui fluid violet button" @click="getCredential(authorizationDetail)" :class="{ 'loading': fetchingCredential }">Get credential</button>
+        <button :disabled="fetchingCredential" class="ui fluid violet button" @click="getCredential(authorizationDetail)" :class="{ 'loading': fetchingCredential }" v-if="tokenResponse">Get credential</button>
       </div>
     </div>
   </div>
@@ -35,11 +36,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { BorutaOauth, KeyStore, extractKeys, BrowserEventHandler } from 'boruta-client'
+import { BorutaOauth, KeyStore, CustomEventHandler } from 'boruta-client'
 import { storage } from '../store'
 import Consent from '../components/Consent.vue'
+import KeySelect from '../components/KeySelect.vue'
 
-const eventHandler = new BrowserEventHandler(window)
+const eventHandler = new CustomEventHandler()
 const oauth = new BorutaOauth({
   host: window.env.BORUTA_OAUTH_BASE_URL,
   tokenPath: '/oauth/token',
@@ -52,65 +54,69 @@ const oauth = new BorutaOauth({
 
 export default defineComponent({
   name: 'VerifiableCredentialsIssuanceView',
-  components: { Consent },
+  components: { KeySelect, Consent },
   data () {
+    const keyStore = new KeyStore(eventHandler, storage)
     return {
+      keyStore,
       client: null,
+      keys: [],
+      keyIdentifier: null,
+      newIdentifier: null,
       credentialIssuer: null,
-      tokenResponse: null,
       credentialId: null,
+      tokenResponse: null,
       authorizationDetails: [],
       keyConsentEventKey: null,
+      generateKeyConsentEventKey: null,
       insertConsentEventKey: null,
       fetchingCredential: false,
       error: null
     }
-  },
-  async mounted () {
-    const keyStore = new KeyStore(eventHandler, storage)
-    window.addEventListener('extract_key-request~client', () => {
-      setTimeout(() => window.dispatchEvent(new Event('extract_key-approval~client')), 0)
-    })
-    const { did } = await keyStore.extractKeys('client')
-
-    const client = new oauth.VerifiableCredentialsIssuance({
-      clientId: did,
-      redirectUri: 'http://localhost:8080/preauthorized-code'
-    })
-    this.client = client
-
-    client.parsePreauthorizedCodeResponse(window.location).then(({ credential_issuer, preauthorized_code }) => {
-      this.credentialIssuer = new URL(credential_issuer).host
-      oauth.host = credential_issuer
-      return client.getToken(preauthorized_code)
-    }).then((tokenResponse) => {
-      const { authorization_details } = tokenResponse
-      this.tokenResponse = tokenResponse
-      this.authorizationDetails = authorization_details
-      window.addEventListener('extract_key-request~' + tokenResponse.access_token, () => {
-        this.keyConsentEventKey = tokenResponse.access_token
-      })
-    }).catch(({ error_description }) => {
-      this.error = error_description
-    })
   },
   computed: {
     params () {
       return this.$route.query
     }
   },
+  async mounted () {
+    const client = new oauth.VerifiableCredentialsIssuance({
+      clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
+      redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/preauthorized-code'
+    })
+    this.client = client
+
+    client.parsePreauthorizedCodeResponse(window.location).then(({ credential_issuer, preauthorized_code }) => {
+      oauth.host = credential_issuer
+      return client.getToken(preauthorized_code)
+    }).then((tokenResponse) => {
+      this.credentialIssuer = new URL(oauth.host).host
+
+      const { authorization_details } = tokenResponse
+      this.tokenResponse = tokenResponse
+      this.authorizationDetails = authorization_details
+    }).catch(({ error_description }) => {
+      this.error = error_description
+    })
+  },
   methods: {
-    keyConsent (eventKey) {
-      window.dispatchEvent(new Event('extract_key-approval~' + eventKey))
+    async selectKey (identifier) {
       this.keyConsentEventKey = null
+      eventHandler.dispatch('extract_key-approval', this.credentialId, identifier)
     },
     insertConsent (eventKey) {
-      window.dispatchEvent(new Event('insert_credential-approval~' + eventKey))
+      eventHandler.dispatch('insert_credential-approval', eventKey)
       this.keyConsentEventKey = null
+    },
+    generateKeyConsent (eventKey) {
+      eventHandler.dispatch('generate_key-approval', '')
+      this.generateKeyConsentEventKey = null
     },
     abortKeyConsent () {
       this.keyConsentEventKey = null
+      this.generateKeyConsentEventKey = null
       this.fetchingCredential = false
+      this.keyIdentifier = null
     },
     abortInsertConsent () {
       this.insertConsentEventKey = null
@@ -120,7 +126,13 @@ export default defineComponent({
       this.fetchingCredential = true
 
       this.credentialId = credential_configuration_id
-      window.addEventListener('insert_credential-request~' + this.credentialId, () => {
+      eventHandler.listen('extract_key-request', this.credentialId, () => {
+        this.keyConsentEventKey = this.credentialId
+      })
+      eventHandler.listen('generate_key-request', '', () => {
+        this.generateKeyConsentEventKey = this.credentialId
+      })
+      eventHandler.listen('insert_credential-request', this.credentialId, () => {
         this.insertConsentEventKey = this.credentialId
       })
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {

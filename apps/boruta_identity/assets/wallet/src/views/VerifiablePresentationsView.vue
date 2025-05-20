@@ -1,12 +1,12 @@
 <template>
   <div class="ui verifiable-presentations container">
     <h1>Verifiable presentation</h1>
-    <Consent
-      message="You are about to use your cryptographic key"
-      :event-key="keyConsentEventKey"
-      @abort="abortKeyConsent"
-      @consent="keyConsent"
-    />
+      <Consent
+        message="You are about to add a new cryptographic key"
+        :event-key="generateKeyConsentEventKey"
+        @abort="abortKeyConsent"
+        @consent="generateKeyConsent"
+      />
     <div class="ui segment" v-if="error">
       <div class="ui placeholder segment">
         <div class="ui header">
@@ -15,6 +15,7 @@
       </div>
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
+    <KeySelect v-if="keyConsentEventKey && !error" @selected="selectKey" @abort="keyConsentEventKey = null"/>
     <div class="ui segment" v-if="!success && presentation_submission && !credentials.length">
       <div class="ui placeholder segment">
         <div class="ui header">
@@ -46,13 +47,14 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { BorutaOauth, KeyStore, extractKeys, BrowserEventHandler } from 'boruta-client'
+import { BorutaOauth, KeyStore, CustomEventHandler } from 'boruta-client'
 import { storage } from '../store'
 
 import Consent from '../components/Consent.vue'
 import Credentials from '../components/Credentials.vue'
+import KeySelect from '../components/KeySelect.vue'
 
-const eventHandler = new BrowserEventHandler(window)
+const eventHandler = new CustomEventHandler(window)
 const oauth = new BorutaOauth({
   host: window.env.BORUTA_OAUTH_BASE_URL,
   jwksPath: window.env.BORUTA_OAUTH_BASE_URL + '/openid/jwks',
@@ -63,7 +65,7 @@ const oauth = new BorutaOauth({
 
 export default defineComponent({
   name: 'VerifiablePresentationsView',
-  components: { Consent, Credentials },
+  components: { Consent, Credentials, KeySelect },
   data () {
     return {
       client: null,
@@ -75,37 +77,36 @@ export default defineComponent({
       redirect_uri: null,
       vp_token: null,
       presentation_submission: null,
-      keyConsentEventKey: null
+      keyConsentEventKey: null,
+      generateKeyConsentEventKey: null,
+      keyIdentifier: null
     }
   },
   async mounted () {
-    const keyStore = new KeyStore(eventHandler, storage)
-    window.addEventListener('extract_key-request~client', () => {
-      setTimeout(() => window.dispatchEvent(new Event('extract_key-approval~client')), 0)
-    })
-    const { did } = await keyStore.extractKeys('client')
-
     const client = new oauth.VerifiablePresentations({
-      clientId: did,
-      redirectUri: 'http://localhost:8080/preauthorized-code'
+      clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
+      redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/verifiable-presentation'
     })
-    this.client = client
 
+    this.client = client
     client.parseVerifiablePresentationAuthorization(window.location).then((presentation) => {
       this.presentation = presentation
-      const eventKey = 'vp_token~' + presentation.id
 
-      window.addEventListener('extract_key-request~' + eventKey, () => {
-        this.keyConsentEventKey = eventKey
+      eventHandler.listen('extract_key-request', this.presentation.id, () => {
+        this.keyConsentEventKey = this.presentation.id
+      })
+      eventHandler.listen('generate_key-request', '', () => {
+        this.generateKeyConsentEventKey = this.presentation.id
       })
 
-      return client.generatePresentation(presentation)
-    }).then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
-      this.redirect_uri = redirect_uri
-      this.host = new URL(redirect_uri).host
-      this.vp_token = vp_token
-      this.presentation_submission = presentation_submission
-      this.credentials = credentials
+      return presentation
+    }).then(this.client.generatePresentation.bind(this.client))
+      .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
+        this.redirect_uri = redirect_uri
+        this.host = new URL(redirect_uri).host
+        this.vp_token = vp_token
+        this.presentation_submission = presentation_submission
+        this.credentials = credentials
     }).catch(response => {
       if (response.error) {
         this.error = response.error_description
@@ -114,15 +115,19 @@ export default defineComponent({
       }
     })
   },
-  computed: {
-  },
   methods: {
+    async selectKey (identifier) {
+      this.keyConsentEventKey = null
+      eventHandler.dispatch('extract_key-approval', this.presentation.id, identifier)
+    },
     deleteCredential (credential) {
-      this.credentials.splice(this.credentials.indexOf(credential), 1)
+      const credentials = this.credentials.map(e => e)
+      credentials.splice(this.credentials.indexOf(credential), 1)
 
-      this.client.generatePresentation(this.presentation, this.credentials)
+      this.client.generatePresentation(this.presentation, credentials)
         .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
-          console.log('changed')
+          this.credentials = credentials
+
           this.redirect_uri = redirect_uri
           this.host = new URL(redirect_uri).host
           this.vp_token = vp_token
@@ -134,12 +139,12 @@ export default defineComponent({
           }
         })
     },
-    keyConsent () {
-      window.dispatchEvent(new Event('extract_key-approval~' + this.keyConsentEventKey))
-      this.keyConsentEventKey = null
+    generateKeyConsent (eventKey) {
+      eventHandler.dispatch('generate_key-approval', '')
+      this.generateKeyConsentEventKey = null
     },
-    abortConsent () {
-      this.keyConsentEventKey = null
+    abortKeyConsent () {
+      this.generateKeyConsentEventKey = null
     }
   }
 })
