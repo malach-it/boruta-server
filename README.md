@@ -35,6 +35,10 @@ This server has also been certified against the [European Blockchain Service Inf
 ![EBSI certified - verify](https://github.com/malach-it/boruta-server/blob/master/images/ebsi-certification-verify.png?raw=true)
 ![OpenID certified](https://github.com/malach-it/boruta-server/blob/master/images/oid-certification-mark.png?raw=true)
 
+## Documentation
+
+Server documentation is available on github pages [here](https://malach-it.github.io/developers.boruta/docs/intro). It highlights how the server works, describing its architecture, parameters and the associated authentication / authorization flows. It is a Work In Progress, all feedback or contributions would be welcomed.
+
 ## DID creation and resolution
 
 boruta may use [Universal resolver](https://github.com/decentralized-identity/universal-resolver) for DID resolution and [Universal registrar](https://github.com/decentralized-identity/universal-registrar) for DID creation. Those are to be configured as environment variables, respoectively `DID_RESOLVER_BASE_URL` and `DID_REGISTRAR_BASE_URL`. DIDs are used in the decentralized identity flows and are present as key identifier header of the other generated JWTs.
