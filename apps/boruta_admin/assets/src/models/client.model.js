@@ -5,8 +5,10 @@ import { addClientErrorInterceptor } from './utils'
 
 const allGrantTypes = [
   'client_credentials',
+  'agent_credentials',
   'password',
   'authorization_code',
+  'agent_code',
   'refresh_token',
   'implicit',
   'preauthorized_code',
