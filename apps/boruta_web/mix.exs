@@ -42,7 +42,6 @@ defmodule BorutaWeb.MixProject do
       {:cors_plug, "~> 3.0"},
       {:ex_machina, "~> 2.4", only: :test},
       {:finch, "~> 0.8"},
-      {:gettext, "~> 0.11"},
       {:hammer, "~> 6.1"},
       {:jason, "~> 1.0"},
       {:joken, "~> 2.3"},

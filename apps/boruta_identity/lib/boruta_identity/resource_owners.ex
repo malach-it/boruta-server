@@ -102,9 +102,16 @@ defmodule BorutaIdentity.ResourceOwners do
     end
   end
 
+  @impl Boruta.Oauth.ResourceOwners
+  def from_holder(%{presentation_claims: presentation_claims, scope: scope}) do
+    get_by(sub: presentation_claims["boruta_uid"], scope: scope)
+  end
+
   @spec metadata(user :: User.t(), scope :: String.t()) :: metadata :: map()
-  def metadata(%User{username: username, metadata: %{} = metadata}, _scope) when metadata == %{}, do: %{
-    "email" => username
+  def metadata(%User{metadata: %{} = metadata} = user, _scope) when metadata == %{}, do: %{
+    "boruta_uid" => user.id,
+    "boruta_username" => user.username,
+    "email" => user.username
   }
 
   def metadata(user, scope) do
@@ -112,6 +119,8 @@ defmodule BorutaIdentity.ResourceOwners do
     |> User.metadata_filter(user.backend)
     |> metadata_scope_filter(scope, user.backend)
     |> Enum.into(%{})
+    |> Map.put("boruta_uid", user.id)
+    |> Map.put("boruta_username", user.username)
     |> Map.put("email", user.username)
   end
 
