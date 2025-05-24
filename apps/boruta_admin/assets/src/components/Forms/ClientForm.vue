@@ -225,6 +225,12 @@
             <label>Authorize scopes</label>
           </div>
         </div>
+        <div class="field">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="client.check_public_client_id">
+            <label>Check public client id</label>
+          </div>
+        </div>
         <div class="field" :class="{ 'error': client.errors?.authorized_scopes }">
           <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
         </div>
