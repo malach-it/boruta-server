@@ -39,7 +39,7 @@ export default defineComponent({
       const url = new URL(result)
       this.qrScanner?.stop()
       this.scanning = false
-      this.$router.push(url.pathname + url.search)
+      this.$router.push(url.pathname.replace('/accounts/wallet', '') + url.search)
     })
   },
   computed: {
