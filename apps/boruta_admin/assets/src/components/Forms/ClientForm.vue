@@ -17,6 +17,10 @@
           <label>Client ID</label>
           <input v-model="client.id" autocomplete="new-password" placeholder="Must be an UUIDv4 - Leave blank to autogenerate" />
         </div>
+        <div class="field" :class="{ 'error': client.errors?.id }">
+          <label>Public client ID</label>
+          <input v-model="client.public_client_id" placeholder="https://boruta.host" />
+        </div>
         <div class="field" :class="{ 'error': client.errors?.secret }">
           <label>Client secret</label>
           <div class="ui left icon input">
