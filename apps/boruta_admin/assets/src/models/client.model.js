@@ -51,6 +51,7 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   public_client_id: function ({ public_client_id }) { this.public_client_id = public_client_id },
+  check_public_client_id: function ({ check_public_client_id }) { this.check_public_client_id = check_public_client_id },
   name: function ({ name }) { this.name = name },
   confidential: function ({ confidential }) { this.confidential = confidential },
   pkce: function ({ pkce }) { this.pkce = pkce },
@@ -222,6 +223,7 @@ class Client {
       grantTypes,
       id,
       public_client_id,
+      check_public_client_id,
       id_token_ttl,
       name,
       pkce,
@@ -253,6 +255,7 @@ class Client {
       confidential,
       id,
       public_client_id,
+      check_public_client_id,
       id_token_ttl,
       name,
       pkce,
