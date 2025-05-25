@@ -42,6 +42,12 @@
         </form>
       </div>
     </div>
+    <div class="ui segment" v-if="id_token">
+      <form method="POST" :action="redirect_uri" class="ui large segment">
+        <input type="hidden" name="id_token" :value="id_token" />
+        <button class="ui fluid blue button" type="submit">Present your cryptographic key</button>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -69,11 +75,12 @@ export default defineComponent({
   data () {
     return {
       client: null,
-      hots: null,
+      host: null,
       error: null,
       success: null,
       presentation: null,
       credentials: [],
+      id_token: null,
       redirect_uri: null,
       vp_token: null,
       presentation_submission: null,
@@ -83,42 +90,69 @@ export default defineComponent({
     }
   },
   async mounted () {
-    const client = new oauth.VerifiablePresentations({
-      clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
-      redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/verifiable-presentation'
-    })
+    if (this.$route.query.error) {
+      this.error = this.$route.query.error_description
+    }
 
-    this.client = client
-    client.parseVerifiablePresentationAuthorization(window.location).then((presentation) => {
-      this.presentation = presentation
+    if (this.$route.query.code) {
+      this.success = 'Your credential has successfully been presented.'
+    }
 
-      eventHandler.listen('extract_key-request', this.presentation.id, () => {
-        this.keyConsentEventKey = this.presentation.id
+    if (this.$route.query.response_type == 'vp_token') {
+      const client = new oauth.VerifiablePresentations({
+        clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
+        redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/verifiable-presentation'
+      })
+
+      this.client = client
+      client.parseVerifiablePresentationAuthorization(window.location).then((presentation) => {
+        this.presentation = presentation
+
+        eventHandler.listen('extract_key-request', this.presentation.id, () => {
+          this.keyConsentEventKey = this.presentation.id
+        })
+        eventHandler.listen('generate_key-request', '', () => {
+          this.generateKeyConsentEventKey = this.presentation.id
+        })
+
+        return presentation
+      }).then(this.client.generatePresentation.bind(this.client))
+        .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
+          this.redirect_uri = redirect_uri
+          this.host = new URL(redirect_uri).host
+          this.vp_token = vp_token
+          this.presentation_submission = presentation_submission
+          this.credentials = credentials
+      }).catch(response => {
+        if (response.error) {
+          this.error = response.error_description
+        } else {
+          this.success = response
+        }
+      })
+    }
+
+    if (this.$route.query.response_type == 'id_token') {
+      eventHandler.listen('extract_key-request', this.$route.query.client_id, () => {
+        this.keyConsentEventKey = this.$route.query.client_id
       })
       eventHandler.listen('generate_key-request', '', () => {
-        this.generateKeyConsentEventKey = this.presentation.id
+        this.generateKeyConsentEventKey = this.$route.query.client_id
       })
 
-      return presentation
-    }).then(this.client.generatePresentation.bind(this.client))
-      .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
+      const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
+      client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
+        this.id_token = id_token
         this.redirect_uri = redirect_uri
-        this.host = new URL(redirect_uri).host
-        this.vp_token = vp_token
-        this.presentation_submission = presentation_submission
-        this.credentials = credentials
-    }).catch(response => {
-      if (response.error) {
-        this.error = response.error_description
-      } else {
-        this.success = response
-      }
-    })
+      }).catch(({ error_description }) => {
+        this.error = error_description
+      })
+    }
   },
   methods: {
     async selectKey (identifier) {
+      eventHandler.dispatch('extract_key-approval', this.keyConsentEventKey, identifier)
       this.keyConsentEventKey = null
-      eventHandler.dispatch('extract_key-approval', this.presentation.id, identifier)
     },
     deleteCredential (credential) {
       const credentials = this.credentials.map(e => e)
