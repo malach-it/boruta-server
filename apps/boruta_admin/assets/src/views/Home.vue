@@ -107,7 +107,7 @@ export default {
       '/accounts/wallet'
     },
     presentationUrl () {
-      if (this.presentationRedirectUri === this.walletRedirectUri) {
+      if (this.presentationRedirectUri.startsWith('http')) {
         return window.env.BORUTA_OAUTH_BASE_URL +
           `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=code&client_metadata={}&prompt=login`
       } else {
