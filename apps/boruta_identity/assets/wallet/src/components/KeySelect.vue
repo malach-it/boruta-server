@@ -7,7 +7,8 @@
         @abort="abortKeyConsent"
         @consent="removeKeyConsent"
       />
-      <h2>Select a key</h2>
+      <p class="ui warning message" v-if="requestedKey"><em>Confirm key selection</em></p>
+      <h2 v-else>Select a key</h2>
       <div class="ui cards">
         <div class="card" v-for="identifier in keys">
           <div class="content">
