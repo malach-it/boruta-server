@@ -36,8 +36,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = put_unsigned_request(conn)
 
-    with {:unchanged, conn} <- prompt_redirection(conn, current_user),
-         {:unchanged, conn} <- public_client?(conn),
+    with {:unchanged, conn} <- public_client?(conn),
+         {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- verifiable_presentation?(conn),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
          {:unchanged, conn} <- check_preauthorized(conn),
@@ -64,14 +64,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
-  def public_client?(conn) do
-    case conn.query_params["client_id"] do
-      "did:" <> _key ->
-        {:preauthorized, conn}
+  def public_client?(%Plug.Conn{query_params: %{"client_id" => "did:" <> _key}} = conn) do
+    {:preauthorized, conn}
+  end
 
-      _ ->
-        {:unchanged, conn}
-    end
+  def public_client?(%Plug.Conn{
+        query_params: %{"response_type" => "code", "client_metadata" => _client_metadata}
+      } = conn) do
+    {:preauthorized, conn}
+  end
+
+  def public_client?(conn) do
+    {:unchanged, conn}
   end
 
   def verifiable_presentation?(conn) do
