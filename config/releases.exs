@@ -87,6 +87,9 @@ config :boruta, Boruta.Oauth,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
   ],
+  max_ttl: [
+    authorization_code: 600
+  ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL"),
   did_resolver_base_url: System.get_env("DID_RESOLVER_BASE_URL", "https://api.godiddy.com/1.0.0/universal-resolver"),
   did_registrar_base_url: System.get_env("DID_REGISTRAR_BASE_URL", "https://api.godiddy.com/1.0.0/universal-registrar"),
