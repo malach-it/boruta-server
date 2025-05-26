@@ -180,6 +180,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
        }}
     end)
     |> Enum.into(%{})
+    |> Map.merge(public_credential_configuration())
   end
 
   def credential_configuration(_user), do: public_credential_configuration()
