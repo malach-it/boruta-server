@@ -11,6 +11,7 @@ defmodule BorutaIdentity.Accounts.VerifiablePresentations do
       }}
     end)
     |> Enum.into(%{})
+    |> Map.merge(public_presentation_configuration())
   end
 
   def presentation_configuration(_user) do

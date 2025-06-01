@@ -3,6 +3,7 @@ defmodule BorutaWeb.Oauth.TokenController do
   @behaviour Boruta.Openid.DirectPostApplication
 
   use BorutaWeb, :controller
+  import Boruta.Config, only: [issuer: 0]
 
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
@@ -104,7 +105,33 @@ defmodule BorutaWeb.Oauth.TokenController do
   end
 
   @impl Boruta.Openid.DirectPostApplication
-  def direct_post_success(conn, callback_uri) do
-    redirect(conn, external: callback_uri)
+  def direct_post_success(conn, response) do
+    query =
+      %{
+        code: response.code.value,
+        state: response.state
+      }
+      |> URI.encode_query()
+
+    callback_uri = URI.parse(response.redirect_uri)
+
+    callback_uri =
+      %{callback_uri | host: callback_uri.host || "", query: query}
+      |> URI.to_string()
+
+    case response.id_token do
+      nil ->
+        redirect(conn, external: callback_uri)
+      id_token ->
+        {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
+
+        redirect(conn, external: issuer() <> Routes.authorize_path(conn, :authorize, %{
+          "client_id" => kid,
+          "response_type" => "vp_token",
+          "client_metadata" => "{}",
+          "scope" => response.code.scope,
+          "redirect_uri" => response.redirect_uri
+        }))
+    end
   end
 end

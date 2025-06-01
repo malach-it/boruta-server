@@ -59,6 +59,8 @@ configuration:
         - https://redirect.uri.boruta
         - "{{PREAUTHORIZED_CODE_REDIRECT_URI}}"
         - "{{PRESENTATION_REDIRECT_URI}}"
+        - openid4vp://
+        - openid-credential-offer://
   scope:
     - name: BorutaCredentialJwtVc
       label: boruta username

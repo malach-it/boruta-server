@@ -22,6 +22,9 @@ config :boruta, Boruta.Oauth,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
   ],
+  max_ttl: [
+    authorization_code: 600
+  ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000")
 
 config :boruta_auth, BorutaAuth.LogRotate,

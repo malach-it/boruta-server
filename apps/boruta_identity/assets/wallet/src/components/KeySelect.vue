@@ -7,7 +7,8 @@
         @abort="abortKeyConsent"
         @consent="removeKeyConsent"
       />
-      <h2>Select a key</h2>
+      <p class="ui warning message" v-if="requestedKey"><em>Confirm key selection</em></p>
+      <h2 v-else>Select a key</h2>
       <div class="ui cards">
         <div class="card" v-for="identifier in keys">
           <div class="content">
@@ -22,7 +23,7 @@
             </div>
           </div>
         </div>
-        <div class="card">
+        <div class="card" v-if="!requestedKey">
           <div class="content">
             <div class="header">
               <div class="ui form">
@@ -60,6 +61,7 @@ export default defineComponent({
       keys: [],
       newIdentifier: null,
       removeKeyConsentEventKey: null,
+      requestedKey: null,
       keyStore
     }
   },
@@ -70,6 +72,19 @@ export default defineComponent({
         eventHandler.listen('remove_key-request', identifier, () => {
           this.removeKeyConsentEventKey = identifier
         })
+      })
+
+      const dids = Promise.all(this.keys.map(async identifier => {
+        return [identifier, await this.keyStore.extractDid(identifier)]
+      })).then(keys => {
+        const key = keys.find(([identifier, did]) => {
+          return this.$route.query.client_id == did
+        })
+
+        if (key) {
+          this.requestedKey = key[0]
+          this.keys = [this.requestedKey]
+        }
       })
     })
   },
