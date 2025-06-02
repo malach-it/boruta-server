@@ -83,6 +83,7 @@ export default defineComponent({
       id_token: null,
       redirect_uri: null,
       vp_token: null,
+      requestedKey: null,
       presentation_submission: null,
       keyConsentEventKey: null,
       generateKeyConsentEventKey: null,
@@ -103,6 +104,7 @@ export default defineComponent({
         clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
         redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/verifiable-presentation'
       })
+
 
       this.client = client
       client.parseVerifiablePresentationAuthorization(window.location).then((presentation) => {
@@ -142,6 +144,7 @@ export default defineComponent({
 
       const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
       client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
+        localStorage.setItem('keySelection', Date.now() + '~' + this.selectedKey)
         this.id_token = id_token
         this.redirect_uri = redirect_uri
       }).catch(({ error_description }) => {
@@ -151,6 +154,7 @@ export default defineComponent({
   },
   methods: {
     async selectKey (identifier) {
+      this.selectedKey = identifier
       eventHandler.dispatch('extract_key-approval', this.keyConsentEventKey, identifier)
       this.keyConsentEventKey = null
     },
