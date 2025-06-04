@@ -1,4 +1,4 @@
-FROM node:21.7.3 AS admin_assets
+FROM node:22.16.0 AS admin_assets
 
 # For packages not compatible with OpenSSL 3.0 https://nodejs.org/en/blog/release/v17.0.0/
 ENV NODE_OPTIONS=--openssl-legacy-provider
@@ -10,7 +10,7 @@ COPY ./apps/boruta_admin/assets /app
 RUN npm ci
 RUN npm run build
 
-FROM node:21.7.3 AS identity_assets
+FROM node:22.16.0 AS identity_assets
 
 ARG BORUTA_OAUTH_BASE_URL
 

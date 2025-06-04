@@ -1,4 +1,4 @@
-FROM node:21.7.3 AS identity_assets
+FROM node:22.16.0 AS identity_assets
 
 ARG BORUTA_OAUTH_BASE_URL
 
