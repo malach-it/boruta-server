@@ -10,6 +10,12 @@
       <div class="ui two column clients stackable grid" v-if="clients.length">
         <div v-for="client in clients" class="ui column" :key="client.id">
           <div class="ui client highlightable segment">
+            <div class="ui tiny icon message" v-if="isPublic(client)">
+              <i class="cloud icon"></i>
+              <div class="content">
+                <strong>Public client</strong>
+              </div>
+            </div>
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-client', params: { clientId: client.id } }"
@@ -86,6 +92,9 @@ export default {
       Client.all().then((clients) => {
         this.clients = clients
       })
+    },
+    isPublic (client) {
+      return client.public_client_id == window.env.BORUTA_OAUTH_BASE_URL
     },
     deleteClient (client) {
       if (!confirm('Are you sure ?')) return
