@@ -88,8 +88,7 @@ export default defineComponent({
       keyConsentEventKey: null,
       generateKeyConsentEventKey: null,
       keyIdentifier: null,
-      encryptionKeyPair: JSON.parse(localStorage.getItem("encryptionKeyPair")),
-      codeVerifier: window.env.BORUTA_WALLET_CODE_VERIFIER
+      encryptionKeyPair: JSON.parse(localStorage.getItem("encryptionKeyPair"))
     }
   },
   async mounted () {

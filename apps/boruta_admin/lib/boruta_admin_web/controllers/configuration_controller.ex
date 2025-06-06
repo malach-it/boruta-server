@@ -62,7 +62,8 @@ defmodule BorutaAdminWeb.ConfigurationController do
         "{{PREAUTHORIZED_CODE_REDIRECT_URI}}",
         issuer() <>
           # credo:disable-for-next-line
-          BorutaIdentityWeb.Router.Helpers.wallet_path(BorutaIdentityWeb.Endpoint, :index, ["preauthorized-code"])
+          BorutaIdentityWeb.Router.Helpers.wallet_path(BorutaIdentityWeb.Endpoint, :index) <>
+          "/preauthorized-code"
       )
 
     content =
@@ -71,7 +72,8 @@ defmodule BorutaAdminWeb.ConfigurationController do
         "{{PRESENTATION_REDIRECT_URI}}",
         issuer() <>
           # credo:disable-for-next-line
-          BorutaIdentityWeb.Router.Helpers.wallet_path(BorutaIdentityWeb.Endpoint, :index, ["verifiable-presentation"])
+          BorutaIdentityWeb.Router.Helpers.wallet_path(BorutaIdentityWeb.Endpoint, :index) <>
+          "/verifiable-presentation"
       )
 
     configurations = [

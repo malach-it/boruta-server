@@ -3,7 +3,6 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   use BorutaIdentityWeb, :controller
 
-  alias Boruta.ClientsAdapter
   alias Boruta.Oauth
   alias BorutaIdentity.Accounts
 
@@ -60,27 +59,6 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec after_sign_out_path(conn :: Plug.Conn.t()) :: String.t()
   def after_sign_out_path(%Plug.Conn{query_params: query_params} = conn) do
     Routes.user_session_path(conn, :new, query_params)
-  end
-
-  @spec public_client_request_param(conn :: Plug.Conn.t()) :: request_param :: String.t()
-  def public_client_request_param(conn) do
-    client = ClientsAdapter.public!()
-
-    user_return_to =
-      current_path(conn)
-      |> String.replace(~r/prompt=(login|none)/, "")
-      |> String.replace(~r/max_age=(\d+)/, "")
-
-    {:ok, jwt, _payload} =
-      Joken.encode_and_sign(
-        %{
-          "client_id" => client.id,
-          "user_return_to" => user_return_to
-        },
-        BorutaIdentityWeb.Token.application_signer()
-      )
-
-    jwt
   end
 
   @spec request_param(conn :: Plug.Conn.t()) :: request_param :: String.t()
