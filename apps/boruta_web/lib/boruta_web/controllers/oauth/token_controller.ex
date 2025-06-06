@@ -128,8 +128,14 @@ defmodule BorutaWeb.Oauth.TokenController do
         user = Users.get_user(response.token.resource_owner.sub)
         {:ok, _user, session_token} = Sessions.create_user_session(user)
         token = response.token
+        query = URI.encode_query(%{
+          access_token: token.value,
+          id_token: IdToken.generate(%{token: token}, token.nonce).value,
+          expires_in: token.expires_at - :os.system_time(:second),
+          state: token.state
+        })
         # PresentationServer.authenticated(token.previous_code, "#{token.redirect_uri}#access_token=#{token.value}&id_token=#{IdToken.generate(%{token: token}, token.nonce).value}&expires_in=#{token.expires_at - :os.system_time(:second)}&state=#{token.state}", session_token)
-        PresentationServer.authenticated(token.previous_code, "http://localhost:4001/oauth-callback#access_token=#{token.value}&id_token=#{IdToken.generate(%{token: token}, token.nonce).value}&expires_in=#{token.expires_at - :os.system_time(:second)}&state=#{token.state}", session_token)
+        PresentationServer.authenticated(token.previous_code, "#{response.code.relying_party_redirect_uri}##{query}", session_token)
 
         redirect(conn, external: callback_uri)
       id_token ->
@@ -140,6 +146,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_metadata" => "{}",
           "scope" => response.code.scope,
           "state" => response.code.state,
+          "relying_party_redirect_uri" => response.code.relying_party_redirect_uri,
           "redirect_uri" => response.redirect_uri
         })
 
