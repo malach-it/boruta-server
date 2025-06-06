@@ -141,7 +141,7 @@ defmodule BorutaWeb.Oauth.TokenController do
         redirect(conn, external: callback_uri)
       id_token ->
         {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
-        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, %{
+        params = %{
           "client_id" => kid,
           "response_type" => "vp_token",
           "client_metadata" => "{}",
@@ -149,9 +149,14 @@ defmodule BorutaWeb.Oauth.TokenController do
           "redirect_uri" => response.redirect_uri,
           "code" => response.code.value,
           "state" => response.code.state,
-          "relying_party_redirect_uri" => response.code.relying_party_redirect_uri,
           "redirect_uri" => response.redirect_uri
-        })
+        }
+        params = case response.code.relying_party_redirect_uri do
+          nil -> params
+          relying_party_redirect_uri ->
+            Map.put(params, "relying_party_redirect_uri", relying_party_redirect_uri)
+        end
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
 
         PresentationServer.authenticated(response.code.value, redirect_uri, nil)
 
