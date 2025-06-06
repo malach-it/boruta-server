@@ -566,9 +566,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     receive do
       {:authenticated, redirect_uri, session_token} ->
         conn =
+          case session_token do
+            nil ->
+              conn
+
+            session_token ->
+              conn
+              |> fetch_session()
+              |> store_user_session(session_token)
+          end
+
+        conn =
           conn
-          |> fetch_session()
-          |> store_user_session(session_token)
           |> put_resp_header("content-type", "text/event-stream")
           |> send_chunked(200)
 
@@ -673,10 +682,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp resource_owner(conn, current_user) do
     current_user = current_user || %User{}
-    scope = case conn.query_params["scope"] do
-      nil -> ""
-      scope -> scope
-    end
+
+    scope =
+      case conn.query_params["scope"] do
+        nil -> ""
+        scope -> scope
+      end
 
     %ResourceOwner{
       sub: current_user.id,
