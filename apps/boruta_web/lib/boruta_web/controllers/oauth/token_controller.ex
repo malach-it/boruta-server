@@ -7,9 +7,13 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
+  alias Boruta.Oauth.IdToken
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
+  alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.Accounts.Users
   alias BorutaWeb.OauthView
+  alias BorutaWeb.PresentationServer
 
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
@@ -121,17 +125,39 @@ defmodule BorutaWeb.Oauth.TokenController do
 
     case response.id_token do
       nil ->
+        user = Users.get_user(response.token.resource_owner.sub)
+        {:ok, _user, session_token} = Sessions.create_user_session(user)
+        token = response.token
+        query = URI.encode_query(%{
+          access_token: token.value,
+          id_token: IdToken.generate(%{token: token}, token.nonce).value,
+          expires_in: token.expires_at - :os.system_time(:second),
+          state: token.state
+        })
+        # PresentationServer.authenticated(token.previous_code, "#{token.redirect_uri}#access_token=#{token.value}&id_token=#{IdToken.generate(%{token: token}, token.nonce).value}&expires_in=#{token.expires_at - :os.system_time(:second)}&state=#{token.state}", session_token)
+        PresentationServer.authenticated(token.previous_code, "#{response.code.relying_party_redirect_uri}##{query}", session_token)
+
         redirect(conn, external: callback_uri)
       id_token ->
         {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
-
-        redirect(conn, external: issuer() <> Routes.authorize_path(conn, :authorize, %{
+        params = %{
           "client_id" => kid,
           "response_type" => "vp_token",
           "client_metadata" => "{}",
           "scope" => response.code.scope,
+          "state" => response.code.state,
           "redirect_uri" => response.redirect_uri
-        }))
+        }
+        params = case response.code.relying_party_redirect_uri do
+          nil -> params
+          relying_party_redirect_uri ->
+            Map.put(params, "relying_party_redirect_uri", relying_party_redirect_uri)
+        end
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+        PresentationServer.authenticated(response.code.value, redirect_uri, nil)
+
+        redirect(conn, external: redirect_uri)
     end
   end
 end
