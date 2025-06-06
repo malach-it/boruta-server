@@ -98,18 +98,15 @@ export default defineComponent({
         const selectedKey = keySelection.split('~')[1]
         if (parseInt(keySelectedAt) + 60000 > Date.now()) {
           this.selectedKey = selectedKey
-          localStorage.removeItem('keySelection')
         } else {
           this.keys = []
           this.error = 'Cannot confirm requested key.'
-          localStorage.removeItem('keySelection')
         }
       } else {
         this.keys = []
         this.error = 'Cannot confirm requested key.'
       }
     }
-
   },
   methods: {
     deleteKey (identifier) {
