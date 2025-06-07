@@ -145,8 +145,9 @@ export default defineComponent({
       })
 
       const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
-      client.parseSiopv2Response(window.location).then(({ response, id_token, redirect_uri }) => {
-        localStorage.setItem('keySelection', Date.now() + '~' + this.selectedKey)
+      client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
+        const keySelection = localStorage.getItem('keySelection')
+        localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
         this.response = response
         this.id_token = id_token
         this.redirect_uri = redirect_uri
