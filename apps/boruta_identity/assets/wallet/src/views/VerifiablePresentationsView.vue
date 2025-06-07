@@ -144,7 +144,8 @@ export default defineComponent({
 
       const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
       client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
-        localStorage.setItem('keySelection', Date.now() + '~' + this.selectedKey)
+        const keySelection = localStorage.getItem('keySelection')
+        localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
         this.id_token = id_token
         this.redirect_uri = redirect_uri
       }).catch(({ error_description }) => {
