@@ -16,7 +16,7 @@
               {{ identifier }}
             </div>
             <div class="description">
-              <p class="ui warning message" v-if="requestedKey == identifier"><em>Confirm key selection</em></p>
+              <p class="ui warning message" v-if="selectedKeys.includes(identifier)"><em>key confirmed</em></p>
             </div>
           </div>
           <div class="extra content">
@@ -65,6 +65,7 @@ export default defineComponent({
       newIdentifier: null,
       removeKeyConsentEventKey: null,
       requestedKey: null,
+      selectedKeys: [],
       error: null,
       keyStore
     }
@@ -83,6 +84,7 @@ export default defineComponent({
       return [identifier, await this.keyStore.extractDid(identifier)]
     })).then(keys => {
       const key = keys.find(([identifier, did]) => {
+        console.log(did)
         return this.$route.query.client_id == did
       })
 
@@ -94,14 +96,13 @@ export default defineComponent({
     if (this.requestedKey) {
       const keySelection = localStorage.getItem('keySelection')
       if (keySelection) {
-        const keySelectedAt = keySelection.split('~')[0]
-        const selectedKey = keySelection.split('~')[1]
-        if (parseInt(keySelectedAt) + 60000 > Date.now()) {
-          this.selectedKey = selectedKey
-        } else {
-          this.keys = []
-          this.error = 'Cannot confirm requested key.'
-        }
+        keySelection.split('|').forEach(keySelection => {
+          const keySelectedAt = keySelection.split('~')[0]
+          const selectedKey = keySelection.split('~')[1]
+          if (parseInt(keySelectedAt) + 10000 > Date.now()) {
+            this.selectedKeys.push(selectedKey)
+          }
+        })
       } else {
         this.keys = []
         this.error = 'Cannot confirm requested key.'
