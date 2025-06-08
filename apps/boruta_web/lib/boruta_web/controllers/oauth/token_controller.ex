@@ -5,24 +5,18 @@ defmodule BorutaWeb.Oauth.TokenController do
   use BorutaWeb, :controller
   import Boruta.Config, only: [issuer: 0]
 
-  alias Boruta.CodesAdapter
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.Token
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
+  alias Boruta.Openid.DirectPostResponse
   alias BorutaWeb.OauthView
 
-  @required_dids Enum.take_random([
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9KboogM6iTSurwvMuv7MfgTyWTWuh94P1PvJc1XXuBsdNmKcDhj8aam1mCN3iPKxC2ofkahGp9HfRNWQVGmEYPF4ACP1K3XMeL6DXJKgr2i9W7yR9nW2EyfEhVDwN1PFfVvJp",
+  @required_dids [
     "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9Kbot7oiEsQLYB8wbaSN1tiMgSqcW7XBsvNRX5mKkmq23yRy1ghvNGENjAWYT3TT8LBUCj6vAogTUaa5suYVbfCES9xUpdDVtW2fQJhx4CsyPeeAUAyqGsjwiDi6aTnRKDhac",
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9Kbq7vQ4hgvZMM99iyYEy2xodSjoNANrfqcLfgJjexuzEqwHt7AsyLDG1wyJ7XMrgwHpNKDCLLP8hMkLodGrZKMEqxzmquM1uDFGGbHTxFAVUFdtyG1jqjLYvaruwdmFk8gGL",
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9KbpyccjxAQmUXi9ydaB4YWkqchFZJW1vJL4uVkBGjE97WD9jTsE336aKeW2qjQqHh6DgBm79BpKZWVQn6TnXQfFWgiafDUeubRgHSgAdZpFwhPBp8rriAoKfP23kzCZ62vwN",
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9Kbs4xtdjTyw3AtAUw7sMVk3x6nqc2xQSNHwTHhUTiGhQxLHiWx9sB7Bcmx3UyWJzQwFsoKFrpBmgGAKPgJJ2nJrBn8rDKFT9vsfqAsLQzWEj3hAitXuqXMD75wwBrB9Dce1J",
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9KbrXz29RMxHug85XVRA8u7RnUqxNpodjdfkXkSJVoDfEhwU9gkmAoPjZKJqEAjfsbUMugQF5vd2PyCVm8U1mHMds9Fa888N1ukxDky8QyagMSCbGt4nR1fp8x9i75TykLJ5A",
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9KbpQxALBcXjsAH6FvbhJ3dsQPCZ8muRzwUVghkib6EgqRcbRSmH1svbCcn3uNaaH5WG9cPtm2D7B7qKmnX5CcmHzswSnd3kjoerWPoPv98gR9CihgdwzLYk9MjL4MJqre7ek",
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9Kbo1SSEXfgo5LgqK2Wnxqcsc1M4sBmNZfKUtGToyeUUgxbJSzsmsA2BATFbm3oNfKaiZKLX8Z7j476ngqomieBb2PDrFHo5kUxDrbzUpz5jvn1hDz4AHVg8sL2Cfjd7SdpgU",
-  ], 3)
+    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9KbrXz29RMxHug85XVRA8u7RnUqxNpodjdfkXkSJVoDfEhwU9gkmAoPjZKJqEAjfsbUMugQF5vd2PyCVm8U1mHMds9Fa888N1ukxDky8QyagMSCbGt4nR1fp8x9i75TykLJ5A"
+  ]
 
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
@@ -118,7 +112,8 @@ defmodule BorutaWeb.Oauth.TokenController do
   end
 
   @impl Boruta.Openid.DirectPostApplication
-  def direct_post_success(conn, response) do
+  def direct_post_success(conn, %DirectPostResponse{vp_token: vp_token} = response)
+      when not is_nil(vp_token) do
     query =
       %{
         code: response.code.value,
@@ -132,49 +127,51 @@ defmodule BorutaWeb.Oauth.TokenController do
       %{callback_uri | host: callback_uri.host || "", query: query}
       |> URI.to_string()
 
-    case response.id_token do
-      nil ->
-        redirect(conn, external: callback_uri)
-      id_token ->
-        {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
-        case Enum.empty?(@required_dids -- [kid | subject_chain(response.code)]) do
-          true ->
-            params = %{
-              "client_id" => kid,
-              "response_type" => "vp_token",
-              "client_metadata" => "{}",
-              "scope" => response.code.scope,
-              "state" => response.code.state,
-              "code" => response.code.value,
-              "redirect_uri" => response.redirect_uri
-            }
-            redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+    redirect(conn, external: callback_uri)
+  end
 
-            redirect(conn, external: redirect_uri)
-          false ->
-            params = %{
-              "client_id" => kid,
-              "response_type" => "code",
-              "client_metadata" => "{}",
-              "scope" => response.code.scope,
-              "state" => response.code.state,
-              "code" => response.code.value,
-              "redirect_uri" => response.redirect_uri
-            }
-            redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+  def direct_post_success(conn, %DirectPostResponse{id_token: id_token} = response)
+      when not is_nil(id_token) do
+    {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
 
-            redirect(conn, external: redirect_uri)
-        end
+    case Enum.empty?(@required_dids -- chain_keys(response.code_chain)) do
+      true ->
+        params = %{
+          "client_id" => kid,
+          "response_type" => "vp_token",
+          "client_metadata" => "{}",
+          "scope" => response.code.scope,
+          "state" => response.code.state,
+          "code" => response.code.value,
+          "redirect_uri" => response.redirect_uri
+        }
+
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+        redirect(conn, external: redirect_uri)
+
+      false ->
+        params = %{
+          "client_id" => kid,
+          "response_type" => "code",
+          "client_metadata" => "{}",
+          "scope" => response.code.scope,
+          "state" => response.code.state,
+          "code" => response.code.value,
+          "redirect_uri" => response.redirect_uri
+        }
+
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+        redirect(conn, external: redirect_uri)
     end
   end
 
-  defp subject_chain(token, acc \\ [])
-
-  defp subject_chain(%Token{previous_code: nil, sub: sub}, acc), do: [sub | acc]
-
-  defp subject_chain(%Token{previous_code: value, sub: sub}, acc) do
-    [sub | acc ++ subject_chain(CodesAdapter.get_by(value: value))]
+  defp chain_keys(code_chain) do
+    Enum.map(code_chain, fn
+      %Token{revoked_at: nil, sub: sub} -> sub
+      _ -> nil
+    end)
+    |> Enum.reject(&is_nil/1)
   end
-
-  defp subject_chain(nil, _acc), do: {:error, "Previous code not found."}
 end
