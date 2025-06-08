@@ -94,13 +94,15 @@ export default defineComponent({
     })
 
     if (this.requestedKey) {
-      const keySelection = localStorage.getItem('keySelection')
-      if (keySelection) {
-        keySelection.split('|').forEach(keySelection => {
+      const keySelections = localStorage.getItem('keySelection')
+      if (keySelections) {
+        keySelections.split('|').forEach(keySelection => {
           const keySelectedAt = keySelection.split('~')[0]
           const selectedKey = keySelection.split('~')[1]
-          if (parseInt(keySelectedAt) + 10000 > Date.now()) {
+          if (parseInt(keySelectedAt) + 60000 > Date.now()) {
             this.selectedKeys.push(selectedKey)
+          } else {
+            localStorage.setItem('keySelection', keySelections.replace('|' + keySelection, ''))
           }
         })
       } else {

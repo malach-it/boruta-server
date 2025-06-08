@@ -1,6 +1,7 @@
 <template>
   <div class="ui verifiable-presentations container">
-    <h1>Verifiable presentation</h1>
+    <h1 v-if="mode == 'oid4vp'">Verifiable presentation</h1>
+    <h1 v-if="mode == 'siopv2'">Key presentation</h1>
       <Consent
         message="You are about to add a new cryptographic key"
         :event-key="generateKeyConsentEventKey"
@@ -35,7 +36,7 @@
     <div v-if="credentials.length">
       <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
       <div class="ui segment">
-        <form :action="redirect_uri" method="POST">
+        <form :action="redirect_uri" method="POST" @submit="localStorage.removeItem('keySelection')">
           <input type="hidden" name="vp_token" :value="vp_token" />
           <input type="hidden" name="presentation_submission" :value="presentation_submission" />
           <button class="ui violet large fluid button" type="submit">Present your credential to {{ host }}</button>
@@ -100,6 +101,7 @@ export default defineComponent({
     }
 
     if (this.$route.query.response_type == 'vp_token') {
+      this.mode = 'oid4vp'
       const client = new oauth.VerifiablePresentations({
         clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
         redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/verifiable-presentation'
@@ -135,6 +137,7 @@ export default defineComponent({
     }
 
     if (this.$route.query.response_type == 'id_token') {
+      this.mode = 'siopv2'
       eventHandler.listen('extract_key-request', this.$route.query.client_id, () => {
         this.keyConsentEventKey = this.$route.query.client_id
       })
