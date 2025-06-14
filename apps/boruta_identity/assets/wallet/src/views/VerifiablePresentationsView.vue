@@ -48,6 +48,9 @@
         <button class="ui fluid blue button" type="submit">Present your cryptographic key</button>
       </form>
     </div>
+    <div class="issuance" v-if="mode == 'oid4vci'">
+      <VerifiableCredentialsIssuanceView />
+    </div>
   </div>
 </template>
 
@@ -56,6 +59,7 @@ import { EncryptJWT, importJWK } from 'jose'
 import { defineComponent } from 'vue'
 import { BorutaOauth, KeyStore, CustomEventHandler } from 'boruta-client'
 import { storage } from '../store'
+import VerifiableCredentialsIssuanceView from './VerifiableCredentialsIssuanceView.vue'
 
 import Consent from '../components/Consent.vue'
 import Credentials from '../components/Credentials.vue'
@@ -71,9 +75,10 @@ const oauth = new BorutaOauth({
 
 export default defineComponent({
   name: 'VerifiablePresentationsView',
-  components: { Consent, Credentials, KeySelect },
+  components: { Consent, Credentials, KeySelect, VerifiableCredentialsIssuanceView },
   data () {
     return {
+      mode: null,
       client: null,
       host: null,
       error: null,
@@ -158,6 +163,11 @@ export default defineComponent({
         this.error = error_description
       })
     }
+
+    if (this.$route.query.credential_offer) {
+      this.mode = 'oid4vci'
+    }
+    console.log(this.mode)
   },
   methods: {
     async selectKey (identifier) {
