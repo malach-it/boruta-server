@@ -138,6 +138,8 @@ export default defineComponent({
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {
         this.$store.commit('refreshCredentials')
         this.$router.push({ name: 'home' })
+      }).catch(({ error_description }) => {
+        this.error = error_description
       })
     }
   }
