@@ -138,7 +138,7 @@ defmodule BorutaWeb.Oauth.TokenController do
       true ->
         params = %{
           "client_id" => kid,
-          "response_type" => "vp_token",
+          "response_type" => String.split(response.code.response_type, " ") |> List.last(),
           "client_metadata" => "{}",
           "scope" => response.code.scope,
           "state" => response.code.state,
@@ -153,7 +153,7 @@ defmodule BorutaWeb.Oauth.TokenController do
       false ->
         params = %{
           "client_id" => kid,
-          "response_type" => "code",
+          "response_type" => response.code.response_type,
           "client_metadata" => "{}",
           "scope" => response.code.scope,
           "state" => response.code.state,
