@@ -12,6 +12,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   import BorutaIdentityWeb.Authenticable,
     only: [request_param: 1, get_user_session: 1]
 
+  alias Boruta.ClientsAdapter
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.AuthorizeResponse
@@ -68,10 +69,36 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     {:preauthorized, conn}
   end
 
-  def public_client?(%Plug.Conn{
-        query_params: %{"response_type" => "code", "client_metadata" => _client_metadata}
-      } = conn) do
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "id_token", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
     {:preauthorized, conn}
+  end
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "id_token urn:ietf:params:oauth:response-type:pre-authorized_code", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
+    {:preauthorized, conn}
+  end
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "id_token vp_token", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
+    {:preauthorized, conn}
+  end
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "code", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
+        {:preauthorized, conn}
   end
 
   def public_client?(conn) do
@@ -531,7 +558,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %Plug.Conn{query_params: query_params} = conn,
         %CredentialOfferResponse{} = response
       ) do
-    case IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"]) do
+        client_id = case query_params["client_id"] do
+          "did" <> _key ->
+            ClientsAdapter.public!().id
+          client_id ->
+            client_id
+        end
+    case IdentityProviders.get_identity_provider_by_client_id(client_id) do
       %IdentityProvider{} = identity_provider ->
         template =
           IdentityProviders.get_identity_provider_template!(
