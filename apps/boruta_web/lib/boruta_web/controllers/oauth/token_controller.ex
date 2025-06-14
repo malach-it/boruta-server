@@ -14,8 +14,6 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias BorutaWeb.OauthView
 
   @required_dids [
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9Kbot7oiEsQLYB8wbaSN1tiMgSqcW7XBsvNRX5mKkmq23yRy1ghvNGENjAWYT3TT8LBUCj6vAogTUaa5suYVbfCES9xUpdDVtW2fQJhx4CsyPeeAUAyqGsjwiDi6aTnRKDhac",
-    "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9KbrXz29RMxHug85XVRA8u7RnUqxNpodjdfkXkSJVoDfEhwU9gkmAoPjZKJqEAjfsbUMugQF5vd2PyCVm8U1mHMds9Fa888N1ukxDky8QyagMSCbGt4nR1fp8x9i75TykLJ5A"
   ]
 
   def token(%Plug.Conn{} = conn, _params) do
