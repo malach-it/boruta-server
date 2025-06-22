@@ -411,7 +411,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                ],
                "issuer" => "http://localhost:4000",
                "jwks_uri" => "http://localhost:4000/openid/jwks",
-               "registration_endpoint" => "http://localhost:4000/openid/register",
+               # "registration_endpoint" => "http://localhost:4000/openid/register",
                "request_object_signing_alg_values_supported" => [
                  "ES256",
                  "ES384",
@@ -460,47 +460,47 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
     end
   end
 
-  describe "dynamic registration" do
-    test "returns an error when data is invalid", %{conn: conn} do
-      conn =
-        post(conn, Routes.dynamic_registration_path(conn, :register_client), %{redirect_uris: nil})
+  # describe "dynamic registration" do
+  #   test "returns an error when data is invalid", %{conn: conn} do
+  #     conn =
+  #       post(conn, Routes.dynamic_registration_path(conn, :register_client), %{redirect_uris: nil})
 
-      assert json_response(conn, 400) == %{
-               "error" => "invalid_client_metadata",
-               "error_description" => "redirect_uris : can't be blank"
-             }
-    end
+  #     assert json_response(conn, 400) == %{
+  #              "error" => "invalid_client_metadata",
+  #              "error_description" => "redirect_uris : can't be blank"
+  #            }
+  #   end
 
-    test "registers client", %{conn: conn} do
-      conn =
-        post(conn, Routes.dynamic_registration_path(conn, :register_client), %{
-          redirect_uris: ["https://test.uri"]
-        })
+  #   test "registers client", %{conn: conn} do
+  #     conn =
+  #       post(conn, Routes.dynamic_registration_path(conn, :register_client), %{
+  #         redirect_uris: ["https://test.uri"]
+  #       })
 
-      assert %{
-               "client_id" => client_id,
-               "client_secret" => client_secret,
-               "client_secret_expires_at" => 0
-             } = json_response(conn, 201)
+  #     assert %{
+  #              "client_id" => client_id,
+  #              "client_secret" => client_secret,
+  #              "client_secret_expires_at" => 0
+  #            } = json_response(conn, 201)
 
-      assert client_id
-      assert client_secret
-    end
+  #     assert client_id
+  #     assert client_secret
+  #   end
 
-    test "creates associated identity provider", %{conn: conn} do
-      conn =
-        post(conn, Routes.dynamic_registration_path(conn, :register_client), %{
-          redirect_uris: ["https://test.uri"]
-        })
+  #   test "creates associated identity provider", %{conn: conn} do
+  #     conn =
+  #       post(conn, Routes.dynamic_registration_path(conn, :register_client), %{
+  #         redirect_uris: ["https://test.uri"]
+  #       })
 
-      assert %{
-               "client_id" => client_id
-             } = json_response(conn, 201)
+  #     assert %{
+  #              "client_id" => client_id
+  #            } = json_response(conn, 201)
 
-      assert %ClientIdentityProvider{identity_provider_id: identity_provider_id} =
-               BorutaIdentity.Repo.get_by(ClientIdentityProvider, client_id: client_id)
+  #     assert %ClientIdentityProvider{identity_provider_id: identity_provider_id} =
+  #              BorutaIdentity.Repo.get_by(ClientIdentityProvider, client_id: client_id)
 
-      assert BorutaIdentity.Repo.get!(IdentityProvider, identity_provider_id)
-    end
-  end
+  #     assert BorutaIdentity.Repo.get!(IdentityProvider, identity_provider_id)
+  #   end
+  # end
 end

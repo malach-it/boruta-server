@@ -55,8 +55,8 @@ defmodule BorutaWeb.OauthView do
       "token_endpoint" => issuer <> routes.token_path(BorutaWeb.Endpoint, :token),
       "userinfo_endpoint" => issuer <> routes.userinfo_path(BorutaWeb.Endpoint, :userinfo),
       "jwks_uri" => issuer <> routes.jwks_path(BorutaWeb.Endpoint, :jwks_index),
-      "registration_endpoint" =>
-        issuer <> routes.dynamic_registration_path(BorutaWeb.Endpoint, :register_client),
+      # "registration_endpoint" =>
+      #   issuer <> routes.dynamic_registration_path(BorutaWeb.Endpoint, :register_client),
       "pushed_authorization_request_endpoint" =>
         issuer <> routes.pushed_authorization_request_path(BorutaWeb.Endpoint, :pushed_authorization_request),
       "grant_types_supported" => [
