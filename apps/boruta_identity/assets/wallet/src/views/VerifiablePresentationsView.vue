@@ -44,8 +44,17 @@
       </div>
     </div>
     <div class="ui segment" v-if="id_token">
-      <form method="POST" :action="redirect_uri" class="ui large segment">
+      <form method="POST" :action="redirect_uri" class="ui form large segment">
         <input type="hidden" name="id_token" :value="id_token" />
+        <textarea name="metadata_policy">
+{
+  "client_id": {
+    "one_of": [
+      "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9KbpVe9GCARGebSWmYgPcKDDqKUqCCB5q5PLeQtp5yonRSDw7mgFESbYmELAa9kS4pfUAfqMAg4ZhnQXnwcHRrgCS9iY6ddeQu9jxGsqyNdNHiRouPKUiyFp2ZkJhQk2itdmE"
+    ]
+  }
+}
+        </textarea>
         <button class="ui fluid blue button" type="submit">Present your cryptographic key</button>
       </form>
     </div>
