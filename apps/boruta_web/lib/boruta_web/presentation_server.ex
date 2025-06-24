@@ -19,6 +19,10 @@ defmodule BorutaWeb.PresentationServer do
     GenServer.cast(__MODULE__, {:authenticated, code, redirect_uri})
   end
 
+  def message(code, message) do
+    GenServer.cast(__MODULE__, {:message, code, message})
+  end
+
   def handle_call({:start_presentation, code}, {pid, _}, state) do
     presentations = Map.put(
       state.presentations,
@@ -28,7 +32,7 @@ defmodule BorutaWeb.PresentationServer do
         pid: pid
       }
     )
-    {:reply, :ok, %{state| presentations: presentations}}
+    {:reply, :ok, %{state | presentations: presentations}}
   end
 
   def handle_cast({:authenticated, code, redirect_uri}, state) do
@@ -36,6 +40,16 @@ defmodule BorutaWeb.PresentationServer do
       nil -> :ok
       presentation ->
         send(presentation[:pid], {:authenticated, redirect_uri})
+    end
+
+    {:noreply, Map.delete(state, code)}
+  end
+
+  def handle_cast({:message, code, message}, state) do
+    case state.presentations[code] do
+      nil -> :ok
+      presentation ->
+        send(presentation[:pid], {:message, message})
     end
 
     {:noreply, Map.delete(state, code)}
