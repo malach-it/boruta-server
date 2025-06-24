@@ -124,6 +124,8 @@ defmodule BorutaWeb.Oauth.TokenController do
       %{callback_uri | host: callback_uri.host || "", query: query}
       |> URI.to_string()
 
+    PresentationServer.message(response.code.value, "Presentation success")
+
     redirect(conn, external: callback_uri)
   end
 

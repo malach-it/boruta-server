@@ -76,7 +76,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     receive do
       {:authenticated, redirect_uri} ->
-        chunk(conn, "event: message\ndata: #{redirect_uri}\n\n")
+        chunk(conn, "event: authenticated\ndata: #{redirect_uri}\n\n")
+
+      {:message, message} ->
+        chunk(conn, "event: message\ndata: #{message}\n\n")
     end
 
     conn
@@ -543,7 +546,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             %{uri | path: Routes.token_path(conn, :direct_post, code)}
             |> URI.to_string()
-          end)
+          end),
+        code: response.code.value
       }
     )
   end
@@ -568,7 +572,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
             |> delete_session(:session_chosen)
             |> put_layout(false)
             |> put_view(TemplateView)
-            |> render("template.html", template: template, assigns: %{credential_offer: response})
+            |> render("template.html", template: template, assigns: %{
+              credential_offer: response,
+              code: response.code.value
+            })
 
           {:error, _error} ->
             {:error, :bad_request}
@@ -602,7 +609,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         |> delete_session(:session_chosen)
         |> put_layout(false)
         |> put_view(TemplateView)
-        |> render("template.html", template: template, assigns: %{credential_offer: response})
+        |> render("template.html", template: template, assigns: %{
+          credential_offer: response,
+          code: response.code.value
+        })
 
       nil ->
         raise BorutaIdentity.Accounts.IdentityProviderError,
