@@ -21,6 +21,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Openid.CredentialOfferResponse
   alias Boruta.Openid.SiopV2Response
   alias Boruta.Openid.VerifiablePresentationResponse
+  alias BorutaWeb.PresentationServer
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.User
@@ -63,6 +64,22 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       {:redirected, conn} ->
         conn
     end
+  end
+
+  def authenticated?(conn, %{"code" => code}) do
+    PresentationServer.start_presentation(code)
+
+    conn =
+      conn
+      |> put_resp_header("content-type", "text/event-stream")
+      |> send_chunked(200)
+
+    receive do
+      {:authenticated, redirect_uri} ->
+        chunk(conn, "event: message\ndata: #{redirect_uri}\n\n")
+    end
+
+    conn
   end
 
   def public_client?(%Plug.Conn{query_params: %{"client_id" => "did:" <> _key}} = conn) do
@@ -455,7 +472,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             %{uri | path: Routes.token_path(conn, :direct_post, code)}
             |> URI.to_string()
-          end)
+          end),
+        code: response.code.value
       }
     )
   end

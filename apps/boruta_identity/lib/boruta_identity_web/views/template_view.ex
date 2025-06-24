@@ -117,6 +117,13 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :webauthn_options))
   end
 
+  def context(context, %{code: code} = assigns) do
+
+    %{code: code}
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :code))
+  end
+
   def context(context, %{current_user: current_user} = assigns) do
     current_user = Map.take(current_user, [:username, :webauthn_registered_at, :totp_registered_at, :metadata])
 
