@@ -36,6 +36,7 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :mime, :types, %{
+  "text/event-stream" => ["event-stream"],
   "application/jwt" => ["jwt"]
 }
 
