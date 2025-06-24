@@ -167,6 +167,19 @@ defmodule BorutaWeb.Oauth.TokenController do
 
     PresentationServer.authenticated(code.value, redirect_uri)
 
-    redirect(conn, external: redirect_uri)
+    query =
+      %{
+        code: response.code.value,
+        state: response.state
+      }
+      |> URI.encode_query()
+
+    callback_uri = URI.parse(response.redirect_uri)
+
+    callback_uri =
+      %{callback_uri | host: callback_uri.host || "", query: query}
+      |> URI.to_string()
+
+    redirect(conn, external: callback_uri)
   end
 end
