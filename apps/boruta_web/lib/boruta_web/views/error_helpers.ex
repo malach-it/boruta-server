@@ -17,7 +17,7 @@ defmodule BorutaWeb.ErrorHelpers do
   @doc """
   Translates an error message using gettext.
   """
-  def translate_error({msg, opts}) do
+  def translate_error({msg, _opts}) do
     # When using gettext, we typically pass the strings we want
     # to translate as a static argument:
     #
@@ -35,10 +35,6 @@ defmodule BorutaWeb.ErrorHelpers do
     # Note we use the "errors" domain, which means translations
     # should be written to the errors.po file. The :count option is
     # set by Ecto and indicates we should also apply plural rules.
-    if count = opts[:count] do
-      Gettext.dngettext(BorutaWeb.Gettext, "errors", msg, msg, count, opts)
-    else
-      Gettext.dgettext(BorutaWeb.Gettext, "errors", msg, opts)
-    end
+    msg
   end
 end

@@ -10,6 +10,7 @@ config :boruta_web, BorutaWeb.Endpoint,
   pubsub_server: BorutaWeb.PubSub
 
 config :mime, :types, %{
+  "text/event-stream" => ["event-stream"],
   "application/jwt" => ["jwt"]
 }
 
