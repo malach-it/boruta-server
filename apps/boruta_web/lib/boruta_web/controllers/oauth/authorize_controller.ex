@@ -21,7 +21,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Openid.CredentialOfferResponse
   alias Boruta.Openid.SiopV2Response
   alias Boruta.Openid.VerifiablePresentationResponse
-  alias BorutaWeb.PresentationServer
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Deliveries
   alias BorutaIdentity.Accounts.User
@@ -32,6 +31,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.ResourceOwners
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
+  alias BorutaWeb.PresentationServer
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -89,6 +89,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   def public_client?(
         %Plug.Conn{
           query_params: %{"response_type" => "id_token", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
+    {:preauthorized, conn}
+  end
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "urn:ietf:params:oauth:response-type:pre-authorized_code", "client_id" => "did:" <> _key}
         } = conn
       ) do
     {:preauthorized, conn}

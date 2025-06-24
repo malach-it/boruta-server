@@ -32,8 +32,11 @@ defmodule BorutaWeb.PresentationServer do
   end
 
   def handle_cast({:authenticated, code, redirect_uri}, state) do
-    presentation = state.presentations[code]
-    send(presentation[:pid], {:authenticated, redirect_uri})
+    case state.presentations[code] do
+      nil -> :ok
+      presentation ->
+        send(presentation[:pid], {:authenticated, redirect_uri})
+    end
 
     {:noreply, Map.delete(state, code)}
   end
