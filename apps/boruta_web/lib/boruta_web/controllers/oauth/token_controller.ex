@@ -11,6 +11,7 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Openid
   alias Boruta.Openid.DirectPostResponse
   alias BorutaWeb.OauthView
+  alias BorutaWeb.PresentationServer
 
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
@@ -148,7 +149,7 @@ defmodule BorutaWeb.Oauth.TokenController do
     redirect(conn, external: redirect_uri)
   end
 
-  def direct_post_success(conn, %DirectPostResponse{id_token: id_token} = response)
+  def direct_post_success(conn, %DirectPostResponse{id_token: id_token, code: code} = response)
       when not is_nil(id_token) do
     {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
 
@@ -163,6 +164,8 @@ defmodule BorutaWeb.Oauth.TokenController do
     }
 
     redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+    PresentationServer.authenticated(code.value, redirect_uri)
 
     redirect(conn, external: redirect_uri)
   end
