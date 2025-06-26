@@ -116,7 +116,33 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   end
 
   def authorization_details(%User{backend: %Backend{} = backend}) do
-    Enum.map(backend.verifiable_credentials, fn credential ->
+    (Enum.map(backend.verifiable_credentials, fn credential ->
+      case credential["type"] do
+        "11" ->
+          %{
+            "type" => "openid_credential",
+            "format" => credential["format"],
+            "credential_definition" => %{
+              "type" => String.split(credential["types"], " ")
+            },
+            "credential_identifiers" => [credential["credential_identifier"]]
+          }
+
+        _ ->
+          %{
+            "type" => "openid_credential",
+            "format" => credential["format"],
+            "credential_configuration_id" => credential["credential_identifier"],
+            "credential_identifiers" => String.split(credential["types"], " ")
+          }
+      end
+    end) ++ default_authorization_details()) |> Enum.uniq()
+  end
+
+  def authorization_details(_user), do: default_authorization_details()
+
+  def default_authorization_details do
+    Enum.map(Backend.default!().verifiable_credentials, fn credential ->
       case credential["type"] do
         "11" ->
           %{
@@ -138,8 +164,6 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
       end
     end)
   end
-
-  def authorization_details(_user), do: []
 
   def public_credential_configuration do
     backend = Backend.default!()

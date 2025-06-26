@@ -109,7 +109,7 @@ export default {
     presentationUrl () {
       if (this.presentationRedirectUri.startsWith('http')) {
         return window.env.BORUTA_OAUTH_BASE_URL +
-          `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=code&client_metadata={}&prompt=login`
+          `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=id_token vp_token&client_metadata={}&prompt=login`
       } else {
         return window.env.BORUTA_OAUTH_BASE_URL +
           `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=vp_token&client_metadata={}&prompt=login`
@@ -117,7 +117,7 @@ export default {
     },
     preauthorizeUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
-      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.issuanceRedirectUri}&response_type=urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4xm&prompt=login`
+      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&response_type=id_token urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&client_metadata={}&state=qrm0c4xm&prompt=login`
     }
   }
 }

@@ -7,9 +7,14 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
+  alias Boruta.Oauth.Token
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
+  alias Boruta.Openid.DirectPostResponse
   alias BorutaWeb.OauthView
+
+  @required_dids [
+  ]
 
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
@@ -105,7 +110,8 @@ defmodule BorutaWeb.Oauth.TokenController do
   end
 
   @impl Boruta.Openid.DirectPostApplication
-  def direct_post_success(conn, response) do
+  def direct_post_success(conn, %DirectPostResponse{vp_token: vp_token} = response)
+      when not is_nil(vp_token) do
     query =
       %{
         code: response.code.value,
@@ -119,19 +125,51 @@ defmodule BorutaWeb.Oauth.TokenController do
       %{callback_uri | host: callback_uri.host || "", query: query}
       |> URI.to_string()
 
-    case response.id_token do
-      nil ->
-        redirect(conn, external: callback_uri)
-      id_token ->
-        {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
+    redirect(conn, external: callback_uri)
+  end
 
-        redirect(conn, external: issuer() <> Routes.authorize_path(conn, :authorize, %{
+  def direct_post_success(conn, %DirectPostResponse{id_token: id_token} = response)
+      when not is_nil(id_token) do
+    {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
+
+    case Enum.empty?(@required_dids -- chain_keys(response.code_chain)) do
+      true ->
+        params = %{
           "client_id" => kid,
-          "response_type" => "vp_token",
+          "response_type" => String.split(response.code.response_type, " ") |> List.last(),
           "client_metadata" => "{}",
           "scope" => response.code.scope,
+          "state" => response.code.state,
+          "code" => response.code.value,
           "redirect_uri" => response.redirect_uri
-        }))
+        }
+
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+        redirect(conn, external: redirect_uri)
+
+      false ->
+        params = %{
+          "client_id" => kid,
+          "response_type" => response.code.response_type,
+          "client_metadata" => "{}",
+          "scope" => response.code.scope,
+          "state" => response.code.state,
+          "code" => response.code.value,
+          "redirect_uri" => response.redirect_uri
+        }
+
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+        redirect(conn, external: redirect_uri)
     end
+  end
+
+  defp chain_keys(code_chain) do
+    Enum.map(code_chain, fn
+      %Token{revoked_at: nil, sub: sub} -> sub
+      _ -> nil
+    end)
+    |> Enum.reject(&is_nil/1)
   end
 end
