@@ -1,20 +1,39 @@
-<h1>Credential presentation</h1>
+<div id="presentation">
+  <h1>Credential presentation</h1>
 
-{{^valid?}}
-<div class="ui error message">
-{{#errors}}
-  <li>{{ message }}</li>
-{{/errors}}
-</div>
-{{/valid?}}
+  {{^valid?}}
+  <div class="ui error message">
+  {{#errors}}
+    <li>{{ message }}</li>
+  {{/errors}}
+  </div>
+  {{/valid?}}
 
-<h2>Scan the QR code with your identity wallet</h2>
-<hr />
-<div class="ui center aligned qr-code segment">
-  <img width="350" src="data:image/svg+xml; base64, {{ base64_presentation_qr_code }}" alt="QR code" />
+  <h2>Scan the QR code with your identity wallet</h2>
+  <hr />
+  <div class="ui center aligned qr-code segment">
+    <img width="350" src="data:image/svg+xml; base64, {{ base64_presentation_qr_code }}" alt="QR code" />
+  </div>
+  <div class="ui center aligned deeplink segment">
+    <a class="ui blue fluid button" onclick="window.open('{{ presentation_deeplink }}', 'present your credentials', 'scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=390,height=844,left=auto,top=auto')">Present your credentials</a>
+  </div>
+  <hr />
+  <a href="#" onclick="window.location.reload()" class="ui fluid button">Reload</a>
 </div>
-<div class="ui center aligned deeplink segment">
-  <a class="ui blue fluid button" href="{{ presentation_deeplink }}">Present your credentials</a>
+
+<div id="message" class="ui info message" style="display: none;">
 </div>
-<hr />
-<a href="#" onclick="window.location.reload()" class="ui fluid button">Reload</a>
+
+<script>
+  var source = new EventSource('{{ issuer }}/openid/presentation_sse?code={{ code }}');
+  source.addEventListener('authenticated', function(event) {
+      console.log(event)
+      window.location.href = event.data
+    })
+  source.addEventListener('message', function(event) {
+      document.getElementById("presentation").style.display = 'none'
+      document.getElementById("message").style.display = 'block'
+      document.getElementById("message").innerHTML = event.data
+    })
+  source.addEventListener("error", console.log);
+</script>

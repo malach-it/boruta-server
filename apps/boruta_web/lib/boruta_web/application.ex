@@ -9,6 +9,10 @@ defmodule BorutaWeb.Application do
     children = [
       BorutaWeb.Endpoint,
       BorutaWeb.Repo,
+      %{
+        id: BorutaWeb.PresentationServer,
+        start: {BorutaWeb.PresentationServer, :start_link, []}
+      },
       BorutaWeb.Plugs.RateLimit.Counter,
       {Finch, name: FinchHttp},
       {Cluster.Supervisor,

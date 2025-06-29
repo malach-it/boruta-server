@@ -3,6 +3,7 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   use BorutaIdentityWeb, :controller
 
+  alias Boruta.ClientsAdapter
   alias Boruta.Oauth
   alias BorutaIdentity.Accounts
 
@@ -64,6 +65,24 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec request_param(conn :: Plug.Conn.t()) :: request_param :: String.t()
   def request_param(conn) do
     case Oauth.Request.authorize_request(conn, %Oauth.ResourceOwner{sub: ""}) do
+      {:ok, %_{client_id: "did:" <> _key, scope: scope}} ->
+        user_return_to =
+          current_path(conn)
+          |> String.replace(~r/prompt=(login|none)/, "")
+          |> String.replace(~r/max_age=(\d+)/, "")
+
+        {:ok, jwt, _payload} =
+          Joken.encode_and_sign(
+            %{
+              "client_id" => ClientsAdapter.public!().id,
+              "scope" => scope,
+              "user_return_to" => user_return_to
+            },
+            BorutaIdentityWeb.Token.application_signer()
+          )
+
+        jwt
+
       {:ok, %_{client_id: client_id, scope: scope}} ->
         # NOTE remove prompt and max_age params affecting redirections
         user_return_to =

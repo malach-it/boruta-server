@@ -8,6 +8,7 @@ defmodule BorutaWeb.Openid.CredentialController do
   alias Boruta.Openid.DeferedCredentialResponse
   alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaWeb.OauthView
+  alias BorutaWeb.PresentationServer
 
   def credential(conn, params) do
     Openid.credential(
@@ -23,16 +24,18 @@ defmodule BorutaWeb.Openid.CredentialController do
   end
 
   @impl Boruta.Openid.CredentialApplication
-  def credential_created(conn, %CredentialResponse{} = credential_response) do
+  def credential_created(conn, %CredentialResponse{} = response) do
+    PresentationServer.message(response.token.previous_code, "Credential issued")
+
     conn
     |> put_view(OauthView)
-    |> render("credential.json", credential_response: credential_response)
+    |> render("credential.json", credential_response: response)
   end
 
-  def credential_created(conn, %DeferedCredentialResponse{} = credential_response) do
+  def credential_created(conn, %DeferedCredentialResponse{} = response) do
     conn
     |> put_view(OauthView)
-    |> render("defered_credential.json", credential_response: credential_response)
+    |> render("defered_credential.json", credential_response: response)
   end
 
   @impl Boruta.Openid.CredentialApplication
