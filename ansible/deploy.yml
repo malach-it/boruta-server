@@ -17,15 +17,15 @@
         kind: Namespace
         state: present
 
-    - name: Install cert-manager helm package
-      kubernetes.core.helm:
-        name: cert-manager
-        chart_ref: jetstack/cert-manager
-        chart_version: 1.11.1
-        release_namespace: cert-manager
-        create_namespace: true
-        values:
-          installCRDs: true
+          # - name: Install cert-manager helm package
+          #   kubernetes.core.helm:
+          #     name: cert-manager
+          #     chart_ref: jetstack/cert-manager
+          #     chart_version: 1.11.1
+          #     release_namespace: cert-manager
+          #     create_namespace: true
+          #     values:
+          #       installCRDs: true
 
             # upgrade looks to be complicated, variable names contain breaking changes
             # the master configuration file - https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
@@ -200,6 +200,8 @@
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
             BORUTA_GATEWAY_PORT: "5000"
             BORUTA_GATEWAY_SIDECAR_PORT: "5001"
+            BORUTA_ORGANIZATION_RESTRICTED: "{{ boruta_organization_restricted }}"
+            DID_SERVICES_API_KEY: "{{ did_services_api_key }}"
             POOL_SIZE: "5"
 
     - name: Setup boruta auth database
@@ -229,44 +231,6 @@
                 imagePullSecrets:
                   - name: dockerconfigjson-github-com
 
-    - name: Setup boruta gateway database
-      register: database_setup
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: batch/v1
-          kind: Job
-          metadata:
-            name: boruta-gateway-setup
-            namespace: boruta-staging
-          backoffLimit: 3
-          spec:
-            template:
-              spec:
-                containers:
-                  - image: "ghcr.io/malach-it/boruta-gateway:master"
-                    command: ["/app/bin/boruta_gateway"]
-                    args: ["eval", "BorutaGateway.Release.setup"]
-                    envFrom:
-                    - configMapRef:
-                        name: boruta-env
-                    imagePullPolicy: Always
-                    name: boruta
-                restartPolicy: OnFailure
-                imagePullSecrets:
-                  - name: dockerconfigjson-github-com
-
-    - name: Create Boruta logs storage class
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: storage.k8s.io/v1
-          kind: StorageClass
-          metadata:
-            name: boruta-logs
-          provisioner: csi.scaleway.com
-          allowVolumeExpansion: true
-
     - name: Create Boruta logs persistent volume claim
       kubernetes.core.k8s:
         state: present
@@ -274,10 +238,10 @@
           apiVersion: v1
           kind: PersistentVolumeClaim
           metadata:
-            name: boruta-logs-pvc
+            name: logs-pvc
             namespace: boruta-staging
           spec:
-            storageClassName: boruta-logs
+            storageClassName: standard-rwo
             accessModes:
               - ReadWriteOnce # TODO will cause issues when running on multiple nodes
             resources:
@@ -302,7 +266,7 @@
             name: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
             namespace: boruta-staging
           spec:
-            replicas: 2
+            replicas: 1
             strategy:
               type: Recreate
               rollingUpdate: null
@@ -319,7 +283,7 @@
                 volumes:
                   - name: logs
                     persistentVolumeClaim:
-                      claimName: boruta-logs-pvc
+                      claimName: logs-pvc
                 containers:
                   - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
                     readinessProbe:
@@ -339,184 +303,6 @@
                         name: logs
                 imagePullSecrets:
                 - name: dockerconfigjson-github-com
-
-    - name: Create httpbin sidecar blue/green deployment
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
-            namespace: boruta-staging
-          spec:
-            replicas: 2
-            strategy:
-              type: Recreate
-              rollingUpdate: null
-            selector:
-              matchLabels:
-                deployment: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
-            template:
-              metadata:
-                name: boruta-httpbin
-                labels:
-                  deployment: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
-                  app: boruta
-              spec:
-                volumes:
-                  - name: logs
-                    persistentVolumeClaim:
-                      claimName: boruta-logs-pvc
-                containers:
-                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
-                    env:
-                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
-                        value: "./config/example-httpbin-configuration.yml"
-                    envFrom:
-                      - configMapRef:
-                          name: boruta-env
-                    imagePullPolicy: Always
-                    name: boruta
-                    volumeMounts:
-                      - mountPath: "/app/log"
-                        name: logs
-                imagePullSecrets:
-                - name: dockerconfigjson-github-com
-
-    - name: Create protected httpbin sidecar blue/green deployment
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
-            namespace: boruta-staging
-          spec:
-            replicas: 2
-            strategy:
-              type: Recreate
-              rollingUpdate: null
-            selector:
-              matchLabels:
-                deployment: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
-            template:
-              metadata:
-                name: boruta-protected-httpbin
-                labels:
-                  deployment: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
-                  app: boruta
-              spec:
-                volumes:
-                  - name: logs
-                    persistentVolumeClaim:
-                      claimName: boruta-logs-pvc
-                containers:
-                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
-                    env:
-                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
-                        value: "./config/example-protected-httpbin-configuration.yml"
-                    envFrom:
-                      - configMapRef:
-                          name: boruta-env
-                    imagePullPolicy: Always
-                    name: boruta
-                    volumeMounts:
-                      - mountPath: "/app/log"
-                        name: logs
-                imagePullSecrets:
-                - name: dockerconfigjson-github-com
-
-    - name: Load boruta gateway configuration
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: batch/v1
-          kind: Job
-          metadata:
-            name: "boruta-gateway-configuration-{{ release_tag }}"
-            namespace: boruta-staging
-          backoffLimit: 3
-          spec:
-            ttlSecondsAfterFinished: 864000
-            template:
-              spec:
-                containers:
-                  - image: "ghcr.io/malach-it/boruta-server:{{ release_tag }}"
-                    command: ["/app/bin/boruta"]
-                    args: ["eval", "BorutaGateway.Release.load_configuration"]
-                    env:
-                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
-                        value: "./config/example-gateway-configuration.yml"
-                    envFrom:
-                    - configMapRef:
-                        name: boruta-env
-                    imagePullPolicy: Always
-                    name: boruta
-                restartPolicy: OnFailure
-                imagePullSecrets:
-                  - name: dockerconfigjson-github-com
-
-    - name: Load httpbin sidecar configuration
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: batch/v1
-          kind: Job
-          metadata:
-            name: "boruta-httpbin-configuration-{{ release_tag }}"
-            namespace: boruta-staging
-          backoffLimit: 3
-          spec:
-            ttlSecondsAfterFinished: 864000
-            template:
-              spec:
-                containers:
-                  - image: "ghcr.io/malach-it/boruta-gateway:{{ release_tag }}"
-                    command: ["/app/bin/boruta_gateway"]
-                    args: ["eval", "BorutaGateway.Release.load_configuration"]
-                    env:
-                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
-                        value: "./config/example-httpbin-configuration.yml"
-                    envFrom:
-                    - configMapRef:
-                        name: boruta-env
-                    imagePullPolicy: Always
-                    name: boruta
-                restartPolicy: OnFailure
-                imagePullSecrets:
-                  - name: dockerconfigjson-github-com
-
-    - name: Load protected httpbin sidecar configuration
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: batch/v1
-          kind: Job
-          metadata:
-            name: "boruta-protected-httpbin-configuration-{{ release_tag }}"
-            namespace: boruta-staging
-          backoffLimit: 3
-          spec:
-            ttlSecondsAfterFinished: 864000
-            template:
-              spec:
-                containers:
-                  - image: "ghcr.io/malach-it/boruta-gateway:{{ release_tag }}"
-                    command: ["/app/bin/boruta_gateway"]
-                    args: ["eval", "BorutaGateway.Release.load_configuration"]
-                    env:
-                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
-                        value: "./config/example-protected-httpbin-configuration.yml"
-                    envFrom:
-                    - configMapRef:
-                        name: boruta-env
-                    imagePullPolicy: Always
-                    name: boruta
-                restartPolicy: OnFailure
-                imagePullSecrets:
-                  - name: dockerconfigjson-github-com
 
     - name: Wait for deployment readyness
       shell: "kubectl -n boruta-staging wait --for=condition=Ready po --all -l deployment={{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
