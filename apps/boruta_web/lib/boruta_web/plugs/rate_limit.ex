@@ -85,8 +85,6 @@ defmodule BorutaWeb.Plugs.RateLimit do
   def call(conn, options) do
     remote_ip = :inet.ntoa(conn.remote_ip)
 
-    Counter.increment(remote_ip, options[:time_unit])
-
     max_timeout = options[:timeout]
 
     case Counter.throttling_timeout(
@@ -97,6 +95,8 @@ defmodule BorutaWeb.Plugs.RateLimit do
     ) do
       timeout when timeout < max_timeout ->
         :timer.sleep(timeout)
+
+        Counter.increment(remote_ip, options[:time_unit])
         conn
       _ ->
         send_resp(conn, 429, "")

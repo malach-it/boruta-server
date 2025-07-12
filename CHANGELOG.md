@@ -2,6 +2,30 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [0.8.0] - 2025-07-12
+
+### Added
+
+- [auth] agent credentials / code flows
+- [wallet] key selection
+- [ssi] verify public client id oauth client option
+
+### Changed
+
+- [auth] max authorization code ttl to 600 seconds
+- [ssi] remove authentication on siopv2 flow
+
+### Fixed
+
+- [admin] file upload text editor update
+- [ssi] expose public credential configuration for authenticated users
+- [wallet] fix presentation duplicates
+
+### Security
+
+- [auth] experimental request rate limiting
+- [auth] remove dynamic client registration
+
 ## [0.7.2] - 2025-04-13
 
 ### Fixed
