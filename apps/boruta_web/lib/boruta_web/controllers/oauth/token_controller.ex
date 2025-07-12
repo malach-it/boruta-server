@@ -9,7 +9,9 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Oauth.Error
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
+  alias Boruta.Openid.DirectPostResponse
   alias BorutaWeb.OauthView
+  alias BorutaWeb.PresentationServer
 
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
@@ -60,7 +62,8 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   def direct_post(conn, %{"code_id" => code_id} = params) do
     direct_post_params = %{
-      code_id: code_id
+      code_id: code_id,
+      metadata_policy: params["metadata_policy"]
     }
 
     direct_post_params =
@@ -105,7 +108,8 @@ defmodule BorutaWeb.Oauth.TokenController do
   end
 
   @impl Boruta.Openid.DirectPostApplication
-  def direct_post_success(conn, response) do
+  def direct_post_success(conn, %DirectPostResponse{vp_token: vp_token} = response)
+      when not is_nil(vp_token) do
     query =
       %{
         code: response.code.value,
@@ -119,19 +123,64 @@ defmodule BorutaWeb.Oauth.TokenController do
       %{callback_uri | host: callback_uri.host || "", query: query}
       |> URI.to_string()
 
-    case response.id_token do
-      nil ->
-        redirect(conn, external: callback_uri)
-      id_token ->
-        {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
+    PresentationServer.message(response.code.value, "Presentation success")
 
-        redirect(conn, external: issuer() <> Routes.authorize_path(conn, :authorize, %{
-          "client_id" => kid,
-          "response_type" => "vp_token",
-          "client_metadata" => "{}",
-          "scope" => response.code.scope,
-          "redirect_uri" => response.redirect_uri
-        }))
-    end
+    redirect(conn, external: callback_uri)
+  end
+
+  def direct_post_success(
+        conn,
+        %DirectPostResponse{id_token: id_token, error: %Error{}} = response
+      )
+      when not is_nil(id_token) do
+    {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
+
+    params = %{
+      "client_id" => kid,
+      "response_type" => response.code.response_type,
+      "client_metadata" => "{}",
+      "scope" => response.code.scope,
+      "state" => response.code.state,
+      "code" => response.code.value,
+      "redirect_uri" => response.redirect_uri
+    }
+
+    redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+    redirect(conn, external: redirect_uri)
+  end
+
+  def direct_post_success(conn, %DirectPostResponse{id_token: id_token, code: code} = response)
+      when not is_nil(id_token) do
+    {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
+
+    params = %{
+      "client_id" => kid,
+      "response_type" => String.split(response.code.response_type, " ") |> List.last(),
+      "client_metadata" => "{}",
+      "scope" => response.code.scope,
+      "state" => response.code.state,
+      "code" => response.code.value,
+      "redirect_uri" => response.redirect_uri
+    }
+
+    redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+    PresentationServer.authenticated(code.value, redirect_uri)
+
+    query =
+      %{
+        code: response.code.value,
+        state: response.state
+      }
+      |> URI.encode_query()
+
+    callback_uri = URI.parse(response.redirect_uri)
+
+    callback_uri =
+      %{callback_uri | host: callback_uri.host || "", query: query}
+      |> URI.to_string()
+
+    redirect(conn, external: callback_uri)
   end
 end

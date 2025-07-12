@@ -12,6 +12,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   import BorutaIdentityWeb.Authenticable,
     only: [request_param: 1, get_user_session: 1]
 
+  alias Boruta.ClientsAdapter
   alias Boruta.Oauth
   alias Boruta.Oauth.AuthorizationSuccess
   alias Boruta.Oauth.AuthorizeResponse
@@ -30,6 +31,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentity.ResourceOwners
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
+  alias BorutaWeb.PresentationServer
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -64,14 +66,67 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
+  def authenticated?(conn, %{"code" => code}) do
+    PresentationServer.start_presentation(code)
+
+    conn =
+      conn
+      |> put_resp_header("content-type", "text/event-stream")
+      |> send_chunked(200)
+
+    receive do
+      {:authenticated, redirect_uri} ->
+        chunk(conn, "event: authenticated\ndata: #{redirect_uri}\n\n")
+
+      {:message, message} ->
+        chunk(conn, "event: message\ndata: #{message}\n\n")
+    end
+
+    conn
+  end
+
   def public_client?(%Plug.Conn{query_params: %{"client_id" => "did:" <> _key}} = conn) do
     {:preauthorized, conn}
   end
 
-  def public_client?(%Plug.Conn{
-        query_params: %{"response_type" => "code", "client_metadata" => _client_metadata}
-      } = conn) do
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "id_token", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
     {:preauthorized, conn}
+  end
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "urn:ietf:params:oauth:response-type:pre-authorized_code", "client_id" => "did:" <> _key}
+        } = conn
+      ) do
+    {:preauthorized, conn}
+  end
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "id_token urn:ietf:params:oauth:response-type:pre-authorized_code", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
+    {:preauthorized, conn}
+  end
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "id_token vp_token", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
+    {:preauthorized, conn}
+  end
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "code", "client_metadata" => _client_metadata}
+        } = conn
+      ) do
+        {:preauthorized, conn}
   end
 
   def public_client?(conn) do
@@ -428,7 +483,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             %{uri | path: Routes.token_path(conn, :direct_post, code)}
             |> URI.to_string()
-          end)
+          end),
+        code: response.code.value
       }
     )
   end
@@ -490,7 +546,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
             %{uri | path: Routes.token_path(conn, :direct_post, code)}
             |> URI.to_string()
-          end)
+          end),
+        code: response.code.value
       }
     )
   end
@@ -515,7 +572,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
             |> delete_session(:session_chosen)
             |> put_layout(false)
             |> put_view(TemplateView)
-            |> render("template.html", template: template, assigns: %{credential_offer: response})
+            |> render("template.html", template: template, assigns: %{
+              credential_offer: response,
+              code: response.code.value
+            })
 
           {:error, _error} ->
             {:error, :bad_request}
@@ -531,7 +591,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %Plug.Conn{query_params: query_params} = conn,
         %CredentialOfferResponse{} = response
       ) do
-    case IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"]) do
+        client_id = case query_params["client_id"] do
+          "did" <> _key ->
+            ClientsAdapter.public!().id
+          client_id ->
+            client_id
+        end
+    case IdentityProviders.get_identity_provider_by_client_id(client_id) do
       %IdentityProvider{} = identity_provider ->
         template =
           IdentityProviders.get_identity_provider_template!(
@@ -543,7 +609,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         |> delete_session(:session_chosen)
         |> put_layout(false)
         |> put_view(TemplateView)
-        |> render("template.html", template: template, assigns: %{credential_offer: response})
+        |> render("template.html", template: template, assigns: %{
+          credential_offer: response,
+          code: response.code.value
+        })
 
       nil ->
         raise BorutaIdentity.Accounts.IdentityProviderError,
