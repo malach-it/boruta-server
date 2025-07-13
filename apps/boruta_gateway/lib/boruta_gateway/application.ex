@@ -9,6 +9,7 @@ defmodule BorutaGateway.Application do
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.ClientSupervisor
 
+  @impl Application
   def start(_type, _args) do
     children = [
       BorutaGateway.Repo,
@@ -27,7 +28,7 @@ defmodule BorutaGateway.Application do
           [
             %{
               start:
-                {BorutaGateway.Gateway, :start,
+                {BorutaGateway.Gateway.Server, :start,
                  [
                    [
                      port: Application.fetch_env!(:boruta_gateway, :port),
@@ -44,7 +45,7 @@ defmodule BorutaGateway.Application do
       end
 
     setup_database()
-    Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor, shutdown: 5_000)
+    Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor)
   end
 
   def setup_database do
