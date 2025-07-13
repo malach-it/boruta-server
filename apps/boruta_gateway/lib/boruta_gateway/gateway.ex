@@ -17,28 +17,46 @@ defmodule BorutaGateway.Gateway do
 
   @connect_timeout 5_000
 
-  def start(args) do
-    {:ok, listen_socket} =
-      :gen_tcp.listen(args[:port], [{:packet, :raw}, :binary, {:active, false}])
+  defmodule Server do
+    use GenServer
 
-    children =
-      Enum.map(1..args[:num_acceptors], fn i ->
-        Supervisor.child_spec({__MODULE__, [listen_socket: listen_socket]},
-          id: :"http_proxy_server_acceptor_#{i}"
-        )
-      end)
+    alias BorutaGateway.Gateway
 
-    # TODO monitor children
-    with {:ok, pid} <- Supervisor.start_link(children, strategy: :one_for_one, name: __MODULE__) do
-      spawn(fn ->
-        Process.monitor(pid)
-        Process.flag(:trap_exit, true)
-        receive do
-          _ ->
-            :gen_tcp.close(listen_socket)
-        end
-      end)
-      {:ok, pid}
+    def start(args) do
+      GenServer.start_link(__MODULE__, args, name: __MODULE__)
+    end
+
+    @impl GenServer
+    def init(args) do
+      {:ok, listen_socket} =
+        :gen_tcp.listen(args[:port], [{:packet, :raw}, :binary, {:active, false}])
+
+      children =
+        Enum.map(1..args[:num_acceptors], fn i ->
+          Supervisor.child_spec({Gateway, [listen_socket: listen_socket]},
+            id: :"http_proxy_server_acceptor_#{i}"
+          )
+        end)
+
+      Process.flag(:trap_exit, true)
+
+      with {:ok, supervisor} <- Supervisor.start_link(children, strategy: :one_for_one) do
+        {:ok, supervisor: supervisor, listen_socket: listen_socket}
+      end
+    end
+
+    @impl GenServer
+    def handle_info({:EXIT, _pid, reason}, state) do
+      :gen_tcp.close(state[:listen_socket])
+
+      {:stop, reason, state}
+    end
+
+    @impl GenServer
+    def terminate(_reason, state) do
+      :gen_tcp.close(state[:listen_socket])
+
+      :ok
     end
   end
 
@@ -67,10 +85,14 @@ defmodule BorutaGateway.Gateway do
   end
 
   def handle_info(:accept, state) do
-    {:ok, socket} = :gen_tcp.accept(state.listen_socket)
-    :inet.setopts(socket, active: :once)
+    case :gen_tcp.accept(state.listen_socket) do
+      {:ok, socket} ->
+        :inet.setopts(socket, active: :once)
 
-    {:noreply, %{state | socket: socket, client_socket: nil}}
+        {:noreply, %{state | socket: socket, client_socket: nil}}
+      {:error, _error} ->
+        {:stop, :shutdown, state}
+    end
   end
 
   def handle_info({:tcp_closed, socket}, %State{socket: socket} = state) do
