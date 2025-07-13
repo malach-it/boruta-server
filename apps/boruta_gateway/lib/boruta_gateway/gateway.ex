@@ -63,7 +63,7 @@ defmodule BorutaGateway.Gateway do
   defmodule State do
     @moduledoc false
 
-    defstruct [:listen_socket, :socket, :client_socket, :start, :request, :response]
+    defstruct [:listen_socket, :socket, :client_socket, :start, :request, :response, :content_length]
   end
 
   def start_link(args) do
@@ -89,7 +89,7 @@ defmodule BorutaGateway.Gateway do
       {:ok, socket} ->
         :inet.setopts(socket, active: :once)
 
-        {:noreply, %{state | socket: socket, client_socket: nil}}
+        {:noreply, %{state | socket: socket, client_socket: nil, response: nil}}
       {:error, _error} ->
         {:stop, :shutdown, state}
     end
@@ -99,17 +99,17 @@ defmodule BorutaGateway.Gateway do
     {:ok, socket} = :gen_tcp.accept(state.listen_socket)
     :inet.setopts(socket, active: :once)
 
-    {:noreply, %{state | socket: socket, client_socket: nil}}
+    {:noreply, %{state | socket: socket, client_socket: nil, response: nil}}
   end
 
   def handle_info({:tcp_closed, socket}, %State{client_socket: socket} = state) do
-    :gen_tcp.shutdown(state.socket, :write)
+    :gen_tcp.close(state.socket)
 
     {:noreply, state}
   end
 
   def handle_info({:ssl_closed, socket}, %State{client_socket: socket} = state) do
-    :gen_tcp.shutdown(state.socket, :write)
+    :gen_tcp.close(state.socket)
 
     {:noreply, state}
   end
@@ -142,7 +142,7 @@ defmodule BorutaGateway.Gateway do
 
             {:error, _error} ->
               :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-              :gen_tcp.shutdown(socket, :write)
+              :gen_tcp.close(socket)
 
               {:noreply, state}
           end
@@ -170,7 +170,7 @@ defmodule BorutaGateway.Gateway do
 
             {:error, _error} ->
               :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-              :gen_tcp.shutdown(socket, :write)
+              :gen_tcp.close(socket)
 
               {:noreply, state}
           end
@@ -187,7 +187,7 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
-        :gen_tcp.shutdown(socket, :write)
+        :gen_tcp.close(socket)
 
         {:noreply, state}
 
@@ -201,7 +201,7 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
-        :gen_tcp.shutdown(socket, :write)
+        :gen_tcp.close(socket)
 
         {:noreply, state}
 
@@ -215,7 +215,7 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
-        :gen_tcp.shutdown(socket, :write)
+        :gen_tcp.close(socket)
 
         {:noreply, state}
     end
@@ -224,30 +224,34 @@ defmodule BorutaGateway.Gateway do
   def handle_info({:tcp, socket, payload}, %State{client_socket: socket} = state) do
     # TODO clean response headers (connection, strict-transport-security)
     # clean_response_headers(payload)
+    response = (state.response || "") <> payload
+
     :gen_tcp.send(state.socket, payload)
-    case message_complete?(payload) do
+    case message_complete?(response) do
       true ->
-        _response = :os.system_time(:microsecond) - state.start
-        :gen_tcp.shutdown(state.socket, :write)
+        :gen_tcp.close(state.socket)
+
+        {:noreply, %{state | socket: socket}}
+
       false ->
         :inet.setopts(socket, active: :once)
+        {:noreply, %{state | response: response}}
     end
-    {:noreply, state}
   end
 
   def handle_info({:ssl, socket, payload}, %State{client_socket: socket} = state) do
     # TODO clean response headers (connection, strict-transport-security)
     # clean_response_headers(payload)
+    response = (state.response || "") <> payload
     :gen_tcp.send(state.socket, payload)
-    case message_complete?(payload) do
+    case message_complete?(response) do
       true ->
-        _response = :os.system_time(:microsecond) - state.start
-        :gen_tcp.shutdown(state.socket, :write)
+        :gen_tcp.close(state.socket)
       false ->
         :ssl.setopts(socket, active: :once)
     end
 
-    {:noreply, %{state | response: payload}}
+    {:noreply, %{state | response: response}}
   end
 
   def handle_info({:tcp, socket, payload}, %State{socket: socket} = state) do
@@ -352,13 +356,13 @@ defmodule BorutaGateway.Gateway do
     end
   end
 
-  defp message_complete?(payload) do
-    case String.split(payload, "\r\n\r\n") do
+  defp message_complete?(response) do
+    case String.split(response, "\r\n\r\n") do
       [_header] -> true
-      [header|body] ->
+      [header|[body]] ->
         [_, content_length] = Regex.run(~r{[C|c]ontent-[L|l]ength\: ([^\r]+)}, header)
 
-        body_length = body |> Enum.join("\r\n\r\n") |> byte_size()
+        body_length = body |> byte_size()
 
         body_length == String.to_integer(content_length)
     end
