@@ -73,7 +73,7 @@ defmodule BorutaIdentityWeb.TemplateView do
   end
 
   def context(context, %{client: client} = assigns) do
-    client = Map.from_struct(client)
+    client = Map.take(client, [:name])
 
     %{client: client}
     |> Map.merge(context)
