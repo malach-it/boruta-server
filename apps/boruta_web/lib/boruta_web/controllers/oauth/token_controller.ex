@@ -135,7 +135,6 @@ defmodule BorutaWeb.Oauth.TokenController do
           expires_in: token.expires_at - :os.system_time(:second),
           state: token.state
         })
-        # PresentationServer.authenticated(token.previous_code, "#{token.redirect_uri}#access_token=#{token.value}&id_token=#{IdToken.generate(%{token: token}, token.nonce).value}&expires_in=#{token.expires_at - :os.system_time(:second)}&state=#{token.state}", session_token)
         PresentationServer.authenticated(token.previous_code, "#{response.code.relying_party_redirect_uri}##{query}", session_token)
 
         redirect(conn, external: callback_uri)
@@ -160,7 +159,7 @@ defmodule BorutaWeb.Oauth.TokenController do
 
         PresentationServer.authenticated(response.code.value, redirect_uri, nil)
 
-        redirect(conn, external: redirect_uri)
+        redirect(conn, external: callback_uri)
     end
   end
 end
