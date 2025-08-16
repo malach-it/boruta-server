@@ -37,6 +37,8 @@ const labels = {
   'edit-edit-reset-password-template': 'Edit reset password template',
   'edit-new-confirmation-template': 'Edit send confirmation instructions template',
   'edit-new-consent-template': 'Edit consent template',
+  'edit-credential-offer-template': 'Edit credential offer template',
+  'edit-cross-device-presentation-template': 'Edit verifiable presentation template',
   'backends': 'Backends',
   'backend': ({ params }) => params.backendId,
   'new-backend': 'Create',
