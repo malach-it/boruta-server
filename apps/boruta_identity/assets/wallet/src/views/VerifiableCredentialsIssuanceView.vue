@@ -138,9 +138,14 @@ export default defineComponent({
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {
         this.$store.commit('refreshCredentials')
         this.$router.push({ name: 'home' })
+        this.resetKeySelect()
       }).catch(({ error_description }) => {
         this.error = error_description
+        this.resetKeySelect()
       })
+    },
+    resetKeySelect () {
+      localStorage.removeItem('keySelection')
     }
   }
 })
