@@ -75,7 +75,7 @@ const oauth = new BorutaOauth({
 })
 
 export default defineComponent({
-  name: 'VerifiablePresentationsView',
+  name: 'Oid4vcCallbackView',
   components: { Consent, Credentials, KeySelect, VerifiableCredentialsIssuanceView },
   data () {
     return {
@@ -101,10 +101,12 @@ export default defineComponent({
   },
   async mounted () {
     if (this.$route.query.error) {
+      this.mode = 'oid4vc_error'
       this.error = this.$route.query.error_description
     }
 
     if (this.$route.query.code) {
+      this.mode = 'presentation_success'
       this.success = 'Your credential has successfully been presented.'
     }
 
@@ -169,7 +171,10 @@ export default defineComponent({
     if (this.$route.query.credential_offer) {
       this.mode = 'oid4vci'
     }
-    console.log(this.mode)
+
+    if (!this.mode) {
+      this.$router.push({ name: 'home' })
+    }
   },
   methods: {
     async selectKey (identifier, did) {
