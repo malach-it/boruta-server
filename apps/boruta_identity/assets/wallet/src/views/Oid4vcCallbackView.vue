@@ -99,81 +99,86 @@ export default defineComponent({
     }
   },
   async mounted () {
-    if (this.$route.query.error) {
-      this.mode = 'oid4vc_error'
-      this.error = this.$route.query.error_description
-    }
-
-    if (this.$route.query.code) {
-      this.mode = 'presentation_success'
-      this.success = 'Your credential has successfully been presented.'
-    }
-
-    if (this.$route.query.response_type == 'vp_token') {
-      this.mode = 'oid4vp'
-      const client = new oauth.VerifiablePresentations({
-        clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
-        redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/verifiable-presentation'
-      })
-
-
-      this.client = client
-      client.parseVerifiablePresentationAuthorization(window.location).then((presentation) => {
-        this.presentation = presentation
-
-        eventHandler.listen('extract_key-request', this.presentation.id, () => {
-          this.keyConsentEventKey = this.presentation.id
-        })
-        eventHandler.listen('generate_key-request', '', () => {
-          this.generateKeyConsentEventKey = this.presentation.id
-        })
-
-        return presentation
-      }).then(this.client.generatePresentation.bind(this.client))
-        .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
-          this.redirect_uri = redirect_uri
-          this.host = new URL(redirect_uri).host
-          this.vp_token = vp_token
-          this.presentation_submission = presentation_submission
-          this.credentials = credentials
-      }).catch(response => {
-        if (response.error) {
-          this.error = response.error_description
-        } else {
-          this.success = response
-        }
-      })
-    }
-
-    if (this.$route.query.response_type == 'id_token') {
-      this.mode = 'siopv2'
-      eventHandler.listen('extract_key-request', this.$route.query.client_id, () => {
-        this.keyConsentEventKey = this.$route.query.client_id
-      })
-      eventHandler.listen('generate_key-request', '', () => {
-        this.generateKeyConsentEventKey = this.$route.query.client_id
-      })
-
-      const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
-      client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
-        const keySelection = localStorage.getItem('keySelection')
-        localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
-        this.id_token = id_token
-        this.redirect_uri = redirect_uri
-      }).catch(({ error_description }) => {
-        this.error = error_description
-      })
-    }
-
-    if (this.$route.query.credential_offer) {
-      this.mode = 'oid4vci'
-    }
-
-    if (!this.mode) {
-      this.$router.push({ name: 'home' })
-    }
+    this.parseLocation()
   },
   methods: {
+    async parseLocation () {
+      this.mode = null
+
+      if (this.$route.query.error) {
+        this.mode = 'oid4vc_error'
+        this.error = this.$route.query.error_description
+      }
+
+      if (this.$route.query.code) {
+        this.mode = 'presentation_success'
+        this.success = 'Your credential has successfully been presented.'
+      }
+
+      if (this.$route.query.response_type == 'vp_token') {
+        this.mode = 'oid4vp'
+        const client = new oauth.VerifiablePresentations({
+          clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
+          redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/verifiable-presentation'
+        })
+
+
+        this.client = client
+        client.parseVerifiablePresentationAuthorization(window.location).then((presentation) => {
+          this.presentation = presentation
+
+          eventHandler.listen('extract_key-request', this.presentation.id, () => {
+            this.keyConsentEventKey = this.presentation.id
+          })
+          eventHandler.listen('generate_key-request', '', () => {
+            this.generateKeyConsentEventKey = this.presentation.id
+          })
+
+          return presentation
+        }).then(this.client.generatePresentation.bind(this.client))
+          .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
+            this.redirect_uri = redirect_uri
+            this.host = new URL(redirect_uri).host
+            this.vp_token = vp_token
+            this.presentation_submission = presentation_submission
+            this.credentials = credentials
+        }).catch(response => {
+          if (response.error) {
+            this.error = response.error_description
+          } else {
+            this.success = response
+          }
+        })
+      }
+
+      if (this.$route.query.response_type == 'id_token') {
+        this.mode = 'siopv2'
+        eventHandler.listen('extract_key-request', this.$route.query.client_id, () => {
+          this.keyConsentEventKey = this.$route.query.client_id
+        })
+        eventHandler.listen('generate_key-request', '', () => {
+          this.generateKeyConsentEventKey = this.$route.query.client_id
+        })
+
+        const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
+        client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
+          const keySelection = localStorage.getItem('keySelection')
+          localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
+          this.id_token = id_token
+          this.redirect_uri = redirect_uri
+        }).catch(({ error_description }) => {
+          this.error = error_description
+        })
+      }
+
+      if (this.$route.query.credential_offer) {
+        this.mode = 'oid4vci'
+      }
+
+      if (!this.mode) {
+        this.$router.push({ name: 'home' })
+      }
+    },
     async selectKey (identifier, did) {
       this.selectedKey = identifier
       this.metadata_policy = JSON.stringify({ client_id: { one_of: [ did ] } })
@@ -205,6 +210,12 @@ export default defineComponent({
     },
     abortKeyConsent () {
       this.generateKeyConsentEventKey = null
+    }
+  },
+  watch: {
+    '$route.query': {
+      handler: function () { this.parseLocation() },
+      deep: true
     }
   }
 })
