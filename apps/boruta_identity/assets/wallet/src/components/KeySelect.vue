@@ -10,7 +10,7 @@
       <h2>Select a key</h2>
       <div class="ui error message" v-if="error">{{ error }}</div>
       <div class="ui cards" v-else>
-        <div class="card" v-for="identifier in keys">
+        <div class="card" v-for="[identifier, did] in keys">
           <div class="content">
             <div class="header">
               {{ identifier }}
@@ -21,7 +21,7 @@
           </div>
           <div class="extra content">
             <div class="ui two buttons">
-              <button class="ui basic blue button" @click="$emit('selected', identifier)">Use this key</button>
+              <button class="ui basic blue button" @click="$emit('selected', identifier, did)">Use this key</button>
               <button class="ui basic red button" @click="deleteKey(identifier)">Delete</button>
             </div>
           </div>
@@ -72,7 +72,7 @@ export default defineComponent({
   },
   async mounted () {
     await this.keyStore.listKeyIdentifiers().then(keys => {
-      this.keys = keys
+      this.keys = keys.map(key => [key])
       keys.forEach(identifier => {
         eventHandler.listen('remove_key-request', identifier, () => {
           this.removeKeyConsentEventKey = identifier
@@ -80,9 +80,10 @@ export default defineComponent({
       })
     })
 
-    await Promise.all(this.keys.map(async identifier => {
+    await Promise.all(this.keys.map(async ([identifier]) => {
       return [identifier, await this.keyStore.extractDid(identifier)]
     })).then(keys => {
+      this.keys = keys
       const key = keys.find(([identifier, did]) => {
         console.log(did)
         return this.$route.query.client_id == did ||

@@ -46,15 +46,7 @@
     <div class="ui segment" v-if="id_token">
       <form method="POST" :action="redirect_uri" class="ui form large segment">
         <input type="hidden" name="id_token" :value="id_token" />
-        <textarea name="metadata_policy">
-{
-  "client_id": {
-    "one_of": [
-      "did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9KbpVe9GCARGebSWmYgPcKDDqKUqCCB5q5PLeQtp5yonRSDw7mgFESbYmELAa9kS4pfUAfqMAg4ZhnQXnwcHRrgCS9iY6ddeQu9jxGsqyNdNHiRouPKUiyFp2ZkJhQk2itdmE"
-    ]
-  }
-}
-        </textarea>
+        <input type="hidden" name="metadata_policy" :value="metadata_policy">
         <button class="ui fluid blue button" type="submit">Present your cryptographic key</button>
       </form>
     </div>
@@ -96,6 +88,7 @@ export default defineComponent({
       presentation: null,
       credentials: [],
       id_token: null,
+      metadata_policy: "{}",
       redirect_uri: null,
       vp_token: null,
       requestedKey: null,
@@ -176,8 +169,9 @@ export default defineComponent({
     console.log(this.mode)
   },
   methods: {
-    async selectKey (identifier) {
+    async selectKey (identifier, did) {
       this.selectedKey = identifier
+      this.metadata_policy = JSON.stringify({ client_id: { one_of: [ did ] } })
       eventHandler.dispatch('extract_key-approval', this.keyConsentEventKey, identifier)
       this.keyConsentEventKey = null
     },
