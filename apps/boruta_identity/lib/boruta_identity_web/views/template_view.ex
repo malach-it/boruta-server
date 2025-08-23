@@ -156,7 +156,7 @@ defmodule BorutaIdentityWeb.TemplateView do
     # TODO Jason.Encode implementation for CredentialOfferResponse
     "#{credential_offer.redirect_uri}?credential_offer=#{credential_offer
       |> Map.from_struct()
-      |> Map.take([:credential_configuration_ids, :credential_issuer, :grants])
+      |> Map.take([:credential_configuration_ids, :client_id, :credential_issuer, :grants])
       |> Jason.encode!()
       |> URI.encode_www_form()}"
   end
