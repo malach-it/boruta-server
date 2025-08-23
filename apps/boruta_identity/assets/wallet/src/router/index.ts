@@ -1,23 +1,17 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import VerifiableCredentialsIssuanceView from '../views/VerifiableCredentialsIssuanceView.vue'
-import VerifiablePresentationsView from '../views/VerifiablePresentationsView.vue'
+import Oid4vcCallbackView from '../views/Oid4vcCallbackView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/',
+    path: '/credentials',
     name: 'home',
     component: HomeView
   },
   {
-    path: '/preauthorized-code',
-    name: 'preauthorized-code',
-    component: VerifiableCredentialsIssuanceView
-  },
-  {
-    path: '/verifiable-presentation',
-    name: 'verifiable-presentation',
-    component: VerifiablePresentationsView
+    path: '/',
+    name: 'oid4vc-callback',
+    component: Oid4vcCallbackView
   },
   {
     path: '/callback',

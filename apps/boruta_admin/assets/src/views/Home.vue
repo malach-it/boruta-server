@@ -68,7 +68,7 @@
             <div class="field">
               <label>Select a wallet</label>
               <select v-model="issuanceRedirectUri">
-                <option :value="walletRedirectUri + '/preauthorized-code'">Internal wallet</option>
+                <option :value="walletRedirectUri">Internal wallet</option>
                 <option value="openid-credential-offer://">Mobile wallet</option>
               </select>
             </div>
@@ -79,7 +79,7 @@
             <div class="field">
               <label>Select a wallet</label>
               <select v-model="presentationRedirectUri">
-                <option :value="walletRedirectUri + '/verifiable-presentation'">Internal wallet</option>
+                <option :value="walletRedirectUri">Internal wallet</option>
                 <option value="openid4vp://">Mobile wallet</option>
               </select>
             </div>
@@ -95,10 +95,11 @@
 export default {
   name: 'home',
   data () {
+    const walletRedirectUri = new URL('/accounts/wallet', window.env.BORUTA_OAUTH_BASE_URL).toString()
     return {
-      walletRedirectUri: `${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet`,
-      issuanceRedirectUri: `${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/preauthorized-code`,
-      presentationRedirectUri: `${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/verifiable-presentation`
+      walletRedirectUri,
+      issuanceRedirectUri: walletRedirectUri,
+      presentationRedirectUri: walletRedirectUri
     }
   },
   computed: {
