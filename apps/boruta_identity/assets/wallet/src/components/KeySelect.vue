@@ -85,7 +85,8 @@ export default defineComponent({
     })).then(keys => {
       const key = keys.find(([identifier, did]) => {
         console.log(did)
-        return this.$route.query.client_id == did
+        return this.$route.query.client_id == did ||
+          JSON.parse(this.$route.query.credential_offer).client_id == did
       })
 
       if (key) {
