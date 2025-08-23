@@ -36,7 +36,7 @@
     <div v-if="credentials.length">
       <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
       <div class="ui segment">
-        <form :action="redirect_uri" method="POST" @submit="localStorage.removeItem('keySelection')">
+        <form :action="redirect_uri" method="POST"  @submit="resetKeySelect">
           <input type="hidden" name="response" :value="response" />
           <button class="ui violet large fluid button" type="submit">Present your credential to {{ host }}</button>
         </form>
@@ -211,6 +211,9 @@ export default defineComponent({
     },
     abortKeyConsent () {
       this.generateKeyConsentEventKey = null
+    },
+    resetKeySelect () {
+      localStorage.removeItem('keySelection')
     }
   },
   watch: {
