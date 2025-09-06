@@ -6,6 +6,7 @@ on:
       - signatures-adapter
       - ebsi-verify-conformance
       - poc-hybrid-vp-token
+      - provider-policies-registration
   workflow_run:
     workflows:
       - Continuous Integration
