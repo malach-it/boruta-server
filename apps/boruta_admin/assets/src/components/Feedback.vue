@@ -6,7 +6,10 @@
         <i class="ui white close icon" @click="toggle()"></i>
         <h2>Your feedback has value</h2>
         <div class="rating">
-          <i class="ui large yellow star icon" v-for="rating in ratings" :class="{'outline': !isRatingActive(rating) }" @click="setRating(rating)"></i>
+          <a v-for="rating in ratings" @click="setRating(rating)">
+            <span class="star" v-if="isRatingActive(rating)">&#9733;</span>
+            <span class="star" v-if="!isRatingActive(rating)">&#9734;</span>
+          </a>
         </div>
         <form target="_blank" class="ui large form" action="https://gateway.boruta.patatoid.fr/store" method="POST">
           <input type="hidden" name="rating" :value="rating" />
@@ -80,10 +83,21 @@ export default {
   }
   .rating {
     margin-bottom: 1em;
+    font-size: 2rem;
+    height: 2.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     .star {
+      display: block;
+      width: 2.4rem;
       cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+      color: #fbbd08!important;
       &:hover {
-        transform: scale(120%);
+        font-size: 1.4em;
         transition: all .2s ease-in-out;
       }
     }
