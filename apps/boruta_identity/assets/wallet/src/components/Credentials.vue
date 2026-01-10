@@ -30,6 +30,19 @@
             </div>
           </div>
         </div>
+        <form class="ui form card">
+          <div class="content">
+            <div class="header">
+              Share content
+            </div>
+            <div class="description">
+              <textarea placeholder="content" v-model="shareContent"></textarea>
+            </div>
+          </div>
+          <div class="extra content">
+            <a :href="shareUrl" class="ui basic fluid blue button">Share credential offer</a>
+          </div>
+        </form>
       </div>
     </div>
     <div class="modal-wrapper" v-if="credential">
@@ -64,7 +77,9 @@ export default defineComponent({
   data () {
     return {
       formattedCredentials: [],
-      credential: null
+      shareContent: null,
+      credential: null,
+      shareUrl: window.env.BORUTA_OAUTH_BASE_URL + `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=http://localhost:4000/accounts/wallet/agent-code&response_type=code`
     }
   },
   methods: {
@@ -73,6 +88,11 @@ export default defineComponent({
     },
     hideCredential (credential) {
       this.credential = null
+    }
+  },
+  watch: {
+    shareContent (value) {
+      localStorage.setItem('shareContent', value)
     }
   }
 })
