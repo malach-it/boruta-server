@@ -94,7 +94,7 @@ client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-3
 client =
   case Boruta.Ecto.Admin.create_client(%{
          name: "Boruta administration panel",
-         secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "777"),
+         secret: System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET"),
          id: client_id,
          redirect_uris: [
            "#{System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4001")}/oauth-callback"
