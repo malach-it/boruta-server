@@ -16,7 +16,7 @@
     "core-js": "^2.6.5",
     "google-palette": "^1.1.0",
     "jwt-decode": "^3.1.2",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "moment": "^2.29.4",
     "phoenix": "^1.5.7",
     "phoenix-socket": "^1.2.3",
