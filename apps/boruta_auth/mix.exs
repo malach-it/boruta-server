@@ -24,7 +24,7 @@ defmodule BorutaAuth.MixProject do
 
   defp deps do
     [
-      {:boruta, "~> 3.0.0-beta.4"},
+      {:boruta, git: "https://github.com/malach-it/boruta_auth.git", branch: "siopv2-encryption"},
       {:logger_file_backend, "~> 0.0.13"},
       {:quantum, "~> 3.0"}
     ]
