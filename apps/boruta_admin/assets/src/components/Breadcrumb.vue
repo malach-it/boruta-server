@@ -21,7 +21,7 @@ const labels = {
   'dashboard': 'Dashboard',
   'request-logs': 'Requests',
   'business-event-logs': 'Business Events',
-  'identity-providers': "identity providers",
+  'identity-providers': "Identity providers",
   'new-identity-provider': 'Create',
   'identity-provider': ({ params }) => params.identityProviderId,
   'edit-layout-template': 'Edit layout template',
