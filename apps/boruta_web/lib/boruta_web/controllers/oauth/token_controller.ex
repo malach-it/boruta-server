@@ -132,8 +132,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_metadata" => "{}",
           "scope" => response.code.scope,
           "redirect_uri" => response.redirect_uri,
-          "client_encryption_key" => response.client_encryption_key,
-          "client_encryption_alg" => response.client_encryption_alg
+          "code" => response.code.value
         }))
     end
   end
