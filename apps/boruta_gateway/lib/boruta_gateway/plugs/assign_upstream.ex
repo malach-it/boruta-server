@@ -22,7 +22,7 @@ defmodule BorutaGateway.Plug.AssignUpstream do
       |> fetch_query_params()
     client = ClientsAdapter.public!()
 
-        with %{"code" => code} <- conn.query_params |> dbg do
+    with %{"code" => code} <- conn.query_params do
       Boruta.Oauth.token(
         %{
           conn |
@@ -42,7 +42,7 @@ defmodule BorutaGateway.Plug.AssignUpstream do
           }
         },
         __MODULE__
-      ) |> dbg
+      )
     end
   end
 
@@ -75,7 +75,7 @@ defmodule BorutaGateway.Plug.AssignUpstream do
       ) do
     conn = assign(conn, :node_name, "global")
 
-    case Upstreams.match(path_info) |> dbg do
+    case Upstreams.match(path_info) do
       %Upstream{} = upstream ->
         conn = fetch_session(conn)
 
@@ -84,7 +84,6 @@ defmodule BorutaGateway.Plug.AssignUpstream do
             assign(conn, :upstream, upstream)
 
           current_request ->
-            dbg(current_request)
             assign(conn, :upstream, upstream)
         end
 

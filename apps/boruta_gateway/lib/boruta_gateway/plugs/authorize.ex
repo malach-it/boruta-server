@@ -103,6 +103,7 @@ defmodule BorutaGateway.Plug.Authorize do
         } = conn
       ) do
     conn = fetch_session(conn)
+    upstream = conn.assigns[:upstream]
 
     access_token =
       case get_session(conn, :token) do
@@ -138,9 +139,10 @@ defmodule BorutaGateway.Plug.Authorize do
                 port: conn.port,
                 path: "/callback"
               }
-              |> URI.to_string()
-              |> dbg,
-            scope: "openid profile",
+              |> URI.to_string(),
+            scope: upstream
+              |> Upstream.required_scopes(conn.method)
+              |> Enum.join(" "),
             state: state,
             response_type: "code"
           })
@@ -152,7 +154,6 @@ defmodule BorutaGateway.Plug.Authorize do
         |> put_resp_header("location", authorize_url)
         |> resp(302, "")
         |> halt()
-        |> dbg
     end
   end
 
