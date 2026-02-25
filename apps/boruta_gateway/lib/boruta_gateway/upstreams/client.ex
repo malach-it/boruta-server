@@ -72,7 +72,7 @@ defmodule BorutaGateway.Upstreams.Client do
       transform_headers(upstream, conn),
       transform_body(conn)
     )
-    |> Finch.request(http_client)
+    |> Finch.request(http_client) |> dbg
   end
 
   @impl GenServer
@@ -103,16 +103,17 @@ defmodule BorutaGateway.Upstreams.Client do
       "iat" => token.inserted_at && DateTime.to_unix(token.inserted_at)
     }
 
-    token =
+    jwt =
       with %Joken.Signer{} = signer <- signer(upstream),
-           {:ok, token, _payload} <- Token.encode_and_sign(payload, signer) do
-        token
+           {:ok, jwt, _payload} <- Token.encode_and_sign(payload, signer) do
+        jwt
       else
         _ -> nil
       end
 
     req_headers
     |> Enum.reject(fn
+      {"authorization", _value} -> true
       {"x-forwarded-authorization", _value} -> true
       {"connection", _value} -> true
       {"content-length", _value} -> true
@@ -123,7 +124,8 @@ defmodule BorutaGateway.Upstreams.Client do
       {"upgrade", _value} -> true
       _rest -> false
     end)
-    |> List.insert_at(0, {"x-forwarded-authorization", "bearer #{token}"})
+    |> List.insert_at(0, {"x-forwarded-authorization", "bearer #{jwt}"})
+    |> List.insert_at(0, {"authorization", "bearer #{token.value}"})
   end
 
   def signer(
