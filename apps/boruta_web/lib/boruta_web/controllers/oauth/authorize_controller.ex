@@ -581,7 +581,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           |> put_resp_header("content-type", "text/event-stream")
           |> send_chunked(200)
 
-        chunk(conn, "event: message\ndata: #{redirect_uri}\n\n")
+        chunk(conn, "event: authenticated\ndata: #{redirect_uri}\n\n")
+      {:error, error} ->
+        conn =
+          conn
+          |> put_resp_header("content-type", "text/event-stream")
+          |> send_chunked(200)
+
+        chunk(conn, "event: authentication_failure\ndata: #{error}\n\n")
     end
 
     conn
