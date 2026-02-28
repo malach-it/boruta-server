@@ -81,7 +81,7 @@ export default defineComponent({
   },
   async mounted () {
     const client = new oauth.VerifiableCredentialsIssuance({
-      clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
+      clientId: '00000000-0000-0000-0000-000000000001',
       redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/preauthorized-code'
     })
     this.client = client
