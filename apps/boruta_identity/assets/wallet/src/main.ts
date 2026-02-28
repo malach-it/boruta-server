@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import { exportJWK, generateKeyPair } from 'jose'
-import AsyncComputed from 'vue-async-computed'
 import App from './App.vue'
 import './registerServiceWorker'
 import router from './router'
@@ -16,5 +15,4 @@ localStorage.getItem("encryptionKeyPair") || generateKeyPair("ECDH-ES", { extrac
 createApp(App)
   .use(store)
   .use(router)
-  .use(AsyncComputed)
   .mount('#app')

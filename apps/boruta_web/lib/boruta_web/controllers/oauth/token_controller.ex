@@ -99,6 +99,8 @@ defmodule BorutaWeb.Oauth.TokenController do
         error: error,
         error_description: error_description
       }) do
+    PresentationServer.error(error.code, error.error_description)
+
     conn
     |> put_status(status)
     |> put_view(OauthView)
@@ -106,6 +108,8 @@ defmodule BorutaWeb.Oauth.TokenController do
   end
 
   def authentication_failure(conn, %Error{} = error) do
+    PresentationServer.error(error.code, error.error_description)
+
     redirect(conn, external: Error.redirect_to_url(error))
   end
 
