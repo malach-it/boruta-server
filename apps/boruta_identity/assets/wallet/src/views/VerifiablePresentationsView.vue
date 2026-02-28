@@ -36,15 +36,14 @@
       <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
       <div class="ui segment">
         <form :action="redirect_uri" method="POST">
-          <input type="hidden" name="vp_token" :value="vp_token" />
-          <input type="hidden" name="presentation_submission" :value="presentation_submission" />
+          <input type="hidden" name="response" :value="response" />
           <button class="ui violet large fluid button" type="submit">Present your credential to {{ host }}</button>
         </form>
       </div>
     </div>
     <div class="ui segment" v-if="id_token">
       <form method="POST" :action="redirect_uri" class="ui large segment">
-        <input type="hidden" name="id_token" :value="id_token" />
+        <input type="hidden" name="response" :value="response" />
         <button class="ui fluid blue button" type="submit">Present your cryptographic key</button>
       </form>
     </div>
@@ -52,6 +51,7 @@
 </template>
 
 <script lang="ts">
+import { EncryptJWT, importJWK } from 'jose'
 import { defineComponent } from 'vue'
 import { BorutaOauth, KeyStore, CustomEventHandler } from 'boruta-client'
 import { storage } from '../store'
@@ -68,7 +68,6 @@ const oauth = new BorutaOauth({
   eventHandler
 })
 
-
 export default defineComponent({
   name: 'VerifiablePresentationsView',
   components: { Consent, Credentials, KeySelect },
@@ -83,11 +82,13 @@ export default defineComponent({
       id_token: null,
       redirect_uri: null,
       vp_token: null,
+      response: null,
       requestedKey: null,
       presentation_submission: null,
       keyConsentEventKey: null,
       generateKeyConsentEventKey: null,
-      keyIdentifier: null
+      keyIdentifier: null,
+      encryptionKeyPair: JSON.parse(localStorage.getItem("encryptionKeyPair"))
     }
   },
   async mounted () {
@@ -119,7 +120,8 @@ export default defineComponent({
 
         return presentation
       }).then(this.client.generatePresentation.bind(this.client))
-        .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
+        .then(({ response, credentials, redirect_uri, vp_token, presentation_submission }) => {
+          this.response = response
           this.redirect_uri = redirect_uri
           this.host = new URL(redirect_uri).host
           this.vp_token = vp_token
@@ -143,8 +145,9 @@ export default defineComponent({
       })
 
       const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
-      client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
+      client.parseSiopv2Response(window.location).then(({ response, id_token, redirect_uri }) => {
         localStorage.setItem('keySelection', Date.now() + '~' + this.selectedKey)
+        this.response = response
         this.id_token = id_token
         this.redirect_uri = redirect_uri
       }).catch(({ error_description }) => {
