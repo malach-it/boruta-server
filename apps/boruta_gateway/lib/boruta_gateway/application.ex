@@ -9,6 +9,7 @@ defmodule BorutaGateway.Application do
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.ClientSupervisor
 
+  @impl Application
   def start(_type, _args) do
     children = [
       BorutaGateway.Repo,
@@ -27,36 +28,14 @@ defmodule BorutaGateway.Application do
           [
             %{
               start:
-                {BorutaGateway.Server, :start_link,
+                {BorutaGateway.Gateway.Server, :start,
                  [
                    [
                      port: Application.fetch_env!(:boruta_gateway, :port),
-                     router: BorutaGateway.Router
+                     num_acceptors: 10
                    ]
                  ]},
               id: :server
-            }
-            | children
-          ]
-
-        _ ->
-          children
-      end
-
-    children =
-      case Application.get_env(:boruta_gateway, :sidecar_server) do
-        true ->
-          [
-            %{
-              start:
-                {BorutaGateway.Server, :start_link,
-                 [
-                   [
-                     port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
-                     router: BorutaGateway.SidecarRouter
-                   ]
-                 ]},
-              id: :sidecar_server
             }
             | children
           ]
