@@ -102,7 +102,8 @@ defmodule BorutaIdentityWeb.Router do
     end
   end
 
-  def handle_errors(conn, %{reason: reason}) do
+  def handle_errors(conn, %{reason: reason} = error) do
+    dbg error
     reason = %{
       message: Map.get(reason, :message, inspect(reason))
     }
