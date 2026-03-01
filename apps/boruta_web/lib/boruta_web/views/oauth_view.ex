@@ -111,13 +111,20 @@ defmodule BorutaWeb.OauthView do
   end
 
   def render("credential.json", %{credential_response: credential_response}) do
-    %{
-      format: credential_response.format,
-      credential: credential_response.credential
-    }
-    # TODO use associated access token c_nonce
-    |> Map.put(:c_nonce, "boruta")
-    |> Map.put(:c_nonce_expires_in, 3600)
+    case credential_response.encrypted_response do
+      nil ->
+        %{
+          format: credential_response.format,
+          credential: credential_response.credential
+        }
+        # TODO use associated access token c_nonce
+        |> Map.put(:c_nonce, "boruta")
+        |> Map.put(:c_nonce_expires_in, 3600)
+      encrypted_response ->
+        %{
+          encrypted_response: encrypted_response
+        }
+    end
   end
 
   def render("defered_credential.json", %{credential_response: credential_response}) do
@@ -135,6 +142,22 @@ defmodule BorutaWeb.OauthView do
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.TokenResponse do
+    def encode(
+          %Boruta.Oauth.TokenResponse{
+            encrypted_response: encrypted_response
+          },
+          options
+        ) when not is_nil(encrypted_response) do
+      response = %{
+        encrypted_response: encrypted_response
+      }
+
+      Jason.Encode.map(
+        response,
+        options
+      )
+    end
+
     def encode(
           %Boruta.Oauth.TokenResponse{
             token_type: token_type,

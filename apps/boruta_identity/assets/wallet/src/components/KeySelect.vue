@@ -10,18 +10,18 @@
       <h2>Select a key</h2>
       <div class="ui error message" v-if="error">{{ error }}</div>
       <div class="ui cards" v-else>
-        <div class="card" v-for="identifier in keys">
+        <div class="card" v-for="[identifier, did] in keys">
           <div class="content">
             <div class="header">
               {{ identifier }}
             </div>
             <div class="description">
-              <p class="ui warning message" v-if="requestedKey == identifier"><em>Confirm key selection</em></p>
+              <p class="ui warning message" v-if="selectedKeys.includes(identifier)"><em>key confirmed</em></p>
             </div>
           </div>
           <div class="extra content">
             <div class="ui two buttons">
-              <button class="ui basic blue button" @click="$emit('selected', identifier)">Use this key</button>
+              <button class="ui basic blue button" @click="$emit('selected', identifier, did)">Use this key</button>
               <button class="ui basic red button" @click="deleteKey(identifier)">Delete</button>
             </div>
           </div>
@@ -65,13 +65,14 @@ export default defineComponent({
       newIdentifier: null,
       removeKeyConsentEventKey: null,
       requestedKey: null,
+      selectedKeys: [],
       error: null,
       keyStore
     }
   },
   async mounted () {
     await this.keyStore.listKeyIdentifiers().then(keys => {
-      this.keys = keys
+      this.keys = keys.map(key => [key])
       keys.forEach(identifier => {
         eventHandler.listen('remove_key-request', identifier, () => {
           this.removeKeyConsentEventKey = identifier
@@ -79,11 +80,18 @@ export default defineComponent({
       })
     })
 
-    await Promise.all(this.keys.map(async identifier => {
+    await Promise.all(this.keys.map(async ([identifier]) => {
       return [identifier, await this.keyStore.extractDid(identifier)]
     })).then(keys => {
+      this.keys = keys
       const key = keys.find(([identifier, did]) => {
-        return this.$route.query.client_id == did
+        console.log(did)
+        try {
+          return this.$route.query.client_id == did ||
+            JSON.parse(this.$route.query.credential_offer).client_id == did
+        } catch (_error) {
+          return false
+        }
       })
 
       if (key) {
@@ -92,16 +100,17 @@ export default defineComponent({
     })
 
     if (this.requestedKey) {
-      const keySelection = localStorage.getItem('keySelection')
-      if (keySelection) {
-        const keySelectedAt = keySelection.split('~')[0]
-        const selectedKey = keySelection.split('~')[1]
-        if (parseInt(keySelectedAt) + 60000 > Date.now()) {
-          this.selectedKey = selectedKey
-        } else {
-          this.keys = []
-          this.error = 'Cannot confirm requested key.'
-        }
+      const keySelections = localStorage.getItem('keySelection')
+      if (keySelections) {
+        keySelections.split('|').forEach(keySelection => {
+          const keySelectedAt = keySelection.split('~')[0]
+          const selectedKey = keySelection.split('~')[1]
+          if (parseInt(keySelectedAt) + 60000 > Date.now()) {
+            this.selectedKeys.push(selectedKey)
+          } else {
+            localStorage.setItem('keySelection', keySelections.replace('|' + keySelection, ''))
+          }
+        })
       } else {
         this.keys = []
         this.error = 'Cannot confirm requested key.'

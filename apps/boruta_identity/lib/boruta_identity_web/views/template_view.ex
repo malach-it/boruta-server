@@ -117,6 +117,13 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :webauthn_options))
   end
 
+  def context(context, %{code: code} = assigns) do
+
+    %{code: code}
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :code))
+  end
+
   def context(context, %{current_user: current_user} = assigns) do
     current_user = Map.take(current_user, [:username, :webauthn_registered_at, :totp_registered_at, :metadata])
 
@@ -149,7 +156,7 @@ defmodule BorutaIdentityWeb.TemplateView do
     # TODO Jason.Encode implementation for CredentialOfferResponse
     "#{credential_offer.redirect_uri}?credential_offer=#{credential_offer
       |> Map.from_struct()
-      |> Map.take([:credential_configuration_ids, :credential_issuer, :grants])
+      |> Map.take([:credential_configuration_ids, :client_id, :credential_issuer, :grants])
       |> Jason.encode!()
       |> URI.encode_www_form()}"
   end

@@ -81,7 +81,7 @@ export default defineComponent({
   },
   async mounted () {
     const client = new oauth.VerifiableCredentialsIssuance({
-      clientId: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet',
+      clientId: '00000000-0000-0000-0000-000000000001',
       redirectUri: window.env.BORUTA_OAUTH_BASE_URL + '/accounts/wallet/preauthorized-code'
     })
     this.client = client
@@ -138,7 +138,14 @@ export default defineComponent({
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {
         this.$store.commit('refreshCredentials')
         this.$router.push({ name: 'home' })
+        this.resetKeySelect()
+      }).catch(({ error_description }) => {
+        this.error = error_description
+        this.resetKeySelect()
       })
+    },
+    resetKeySelect () {
+      localStorage.removeItem('keySelection')
     }
   }
 })
