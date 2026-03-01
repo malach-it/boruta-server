@@ -68,7 +68,8 @@ defmodule BorutaWeb.Oauth.TokenController do
 
     direct_post_params =
       case params do
-        %{"response" => response} -> Map.put(direct_post_params, :response, response)
+        %{"encrypted_response" => encrypted_response} ->
+          Map.put(direct_post_params, :encrypted_response, encrypted_response)
         %{"id_token" => id_token} -> Map.put(direct_post_params, :id_token, id_token)
         %{"vp_token" => vp_token} -> Map.put(direct_post_params, :vp_token, vp_token)
         %{} -> direct_post_params

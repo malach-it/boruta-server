@@ -37,14 +37,14 @@
       <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
       <div class="ui segment">
         <form :action="redirect_uri" method="POST"  @submit="resetKeySelect">
-          <input type="hidden" name="response" :value="response" />
+          <input type="hidden" name="encrypted_response" :value="encrypted_response" />
           <button class="ui violet large fluid button" type="submit">Present your credential to {{ host }}</button>
         </form>
       </div>
     </div>
     <div class="ui segment" v-if="id_token">
       <form method="POST" :action="redirect_uri" class="ui large segment">
-        <input type="hidden" name="response" :value="response" />
+        <input type="hidden" name="encrypted_response" :value="encrypted_response" />
         <input type="hidden" name="metadata_policy" :value="metadata_policy">
         <button class="ui fluid blue button" type="submit">Present your cryptographic key</button>
       </form>
@@ -90,7 +90,7 @@ export default defineComponent({
       metadata_policy: "{}",
       redirect_uri: null,
       vp_token: null,
-      response: null,
+      encrypted_response: null,
       requestedKey: null,
       presentation_submission: null,
       keyConsentEventKey: null,
@@ -136,7 +136,7 @@ export default defineComponent({
           return presentation
         }).then(this.client.generatePresentation.bind(this.client))
           .then(({ response, credentials, redirect_uri, vp_token, presentation_submission }) => {
-            this.response = response
+            this.encrypted_response = response
             this.redirect_uri = redirect_uri
             this.host = new URL(redirect_uri).host
             this.vp_token = vp_token
@@ -164,7 +164,7 @@ export default defineComponent({
         client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri, response }) => {
           const keySelection = localStorage.getItem('keySelection')
           localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
-          this.response = response
+          this.encrypted_response = response
           this.id_token = id_token
           this.redirect_uri = redirect_uri
         }).catch(({ error_description }) => {
