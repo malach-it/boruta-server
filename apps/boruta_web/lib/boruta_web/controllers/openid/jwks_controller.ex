@@ -13,11 +13,9 @@ defmodule BorutaWeb.Openid.JwksController do
 
   @impl Boruta.Openid.JwksApplication
   def jwk_list(conn, jwk_keys) do
-    global_keys = KeyPairs.list_jwks()
-
     keys =
       Enum.uniq_by(
-        global_keys ++ jwk_keys,
+        jwk_keys,
         fn %{"kid" => kid} -> kid end
       )
 
