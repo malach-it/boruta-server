@@ -41,7 +41,7 @@ Server documentation is available on github pages [here](https://malach-it.githu
 
 ## DID creation and resolution
 
-boruta may use [Universal resolver](https://github.com/decentralized-identity/universal-resolver) for DID resolution and [Universal registrar](https://github.com/decentralized-identity/universal-registrar) for DID creation. Those are to be configured as environment variables, respoectively `DID_RESOLVER_BASE_URL` and `DID_REGISTRAR_BASE_URL`. DIDs are used in the decentralized identity flows and are present as key identifier header of the other generated JWTs.
+boruta may use [Universal resolver](https://github.com/decentralized-identity/universal-resolver) for DID resolution and [Universal registrar](https://github.com/decentralized-identity/universal-registrar) for DID creation. Those are to be configured as environment variables, respectively `DID_RESOLVER_BASE_URL` and `DID_REGISTRAR_BASE_URL`. DIDs are used in the decentralized identity flows and are present as key identifier header of the other generated JWTs.
 
 ## Installation
 
