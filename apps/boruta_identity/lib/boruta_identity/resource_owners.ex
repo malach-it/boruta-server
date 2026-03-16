@@ -37,6 +37,9 @@ defmodule BorutaIdentity.ResourceOwners do
     end
   end
 
+  def get_by(sub: "unknown", scope: _scope), do: %User{}
+  def get_by(sub: "did:" <> _key, scope: _scope), do: %User{}
+
   def get_by(sub: sub, scope: scope) when not is_nil(sub) do
     case Accounts.get_user(sub) do
       %User{

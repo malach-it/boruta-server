@@ -650,7 +650,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     anonymous_sub =
       case conn.query_params["client_id"] do
         "did:" <> _key = did -> did
-        _ -> nil
+        _ -> "unknown"
       end
 
     scope =
