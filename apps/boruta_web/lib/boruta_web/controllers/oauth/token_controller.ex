@@ -130,7 +130,8 @@ defmodule BorutaWeb.Oauth.TokenController do
           "response_type" => "vp_token",
           "client_metadata" => "{}",
           "scope" => response.code.scope,
-          "redirect_uri" => response.redirect_uri
+          "redirect_uri" => response.redirect_uri,
+          "code" => response.code.value
         }))
     end
   end
