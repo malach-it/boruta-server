@@ -9,7 +9,11 @@ defmodule BorutaWeb.OpenidView do
 
   def render("jwks.json", %{keys: keys}) do
     %{
-      keys: keys
+      keys: Enum.flat_map(keys, fn
+        %{"kty" => "RSA"} = key -> Enum.map(["RS256", "RS384", "RS512"], fn alg -> Map.put(key, "alg", alg) end)
+        %{"kty" => "P-256"} = key -> Enum.map(["ES256", "ES384", "ES512"], fn alg -> Map.put(key, "alg", alg) end)
+        %{"kty" => "EC"} = key -> Enum.map(["ES256", "ES384", "ES512"], fn alg -> Map.put(key, "alg", alg) end)
+      end)
     }
   end
 
