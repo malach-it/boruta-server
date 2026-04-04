@@ -73,6 +73,8 @@
               </select>
             </div>
             <a class="ui fluid blue button" target="_blank" :href="preauthorizeUrl">Trigger example pre-authorized code flow with associated boruta wallet (load example data first)</a>
+            <hr />
+            <a class="ui fluid blue button" target="_blank" :href="presentationPreauthorizeUrl">Trigger example pre-authorized code with presentation flow with associated boruta wallet (load example data first)</a>
           </div>
           <div class="ui form segment">
             <h3>Verifiable credential presentation</h3>
@@ -119,6 +121,10 @@ export default {
     preauthorizeUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
       `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&response_type=id_token urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&client_metadata={}&state=qrm0c4xm&prompt=login`
+    },
+    presentationPreauthorizeUrl () {
+     return window.env.BORUTA_OAUTH_BASE_URL +
+      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&response_type=vp_token urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&client_metadata={}&state=qrm0c4xm&prompt=login&scope=BorutaCredentialJwtVc`
     }
   }
 }

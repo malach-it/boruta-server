@@ -110,22 +110,41 @@ defmodule BorutaWeb.Oauth.TokenController do
   @impl Boruta.Openid.DirectPostApplication
   def direct_post_success(conn, %DirectPostResponse{vp_token: vp_token} = response)
       when not is_nil(vp_token) do
-    query =
-      %{
-        code: response.code.value,
-        state: response.state
-      }
-      |> URI.encode_query()
+    {:ok, %{"kid" => kid}} = Joken.peek_header(vp_token)
 
-    callback_uri = URI.parse(response.redirect_uri)
+    case tl(String.split(response.code.response_type, " ")) |> dbg do
+      [] ->
+        query =
+          %{
+            code: response.code.value,
+            state: response.state
+          }
+          |> URI.encode_query()
 
-    callback_uri =
-      %{callback_uri | host: callback_uri.host || "", query: query}
-      |> URI.to_string()
+        callback_uri = URI.parse(response.redirect_uri)
 
-    PresentationServer.message(response.code.value, "Presentation success")
+        callback_uri =
+          %{callback_uri | host: callback_uri.host || "", query: query}
+          |> URI.to_string()
 
-    redirect(conn, external: callback_uri)
+        redirect(conn, external: callback_uri)
+
+      response_types ->
+        params = %{
+          "client_id" => kid,
+          "response_type" => Enum.join(response_types, " "),
+          "client_metadata" => "{}",
+          "scope" => response.code.scope,
+          "state" => response.code.state,
+          "code" => response.code.value,
+          "redirect_uri" => response.redirect_uri
+        }
+
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+
+        PresentationServer.authenticated(response.code.value, redirect_uri)
+        redirect(conn, external: redirect_uri)
+    end
   end
 
   def direct_post_success(
@@ -154,33 +173,38 @@ defmodule BorutaWeb.Oauth.TokenController do
       when not is_nil(id_token) do
     {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
 
-    params = %{
-      "client_id" => kid,
-      "response_type" => String.split(response.code.response_type, " ") |> List.last(),
-      "client_metadata" => "{}",
-      "scope" => response.code.scope,
-      "state" => response.code.state,
-      "code" => response.code.value,
-      "redirect_uri" => response.redirect_uri
-    }
+    case tl(String.split(response.code.response_type, " ")) |> dbg do
+      [] ->
+        query =
+          %{
+            code: response.code.value,
+            state: response.state
+          }
+          |> URI.encode_query()
 
-    redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
+        callback_uri = URI.parse(response.redirect_uri)
 
-    PresentationServer.authenticated(code.value, redirect_uri)
+        callback_uri =
+          %{callback_uri | host: callback_uri.host || "", query: query}
+          |> URI.to_string()
 
-    # query =
-    #   %{
-    #     code: response.code.value,
-    #     state: response.state
-    #   }
-    #   |> URI.encode_query()
+        redirect(conn, external: callback_uri)
 
-    # callback_uri = URI.parse(response.redirect_uri)
+      response_types ->
+        params = %{
+          "client_id" => kid,
+          "response_type" => Enum.join(response_types, " "),
+          "client_metadata" => "{}",
+          "scope" => response.code.scope,
+          "state" => response.code.state,
+          "code" => response.code.value,
+          "redirect_uri" => response.redirect_uri
+        }
 
-    # callback_uri =
-    #   %{callback_uri | host: callback_uri.host || "", query: query}
-    #   |> URI.to_string()
+        redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
 
-    redirect(conn, external: redirect_uri)
+        PresentationServer.authenticated(code.value, redirect_uri)
+        redirect(conn, external: redirect_uri)
+    end
   end
 end

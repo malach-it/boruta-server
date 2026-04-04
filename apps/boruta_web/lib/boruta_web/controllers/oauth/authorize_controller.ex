@@ -38,7 +38,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     "id_token",
     "id_token urn:ietf:params:oauth:response-type:pre-authorized_code",
     "id_token vp_token",
-    "vp_token"
+    "vp_token",
+    "vp_token urn:ietf:params:oauth:response-type:pre-authorized_code",
   ]
 
   def authorize(%Plug.Conn{} = conn, _params) do
