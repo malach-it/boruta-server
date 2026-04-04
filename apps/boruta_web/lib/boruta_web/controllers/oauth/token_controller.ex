@@ -112,7 +112,7 @@ defmodule BorutaWeb.Oauth.TokenController do
       when not is_nil(vp_token) do
     {:ok, %{"kid" => kid}} = Joken.peek_header(vp_token)
 
-    case tl(String.split(response.code.response_type, " ")) |> dbg do
+    case tl(String.split(response.code.response_type, " ")) do
       [] ->
         query =
           %{
@@ -173,7 +173,7 @@ defmodule BorutaWeb.Oauth.TokenController do
       when not is_nil(id_token) do
     {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
 
-    case tl(String.split(response.code.response_type, " ")) |> dbg do
+    case tl(String.split(response.code.response_type, " ")) do
       [] ->
         query =
           %{
