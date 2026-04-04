@@ -68,18 +68,20 @@
             <div class="field">
               <label>Select a wallet</label>
               <select v-model="issuanceRedirectUri">
-                <option :value="walletRedirectUri + '/preauthorized-code'">Internal wallet</option>
+                <option :value="walletRedirectUri">Internal wallet</option>
                 <option value="openid-credential-offer://">Mobile wallet</option>
               </select>
             </div>
             <a class="ui fluid blue button" target="_blank" :href="preauthorizeUrl">Trigger example pre-authorized code flow with associated boruta wallet (load example data first)</a>
+            <hr />
+            <a class="ui fluid blue button" target="_blank" :href="presentationPreauthorizeUrl">Trigger example pre-authorized code with presentation flow with associated boruta wallet (load example data first)</a>
           </div>
           <div class="ui form segment">
             <h3>Verifiable credential presentation</h3>
             <div class="field">
               <label>Select a wallet</label>
               <select v-model="presentationRedirectUri">
-                <option :value="walletRedirectUri + '/verifiable-presentation'">Internal wallet</option>
+                <option :value="walletRedirectUri">Internal wallet</option>
                 <option value="openid4vp://">Mobile wallet</option>
               </select>
             </div>
@@ -95,10 +97,11 @@
 export default {
   name: 'home',
   data () {
+    const walletRedirectUri = new URL('/accounts/wallet', window.env.BORUTA_OAUTH_BASE_URL).toString()
     return {
-      walletRedirectUri: `${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet`,
-      issuanceRedirectUri: `${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/preauthorized-code`,
-      presentationRedirectUri: `${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/verifiable-presentation`
+      walletRedirectUri,
+      issuanceRedirectUri: walletRedirectUri,
+      presentationRedirectUri: walletRedirectUri
     }
   },
   computed: {
@@ -109,7 +112,7 @@ export default {
     presentationUrl () {
       if (this.presentationRedirectUri.startsWith('http')) {
         return window.env.BORUTA_OAUTH_BASE_URL +
-          `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=code&client_metadata={}`
+          `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=id_token vp_token&client_metadata={}&prompt=login`
       } else {
         return window.env.BORUTA_OAUTH_BASE_URL +
           `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=vp_token&client_metadata={}&prompt=login`
@@ -117,7 +120,11 @@ export default {
     },
     preauthorizeUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
-      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.issuanceRedirectUri}&response_type=urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4xm&prompt=login`
+      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&response_type=id_token urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&client_metadata={}&state=qrm0c4xm&prompt=login`
+    },
+    presentationPreauthorizeUrl () {
+     return window.env.BORUTA_OAUTH_BASE_URL +
+      `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&response_type=vp_token urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&client_metadata={}&state=qrm0c4xm&prompt=login&scope=BorutaCredentialJwtVc`
     }
   }
 }
