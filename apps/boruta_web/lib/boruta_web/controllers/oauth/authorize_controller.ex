@@ -33,15 +33,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentityWeb.TemplateView
   alias BorutaWeb.PresentationServer
 
-  @public_response_types [
-    "code",
-    "id_token",
-    "id_token urn:ietf:params:oauth:response-type:pre-authorized_code",
-    "id_token vp_token",
-    "vp_token",
-    "vp_token urn:ietf:params:oauth:response-type:pre-authorized_code",
-  ]
-
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
 
@@ -95,12 +86,21 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def public_client?(
         %Plug.Conn{
-          query_params: %{"response_type" => response_type, "client_metadata" => _client_metadata}
+          query_params: %{"response_type" => "code" <> _rest, "client_metadata" => _client_metadata}
         } = conn
-      )
-      when response_type in @public_response_types do
-    {:preauthorized, conn}
-  end
+  ), do: {:preauthorized, conn}
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "id_token" <> _rest, "client_metadata" => _client_metadata}
+        } = conn
+  ), do: {:preauthorized, conn}
+
+  def public_client?(
+        %Plug.Conn{
+          query_params: %{"response_type" => "vp_token" <> _rest, "client_metadata" => _client_metadata}
+        } = conn
+  ), do: {:preauthorized, conn}
 
   def public_client?(conn), do: {:unchanged, conn}
 
