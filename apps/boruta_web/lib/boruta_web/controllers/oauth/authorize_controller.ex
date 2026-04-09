@@ -33,6 +33,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaIdentityWeb.TemplateView
   alias BorutaWeb.PresentationServer
 
+  @public_response_types ["id_token", "code", "vp_token"]
+
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
 
@@ -337,7 +339,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         response_types: response_types
       }) do
     case Enum.map(@public_response_types, &String.split(&1, " "))
-         |> Enum.member?(response_types) do
+    |> List.first()
+    |> Enum.member?(Enum.split(response_types, " ") |> List.first()) do
       true ->
         Oauth.authorize(
           conn,
