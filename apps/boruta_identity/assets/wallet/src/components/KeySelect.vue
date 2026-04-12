@@ -15,8 +15,8 @@
             <div class="header">
               {{ identifier }}
             </div>
-            <div class="description">
-              <p class="ui warning message" v-if="selectedKeys.includes(identifier)"><em>key confirmed</em></p>
+            <div class="description" v-if="selectedKeys.includes(identifier)">
+              <p class="ui warning message"><em>key confirmed</em></p>
             </div>
           </div>
           <div class="extra content">
@@ -120,7 +120,7 @@ export default defineComponent({
   methods: {
     deleteKey (identifier) {
       this.keyStore.removeKey(identifier).then(keys => {
-        this.keys = keys
+        this.keys = keys.map(key => [key])
       })
     },
     removeKeyConsent (eventKey) {
