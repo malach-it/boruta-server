@@ -183,7 +183,6 @@ export default defineComponent({
     },
     async selectKey (identifier, did) {
       this.selectedKey = identifier
-      this.metadata_policy = JSON.stringify({ client_id: { one_of: [ did ] } })
       eventHandler.dispatch('extract_key-approval', this.keyConsentEventKey, identifier)
       this.keyConsentEventKey = null
     },
