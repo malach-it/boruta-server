@@ -43,7 +43,7 @@ export default defineComponent({
   },
   computed: {
     preauthorizeUrl () {
-      return window.env.BORUTA_OAUTH_BASE_URL + `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/preauthorized-code&response_type=urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4xm&prompt=login&agent_token=${this.agentToken}`
+      return window.env.BORUTA_OAUTH_BASE_URL + `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet&response_type=id_token%20urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&state=qrm0c4xm&prompt=login&agent_token=${this.agentToken}&client_metadata={}`
     }
   },
   methods: {
