@@ -20,7 +20,7 @@ const allGrantTypes = [
 
 const keyPairTypes = {
   'ec': { curve: ['P-256', 'P-384', 'P-512'] },
-  'rsa': { modulus_size: '1024', exponent_size: '65537' }
+  'rsa': { modulus_size: '2048', exponent_size: '65537' }
 }
 
 const signaturesAdapters = [
@@ -31,7 +31,7 @@ const signaturesAdapters = [
 const defaults = {
   errors: null,
   key_pair_id: null,
-  key_pair_type: { type: 'rsa', modulus_size: '1024', exponent_size: '65537' },
+  key_pair_type: { type: 'rsa', modulus_size: '2048', exponent_size: '65537' },
   signatures_adapter: 'Elixir.Boruta.Internal.Signatures',
   authorize_scopes: false,
   authorized_scopes: [],
