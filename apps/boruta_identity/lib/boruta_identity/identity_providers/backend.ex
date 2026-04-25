@@ -168,7 +168,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                               "properties" => %{
                                 "attribute_name" => %{"type" => "string"},
                                 "user_editable" => %{"type" => "boolean"},
-                                "scopes" => %{"type" => "array", "items" => %{"type" => "string"}}
+                                "scopes" => %{"type" => "array", "items" => %{"type" => "string"}},
+                                "default_value" => %{}
                               },
                               "required" => ["attribute_name"],
                               "additionalProperties" => false

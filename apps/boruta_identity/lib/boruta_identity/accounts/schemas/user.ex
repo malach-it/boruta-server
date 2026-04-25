@@ -165,6 +165,19 @@ defmodule BorutaIdentity.Accounts.User do
 
       Enum.member?(attribute_names, key)
     end)
+    |> Enum.map(fn
+      {key, nil} ->
+        {key,
+         Map.get(
+           Enum.find(metadata_fields, fn %{"attribute_name" => attribute_name} ->
+             key == attribute_name
+           end),
+           "default_value"
+         )}
+
+      attribute ->
+        attribute
+    end)
     |> Enum.into(%{})
   end
 
@@ -201,10 +214,12 @@ defmodule BorutaIdentity.Accounts.User do
       _ -> false
     end)
     |> Enum.map(fn
-      {key, value} when is_map(value) -> {key, value}
+      {key, value} when is_map(value) ->
+        {key, value}
+
       {key, value} ->
-      # TODO default display
-      {key, %{"value" => value, "status" => "valid", "display" => []}}
+        # TODO default display
+        {key, %{"value" => value, "status" => "valid", "display" => []}}
     end)
     |> Enum.into(%{})
   end
@@ -242,18 +257,17 @@ defmodule BorutaIdentity.Accounts.User do
     end
   end
 
-  defp validate_metadata(
-         %Ecto.Changeset{changes: %{metadata: metadata}} = changeset
-       ) do
+  defp validate_metadata(%Ecto.Changeset{changes: %{metadata: metadata}} = changeset) do
     Enum.reduce_while(metadata, changeset, fn {_attribute, value}, changeset ->
       case ExJsonSchema.Validator.validate(@metadata_schema, value) do
         :ok ->
           {:cont, changeset}
 
         {:error, errors} ->
-          {:halt, Enum.reduce(errors, changeset, fn {message, path}, changeset ->
-            add_error(changeset, :metadata, "#{message} at #{path}")
-          end)}
+          {:halt,
+           Enum.reduce(errors, changeset, fn {message, path}, changeset ->
+             add_error(changeset, :metadata, "#{message} at #{path}")
+           end)}
       end
     end)
   end
