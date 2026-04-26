@@ -80,6 +80,14 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :client))
   end
 
+  def context(context, %{resource_owner: resource_owner} = assigns) do
+    resource_owner = Map.take(resource_owner, [:sub, :extra_claims, :claims])
+
+    %{resource_owner: resource_owner}
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :resource_owner))
+  end
+
   def context(context, %{credential_offer: credential_offer} = assigns) do
     {:ok, base64_credential_offer_qr_code} =
       text_from_credential_offer(credential_offer)

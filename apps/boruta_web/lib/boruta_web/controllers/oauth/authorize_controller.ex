@@ -454,6 +454,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     |> render("template.html",
       template: template,
       assigns: %{
+        resource_owner: response.code.resource_owner,
         presentation_deeplink:
           SiopV2Response.redirect_to_deeplink(response, fn code ->
             uri = URI.parse(Boruta.Config.issuer())
@@ -517,6 +518,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     |> render("template.html",
       template: template,
       assigns: %{
+        resource_owner: response.code.resource_owner,
         presentation_deeplink:
           VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
             uri = URI.parse(Boruta.Config.issuer())
@@ -552,6 +554,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
             |> render("template.html",
               template: template,
               assigns: %{
+                resource_owner: response.code.resource_owner,
                 credential_offer: response,
                 code: response.code.value
               }
@@ -595,6 +598,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         |> render("template.html",
           template: template,
           assigns: %{
+            resource_owner: response.code.resource_owner,
             credential_offer: response,
             code: response.code.value
           }
