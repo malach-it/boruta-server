@@ -220,7 +220,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                       },
                                       "required" => ["name", "logo"],
                                       "additionalProperties" => false
-                                    }
+                                    },
+                                    "scopes" => %{"type" => "array", "items" => %{"type" => "string"}}
                                   },
                                   "required" => [
                                     "version",

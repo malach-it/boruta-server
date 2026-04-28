@@ -61,7 +61,8 @@ const assign = {
           credential.claims.split(' ').map(claim => ({ pointer: claim })) :
           credential.claims.map(claim => {
             return new Claim(claim)
-          })
+          }),
+        scopes: credential.scopes?.map(name => ({ name }))
       }
     });
   },
@@ -252,6 +253,7 @@ class Backend {
       }),
       verifiable_credentials: verifiable_credentials.map(verifiableCredential => {
         verifiableCredential.claims = verifiableCredential.claims.map(serializeClaim)
+        verifiableCredential.scopes = verifiableCredential.scopes?.map(({ name }) => name)
         return verifiableCredential
       }),
       verifiable_presentations,

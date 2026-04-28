@@ -302,6 +302,10 @@
               <label>Logo alt text</label>
               <input type="text" v-model="credential.display.logo.alt_text" placeholder="Boruta credential logo">
             </div>
+            <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
+              <label>Scope restriction <i>(leave blank for no restriction)</i></label>
+              <ScopesFieldByName :currentScopes="credential.scopes" :scopes="scopes" @add-scope="addCredentialScope(credential)" @delete-scope="scope => deleteCredentialScope(credential, scope)" />
+            </div>
           </div>
           <div class="field">
             <a class="ui blue fluid button" @click="addVerifiableCredential()">Add a verifiable credential</a>
@@ -427,7 +431,7 @@ export default {
       credential.claims.push(Claim.build('attribute'))
     },
     addVerifiableCredential () {
-      this.backend.verifiable_credentials.push({defered: false, display: {logo: {}}, claims: []})
+      this.backend.verifiable_credentials.push({defered: false, display: {logo: {}}, claims: [], scopes: []})
     },
     addVerifiablePresentation () {
       this.backend.verifiable_presentations.push({})
@@ -468,6 +472,13 @@ export default {
     },
     deleteMetadataFieldScope (field, scope) {
       field.scopes.splice(field.scopes.indexOf(scope), 1)
+    },
+    addCredentialScope (credential) {
+      credential.scopes ||= []
+      credential.scopes.push({})
+    },
+    deleteCredentialScope (credential, scope) {
+      credential.scopes.splice(credential.scopes.indexOf(scope), 1)
     },
     back () {
       this.$emit('back')
