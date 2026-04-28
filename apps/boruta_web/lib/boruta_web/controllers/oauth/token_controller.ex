@@ -134,7 +134,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_id" => kid,
           "response_type" => Enum.join(response_types, " "),
           "client_metadata" => "{}",
-          "scope" => response.code.scope,
+          "scope" => response.code.requested_scope,
           "state" => response.code.state,
           "code" => response.code.value,
           "redirect_uri" => response.redirect_uri
@@ -158,7 +158,7 @@ defmodule BorutaWeb.Oauth.TokenController do
       "client_id" => kid,
       "response_type" => response.code.response_type,
       "client_metadata" => "{}",
-      "scope" => response.code.scope,
+      "scope" => response.code.requested_scope,
       "state" => response.code.state,
       "code" => response.code.value,
       "redirect_uri" => response.redirect_uri
@@ -195,7 +195,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_id" => kid,
           "response_type" => Enum.join(response_types, " "),
           "client_metadata" => "{}",
-          "scope" => response.code.scope,
+          "scope" => response.code.requested_scope,
           "state" => response.code.state,
           "code" => response.code.value,
           "redirect_uri" => response.redirect_uri
