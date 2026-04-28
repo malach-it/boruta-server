@@ -424,8 +424,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       [:authorization, :authorize, :success],
       %{},
       %{
-        access_token: response.access_token,
-        code: response.code,
+        access_token: response.access_token && response.access_token.value,
+        code: response.code && response.code.value,
         type: response.type,
         response_mode: response.response_mode,
         expires_in: response.expires_in,
