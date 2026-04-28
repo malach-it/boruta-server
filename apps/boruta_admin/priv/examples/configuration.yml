@@ -7,7 +7,7 @@ configuration:
       name: Example backend
       verifiable_credentials:
         - version: "13"
-          credential_identifier: BorutaCredentialJwtVc
+          credential_identifier: BorutaCredential
           format: jwt_vc
           types: VerifiableCredential BorutaCredentialJwtVc
           claims:
