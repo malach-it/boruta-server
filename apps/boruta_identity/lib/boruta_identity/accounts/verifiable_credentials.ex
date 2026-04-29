@@ -2,6 +2,7 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
   @moduledoc false
 
   alias Boruta.Oauth.Client
+  alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
@@ -115,54 +116,64 @@ defmodule BorutaIdentity.Accounts.VerifiableCredentials do
     |> Enum.into(%{})
   end
 
-  def authorization_details(%User{backend: %Backend{} = backend}) do
-    (Enum.map(backend.verifiable_credentials, fn credential ->
-      case credential["type"] do
-        "11" ->
-          %{
-            "type" => "openid_credential",
-            "format" => credential["format"],
-            "credential_definition" => %{
-              "type" => String.split(credential["types"], " ")
-            },
-            "credential_identifiers" => [credential["credential_identifier"]]
-          }
+  def authorization_details(%User{backend: %Backend{} = backend}, scope) do
+    ((Enum.map(backend.verifiable_credentials, fn credential ->
+      case (credential["scopes"] || []) -- Scope.split(scope) do
+        [] ->
+          case credential["type"] do
+            "11" ->
+              %{
+                "type" => "openid_credential",
+                "format" => credential["format"],
+                "credential_definition" => %{
+                  "type" => String.split(credential["types"], " ")
+                },
+                "credential_identifiers" => [credential["credential_identifier"]]
+              }
 
-        _ ->
-          %{
-            "type" => "openid_credential",
-            "format" => credential["format"],
-            "credential_configuration_id" => credential["credential_identifier"],
-            "credential_identifiers" => String.split(credential["types"], " ")
-          }
+            _ ->
+              %{
+                "type" => "openid_credential",
+                "format" => credential["format"],
+                "credential_configuration_id" => credential["credential_identifier"],
+                "credential_identifiers" => String.split(credential["types"], " ")
+              }
+          end
+        _scopes ->
+          nil
       end
-    end) ++ default_authorization_details()) |> Enum.uniq()
+    end) |> Enum.reject(&is_nil/1)) ++ default_authorization_details(scope)) |> Enum.uniq()
   end
 
-  def authorization_details(_user), do: default_authorization_details()
+  def authorization_details(_user, scope), do: default_authorization_details(scope)
 
-  def default_authorization_details do
+  def default_authorization_details(scope) do
     Enum.map(Backend.default!().verifiable_credentials, fn credential ->
-      case credential["type"] do
-        "11" ->
-          %{
-            "type" => "openid_credential",
-            "format" => credential["format"],
-            "credential_definition" => %{
-              "type" => String.split(credential["types"], " ")
-            },
-            "credential_identifiers" => [credential["credential_identifier"]]
-          }
+      case (credential["scopes"] || []) -- Scope.split(scope) do
+        [] ->
+          case credential["type"] do
+            "11" ->
+              %{
+                "type" => "openid_credential",
+                "format" => credential["format"],
+                "credential_definition" => %{
+                  "type" => String.split(credential["types"], " ")
+                },
+                "credential_identifiers" => [credential["credential_identifier"]]
+              }
 
-        _ ->
-          %{
-            "type" => "openid_credential",
-            "format" => credential["format"],
-            "credential_configuration_id" => credential["credential_identifier"],
-            "credential_identifiers" => String.split(credential["types"], " ")
-          }
+            _ ->
+              %{
+                "type" => "openid_credential",
+                "format" => credential["format"],
+                "credential_configuration_id" => credential["credential_identifier"],
+                "credential_identifiers" => String.split(credential["types"], " ")
+              }
+          end
+        _scopes ->
+          nil
       end
-    end)
+    end) |> Enum.reject(&is_nil/1)
   end
 
   def public_credential_configuration do

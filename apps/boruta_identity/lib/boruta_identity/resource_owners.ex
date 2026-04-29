@@ -54,7 +54,7 @@ defmodule BorutaIdentity.ResourceOwners do
            username: email,
            last_login_at: last_login_at,
            extra_claims: Map.merge(metadata(user, scope), federated_metadata),
-           authorization_details: VerifiableCredentials.authorization_details(user),
+           authorization_details: VerifiableCredentials.authorization_details(user, scope),
            credential_configuration: VerifiableCredentials.credential_configuration(user),
            presentation_configuration: VerifiablePresentations.presentation_configuration(user)
          }}
