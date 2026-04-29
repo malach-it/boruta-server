@@ -240,6 +240,9 @@ defmodule BorutaIdentity.IdentityProviders do
 
   def update_backend(%Backend{} = backend, attrs) do
     :ok = Boruta.Cache.delete({__MODULE__, :backend, backend.id})
+    if backend.is_default do
+      :ok = Boruta.Cache.delete({Backend, :default})
+    end
 
     ldap_pool_name = Ldap.pool_name(backend)
 
@@ -259,6 +262,9 @@ defmodule BorutaIdentity.IdentityProviders do
           {:ok, %Backend{}} | {:error, Ecto.Changeset.t()}
   def update_backend_roles(%Backend{id: backend_id} = backend, roles) do
     :ok = Boruta.Cache.delete({__MODULE__, :backend, backend_id})
+    if backend.is_default do
+      :ok = Boruta.Cache.delete({Backend, :default})
+    end
 
     Repo.delete_all(from(s in BackendRole, where: s.backend_id == ^backend_id))
 
@@ -313,6 +319,9 @@ defmodule BorutaIdentity.IdentityProviders do
 
   def delete_backend(%Backend{} = backend) do
     :ok = Boruta.Cache.delete({__MODULE__, :backend, backend.id})
+    if backend.is_default do
+      :ok = Boruta.Cache.delete({Backend, :default})
+    end
 
     ldap_pool_name = Ldap.pool_name(backend)
 
