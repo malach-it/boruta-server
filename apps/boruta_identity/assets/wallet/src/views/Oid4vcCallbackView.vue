@@ -34,6 +34,13 @@
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
     <div v-if="credentials.length">
+      <div v-for="input_descriptor of presentation_definition.input_descriptors">
+        <div v-for="field of input_descriptor.constraints.fields">
+          <p :key="field.path" v-if="field.id" class="ui purpose segment">
+            <strong>{{ field.id }}</strong> {{ field.purpose }}
+          </p>
+        </div>
+      </div>
       <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
       <div class="ui segment">
         <form :action="redirect_uri" method="POST">
@@ -92,6 +99,7 @@ export default defineComponent({
       redirect_uri: null,
       vp_token: null,
       requestedKey: null,
+      presentation_definition: null,
       presentation_submission: null,
       keyConsentEventKey: null,
       generateKeyConsentEventKey: null,
@@ -133,6 +141,8 @@ export default defineComponent({
           eventHandler.listen('generate_key-request', '', () => {
             this.generateKeyConsentEventKey = this.presentation.id
           })
+
+          this.presentation_definition = presentation.presentation_definition
 
           return presentation
         }).then(this.client.generatePresentation.bind(this.client))
@@ -228,6 +238,9 @@ export default defineComponent({
   h1 {
     padding: 1em .5em;
     text-align: center
+  }
+  .purpose {
+    margin-bottom: 1.5em;
   }
 }
 </style>
