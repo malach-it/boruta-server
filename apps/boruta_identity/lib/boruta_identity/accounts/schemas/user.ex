@@ -20,6 +20,7 @@ defmodule BorutaIdentity.Accounts.User do
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserRole
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.OrganizationUser
   alias BorutaIdentity.Repo
@@ -80,6 +81,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:webauthn_registered_at, :utc_datetime_usec)
     field(:account_type, :string)
 
+    has_many(:user_tokens, UserToken)
     has_many(:authorized_scopes, UserAuthorizedScope)
     has_many(:roles, UserRole)
     has_many(:organizations, OrganizationUser)

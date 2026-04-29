@@ -4,6 +4,8 @@ defmodule BorutaIdentity.Accounts.UserToken do
   use Ecto.Schema
   import Ecto.Query
 
+  alias BorutaIdentity.Accounts.User
+
   @hash_algorithm :sha256
   @rand_size 32
 
@@ -45,10 +47,13 @@ defmodule BorutaIdentity.Accounts.UserToken do
   """
   def verify_session_token_query(token) do
     query =
-      from token in token_and_context_query(token, "session"),
-        join: user in assoc(token, :user),
-        where: token.inserted_at > ago(@session_validity_in_days, "day"),
-        select: user
+      from u in User,
+        join: t in assoc(u, :user_tokens),
+        join: b in assoc(u, :backend),
+        where: t.token == ^token,
+        where: t.context == "session",
+        where: t.inserted_at > ago(@session_validity_in_days, "day"),
+        preload: [backend: b]
 
     {:ok, query}
   end

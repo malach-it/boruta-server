@@ -3,6 +3,7 @@ defmodule BorutaIdentity.IdentityProviders do
   The IdentityProviders context.
   """
 
+  use Nebulex.Caching
   import Ecto.Query, warn: false
   alias BorutaIdentity.Repo
 
@@ -47,12 +48,16 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def update_identity_provider(%IdentityProvider{} = identity_provider, attrs) do
+    clear_identity_provider_by_client_id_cache()
+
     identity_provider
     |> IdentityProvider.changeset(attrs)
     |> Repo.update()
   end
 
   def delete_identity_provider(%IdentityProvider{} = identity_provider) do
+    clear_identity_provider_by_client_id_cache()
+
     identity_provider
     |> IdentityProvider.delete_changeset()
     |> Repo.delete()
@@ -63,6 +68,8 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def upsert_client_identity_provider(client_id, identity_provider_id) do
+    clear_identity_provider_by_client_id_cache()
+
     %ClientIdentityProvider{}
     |> ClientIdentityProvider.changeset(%{
       client_id: client_id,
@@ -71,6 +78,20 @@ defmodule BorutaIdentity.IdentityProviders do
     |> Repo.insert(
       on_conflict: [set: [identity_provider_id: identity_provider_id]],
       conflict_target: :client_id
+    )
+  end
+
+  defp clear_identity_provider_by_client_id_cache do
+    Boruta.Cache.delete_all(
+      [
+        {
+          {:entry,
+           {BorutaIdentity.IdentityProviders, :identity_provider_by_client_id, :"$1"},
+           :"$2", :"$3", :"$4"},
+          [],
+          [true]
+        }
+      ]
     )
   end
 
@@ -90,6 +111,10 @@ defmodule BorutaIdentity.IdentityProviders do
     end
   end
 
+  @decorate cacheable(
+              key: {__MODULE__, :identity_provider_by_client_id, client_id},
+              cache: Boruta.Cache
+            )
   def get_identity_provider_by_client_id(client_id) do
     case Ecto.UUID.cast(client_id) do
       {:ok, client_id} ->
@@ -110,6 +135,10 @@ defmodule BorutaIdentity.IdentityProviders do
 
   alias BorutaIdentity.IdentityProviders.Template
 
+  @decorate cacheable(
+              key: {__MODULE__, :identity_provider_template, identity_provider_id, type},
+              cache: Boruta.Cache
+            )
   def get_identity_provider_template!(identity_provider_id, type) do
     with %IdentityProvider{} = identity_provider_with_templates <-
            Repo.one(
@@ -120,7 +149,8 @@ defmodule BorutaIdentity.IdentityProviders do
                preload: [backend: b, templates: t]
              )
            ),
-         %Template{} = template <- IdentityProvider.template(identity_provider_with_templates, type) do
+         %Template{} = template <-
+           IdentityProvider.template(identity_provider_with_templates, type) do
       %{template | layout: IdentityProvider.template(identity_provider_with_templates, :layout)}
     else
       nil -> raise Ecto.NoResultsError, queryable: Template
@@ -128,6 +158,12 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def upsert_template(%Template{id: template_id} = template, attrs) do
+    :ok =
+      Boruta.Cache.delete(
+        {__MODULE__, :identity_provider_template, template.identity_provider_id,
+         String.to_atom(template.type)}
+      )
+
     changeset = Template.changeset(template, attrs)
 
     case template_id do
@@ -139,7 +175,11 @@ defmodule BorutaIdentity.IdentityProviders do
   def delete_identity_provider_template!(identity_provider_id, type) do
     template_type = Atom.to_string(type)
 
-    with {1, _results} <-
+    with :ok <-
+           Boruta.Cache.delete(
+             {__MODULE__, :identity_provider_template, identity_provider_id, type}
+           ),
+         {1, _results} <-
            Repo.delete_all(
              from(t in Template,
                join: idp in assoc(t, :identity_provider),
@@ -164,6 +204,7 @@ defmodule BorutaIdentity.IdentityProviders do
     Repo.all(Backend)
   end
 
+  @decorate cacheable(key: {__MODULE__, :backend, id}, cache: Boruta.Cache)
   def get_backend!(id) do
     case Ecto.UUID.cast(id) do
       {:ok, id} -> Repo.get!(Backend, id)
@@ -198,6 +239,8 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def update_backend(%Backend{} = backend, attrs) do
+    :ok = Boruta.Cache.delete({__MODULE__, :backend, backend.id})
+
     ldap_pool_name = Ldap.pool_name(backend)
 
     with {:ok, backend} <-
@@ -215,6 +258,8 @@ defmodule BorutaIdentity.IdentityProviders do
   @spec update_backend_roles(backend :: %Backend{}, roles :: list(map())) ::
           {:ok, %Backend{}} | {:error, Ecto.Changeset.t()}
   def update_backend_roles(%Backend{id: backend_id} = backend, roles) do
+    :ok = Boruta.Cache.delete({__MODULE__, :backend, backend_id})
+
     Repo.delete_all(from(s in BackendRole, where: s.backend_id == ^backend_id))
 
     case Enum.reduce(roles, Ecto.Multi.new(), fn attrs, multi ->
@@ -267,6 +312,8 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def delete_backend(%Backend{} = backend) do
+    :ok = Boruta.Cache.delete({__MODULE__, :backend, backend.id})
+
     ldap_pool_name = Ldap.pool_name(backend)
 
     with {:ok, backend} <-

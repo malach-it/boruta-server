@@ -54,7 +54,7 @@ defmodule BorutaIdentity.Accounts.Users do
   @spec get_user_by_session_token(token :: String.t()) :: user :: User.t() | nil
   def get_user_by_session_token(token) do
     {:ok, query} = UserToken.verify_session_token_query(token)
-    Repo.one(query) |> Repo.preload(:backend)
+    Repo.one(query)
   end
 
   @spec get_user_scopes(user_id :: String.t()) :: user :: list(UserAuthorizedScope.t()) | nil

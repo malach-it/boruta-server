@@ -36,6 +36,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   use Ecto.Schema
+  use Nebulex.Caching
   import Ecto.Changeset
 
   alias BorutaIdentity.Accounts.EmailTemplate
@@ -296,6 +297,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   @spec default!() :: t()
+  @decorate cacheable(key: {__MODULE__, :default}, cache: Boruta.Cache)
   def default! do
     Repo.get_by!(__MODULE__, is_default: true)
   end
@@ -659,8 +661,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: _is_default}} = changeset) do
     # TODO use a transaction to change default backend
+    :ok = Boruta.Cache.delete({__MODULE__, :default})
     case Ecto.Changeset.change(default!(), %{is_default: false}) |> Repo.update() do
       {:ok, _backend} ->
+
         changeset
 
       {:error, changeset} ->
