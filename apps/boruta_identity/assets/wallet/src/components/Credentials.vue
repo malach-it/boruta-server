@@ -79,7 +79,7 @@ export default defineComponent({
       formattedCredentials: [],
       shareContent: null,
       credential: null,
-      shareUrl: window.env.BORUTA_OAUTH_BASE_URL + `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=http://localhost:4000/accounts/wallet/agent-code&response_type=code`
+      shareUrl: `${window.env.BORUTA_OAUTH_BASE_URL}/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/agent-code&response_type=code`
     }
   },
   methods: {

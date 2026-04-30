@@ -38,7 +38,7 @@ export default defineComponent({
       bindConfiguration,
       clientId: '00000000-0000-0000-0000-000000000001',
       clientSecret: '<client secret>',
-      redirectUri: 'http://localhost:4000/accounts/wallet/agent-code'
+      redirectUri: `${window.env.BORUTA_OAUTH_BASE_URL}/accounts/wallet/agent-code`
     }
   },
   computed: {
