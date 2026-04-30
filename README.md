@@ -43,6 +43,10 @@ Server documentation is available on github pages [here](https://malach-it.githu
 
 boruta may use [Universal resolver](https://github.com/decentralized-identity/universal-resolver) for DID resolution and [Universal registrar](https://github.com/decentralized-identity/universal-registrar) for DID creation. Those are to be configured as environment variables, respectively `DID_RESOLVER_BASE_URL` and `DID_REGISTRAR_BASE_URL`. DIDs are used in the decentralized identity flows and are present as key identifier header of the other generated JWTs.
 
+## Integrated wallet
+
+This project includes a demo wallet implemented for testing purposes. It is compliant with the decentralized identity flows but does not have neither secure storage nor portability features which makes it not production ready. Note that even if those features come in further releases, this wallet does not target to be an EUDI wallet as the European framework states.
+
 ## Installation
 
 A [loom presentation](https://www.loom.com/share/77006360fdac44bc9113fab9cf30aba5) about how to get a server up and running.
