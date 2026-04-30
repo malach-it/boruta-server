@@ -24,7 +24,7 @@ defmodule BorutaIdentity.MixProject do
   def application do
     [
       mod: {BorutaIdentity.Application, []},
-      extra_applications: [:logger, :runtime_tools, :eldap]
+      extra_applications: [:logger, :runtime_tools, :eldap, :boruta]
     ]
   end
 
@@ -51,6 +51,8 @@ defmodule BorutaIdentity.MixProject do
       {:jason, "~> 1.0"},
       {:mox, "~> 1.0"},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},
+      {:nebulex, "~> 2.0"},
+      {:shards, "~> 1.0"},
       {:nimble_csv, "~> 1.2"},
       {:nimble_pool, "~> 0.2"},
       {:oauth2, "~> 2.0"},
