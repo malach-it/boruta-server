@@ -37,6 +37,8 @@ configuration:
                     "fields": [
                       {
                         "path": [ "$.boruta_username" ]
+                        "id": "Boruta account information",
+                        "purpose": "Present account information to obtain access or further credentials"
                       }
                     ]
                   }
