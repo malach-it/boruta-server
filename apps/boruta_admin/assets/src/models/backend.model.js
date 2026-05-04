@@ -239,7 +239,7 @@ class Backend {
         ({ attribute_name, user_editable, scopes }) => ({
           attribute_name,
           user_editable,
-          scopes: scopes.map(({ name }) => name),
+          scopes: scopes.map(scope => scope.name).filter(scope => scope),
         })
       ),
       federated_servers: federated_servers.map((federatedServer) => {
@@ -253,7 +253,10 @@ class Backend {
       }),
       verifiable_credentials: verifiable_credentials.map(verifiableCredential => {
         verifiableCredential.claims = verifiableCredential.claims.map(serializeClaim)
-        verifiableCredential.scopes = verifiableCredential.scopes?.map(({ name }) => name)
+        verifiableCredential.scopes = verifiableCredential.scopes
+          ?.map(scope => scope.name)
+          .filter(scope => scope)
+
         return verifiableCredential
       }),
       verifiable_presentations,

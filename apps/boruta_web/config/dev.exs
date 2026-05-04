@@ -1,7 +1,16 @@
 import Config
 
 config :boruta_web, BorutaWeb.Endpoint,
-  http: [port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer()],
+  https: [
+    port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer(),
+    keyfile: Path.expand("../priv/ssl/boruta_web_selfsigned.key", __DIR__),
+    certfile: Path.expand("../priv/ssl/boruta_web_selfsigned.crt", __DIR__)
+  ],
+  url: [
+    scheme: "https",
+    host: System.get_env("BORUTA_OAUTH_HOST", "localhost"),
+    port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer()
+  ],
   debug_errors: true,
   code_reloader: true,
   watchers: [
@@ -11,6 +20,9 @@ config :boruta_web, BorutaWeb.Endpoint,
       cd: Path.expand("../../boruta_identity/assets/wallet", __DIR__)
     ]
   ]
+
+config :boruta, Boruta.Oauth,
+  issuer: System.get_env("BORUTA_OAUTH_BASE_URL", "https://localhost:4000")
 
 config :boruta_web, BorutaWeb.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",

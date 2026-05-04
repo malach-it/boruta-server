@@ -2,6 +2,44 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [unreleased]
+
+### Added
+
+- [ssi] code chains
+    - verify verifiable presentation from code chains
+    - issuance code chains
+    - next flow redirection in case of presentation success
+    - agent token management
+- [ssi] code metadata policies
+    - restrict issuance / presentation key usage for enabled check public client id clients
+- [ssi] server sent events verifiable presentation page navigation
+- [identity] add resource owner in credentials templates
+- [ssi] credential issuance scope restriction
+- [wallet] display credential presentation purposes
+
+### Changed
+
+- [ssi] remove resource owner constraint for openid4vc flows
+- [ssi] default backend authorization details for anonymous users
+- [ssi] issuance / presentation default templates open integrated wallet in a popup
+- [ssi] add client_id to credential offers
+- [identity] improve identity providers querying and cache
+
+### Fixed
+
+- [admin] add credential offer and presentation in breadcrumb
+- [admin] update identity provider title in breadcrumb
+- [admin] feedback stars display
+- [wallet] qr code scan redirection
+- [ssi] public and unknown users presentation
+
+### Security
+
+- [admin] only expose client name in templates
+- [auth] remove default client secret from seeds
+- [admin] set minimum oauth client private key modulus size
+
 ## [0.8.0] - 2025-07-12
 
 ### Added

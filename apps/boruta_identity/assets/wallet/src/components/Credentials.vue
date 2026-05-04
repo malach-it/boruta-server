@@ -15,7 +15,10 @@
                 <div class="item" v-for="claim in credential.claims">
                   <div class="content">
                     <a class="header">{{ claim.key }}</a>
-                    <div class="description">{{ claim.value }}</div>
+                    <div class="description">
+                      <img :src="claim.value" v-if="(typeof claim.value === 'string') && claim.value.startsWith('data:image')" />
+                      <span v-else> {{ claim.value }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
