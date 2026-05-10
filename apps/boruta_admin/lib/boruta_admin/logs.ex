@@ -254,10 +254,12 @@ defmodule BorutaAdmin.Logs do
         duration_unit
       ] ->
         with {:ok, time, _offset} <- DateTime.from_iso8601(raw_time) do
+          label_path = normalize_request_label_path(path)
+
           %{
             log_line: log_line,
             time: time,
-            label: String.slice("#{application} - #{method} #{path}", 0..70),
+            label: String.slice("#{application} - #{method} #{label_path}", 0..70),
             request_id: request_id,
             application: application,
             method: method,
@@ -270,6 +272,11 @@ defmodule BorutaAdmin.Logs do
         end
     end
   end
+
+  defp normalize_request_label_path("/openid/direct_post/" <> code_id) when code_id != "",
+    do: "/openid/direct_post/:code_id"
+
+  defp normalize_request_label_path(path), do: path
 
   def apply_request_filters(request_stream, query) do
     Enum.reduce(query, request_stream, fn

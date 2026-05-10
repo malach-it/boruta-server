@@ -25,6 +25,7 @@
 - [ssi] issuance / presentation default templates open integrated wallet in a popup
 - [ssi] add client_id to credential offers
 - [identity] improve identity providers querying and cache
+- [admin] group direct post requests in dashboard
 
 ### Fixed
 

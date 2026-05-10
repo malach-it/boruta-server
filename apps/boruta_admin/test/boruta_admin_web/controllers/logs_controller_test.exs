@@ -113,6 +113,56 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     test "filter logs"
 
     @tag authorized: ["logs:read:all"]
+    test "groups direct post requests by route in dashboard stats", %{conn: conn} do
+      File.mkdir("./log")
+      File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
+
+      log_time = DateTime.utc_now() |> DateTime.add(-60, :second) |> DateTime.truncate(:second)
+
+      direct_post_lines = [
+        "#{DateTime.to_iso8601(log_time)} request_id=direct-post-1 [info] boruta_web POST /openid/direct_post/code-1 - sent 200 from 0.0.0.0 in 2ms",
+        "#{DateTime.to_iso8601(log_time)} request_id=direct-post-2 [info] boruta_web POST /openid/direct_post/code-2 - sent 302 from 0.0.0.0 in 4ms"
+      ]
+
+      File.write!(
+        LogRotate.path(:boruta_web, :request, Date.utc_today()),
+        Enum.join(direct_post_lines, "\n") <> "\n"
+      )
+
+      start_at = log_time |> DateTime.add(-1, :second) |> DateTime.to_iso8601()
+      end_at = log_time |> DateTime.add(1, :second) |> DateTime.to_iso8601()
+
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{
+          start_at: start_at,
+          end_at: end_at,
+          application: "boruta_web",
+          type: "request"
+        })
+
+      direct_post_label = "boruta_web - POST /openid/direct_post/:code_id"
+
+      assert %{
+               "labels" => [^direct_post_label],
+               "log_lines" => ^direct_post_lines,
+               "log_count" => 2,
+               "status_codes" => %{
+                 ^direct_post_label => %{
+                   "200" => 1,
+                   "302" => 1
+                 }
+               },
+               "request_counts" => %{
+                 ^direct_post_label => request_counts
+               }
+             } = json_response(conn, 200)
+
+      assert Enum.sum(Map.values(request_counts)) == 2
+
+      File.rm!(LogRotate.path(:boruta_web, :request, Date.utc_today()))
+    end
+
+    @tag authorized: ["logs:read:all"]
     test "skips lines before start_at", %{conn: conn} do
       File.mkdir("./log")
       File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
