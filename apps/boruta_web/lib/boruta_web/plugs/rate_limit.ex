@@ -99,7 +99,7 @@ defmodule BorutaWeb.Plugs.RateLimit do
         Counter.increment(remote_ip, options[:time_unit])
         conn
       _ ->
-        send_resp(conn, 429, "")
+      send_resp(conn, 429, "") |> halt()
     end
   end
 end
