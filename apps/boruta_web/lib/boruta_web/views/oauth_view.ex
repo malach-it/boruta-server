@@ -138,6 +138,7 @@ defmodule BorutaWeb.OauthView do
     def encode(
           %Boruta.Oauth.TokenResponse{
             token_type: token_type,
+            authorization_code: authorization_code,
             access_token: access_token,
             agent_token: agent_token,
             id_token: id_token,
@@ -154,6 +155,12 @@ defmodule BorutaWeb.OauthView do
         refresh_token: refresh_token,
         c_nonce: c_nonce
       }
+
+      response =
+        case authorization_code do
+          nil -> response
+          authorization_code -> Map.put(response, :authorization_code, authorization_code)
+        end
 
       response =
         case id_token do

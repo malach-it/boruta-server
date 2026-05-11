@@ -7,6 +7,7 @@ const allGrantTypes = [
   'client_credentials',
   'agent_credentials',
   'password',
+  'code_chain',
   'authorization_code',
   'agent_code',
   'refresh_token',
