@@ -41,13 +41,13 @@ defmodule BorutaIdentity.ResourceOwners do
   def get_by(sub: "did:" <> _key, scope: _scope), do: %User{}
 
   def get_by(sub: sub, scope: scope) when not is_nil(sub) do
-    case Accounts.get_user(sub) do
+    with {:ok, _uuid} <- Ecto.UUID.cast(sub),
       %User{
         id: id,
         username: email,
         last_login_at: last_login_at,
         federated_metadata: federated_metadata
-      } = user ->
+      } = user <- Accounts.get_user(sub) do
         {:ok,
          %ResourceOwner{
            sub: id,
@@ -59,6 +59,7 @@ defmodule BorutaIdentity.ResourceOwners do
            presentation_configuration: VerifiablePresentations.presentation_configuration(user)
          }}
 
+    else
       _ ->
         {:error, "Invalid username or password."}
     end
