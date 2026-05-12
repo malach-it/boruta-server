@@ -128,10 +128,11 @@ defmodule BorutaIdentity.Accounts.Internal do
   def update_user(backend, user, params) do
     Repo.transaction(fn repo ->
       case %{user | metadata: params[:metadata], group: params[:group]}
-             |> Internal.User.update_changeset(params, %{backend: backend})
-             |> repo.update() do
+           |> Internal.User.update_changeset(params, %{backend: backend})
+           |> repo.update() do
         {:ok, user} ->
           domain_user!(user, backend, repo)
+
         {:error, error} ->
           Repo.rollback(error)
       end
@@ -150,25 +151,28 @@ defmodule BorutaIdentity.Accounts.Internal do
   def create_user(backend, params) do
     Repo.transaction(fn repo ->
       case Internal.User.registration_changeset(
-               %Internal.User{
-                 group: params[:group],
-                 metadata: params[:metadata]
-               },
-               %{
-                 email: params[:username],
-                 password: params[:password]
-               },
-               %{backend: backend}
-             )
-             |> repo.insert() do
-
+             %Internal.User{
+               group: params[:group],
+               metadata: params[:metadata]
+             },
+             %{
+              email: params[:username],
+              password: params[:password]
+            },
+             %{backend: backend}
+           )
+           |> repo.insert() do
         {:ok, user} ->
-          domain_user!(user, backend, repo)
+          domain_user!(%{user | id: params[:uid]}, backend, repo)
+
         {:error, error} ->
           Repo.rollback(error)
       end
     end)
   end
+
+  defp blank_to_nil(value) when value in ["", nil], do: nil
+  defp blank_to_nil(value), do: value
 
   @impl BorutaIdentity.Admin
   def create_raw_user(backend, params) do

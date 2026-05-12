@@ -17,6 +17,7 @@ defmodule BorutaIdentity.Admin do
   @type user_params ::
           %{
             optional(:username) => String.t(),
+            optional(:uid) => String.t(),
             optional(:password) => String.t(),
             optional(:group) => String.t(),
             optional(:metadata) => map(),
