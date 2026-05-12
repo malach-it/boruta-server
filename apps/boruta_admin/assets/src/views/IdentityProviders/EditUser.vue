@@ -30,6 +30,10 @@
                   <span class="header">Last login at</span>
                   <span class="description">{{ formatDate(user.last_login_at) }}</span>
                 </div>
+                <div class="item" v-for="(value, key) in user.metadata" :key="key">
+                  <span class="header">{{ key }}</span>
+                  <span class="description">{{ value.value }}</span>
+                </div>
               </div>
             </div>
             <div class="ui segment" v-for="(attributes, federatedServerName) in user.federated_metadata">
