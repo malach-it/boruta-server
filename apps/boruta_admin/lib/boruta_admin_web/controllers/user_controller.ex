@@ -46,6 +46,7 @@ defmodule BorutaAdminWeb.UserController do
       uid: user_params["uid"],
       username: user_params["username"],
       group: user_params["group"],
+      blocked: user_params["blocked"] || false,
       password: user_params["password"],
       metadata: user_params["metadata"] || %{},
       authorized_scopes: user_params["authorized_scopes"],
@@ -111,6 +112,7 @@ defmodule BorutaAdminWeb.UserController do
       [
         {"email", :username},
         {"group", :group},
+        {"blocked", :blocked},
         {"metadata", :metadata},
         {"authorized_scopes", :authorized_scopes},
         {"organizations", :organizations},

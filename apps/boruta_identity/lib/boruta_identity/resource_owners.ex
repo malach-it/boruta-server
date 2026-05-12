@@ -22,7 +22,7 @@ defmodule BorutaIdentity.ResourceOwners do
 
     with {:ok, impl_user} <-
            apply(Backend.implementation(backend), :get_user, [backend, %{email: username}]),
-         %User{id: id, username: email, last_login_at: last_login_at} <-
+         %User{id: id, username: email, last_login_at: last_login_at, blocked: blocked} <-
            apply(Backend.implementation(backend), :domain_user!, [impl_user, backend]) do
       {:ok,
        %ResourceOwner{
@@ -30,7 +30,8 @@ defmodule BorutaIdentity.ResourceOwners do
          username: email,
          last_login_at: last_login_at,
          # TODO find out why the impl user in extra_claims
-         extra_claims: %{user: impl_user}
+         extra_claims: %{user: impl_user},
+         blocked: blocked
        }}
     else
       _ ->
@@ -57,13 +58,15 @@ defmodule BorutaIdentity.ResourceOwners do
             id: id,
             username: username,
             last_login_at: last_login_at,
+            blocked: blocked,
             federated_metadata: federated_metadata
-          } = user} <- Machine.domain_user(%ResourceOwner{sub: id_token}, Backend.default!()) do
+          } = user} <- Machine.domain_user!(%ResourceOwner{sub: id_token}, Backend.default!()) do
       {:ok,
        %ResourceOwner{
          sub: id,
          username: username,
          last_login_at: last_login_at,
+         blocked: blocked,
          extra_claims: Map.merge(metadata(user, scope), federated_metadata),
          authorization_details: VerifiableCredentials.authorization_details(user, scope),
          credential_configuration: VerifiableCredentials.credential_configuration(user),
@@ -82,6 +85,7 @@ defmodule BorutaIdentity.ResourceOwners do
            id: id,
            username: email,
            last_login_at: last_login_at,
+           blocked: blocked,
            federated_metadata: federated_metadata
          } = user <- Accounts.get_user(sub) do
       {:ok,
@@ -89,6 +93,7 @@ defmodule BorutaIdentity.ResourceOwners do
          sub: id,
          username: email,
          last_login_at: last_login_at,
+         blocked: blocked,
          extra_claims: Map.merge(metadata(user, scope), federated_metadata),
          authorization_details: VerifiableCredentials.authorization_details(user, scope),
          credential_configuration: VerifiableCredentials.credential_configuration(user),

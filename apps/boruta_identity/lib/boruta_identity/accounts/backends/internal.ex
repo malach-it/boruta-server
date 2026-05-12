@@ -171,9 +171,6 @@ defmodule BorutaIdentity.Accounts.Internal do
     end)
   end
 
-  defp blank_to_nil(value) when value in ["", nil], do: nil
-  defp blank_to_nil(value), do: value
-
   @impl BorutaIdentity.Admin
   def create_raw_user(backend, params) do
     # TODO database transaction

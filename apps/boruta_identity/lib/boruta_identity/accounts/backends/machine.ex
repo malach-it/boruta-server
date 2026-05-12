@@ -22,16 +22,17 @@ defmodule BorutaIdentity.Accounts.Machine do
 
   def account_type, do: @account_type
 
-  @spec domain_user(ResourceOwner.t(), Backend.t()) ::
+  @spec domain_user!(ResourceOwner.t(), Backend.t()) ::
           {:ok, User.t()} | {:error, String.t()}
-  def domain_user(%ResourceOwner{sub: id_token}, %Backend{} = backend) when is_binary(id_token) do
+  def domain_user!(%ResourceOwner{sub: id_token}, %Backend{} = backend)
+      when is_binary(id_token) do
     with {:ok, _jwk, claims} <- VerifiablePresentations.validate_signature(id_token),
          {:ok, sub} <- fetch_sub(claims) do
       upsert_user(sub, id_token, claims, backend)
     end
   end
 
-  def domain_user(_, _), do: {:error, "Machine id_token is missing."}
+  def domain_user!(_, _), do: {:error, "Machine id_token is missing."}
 
   def delete_user(_uid), do: :ok
 
@@ -45,7 +46,9 @@ defmodule BorutaIdentity.Accounts.Machine do
       username: sub,
       metadata:
         Map.put(claims, "id_token", id_token)
-        |> Enum.map(fn {key, value} -> {key, %{"value" => value, "status" => "valid", "display" => []}} end)
+        |> Enum.map(fn {key, value} ->
+          {key, %{"value" => value, "status" => "valid", "display" => []}}
+        end)
         |> Enum.into(%{}),
       account_type: @account_type,
       backend_id: backend_id
