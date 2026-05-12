@@ -8,13 +8,13 @@ defmodule BorutaIdentity.Accounts.MachineTest do
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.ResourceOwners
 
-  describe "domain_user/2" do
+  describe "domain_user!/2" do
     test "creates a machine user from a resource owner id_token" do
       backend = insert(:backend)
       id_token = id_token_fixture("did:example:machine", %{"machine_name" => "machine"})
 
       assert {:ok, %User{} = user} =
-               Machine.domain_user(%ResourceOwner{sub: id_token}, backend)
+               Machine.domain_user!(%ResourceOwner{sub: id_token}, backend)
 
       assert user.id
       assert user.uid == "did:example:machine"
@@ -32,10 +32,10 @@ defmodule BorutaIdentity.Accounts.MachineTest do
       updated_id_token = id_token_fixture(sub, %{"machine_name" => "updated-machine"})
 
       assert {:ok, %User{id: user_id}} =
-               Machine.domain_user(%ResourceOwner{sub: id_token}, backend)
+               Machine.domain_user!(%ResourceOwner{sub: id_token}, backend)
 
       assert {:ok, %User{id: ^user_id} = user} =
-               Machine.domain_user(%ResourceOwner{sub: updated_id_token}, backend)
+               Machine.domain_user!(%ResourceOwner{sub: updated_id_token}, backend)
 
       assert user.metadata["claims"]["value"]["machine_name"] == "updated-machine"
 
@@ -52,7 +52,7 @@ defmodule BorutaIdentity.Accounts.MachineTest do
     test "returns an error when id_token is invalid" do
       backend = insert(:backend)
 
-      assert {:error, _reason} = Machine.domain_user(%ResourceOwner{sub: "invalid"}, backend)
+      assert {:error, _reason} = Machine.domain_user!(%ResourceOwner{sub: "invalid"}, backend)
     end
   end
 

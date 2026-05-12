@@ -30,6 +30,12 @@
           <label>Group</label>
           <input type="text" v-model="user.group" />
         </div>
+        <div class="field" :class="{ 'error': user.errors?.blocked }">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="user.blocked">
+            <label>Blocked</label>
+          </div>
+        </div>
         <section v-if="user.backend.metadata_fields.length">
           <h3>Metadata</h3>
           <div class="ui metadata segment" v-for="field in user.backend.metadata_fields">

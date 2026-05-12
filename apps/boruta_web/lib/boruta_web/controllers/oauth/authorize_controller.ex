@@ -725,6 +725,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       sub: current_user.id || anonymous_sub,
       username: current_user.username,
       last_login_at: current_user.last_login_at,
+      blocked: current_user.blocked,
       extra_claims:
         Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata),
       authorization_details: VerifiableCredentials.authorization_details(current_user, scope),

@@ -20,6 +20,7 @@ defmodule BorutaIdentity.Admin do
             optional(:uid) => String.t(),
             optional(:password) => String.t(),
             optional(:group) => String.t(),
+            optional(:blocked) => boolean(),
             optional(:metadata) => map(),
             optional(:roles) => list(map()),
             optional(:authorized_scopes) => list(map()),
@@ -103,6 +104,7 @@ defmodule BorutaIdentity.Admin do
              :create_user,
              [backend, params]
            ),
+         {:ok, user} <- update_user_blocked(user, params),
          {:ok, user} <- update_user_authorized_scopes(user, params[:authorized_scopes] || []),
          {:ok, user} <- update_user_organizations(user, params[:organizations] || []),
          {:ok, user} <- update_user_roles(user, params[:roles] || []) do
@@ -312,6 +314,14 @@ defmodule BorutaIdentity.Admin do
         {:error, changeset}
     end
   end
+
+  defp update_user_blocked(user, %{blocked: blocked}) do
+    user
+    |> User.changeset(%{blocked: blocked})
+    |> Repo.update()
+  end
+
+  defp update_user_blocked(user, _params), do: {:ok, user}
 
   @spec update_user(user :: User.t(), user_params :: user_params()) ::
           {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}

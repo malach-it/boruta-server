@@ -483,6 +483,22 @@ defmodule BorutaAdminWeb.UserControllerTest do
     end
 
     @tag authorized: ["users:manage:all"]
+    test "updates user with blocked", %{
+      conn: conn,
+      user: %User{id: id} = user
+    } do
+      conn =
+        put(conn, Routes.admin_user_path(conn, :update, user),
+          user: %{
+            "blocked" => true
+          }
+        )
+
+      assert %{"id" => ^id, "blocked" => true} = json_response(conn, 200)["data"]
+      assert %User{blocked: true} = Repo.get!(User, id)
+    end
+
+    @tag authorized: ["users:manage:all"]
     test "updates user with authorized scopes", %{
       conn: conn,
       user: %User{id: id} = user,
