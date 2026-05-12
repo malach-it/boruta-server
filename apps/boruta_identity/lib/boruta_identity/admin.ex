@@ -17,6 +17,7 @@ defmodule BorutaIdentity.Admin do
   @type user_params ::
           %{
             optional(:username) => String.t(),
+            optional(:uid) => String.t(),
             optional(:password) => String.t(),
             optional(:group) => String.t(),
             optional(:metadata) => map(),
@@ -151,13 +152,14 @@ defmodule BorutaIdentity.Admin do
         password_index =
           Enum.find_index(headers, fn header -> header == opts[:password_header] end)
 
-        metadata_headers = Enum.map(opts[:metadata_headers] || [], fn metadata_header ->
-          [origin, target] = String.split(metadata_header, ">")
+        metadata_headers =
+          Enum.map(opts[:metadata_headers] || [], fn metadata_header ->
+            [origin, target] = String.split(metadata_header, ">")
 
-          header_index = Enum.find_index(headers, fn header -> header == origin end)
-          {target, header_index}
-        end)
-        |> Enum.into(%{})
+            header_index = Enum.find_index(headers, fn header -> header == origin end)
+            {target, header_index}
+          end)
+          |> Enum.into(%{})
 
         %{
           username: {"username", username_index},
@@ -171,17 +173,24 @@ defmodule BorutaIdentity.Admin do
     |> Stream.map(fn row ->
       case opts[:hash_password] do
         true ->
-          create_params = %{
-            username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
-            password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
-          } |> Map.put(:metadata, Enum.map(headers[:metadata], fn header ->
-            {elem(header, 0), %{
-              "value" => Enum.at(row, elem(header, 1)),
-              "status" => "valid",
-              "display" => ["status", "origin"],
-              "origin" => "import - #{:os.system_time(:second)}"
-            }}
-          end) |> Enum.into(%{}))
+          create_params =
+            %{
+              username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
+              password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
+            }
+            |> Map.put(
+              :metadata,
+              Enum.map(headers[:metadata], fn header ->
+                {elem(header, 0),
+                 %{
+                   "value" => Enum.at(row, elem(header, 1)),
+                   "status" => "valid",
+                   "display" => ["status", "origin"],
+                   "origin" => "import - #{:os.system_time(:second)}"
+                 }}
+              end)
+              |> Enum.into(%{})
+            )
 
           create_user(backend, create_params)
 
@@ -338,7 +347,10 @@ defmodule BorutaIdentity.Admin do
       user ->
         # TODO delete both provider and domain users in a transaction
         # TODO manage identity federated users
-        with :ok <- apply(Backend.implementation(user.backend, user.account_type), :delete_user, [user.uid]) do
+        with :ok <-
+               apply(Backend.implementation(user.backend, user.account_type), :delete_user, [
+                 user.uid
+               ]) do
           Repo.delete(user)
         end
     end

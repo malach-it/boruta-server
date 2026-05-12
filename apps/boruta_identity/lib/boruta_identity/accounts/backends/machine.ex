@@ -45,7 +45,7 @@ defmodule BorutaIdentity.Accounts.Machine do
       username: sub,
       metadata:
         Map.put(claims, "id_token", id_token)
-        |> Enum.map(fn {key, value} -> {key, %{"value" => value}} end)
+        |> Enum.map(fn {key, value} -> {key, %{"value" => value, "status" => "valid", "display" => []}} end)
         |> Enum.into(%{}),
       account_type: @account_type,
       backend_id: backend_id

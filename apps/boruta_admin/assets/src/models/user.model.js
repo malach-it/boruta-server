@@ -11,6 +11,7 @@ const defaults = {
   authorized_scopes: [],
   roles: [],
   organizations: [],
+  uid: '',
   backend_id: '',
   backend: new Backend(),
   metadata: {},
@@ -119,7 +120,7 @@ class User {
   }
 
   get serialized () {
-    const { id, username, password, metadata: rawMetadata, group, authorized_scopes, roles, organizations } = this
+    const { id, uid, username, password, metadata: rawMetadata, group, authorized_scopes, roles, organizations } = this
 
     const metadata = {}
 
@@ -135,6 +136,7 @@ class User {
 
     return {
       id,
+      uid,
       username,
       password,
       metadata,
