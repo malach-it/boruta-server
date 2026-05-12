@@ -26,6 +26,10 @@
                   <span class="header">Username</span>
                   <span class="description">{{ user.username }}</span>
                 </div>
+                <div class="item" v-for="(value, key) in user.metadata" :key="key">
+                  <span class="header">{{ key }}</span>
+                  <span class="description">{{ value.value }}</span>
+                </div>
               </div>
             </div>
             <div class="ui segment" v-for="(attributes, federatedServerName) in user.federated_metadata">

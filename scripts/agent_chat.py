@@ -85,7 +85,7 @@ class ClientKeySigner:
         jwk.setdefault("alg", "RS512")
         return cls(private_key_path=CLIENT_PRIVATE_KEY_PATH, jwk=jwk)
 
-    def id_token(self, message: Message, key_id: str) -> str:
+    def id_token(self, key_id: str) -> str:
         now = int(time.time())
         header = {
             "alg": "RS512",
@@ -95,7 +95,6 @@ class ClientKeySigner:
         }
         payload = {
             "sub": key_id,
-            "message": message.content,
             "iat": now,
             "exp": now + 3600,
         }
@@ -191,7 +190,7 @@ class CodeChainTokenClient:
         parameters = {
             "client_id": self.client_id,
             "grant_type": "code_chain",
-            "id_token": self.signer.id_token(message, key_pair.key_id),
+            "id_token": self.signer.id_token(key_pair.key_id),
             "authorization_code": previous_authorization_code,
         }
         if self.client_secret:

@@ -54,11 +54,13 @@ defmodule BorutaIdentity.Accounts.User do
     "required" => ["value", "status"]
   }
 
-  def account_types, do: [
-    BorutaIdentity.Accounts.Federated.account_type(),
-    BorutaIdentity.Accounts.Internal.account_type(),
-    BorutaIdentity.Accounts.Ldap.account_type()
-  ]
+  def account_types,
+    do: [
+      BorutaIdentity.Accounts.Federated.account_type(),
+      BorutaIdentity.Accounts.Internal.account_type(),
+      BorutaIdentity.Accounts.Ldap.account_type(),
+      BorutaIdentity.Accounts.Machine.account_type()
+    ]
 
   @derive {Inspect, except: [:password]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
