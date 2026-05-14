@@ -25,6 +25,11 @@
                     <span>Business events</span>
                   </router-link>
                 </div>
+                <div class="subitem">
+                  <router-link :to="{ name: 'token-list' }">
+                    <span>Tokens</span>
+                  </router-link>
+                </div>
               </div>
             </div>
           </router-link>

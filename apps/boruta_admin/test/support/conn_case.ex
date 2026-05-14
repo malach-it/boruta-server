@@ -21,6 +21,8 @@ defmodule BorutaAdminWeb.ConnCase do
 
   alias Boruta.Ecto.OauthMapper
   alias Boruta.Oauth.IntrospectResponse
+  alias BorutaAuth.Repo, as: AuthRepo
+  alias BorutaIdentity.Factory, as: IdentityFactory
   alias Ecto.Adapters.SQL.Sandbox
 
   using do
@@ -87,6 +89,23 @@ defmodule BorutaAdminWeb.ConnCase do
     conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{token.value}")
 
     [conn: conn]
+  end
+
+  def insert_token_search_user(attrs \\ []) do
+    backend =
+      :backend
+      |> IdentityFactory.build()
+      |> AuthRepo.insert!()
+
+    user =
+      :user
+      |> IdentityFactory.build(attrs)
+      |> Map.put(:backend, nil)
+      |> Map.put(:backend_id, backend.id)
+      |> Map.put(:account_type, "internal")
+      |> AuthRepo.insert!()
+
+    %{user | backend: backend}
   end
 
   def user_authorized_params(conn, scopes) do

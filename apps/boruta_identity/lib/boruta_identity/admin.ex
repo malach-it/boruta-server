@@ -80,16 +80,30 @@ defmodule BorutaIdentity.Admin do
   """
   @spec get_user(id :: Ecto.UUID.t()) :: user :: User.t() | nil
   def get_user(id) do
-    Repo.one(
-      from(u in User,
-        left_join: as in assoc(u, :authorized_scopes),
-        left_join: r in assoc(u, :roles),
-        left_join: o in assoc(u, :organizations),
-        join: b in assoc(u, :backend),
-        preload: [authorized_scopes: as, roles: r, backend: b, organizations: o],
-        where: u.id == ^id
-      )
-    )
+    case Ecto.UUID.cast(id) do
+      {:ok, user_id} ->
+        Repo.one(
+          from(u in User,
+            left_join: as in assoc(u, :authorized_scopes),
+            left_join: r in assoc(u, :roles),
+            left_join: o in assoc(u, :organizations),
+            left_join: b in assoc(u, :backend),
+            preload: [authorized_scopes: as, backend: b],
+            where: u.id == ^user_id
+          )
+        )
+      _ ->
+        Repo.one(
+          from(u in User,
+            left_join: as in assoc(u, :authorized_scopes),
+            left_join: r in assoc(u, :roles),
+            left_join: o in assoc(u, :organizations),
+            left_join: b in assoc(u, :backend),
+            preload: [authorized_scopes: as, backend: b],
+            where: u.username == ^id
+          )
+        )
+    end
   end
 
   use BorutaIdentity.PostUserCreationHook
