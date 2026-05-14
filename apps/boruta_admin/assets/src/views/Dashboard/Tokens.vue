@@ -146,7 +146,7 @@
                           <div class="column">
                             <div class="ui attribute list">
                               <div class="item">
-                                <span class="header">ID</span>
+                                <span class="header">Identifier</span>
                                 <span class="token-value description monospace" :title="token.value">{{ token.id }}</span>
                               </div>
                               <div class="item">
@@ -582,6 +582,18 @@ export default {
     justify-content: center;
     min-height: 9rem;
     width: 100%;
+  }
+
+  @media only screen and (max-width: 767px) {
+    .token-summary-row > .column {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    .token-search-panel,
+    .token-types-chart {
+      min-height: auto;
+    }
   }
 
   .token-list-row {
