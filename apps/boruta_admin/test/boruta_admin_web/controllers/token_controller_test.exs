@@ -4,6 +4,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
   import Boruta.Factory
 
   alias Boruta.Ecto.Token
+  alias Boruta.Openid.VerifiablePresentations
   alias BorutaAuth.Repo
   alias BorutaIdentity.Factory, as: IdentityFactory
 
@@ -179,7 +180,8 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       assert %{
                "id" => user.id,
                "uid" => user.uid,
-               "username" => user.username
+               "username" => user.username,
+               "blocked" => false
              } == response["data"] |> List.first() |> Map.get("user")
     end
 
@@ -204,6 +206,35 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       assert response["previous_code"] == "previous-code"
       assert response["previous_token"] == "previous-token"
       assert response["agent_token"] == "agent-token"
+    end
+
+    @tag authorized: ["tokens:read:all"]
+    test "exposes id token and verified claims", %{conn: conn} do
+      client = insert(:client)
+      {_, jwk} = JOSE.JWK.from_pem(client.public_key) |> JOSE.JWK.to_map()
+
+      signer =
+        Joken.Signer.create("RS512", %{"pem" => client.private_key}, %{
+          "jwk" => jwk
+        })
+
+      {:ok, id_token, _claims} =
+        VerifiablePresentations.Token.generate_and_sign(%{"sub" => "did:example:id"}, signer)
+
+      token = insert(:token, id_token: id_token)
+
+      response =
+        conn
+        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.value})
+        |> json_response(200)
+        |> Map.get("data")
+        |> List.first()
+
+      assert response["id_token"] == id_token
+      assert response["id_token_claims"]["verified"] == true
+      assert response["id_token_claims"]["claims"]["sub"] == "did:example:id"
+      refute Map.has_key?(response, "vp_token")
+      refute Map.has_key?(response, "vp_token_claims")
     end
 
     @tag authorized: ["tokens:read:all"]
