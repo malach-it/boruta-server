@@ -260,6 +260,21 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     end
 
     @tag authorized: ["tokens:read:all"]
+    test "revokes active agent token", %{conn: conn} do
+      token = insert(:token, type: "agent_token", expires_at: :os.system_time(:seconds) + 60)
+
+      response =
+        conn
+        |> post("/api/tokens/#{token.id}/revoke")
+        |> json_response(200)
+        |> Map.get("data")
+
+      assert response["id"] == token.id
+      assert response["revoked_at"]
+      assert Repo.get(Token, token.id).revoked_at
+    end
+
+    @tag authorized: ["tokens:read:all"]
     test "does not revoke expired access token", %{conn: conn} do
       token = insert(:token, type: "access_token", expires_at: :os.system_time(:seconds) - 60)
 
@@ -273,6 +288,17 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     @tag authorized: ["tokens:read:all"]
     test "does not revoke expired code", %{conn: conn} do
       token = insert(:token, type: "code", expires_at: :os.system_time(:seconds) - 60)
+
+      assert conn
+             |> post("/api/tokens/#{token.id}/revoke")
+             |> json_response(400)
+
+      refute Repo.get(Token, token.id).revoked_at
+    end
+
+    @tag authorized: ["tokens:read:all"]
+    test "does not revoke expired agent token", %{conn: conn} do
+      token = insert(:token, type: "agent_token", expires_at: :os.system_time(:seconds) - 60)
 
       assert conn
              |> post("/api/tokens/#{token.id}/revoke")
