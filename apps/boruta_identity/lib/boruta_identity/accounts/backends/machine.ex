@@ -43,6 +43,7 @@ defmodule BorutaIdentity.Accounts.Machine do
   defp upsert_user(sub, %Backend{id: backend_id}) do
     attrs = %{
       uid: sub,
+      username: sub,
       metadata: %{"sub" => %{"value" => sub, "status" => "valid", "display" => []}}
         |> Enum.into(%{}),
       account_type: @account_type,
@@ -51,8 +52,8 @@ defmodule BorutaIdentity.Accounts.Machine do
 
     changeset =
       %User{}
-      |> cast(attrs, [:backend_id, :uid, :metadata, :account_type])
-      |> validate_required([:backend_id, :uid, :account_type])
+      |> cast(attrs, [:backend_id, :uid, :username, :metadata, :account_type])
+      |> validate_required([:backend_id, :uid, :username, :account_type])
       |> validate_inclusion(:account_type, User.account_types())
 
     metadata = get_field(changeset, :metadata)
