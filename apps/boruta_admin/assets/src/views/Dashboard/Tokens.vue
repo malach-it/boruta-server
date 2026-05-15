@@ -132,7 +132,7 @@
                 class="content chain-content"
                 :class="{ active: isCodeChain(group) ? isChainExpanded(group) : true }">
                 <div class="ui styled fluid accordion chain-token-list">
-                  <div class="token-accordion" v-for="token in group.tokens" :key="token.id">
+                  <div class="token-accordion" v-for="token in group.tokens" :key="group.key + token.id">
                     <div
                       class="title token-title"
                       :class="{ active: isTokenExpanded(token) }"
