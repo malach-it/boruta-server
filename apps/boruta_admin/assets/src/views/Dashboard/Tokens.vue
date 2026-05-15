@@ -90,6 +90,7 @@
         <LineChart
           :chartData="issuedTokenChartData"
           :options="issuedTokenChartOptions"
+          :key="issuedTokenChartRerenders"
           height="220" />
       </div>
 
@@ -364,6 +365,7 @@ export default {
       tokenTypeCounts: {},
       tokenCounts: {},
       tokenCountsTimeScaleUnit: 'hour',
+      issuedTokenChartRerenders: 0,
       clientId: this.$route.query.client_id || '',
       type: this.$route.query.type || '',
       scope: this.$route.query.scope || '',
@@ -442,13 +444,20 @@ export default {
       return {
         labels,
         datasets: Object.keys(this.tokenCounts).sort().map((type) => {
+          const counts = this.tokenCounts[type]
+
           return {
             label: type,
             borderColor: this.tokenTypeColor(type),
             backgroundColor: this.tokenTypeColor(type),
             fill: false,
             lineTension: 0,
-            data: labels.map((timestamp) => this.tokenCounts[type][timestamp] || 0)
+            data: Object.keys(counts).sort().map((timestamp) => {
+              return {
+                x: timestamp,
+                y: counts[timestamp]
+              }
+            })
           }
         })
       }
@@ -531,6 +540,7 @@ export default {
         this.tokenTypeCounts = typeCounts || {}
         this.tokenCounts = tokenCounts || {}
         this.tokenCountsTimeScaleUnit = tokenCountsTimeScaleUnit || 'hour'
+        this.issuedTokenChartRerenders += 1
         this.totalPages = totalPages
         this.totalEntries = totalEntries
         this.currentPage = currentPage

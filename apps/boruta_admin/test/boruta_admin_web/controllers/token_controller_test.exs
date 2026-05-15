@@ -158,7 +158,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     end
 
     @tag authorized: ["tokens:read:all"]
-    test "exposes issued token counts per second by type according to filters", %{conn: conn} do
+    test "exposes issued token counts by type according to filters", %{conn: conn} do
       first_code =
         insert(:token,
           type: "code",
@@ -198,6 +198,65 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       assert response["token_counts"] == %{
                "code" => %{
                  "2026-01-01T00:00:00.000000Z" => 2
+               }
+             }
+    end
+
+    @tag authorized: ["tokens:read:all"]
+    test "exposes issued token counts in separate type series", %{conn: conn} do
+      insert(:token,
+        type: "code",
+        inserted_at: ~U[2026-01-01 00:00:00Z],
+        updated_at: ~U[2026-01-01 00:00:00Z]
+      )
+
+      insert(:token,
+        type: "access_token",
+        inserted_at: ~U[2026-01-01 00:00:00Z],
+        updated_at: ~U[2026-01-01 00:00:00Z]
+      )
+
+      response =
+        conn
+        |> get(Routes.admin_token_path(conn, :index), %{
+          "start_at" => "2026-01-01T00:00:00Z",
+          "end_at" => "2026-01-01T00:00:01Z"
+        })
+        |> json_response(200)
+
+      assert response["token_counts"] == %{
+               "access_token" => %{
+                 "2026-01-01T00:00:00.000000Z" => 1
+               },
+               "code" => %{
+                 "2026-01-01T00:00:00.000000Z" => 1
+               }
+             }
+    end
+
+    @tag authorized: ["tokens:read:all"]
+    test "groups issued token counts by day for a month range", %{conn: conn} do
+      token =
+        insert(:token,
+          type: "code",
+          inserted_at: ~U[2026-01-01 12:34:56Z],
+          updated_at: ~U[2026-01-01 12:34:56Z]
+        )
+
+      response =
+        conn
+        |> get(Routes.admin_token_path(conn, :index), %{
+          "type" => token.type,
+          "start_at" => "2025-12-15T00:00:00Z",
+          "end_at" => "2026-01-15T00:00:00Z"
+        })
+        |> json_response(200)
+
+      assert response["token_counts_time_scale_unit"] == "day"
+
+      assert response["token_counts"] == %{
+               "code" => %{
+                 "2026-01-01T00:00:00.000000Z" => 1
                }
              }
     end

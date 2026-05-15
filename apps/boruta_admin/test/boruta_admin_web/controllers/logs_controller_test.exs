@@ -363,12 +363,13 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         Enum.join(second_day_log_lines, "\n")
       )
 
-      start_at =
-        DateTime.utc_now()
-        |> DateTime.add(-1 * 10 * 24 * 3600 - 1, :second)
-        |> DateTime.to_iso8601()
+      start_at = first_day |> DateTime.new!(~T[00:00:00], "Etc/UTC") |> DateTime.to_iso8601()
 
-      end_at = DateTime.utc_now() |> DateTime.to_iso8601()
+      end_at =
+        second_day
+        |> Date.add(1)
+        |> DateTime.new!(~T[00:00:00], "Etc/UTC")
+        |> DateTime.to_iso8601()
 
       conn =
         get(conn, Routes.admin_logs_path(conn, :index), %{
@@ -381,7 +382,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       log_lines = first_day_log_lines ++ second_day_log_lines
 
       assert %{
-               "time_scale_unit" => "hour",
+               "time_scale_unit" => "day",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 60
@@ -782,12 +783,13 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         Enum.join(second_day_log_lines, "\n")
       )
 
-      start_at =
-        DateTime.utc_now()
-        |> DateTime.add(-1 * 10 * 24 * 3600 - 1, :second)
-        |> DateTime.to_iso8601()
+      start_at = first_day |> DateTime.new!(~T[00:00:00], "Etc/UTC") |> DateTime.to_iso8601()
 
-      end_at = DateTime.utc_now() |> DateTime.to_iso8601()
+      end_at =
+        second_day
+        |> Date.add(1)
+        |> DateTime.new!(~T[00:00:00], "Etc/UTC")
+        |> DateTime.to_iso8601()
 
       conn =
         get(conn, Routes.admin_logs_path(conn, :index), %{
@@ -800,7 +802,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       log_lines = first_day_log_lines ++ second_day_log_lines
 
       assert %{
-               "time_scale_unit" => "hour",
+               "time_scale_unit" => "day",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 60
