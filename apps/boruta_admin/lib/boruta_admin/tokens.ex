@@ -15,6 +15,7 @@ defmodule BorutaAdmin.Tokens do
   alias BorutaIdentity.Accounts.User
 
   @default_page_size 12
+  @search_word_similarity_threshold 0.6
 
   def list_tokens(params \\ %{}) do
     from(t in Token,
@@ -151,10 +152,18 @@ defmodule BorutaAdmin.Tokens do
       as: :user,
       on: fragment("?::text = ?", u.id, t.sub),
       where:
-        fragment("coalesce(?, '') % ?", t.sub, ^query) or
-          fragment("coalesce(?, '') % ?", t.refresh_token, ^query) or
-          fragment("coalesce(?, '') % ?", t.value, ^query) or
-          fragment("coalesce(?, '') % ?", u.username, ^query)
+        fragment(
+          "greatest(word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?)) >= ?",
+          t.sub,
+          ^query,
+          t.refresh_token,
+          ^query,
+          t.value,
+          ^query,
+          u.username,
+          ^query,
+          ^@search_word_similarity_threshold
+        )
     )
   end
 

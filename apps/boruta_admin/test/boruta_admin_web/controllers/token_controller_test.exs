@@ -119,6 +119,17 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     end
 
     @tag authorized: ["tokens:read:all"]
+    test "searches tokens with the configured word similarity threshold", %{conn: conn} do
+      token = insert(:token, value: "specific-reference")
+
+      assert conn
+             |> get(Routes.admin_token_path(conn, :index), %{"q" => "specific"})
+             |> json_response(200)
+             |> Map.get("data")
+             |> Enum.map(& &1["id"]) == [token.id]
+    end
+
+    @tag authorized: ["tokens:read:all"]
     test "filters tokens by client", %{conn: conn} do
       client = insert(:client)
       other_client = insert(:client)
@@ -200,7 +211,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
         |> get(Routes.admin_token_path(conn, :index), %{"q" => token.value})
         |> json_response(200)
         |> Map.get("data")
-        |> List.first()
+        |> Enum.find(&(&1["id"] == token.id))
 
       assert response["response_type"] == "code"
       assert response["previous_code"] == "previous-code"
@@ -255,7 +266,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
 
       assert response["id"] == token.id
       assert response["previous_code"] == "middle-code"
-      assert response["previous_codes"] |> Enum.map(& &1["value"]) == ["middle-code", "root-code"]
+      assert response["previous_codes"] |> Enum.map(& &1["value"]) == ["root-code", "middle-code"]
       assert response["previous_codes"] |> Enum.map(& &1["type"]) == ["code", "code"]
     end
   end
