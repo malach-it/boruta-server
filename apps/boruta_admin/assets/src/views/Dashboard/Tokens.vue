@@ -664,9 +664,8 @@ export default {
   }
 
   .token-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1rem;
+    float: right;
+    margin: 0 0 1rem 1rem;
   }
 
   .chain-title,
