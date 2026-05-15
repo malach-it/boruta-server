@@ -450,6 +450,7 @@ export default {
     tokenTypeColor (type) {
       const colors = {
         access_token: '#2185d0',
+        agent_token: '#00b5ad',
         refresh_token: '#21ba45',
         code: '#6435c9',
         preauthorized_code: '#f2711c'
@@ -458,7 +459,7 @@ export default {
       return colors[type] || '#767676'
     },
     canRevoke (token) {
-      return ((token.type === 'access_token' && token.client) || token.type === 'code') &&
+      return ['access_token', 'agent_token', 'code'].includes(token.type) &&
         !token.revoked_at &&
         this.isActive(token)
     },

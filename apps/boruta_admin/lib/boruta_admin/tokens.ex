@@ -8,6 +8,7 @@ defmodule BorutaAdmin.Tokens do
 
   alias Boruta.Ecto.Token
   alias Boruta.AccessTokensAdapter
+  alias Boruta.AgentTokensAdapter
   alias Boruta.CodesAdapter
   alias Boruta.Oauth
   alias BorutaAuth.Repo
@@ -193,6 +194,16 @@ defmodule BorutaAdmin.Tokens do
     if expires_at > :os.system_time(:second), do: :ok, else: {:error, :bad_request}
   end
 
+  defp ensure_revocable_token(%Token{
+         type: "agent_token",
+         client_id: client_id,
+         revoked_at: nil,
+         expires_at: expires_at
+       })
+       when is_binary(client_id) and is_integer(expires_at) do
+    if expires_at > :os.system_time(:second), do: :ok, else: {:error, :bad_request}
+  end
+
   defp ensure_revocable_token(%Token{type: "code", revoked_at: nil, expires_at: expires_at})
        when is_integer(expires_at) do
     if expires_at > :os.system_time(:second), do: :ok, else: {:error, :bad_request}
@@ -204,6 +215,12 @@ defmodule BorutaAdmin.Tokens do
     token
     |> to_oauth_schema()
     |> AccessTokensAdapter.revoke()
+  end
+
+  defp revoke_token(%Token{type: "agent_token"} = token) do
+    token
+    |> to_oauth_schema()
+    |> AgentTokensAdapter.revoke()
   end
 
   defp revoke_token(%Token{type: "code"} = token) do
