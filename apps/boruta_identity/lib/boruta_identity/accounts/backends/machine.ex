@@ -6,6 +6,7 @@ defmodule BorutaIdentity.Accounts.Machine do
   import Ecto.Changeset
   import Ecto.Query
 
+  alias Boruta.Did
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Openid.VerifiablePresentations
   alias BorutaIdentity.Accounts.User
@@ -26,9 +27,9 @@ defmodule BorutaIdentity.Accounts.Machine do
           {:ok, User.t()} | {:error, String.t()}
   def domain_user!(%ResourceOwner{sub: id_token}, %Backend{} = backend)
       when is_binary(id_token) do
-    with {:ok, _jwk, claims} <- VerifiablePresentations.validate_signature(id_token),
-         {:ok, sub} <- fetch_sub(claims) do
-      upsert_user(sub, backend)
+    with {:ok, jwk, claims} <- VerifiablePresentations.validate_signature(id_token),
+         {:ok, sub} <- did_from_jwk(jwk) do
+      upsert_user(sub, claims, backend)
     end
   end
 
@@ -36,23 +37,24 @@ defmodule BorutaIdentity.Accounts.Machine do
 
   def delete_user(_uid), do: :ok
 
-  defp fetch_sub(%{"sub" => sub}) when is_binary(sub) and sub != "", do: {:ok, sub}
-  defp fetch_sub(%{sub: sub}) when is_binary(sub) and sub != "", do: {:ok, sub}
-  defp fetch_sub(_claims), do: {:error, "Machine id_token sub claim is missing."}
+  defp did_from_jwk(jwk) do
+    case Did.create("key", jwk) do
+      {:ok, did, _jwk} -> {:ok, did}
+      {:error, error} -> {:error, error}
+    end
+  end
 
-  defp upsert_user(sub, %Backend{id: backend_id}) do
+  defp upsert_user(sub, claims, %Backend{id: backend_id}) do
     attrs = %{
       uid: sub,
       username: sub,
-      metadata: %{"sub" => %{"value" => sub, "status" => "valid", "display" => []}}
-        |> Enum.into(%{}),
       account_type: @account_type,
       backend_id: backend_id
     }
 
     changeset =
       %User{}
-      |> cast(attrs, [:backend_id, :uid, :username, :metadata, :account_type])
+      |> cast(attrs, [:backend_id, :uid, :username, :account_type])
       |> validate_required([:backend_id, :uid, :username, :account_type])
       |> validate_inclusion(:account_type, User.account_types())
 
@@ -65,7 +67,6 @@ defmodule BorutaIdentity.Accounts.Machine do
           update: [
             set: [
               username: ^sub,
-              metadata: ^metadata
             ]
           ]
         ),
