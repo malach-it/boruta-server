@@ -92,7 +92,7 @@
                 :aria-expanded="isChainExpanded(group)">
                 <div class="chain-title-main">
                   <i class="dropdown icon"></i>
-                  <span class="ui tiny violet label" v-if="isCodeChain(group)">code chain</span>
+                  <span class="ui tiny violet label" v-if="isCodeChain(group)">{{ lastToken(group).type }}</span>
                   <span class="ui tiny basic label" v-else>token</span>
                   <span class="chain-id monospace">{{ group.label }}</span>
                 </div>
