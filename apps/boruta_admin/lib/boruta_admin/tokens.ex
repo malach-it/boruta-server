@@ -314,7 +314,7 @@ defmodule BorutaAdmin.Tokens do
          {:ok, end_at} <- time_scale_datetime(params, "end_at", :end_at) do
       case DateTime.diff(end_at, start_at, :second) do
         duration when duration <= 60 * 60 * 24 -> "minute"
-        duration when duration <= 60 * 60 * 24 * 31 -> "hour"
+        duration when duration < 60 * 60 * 24 * 7 -> "hour"
         _duration -> "day"
       end
     else

@@ -152,7 +152,7 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: 'hour',
+              unit: this.timeScaleUnit || 'hour',
               round: true
             }
           }
@@ -178,7 +178,7 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: 'hour',
+              unit: this.timeScaleUnit || 'hour',
               round: true
             }
           }
