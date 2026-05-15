@@ -5,10 +5,26 @@
         {{ errorMessage }}
       </div>
 
+      <div class="ui dates form">
+        <div class="ui stackable grid">
+          <div class="four wide token-times column">
+            <h1>Tokens</h1>
+          </div>
+          <div class="five wide token-times column">
+            <input type="datetime-local" v-model="dateFilter.startAt" :disabled="pending" />
+          </div>
+          <div class="five wide token-times column">
+            <input type="datetime-local" v-model="dateFilter.endAt" :disabled="pending" />
+          </div>
+          <div class="two wide token-times column">
+            <button class="ui fluid blue button" @click="search()" :disabled="pending">Filter</button>
+          </div>
+        </div>
+      </div>
+
       <div class="ui stackable equal height grid token-summary-row">
         <div class="thirteen wide column">
           <div class="ui segment token-search-panel">
-            <h1>Tokens</h1>
             <form class="ui form" @submit.prevent="search()">
               <div class="three fields">
                 <div class="field">
@@ -68,6 +84,13 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="ui segment token-issued-chart" v-if="hasIssuedTokenCounts">
+        <LineChart
+          :chartData="issuedTokenChartData"
+          :options="issuedTokenChartOptions"
+          height="220" />
       </div>
 
       <div class="ui stackable grid token-list-row">
@@ -316,8 +339,9 @@
 
 <script>
 import moment from 'moment'
-import { PieChart } from "vue-chart-3"
+import { LineChart, PieChart } from "vue-chart-3"
 import { Chart, registerables } from 'chart.js'
+import 'chartjs-adapter-moment'
 import Client from '../../models/client.model'
 import Token from '../../models/token.model'
 
@@ -326,6 +350,7 @@ Chart.register(...registerables)
 export default {
   name: 'tokens-dashboard',
   components: {
+    LineChart,
     PieChart
   },
   data () {
@@ -337,9 +362,15 @@ export default {
       tokenScopes: [],
       tokenTypes: [],
       tokenTypeCounts: {},
+      tokenCounts: {},
+      tokenCountsTimeScaleUnit: 'hour',
       clientId: this.$route.query.client_id || '',
       type: this.$route.query.type || '',
       scope: this.$route.query.scope || '',
+      dateFilter: {
+        startAt: this.$route.query.startAt || moment().utc().subtract(1, 'month').format("yyyy-MM-DDTHH:mm"),
+        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+      },
       currentPage: Number(this.$route.query.page || 1),
       tokenQuery: this.$route.query.q || '',
       totalPages: 1,
@@ -402,6 +433,56 @@ export default {
         ]
       }
     },
+    hasIssuedTokenCounts () {
+      return Object.values(this.tokenCounts).some((counts) => Object.keys(counts).length)
+    },
+    issuedTokenChartData () {
+      const labels = [...new Set(Object.values(this.tokenCounts).flatMap((counts) => Object.keys(counts)))].sort()
+
+      return {
+        labels,
+        datasets: Object.keys(this.tokenCounts).sort().map((type) => {
+          return {
+            label: type,
+            borderColor: this.tokenTypeColor(type),
+            backgroundColor: this.tokenTypeColor(type),
+            fill: false,
+            lineTension: 0,
+            data: labels.map((timestamp) => this.tokenCounts[type][timestamp] || 0)
+          }
+        })
+      }
+    },
+    issuedTokenChartOptions () {
+      return {
+        animation: false,
+        plugins: {
+          title: {
+            display: true,
+            text: `Issued tokens per ${this.tokenCountsTimeScaleUnit}`
+          },
+          legend: {
+            align: 'start',
+            position: 'bottom'
+          }
+        },
+        scales: {
+          x: {
+            type: 'timeseries',
+            time: {
+              unit: this.tokenCountsTimeScaleUnit,
+              round: true
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    },
     tokenGroups () {
       const tokensWithPreviousCodes = this.tokens.map((token) => {
         const previousCodes = token.previous_codes || []
@@ -439,15 +520,17 @@ export default {
         this.errorMessage = error.response?.data?.message || 'An error has occured when fetching clients.'
       })
     },
-    getTokens (pageNumber, query, clientId, scope, type) {
+    getTokens (pageNumber, query, clientId, scope, type, startAt, endAt) {
       this.pending = true
       this.errorMessage = false
 
-      Token.all({ query, pageNumber, clientId, scope, type }).then(({ data, scopes, types, typeCounts, currentPage, totalPages, totalEntries }) => {
+      Token.all({ query, pageNumber, clientId, scope, type, startAt, endAt }).then(({ data, scopes, types, typeCounts, tokenCounts, tokenCountsTimeScaleUnit, currentPage, totalPages, totalEntries }) => {
         this.tokens = data
         this.tokenScopes = scopes
         this.tokenTypes = types
         this.tokenTypeCounts = typeCounts || {}
+        this.tokenCounts = tokenCounts || {}
+        this.tokenCountsTimeScaleUnit = tokenCountsTimeScaleUnit || 'hour'
         this.totalPages = totalPages
         this.totalEntries = totalEntries
         this.currentPage = currentPage
@@ -463,6 +546,8 @@ export default {
       if (this.clientId) query.client_id = this.clientId
       if (this.scope) query.scope = this.scope
       if (this.type) query.type = this.type
+      query.startAt = this.dateFilter.startAt
+      query.endAt = this.dateFilter.endAt
 
       this.$router.push({ name: 'token-list', query })
     },
@@ -472,6 +557,8 @@ export default {
       if (this.clientId) query.client_id = this.clientId
       if (this.scope) query.scope = this.scope
       if (this.type) query.type = this.type
+      query.startAt = this.dateFilter.startAt
+      query.endAt = this.dateFilter.endAt
 
       this.$router.push({ name: 'token-list', query })
     },
@@ -610,12 +697,16 @@ export default {
   },
   watch: {
     '$route.query': {
-      handler ({ page, q, client_id, scope, type }) {
+      handler ({ page, q, client_id, scope, type, startAt, endAt }) {
         this.tokenQuery = q || ''
         this.clientId = client_id || ''
         this.scope = scope || ''
         this.type = type || ''
-        this.getTokens(page, q, client_id, scope, type)
+        this.dateFilter = {
+          startAt: startAt || moment().utc().subtract(1, 'month').format("yyyy-MM-DDTHH:mm"),
+          endAt: endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+        }
+        this.getTokens(page, q, client_id, scope, type, this.dateFilter.startAt, this.dateFilter.endAt)
       },
       deep: true,
       immediate: true
@@ -626,6 +717,14 @@ export default {
 
 <style scoped lang="scss">
 .tokens-dashboard {
+  .dates.form {
+    margin-bottom: 1em;
+
+    button {
+      font-size: 1.08rem !important;
+    }
+  }
+
   .token-list-accordion.ui.styled.accordion {
     width: 100%;
   }

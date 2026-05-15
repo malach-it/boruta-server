@@ -1,4 +1,5 @@
 import axios from 'axios'
+import moment from 'moment'
 import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
@@ -58,13 +59,15 @@ Token.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-Token.all = function ({ query, pageNumber, clientId, scope, type } = {}) {
+Token.all = function ({ query, pageNumber, clientId, scope, type, startAt, endAt } = {}) {
   const searchParams = new URLSearchParams()
   pageNumber && searchParams.append('page', pageNumber)
   query && searchParams.append('q', query)
   clientId && searchParams.append('client_id', clientId)
   scope && searchParams.append('scope', scope)
   type && searchParams.append('type', type)
+  startAt && searchParams.append('start_at', moment.utc(startAt).toISOString())
+  endAt && searchParams.append('end_at', moment.utc(endAt).toISOString())
 
   return this.api().get(`/?${searchParams.toString()}`).then(({
     data: {
@@ -72,6 +75,8 @@ Token.all = function ({ query, pageNumber, clientId, scope, type } = {}) {
       scopes,
       types,
       type_counts: typeCounts,
+      token_counts: tokenCounts,
+      token_counts_time_scale_unit: tokenCountsTimeScaleUnit,
       total_entries: totalEntries,
       page_number: currentPage,
       total_pages: totalPages
@@ -82,6 +87,8 @@ Token.all = function ({ query, pageNumber, clientId, scope, type } = {}) {
       scopes,
       types,
       typeCounts,
+      tokenCounts,
+      tokenCountsTimeScaleUnit,
       currentPage,
       totalPages,
       totalEntries

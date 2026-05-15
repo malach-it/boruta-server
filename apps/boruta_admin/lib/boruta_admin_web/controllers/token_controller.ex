@@ -17,6 +17,8 @@ defmodule BorutaAdminWeb.TokenController do
     scopes = Tokens.list_scopes(params)
     types = Tokens.list_types(params)
     type_counts = Tokens.type_counts(params)
+    token_counts = Tokens.issued_token_counts(params)
+    token_counts_time_scale_unit = Tokens.issued_token_count_time_scale_unit(params)
     previous_codes = Tokens.previous_codes(tokens.entries)
 
     render(conn, "index.json",
@@ -24,6 +26,8 @@ defmodule BorutaAdminWeb.TokenController do
       scopes: scopes,
       types: types,
       type_counts: type_counts,
+      token_counts: token_counts,
+      token_counts_time_scale_unit: token_counts_time_scale_unit,
       previous_codes: previous_codes,
       page_number: tokens.page_number,
       page_size: tokens.page_size,

@@ -28,6 +28,8 @@ defmodule BorutaAdminWeb.TokenView do
       scopes: Map.get(assigns, :scopes, []),
       types: Map.get(assigns, :types, []),
       type_counts: Map.get(assigns, :type_counts, %{}),
+      token_counts: Map.get(assigns, :token_counts, %{}),
+      token_counts_time_scale_unit: Map.get(assigns, :token_counts_time_scale_unit, "hour"),
       page_number: page_number,
       page_size: page_size,
       total_pages: total_pages,

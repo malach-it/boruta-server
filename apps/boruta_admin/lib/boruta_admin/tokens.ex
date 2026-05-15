@@ -25,6 +25,7 @@ defmodule BorutaAdmin.Tokens do
     |> filter_by_client(params)
     |> filter_by_type(params)
     |> filter_by_scope(params)
+    |> filter_by_inserted_at(params)
     |> search(params)
     |> order(params)
     |> Scrivener.paginate(%Scrivener.Config{
@@ -41,6 +42,7 @@ defmodule BorutaAdmin.Tokens do
       Token
       |> filter_by_client(params)
       |> filter_by_type(params)
+      |> filter_by_inserted_at(params)
       |> select([t], t.scope)
       |> Repo.all()
 
@@ -48,6 +50,7 @@ defmodule BorutaAdmin.Tokens do
       Token
       |> filter_by_client(params)
       |> filter_by_type(params)
+      |> filter_by_inserted_at(params)
       |> select([t], t.requested_scope)
       |> Repo.all()
 
@@ -61,6 +64,7 @@ defmodule BorutaAdmin.Tokens do
     Token
     |> filter_by_client(params)
     |> filter_by_type(params)
+    |> filter_by_inserted_at(params)
     |> select([t], t.requested_scope)
     |> Repo.all()
     |> Enum.flat_map(&Oauth.Scope.split/1)
@@ -76,15 +80,35 @@ defmodule BorutaAdmin.Tokens do
     |> filter_by_client(params)
     |> filter_by_type(params)
     |> filter_by_scope(params)
+    |> filter_by_inserted_at(params)
     |> search(params)
     |> Repo.all()
     |> Enum.into(%{})
+  end
+
+  def issued_token_counts(params \\ %{}) do
+    Token
+    |> filter_by_client(params)
+    |> filter_by_type(params)
+    |> filter_by_scope(params)
+    |> filter_by_inserted_at(params)
+    |> search(params)
+    |> group_by_inserted_at_time_unit(token_count_time_scale_unit(params))
+    |> Repo.all()
+    |> Enum.reduce(%{}, fn {type, timestamp, count}, acc ->
+      put_in(acc, [Access.key(type || "unknown", %{}), timestamp_to_iso8601(timestamp)], count)
+    end)
+  end
+
+  def issued_token_count_time_scale_unit(params \\ %{}) do
+    token_count_time_scale_unit(params)
   end
 
   def list_types(params \\ %{}) do
     Token
     |> filter_by_client(params)
     |> filter_by_scope(params)
+    |> filter_by_inserted_at(params)
     |> select([t], t.type)
     |> distinct(true)
     |> Repo.all()
@@ -146,6 +170,42 @@ defmodule BorutaAdmin.Tokens do
 
   defp filter_by_scope(queryable, _params), do: queryable
 
+  defp filter_by_inserted_at(queryable, params) do
+    queryable
+    |> filter_by_inserted_at_start(params)
+    |> filter_by_inserted_at_end(params)
+  end
+
+  defp filter_by_inserted_at_start(queryable, %{"start_at" => start_at})
+       when is_binary(start_at) and start_at != "" do
+    case parse_datetime(start_at) do
+      {:ok, start_at} -> from(t in queryable, where: t.inserted_at >= ^start_at)
+      :error -> queryable
+    end
+  end
+
+  defp filter_by_inserted_at_start(queryable, %{start_at: start_at})
+       when is_binary(start_at) and start_at != "" do
+    filter_by_inserted_at_start(queryable, %{"start_at" => start_at})
+  end
+
+  defp filter_by_inserted_at_start(queryable, _params), do: queryable
+
+  defp filter_by_inserted_at_end(queryable, %{"end_at" => end_at})
+       when is_binary(end_at) and end_at != "" do
+    case parse_datetime(end_at) do
+      {:ok, end_at} -> from(t in queryable, where: t.inserted_at <= ^end_at)
+      :error -> queryable
+    end
+  end
+
+  defp filter_by_inserted_at_end(queryable, %{end_at: end_at})
+       when is_binary(end_at) and end_at != "" do
+    filter_by_inserted_at_end(queryable, %{"end_at" => end_at})
+  end
+
+  defp filter_by_inserted_at_end(queryable, _params), do: queryable
+
   defp search(queryable, %{"q" => query}) when is_binary(query) and query != "" do
     from(t in queryable,
       left_join: u in User,
@@ -199,6 +259,74 @@ defmodule BorutaAdmin.Tokens do
 
   defp order(queryable, _params) do
     from(t in queryable, order_by: [desc: t.inserted_at])
+  end
+
+  defp group_by_inserted_at_time_unit(queryable, "minute") do
+    from(t in queryable,
+      select: {
+        t.type,
+        fragment("date_trunc('minute', ?)", t.inserted_at),
+        count(t.id)
+      },
+      group_by: [t.type, fragment("date_trunc('minute', ?)", t.inserted_at)],
+      order_by: fragment("date_trunc('minute', ?)", t.inserted_at)
+    )
+  end
+
+  defp group_by_inserted_at_time_unit(queryable, "day") do
+    from(t in queryable,
+      select: {
+        t.type,
+        fragment("date_trunc('day', ?)", t.inserted_at),
+        count(t.id)
+      },
+      group_by: [t.type, fragment("date_trunc('day', ?)", t.inserted_at)],
+      order_by: fragment("date_trunc('day', ?)", t.inserted_at)
+    )
+  end
+
+  defp group_by_inserted_at_time_unit(queryable, _time_scale_unit) do
+    from(t in queryable,
+      select: {
+        t.type,
+        fragment("date_trunc('hour', ?)", t.inserted_at),
+        count(t.id)
+      },
+      group_by: [t.type, fragment("date_trunc('hour', ?)", t.inserted_at)],
+      order_by: fragment("date_trunc('hour', ?)", t.inserted_at)
+    )
+  end
+
+  defp timestamp_to_iso8601(%DateTime{} = timestamp), do: DateTime.to_iso8601(timestamp)
+
+  defp timestamp_to_iso8601(%NaiveDateTime{} = timestamp),
+    do: NaiveDateTime.to_iso8601(timestamp) <> "Z"
+
+  defp parse_datetime(datetime) do
+    case DateTime.from_iso8601(datetime) do
+      {:ok, datetime, _offset} -> {:ok, datetime}
+      _ -> :error
+    end
+  end
+
+  defp token_count_time_scale_unit(params) do
+    with {:ok, start_at} <- time_scale_datetime(params, "start_at", :start_at),
+         {:ok, end_at} <- time_scale_datetime(params, "end_at", :end_at) do
+      case DateTime.diff(end_at, start_at, :second) do
+        duration when duration <= 60 * 60 * 24 -> "minute"
+        duration when duration <= 60 * 60 * 24 * 31 -> "hour"
+        _duration -> "day"
+      end
+    else
+      _ -> "hour"
+    end
+  end
+
+  defp time_scale_datetime(params, string_key, atom_key) do
+    case Map.get(params, string_key) || Map.get(params, atom_key) do
+      datetime when is_binary(datetime) and datetime != "" -> parse_datetime(datetime)
+      _ -> :error
+    end
   end
 
   defp previous_codes_for_token(%Token{} = token) do

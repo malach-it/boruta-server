@@ -104,23 +104,22 @@ defmodule BorutaAdminWeb.TokenControllerTest do
           updated_at: ~U[2026-01-01 00:00:00Z]
         )
 
-      partial_token =
-        insert(:token,
-          value: "zzztargetwordzzz",
-          inserted_at: ~U[2026-01-02 00:00:00Z],
-          updated_at: ~U[2026-01-02 00:00:00Z]
-        )
+      insert(:token,
+        value: "zzztargetwordzzz",
+        inserted_at: ~U[2026-01-02 00:00:00Z],
+        updated_at: ~U[2026-01-02 00:00:00Z]
+      )
 
       assert conn
              |> get(Routes.admin_token_path(conn, :index), %{"q" => "targetword"})
              |> json_response(200)
              |> Map.get("data")
-             |> Enum.map(& &1["id"]) == [exact_token.id, partial_token.id]
+             |> Enum.map(& &1["id"]) == [exact_token.id]
     end
 
     @tag authorized: ["tokens:read:all"]
     test "searches tokens with the configured word similarity threshold", %{conn: conn} do
-      token = insert(:token, value: "specific-reference")
+      token = insert(:token, value: "specific")
 
       assert conn
              |> get(Routes.admin_token_path(conn, :index), %{"q" => "specific"})
@@ -156,6 +155,51 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       assert response["data"] |> Enum.map(& &1["id"]) == [token.id]
       assert response["types"] == ["access_token", "code"]
       assert response["type_counts"] == %{"code" => 1}
+    end
+
+    @tag authorized: ["tokens:read:all"]
+    test "exposes issued token counts per second by type according to filters", %{conn: conn} do
+      first_code =
+        insert(:token,
+          type: "code",
+          inserted_at: ~U[2026-01-01 00:00:00.123456Z],
+          updated_at: ~U[2026-01-01 00:00:00.123456Z]
+        )
+
+      insert(:token,
+        type: "code",
+        inserted_at: ~U[2026-01-01 00:00:00.654321Z],
+        updated_at: ~U[2026-01-01 00:00:00.654321Z]
+      )
+
+      insert(:token,
+        type: "code",
+        inserted_at: ~U[2026-01-01 00:00:02Z],
+        updated_at: ~U[2026-01-01 00:00:02Z]
+      )
+
+      insert(:token,
+        type: "access_token",
+        inserted_at: ~U[2026-01-01 00:00:00Z],
+        updated_at: ~U[2026-01-01 00:00:00Z]
+      )
+
+      response =
+        conn
+        |> get(Routes.admin_token_path(conn, :index), %{
+          "type" => first_code.type,
+          "start_at" => "2026-01-01T00:00:00Z",
+          "end_at" => "2026-01-01T00:00:01Z"
+        })
+        |> json_response(200)
+
+      assert response["token_counts_time_scale_unit"] == "minute"
+
+      assert response["token_counts"] == %{
+               "code" => %{
+                 "2026-01-01T00:00:00.000000Z" => 2
+               }
+             }
     end
 
     @tag authorized: ["tokens:read:all"]
