@@ -164,6 +164,30 @@ defmodule BorutaAdmin.Tokens do
 
   defp search(queryable, _params), do: queryable
 
+  defp order(queryable, %{"q" => query}) when is_binary(query) and query != "" do
+    from([t, user: u] in queryable,
+      order_by: [
+        desc:
+          fragment(
+            "greatest(word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?))",
+            t.sub,
+            ^query,
+            t.refresh_token,
+            ^query,
+            t.value,
+            ^query,
+            u.username,
+            ^query
+          ),
+        desc: t.inserted_at
+      ]
+    )
+  end
+
+  defp order(queryable, %{q: query}) when is_binary(query) and query != "" do
+    order(queryable, %{"q" => query})
+  end
+
   defp order(queryable, _params) do
     from(t in queryable, order_by: [desc: t.inserted_at])
   end
