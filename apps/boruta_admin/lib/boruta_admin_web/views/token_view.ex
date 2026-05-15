@@ -2,6 +2,7 @@ defmodule BorutaAdminWeb.TokenView do
   use BorutaAdminWeb, :view
 
   alias Boruta.Oauth
+  alias Boruta.Openid.VerifiablePresentations
   alias BorutaAdminWeb.TokenView
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Admin
@@ -50,6 +51,8 @@ defmodule BorutaAdminWeb.TokenView do
       type: token.type,
       response_type: token.response_type,
       value: token.value,
+      id_token: token.id_token,
+      id_token_claims: verified_claims(token.id_token),
       refresh_token: token.refresh_token,
       previous_code: token.previous_code,
       previous_codes:
@@ -82,13 +85,42 @@ defmodule BorutaAdminWeb.TokenView do
 
   defp client(_client), do: nil
 
+  defp verified_claims(jwt) when is_binary(jwt) and jwt != "" do
+    with {:ok, %{"alg" => alg} = headers} <- Joken.peek_header(jwt),
+         {:ok, _jwk, claims} <- VerifiablePresentations.verify_jwt(extract_key(headers), alg, jwt) do
+      %{
+        verified: true,
+        claims: claims
+      }
+    else
+      {:error, error} ->
+        %{
+          verified: false,
+          error: inspect(error)
+        }
+
+      error ->
+        %{
+          verified: false,
+          error: inspect(error)
+        }
+    end
+  end
+
+  defp verified_claims(_jwt), do: nil
+
+  defp extract_key(%{"jwk" => jwk}), do: {:jwk, jwk}
+  defp extract_key(%{"kid" => did}), do: {:did, did}
+  defp extract_key(_headers), do: {:error, "No proof key material found in JWT headers"}
+
   defp user(sub) when is_binary(sub) do
     case Admin.get_user(sub) do
       %User{} = user ->
         %{
           id: user.id,
           uid: user.uid,
-          username: user.username
+          username: user.username,
+          blocked: user.blocked
         }
 
       _ ->

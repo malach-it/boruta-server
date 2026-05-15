@@ -197,7 +197,7 @@
                           </div>
                         </div>
 
-                        <div class="ui styled fluid accordion token-user-accordion" v-if="token.user">
+                        <div class="ui styled fluid accordion token-detail-accordion" v-if="token.user">
                           <div
                             class="title"
                             :class="{ active: isUserExpanded(token) }"
@@ -208,8 +208,12 @@
                             tabindex="0"
                             :aria-expanded="isUserExpanded(token)">
                             <i class="dropdown icon"></i>
-                            User
-                            <span class="token-user-summary">{{ tokenUserLabel(token.user) }}</span>
+                            user
+                            <span class="token-detail-summary">{{ tokenUserLabel(token.user) }}</span>
+                            <span class="token-detail-status">
+                              <span class="ui tiny red label" v-if="token.user.blocked">blocked</span>
+                              <span class="ui tiny green label" v-else>active</span>
+                            </span>
                           </div>
                           <div class="content" :class="{ active: isUserExpanded(token) }">
                             <div class="ui attribute list">
@@ -225,6 +229,42 @@
                                 <span class="header">Username</span>
                                 <span class="description">{{ token.user.username || '-' }}</span>
                               </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div
+                          class="ui styled fluid accordion token-detail-accordion"
+                          v-for="presentationToken in tokenPresentationTokens(token)"
+                          :key="presentationToken.name">
+                          <div
+                            class="title"
+                            :class="{ active: isPresentationTokenExpanded(token, presentationToken) }"
+                            @click.stop="togglePresentationToken(token, presentationToken)"
+                            @keyup.enter.stop="togglePresentationToken(token, presentationToken)"
+                            @keyup.space.stop.prevent="togglePresentationToken(token, presentationToken)"
+                            role="button"
+                            tabindex="0"
+                            :aria-expanded="isPresentationTokenExpanded(token, presentationToken)">
+                            <i class="dropdown icon"></i>
+                            {{ presentationToken.label }}
+                            <span class="token-detail-summary monospace" :title="presentationToken.value">
+                              {{ presentationToken.value }}
+                            </span>
+                            <span class="token-detail-status">
+                              <span class="ui tiny green label" v-if="presentationToken.result?.verified">verified</span>
+                              <span class="ui tiny red label" v-else>not verified</span>
+                            </span>
+                          </div>
+                          <div class="content" :class="{ active: isPresentationTokenExpanded(token, presentationToken) }">
+                            <div class="ui segment">
+                              <div class="ui attribute list token-claims-list" v-if="presentationToken.result?.claims">
+                                <div class="item" v-for="claim in tokenClaimAttributes(presentationToken.result.claims)" :key="claim.name">
+                                  <span class="header">{{ claim.name }}</span>
+                                  <span class="description monospace">{{ claim.value }}</span>
+                                </div>
+                              </div>
+                              <pre class="token-claims token-claims-error" v-else>{{ presentationToken.result?.error || 'No claims available.' }}</pre>
                             </div>
                           </div>
                         </div>
@@ -307,6 +347,7 @@ export default {
       expandedChainIds: [],
       expandedTokenIds: [],
       expandedUserTokenIds: [],
+      expandedPresentationTokenIds: [],
       revokingTokenIds: [],
       tokenTypeChartOptions: {
         animation: false,
@@ -526,6 +567,45 @@ export default {
     },
     tokenUserLabel (user) {
       return user.username || user.uid || user.id
+    },
+    presentationTokenKey (token, presentationToken) {
+      return `${token.id}:${presentationToken.name}`
+    },
+    isPresentationTokenExpanded (token, presentationToken) {
+      return this.expandedPresentationTokenIds.includes(this.presentationTokenKey(token, presentationToken))
+    },
+    togglePresentationToken (token, presentationToken) {
+      const key = this.presentationTokenKey(token, presentationToken)
+
+      if (this.isPresentationTokenExpanded(token, presentationToken)) {
+        this.expandedPresentationTokenIds = this.expandedPresentationTokenIds.filter((tokenId) => tokenId !== key)
+      } else {
+        this.expandedPresentationTokenIds = [...this.expandedPresentationTokenIds, key]
+      }
+    },
+    tokenPresentationTokens (token) {
+      return [
+        {
+          name: 'id_token',
+          label: 'id_token',
+          value: token.id_token,
+          result: token.id_token_claims
+        }
+      ].filter((presentationToken) => presentationToken.value)
+    },
+    tokenClaimAttributes (claims) {
+      return Object.keys(claims).sort().map((name) => {
+        return {
+          name,
+          value: this.formatClaimValue(claims[name])
+        }
+      })
+    },
+    formatClaimValue (value) {
+      if (value === null || value === undefined) return '-'
+      if (typeof value === 'object') return JSON.stringify(value, null, 2)
+
+      return String(value)
     }
   },
   watch: {
@@ -646,7 +726,7 @@ export default {
     margin-top: 0;
   }
 
-  .chain-token-list.ui.styled.accordion .token-user-accordion {
+  .chain-token-list.ui.styled.accordion .token-detail-accordion {
     margin-top: 0;
   }
 
@@ -703,8 +783,12 @@ export default {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .token-user-accordion {
+  .token-detail-accordion {
     margin-top: 1rem;
+
+    &:not(:last-child) {
+      margin-bottom: 1rem;
+    }
 
     &.ui.styled.accordion {
       width: 100%;
@@ -714,15 +798,58 @@ export default {
       align-items: center;
       display: flex;
       gap: .25rem;
+      min-width: 0;
     }
 
-    .token-user-summary {
+    .token-detail-status {
+      flex: 0 0 auto;
+      margin-left: auto;
+    }
+
+    .token-detail-summary {
       color: rgba(0, 0, 0, .55);
+      flex: 0 1 auto;
       font-family: monospace;
       margin-left: .5rem;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+  }
+  .token-claims {
+    background: rgba(0, 0, 0, .035);
+    border-radius: .28571429rem;
+    color: rgba(0, 0, 0, .8);
+    margin: .75rem 0 0;
+    max-height: 20rem;
+    overflow: auto;
+    padding: .75rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .token-claims-error {
+    color: #9f3a38;
+  }
+  .token-claims-list {
+    column-count: 2;
+    column-gap: 2rem;
+    margin-top: .75rem !important;
+
+    .item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .description {
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+  }
+
+  @media only screen and (max-width: 767px) {
+    .token-claims-list {
+      column-count: 1;
     }
   }
   .monospace {

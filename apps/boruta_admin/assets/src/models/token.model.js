@@ -12,6 +12,8 @@ const assign = {
   type: function ({ type }) { this.type = type },
   response_type: function ({ response_type }) { this.response_type = response_type },
   value: function ({ value }) { this.value = value },
+  id_token: function ({ id_token }) { this.id_token = id_token },
+  id_token_claims: function ({ id_token_claims }) { this.id_token_claims = id_token_claims },
   refresh_token: function ({ refresh_token }) { this.refresh_token = refresh_token },
   previous_code: function ({ previous_code }) { this.previous_code = previous_code },
   previous_codes: function ({ previous_codes }) {
