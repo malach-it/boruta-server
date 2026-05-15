@@ -95,6 +95,29 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     end
 
     @tag authorized: ["tokens:read:all"]
+    test "sorts searched tokens by word similarity", %{conn: conn} do
+      exact_token =
+        insert(:token,
+          value: "targetword",
+          inserted_at: ~U[2026-01-01 00:00:00Z],
+          updated_at: ~U[2026-01-01 00:00:00Z]
+        )
+
+      partial_token =
+        insert(:token,
+          value: "zzztargetwordzzz",
+          inserted_at: ~U[2026-01-02 00:00:00Z],
+          updated_at: ~U[2026-01-02 00:00:00Z]
+        )
+
+      assert conn
+             |> get(Routes.admin_token_path(conn, :index), %{"q" => "targetword"})
+             |> json_response(200)
+             |> Map.get("data")
+             |> Enum.map(& &1["id"]) == [exact_token.id, partial_token.id]
+    end
+
+    @tag authorized: ["tokens:read:all"]
     test "filters tokens by client", %{conn: conn} do
       client = insert(:client)
       other_client = insert(:client)
