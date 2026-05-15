@@ -28,7 +28,7 @@ defmodule BorutaIdentity.Accounts.Machine do
       when is_binary(id_token) do
     with {:ok, _jwk, claims} <- VerifiablePresentations.validate_signature(id_token),
          {:ok, sub} <- fetch_sub(claims) do
-      upsert_user(sub, id_token, claims, backend)
+      upsert_user(sub, backend)
     end
   end
 
@@ -40,15 +40,10 @@ defmodule BorutaIdentity.Accounts.Machine do
   defp fetch_sub(%{sub: sub}) when is_binary(sub) and sub != "", do: {:ok, sub}
   defp fetch_sub(_claims), do: {:error, "Machine id_token sub claim is missing."}
 
-  defp upsert_user(sub, id_token, claims, %Backend{id: backend_id}) do
+  defp upsert_user(sub, %Backend{id: backend_id}) do
     attrs = %{
       uid: sub,
-      username: sub,
-      metadata:
-        Map.put(claims, "id_token", id_token)
-        |> Enum.map(fn {key, value} ->
-          {key, %{"value" => value, "status" => "valid", "display" => []}}
-        end)
+      metadata: %{"sub" => %{"value" => sub, "status" => "valid", "display" => []}}
         |> Enum.into(%{}),
       account_type: @account_type,
       backend_id: backend_id
@@ -56,8 +51,8 @@ defmodule BorutaIdentity.Accounts.Machine do
 
     changeset =
       %User{}
-      |> cast(attrs, [:backend_id, :uid, :username, :metadata, :account_type])
-      |> validate_required([:backend_id, :uid, :username, :account_type])
+      |> cast(attrs, [:backend_id, :uid, :metadata, :account_type])
+      |> validate_required([:backend_id, :uid, :account_type])
       |> validate_inclusion(:account_type, User.account_types())
 
     metadata = get_field(changeset, :metadata)
