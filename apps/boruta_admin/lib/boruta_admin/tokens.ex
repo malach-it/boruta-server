@@ -177,7 +177,7 @@ defmodule BorutaAdmin.Tokens do
   defp do_previous_codes(%Token{previous_code: previous_code}, acc)
        when is_binary(previous_code) and previous_code != "" do
     case Repo.get_by(Token, value: previous_code) do
-      %Token{} = previous_token -> do_previous_codes(previous_token, [previous_token | acc])
+      %Token{} = previous_token -> do_previous_codes(previous_token, acc ++ [previous_token])
       _ -> acc
     end
   end
