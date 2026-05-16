@@ -7,10 +7,10 @@ defmodule BorutaIdentity.Configuration do
   alias BorutaIdentity.Repo
 
   def get_error_template!(type) do
-    case Repo.get_by(ErrorTemplate, type: to_string(type)) do
+    (case Repo.get_by(ErrorTemplate, type: to_string(type)) do
       nil -> ErrorTemplate.default_template(type)
       template -> template
-    end || raise Ecto.NoResultsError, queryable: ErrorTemplate
+    end) || raise Ecto.NoResultsError, queryable: ErrorTemplate
   end
 
   def upsert_error_template(%ErrorTemplate{id: template_id} = template, attrs) do
