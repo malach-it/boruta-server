@@ -16,7 +16,7 @@ RUN mix compile
 WORKDIR /app
 RUN mix release boruta_gateway --force --overwrite
 
-FROM elixir:1.14-otp-25-alpine
+FROM elixir:1.18-otp-26-alpine
 
 WORKDIR /app
 
