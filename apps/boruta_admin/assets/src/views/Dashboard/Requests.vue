@@ -77,6 +77,8 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="ui segment">
         <div class="ui stackable grid">
           <div class="ten wide request-times column">
             <LineChart :chartData="requestCounts" :options="requestCountsOptions" height="500" :key="graphRerenders" />
