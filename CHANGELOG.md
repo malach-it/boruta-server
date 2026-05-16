@@ -41,6 +41,7 @@
 - [admin] only expose client name in templates
 - [auth] remove default client secret from seeds
 - [admin] set minimum oauth client private key modulus size
+- [auth] set 2048 as minimum rsa keys modulus
 
 ## [0.8.0] - 2025-07-12
 

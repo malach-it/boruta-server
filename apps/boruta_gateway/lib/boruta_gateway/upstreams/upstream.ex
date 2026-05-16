@@ -195,7 +195,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
           changeset
 
         _ ->
-          private_key = JOSE.JWK.generate_key({:rsa, 1024, 65_537})
+          private_key = JOSE.JWK.generate_key({:rsa, 2048, 65_537})
           public_key = JOSE.JWK.to_public(private_key)
 
           {_type, public_pem} = JOSE.JWK.to_pem(public_key)
