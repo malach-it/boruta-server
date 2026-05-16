@@ -6,7 +6,8 @@ defmodule BorutaAuth.Application do
   def start(_type, _args) do
     children = [
       BorutaAuth.Repo,
-      BorutaAuth.Scheduler
+      BorutaAuth.Scheduler,
+      BorutaAuth.Plugs.RateLimit.Counter
     ]
 
     BorutaAuth.LogRotate.rotate()
@@ -15,6 +16,7 @@ defmodule BorutaAuth.Application do
     opts = [strategy: :one_for_one, name: BorutaAuth.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
   def setup_database do
     Enum.each([BorutaAuth.Repo], fn repo ->
       repo.__adapter__.storage_up(repo.config)

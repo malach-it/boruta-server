@@ -1,23 +1,25 @@
-defmodule BorutaWeb.Plugs.RateLimitTest do
+defmodule BorutaAuth.Plugs.RateLimitTest do
   use ExUnit.Case
 
-  alias BorutaWeb.Plugs.RateLimit
+  alias BorutaAuth.Plugs.RateLimit
 
   setup do
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    Agent.update(RateLimit.Counter, fn _counter -> %{} end)
+
+    {:ok, conn: Plug.Test.conn(:get, "/")}
   end
 
   describe "rate limiting" do
     test "request passes", %{conn: conn} do
       :timer.sleep(1)
-      options = [time_unit: :millisecond, count: 1]
+      options = [time_unit: :millisecond, count: 1, penality: 500, timeout: 5_000]
       assert RateLimit.call(conn, options) == conn
     end
 
     test "request is throttled", %{conn: conn} do
       :timer.sleep(1000)
       b_conn = %{conn | remote_ip: {127, 0, 0, 2}}
-      options = [time_unit: :second, count: 5, penality: 500]
+      options = [time_unit: :second, count: 5, penality: 500, timeout: 5_000]
       assert RateLimit.call(conn, options) == conn
       assert RateLimit.call(b_conn, options) == b_conn
     end

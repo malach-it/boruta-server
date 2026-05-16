@@ -26,6 +26,7 @@
 - [ssi] add client_id to credential offers
 - [identity] improve identity providers querying and cache
 - [admin] group direct post requests in dashboard
+- [infra] rate limit boruta identity requests
 
 ### Fixed
 

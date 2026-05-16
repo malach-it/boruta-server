@@ -2,7 +2,7 @@ defmodule BorutaWeb.Router do
   use BorutaWeb, :router
   use Plug.ErrorHandler
 
-  alias BorutaWeb.Plugs.RateLimit
+  alias BorutaAuth.Plugs.RateLimit
 
   import BorutaIdentityWeb.Sessions,
     only: [

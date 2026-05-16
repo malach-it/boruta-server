@@ -8,13 +8,16 @@ defmodule BorutaIdentityWeb.Router do
       redirect_if_user_is_authenticated: 2,
       require_authenticated_user: 2
     ]
+
   require Logger
 
+  alias BorutaAuth.Plugs.RateLimit
   alias BorutaIdentity.Configuration
   alias BorutaIdentity.Configuration.ErrorTemplate
 
   pipeline :browser do
     plug(:accepts, ["html"])
+    plug RateLimit, count: 10, time_unit: :second, penality: 500, timeout: 5_000
     plug(:fetch_session)
     plug(:fetch_flash)
     plug(:protect_from_forgery)
@@ -24,6 +27,7 @@ defmodule BorutaIdentityWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json"])
+    plug RateLimit, count: 10, time_unit: :second, penality: 500, timeout: 5_000
   end
 
   # scope "/", BorutaIdentityWeb do
