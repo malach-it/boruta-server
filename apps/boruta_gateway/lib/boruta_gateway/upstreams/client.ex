@@ -66,13 +66,19 @@ defmodule BorutaGateway.Upstreams.Client do
   def request(%Upstream{http_client: http_client} = upstream, conn) do
     http_client = http_client(http_client)
 
+    upstream
+    |> build_request(conn)
+    |> Finch.request(http_client)
+  end
+
+  @doc false
+  def build_request(upstream, conn) do
     Finch.build(
       transform_method(conn),
       transform_url(upstream, conn),
       transform_headers(upstream, conn),
       transform_body(conn)
     )
-    |> Finch.request(http_client)
   end
 
   @impl GenServer
@@ -111,21 +117,26 @@ defmodule BorutaGateway.Upstreams.Client do
         _ -> nil
       end
 
-    req_headers
-    |> Enum.reject(fn
-      {"authorization", _value} -> true
-      {"x-forwarded-authorization", _value} -> true
-      {"connection", _value} -> true
-      {"content-length", _value} -> true
-      {"expect", _value} -> true
-      {"host", _value} -> true
-      {"keep-alive", _value} -> true
-      {"transfer-encoding", _value} -> true
-      {"upgrade", _value} -> true
-      _rest -> false
-    end)
-    |> List.insert_at(0, {"x-forwarded-authorization", "bearer #{jwt}"})
-    |> List.insert_at(0, {"authorization", "bearer #{token.value}"})
+    headers =
+      req_headers
+      |> Enum.reject(fn
+        {"authorization", _value} -> true
+        {"x-forwarded-authorization", _value} -> true
+        {"connection", _value} -> true
+        {"content-length", _value} -> true
+        {"expect", _value} -> true
+        {"host", _value} -> true
+        {"keep-alive", _value} -> true
+        {"transfer-encoding", _value} -> true
+        {"upgrade", _value} -> true
+        _rest -> false
+      end)
+      |> List.insert_at(0, {"authorization", "bearer #{token.value}"})
+
+    case jwt do
+      nil -> headers
+      jwt -> List.insert_at(headers, 0, {"x-forwarded-authorization", "bearer #{jwt}"})
+    end
   end
 
   def signer(

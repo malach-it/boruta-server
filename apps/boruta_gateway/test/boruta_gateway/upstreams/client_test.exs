@@ -1,7 +1,10 @@
 defmodule BorutaGateway.Upstreams.ClientTest do
   use ExUnit.Case
-  use Plug.Test
 
+  import Plug.Conn
+  import Plug.Test
+
+  alias Boruta.Oauth.Token
   alias BorutaGateway.Repo
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Client
@@ -39,13 +42,47 @@ defmodule BorutaGateway.Upstreams.ClientTest do
     end
   end
 
+  describe "build_request/2" do
+    test "does not forward an empty signed token header without a signer" do
+      request =
+        %Upstream{scheme: "http", host: "example.test", port: 80}
+        |> Client.build_request(conn_with_token())
+
+      refute List.keymember?(request.headers, "x-forwarded-authorization", 0)
+      assert {"authorization", "bearer token-value"} in request.headers
+    end
+
+    test "forwards a signed token header when a signer is configured" do
+      request =
+        %Upstream{
+          scheme: "http",
+          host: "example.test",
+          port: 80,
+          forwarded_token_signature_alg: "HS256",
+          forwarded_token_secret: "secret"
+        }
+        |> Client.build_request(conn_with_token())
+
+      assert {"x-forwarded-authorization", "bearer " <> jwt} =
+               List.keyfind(request.headers, "x-forwarded-authorization", 0)
+
+      assert {:ok, _claims} =
+               Client.Token.verify(
+                 jwt,
+                 Joken.Signer.create("HS256", "secret")
+               )
+    end
+  end
+
   # TODO change for an internal server
   describe "external http calls" do
     @tag :skip
     test "should request an external url (httpbin.patatoid.fr/status) given a Plug.Conn" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          {:ok, upstream} = Upstreams.create_upstream(%{scheme: "http", host: "httpbin.patatoid.fr", port: 80})
+          {:ok, upstream} =
+            Upstreams.create_upstream(%{scheme: "http", host: "httpbin.patatoid.fr", port: 80})
+
           :timer.sleep(100)
 
           conn = conn("GET", "/status/418")
@@ -68,7 +105,9 @@ defmodule BorutaGateway.Upstreams.ClientTest do
     test "should request an external url (httpbin.patatoid.fr/headers) given a Plug.Conn" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          {:ok, upstream} = Upstreams.create_upstream(%{scheme: "http", host: "httpbin.patatoid.fr", port: 80})
+          {:ok, upstream} =
+            Upstreams.create_upstream(%{scheme: "http", host: "httpbin.patatoid.fr", port: 80})
+
           :timer.sleep(100)
 
           conn =
@@ -99,5 +138,11 @@ defmodule BorutaGateway.Upstreams.ClientTest do
         end
       end)
     end
+  end
+
+  defp conn_with_token do
+    "GET"
+    |> conn("/resource")
+    |> assign(:token, %Token{type: "access_token", value: "token-value"})
   end
 end
