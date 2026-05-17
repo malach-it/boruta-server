@@ -97,7 +97,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
   end
 
   def required_scopes(%__MODULE__{required_scopes: required_scopes}, method) do
-    default_scopes = Map.get(required_scopes, "*", [:not_authorized])
+    default_scopes = Map.get(required_scopes, "*", [])
     Map.get(required_scopes, method, default_scopes)
   end
 

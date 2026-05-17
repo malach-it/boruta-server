@@ -22,27 +22,31 @@ defmodule BorutaGateway.Plug.AssignUpstream do
       |> fetch_query_params()
     client = ClientsAdapter.public!()
 
-    with %{"code" => code} <- conn.query_params do
-      Boruta.Oauth.token(
-        %{
-          conn |
-          body_params: %{
-            "client_id" => client.id,
-            "client_secret" => client.secret,
-            "code" => code,
-            "redirect_uri" =>
-            %URI{
-              scheme: to_string(conn.scheme),
-              host: conn.host,
-              port: conn.port,
-              path: "/callback"
+    case conn.query_params do
+      %{"code" => code} ->
+        Boruta.Oauth.token(
+          %{
+            conn |
+            body_params: %{
+              "client_id" => client.id,
+              "client_secret" => client.secret,
+              "code" => code,
+              "redirect_uri" =>
+              %URI{
+                scheme: to_string(conn.scheme),
+                host: conn.host,
+                port: conn.port,
+                path: "/callback"
+              }
+              |> URI.to_string(),
+              "grant_type" => "authorization_code"
             }
-            |> URI.to_string(),
-            "grant_type" => "authorization_code"
-          }
-        },
-        __MODULE__
-      )
+          },
+          __MODULE__
+        )
+      %{"error" => _error, "error_description" => error_description} ->
+        conn
+        |> send_resp(401, error_description)
     end
   end
 
