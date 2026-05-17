@@ -4,7 +4,7 @@
       <div class="ui segment">
         <div class="ui four column stackable grid">
           <div class="column" v-for="scope in adminScopes" :key="scope.name">
-            <div class="ui checkbox">
+            <div class="ui scope checkbox" :class="{ 'authorized': authorizedScopes.includes(scope.name) }">
               <input
                 type="checkbox"
                 :id="`admin-scope-${scope.name}`"
@@ -135,6 +135,9 @@ export default {
     adminScopes () {
       return oauth.adminScopes
     },
+    authorizedScopes () {
+      return oauth.authorizedScope?.split(' ') || []
+    },
     walletUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
       '/accounts/wallet'
@@ -177,16 +180,13 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.scope.authorized {
+  font-weight: bold;
+}
 .scope-name {
   color: rgba(0, 0, 0, .45);
   display: block;
   font-size: .85em;
   margin-top: .25rem;
-}
-.login-button {
-  margin-top: 1rem;
-}
-.scope-actions {
-  margin-top: 1rem;
 }
 </style>

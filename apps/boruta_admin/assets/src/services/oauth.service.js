@@ -12,7 +12,8 @@ class Oauth {
       revokePath: '/oauth/revoke'
     })
 
-    this.requestedScope = localStorage.getItem('authorized_scope') ?? ADMIN_SCOPE
+    this.requestedScope = localStorage.getItem('requested_scope') ?? ADMIN_SCOPE
+    this.authorizedScope = localStorage.getItem('authorized_scope')
 
     this.revokeClient = new this.oauth.Revoke({
       clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID
@@ -52,6 +53,8 @@ class Oauth {
 
   setRequestedScope (scopes) {
     this.requestedScope = scopes.join(' ')
+
+    localStorage.setItem('requested_scope', this.requestedScope)
   }
 
   scopeLabel (scope) {
@@ -79,6 +82,7 @@ class Oauth {
 
     this.authorizedScope = this.requestedScope
 
+    localStorage.setItem('authorized_scope', this.requestedScope)
     localStorage.setItem('access_token', access_token)
     localStorage.setItem('id_token', id_token)
     localStorage.setItem('token_expires_at', expires_at)
@@ -90,7 +94,7 @@ class Oauth {
   }
 
   login () {
-    localStorage.setItem('authorized_scope', this.requestedScope)
+    localStorage.setItem('requested_scope', this.requestedScope)
 
     window.location = this.implicitClient.loginUrl
   }
