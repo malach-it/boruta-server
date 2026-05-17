@@ -161,7 +161,7 @@ defmodule BorutaGateway.Gateway do
               _connected = :os.system_time(:microsecond) - start
               :ok = :gen_tcp.send(client_socket, transform_header(payload, upstream, token))
 
-              # :inet.setopts(socket, active: :once)
+              :inet.setopts(socket, active: :once)
               :inet.setopts(client_socket, active: :once)
               {:noreply, %{state | client_socket: client_socket, start: start}}
 
