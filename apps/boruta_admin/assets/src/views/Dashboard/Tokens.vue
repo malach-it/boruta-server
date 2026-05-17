@@ -525,9 +525,7 @@ export default {
     getClients () {
       Client.all().then((clients) => {
         this.clients = clients
-      }).catch((error) => {
-        this.errorMessage = error.response?.data?.message || 'An error has occured when fetching clients.'
-      })
+      }).catch()
     },
     getTokens (pageNumber, query, clientId, scope, type, startAt, endAt) {
       this.pending = true
