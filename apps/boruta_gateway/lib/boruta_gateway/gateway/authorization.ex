@@ -6,6 +6,16 @@ defmodule BorutaGateway.Gateway.Authorization do
   alias Boruta.Oauth.Token
   alias BorutaGateway.Upstreams.Upstream
 
+  @default_error_content_type "application/json"
+  @default_forbidden_response Jason.encode!(%{
+                                error: "FORBIDDEN",
+                                message: "You are forbidden to access this resource."
+                              })
+  @default_unauthorized_response Jason.encode!(%{
+                                   error: "UNAUTHORIZED",
+                                   message: "You are unauthorized to access this resource."
+                                 })
+
   def authorize(_authorization_header, _method, %Upstream{authorize: false}) do
     {:ok, nil}
   end
@@ -13,15 +23,18 @@ defmodule BorutaGateway.Gateway.Authorization do
   def authorize(payload, method, upstream) do
     with [_, authorization_header] <- Regex.run(~r{[A|a]uthorization\: ([^\r]+)}, payload),
          [_header, value] <- Regex.run(~r/[B|b]earer (.+)/, authorization_header),
-         {:ok, %Token{scope: scope} = token} <- Oauth.Authorization.AccessToken.authorize(value: value),
+         {:ok, %Token{scope: scope} = token} <-
+           Oauth.Authorization.AccessToken.authorize(value: value),
          {:ok, _} <- validate_scopes(scope, upstream.required_scopes, method) do
       {:ok, token}
     else
       {:error, "required scopes are not present."} ->
-        {:forbidden, upstream.error_content_type, upstream.forbidden_response}
+        {:forbidden, upstream.error_content_type || @default_error_content_type,
+         upstream.forbidden_response || @default_forbidden_response}
 
       _error ->
-        {:unauthorized, upstream.error_content_type, upstream.unauthorized_response}
+        {:unauthorized, upstream.error_content_type || @default_error_content_type,
+         upstream.unauthorized_response || @default_unauthorized_response}
     end
   end
 

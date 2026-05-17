@@ -23,17 +23,27 @@ defmodule BorutaGateway.Gateway do
     alias BorutaGateway.Gateway
 
     def start(args) do
-      GenServer.start_link(__MODULE__, args, name: __MODULE__)
+      GenServer.start_link(__MODULE__, args)
     end
 
     @impl GenServer
     def init(args) do
       {:ok, listen_socket} =
-        :gen_tcp.listen(args[:port], [{:packet, :raw}, :binary, {:active, false}])
+        :gen_tcp.listen(args[:port], [
+          {:packet, :raw},
+          :binary,
+          {:active, false},
+          {:reuseaddr, true}
+        ])
 
       children =
         Enum.map(1..args[:num_acceptors], fn i ->
-          Supervisor.child_spec({Gateway, [listen_socket: listen_socket]},
+          Supervisor.child_spec(
+            {Gateway,
+             [
+               listen_socket: listen_socket,
+               match_function: args[:match_function]
+             ]},
             id: :"http_proxy_server_acceptor_#{i}"
           )
         end)
@@ -63,7 +73,16 @@ defmodule BorutaGateway.Gateway do
   defmodule State do
     @moduledoc false
 
-    defstruct [:listen_socket, :socket, :client_socket, :start, :request, :response, :content_length]
+    defstruct [
+      :listen_socket,
+      :match_function,
+      :socket,
+      :client_socket,
+      :start,
+      :request,
+      :response,
+      :content_length
+    ]
   end
 
   def start_link(args) do
@@ -76,7 +95,11 @@ defmodule BorutaGateway.Gateway do
 
     send(self(), :accept)
 
-    {:ok, %State{listen_socket: args[:listen_socket]}}
+    {:ok,
+     %State{
+       listen_socket: args[:listen_socket],
+       match_function: args[:match_function] || (&Upstreams.match/1)
+     }}
   end
 
   @impl GenServer
@@ -90,6 +113,7 @@ defmodule BorutaGateway.Gateway do
         :inet.setopts(socket, active: :once)
 
         {:noreply, %{state | socket: socket, client_socket: nil, response: nil}}
+
       {:error, _error} ->
         {:stop, :shutdown, state}
     end
@@ -121,9 +145,10 @@ defmodule BorutaGateway.Gateway do
 
     path_info = String.split(path, "/", trim: true)
 
-    with %Upstream{} = upstream <- Upstreams.match(path_info) ,
+    with %Upstream{} = upstream <- state.match_function.(path_info),
          {:ok, token} <- Authorization.authorize(payload, method, upstream) do
       _connect = :os.system_time(:microsecond) - start
+
       case upstream.scheme do
         "http" ->
           case :gen_tcp.connect(
@@ -179,11 +204,12 @@ defmodule BorutaGateway.Gateway do
       # TODO close client socket in case of failure
       nil ->
         response = "No upstream has been found corresponding to the given request."
+
         :gen_tcp.send(
           socket,
           "HTTP/1.1 404 Not Found\r\n" <>
             "Content-Length: 62\r\n\r\n" <>
-              response
+            response
         )
 
         _response = :os.system_time(:microsecond) - start
@@ -197,7 +223,7 @@ defmodule BorutaGateway.Gateway do
           "HTTP/1.1 401 Unauthorized\r\n" <>
             "Content-Type: #{content_type}\r\n" <>
             "Content-Length: #{byte_size(response)}\r\n\r\n" <>
-              response
+            response
         )
 
         _response = :os.system_time(:microsecond) - start
@@ -211,7 +237,7 @@ defmodule BorutaGateway.Gateway do
           "HTTP/1.1 403 Forbidden\r\n" <>
             "Content-Type: #{content_type}\r\n" <>
             "Content-Length: #{byte_size(response)}\r\n\r\n" <>
-              response
+            response
         )
 
         _response = :os.system_time(:microsecond) - start
@@ -227,6 +253,7 @@ defmodule BorutaGateway.Gateway do
     response = (state.response || "") <> payload
 
     :gen_tcp.send(state.socket, payload)
+
     case message_complete?(response) do
       true ->
         :gen_tcp.close(state.socket)
@@ -244,9 +271,11 @@ defmodule BorutaGateway.Gateway do
     # clean_response_headers(payload)
     response = (state.response || "") <> payload
     :gen_tcp.send(state.socket, payload)
+
     case message_complete?(response) do
       true ->
         :gen_tcp.close(state.socket)
+
       false ->
         :ssl.setopts(socket, active: :once)
     end
@@ -256,12 +285,15 @@ defmodule BorutaGateway.Gateway do
 
   def handle_info({:tcp, socket, payload}, %State{socket: socket} = state) do
     :inet.setopts(socket, active: :once)
+
     case state.client_socket do
       {:sslsocket, _, _} ->
         :ssl.send(state.client_socket, payload)
+
       _ ->
         :gen_tcp.send(state.client_socket, payload)
     end
+
     {:noreply, state}
   end
 
@@ -277,16 +309,17 @@ defmodule BorutaGateway.Gateway do
   defp transform_header(payload, upstream, nil) do
     [_, _method, path] =
       Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
+
     upstream_path =
       case upstream do
         %Upstream{strip_uri: true, uris: uris} ->
+          Enum.reduce(uris, path, fn
+            "/", _ ->
+              path
 
-            Enum.reduce(uris, path, fn
-              "/", _ ->
-                path
-              uri, path ->
-                String.replace_prefix(path, uri, "")
-            end)
+            uri, path ->
+              String.replace_prefix(path, uri, "")
+          end)
 
         %Upstream{strip_uri: false} ->
           path
@@ -320,22 +353,23 @@ defmodule BorutaGateway.Gateway do
         _ -> nil
       end
 
-    payload = Regex.replace(
-      ~r{[A|a]uthorization: ([^\r]+)\r\n},
-      payload,
-      "Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\1\r\n"
-    )
+    payload =
+      Regex.replace(
+        ~r{[A|a]uthorization: ([^\r]+)\r\n},
+        payload,
+        "Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\1\r\n"
+      )
 
     transform_header(payload, upstream, nil)
   end
 
   def signer(
-         %Upstream{
-           forwarded_token_signature_alg: signature_alg,
-           forwarded_token_secret: secret,
-           forwarded_token_private_key: private_key
-         } = upstream
-       ) do
+        %Upstream{
+          forwarded_token_signature_alg: signature_alg,
+          forwarded_token_secret: secret,
+          forwarded_token_private_key: private_key
+        } = upstream
+      ) do
     case signature_alg && signature_type(upstream) do
       :symmetric ->
         Joken.Signer.create(signature_alg, secret)
@@ -358,8 +392,10 @@ defmodule BorutaGateway.Gateway do
 
   defp message_complete?(response) do
     case String.split(response, "\r\n\r\n") do
-      [_header] -> true
-      [header|[body]] ->
+      [_header] ->
+        true
+
+      [header | [body]] ->
         [_, content_length] = Regex.run(~r{[C|c]ontent-[L|l]ength\: ([^\r]+)}, header)
 
         body_length = body |> byte_size()

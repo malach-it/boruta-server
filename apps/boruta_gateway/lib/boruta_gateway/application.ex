@@ -32,10 +32,34 @@ defmodule BorutaGateway.Application do
                  [
                    [
                      port: Application.fetch_env!(:boruta_gateway, :port),
+                     match_function: &Upstreams.match/1,
                      num_acceptors: 10
                    ]
                  ]},
               id: :server
+            }
+            | children
+          ]
+
+        _ ->
+          children
+      end
+
+    children =
+      case Application.get_env(:boruta_gateway, :sidecar_server) do
+        true ->
+          [
+            %{
+              start:
+                {BorutaGateway.Gateway.Server, :start,
+                 [
+                   [
+                     port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
+                     match_function: &Upstreams.sidecar_match/1,
+                     num_acceptors: 10
+                   ]
+                 ]},
+              id: :sidecar_server
             }
             | children
           ]
