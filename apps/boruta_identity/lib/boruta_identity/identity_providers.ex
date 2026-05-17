@@ -188,7 +188,7 @@ defmodule BorutaIdentity.IdentityProviders do
     end
   end
 
-  defp clear_identity_provider_templates_cache(identity_provider_id, []), do: :ok
+  defp clear_identity_provider_templates_cache(_identity_provider_id, []), do: :ok
 
   defp clear_identity_provider_templates_cache(identity_provider_id, ["layout"]) do
     Boruta.Cache.delete({__MODULE__, :identity_provider_template, identity_provider_id, "layout"})

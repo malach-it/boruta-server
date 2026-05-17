@@ -81,6 +81,14 @@ defmodule BorutaAdminWeb.Authorization do
     end
   end
 
+  def authorize(conn, _opts) do
+    conn
+    |> put_status(:forbidden)
+    |> put_view(ErrorView)
+    |> render("403.json")
+    |> halt()
+  end
+
   def authorize_any(conn, [_h | _t] = scopes) do
     current_scopes = String.split(conn.assigns[:authorization]["scope"], " ")
 
@@ -95,14 +103,6 @@ defmodule BorutaAdminWeb.Authorization do
         |> render("403.json")
         |> halt()
     end
-  end
-
-  def authorize(conn, _opts) do
-    conn
-    |> put_status(:forbidden)
-    |> put_view(ErrorView)
-    |> render("403.json")
-    |> halt()
   end
 
   # TODO cache token introspection
