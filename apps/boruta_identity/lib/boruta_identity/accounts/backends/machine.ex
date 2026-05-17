@@ -59,8 +59,6 @@ defmodule BorutaIdentity.Accounts.Machine do
       |> validate_required([:backend_id, :uid, :username, :account_type])
       |> validate_inclusion(:account_type, User.account_types())
 
-    metadata = get_field(changeset, :metadata)
-
     changeset
     |> Repo.insert(
       on_conflict:

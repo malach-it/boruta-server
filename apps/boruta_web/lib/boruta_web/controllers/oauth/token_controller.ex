@@ -266,7 +266,7 @@ defmodule BorutaWeb.Oauth.TokenController do
     )
   end
 
-  defp direct_post_metadata(%DirectPostResponse{} = response, code) do
+  defp direct_post_metadata(%DirectPostResponse{}, code) do
     %{
       client_id: code.client && code.client.id,
       sub: code.sub,
@@ -276,8 +276,4 @@ defmodule BorutaWeb.Oauth.TokenController do
       requested_scope: code.requested_scope
     }
   end
-
-  defp present?(nil), do: false
-  defp present?(""), do: false
-  defp present?(_value), do: true
 end
