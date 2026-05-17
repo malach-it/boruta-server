@@ -31,7 +31,7 @@ export default class ConfigurationFile {
     return this.api.get(`/${type}`).then(({ data }) => {
       const configuration = data.data.find(({ name }) => name == 'configuration_file')
       return configuration && configuration.value || this.baseConfiguration
-    }).catch(() => '')
+    })
   }
 
   static get baseConfiguration () {

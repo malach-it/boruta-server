@@ -1,6 +1,9 @@
 <template>
   <div class="container edit-bad-request-template">
     <Toaster :active="success" message="Template has been updated" type="success" />
+    <div class="ui error message" v-if="error">
+      {{ error }}
+    </div>
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
@@ -27,13 +30,16 @@ export default {
     ErrorTemplate.get(400).then((template) => {
       this.template = template
       this.content = template.content
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
     return {
       content: '',
       template: new ErrorTemplate(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

@@ -2,6 +2,9 @@
   <div class="edit-role">
     <Toaster :active="success" message="Role has been updated" type="success" />
     <div class="ui container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui segment">
         <div class="ui attribute list">
           <div class="item">
@@ -30,12 +33,15 @@ export default {
     const { roleId } = this.$route.params
     Role.get(roleId).then((role) => {
       this.role = role
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
     return {
       role: new Role(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

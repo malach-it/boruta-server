@@ -7,6 +7,9 @@
       <router-link :to="{ name: 'new-user' }" class="ui violet main create button">Add a user</router-link>
     </div>
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui info message">
         Users are here the ones that can login to Boruta mirroring the backend to give the ability for the server to add security traits (confirmation, consent, or scope access).
       </div>
@@ -100,7 +103,8 @@ export default {
       userQuery: this.$route.query.q,
       totalPages: 1,
       totalEntries: 0,
-      total_entries: 0
+      total_entries: 0,
+      error: null
     }
   },
   computed: {
@@ -136,6 +140,8 @@ export default {
         this.totalPages = totalPages
         this.totalEntries = totalEntries
         this.currentPage = currentPage
+      }).catch((error) => {
+        this.error = error.response?.data?.message || error.message
       })
     },
     goToPage (pageNumber) {

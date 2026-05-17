@@ -4,6 +4,9 @@
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <router-link :to="{ name: 'new-backend' }" class="ui violet main create button">Add a backend</router-link>
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui info message">
         Backends act as user registries, identity providers are connected to them in order to manage identities.
       </div>
@@ -52,7 +55,8 @@ export default {
     return {
       backends: [],
       errorMessage: false,
-      deleted: false
+      deleted: false,
+      error: null
     }
   },
   mounted () {
@@ -62,6 +66,8 @@ export default {
     getBackends () {
       Backend.all().then((backends) => {
         this.backends = backends
+      }).catch((error) => {
+        this.error = error.response?.data?.message || error.message
       })
     },
     deleteBackend (backend) {

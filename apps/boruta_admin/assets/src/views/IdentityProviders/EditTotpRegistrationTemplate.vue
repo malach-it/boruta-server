@@ -1,6 +1,9 @@
 <template>
   <div class="container edit-totp-registration-template">
     <Toaster :active="success" message="Template has been updated" type="success" />
+    <div class="ui error message" v-if="error">
+      {{ error }}
+    </div>
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
@@ -28,10 +31,14 @@ export default {
     const { identityProviderId } = this.$route.params
     IdentityProvider.get(identityProviderId).then((identityProvider) => {
       this.identityProvider = identityProvider
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
     Template.get(identityProviderId, 'new_totp_registration').then((template) => {
       this.template = template
       this.content = template.content
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
@@ -39,7 +46,8 @@ export default {
       content: '',
       identityProvider: new IdentityProvider(),
       template: new Template(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

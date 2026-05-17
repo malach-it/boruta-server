@@ -1,6 +1,29 @@
 <template>
   <div class="home">
     <div class="ui container">
+      <div class="ui segment">
+        <div class="ui four column stackable grid">
+          <div class="column" v-for="scope in adminScopes" :key="scope.name">
+            <div class="ui checkbox">
+              <input
+                type="checkbox"
+                :id="`admin-scope-${scope.name}`"
+                :value="scope.name"
+                v-model="selectedAdminScopes"
+                @change="setRequestedScope" />
+              <label :for="`admin-scope-${scope.name}`">
+                {{ scope.label }}
+                <span class="scope-name">{{ scope.name }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="ui two buttons scope-actions">
+          <button class="ui button" @click="selectAllScopes">Select all</button>
+          <button class="ui button" @click="selectNoScopes">None</button>
+        </div>
+        <button class="ui fluid yellow button login-button" @click="login">Login</button>
+      </div>
       <div class="ui center aligned segment">
         <h2>Welcome to boruta administration</h2>
         <div class="ui three column stackable grid">
@@ -94,6 +117,8 @@
 </template>
 
 <script>
+import oauth from '../services/oauth.service'
+
 export default {
   name: 'home',
   data () {
@@ -101,10 +126,15 @@ export default {
     return {
       walletRedirectUri,
       issuanceRedirectUri: walletRedirectUri,
-      presentationRedirectUri: walletRedirectUri
+      presentationRedirectUri: walletRedirectUri,
+      selectedAdminScopes: oauth.requestedScope.split(' ')
+
     }
   },
   computed: {
+    adminScopes () {
+      return oauth.adminScopes
+    },
     walletUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
       '/accounts/wallet'
@@ -126,9 +156,37 @@ export default {
      return window.env.BORUTA_OAUTH_BASE_URL +
       `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&response_type=vp_token urn%3Aietf%3Aparams%3Aoauth%3Aresponse-type%3Apre-authorized_code&client_metadata={}&state=qrm0c4xm&prompt=login&scope=BorutaCredentialJwtVc`
     }
+  },
+  methods: {
+    setRequestedScope () {
+      oauth.setRequestedScope(this.selectedAdminScopes)
+    },
+    selectAllScopes () {
+      this.selectedAdminScopes = this.adminScopes.map(({ name }) => name)
+      this.setRequestedScope()
+    },
+    selectNoScopes () {
+      this.selectedAdminScopes = []
+      this.setRequestedScope()
+    },
+    login () {
+      oauth.login()
+    }
   }
 }
 </script>
 
 <style scoped lang="scss">
+.scope-name {
+  color: rgba(0, 0, 0, .45);
+  display: block;
+  font-size: .85em;
+  margin-top: .25rem;
+}
+.login-button {
+  margin-top: 1rem;
+}
+.scope-actions {
+  margin-top: 1rem;
+}
 </style>

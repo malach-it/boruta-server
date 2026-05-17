@@ -3,6 +3,9 @@
     <Toaster :active="deleted" message="Role has been deleted" type="warning" />
     <router-link :to="{ name: 'new-role' }" class="ui violet main create button">Add a role</router-link>
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui info message">
         Roles have here a label and are associated with scopes that will be available to the users having them.
       </div>
@@ -50,7 +53,8 @@ export default {
   data () {
     return {
       roles: [],
-      deleted: false
+      deleted: false,
+      error: null
     }
   },
   mounted () {
@@ -60,6 +64,8 @@ export default {
     getRoles () {
       Role.all().then((roles) => {
         this.roles = roles
+      }).catch((error) => {
+        this.error = error.response?.data?.message || error.message
       })
     },
     deleteRole (role) {

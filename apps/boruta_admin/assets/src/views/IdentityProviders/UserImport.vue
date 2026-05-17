@@ -1,6 +1,9 @@
 <template>
   <div class="user-import">
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui segment">
         <FormErrors :errors="importErrors" v-if="importErrors" />
         <form class="ui form" @submit.prevent="upload()">
@@ -104,12 +107,15 @@ export default {
       backendId: null,
       pending: false,
       importResult: null,
-      importErrors: null
+      importErrors: null,
+      error: null
     }
   },
   mounted () {
     Backend.all().then((backends) => {
       this.backends = backends
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   methods: {

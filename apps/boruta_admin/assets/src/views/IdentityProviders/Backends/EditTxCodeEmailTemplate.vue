@@ -1,6 +1,9 @@
 <template>
   <div class="container edit-tx-code-email-template">
     <Toaster :active="success" message="Template has been updated" type="success" />
+    <div class="ui error message" v-if="error">
+      {{ error }}
+    </div>
     <div class="ui segment">
       <h2>Text content</h2>
       <TextEditor :content="txtContent" @codeUpdate="setTxtContent" />
@@ -33,11 +36,15 @@ export default {
     const { backendId } = this.$route.params
     Backend.get(backendId).then((backend) => {
       this.backend = backend
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
     EmailTemplate.get(backendId, 'tx_code').then((template) => {
       this.template = template
       this.txtContent = template.txt_content
       this.htmlContent = template.html_content
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
@@ -46,7 +53,8 @@ export default {
       htmlContent: '',
       backend: new Backend(),
       template: new EmailTemplate(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

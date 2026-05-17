@@ -4,6 +4,9 @@
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <router-link :to="{ name: 'new-identity-provider' }" class="ui violet main create button">Add a identity provider</router-link>
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui info message">
         Identity providers are here the pages the users will navigate to while authenticating, managing of their identity or security.
       </div>
@@ -51,7 +54,8 @@ export default {
     return {
       identityProviders: [],
       errorMessage: false,
-      deleted: false
+      deleted: false,
+      error: null
     }
   },
   mounted () {
@@ -61,6 +65,8 @@ export default {
     getIdentityProviders () {
       IdentityProvider.all().then((identityProviders) => {
         this.identityProviders = identityProviders
+      }).catch((error) => {
+        this.error = error.response?.data?.message || error.message
       })
     },
     deleteIdentityProvider (identityProvider) {

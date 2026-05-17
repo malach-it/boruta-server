@@ -6,6 +6,9 @@
       <router-link :to="{ name: 'new-organization' }" class="ui violet main create button">Add a organization</router-link>
     </div>
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui info message">
         Organizations have many users as members. They help to group them and provide belongship.
       </div>
@@ -83,7 +86,8 @@ export default {
       currentPage: this.$route.query.page,
       totalPages: 1,
       totalEntries: 0,
-      total_entries: 0
+      total_entries: 0,
+      error: null
     }
   },
   computed: {
@@ -119,6 +123,8 @@ export default {
         this.totalPages = totalPages
         this.totalEntries = totalEntries
         this.currentPage = currentPage
+      }).catch((error) => {
+        this.error = error.response?.data?.message || error.message
       })
     },
     goToPage (pageNumber) {

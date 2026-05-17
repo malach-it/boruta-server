@@ -518,6 +518,8 @@ router.beforeEach((to, _from, next) => {
 
   oauth.storeLocationName(to);
 
+  if (to.name === "home") return next();
+
   if (!oauth.isAuthenticated) {
     // TODO find a way to remove event listener once triggered
     const continueNavigation = () => {
@@ -527,7 +529,7 @@ router.beforeEach((to, _from, next) => {
     window.addEventListener("logged_in", continueNavigation);
 
     oauth.silentRefresh();
-    return next(new Error('Not logged in'));
+    return next("/");
   } else {
     return next();
   }

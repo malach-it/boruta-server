@@ -17,6 +17,7 @@
 - [identity] add resource owner in credentials templates
 - [ssi] credential issuance scope restriction
 - [wallet] display credential presentation purposes
+- [admin] home page selective login
 
 ### Changed
 

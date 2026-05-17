@@ -2,6 +2,9 @@
   <div class="edit-upstream">
     <Toaster :active="success" message="Upstream has been updated" type="success" />
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui stackable grid">
         <div class="four wide column">
           <div class="sidebar">
@@ -39,12 +42,15 @@ export default {
     const { upstreamId } = this.$route.params
     Upstream.get(upstreamId).then((upstream) => {
       this.upstream = upstream
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
     return {
       upstream: new Upstream(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

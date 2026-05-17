@@ -3,6 +3,9 @@
     <Toaster :active="deleted" message="Upstream has been deleted" type="warning" />
     <router-link :to="{ name: 'new-upstream' }" class="ui violet main create button">Add an upstream</router-link>
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui info message">
         Upstreams are here the configuration of the flow the gateway will apply for requests to be forwarded to backends. Corresponding to given paths, the gateway will route the request to the configured server.
       </div>
@@ -55,7 +58,8 @@ export default {
   data () {
     return {
       upstreams: [],
-      deleted: false
+      deleted: false,
+      error: null
     }
   },
   mounted () {
@@ -65,6 +69,8 @@ export default {
     getUpstreams () {
       Upstream.all().then((upstreams) => {
         this.upstreams = upstreams
+      }).catch((error) => {
+        this.error = error.response?.data?.message || error.message
       })
     },
     deleteUpstream (upstream) {

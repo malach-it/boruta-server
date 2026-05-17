@@ -2,6 +2,9 @@
   <div class="edit-identity-provider">
     <Toaster :active="success" message="identity provider has been updated" type="success" />
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui stackable grid">
         <div class="four wide column">
           <div class="sidebar">
@@ -47,12 +50,15 @@ export default {
     const { identityProviderId } = this.$route.params
     IdentityProvider.get(identityProviderId).then((identityProvider) => {
       this.identityProvider = identityProvider
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
     return {
       identityProvider: new IdentityProvider(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

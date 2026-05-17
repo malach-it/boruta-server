@@ -4,6 +4,9 @@
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <router-link :to="{ name: 'new-client' }" class="ui violet main create button">Add a client</router-link>
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui info message">
         Clients are here relying parties as defined in <a target="_blank" href="https://datatracker.ietf.org/doc/html/rfc6749#section-1.1">OAuth 2.0 RFC</a>. They are the applications that require a priviledge access to a HTTP service secured by the Boruta authorization server.
       </div>
@@ -81,7 +84,8 @@ export default {
     return {
       clients: [] ,
       deleted: false,
-      errorMessage: false
+      errorMessage: false,
+      error: null
     }
   },
   mounted () {
@@ -91,6 +95,8 @@ export default {
     getClients () {
       Client.all().then((clients) => {
         this.clients = clients
+      }).catch((error) => {
+        this.error = error.response?.data?.message || error.message
       })
     },
     isPublic (client) {

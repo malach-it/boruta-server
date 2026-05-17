@@ -6,6 +6,9 @@
     <Toaster :active="deleted" message="Key pair has been deleted" type="warning" />
     <a class="ui violet main create button" v-on:click="createKeyPair()">Add a key pair</a>
     <div class="container">
+      <div class="ui error message" v-if="fetchError">
+        {{ fetchError }}
+      </div>
       <h2>Key pairs</h2>
       <div class="ui three column stackable grid">
         <div class="ui column" v-for="keyPair in keyPairs">
@@ -41,6 +44,7 @@ export default {
       rotated: false,
       deleted: false,
       error: false,
+      fetchError: null,
       keyPairs: []
     }
   },
@@ -51,6 +55,8 @@ export default {
     getKeyPairs () {
       KeyPair.all().then(keyPairs => {
         this.keyPairs = keyPairs
+      }).catch((error) => {
+        this.fetchError = error.response?.data?.message || error.message
       })
     },
     createKeyPair () {
@@ -108,4 +114,3 @@ export default {
   }
 }
 </style>
-

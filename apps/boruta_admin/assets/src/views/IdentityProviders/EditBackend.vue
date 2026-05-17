@@ -2,6 +2,9 @@
   <div class="edit-backend">
     <Toaster :active="success" message="backend has been updated" type="success" />
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui stackable grid">
         <div class="four wide column">
           <div class="sidebar">
@@ -47,12 +50,15 @@ export default {
     const { backendId } = this.$route.params
     Backend.get(backendId).then((backend) => {
       this.backend = backend
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
     return {
       backend: new Backend(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

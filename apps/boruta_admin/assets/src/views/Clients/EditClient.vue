@@ -2,6 +2,9 @@
   <div class="edit-client">
     <Toaster :active="success" message="Client has been updated" type="success" />
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui stackable grid">
         <div class="four wide column">
           <div class="sidebar">
@@ -44,11 +47,14 @@ export default {
     const { clientId } = this.$route.params
     Client.get(clientId).then((client) => {
       this.client = client
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
     return {
       errors: null,
+      error: null,
       scopes: [],
       success: false,
       client: new Client()

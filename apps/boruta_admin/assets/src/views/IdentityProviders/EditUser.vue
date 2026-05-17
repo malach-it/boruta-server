@@ -2,6 +2,9 @@
   <div class="edit-user">
     <Toaster :active="success" message="User has been updated" type="success" />
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui stackable grid">
         <div class="four wide column">
           <div class="sidebar">
@@ -60,12 +63,15 @@ export default {
     const { userId } = this.$route.params
     User.get(userId).then((user) => {
       this.user = user
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data() {
     return {
       user: new User(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

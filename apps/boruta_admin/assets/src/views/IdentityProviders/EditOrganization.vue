@@ -2,6 +2,9 @@
   <div class="edit-organization">
     <Toaster :active="success" message="Organization has been updated" type="success" />
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui stackable grid">
         <div class="four wide column">
           <div class="sidebar">
@@ -39,12 +42,15 @@ export default {
     const { organizationId } = this.$route.params
     Organization.get(organizationId).then((organization) => {
       this.organization = organization
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data() {
     return {
       organization: new Organization(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {

@@ -4,6 +4,9 @@
     <Toaster :active="deleted" message="Scope has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui info message">
         Scopes are here the ones that are to be requested by the client. They are to be public, accessible to everyone, or private, granted only having a priviledge user or client.
       </div>
@@ -79,7 +82,8 @@ export default {
       scopes: [],
       saved: false,
       deleted: false,
-      errorMessage: false
+      errorMessage: false,
+      error: null
     }
   },
   mounted () {
@@ -89,6 +93,8 @@ export default {
     getScopes () {
       Scope.all().then((scopes) => {
         this.scopes = scopes
+      }).catch(error => {
+        this.error = error.response?.data?.message || error.message
       })
     },
     addScope () {

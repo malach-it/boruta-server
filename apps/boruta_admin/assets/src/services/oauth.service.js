@@ -1,26 +1,32 @@
 import decode from 'jwt-decode'
 import { BorutaOauth } from 'boruta-client'
 
+const ADMIN_SCOPE = 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all'
+
 class Oauth {
   constructor () {
-    const oauth = new BorutaOauth({
+    this.oauth = new BorutaOauth({
       window,
       host: window.env.BORUTA_ADMIN_OAUTH_BASE_URL,
       authorizePath: '/oauth/authorize',
       revokePath: '/oauth/revoke'
     })
 
-    this.implicitClient = new oauth.Implicit({
+    this.requestedScope = localStorage.getItem('authorized_scope') ?? ADMIN_SCOPE
+
+    this.revokeClient = new this.oauth.Revoke({
+      clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID
+    })
+  }
+
+  get implicitClient () {
+    return new this.oauth.Implicit({
       clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID,
       redirectUri: `${window.env.BORUTA_ADMIN_BASE_URL}/oauth-callback`,
-      scope: 'openid email profile scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all',
+      scope: ['openid', 'email', 'profile', this.requestedScope].filter(Boolean).join(' '),
       silentRefresh: true,
       silentRefreshCallback: this.authenticate.bind(this),
       responseType: 'id_token token'
-    })
-
-    this.revokeClient = new oauth.Revoke({
-      clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID
     })
   }
 
@@ -37,6 +43,30 @@ class Oauth {
     }
   }
 
+  get adminScopes () {
+    return ADMIN_SCOPE.split(' ').map((name) => ({
+      name,
+      label: this.scopeLabel(name)
+    }))
+  }
+
+  setRequestedScope (scopes) {
+    this.requestedScope = scopes.join(' ')
+  }
+
+  scopeLabel (scope) {
+    const labels = {}
+
+    if (labels[scope]) return labels[scope]
+
+    const [resource, action, target] = scope.split(':')
+    return [action, target, resource]
+      .filter(Boolean)
+      .map((part) => part.replaceAll('-', ' '))
+      .join(' ')
+      .replace(/^\w/, (letter) => letter.toUpperCase())
+  }
+
   authenticate (response) {
     if (window.frameElement) return
 
@@ -46,6 +76,8 @@ class Oauth {
 
     const { access_token, id_token, expires_in } = response
     const expires_at = new Date().getTime() + expires_in * 1000
+
+    this.authorizedScope = this.requestedScope
 
     localStorage.setItem('access_token', access_token)
     localStorage.setItem('id_token', id_token)
@@ -58,6 +90,8 @@ class Oauth {
   }
 
   login () {
+    localStorage.setItem('authorized_scope', this.requestedScope)
+
     window.location = this.implicitClient.loginUrl
   }
 
@@ -78,7 +112,10 @@ class Oauth {
   logout () {
     return this.revokeClient.revoke(this.accessToken).then(() => {
       localStorage.removeItem('access_token')
+      localStorage.removeItem('id_token')
       localStorage.removeItem('token_expires_at')
+      localStorage.removeItem('authorized_scope')
+      this.authorizedScope = null
     })
   }
 

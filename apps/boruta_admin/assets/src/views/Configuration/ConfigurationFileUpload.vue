@@ -1,6 +1,9 @@
 <template>
   <div class="configuration-file-upload">
     <div class="container">
+      <div class="ui error message" v-if="error">
+        {{ error }}
+      </div>
       <div class="ui stackable grid">
         <div class="twelve wide column">
           <div class="upload-result">
@@ -53,6 +56,7 @@ export default {
       result: {},
       fileContent: '',
       errors: null,
+      error: null,
       edited: false
     }
   },
@@ -61,6 +65,8 @@ export default {
     ConfigurationFile.get(this.$route.params.type).then(fileContent => {
       this.fileContent = fileContent
       this.file = new Blob([fileContent], {type : 'text/plain'})
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   methods: {

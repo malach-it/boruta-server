@@ -1,6 +1,9 @@
 <template>
   <div class="container edit-new-confirmation-template">
     <Toaster :active="success" message="Template has been updated" type="success" />
+    <div class="ui error message" v-if="error">
+      {{ error }}
+    </div>
     <div class="field">
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
@@ -29,10 +32,14 @@ export default {
 
     IdentityProvider.get(identityProviderId).then((identityProvider) => {
       this.identityProvider = identityProvider
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
     Template.get(identityProviderId, 'new_confirmation_instructions').then((template) => {
       this.template = template
       this.content = template.content
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
     })
   },
   data () {
@@ -40,7 +47,8 @@ export default {
       content: '',
       identityProvider: new IdentityProvider(),
       template: new Template(),
-      success: false
+      success: false,
+      error: null
     }
   },
   methods: {
