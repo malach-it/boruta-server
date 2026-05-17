@@ -120,6 +120,39 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
       conn = get(conn, Routes.admin_scope_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
+
+    @tag authorized: ["users:manage:all"]
+    test "lists all scopes with users management scope", %{conn: conn} do
+      conn = get(conn, Routes.admin_scope_path(conn, :index))
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    @tag authorized: ["clients:manage:all"]
+    test "lists all scopes with clients management scope", %{conn: conn} do
+      conn = get(conn, Routes.admin_scope_path(conn, :index))
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "lists all scopes with identity providers management scope", %{conn: conn} do
+      conn = get(conn, Routes.admin_scope_path(conn, :index))
+      assert json_response(conn, 200)["data"] == []
+    end
+  end
+
+  describe "create scope with scope-list-only authorization" do
+    @tag authorized: ["users:manage:all"]
+    test "returns a 403", %{conn: conn} do
+      assert conn
+             |> post(Routes.admin_scope_path(conn, :create), scope: @create_attrs)
+             |> json_response(403) == %{
+               "code" =>"FORBIDDEN",
+               "message" =>"You are forbidden to access this resource.",
+               "errors" =>%{
+                 "resource" =>["you are forbidden to access this resource."]
+               }
+             }
+    end
   end
 
   describe "create scope" do

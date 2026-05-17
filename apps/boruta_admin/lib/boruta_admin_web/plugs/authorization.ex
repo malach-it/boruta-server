@@ -81,6 +81,22 @@ defmodule BorutaAdminWeb.Authorization do
     end
   end
 
+  def authorize_any(conn, [_h | _t] = scopes) do
+    current_scopes = String.split(conn.assigns[:authorization]["scope"], " ")
+
+    case Enum.any?(scopes, &Enum.member?(current_scopes, &1)) do
+      true ->
+        conn
+
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> put_view(ErrorView)
+        |> render("403.json")
+        |> halt()
+    end
+  end
+
   def authorize(conn, _opts) do
     conn
     |> put_status(:forbidden)
