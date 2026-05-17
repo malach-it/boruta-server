@@ -138,6 +138,12 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
       conn = get(conn, Routes.admin_scope_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
+
+    @tag authorized: ["tokens:read:all"]
+    test "lists all scopes with tokens read scope", %{conn: conn} do
+      conn = get(conn, Routes.admin_scope_path(conn, :index))
+      assert json_response(conn, 200)["data"] == []
+    end
   end
 
   describe "create scope with scope-list-only authorization" do
