@@ -62,33 +62,13 @@ defmodule BorutaGateway.Upstreams.Store do
   end
 
   def handle_call({:match, path_info}, _from, %{upstreams: upstreams} = state) do
-    upstream =
-      with {_prefix_info, upstream} <-
-             Enum.find(upstreams["global"] || [], fn {prefix_info, _upstream} ->
-               path_info = Enum.take(path_info, length(prefix_info))
-
-               Enum.empty?(prefix_info -- path_info)
-             end) do
-        upstream
-      end
-
-    {:reply, upstream, state}
+    {:reply, match_upstream(upstreams["global"] || [], path_info), state}
   end
 
   def handle_call({:sidecar_match, path_info}, _from, %{upstreams: upstreams} = state) do
     node_name = ConfigurationLoader.node_name()
 
-    upstream =
-      with {_prefix_info, upstream} <-
-             Enum.find(upstreams[node_name] || [], fn {prefix_info, _upstream} ->
-               path_info = Enum.take(path_info, length(prefix_info))
-
-               Enum.empty?(prefix_info -- path_info)
-             end) do
-        upstream
-      end
-
-    {:reply, upstream, state}
+    {:reply, match_upstream(upstreams[node_name] || [], path_info), state}
   end
 
   @impl GenServer
@@ -190,5 +170,14 @@ defmodule BorutaGateway.Upstreams.Store do
       |> Enum.sort_by(fn {path_info, _upstream} -> length(path_info) end, :desc)
     end)
     |> Enum.group_by(fn {_path_info, %Upstream{node_name: node_name}} -> node_name end)
+  end
+
+  defp match_upstream(upstreams, path_info) do
+    with {_prefix_info, upstream} <-
+           Enum.find(upstreams, fn {prefix_info, _upstream} ->
+             Enum.take(path_info, length(prefix_info)) == prefix_info
+           end) do
+      upstream
+    end
   end
 end
