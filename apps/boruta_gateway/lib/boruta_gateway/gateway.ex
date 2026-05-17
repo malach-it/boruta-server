@@ -81,6 +81,7 @@ defmodule BorutaGateway.Gateway do
       :start,
       :request,
       :response,
+      :response_headers_sent,
       :content_length
     ]
   end
@@ -112,7 +113,14 @@ defmodule BorutaGateway.Gateway do
       {:ok, socket} ->
         :inet.setopts(socket, active: :once)
 
-        {:noreply, %{state | socket: socket, client_socket: nil, response: nil}}
+        {:noreply,
+         %{
+           state
+           | socket: socket,
+             client_socket: nil,
+             response: nil,
+             response_headers_sent: false
+         }}
 
       {:error, _error} ->
         {:stop, :shutdown, state}
@@ -123,7 +131,8 @@ defmodule BorutaGateway.Gateway do
     {:ok, socket} = :gen_tcp.accept(state.listen_socket)
     :inet.setopts(socket, active: :once)
 
-    {:noreply, %{state | socket: socket, client_socket: nil, response: nil}}
+    {:noreply,
+     %{state | socket: socket, client_socket: nil, response: nil, response_headers_sent: false}}
   end
 
   def handle_info({:tcp_closed, socket}, %State{client_socket: socket} = state) do
@@ -239,36 +248,11 @@ defmodule BorutaGateway.Gateway do
   end
 
   def handle_info({:tcp, socket, payload}, %State{client_socket: socket} = state) do
-    # TODO clean response headers (connection, strict-transport-security)
-    # clean_response_headers(payload)
-    response = (state.response || "") <> payload
-
-    :gen_tcp.send(state.socket, payload)
-
-    case message_complete?(response) do
-      true ->
-        {:noreply, close_exchange(state, socket, :tcp)}
-
-      false ->
-        :inet.setopts(socket, active: :once)
-        {:noreply, %{state | response: response}}
-    end
+    forward_response_payload(state, socket, payload, :tcp)
   end
 
   def handle_info({:ssl, socket, payload}, %State{client_socket: socket} = state) do
-    # TODO clean response headers (connection, strict-transport-security)
-    # clean_response_headers(payload)
-    response = (state.response || "") <> payload
-    :gen_tcp.send(state.socket, payload)
-
-    case message_complete?(response) do
-      true ->
-        {:noreply, close_exchange(state, socket, :ssl)}
-
-      false ->
-        :ssl.setopts(socket, active: :once)
-        {:noreply, %{state | response: response}}
-    end
+    forward_response_payload(state, socket, payload, :ssl)
   end
 
   def handle_info({:tcp, socket, payload}, %State{socket: socket} = state) do
@@ -294,11 +278,62 @@ defmodule BorutaGateway.Gateway do
     {:stop, reason}
   end
 
+  defp forward_response_payload(
+         %State{response_headers_sent: true} = state,
+         socket,
+         payload,
+         transport
+       ) do
+    response = (state.response || "") <> payload
+    :gen_tcp.send(state.socket, payload)
+
+    case message_complete?(response) do
+      true ->
+        {:noreply, close_exchange(state, socket, transport)}
+
+      false ->
+        activate_upstream_socket(socket, transport)
+        {:noreply, %{state | response: response}}
+    end
+  end
+
+  defp forward_response_payload(state, socket, payload, transport) do
+    response = (state.response || "") <> payload
+
+    case split_headers(response) do
+      {:ok, header, body} ->
+        :gen_tcp.send(state.socket, clean_response_headers(header) <> "\r\n\r\n" <> body)
+
+        case message_complete?(response) do
+          true ->
+            {:noreply, close_exchange(state, socket, transport)}
+
+          false ->
+            activate_upstream_socket(socket, transport)
+            {:noreply, %{state | response: response, response_headers_sent: true}}
+        end
+
+      :error ->
+        activate_upstream_socket(socket, transport)
+        {:noreply, %{state | response: response}}
+    end
+  end
+
+  defp activate_upstream_socket(socket, :tcp), do: :inet.setopts(socket, active: :once)
+  defp activate_upstream_socket(socket, :ssl), do: :ssl.setopts(socket, active: :once)
+
   defp close_downstream(socket, state) do
     :gen_tcp.close(socket)
     send(self(), :accept)
 
-    %{state | socket: nil, client_socket: nil, request: nil, response: nil}
+    %{
+      state
+      | socket: nil,
+        client_socket: nil,
+        request: nil,
+        response: nil,
+        response_headers_sent: false
+    }
   end
 
   defp close_exchange(state, upstream_socket, :tcp) do
@@ -306,7 +341,14 @@ defmodule BorutaGateway.Gateway do
     :gen_tcp.close(upstream_socket)
     send(self(), :accept)
 
-    %{state | socket: nil, client_socket: nil, request: nil, response: nil}
+    %{
+      state
+      | socket: nil,
+        client_socket: nil,
+        request: nil,
+        response: nil,
+        response_headers_sent: false
+    }
   end
 
   defp close_exchange(state, upstream_socket, :ssl) do
@@ -314,10 +356,22 @@ defmodule BorutaGateway.Gateway do
     :ssl.close(upstream_socket)
     send(self(), :accept)
 
-    %{state | socket: nil, client_socket: nil, request: nil, response: nil}
+    %{
+      state
+      | socket: nil,
+        client_socket: nil,
+        request: nil,
+        response: nil,
+        response_headers_sent: false
+    }
   end
 
   defp transform_header(payload, upstream, nil) do
+    transform_header(payload, upstream, false)
+  end
+
+  defp transform_header(payload, upstream, preserve_forwarded_authorization?)
+       when is_boolean(preserve_forwarded_authorization?) do
     [_, _method, path] =
       Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
 
@@ -336,14 +390,12 @@ defmodule BorutaGateway.Gateway do
           path
       end
 
-    # TODO clean request headers
-    # (x-forwarded-authorization, connection, content-length, expect, host, keep-alive, transfer-encoding, upgrade)
-    # clean_request_headers(payload)
-
     [_, _method, path] = Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
-    [_, host] = Regex.run(~r{[H|h]ost\: ([^\r]+)}, payload)
     payload = String.replace(payload, path, upstream_path)
-    String.replace(payload, host, upstream.host)
+
+    payload
+    |> clean_request_headers(preserve_forwarded_authorization?)
+    |> put_header("Host", upstream.host)
   end
 
   defp transform_header(payload, upstream, token) do
@@ -371,7 +423,84 @@ defmodule BorutaGateway.Gateway do
         "Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\1\r\n"
       )
 
-    transform_header(payload, upstream, nil)
+    transform_header(payload, upstream, true)
+  end
+
+  defp clean_request_headers(payload, preserve_forwarded_authorization?) do
+    rejected_headers = [
+      "connection",
+      "expect",
+      "host",
+      "keep-alive",
+      "proxy-authenticate",
+      "proxy-authorization",
+      "te",
+      "trailer",
+      "upgrade"
+    ]
+
+    rejected_headers =
+      case preserve_forwarded_authorization? do
+        true -> rejected_headers
+        false -> ["x-forwarded-authorization" | rejected_headers]
+      end
+
+    reject_headers(payload, rejected_headers)
+  end
+
+  defp clean_response_headers(header) do
+    reject_header_lines(header, [
+      "connection",
+      "keep-alive",
+      "proxy-authenticate",
+      "proxy-authorization",
+      "strict-transport-security",
+      "te",
+      "trailer",
+      "upgrade"
+    ])
+  end
+
+  defp reject_headers(payload, rejected_headers) do
+    case split_headers(payload) do
+      {:ok, header, body} ->
+        reject_header_lines(header, rejected_headers) <> "\r\n\r\n" <> body
+
+      :error ->
+        payload
+    end
+  end
+
+  defp reject_header_lines(header, rejected_headers) do
+    header
+    |> String.split("\r\n")
+    |> Enum.with_index()
+    |> Enum.reject(fn
+      {_line, 0} ->
+        false
+
+      {line, _index} ->
+        header_name(line) in rejected_headers
+    end)
+    |> Enum.map(fn {line, _index} -> line end)
+    |> Enum.join("\r\n")
+  end
+
+  defp put_header(payload, header_name, header_value) do
+    case split_headers(payload) do
+      {:ok, header, body} ->
+        header <> "\r\n" <> header_name <> ": " <> header_value <> "\r\n\r\n" <> body
+
+      :error ->
+        payload
+    end
+  end
+
+  defp header_name(header_line) do
+    header_line
+    |> String.split(":", parts: 2)
+    |> List.first()
+    |> String.downcase()
   end
 
   def signer(
@@ -462,6 +591,13 @@ defmodule BorutaGateway.Gateway do
         _ -> headers
       end
     end)
+  end
+
+  defp split_headers(payload) do
+    case String.split(payload, "\r\n\r\n", parts: 2) do
+      [header, body] -> {:ok, header, body}
+      [_partial_header] -> :error
+    end
   end
 
   defp bodyless_status?(status_code) when status_code in [204, 304], do: true

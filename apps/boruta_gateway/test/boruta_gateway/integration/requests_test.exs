@@ -352,6 +352,78 @@ defmodule BorutaGateway.RequestsIntegrationTest do
         end
       end)
     end
+
+    test "does not forward hop-by-hop request headers" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&echo_headers_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/headers"]
+            })
+
+            Process.sleep(100)
+
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/headers",
+                [
+                  {"connection", "keep-alive"},
+                  {"keep-alive", "timeout=5"},
+                  {"upgrade", "websocket"},
+                  {"x-forwarded-authorization", "bearer stale"}
+                ],
+                ""
+              )
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert %{"headers" => headers} = Jason.decode!(body)
+            refute Map.has_key?(headers, "Connection")
+            refute Map.has_key?(headers, "Keep-Alive")
+            refute Map.has_key?(headers, "Upgrade")
+            refute Map.has_key?(headers, "X-Forwarded-Authorization")
+            assert headers["Host"] == "127.0.0.1"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "does not forward hop-by-hop response headers" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&response_headers_cleanup_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/response-headers"]
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/response-headers", [], "")
+
+            assert {:ok, %Finch.Response{body: "headers-cleaned", headers: headers, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            header_names = Enum.map(headers, fn {name, _value} -> name end)
+            refute "connection" in header_names
+            refute "keep-alive" in header_names
+            refute "strict-transport-security" in header_names
+            refute "upgrade" in header_names
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
   end
 
   describe "requests (from configuration file)" do
@@ -816,6 +888,19 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       "Transfer-Encoding: chunked\r\n\r\n" <>
       "5\r\nhello\r\n" <>
       "0\r\n\r\n"
+  end
+
+  defp response_headers_cleanup_response(request) do
+    assert request =~ "GET /response-headers HTTP/1.1"
+
+    "HTTP/1.1 200 OK\r\n" <>
+      "Connection: keep-alive\r\n" <>
+      "Keep-Alive: timeout=5\r\n" <>
+      "Strict-Transport-Security: max-age=31536000\r\n" <>
+      "Upgrade: websocket\r\n" <>
+      "Content-Type: text/plain\r\n" <>
+      "Content-Length: 15\r\n\r\n" <>
+      "headers-cleaned"
   end
 
   defp response_body(body, options) do
