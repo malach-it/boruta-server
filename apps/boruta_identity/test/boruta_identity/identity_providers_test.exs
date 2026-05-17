@@ -45,7 +45,10 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       backend: backend
     } do
       assert {:ok, %IdentityProvider{} = identity_provider} =
-               IdentityProviders.create_identity_provider(%{@valid_attrs | backend_id: backend.id})
+               IdentityProviders.create_identity_provider(%{
+                 @valid_attrs
+                 | backend_id: backend.id
+               })
 
       assert identity_provider.name == "some name"
     end
@@ -86,7 +89,10 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                      [constraint: :unique, constraint_name: "identity_providers_name_index"]}
                 ]
               }} =
-               IdentityProviders.create_identity_provider(%{@valid_attrs | backend_id: backend.id})
+               IdentityProviders.create_identity_provider(%{
+                 @valid_attrs
+                 | backend_id: backend.id
+               })
     end
 
     test "update_identity_provider/2 with valid data updates the identity_provider" do
@@ -118,6 +124,44 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                  content: "test content"
                }
              ] = identity_provider.templates
+    end
+
+    test "update_identity_provider/1 invalidates template cache when updating templates" do
+      identity_provider = identity_provider_fixture()
+
+      template =
+        insert(:new_registration_template,
+          identity_provider: identity_provider,
+          content: "cached content"
+        )
+
+      assert %Template{content: "cached content"} =
+               IdentityProviders.get_identity_provider_template!(
+                 identity_provider.id,
+                 :new_registration
+               )
+
+      assert {:ok, %IdentityProvider{}} =
+               IdentityProviders.update_identity_provider(identity_provider, %{
+                 templates: [
+                   %{
+                     id: template.id,
+                     type: "new_registration",
+                     content: "updated through identity provider"
+                   }
+                 ]
+               })
+
+      refute Boruta.Cache.has_key?(
+               {IdentityProviders, :identity_provider_template, identity_provider.id,
+                :new_registration}
+             )
+
+      assert %Template{content: "updated through identity provider"} =
+               IdentityProviders.get_identity_provider_template!(
+                 identity_provider.id,
+                 :new_registration
+               )
     end
 
     test "update_identity_provider/1 with valid data (with an existing template, delete_if_exists) creates a identity_provider" do
@@ -343,6 +387,69 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                IdentityProviders.upsert_template(template, %{content: "new content"})
 
       assert Repo.reload(template)
+    end
+
+    test "invalidates cached template when updating an existing template" do
+      identity_provider = insert(:identity_provider)
+
+      template =
+        insert(:new_registration_template,
+          identity_provider: identity_provider,
+          content: "cached content"
+        )
+
+      assert %Template{content: "cached content"} =
+               IdentityProviders.get_identity_provider_template!(
+                 identity_provider.id,
+                 :new_registration
+               )
+
+      assert {:ok, %Template{}} =
+               IdentityProviders.upsert_template(template, %{content: "updated content"})
+
+      refute Boruta.Cache.has_key?(
+               {IdentityProviders, :identity_provider_template, identity_provider.id,
+                :new_registration}
+             )
+
+      assert %Template{content: "updated content"} =
+               IdentityProviders.get_identity_provider_template!(
+                 identity_provider.id,
+                 :new_registration
+               )
+    end
+
+    test "invalidates cached templates when updating the layout template" do
+      identity_provider = insert(:identity_provider)
+
+      layout_template =
+        insert(:template,
+          identity_provider: identity_provider,
+          type: "layout",
+          content: "cached layout"
+        )
+
+      insert(:new_registration_template, identity_provider: identity_provider)
+
+      assert %Template{layout: %Template{content: "cached layout"}} =
+               IdentityProviders.get_identity_provider_template!(
+                 identity_provider.id,
+                 :new_registration
+               )
+
+      assert {:ok, %Template{}} =
+               IdentityProviders.upsert_template(layout_template, %{content: "updated layout"})
+
+      refute Boruta.Cache.has_key?(
+               {IdentityProviders, :identity_provider_template, identity_provider.id,
+                :new_registration}
+             )
+
+      assert %Template{layout: %Template{content: "updated layout"}} =
+               IdentityProviders.get_identity_provider_template!(
+                 identity_provider.id,
+                 :new_registration
+               )
     end
   end
 

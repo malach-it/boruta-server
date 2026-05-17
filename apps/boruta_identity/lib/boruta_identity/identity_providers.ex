@@ -49,6 +49,7 @@ defmodule BorutaIdentity.IdentityProviders do
 
   def update_identity_provider(%IdentityProvider{} = identity_provider, attrs) do
     clear_identity_provider_by_client_id_cache()
+    clear_identity_provider_templates_cache(identity_provider, attrs)
 
     identity_provider
     |> IdentityProvider.changeset(attrs)
@@ -82,17 +83,14 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   defp clear_identity_provider_by_client_id_cache do
-    Boruta.Cache.delete_all(
-      [
-        {
-          {:entry,
-           {BorutaIdentity.IdentityProviders, :identity_provider_by_client_id, :"$1"},
-           :"$2", :"$3", :"$4"},
-          [],
-          [true]
-        }
-      ]
-    )
+    Boruta.Cache.delete_all([
+      {
+        {:entry, {BorutaIdentity.IdentityProviders, :identity_provider_by_client_id, :"$1"},
+         :"$2", :"$3", :"$4"},
+        [],
+        [true]
+      }
+    ])
   end
 
   def remove_client_identity_provider(client_id) do
@@ -158,11 +156,7 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def upsert_template(%Template{id: template_id} = template, attrs) do
-    :ok =
-      Boruta.Cache.delete(
-        {__MODULE__, :identity_provider_template, template.identity_provider_id,
-         String.to_atom(template.type)}
-      )
+    :ok = clear_identity_provider_templates_cache(template.identity_provider_id, [template.type])
 
     changeset = Template.changeset(template, attrs)
 
@@ -176,9 +170,7 @@ defmodule BorutaIdentity.IdentityProviders do
     template_type = Atom.to_string(type)
 
     with :ok <-
-           Boruta.Cache.delete(
-             {__MODULE__, :identity_provider_template, identity_provider_id, type}
-           ),
+           clear_identity_provider_templates_cache(identity_provider_id, [type]),
          {1, _results} <-
            Repo.delete_all(
              from(t in Template,
@@ -194,6 +186,20 @@ defmodule BorutaIdentity.IdentityProviders do
       {0, nil} -> raise Ecto.NoResultsError, queryable: Template
       nil -> raise Ecto.NoResultsError, queryable: Template
     end
+  end
+
+  defp clear_identity_provider_templates_cache(identity_provider_id, []), do: :ok
+
+  defp clear_identity_provider_templates_cache(identity_provider_id, ["layout"]) do
+    Boruta.Cache.delete({__MODULE__, :identity_provider_template, identity_provider_id, "layout"})
+
+    clear_identity_provider_templates_cache(identity_provider_id, Template.template_types() |> Enum.map(&Atom.to_string/1))
+  end
+
+  defp clear_identity_provider_templates_cache(identity_provider_id, [type | types]) do
+    Boruta.Cache.delete({__MODULE__, :identity_provider_template, identity_provider_id, type})
+
+    clear_identity_provider_templates_cache(identity_provider_id, types)
   end
 
   alias BorutaIdentity.Accounts.EmailTemplate
@@ -240,6 +246,7 @@ defmodule BorutaIdentity.IdentityProviders do
 
   def update_backend(%Backend{} = backend, attrs) do
     :ok = Boruta.Cache.delete({__MODULE__, :backend, backend.id})
+
     if backend.is_default do
       :ok = Boruta.Cache.delete({Backend, :default})
     end
@@ -262,6 +269,7 @@ defmodule BorutaIdentity.IdentityProviders do
           {:ok, %Backend{}} | {:error, Ecto.Changeset.t()}
   def update_backend_roles(%Backend{id: backend_id} = backend, roles) do
     :ok = Boruta.Cache.delete({__MODULE__, :backend, backend_id})
+
     if backend.is_default do
       :ok = Boruta.Cache.delete({Backend, :default})
     end
@@ -319,6 +327,7 @@ defmodule BorutaIdentity.IdentityProviders do
 
   def delete_backend(%Backend{} = backend) do
     :ok = Boruta.Cache.delete({__MODULE__, :backend, backend.id})
+
     if backend.is_default do
       :ok = Boruta.Cache.delete({Backend, :default})
     end
