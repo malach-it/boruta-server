@@ -529,7 +529,7 @@ router.beforeEach((to, _from, next) => {
     window.addEventListener("logged_in", continueNavigation);
 
     oauth.silentRefresh();
-    return next("/");
+    return next(new Error("Not logged in"));
   } else {
     return next();
   }
