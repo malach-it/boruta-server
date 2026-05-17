@@ -159,119 +159,122 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
-    @tag :skip
     test "returns response when authorized", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          Upstreams.create_upstream(%{
-            scheme: "https",
-            host: "httpbin.patatoid.fr",
-            port: 443,
-            uris: ["/httpbin"],
-            strip_uri: true,
-            authorize: true,
-            required_scopes: %{"GET" => ["test"]}
-          })
+          with_upstream_server(&teapot_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: true,
+              authorize: true,
+              required_scopes: %{"GET" => ["test"]}
+            })
 
-          Process.sleep(100)
+            Process.sleep(100)
 
-          request =
-            Finch.build(
-              :get,
-              "http://localhost:7777/httpbin/status/418",
-              [{"authorization", "Bearer #{access_token.value}"}],
-              ""
-            )
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/httpbin/status/418",
+                [{"authorization", "Bearer #{access_token.value}"}],
+                ""
+              )
 
-          assert {:ok, %Finch.Response{body: body, status: 418}} =
-                   Finch.request(request, HttpClient)
+            assert {:ok, %Finch.Response{body: body, status: 418}} =
+                     Finch.request(request, HttpClient)
 
-          assert body =~ ~r/teapot/
+            assert body =~ ~r/teapot/
+          end)
         after
           Repo.delete_all(Upstream)
         end
       end)
     end
 
-    @tag :skip
     test "returns response root uri stripped", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          Upstreams.create_upstream(%{
-            scheme: "https",
-            host: "httpbin.patatoid.fr",
-            port: 443,
-            uris: ["/"],
-            strip_uri: true,
-            authorize: true,
-            required_scopes: %{"GET" => ["test"]}
-          })
+          with_upstream_server(&teapot_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/"],
+              strip_uri: true,
+              authorize: true,
+              required_scopes: %{"GET" => ["test"]}
+            })
 
-          Process.sleep(100)
+            Process.sleep(100)
 
-          request =
-            Finch.build(
-              :get,
-              "http://localhost:7777/status/418",
-              [{"authorization", "Bearer #{access_token.value}"}],
-              ""
-            )
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/status/418",
+                [{"authorization", "Bearer #{access_token.value}"}],
+                ""
+              )
 
-          assert {:ok, %Finch.Response{body: body, status: 418}} =
-                   Finch.request(request, HttpClient)
+            assert {:ok, %Finch.Response{body: body, status: 418}} =
+                     Finch.request(request, HttpClient)
 
-          assert body =~ ~r/teapot/
+            assert body =~ ~r/teapot/
+          end)
         after
           Repo.delete_all(Upstream)
         end
       end)
     end
 
-    @tag :skip
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          {:ok, upstream} =
-            Upstreams.create_upstream(%{
-              scheme: "https",
-              host: "httpbin.patatoid.fr",
-              port: 443,
-              uris: ["/httpbin"],
-              strip_uri: true,
-              authorize: true,
-              required_scopes: %{"GET" => ["test"]},
-              forwarded_token_signature_alg: "HS256"
-            })
+          with_upstream_server(&echo_headers_response/1, fn port ->
+            {:ok, upstream} =
+              Upstreams.create_upstream(%{
+                scheme: "http",
+                host: "127.0.0.1",
+                port: port,
+                uris: ["/httpbin"],
+                strip_uri: true,
+                authorize: true,
+                required_scopes: %{"GET" => ["test"]},
+                forwarded_token_signature_alg: "HS256"
+              })
 
-          Process.sleep(100)
+            Process.sleep(100)
 
-          request =
-            Finch.build(
-              :get,
-              "http://localhost:7777/httpbin/anything",
-              [{"authorization", "bearer #{access_token.value}"}],
-              ""
-            )
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/httpbin/anything",
+                [{"authorization", "bearer #{access_token.value}"}],
+                ""
+              )
 
-          assert {:ok, %Finch.Response{body: body, status: 200}} =
-                   Finch.request(request, HttpClient)
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
 
-          assert %{
-                   "headers" => %{
-                     "Authorization" => authorization,
-                     "X-Forwarded-Authorization" => forwarded_authorization
-                   }
-                 } = Jason.decode!(body)
+            assert %{
+                     "headers" => %{
+                       "Authorization" => authorization,
+                       "X-Forwarded-Authorization" => forwarded_authorization
+                     }
+                   } = Jason.decode!(body)
 
-          assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
-          signer = Gateway.signer(upstream)
-          assert {:ok, claims} = Gateway.Token.verify(token, signer)
-          assert claims["client_id"] == access_token.client.id
-          assert claims["value"] == access_token.value
+            assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
+            signer = Gateway.signer(upstream)
+            assert {:ok, claims} = Gateway.Token.verify(token, signer)
+            assert claims["client_id"] == access_token.client.id
+            assert claims["value"] == access_token.value
 
-          assert forwarded_authorization == "bearer #{access_token.value}"
+            assert forwarded_authorization == "bearer #{access_token.value}"
+          end)
         after
           Repo.delete_all(Upstream)
         end
@@ -386,77 +389,75 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
-    @tag :skip
     test "returns response when authorized", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          configuration_file_path =
-            :code.priv_dir(:boruta_gateway)
-            |> Path.join("/test/configuration_files/authorized.yml")
+          with_upstream_server(&teapot_response/1, fn port ->
+            configuration_file_path = authorized_configuration_file(port)
 
-          ConfigurationLoader.from_file!(configuration_file_path)
+            ConfigurationLoader.from_file!(configuration_file_path)
 
-          Process.sleep(100)
+            Process.sleep(100)
 
-          request =
-            Finch.build(
-              :get,
-              "http://localhost:7777/httpbin/status/418",
-              [{"authorization", "Bearer #{access_token.value}"}],
-              ""
-            )
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/httpbin/status/418",
+                [{"authorization", "Bearer #{access_token.value}"}],
+                ""
+              )
 
-          assert {:ok, %Finch.Response{body: body, status: 418}} =
-                   Finch.request(request, HttpClient)
+            assert {:ok, %Finch.Response{body: body, status: 418}} =
+                     Finch.request(request, HttpClient)
 
-          assert body =~ ~r/teapot/
+            assert body =~ ~r/teapot/
+          end)
         after
           Repo.delete_all(Upstream)
         end
       end)
     end
 
-    @tag :skip
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          configuration_file_path =
-            :code.priv_dir(:boruta_gateway)
-            |> Path.join("/test/configuration_files/authorized_introspect.yml")
+          with_upstream_server(&echo_headers_response/1, fn port ->
+            configuration_file_path = authorized_configuration_file(port, introspect: true)
 
-          ConfigurationLoader.from_file!(configuration_file_path)
+            ConfigurationLoader.from_file!(configuration_file_path)
 
-          Process.sleep(100)
+            Process.sleep(100)
 
-          request =
-            Finch.build(
-              :get,
-              "http://localhost:7777/httpbin/anything",
-              [{"authorization", "bearer #{access_token.value}"}],
-              ""
-            )
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/httpbin/anything",
+                [{"authorization", "bearer #{access_token.value}"}],
+                ""
+              )
 
-          assert {:ok, %Finch.Response{body: body, status: 200}} =
-                   Finch.request(request, HttpClient)
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
 
-          assert %{
-                   "headers" => %{
-                     "Authorization" => forwarded_authorization,
-                     "X-Forwarded-Authorization" => authorization
-                   }
-                 } = Jason.decode!(body)
+            assert %{
+                     "headers" => %{
+                       "Authorization" => authorization,
+                       "X-Forwarded-Authorization" => forwarded_authorization
+                     }
+                   } = Jason.decode!(body)
 
-          assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
+            assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
 
-          upstream = Repo.all(Upstream) |> List.first()
-          signer = Client.signer(upstream)
-          assert {:ok, claims} = Client.Token.verify(token, signer)
-          assert claims["client_id"] == access_token.client.id
-          assert claims["value"] == access_token.value
+            upstream = Repo.all(Upstream) |> List.first()
+            signer = Client.signer(upstream)
+            assert {:ok, claims} = Client.Token.verify(token, signer)
+            assert claims["client_id"] == access_token.client.id
+            assert claims["value"] == access_token.value
 
-          assert forwarded_authorization == "bearer #{access_token.value}"
+            assert forwarded_authorization == "bearer #{access_token.value}"
+          end)
         after
           Repo.delete_all(Upstream)
         end
@@ -590,91 +591,185 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
-    @tag :skip
     test "returns response when authorized", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          Upstreams.create_upstream(%{
-            node_name: ConfigurationLoader.node_name(),
-            scheme: "https",
-            host: "httpbin.patatoid.fr",
-            port: 443,
-            uris: ["/httpbin"],
-            strip_uri: true,
-            authorize: true,
-            required_scopes: %{"GET" => ["test"]}
-          })
+          with_upstream_server(&teapot_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              node_name: ConfigurationLoader.node_name(),
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: true,
+              authorize: true,
+              required_scopes: %{"GET" => ["test"]}
+            })
 
-          Process.sleep(100)
+            Process.sleep(100)
 
-          request =
-            Finch.build(
-              :get,
-              "http://localhost:7778/httpbin/status/418",
-              [{"authorization", "Bearer #{access_token.value}"}],
-              ""
-            )
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7778/httpbin/status/418",
+                [{"authorization", "Bearer #{access_token.value}"}],
+                ""
+              )
 
-          assert {:ok, %Finch.Response{body: body, status: 418}} =
-                   Finch.request(request, HttpClient)
+            assert {:ok, %Finch.Response{body: body, status: 418}} =
+                     Finch.request(request, HttpClient)
 
-          assert body =~ ~r/teapot/
+            assert body =~ ~r/teapot/
+          end)
         after
           Repo.delete_all(Upstream)
         end
       end)
     end
 
-    @tag :skip
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          {:ok, upstream} =
-            Upstreams.create_upstream(%{
-              node_name: ConfigurationLoader.node_name(),
-              scheme: "https",
-              host: "httpbin.patatoid.fr",
-              port: 443,
-              uris: ["/httpbin"],
-              strip_uri: true,
-              authorize: true,
-              required_scopes: %{"GET" => ["test"]},
-              forwarded_token_signature_alg: "HS256"
-            })
+          with_upstream_server(&echo_headers_response/1, fn port ->
+            {:ok, upstream} =
+              Upstreams.create_upstream(%{
+                node_name: ConfigurationLoader.node_name(),
+                scheme: "http",
+                host: "127.0.0.1",
+                port: port,
+                uris: ["/httpbin"],
+                strip_uri: true,
+                authorize: true,
+                required_scopes: %{"GET" => ["test"]},
+                forwarded_token_signature_alg: "HS256"
+              })
 
-          Process.sleep(100)
+            Process.sleep(100)
 
-          request =
-            Finch.build(
-              :get,
-              "http://localhost:7778/httpbin/anything",
-              [{"authorization", "bearer #{access_token.value}"}],
-              ""
-            )
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7778/httpbin/anything",
+                [{"authorization", "bearer #{access_token.value}"}],
+                ""
+              )
 
-          assert {:ok, %Finch.Response{body: body, status: 200}} =
-                   Finch.request(request, HttpClient)
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
 
-          assert %{
-                   "headers" => %{
-                     "Authorization" => authorization,
-                     "X-Forwarded-Authorization" => forwarded_authorization
-                   }
-                 } = Jason.decode!(body)
+            assert %{
+                     "headers" => %{
+                       "Authorization" => authorization,
+                       "X-Forwarded-Authorization" => forwarded_authorization
+                     }
+                   } = Jason.decode!(body)
 
-          assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
-          signer = Gateway.signer(upstream)
-          assert {:ok, claims} = Gateway.Token.verify(token, signer)
-          assert claims["client_id"] == access_token.client.id
-          assert claims["value"] == access_token.value
+            assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
+            signer = Gateway.signer(upstream)
+            assert {:ok, claims} = Gateway.Token.verify(token, signer)
+            assert claims["client_id"] == access_token.client.id
+            assert claims["value"] == access_token.value
 
-          assert forwarded_authorization == "bearer #{access_token.value}"
+            assert forwarded_authorization == "bearer #{access_token.value}"
+          end)
         after
           Repo.delete_all(Upstream)
         end
       end)
     end
+  end
+
+  defp with_upstream_server(response_fun, test_fun) do
+    {:ok, listen_socket} =
+      :gen_tcp.listen(0, [
+        :binary,
+        {:packet, :raw},
+        {:active, false},
+        {:ip, {127, 0, 0, 1}},
+        {:reuseaddr, true}
+      ])
+
+    {:ok, {_address, port}} = :inet.sockname(listen_socket)
+
+    task =
+      Task.async(fn ->
+        {:ok, socket} = :gen_tcp.accept(listen_socket)
+        {:ok, request} = :gen_tcp.recv(socket, 0, 1_000)
+        :ok = :gen_tcp.send(socket, response_fun.(request))
+        :gen_tcp.close(socket)
+        :gen_tcp.close(listen_socket)
+      end)
+
+    try do
+      test_fun.(port)
+      Task.await(task, 1_000)
+    after
+      :gen_tcp.close(listen_socket)
+      Task.shutdown(task, :brutal_kill)
+    end
+  end
+
+  defp teapot_response(request) do
+    assert request =~ "GET /status/418 HTTP/1.1"
+
+    response_body("I'm a teapot", status: "418 I'm a teapot", content_type: "text/plain")
+  end
+
+  defp echo_headers_response(request) do
+    body = Jason.encode!(%{"headers" => request_headers(request)})
+
+    response_body(body, content_type: "application/json")
+  end
+
+  defp response_body(body, options) do
+    status = Keyword.get(options, :status, "200 OK")
+    content_type = Keyword.fetch!(options, :content_type)
+
+    "HTTP/1.1 #{status}\r\n" <>
+      "Content-Type: #{content_type}\r\n" <>
+      "Content-Length: #{byte_size(body)}\r\n\r\n" <>
+      body
+  end
+
+  defp request_headers(request) do
+    request
+    |> String.split("\r\n\r\n", parts: 2)
+    |> List.first()
+    |> String.split("\r\n")
+    |> Enum.drop(1)
+    |> Enum.reduce(%{}, fn header, headers ->
+      case String.split(header, ": ", parts: 2) do
+        [name, value] -> Map.put(headers, name, value)
+        _ -> headers
+      end
+    end)
+  end
+
+  defp authorized_configuration_file(port, options \\ []) do
+    introspect? = Keyword.get(options, :introspect, false)
+
+    forwarded_token_signature_alg =
+      if introspect?, do: ~s|      forwarded_token_signature_alg: "HS256"\n|, else: ""
+
+    path = Path.join(System.tmp_dir!(), "boruta_gateway_authorized_#{port}.yml")
+
+    File.write!(path, """
+    ---
+    configuration:
+      gateway:
+        - host: "127.0.0.1"
+          port: #{port}
+          uris: ["/httpbin"]
+          scheme: "http"
+          strip_uri: true
+          authorize: true
+          required_scopes:
+            GET: ["test"]
+    #{forwarded_token_signature_alg}\
+    """)
+
+    path
   end
 end

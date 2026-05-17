@@ -167,9 +167,8 @@ defmodule BorutaGateway.Gateway do
 
             {:error, _error} ->
               :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-              :gen_tcp.close(socket)
 
-              {:noreply, state}
+              {:noreply, close_downstream(socket, state)}
           end
 
         "https" ->
@@ -195,9 +194,8 @@ defmodule BorutaGateway.Gateway do
 
             {:error, _error} ->
               :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-              :gen_tcp.close(socket)
 
-              {:noreply, state}
+              {:noreply, close_downstream(socket, state)}
           end
       end
     else
@@ -213,9 +211,8 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
-        :gen_tcp.close(socket)
 
-        {:noreply, state}
+        {:noreply, close_downstream(socket, state)}
 
       {:unauthorized, content_type, response} ->
         :gen_tcp.send(
@@ -227,9 +224,8 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
-        :gen_tcp.close(socket)
 
-        {:noreply, state}
+        {:noreply, close_downstream(socket, state)}
 
       {:forbidden, content_type, response} ->
         :gen_tcp.send(
@@ -241,9 +237,8 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
-        :gen_tcp.close(socket)
 
-        {:noreply, state}
+        {:noreply, close_downstream(socket, state)}
     end
   end
 
@@ -256,9 +251,7 @@ defmodule BorutaGateway.Gateway do
 
     case message_complete?(response) do
       true ->
-        :gen_tcp.close(state.socket)
-
-        {:noreply, %{state | socket: socket}}
+        {:noreply, close_exchange(state, socket, :tcp)}
 
       false ->
         :inet.setopts(socket, active: :once)
@@ -274,13 +267,12 @@ defmodule BorutaGateway.Gateway do
 
     case message_complete?(response) do
       true ->
-        :gen_tcp.close(state.socket)
+        {:noreply, close_exchange(state, socket, :ssl)}
 
       false ->
         :ssl.setopts(socket, active: :once)
+        {:noreply, %{state | response: response}}
     end
-
-    {:noreply, %{state | response: response}}
   end
 
   def handle_info({:tcp, socket, payload}, %State{socket: socket} = state) do
@@ -304,6 +296,29 @@ defmodule BorutaGateway.Gateway do
   @impl GenServer
   def terminate(reason, _state) do
     {:stop, reason}
+  end
+
+  defp close_downstream(socket, state) do
+    :gen_tcp.close(socket)
+    send(self(), :accept)
+
+    %{state | socket: nil, client_socket: nil, request: nil, response: nil}
+  end
+
+  defp close_exchange(state, upstream_socket, :tcp) do
+    :gen_tcp.close(state.socket)
+    :gen_tcp.close(upstream_socket)
+    send(self(), :accept)
+
+    %{state | socket: nil, client_socket: nil, request: nil, response: nil}
+  end
+
+  defp close_exchange(state, upstream_socket, :ssl) do
+    :gen_tcp.close(state.socket)
+    :ssl.close(upstream_socket)
+    send(self(), :accept)
+
+    %{state | socket: nil, client_socket: nil, request: nil, response: nil}
   end
 
   defp transform_header(payload, upstream, nil) do
