@@ -190,10 +190,10 @@ defmodule BorutaIdentity.IdentityProviders do
 
   defp clear_identity_provider_templates_cache(_identity_provider_id, []), do: :ok
 
-  defp clear_identity_provider_templates_cache(identity_provider_id, ["layout"]) do
-    Boruta.Cache.delete({__MODULE__, :identity_provider_template, identity_provider_id, "layout"})
+  defp clear_identity_provider_templates_cache(identity_provider_id, [:layout]) do
+    Boruta.Cache.delete({__MODULE__, :identity_provider_template, identity_provider_id, :layout})
 
-    clear_identity_provider_templates_cache(identity_provider_id, Template.template_types() |> Enum.map(&Atom.to_string/1))
+    clear_identity_provider_templates_cache(identity_provider_id, Template.template_types())
   end
 
   defp clear_identity_provider_templates_cache(identity_provider_id, [type | types]) do
