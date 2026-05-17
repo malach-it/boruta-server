@@ -20,55 +20,36 @@ defmodule BorutaGateway.Plug.AssignUpstream do
     conn =
       conn
       |> fetch_query_params()
+
     client = ClientsAdapter.public!()
 
     case conn.query_params do
       %{"code" => code} ->
         Boruta.Oauth.token(
           %{
-            conn |
-            body_params: %{
-              "client_id" => client.id,
-              "client_secret" => client.secret,
-              "code" => code,
-              "redirect_uri" =>
-              %URI{
-                scheme: to_string(conn.scheme),
-                host: conn.host,
-                port: conn.port,
-                path: "/callback"
+            conn
+            | body_params: %{
+                "client_id" => client.id,
+                "client_secret" => client.secret,
+                "code" => code,
+                "redirect_uri" =>
+                  %URI{
+                    scheme: to_string(conn.scheme),
+                    host: conn.host,
+                    port: conn.port,
+                    path: "/callback"
+                  }
+                  |> URI.to_string(),
+                "grant_type" => "authorization_code"
               }
-              |> URI.to_string(),
-              "grant_type" => "authorization_code"
-            }
           },
           __MODULE__
         )
+
       %{"error" => _error, "error_description" => error_description} ->
         conn
         |> send_resp(401, error_description)
     end
-  end
-
-  def token_success(conn, response) do
-    conn =
-      conn
-      |> fetch_session()
-
-    path = get_session(conn, :current_request).request_path
-    conn
-    |> put_session(:token, response.token)
-    |> put_resp_header("location", path)
-    |> resp(302, "")
-    |> halt()
-  end
-
-  def token_error(conn, error) do
-    dbg(error)
-
-    conn
-    |> send_resp(401, inspect(error))
-    |> halt()
   end
 
   def call(
@@ -82,19 +63,34 @@ defmodule BorutaGateway.Plug.AssignUpstream do
     case Upstreams.match(path_info) do
       %Upstream{} = upstream ->
         conn = fetch_session(conn)
-
-        case get_session(conn, :current_request) do
-          nil ->
-            assign(conn, :upstream, upstream)
-
-          current_request ->
-            assign(conn, :upstream, upstream)
-        end
+        assign(conn, :upstream, upstream)
 
       nil ->
         conn
         |> send_resp(404, "No upstream has been found corresponding to the given request.")
         |> halt()
     end
+  end
+
+  def token_success(conn, response) do
+    conn =
+      conn
+      |> fetch_session()
+
+    path = get_session(conn, :current_request).request_path
+
+    conn
+    |> put_session(:token, response.token)
+    |> put_resp_header("location", path)
+    |> resp(302, "")
+    |> halt()
+  end
+
+  def token_error(conn, error) do
+    Logger.warning("Gateway token exchange failed: #{inspect(error)}")
+
+    conn
+    |> send_resp(401, inspect(error))
+    |> halt()
   end
 end

@@ -18,6 +18,7 @@ defmodule BorutaGateway.Plug.Authorize do
                                    error: "UNAUTHORIZED",
                                    message: "You are unauthorized to access this resource."
                                  })
+  @bearer_token_pattern ~r/^Bearer\s+(.+)$/i
 
   def init(options), do: options
 
@@ -45,10 +46,9 @@ defmodule BorutaGateway.Plug.Authorize do
         %Plug.Conn{} = conn,
         _options
       ) do
-    case get_req_header(conn, "accept") do
-      ["application/json"] -> handle_service_request(conn)
-      _ -> handle_web_request(conn)
-    end
+    if accepts_json?(conn),
+      do: handle_service_request(conn),
+      else: handle_web_request(conn)
   end
 
   def handle_service_request(
@@ -59,15 +59,14 @@ defmodule BorutaGateway.Plug.Authorize do
           }
         } = conn
       ) do
-    with [authorization_header] <- get_req_header(conn, "authorization"),
-         [_header, value] <- Regex.run(~r/[B|b]earer (.+)/, authorization_header),
+    with {:ok, value} <- bearer_token(conn),
          {:ok, %Token{scope: scope} = token} <- Authorization.AccessToken.authorize(value: value),
          {:ok, _} <- validate_scopes(scope, required_scopes, method) do
       conn
       |> assign(:token, token)
       |> tap(fn conn -> emit_authorization_event(:success, conn, upstream, token: token) end)
     else
-      {:error, "required scopes are not present."} ->
+      {:error, :insufficient_scope} ->
         emit_authorization_event(:failure, conn, upstream,
           status: 403,
           error: "required_scopes_not_present"
@@ -108,8 +107,7 @@ defmodule BorutaGateway.Plug.Authorize do
     access_token =
       case get_session(conn, :token) do
         nil ->
-          with [authorization_header] <- get_req_header(conn, "authorization"),
-               [_header, value] <- Regex.run(~r/[B|b]earer (.+)/, authorization_header) do
+          with {:ok, value} <- bearer_token(conn) do
             value
           else
             _ -> ""
@@ -129,23 +127,7 @@ defmodule BorutaGateway.Plug.Authorize do
         state = SecureRandom.uuid()
         client = ClientsAdapter.public!()
 
-        authorize_url =
-          BorutaWeb.Router.Helpers.authorize_url(BorutaWeb.Endpoint, :authorize, %{
-            client_id: client.id,
-            redirect_uri:
-              %URI{
-                scheme: to_string(conn.scheme),
-                host: conn.host,
-                port: conn.port,
-                path: "/callback"
-              }
-              |> URI.to_string(),
-            scope: upstream
-              |> Upstream.required_scopes(conn.method)
-              |> Enum.join(" "),
-            state: state,
-            response_type: "code"
-          })
+        authorize_url = authorize_url(conn, upstream, client, state)
 
         conn
         |> fetch_query_params()
@@ -166,7 +148,53 @@ defmodule BorutaGateway.Plug.Authorize do
 
     case Enum.empty?(Map.get(required_scopes, method, default_scopes) -- scopes) do
       true -> {:ok, scopes}
-      false -> {:error, "required scopes are not present."}
+      false -> {:error, :insufficient_scope}
+    end
+  end
+
+  defp authorize_url(conn, upstream, client, state) do
+    query =
+      URI.encode_query(%{
+        client_id: client.id,
+        redirect_uri: callback_url(conn),
+        scope: upstream |> Upstream.required_scopes(conn.method) |> Enum.join(" "),
+        state: state,
+        response_type: "code"
+      })
+
+    Boruta.Config.issuer()
+    |> URI.parse()
+    |> Map.put(:path, "/oauth/authorize")
+    |> Map.put(:query, query)
+    |> URI.to_string()
+  end
+
+  defp callback_url(conn) do
+    %URI{
+      scheme: to_string(conn.scheme),
+      host: conn.host,
+      port: conn.port,
+      path: "/callback"
+    }
+    |> URI.to_string()
+  end
+
+  defp accepts_json?(conn) do
+    conn
+    |> get_req_header("accept")
+    |> Enum.any?(&String.contains?(&1, "application/json"))
+  end
+
+  defp bearer_token(conn) do
+    case get_req_header(conn, "authorization") do
+      [authorization_header] ->
+        case Regex.run(@bearer_token_pattern, authorization_header) do
+          [_header, value] -> {:ok, value}
+          _ -> {:error, :missing_bearer_token}
+        end
+
+      _ ->
+        {:error, :missing_bearer_token}
     end
   end
 

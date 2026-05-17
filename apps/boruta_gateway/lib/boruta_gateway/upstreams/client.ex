@@ -72,7 +72,7 @@ defmodule BorutaGateway.Upstreams.Client do
       transform_headers(upstream, conn),
       transform_body(conn)
     )
-    |> Finch.request(http_client) |> dbg
+    |> Finch.request(http_client)
   end
 
   @impl GenServer
@@ -129,12 +129,12 @@ defmodule BorutaGateway.Upstreams.Client do
   end
 
   def signer(
-         %Upstream{
-           forwarded_token_signature_alg: signature_alg,
-           forwarded_token_secret: secret,
-           forwarded_token_private_key: private_key
-         } = upstream
-       ) do
+        %Upstream{
+          forwarded_token_signature_alg: signature_alg,
+          forwarded_token_secret: secret,
+          forwarded_token_private_key: private_key
+        } = upstream
+      ) do
     case signature_alg && signature_type(upstream) do
       :symmetric ->
         Joken.Signer.create(signature_alg, secret)
@@ -170,6 +170,7 @@ defmodule BorutaGateway.Upstreams.Client do
       case strip_uri do
         true ->
           matching_uri = Enum.find(uris, fn uri -> String.starts_with?(request_path, uri) end)
+
           case matching_uri == "/" do
             true -> request_path
             false -> String.replace_prefix(request_path, matching_uri, "")
