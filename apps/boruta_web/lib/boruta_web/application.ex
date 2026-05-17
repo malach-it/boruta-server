@@ -33,7 +33,7 @@ defmodule BorutaWeb.Application do
 
   def setup_database do
     Enum.each([BorutaAuth.Repo, BorutaIdentity.Repo], fn repo ->
-      repo.__adapter__.storage_up(repo.config)
+      repo.__adapter__().storage_up(repo.config())
     end)
 
     need_seeding? =

@@ -4,14 +4,14 @@ defmodule BorutaWeb.Release do
 
   def migrate do
     for repo <- repos() do
-      repo.__adapter__.storage_up(repo.config)
+      repo.__adapter__().storage_up(repo.config())
 
       {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
     end
   end
 
   def rollback(repo, version) do
-    repo.__adapter__.storage_up(repo.config)
+    repo.__adapter__().storage_up(repo.config())
 
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
   end

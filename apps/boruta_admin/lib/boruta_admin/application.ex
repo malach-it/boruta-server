@@ -27,7 +27,7 @@ defmodule BorutaAdmin.Application do
 
   def setup_database do
     Enum.each([BorutaAdmin.Repo], fn repo ->
-      repo.__adapter__().storage_up(repo.config)
+      repo.__adapter__().storage_up(repo.config())
     end)
 
     Enum.each([BorutaAdmin.Repo], fn repo ->
