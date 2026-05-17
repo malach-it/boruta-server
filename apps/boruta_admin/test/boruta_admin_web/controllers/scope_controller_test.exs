@@ -75,40 +75,40 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
       assert conn
              |> get(Routes.admin_scope_path(conn, :index))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> post(Routes.admin_scope_path(conn, :create))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> patch(Routes.admin_scope_path(conn, :update, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> delete(Routes.admin_scope_path(conn, :delete, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
     end
@@ -146,10 +146,10 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
       assert conn
              |> post(Routes.admin_scope_path(conn, :create), scope: @create_attrs)
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
     end
@@ -187,7 +187,10 @@ defmodule BorutaAdminWeb.ScopeControllerTest do
     @tag authorized: ["scopes:manage:all"]
     test "cannot update protected scopes", %{conn: conn} do
       Enum.map(@protected_scopes, fn name ->
-        conn = put(conn, Routes.admin_scope_path(conn, :update, insert(:scope, name: name)), scope: @update_attrs)
+        conn =
+          put(conn, Routes.admin_scope_path(conn, :update, insert(:scope, name: name)),
+            scope: @update_attrs
+          )
 
         assert response(conn, 403)
       end)

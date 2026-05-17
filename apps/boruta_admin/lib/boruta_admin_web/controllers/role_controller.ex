@@ -3,13 +3,25 @@ defmodule BorutaAdminWeb.RoleController do
 
   import BorutaAdminWeb.Authorization,
     only: [
-      authorize: 2
+      authorize: 2,
+      authorize_any: 2
     ]
 
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Admin
 
-  plug(:authorize, ["scopes:manage:all"])
+  plug(
+    :authorize_any,
+    [
+      "scopes:manage:all",
+      "users:manage:all",
+      "clients:manage:all",
+      "identity-providers:manage:all"
+    ]
+    when action in [:index]
+  )
+
+  plug(:authorize, ["scopes:manage:all"] when action not in [:index])
 
   action_fallback(BorutaAdminWeb.FallbackController)
 

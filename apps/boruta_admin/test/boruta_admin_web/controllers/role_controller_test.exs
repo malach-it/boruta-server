@@ -6,7 +6,7 @@ defmodule BorutaAdminWeb.RoleControllerTest do
   alias BorutaIdentity.Accounts.Role
 
   @create_attrs %{
-    name: "some name",
+    name: "some name"
   }
   @update_attrs %{
     name: "some updated name"
@@ -67,40 +67,40 @@ defmodule BorutaAdminWeb.RoleControllerTest do
       assert conn
              |> get(Routes.admin_role_path(conn, :index))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> post(Routes.admin_role_path(conn, :create))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> patch(Routes.admin_role_path(conn, :update, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
 
       assert conn
              |> delete(Routes.admin_role_path(conn, :delete, "id"))
              |> json_response(403) == %{
-               "code" =>"FORBIDDEN",
-               "message" =>"You are forbidden to access this resource.",
-               "errors" =>%{
-                 "resource" =>["you are forbidden to access this resource."]
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
                }
              }
     end
@@ -111,6 +111,39 @@ defmodule BorutaAdminWeb.RoleControllerTest do
     test "lists all roles", %{conn: conn} do
       conn = get(conn, Routes.admin_role_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "lists all roles with users management scope", %{conn: conn} do
+      conn = get(conn, Routes.admin_role_path(conn, :index))
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    @tag authorized: ["clients:manage:all"]
+    test "lists all roles with clients management scope", %{conn: conn} do
+      conn = get(conn, Routes.admin_role_path(conn, :index))
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "lists all roles with identity providers management scope", %{conn: conn} do
+      conn = get(conn, Routes.admin_role_path(conn, :index))
+      assert json_response(conn, 200)["data"] == []
+    end
+  end
+
+  describe "create role with role-list-only authorization" do
+    @tag authorized: ["users:manage:all"]
+    test "returns a 403", %{conn: conn} do
+      assert conn
+             |> post(Routes.admin_role_path(conn, :create), role: @create_attrs)
+             |> json_response(403) == %{
+               "code" => "FORBIDDEN",
+               "message" => "You are forbidden to access this resource.",
+               "errors" => %{
+                 "resource" => ["you are forbidden to access this resource."]
+               }
+             }
     end
   end
 
@@ -146,7 +179,10 @@ defmodule BorutaAdminWeb.RoleControllerTest do
     @tag authorized: ["scopes:manage:all"]
     test "cannot update protected roles", %{conn: conn} do
       Enum.map(@protected_roles, fn name ->
-        conn = put(conn, Routes.admin_role_path(conn, :update, insert(:role, name: name)), role: @update_attrs)
+        conn =
+          put(conn, Routes.admin_role_path(conn, :update, insert(:role, name: name)),
+            role: @update_attrs
+          )
 
         assert response(conn, 403)
       end)

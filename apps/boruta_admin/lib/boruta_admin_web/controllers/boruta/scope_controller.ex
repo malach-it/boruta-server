@@ -19,12 +19,16 @@ defmodule BorutaAdminWeb.ScopeController do
     "upstreams:manage:all"
   ]
 
-  plug(:authorize_any, [
-    "scopes:manage:all",
-    "users:manage:all",
-    "clients:manage:all",
-    "identity-providers:manage:all"
-  ] when action in [:index])
+  plug(
+    :authorize_any,
+    [
+      "scopes:manage:all",
+      "users:manage:all",
+      "clients:manage:all",
+      "identity-providers:manage:all"
+    ]
+    when action in [:index]
+  )
 
   plug(:authorize, ["scopes:manage:all"] when action not in [:index])
 
