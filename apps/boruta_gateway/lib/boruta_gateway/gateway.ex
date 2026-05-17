@@ -127,15 +127,11 @@ defmodule BorutaGateway.Gateway do
   end
 
   def handle_info({:tcp_closed, socket}, %State{client_socket: socket} = state) do
-    :gen_tcp.close(state.socket)
-
-    {:noreply, state}
+    {:noreply, close_exchange(state, socket, :tcp)}
   end
 
   def handle_info({:ssl_closed, socket}, %State{client_socket: socket} = state) do
-    :gen_tcp.close(state.socket)
-
-    {:noreply, state}
+    {:noreply, close_exchange(state, socket, :ssl)}
   end
 
   def handle_info({:tcp, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
@@ -407,15 +403,86 @@ defmodule BorutaGateway.Gateway do
 
   defp message_complete?(response) do
     case String.split(response, "\r\n\r\n") do
-      [_header] ->
-        true
+      [_partial_header] ->
+        false
 
-      [header | [body]] ->
-        [_, content_length] = Regex.run(~r{[C|c]ontent-[L|l]ength\: ([^\r]+)}, header)
+      [header, body] ->
+        status_code = status_code(header)
+        headers = response_headers(header)
 
-        body_length = body |> byte_size()
+        cond do
+          bodyless_status?(status_code) ->
+            true
 
-        body_length == String.to_integer(content_length)
+          chunked_response?(headers) ->
+            chunked_body_complete?(body)
+
+          content_length = headers["content-length"] ->
+            byte_size(body) >= String.to_integer(content_length)
+
+          true ->
+            false
+        end
+
+      [header | body_parts] ->
+        status_code = status_code(header)
+        headers = response_headers(header)
+        body = Enum.join(body_parts, "\r\n\r\n")
+
+        cond do
+          bodyless_status?(status_code) ->
+            true
+
+          chunked_response?(headers) ->
+            chunked_body_complete?(body)
+
+          content_length = headers["content-length"] ->
+            byte_size(body) >= String.to_integer(content_length)
+
+          true ->
+            false
+        end
+    end
+  end
+
+  defp status_code(header) do
+    case Regex.run(~r/^HTTP\/\d(?:\.\d)?\s+(\d{3})/, header) do
+      [_status_line, status_code] -> String.to_integer(status_code)
+      nil -> nil
+    end
+  end
+
+  defp response_headers(header) do
+    header
+    |> String.split("\r\n")
+    |> Enum.drop(1)
+    |> Enum.reduce(%{}, fn header, headers ->
+      case String.split(header, ":", parts: 2) do
+        [name, value] -> Map.put(headers, String.downcase(name), String.trim(value))
+        _ -> headers
+      end
+    end)
+  end
+
+  defp bodyless_status?(status_code) when status_code in [204, 304], do: true
+  defp bodyless_status?(status_code) when status_code in 100..199, do: true
+  defp bodyless_status?(_status_code), do: false
+
+  defp chunked_response?(headers) do
+    headers
+    |> Map.get("transfer-encoding", "")
+    |> String.downcase()
+    |> String.contains?("chunked")
+  end
+
+  defp chunked_body_complete?(body) do
+    case Regex.run(~r/(?:^|\r\n)0\r\n/s, body, return: :index) do
+      [{start, length}] ->
+        trailer_start = start + length
+        String.slice(body, trailer_start..-1//1) |> String.contains?("\r\n")
+
+      nil ->
+        false
     end
   end
 end

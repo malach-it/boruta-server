@@ -280,6 +280,78 @@ defmodule BorutaGateway.RequestsIntegrationTest do
         end
       end)
     end
+
+    test "returns close-delimited response without content length" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&close_delimited_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/close-delimited"]
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/close-delimited", [], "")
+
+            assert {:ok, %Finch.Response{body: "close-delimited", status: 200}} =
+                     Finch.request(request, HttpClient)
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "returns bodyless response without content length" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&no_content_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/no-content"]
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/no-content", [], "")
+
+            assert {:ok, %Finch.Response{body: "", status: 204}} =
+                     Finch.request(request, HttpClient)
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "returns chunked response" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&chunked_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/chunked"]
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/chunked", [], "")
+
+            assert {:ok, %Finch.Response{body: "hello", status: 200}} =
+                     Finch.request(request, HttpClient)
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
   end
 
   describe "requests (from configuration file)" do
@@ -721,6 +793,29 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     body = Jason.encode!(%{"headers" => request_headers(request)})
 
     response_body(body, content_type: "application/json")
+  end
+
+  defp close_delimited_response(request) do
+    assert request =~ "GET /close-delimited HTTP/1.1"
+
+    "HTTP/1.1 200 OK\r\n" <>
+      "Content-Type: text/plain\r\n\r\n" <>
+      "close-delimited"
+  end
+
+  defp no_content_response(request) do
+    assert request =~ "GET /no-content HTTP/1.1"
+
+    "HTTP/1.1 204 No Content\r\n\r\n"
+  end
+
+  defp chunked_response(request) do
+    assert request =~ "GET /chunked HTTP/1.1"
+
+    "HTTP/1.1 200 OK\r\n" <>
+      "Transfer-Encoding: chunked\r\n\r\n" <>
+      "5\r\nhello\r\n" <>
+      "0\r\n\r\n"
   end
 
   defp response_body(body, options) do
