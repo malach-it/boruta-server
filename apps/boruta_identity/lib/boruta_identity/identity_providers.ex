@@ -3,7 +3,7 @@ defmodule BorutaIdentity.IdentityProviders do
   The IdentityProviders context.
   """
 
-  use Nebulex.Caching, opts: [], on_error: :nothing
+  use Nebulex.Caching, cache: Boruta.Cache
   import Ecto.Query, warn: false
   alias BorutaIdentity.Repo
 
