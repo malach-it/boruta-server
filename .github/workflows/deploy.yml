@@ -2,16 +2,8 @@ name: Deployment
 
 on:
   push:
-    branches:
-      - provider-policies-registration
-  workflow_run:
-    workflows:
-      - Continuous Integration
-    branches:
-      - master
-      - signatures-adapter
-    types:
-      - completed
+    tags:
+      - "*"
 
 env:
   REGISTRY: ghcr.io

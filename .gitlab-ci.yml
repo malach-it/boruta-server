@@ -55,7 +55,7 @@ build:
     - docker push $CI_REGISTRY/patatoid/boruta/app:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY/patatoid/boruta/app:latest
   only:
-    - master
+    - tags
 
 deploy:
   stage: deploy
