@@ -2,7 +2,7 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
-## [unreleased]
+## [0.9.0] - 2026-05-18
 
 ### Added
 
@@ -28,6 +28,10 @@
 - [identity] improve identity providers querying and cache
 - [admin] group direct post requests in dashboard
 - [infra] rate limit boruta identity requests
+- [admin] set backend as default in example configuration
+- [admin] improve administration login
+- [ssi] local did creation / resolution
+- [infra] database pool management
 
 ### Fixed
 
@@ -36,6 +40,7 @@
 - [admin] feedback stars display
 - [wallet] qr code scan redirection
 - [ssi] public and unknown users presentation
+- [infra] halt request on 429 rate limit response
 
 ### Security
 
