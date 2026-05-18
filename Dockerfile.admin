@@ -5,9 +5,10 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 
 WORKDIR /app
 
-COPY ./apps/boruta_admin/assets /app
-
+COPY ./apps/boruta_admin/assets/package*.json ./
 RUN npm ci
+
+COPY ./apps/boruta_admin/assets /app
 RUN npm run build
 
 FROM elixir:1.18-otp-26-alpine AS builder
@@ -20,10 +21,16 @@ RUN mix local.hex --force
 RUN mix local.rebar --force
 
 WORKDIR /app
+COPY mix.exs mix.lock ./
+COPY apps/boruta_auth/mix.exs apps/boruta_auth/mix.exs
+COPY apps/boruta_admin/mix.exs apps/boruta_admin/mix.exs
+COPY apps/boruta_gateway/mix.exs apps/boruta_gateway/mix.exs
+COPY apps/boruta_identity/mix.exs apps/boruta_identity/mix.exs
+COPY apps/boruta_web/mix.exs apps/boruta_web/mix.exs
+RUN mix deps.get
+
 COPY . .
 COPY --from=assets /priv/static/assets ./apps/boruta_admin/priv/static/assets
-RUN rm -rf deps
-RUN mix do clean, deps.get
 RUN mix compile
 
 WORKDIR /app/apps/boruta_admin

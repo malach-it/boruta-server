@@ -1,10 +1,11 @@
 FROM node:21.4 AS builder
 
-COPY . /app
-
 WORKDIR /app
 
+COPY package*.json ./
 RUN npm ci
+
+COPY . /app
 RUN npm run build
 
 RUN npm install -g serve

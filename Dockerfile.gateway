@@ -8,9 +8,15 @@ RUN mix local.hex --force
 RUN mix local.rebar --force
 
 WORKDIR /app
+COPY mix.exs mix.lock ./
+COPY apps/boruta_auth/mix.exs apps/boruta_auth/mix.exs
+COPY apps/boruta_admin/mix.exs apps/boruta_admin/mix.exs
+COPY apps/boruta_gateway/mix.exs apps/boruta_gateway/mix.exs
+COPY apps/boruta_identity/mix.exs apps/boruta_identity/mix.exs
+COPY apps/boruta_web/mix.exs apps/boruta_web/mix.exs
+RUN mix deps.get
+
 COPY . .
-RUN rm -rf deps
-RUN mix do clean, deps.get
 RUN mix compile
 
 WORKDIR /app
