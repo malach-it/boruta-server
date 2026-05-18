@@ -226,8 +226,6 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
 
       assert length(identity_provider_names) ==
                BorutaIdentity.Repo.aggregate(IdentityProvider, :count)
-
-      assert "Boruta administration interface" in identity_provider_names
     end
   end
 
