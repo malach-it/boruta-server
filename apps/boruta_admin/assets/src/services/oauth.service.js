@@ -1,7 +1,7 @@
 import decode from 'jwt-decode'
 import { BorutaOauth } from 'boruta-client'
 
-const ADMIN_SCOPE = 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all'
+const ADMIN_SCOPE = 'roles:manage:all scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all'
 
 class Oauth {
   constructor () {
