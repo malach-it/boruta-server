@@ -18,6 +18,8 @@ defmodule BorutaGateway.Gateway do
   @connect_timeout 5_000
 
   defmodule Server do
+    @moduledoc false
+
     use GenServer
 
     alias BorutaGateway.Gateway
@@ -482,8 +484,7 @@ defmodule BorutaGateway.Gateway do
       {line, _index} ->
         header_name(line) in rejected_headers
     end)
-    |> Enum.map(fn {line, _index} -> line end)
-    |> Enum.join("\r\n")
+    |> Enum.map_join("\r\n", fn {line, _index} -> line end)
   end
 
   defp put_header(payload, header_name, header_value) do
@@ -531,46 +532,31 @@ defmodule BorutaGateway.Gateway do
   end
 
   defp message_complete?(response) do
-    case String.split(response, "\r\n\r\n") do
-      [_partial_header] ->
+    case split_headers(response) do
+      :error ->
         false
 
-      [header, body] ->
+      {:ok, header, body} ->
         status_code = status_code(header)
         headers = response_headers(header)
 
-        cond do
-          bodyless_status?(status_code) ->
-            true
+        response_body_complete?(status_code, headers, body)
+    end
+  end
 
-          chunked_response?(headers) ->
-            chunked_body_complete?(body)
+  defp response_body_complete?(status_code, headers, body) do
+    cond do
+      bodyless_status?(status_code) ->
+        true
 
-          content_length = headers["content-length"] ->
-            byte_size(body) >= String.to_integer(content_length)
+      chunked_response?(headers) ->
+        chunked_body_complete?(body)
 
-          true ->
-            false
-        end
+      content_length = headers["content-length"] ->
+        byte_size(body) >= String.to_integer(content_length)
 
-      [header | body_parts] ->
-        status_code = status_code(header)
-        headers = response_headers(header)
-        body = Enum.join(body_parts, "\r\n\r\n")
-
-        cond do
-          bodyless_status?(status_code) ->
-            true
-
-          chunked_response?(headers) ->
-            chunked_body_complete?(body)
-
-          content_length = headers["content-length"] ->
-            byte_size(body) >= String.to_integer(content_length)
-
-          true ->
-            false
-        end
+      true ->
+        false
     end
   end
 
