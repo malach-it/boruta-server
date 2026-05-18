@@ -145,7 +145,7 @@
     </div>
     <footer>
       <a @click="toggleDarkMode()" class="dark-mode">
-        <i class="sun icon" :class="{ 'outline': currentMode }"></i>
+        <i class="ui sun icon"></i>
       </a>
       <Feedback />
       &copy; 2025 malachit

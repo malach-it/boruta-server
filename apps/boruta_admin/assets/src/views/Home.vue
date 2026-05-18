@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <div class="ui container">
-      <div class="ui segment">
+      <div class="ui form segment">
         <div class="ui four column stackable grid">
           <div class="column" v-for="scope in adminScopes" :key="scope.name">
             <div class="ui scope checkbox" :class="{ 'authorized': authorizedScopes.includes(scope.name) }">
@@ -184,7 +184,6 @@ export default {
   font-weight: bold;
 }
 .scope-name {
-  color: rgba(0, 0, 0, .45);
   display: block;
   font-size: .85em;
   margin-top: .25rem;
