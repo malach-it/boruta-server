@@ -33,6 +33,11 @@ defmodule BorutaGateway.ConfigurationLoader do
   def from_file!(path) do
     %{"configuration" => configuration} = YamlElixir.read_from_file!(path)
 
+    case Map.fetch(configuration, "node_name") do
+      {:ok, node_name} -> Application.put_env(__MODULE__, :node_name, node_name)
+      :error -> :ok
+    end
+
     load_configuration!(configuration)
   end
 
