@@ -94,7 +94,7 @@ class Oauth {
   }
 
   login () {
-    function loginNavigation () {
+    const loginNavigation = () => {
         localStorage.setItem('requested_scope', this.requestedScope)
 
         window.location = this.implicitClient.loginUrl
