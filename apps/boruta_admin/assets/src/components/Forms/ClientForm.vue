@@ -307,16 +307,12 @@ export default {
   methods: {
     regenerateKeyPair () {
       if (confirm("Are you sure you want to regenerate this client key pair?")) {
-        this.client.regenerateKeyPair().then(() => {
-          this.$emit('submit')
-        })
+        this.client.regenerateKeyPair()
       }
     },
     regenerateDid () {
       if (confirm("Are you sure you want to regenerate this client did?")) {
-        this.client.regenerateDid().then(() => {
-          this.$emit('submit')
-        })
+        this.client.regenerateDid()
       }
     },
     submit () {
