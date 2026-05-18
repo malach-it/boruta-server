@@ -55,8 +55,8 @@ defmodule BorutaWeb.MixProject do
       {:phoenix_pubsub, "~> 2.0"},
       {:plug_cowboy, "~> 2.0"},
       {:remote_ip, "~> 1.1"},
-      {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 0.5"}
+      {:telemetry_metrics, "~> 1.0"},
+      {:telemetry_poller, "~> 1.0"}
     ]
   end
 

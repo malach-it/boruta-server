@@ -51,7 +51,7 @@ defmodule BorutaIdentity.MixProject do
       {:jason, "~> 1.0"},
       {:mox, "~> 1.0"},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},
-      {:nebulex, "~> 2.0"},
+      {:nebulex, "~> 3.0", override: true},
       {:shards, "~> 1.0"},
       {:nimble_csv, "~> 1.2"},
       {:nimble_pool, "~> 0.2"},
@@ -69,8 +69,8 @@ defmodule BorutaIdentity.MixProject do
       {:scrivener_ecto, "~> 2.7"},
       {:secure_random, "~> 0.5"},
       {:swoosh, "~> 1.5"},
-      {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 0.5"},
+      {:telemetry_metrics, "~> 1.0"},
+      {:telemetry_poller, "~> 1.0"},
       {:wax_, "~> 0.6.0"}
     ]
   end

@@ -36,7 +36,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   use Ecto.Schema
-  use Nebulex.Caching
+  use Nebulex.Caching, opts: [], on_error: :nothing
   import Ecto.Changeset
 
   alias BorutaIdentity.Accounts.EmailTemplate
@@ -184,7 +184,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                     "vct" => %{"type" => "string"},
                                     "time_to_live" => %{"type" => "number"},
                                     "types" => %{"type" => "string"},
-                                    "format" => %{"type" => "string", "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"},
+                                    "format" => %{
+                                      "type" => "string",
+                                      "pattern" => "jwt_vc|jwt_vc_json|vc\\+sd\\-jwt"
+                                    },
                                     "defered" => %{"type" => "boolean"},
                                     "claims" => %{
                                       "type" => "array",
@@ -222,7 +225,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                       "required" => ["name", "logo"],
                                       "additionalProperties" => false
                                     },
-                                    "scopes" => %{"type" => "array", "items" => %{"type" => "string"}}
+                                    "scopes" => %{
+                                      "type" => "array",
+                                      "items" => %{"type" => "string"}
+                                    }
                                   },
                                   "required" => [
                                     "version",
@@ -236,17 +242,17 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                 })
 
   @verifiable_presentation_schema ExJsonSchema.Schema.resolve(%{
-                                  "type" => "object",
-                                  "properties" => %{
-                                    "presentation_identifier" => %{"type" => "string"},
-                                    "presentation_definition" => %{"type" => "string"}
-                                  },
-                                  "required" => [
-                                    "presentation_identifier",
-                                    "presentation_definition"
-                                  ],
-                                  "additionalProperties" => false
-  })
+                                    "type" => "object",
+                                    "properties" => %{
+                                      "presentation_identifier" => %{"type" => "string"},
+                                      "presentation_definition" => %{"type" => "string"}
+                                    },
+                                    "required" => [
+                                      "presentation_identifier",
+                                      "presentation_definition"
+                                    ],
+                                    "additionalProperties" => false
+                                  })
 
   @spec backend_types() :: list(atom)
   def backend_types, do: @backend_types
@@ -308,6 +314,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     case account_type do
       nil ->
         String.to_atom(type)
+
       account_type ->
         account_implementations()[account_type]
     end
@@ -629,16 +636,25 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   defp validate_verifiable_credentials(changeset), do: changeset
 
   defp validate_verifiable_presentations(
-         %Ecto.Changeset{changes: %{verifiable_presentations: verifiable_presentations}} = changeset
+         %Ecto.Changeset{changes: %{verifiable_presentations: verifiable_presentations}} =
+           changeset
        ) do
     Enum.reduce(verifiable_presentations, changeset, fn verifiable_presentation, changeset ->
-      case ExJsonSchema.Validator.validate(@verifiable_presentation_schema, verifiable_presentation) do
+      case ExJsonSchema.Validator.validate(
+             @verifiable_presentation_schema,
+             verifiable_presentation
+           ) do
         :ok ->
           case Jason.decode(verifiable_presentation["presentation_definition"]) do
             {:ok, _map} ->
               changeset
+
             {:error, _error} ->
-              add_error(changeset, :verifiable_presentations, "Verifiable presentation definition must be a valid JSON object")
+              add_error(
+                changeset,
+                :verifiable_presentations,
+                "Verifiable presentation definition must be a valid JSON object"
+              )
           end
 
         {:error, errors} ->
@@ -662,9 +678,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   defp set_default(%Ecto.Changeset{changes: %{is_default: _is_default}} = changeset) do
     # TODO use a transaction to change default backend
     :ok = Boruta.Cache.delete({__MODULE__, :default})
+
     case Ecto.Changeset.change(default!(), %{is_default: false}) |> Repo.update() do
       {:ok, _backend} ->
-
         changeset
 
       {:error, changeset} ->

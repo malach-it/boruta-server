@@ -3,7 +3,7 @@ defmodule BorutaIdentity.IdentityProviders do
   The IdentityProviders context.
   """
 
-  use Nebulex.Caching
+  use Nebulex.Caching, opts: [], on_error: :nothing
   import Ecto.Query, warn: false
   alias BorutaIdentity.Repo
 
@@ -83,14 +83,19 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   defp clear_identity_provider_by_client_id_cache do
-    Boruta.Cache.delete_all([
-      {
-        {:entry, {BorutaIdentity.IdentityProviders, :identity_provider_by_client_id, :"$1"},
-         :"$2", :"$3", :"$4"},
-        [],
-        [true]
-      }
-    ])
+    {:ok, _count} =
+      Boruta.Cache.delete_all(
+        query: [
+          {
+            {:entry, {BorutaIdentity.IdentityProviders, :identity_provider_by_client_id, :"$1"},
+             :"$2", :"$3", :"$4"},
+            [],
+            [true]
+          }
+        ]
+      )
+
+    :ok
   end
 
   def remove_client_identity_provider(client_id) do

@@ -152,10 +152,11 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                  ]
                })
 
-      refute Boruta.Cache.has_key?(
-               {IdentityProviders, :identity_provider_template, identity_provider.id,
-                :new_registration}
-             )
+      assert {:ok, false} =
+               Boruta.Cache.has_key?(
+                 {IdentityProviders, :identity_provider_template, identity_provider.id,
+                  :new_registration}
+               )
 
       assert %Template{content: "updated through identity provider"} =
                IdentityProviders.get_identity_provider_template!(
@@ -407,10 +408,11 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:ok, %Template{}} =
                IdentityProviders.upsert_template(template, %{content: "updated content"})
 
-      refute Boruta.Cache.has_key?(
-               {IdentityProviders, :identity_provider_template, identity_provider.id,
-                :new_registration}
-             )
+      assert {:ok, false} =
+               Boruta.Cache.has_key?(
+                 {IdentityProviders, :identity_provider_template, identity_provider.id,
+                  :new_registration}
+               )
 
       assert %Template{content: "updated content"} =
                IdentityProviders.get_identity_provider_template!(
@@ -440,10 +442,11 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert {:ok, %Template{}} =
                IdentityProviders.upsert_template(layout_template, %{content: "updated layout"})
 
-      refute Boruta.Cache.has_key?(
-               {IdentityProviders, :identity_provider_template, identity_provider.id,
-                :new_registration}
-             )
+      assert {:ok, false} =
+               Boruta.Cache.has_key?(
+                 {IdentityProviders, :identity_provider_template, identity_provider.id,
+                  :new_registration}
+               )
 
       assert %Template{layout: %Template{content: "updated layout"}} =
                IdentityProviders.get_identity_provider_template!(
