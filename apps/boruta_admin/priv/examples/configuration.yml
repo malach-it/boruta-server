@@ -5,6 +5,7 @@ configuration:
   backend:
     - id: 00000000-0000-0000-0000-000000000001
       name: Example backend
+      is_default: true
       verifiable_credentials:
         - version: "13"
           credential_identifier: BorutaCredential
