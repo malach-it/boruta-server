@@ -41,6 +41,7 @@
 - [wallet] qr code scan redirection
 - [ssi] public and unknown users presentation
 - [infra] halt request on 429 rate limit response
+- [admin] fix key pair management display
 
 ### Security
 
