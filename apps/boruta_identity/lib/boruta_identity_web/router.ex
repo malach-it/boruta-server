@@ -9,8 +9,6 @@ defmodule BorutaIdentityWeb.Router do
       require_authenticated_user: 2
     ]
 
-  require Logger
-
   alias BorutaAuth.Plugs.RateLimit
   alias BorutaIdentity.Configuration
   alias BorutaIdentity.Configuration.ErrorTemplate
@@ -115,7 +113,6 @@ defmodule BorutaIdentityWeb.Router do
   end
 
   defp render_error(conn, reason) do
-    Logger.error("conn: #{inspect(conn)} reason: #{inspect(reason)}")
     %ErrorTemplate{content: template} = Configuration.get_error_template!(conn.status)
 
     context = %{

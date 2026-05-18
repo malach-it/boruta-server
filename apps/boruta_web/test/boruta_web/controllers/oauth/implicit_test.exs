@@ -88,7 +88,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
         )
 
       # NOTE Path will be scoped in production with configuration and be forwarded to
-      assert redirected_to(conn) =~ "/users/choose_session"
+      assert redirected_to(conn) =~ "/users/log_in"
     end
 
     test "redirects to redirect_uri with token if current_user is set", %{
@@ -172,16 +172,16 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
         )
 
       assert [_, "bearer"] =
-        Regex.run(
-          ~r/token_type=([^&]+)/,
-          redirected_to(conn)
-        )
+               Regex.run(
+                 ~r/token_type=([^&]+)/,
+                 redirected_to(conn)
+               )
 
       assert [_, _redirect_uri] =
-        Regex.run(
-          ~r/(#{redirect_uri})#/,
-          redirected_to(conn)
-        )
+               Regex.run(
+                 ~r/(#{redirect_uri})#/,
+                 redirected_to(conn)
+               )
 
       [_, access_token] =
         Regex.run(
@@ -200,6 +200,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
           ~r/state=([^&]+)/,
           redirected_to(conn)
         )
+
       assert access_token
       assert expires_in
       assert state == given_state

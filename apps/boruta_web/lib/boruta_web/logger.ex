@@ -31,6 +31,16 @@ defmodule BorutaWeb.Logger do
         &__MODULE__.authorization_token_failure_handler/4
       },
       {
+        :authorization_direct_post_success,
+        [:authorization, :direct_post, :success],
+        &__MODULE__.authorization_direct_post_success_handler/4
+      },
+      {
+        :authorization_direct_post_failure,
+        [:authorization, :direct_post, :failure],
+        &__MODULE__.authorization_direct_post_failure_handler/4
+      },
+      {
         :authorization_introspect_success,
         [:authorization, :introspect, :success],
         &__MODULE__.authorization_introspect_success_handler/4
@@ -167,7 +177,7 @@ defmodule BorutaWeb.Logger do
           token_type: token_type,
           expires_in: expires_in,
           refresh_token: refresh_token
-        },
+        } = metadata,
         _
       ) do
     log_line = [
@@ -182,6 +192,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("sub", sub),
       log_attribute("access_token", access_token),
       log_attribute("agent_token", agent_token),
+      log_attribute("authorization_code", metadata[:authorization_code]),
       log_attribute("token_type", token_type),
       log_attribute("expires_in", expires_in),
       log_attribute("refresh_token", refresh_token)
@@ -211,6 +222,46 @@ defmodule BorutaWeb.Logger do
       log_attribute("status", status),
       log_attribute("error", error),
       log_attribute("error_description", ~s{"#{error_description}"})
+    ]
+
+    Logger.log(:info, fn -> log_line end, type: :business)
+  end
+
+  def authorization_direct_post_success_handler(_, _measurements, metadata, _) do
+    log_line = [
+      "boruta_web",
+      ?\s,
+      "authorization",
+      ?\s,
+      "direct_post",
+      " - ",
+      "success",
+      log_attribute("client_id", metadata[:client_id]),
+      log_attribute("sub", metadata[:sub]),
+      log_attribute("code_id", metadata[:code_id]),
+      log_attribute("code", metadata[:code]),
+      log_attribute("response_type", quoted(metadata[:response_type])),
+      log_attribute("requested_scope", quoted(metadata[:requested_scope])),
+      log_attribute("id_token", metadata[:id_token]),
+      log_attribute("vp_token", metadata[:vp_token])
+    ]
+
+    Logger.log(:info, fn -> log_line end, type: :business)
+  end
+
+  def authorization_direct_post_failure_handler(_, _measurements, metadata, _) do
+    log_line = [
+      "boruta_web",
+      ?\s,
+      "authorization",
+      ?\s,
+      "direct_post",
+      " - ",
+      "failure",
+      log_attribute("code_id", metadata[:code_id]),
+      log_attribute("status", metadata[:status]),
+      log_attribute("error", metadata[:error]),
+      log_attribute("error_description", quoted(metadata[:error_description]))
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -324,6 +375,9 @@ defmodule BorutaWeb.Logger do
 
   defp log_attribute(_key, nil), do: ""
   defp log_attribute(key, attribute), do: " #{key}=#{attribute}"
+
+  defp quoted(nil), do: nil
+  defp quoted(attribute), do: ~s{"#{attribute}"}
 
   # From Phoenix.Logger
   defp log_level(nil, _conn), do: :info

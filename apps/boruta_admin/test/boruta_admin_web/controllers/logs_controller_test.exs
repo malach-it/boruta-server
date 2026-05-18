@@ -264,8 +264,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       second_day = Date.utc_today() |> Date.add(-8)
 
       File.mkdir("./log")
-      File.rm(LogRotate.path(:boruta_web, :request, first_day))
-      File.rm(LogRotate.path(:boruta_web, :request, second_day))
+      cleanup_log_files(:boruta_web, :request, first_day, Date.utc_today())
 
       [first_day_log_lines, second_day_log_lines] =
         Enum.map([10, 8], fn day_shift ->
@@ -479,8 +478,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       second_day = Date.utc_today() |> Date.add(-8)
 
       File.mkdir("./log")
-      File.rm(LogRotate.path(:boruta_web, :business, first_day))
-      File.rm(LogRotate.path(:boruta_web, :business, second_day))
+      cleanup_log_files(:boruta_web, :business, first_day, Date.utc_today())
 
       [first_day_log_lines, second_day_log_lines] =
         Enum.map([10, 8], fn day_shift ->
@@ -535,6 +533,16 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       log_time = fun.(i)
 
       Enum.map(@request_log_lines, fn log -> "#{DateTime.to_iso8601(log_time)} #{log}" end)
+    end)
+  end
+
+  defp cleanup_log_files(application, type, start_date, end_date) do
+    start_date
+    |> Date.range(end_date)
+    |> Enum.each(fn date ->
+      application
+      |> LogRotate.path(type, date)
+      |> File.rm()
     end)
   end
 

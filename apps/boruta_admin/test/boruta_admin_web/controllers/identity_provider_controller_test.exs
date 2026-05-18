@@ -219,7 +219,16 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
     @tag authorized: ["identity-providers:manage:all"]
     test "lists all identity_providers", %{conn: conn} do
       conn = get(conn, Routes.admin_identity_provider_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+
+      identity_provider_names =
+        json_response(conn, 200)["data"]
+        |> Enum.map(& &1["name"])
+
+      assert length(identity_provider_names) ==
+               BorutaIdentity.Repo.aggregate(IdentityProvider, :count)
+
+      assert "Default" in identity_provider_names
+      assert "Boruta administration interface" in identity_provider_names
     end
   end
 

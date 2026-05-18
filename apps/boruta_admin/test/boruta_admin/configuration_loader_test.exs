@@ -69,7 +69,7 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
   end
 
   test "returns an error with a bad identity provider configuration file" do
-    assert BorutaIdentity.Repo.all(IdentityProvider) |> Enum.empty?()
+    identity_provider_count = BorutaIdentity.Repo.aggregate(IdentityProvider, :count)
 
     configuration_file_path =
       :code.priv_dir(:boruta_admin)
@@ -80,6 +80,8 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
               %{
                 identity_provider: ["Schema does not allow additional properties: #/additional."]
               }}
+
+    assert BorutaIdentity.Repo.aggregate(IdentityProvider, :count) == identity_provider_count
   end
 
   test "returns an error with a bad backend configuration file" do
@@ -206,14 +208,13 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
            ] = BorutaGateway.Repo.all(Upstream)
 
     # TODO test all possible configurations
-    assert %Backend{name: "test"} = BorutaIdentity.Repo.all(Backend) |> List.last()
+    assert %Backend{name: "test"} = BorutaIdentity.Repo.get_by(Backend, name: "test")
 
     assert %IdentityProvider{
              name: "test",
              templates: [%Template{content: "test", type: "layout"}]
            } =
-             BorutaIdentity.Repo.all(IdentityProvider)
-             |> List.last()
+             BorutaIdentity.Repo.get_by(IdentityProvider, name: "test")
              |> BorutaIdentity.Repo.preload(:templates)
 
     assert %Client{name: "test"} = BorutaAuth.Repo.all(Client) |> List.last()
@@ -258,10 +259,11 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
                    %{
                      "label" => "boruta username",
                      "name" => "boruta_username",
-                     "pointer" => "email"
+                     "pointer" => "email",
+                     "type" => "attribute"
                    }
                  ],
-                 "credential_identifier" => "BorutaCredentialJwtVc",
+                 "credential_identifier" => "BorutaCredential",
                  "display" => %{
                    "background_color" => "#ffd758",
                    "logo" => %{
@@ -279,7 +281,7 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              verifiable_presentations: [
                %{
                  "presentation_definition" =>
-                   "{\n  \"id\": \"credential\",\n  \"input_descriptors\": [\n    {\n      \"id\": \"boruta_username\",\n      \"format\": {\n        \"jwt_vc\": {}\n      },\n      \"constraints\": {\n        \"fields\": [\n          {\n            \"path\": [ \"$.boruta_username\" ]\n          }\n        ]\n      }\n    }\n  ]\n}\n",
+                   "{\n  \"id\": \"credential\",\n  \"input_descriptors\": [\n    {\n      \"id\": \"boruta_username\",\n      \"format\": {\n        \"jwt_vc\": {}\n      },\n      \"constraints\": {\n        \"fields\": [\n          {\n            \"path\": [ \"$.boruta_username\" ],\n            \"id\": \"Boruta account information\",\n            \"purpose\": \"Present account information to obtain access or further credentials\"\n          }\n        ]\n      }\n    }\n  ]\n}\n",
                  "presentation_identifier" => "BorutaCredentialJwtVc"
                }
              ]
@@ -293,8 +295,10 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              choose_session: true,
              registrable: true
            } =
-             BorutaIdentity.Repo.all(IdentityProvider)
-             |> List.last()
+             BorutaIdentity.Repo.get(
+               IdentityProvider,
+               "00000000-0000-0000-0000-000000000001"
+             )
              |> BorutaIdentity.Repo.preload(:templates)
 
     assert %Scope{

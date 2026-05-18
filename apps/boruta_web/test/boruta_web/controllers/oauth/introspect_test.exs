@@ -137,10 +137,12 @@ defmodule BorutaWeb.Oauth.IntrospectTest do
         {:ok, payload} ->
           assert payload == %{
                    "active" => true,
+                   "aud" => nil,
                    "client_id" => client.id,
                    "exp" => token.expires_at,
                    "iat" => DateTime.to_unix(token.inserted_at),
                    "iss" => "http://localhost:4000",
+                   "resource" => nil,
                    "scope" => token.scope,
                    "sub" => nil,
                    "username" => nil
