@@ -36,7 +36,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   use Ecto.Schema
-  use Nebulex.Caching, cache: Boruta.Cache
+  use Nebulex.Caching, cache: BorutaIdentity.Cache
   import Ecto.Changeset
 
   alias BorutaIdentity.Accounts.EmailTemplate

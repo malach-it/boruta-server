@@ -8,6 +8,7 @@ defmodule BorutaIdentity.Application do
   def start(_type, _args) do
     children = [
       BorutaIdentity.Repo,
+      BorutaIdentity.Cache,
       BorutaIdentityWeb.Telemetry,
       {Phoenix.PubSub, name: BorutaIdentity.PubSub},
       BorutaIdentityWeb.Endpoint,
