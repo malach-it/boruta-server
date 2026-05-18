@@ -36,7 +36,6 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   use Ecto.Schema
-  use Nebulex.Caching, cache: BorutaIdentity.Cache
   import Ecto.Changeset
 
   alias BorutaIdentity.Accounts.EmailTemplate
@@ -303,9 +302,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   end
 
   @spec default!() :: t()
-  @decorate cacheable(key: {__MODULE__, :default}, cache: Boruta.Cache)
   def default! do
-    Repo.get_by!(__MODULE__, is_default: true)
+    cache_get({__MODULE__, :default}, fn ->
+      Repo.get_by!(__MODULE__, is_default: true)
+    end)
   end
 
   @spec implementation(t()) :: atom()
@@ -677,7 +677,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
   defp set_default(%Ecto.Changeset{changes: %{is_default: _is_default}} = changeset) do
     # TODO use a transaction to change default backend
-    :ok = Boruta.Cache.delete({__MODULE__, :default})
+    :ok = BorutaIdentity.Cache.delete({__MODULE__, :default})
 
     case Ecto.Changeset.change(default!(), %{is_default: false}) |> Repo.update() do
       {:ok, _backend} ->
@@ -733,6 +733,21 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
         Enum.reduce(errors, changeset, fn {message, path}, changeset ->
           add_error(changeset, :password_hashing_opts, "#{message} at #{path}")
         end)
+    end
+  end
+
+  defp cache_get(key, fun) do
+    case BorutaIdentity.Cache.get(key, :cache_miss) do
+      {:ok, :cache_miss} ->
+        value = fun.()
+        _ignore = BorutaIdentity.Cache.put(key, value)
+        value
+
+      {:ok, value} ->
+        value
+
+      {:error, _reason} ->
+        fun.()
     end
   end
 end

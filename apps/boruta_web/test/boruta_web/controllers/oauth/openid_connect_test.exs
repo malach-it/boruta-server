@@ -9,8 +9,6 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   alias Boruta.Ecto.Client
   alias Boruta.Ecto.ClientStore
   alias Boruta.Oauth
-  alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
-  alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentityWeb.Authenticable
 
   describe "OpenID Connect flows" do

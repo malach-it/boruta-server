@@ -153,7 +153,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                })
 
       assert {:ok, false} =
-               Boruta.Cache.has_key?(
+               BorutaIdentity.Cache.has_key?(
                  {IdentityProviders, :identity_provider_template, identity_provider.id,
                   :new_registration}
                )
@@ -409,7 +409,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                IdentityProviders.upsert_template(template, %{content: "updated content"})
 
       assert {:ok, false} =
-               Boruta.Cache.has_key?(
+               BorutaIdentity.Cache.has_key?(
                  {IdentityProviders, :identity_provider_template, identity_provider.id,
                   :new_registration}
                )
@@ -443,7 +443,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                IdentityProviders.upsert_template(layout_template, %{content: "updated layout"})
 
       assert {:ok, false} =
-               Boruta.Cache.has_key?(
+               BorutaIdentity.Cache.has_key?(
                  {IdentityProviders, :identity_provider_template, identity_provider.id,
                   :new_registration}
                )
