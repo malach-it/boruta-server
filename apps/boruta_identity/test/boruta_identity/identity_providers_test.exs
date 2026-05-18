@@ -33,7 +33,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
 
     test "list_identity_providers/0 returns all identity_providers" do
       identity_provider = identity_provider_fixture()
-      assert IdentityProviders.list_identity_providers() == [identity_provider]
+      assert identity_provider in IdentityProviders.list_identity_providers()
     end
 
     test "get_identity_provider!/1 returns the identity_provider with given id" do

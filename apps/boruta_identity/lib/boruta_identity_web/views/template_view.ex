@@ -104,14 +104,24 @@ defmodule BorutaIdentityWeb.TemplateView do
   end
 
   def context(context, %{presentation_deeplink: presentation_deeplink} = assigns) do
-    {:ok, base64_presentation_qr_code} = presentation_deeplink
-      |> QRCode.create()
-      |> QRCode.render(:svg)
-      |> QRCode.to_base64()
+    {base64_presentation_qr_code, presentation_qr_code_error?} =
+      case QRCode.create(presentation_deeplink) do
+        {:ok, qr_code} ->
+          {:ok, base64_presentation_qr_code} =
+            {:ok, qr_code}
+            |> QRCode.render(:svg)
+            |> QRCode.to_base64()
+
+          {base64_presentation_qr_code, false}
+
+        {:error, _reason} ->
+          {nil, true}
+      end
 
     %{
       base64_presentation_qr_code: base64_presentation_qr_code,
-      presentation_deeplink: presentation_deeplink
+      presentation_deeplink: presentation_deeplink,
+      presentation_qr_code_error?: presentation_qr_code_error?
     }
     |> Map.merge(context)
     |> context(Map.delete(assigns, :presentation_deeplink))

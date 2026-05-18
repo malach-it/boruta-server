@@ -188,19 +188,56 @@ defmodule BorutaIdentity.IdentityProviders do
     end
   end
 
-  defp clear_identity_provider_templates_cache(_identity_provider_id, []), do: :ok
-
-  defp clear_identity_provider_templates_cache(identity_provider_id, [:layout]) do
-    Boruta.Cache.delete({__MODULE__, :identity_provider_template, identity_provider_id, :layout})
-
-    clear_identity_provider_templates_cache(identity_provider_id, Template.template_types())
-  end
-
-  defp clear_identity_provider_templates_cache(identity_provider_id, [type | types]) do
-    Boruta.Cache.delete({__MODULE__, :identity_provider_template, identity_provider_id, type})
+  defp clear_identity_provider_templates_cache(%IdentityProvider{id: identity_provider_id}, attrs) do
+    types =
+      attrs
+      |> Map.get(:templates, Map.get(attrs, "templates", []))
+      |> Enum.map(&Map.get(&1, :type, Map.get(&1, "type")))
+      |> Enum.reject(&is_nil/1)
 
     clear_identity_provider_templates_cache(identity_provider_id, types)
   end
+
+  defp clear_identity_provider_templates_cache(_identity_provider_id, []), do: :ok
+
+  defp clear_identity_provider_templates_cache(identity_provider_id, types) when is_list(types) do
+    normalized_types = Enum.map(types, &normalize_template_type/1)
+
+    clear_identity_provider_templates_cache(identity_provider_id, normalized_types, [])
+  end
+
+  defp clear_identity_provider_templates_cache(_identity_provider_id, [], _cleared_types), do: :ok
+
+  defp clear_identity_provider_templates_cache(
+         identity_provider_id,
+         [type | types],
+         cleared_types
+       ) do
+    :ok = clear_identity_provider_templates_cache_key(identity_provider_id, type, cleared_types)
+
+    types =
+      if type == :layout and type not in cleared_types do
+        Enum.reject(Template.template_types(), &(&1 == :layout)) ++ types
+      else
+        types
+      end
+
+    clear_identity_provider_templates_cache(identity_provider_id, types, [type | cleared_types])
+  end
+
+  defp clear_identity_provider_templates_cache_key(identity_provider_id, type, cleared_types) do
+    if type in cleared_types do
+      :ok
+    else
+      Boruta.Cache.delete({__MODULE__, :identity_provider_template, identity_provider_id, type})
+    end
+  end
+
+  defp normalize_template_type(type) when is_binary(type) do
+    Enum.find([:layout | Template.template_types()], &(Atom.to_string(&1) == type)) || type
+  end
+
+  defp normalize_template_type(type), do: type
 
   alias BorutaIdentity.Accounts.EmailTemplate
   alias BorutaIdentity.Accounts.Ldap
