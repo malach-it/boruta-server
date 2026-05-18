@@ -94,9 +94,19 @@ class Oauth {
   }
 
   login () {
-    localStorage.setItem('requested_scope', this.requestedScope)
+    function loginNavigation () {
+        localStorage.setItem('requested_scope', this.requestedScope)
 
-    window.location = this.implicitClient.loginUrl
+        window.location = this.implicitClient.loginUrl
+    }
+
+    if (this.accessToken) {
+      return this.logout().then(() => {
+        loginNavigation()
+      })
+    }
+
+    return loginNavigation()
   }
 
   silentRefresh () {
