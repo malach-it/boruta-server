@@ -14,6 +14,16 @@ defmodule BorutaGateway.Logger do
         :boruta_gateway_requests,
         [:boruta_gateway, :request, :done],
         &__MODULE__.boruta_gateway_request_handler/4
+      },
+      {
+        :boruta_gateway_authorization_authorize_success,
+        [:boruta_gateway, :authorization, :authorize, :success],
+        &__MODULE__.boruta_gateway_authorization_authorize_success_handler/4
+      },
+      {
+        :boruta_gateway_authorization_authorize_failure,
+        [:boruta_gateway, :authorization, :authorize, :failure],
+        &__MODULE__.boruta_gateway_authorization_authorize_failure_handler/4
       }
     ]
 
@@ -95,6 +105,71 @@ defmodule BorutaGateway.Logger do
     )
   end
 
+  def boruta_gateway_authorization_authorize_success_handler(
+        _,
+        _measurements,
+        %{conn: conn, upstream: upstream, token: token},
+        _
+      ) do
+    %{method: method, request_path: path} = conn
+
+    log_line = [
+      "boruta_gateway",
+      ?\s,
+      "authorization",
+      ?\s,
+      "authorize",
+      " - ",
+      "success",
+      log_attribute("node_name", conn.assigns[:node_name]),
+      log_attribute("method", method),
+      log_attribute("path", path),
+      log_attribute("access_token", token.value)
+    ]
+
+    log_line =
+      log_line
+      |> put_token_subject(token)
+      |> put_required_scopes(upstream, method)
+      |> put_upstream_attributes(conn)
+
+    Logger.log(:info, fn -> log_line end, type: :business)
+  end
+
+  def boruta_gateway_authorization_authorize_failure_handler(
+        _,
+        _measurements,
+        %{conn: conn, upstream: upstream, status: status, error: error} = metadata,
+        _
+      ) do
+    %{method: method, request_path: path} = conn
+    token = metadata[:token]
+
+    log_line = [
+      "boruta_gateway",
+      ?\s,
+      "authorization",
+      ?\s,
+      "authorize",
+      " - ",
+      "failure",
+      log_attribute("node_name", conn.assigns[:node_name]),
+      log_attribute("method", method),
+      log_attribute("path", path),
+      log_attribute("status", status),
+      log_attribute("error", error)
+    ]
+
+    log_line =
+      log_line
+      |> put_access_token(token)
+      |> put_token_subject(token)
+      |> put_required_scopes(upstream, method)
+      |> put_upstream_attributes(conn)
+
+    Logger.log(:info, fn -> log_line end, type: :business)
+  end
+
   defp business_status(conn) do
     case conn.assigns[:upstream] do
       nil -> "failure"
@@ -102,16 +177,50 @@ defmodule BorutaGateway.Logger do
     end
   end
 
-  defp put_access_token(log_line, conn) do
+  defp put_access_token(log_line, %Plug.Conn{} = conn) do
     case conn.assigns[:token] do
       nil ->
         log_line
 
       token ->
+        put_access_token(log_line, token)
+    end
+  end
+
+  defp put_access_token(log_line, nil), do: log_line
+
+  defp put_access_token(log_line, token) do
+    log_line ++
+      [
+        log_attribute("access_token", token.value)
+      ]
+  end
+
+  defp put_token_subject(log_line, nil), do: log_line
+
+  defp put_token_subject(log_line, token) do
+    log_line ++ [log_attribute("sub", token.sub)]
+  end
+
+  defp put_required_scopes(log_line, upstream, method) do
+    case upstream.required_scopes do
+      nil ->
+        log_line
+
+      required_scopes ->
         log_line ++
           [
-            log_attribute("access_token", token.value)
+            log_attribute("required_scopes", required_scopes_for_method(required_scopes, method))
           ]
+    end
+  end
+
+  defp required_scopes_for_method(required_scopes, method) do
+    scopes = Map.get(required_scopes, method, Map.get(required_scopes, "*", []))
+
+    case Enum.join(scopes, ",") do
+      "" -> nil
+      scopes -> scopes
     end
   end
 
@@ -133,6 +242,21 @@ defmodule BorutaGateway.Logger do
               "gateway_time",
               upstream_time && [to_string(request_time - upstream_time), "µs"]
             )
+          ]
+    end
+  end
+
+  defp put_upstream_attributes(log_line, conn) do
+    case conn.assigns[:upstream] do
+      nil ->
+        log_line
+
+      upstream ->
+        log_line ++
+          [
+            log_attribute("upstream_scheme", upstream.scheme),
+            log_attribute("upstream_host", upstream.host),
+            log_attribute("upstream_port", upstream.port)
           ]
     end
   end

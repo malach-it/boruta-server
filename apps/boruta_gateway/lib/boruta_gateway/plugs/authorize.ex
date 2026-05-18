@@ -33,15 +33,27 @@ defmodule BorutaGateway.Plug.Authorize do
          [_header, value] <- Regex.run(~r/[B|b]earer (.+)/, authorization_header),
          {:ok, %Token{scope: scope} = token} <- Authorization.AccessToken.authorize(value: value),
          {:ok, _} <- validate_scopes(scope, required_scopes, method) do
-      assign(conn, :token, token)
+      conn
+      |> assign(:token, token)
+      |> tap(fn conn -> emit_authorization_event(:success, conn, upstream, token: token) end)
     else
       {:error, "required scopes are not present."} ->
+        emit_authorization_event(:failure, conn, upstream,
+          status: 403,
+          error: "required_scopes_not_present"
+        )
+
         conn
         |> put_resp_content_type(upstream.error_content_type || @default_error_content_type)
         |> send_resp(:forbidden, upstream.forbidden_response || @default_forbidden_response)
         |> halt()
 
-      _error ->
+      error ->
+        emit_authorization_event(:failure, conn, upstream,
+          status: 401,
+          error: authorization_error(error)
+        )
+
         conn
         |> put_resp_content_type(upstream.error_content_type || @default_error_content_type)
         |> send_resp(
@@ -74,4 +86,22 @@ defmodule BorutaGateway.Plug.Authorize do
       false -> {:error, "required scopes are not present."}
     end
   end
+
+  defp emit_authorization_event(status, conn, upstream, metadata) do
+    :telemetry.execute(
+      [:boruta_gateway, :authorization, :authorize, status],
+      %{},
+      Map.merge(
+        %{
+          conn: conn,
+          upstream: upstream
+        },
+        Map.new(metadata)
+      )
+    )
+  end
+
+  defp authorization_error({:error, error}) when is_binary(error), do: error
+  defp authorization_error([_header]), do: "invalid_authorization_header"
+  defp authorization_error(_error), do: "unauthorized"
 end
