@@ -53,26 +53,27 @@ defmodule BorutaIdentity.ResourceOwners do
   end
 
   def get_by(id_token: id_token, scope: scope) do
-    with {:ok,
-          %User{
-            id: id,
-            username: username,
-            last_login_at: last_login_at,
-            blocked: blocked,
-            federated_metadata: federated_metadata
-          } = user} <- Machine.domain_user!(%ResourceOwner{sub: id_token}, Backend.default!()) do
+    case Machine.domain_user!(%ResourceOwner{sub: id_token}, Backend.default!()) do
       {:ok,
-       %ResourceOwner{
-         sub: id,
+       %User{
+         id: id,
          username: username,
          last_login_at: last_login_at,
          blocked: blocked,
-         extra_claims: Map.merge(metadata(user, scope), federated_metadata),
-         authorization_details: VerifiableCredentials.authorization_details(user, scope),
-         credential_configuration: VerifiableCredentials.credential_configuration(user),
-         presentation_configuration: VerifiablePresentations.presentation_configuration(user)
-       }}
-    else
+         federated_metadata: federated_metadata
+       } = user} ->
+        {:ok,
+         %ResourceOwner{
+           sub: id,
+           username: username,
+           last_login_at: last_login_at,
+           blocked: blocked,
+           extra_claims: Map.merge(metadata(user, scope), federated_metadata),
+           authorization_details: VerifiableCredentials.authorization_details(user, scope),
+           credential_configuration: VerifiableCredentials.credential_configuration(user),
+           presentation_configuration: VerifiablePresentations.presentation_configuration(user)
+         }}
+
       _ ->
         {:error, "Invalid username or password."}
     end
@@ -81,25 +82,26 @@ defmodule BorutaIdentity.ResourceOwners do
   def get_by(_), do: {:error, "Invalid username or password."}
 
   defp get_user_by_sub(sub, scope) do
-    with %User{
-           id: id,
+    case Accounts.get_user(sub) do
+      %User{
+        id: id,
+        username: email,
+        last_login_at: last_login_at,
+        blocked: blocked,
+        federated_metadata: federated_metadata
+      } = user ->
+        {:ok,
+         %ResourceOwner{
+           sub: id,
            username: email,
            last_login_at: last_login_at,
            blocked: blocked,
-           federated_metadata: federated_metadata
-         } = user <- Accounts.get_user(sub) do
-      {:ok,
-       %ResourceOwner{
-         sub: id,
-         username: email,
-         last_login_at: last_login_at,
-         blocked: blocked,
-         extra_claims: Map.merge(metadata(user, scope), federated_metadata),
-         authorization_details: VerifiableCredentials.authorization_details(user, scope),
-         credential_configuration: VerifiableCredentials.credential_configuration(user),
-         presentation_configuration: VerifiablePresentations.presentation_configuration(user)
-       }}
-    else
+           extra_claims: Map.merge(metadata(user, scope), federated_metadata),
+           authorization_details: VerifiableCredentials.authorization_details(user, scope),
+           credential_configuration: VerifiableCredentials.credential_configuration(user),
+           presentation_configuration: VerifiablePresentations.presentation_configuration(user)
+         }}
+
       _ ->
         {:error, "Invalid username or password."}
     end

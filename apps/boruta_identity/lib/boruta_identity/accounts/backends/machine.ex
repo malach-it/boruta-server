@@ -44,8 +44,9 @@ defmodule BorutaIdentity.Accounts.Machine do
     end
   end
 
-  defp upsert_user(sub, claims, %Backend{id: backend_id}) do
-    username = claims["sub"]
+  defp upsert_user(sub, _claims, %Backend{id: backend_id}) do
+    username = sub
+
     attrs = %{
       uid: sub,
       username: username,
@@ -65,7 +66,7 @@ defmodule BorutaIdentity.Accounts.Machine do
         from(u in User,
           update: [
             set: [
-              username: ^username,
+              username: ^username
             ]
           ]
         ),
