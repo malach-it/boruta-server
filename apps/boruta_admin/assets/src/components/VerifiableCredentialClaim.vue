@@ -93,10 +93,11 @@ export default {
   },
   methods: {
     deleteVerifiableCredentialClaim (credential, claim) {
-      credential.claims.splice(
-        credential.claims.indexOf(claim),
-        1
-      )
+      const collection = credential.claims.includes(claim)
+        ? credential.claims
+        : credential.items
+
+      collection.splice(collection.indexOf(claim), 1)
     },
     addChildClaim(claim) {
       claim.claims.push(

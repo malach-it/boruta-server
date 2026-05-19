@@ -2,6 +2,12 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [unreleased]
+
+### Fixed
+
+- [admin] claim deletion for verifiable credential arrays
+
 ## [0.9.0] - 2026-05-18
 
 ### Added
