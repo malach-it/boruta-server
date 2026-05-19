@@ -19,8 +19,6 @@ defmodule BorutaAdminWeb.ConnCase do
 
   import BorutaIdentity.AccountsFixtures
 
-  alias Boruta.Ecto.OauthMapper
-  alias Boruta.Oauth.IntrospectResponse
   alias BorutaAuth.Repo, as: AuthRepo
   alias BorutaIdentity.Factory, as: IdentityFactory
   alias Ecto.Adapters.SQL.Sandbox

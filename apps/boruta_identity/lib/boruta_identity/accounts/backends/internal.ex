@@ -151,24 +151,29 @@ defmodule BorutaIdentity.Accounts.Internal do
   def create_user(backend, params) do
     Repo.transaction(fn repo ->
       case Internal.User.registration_changeset(
-             %Internal.User{
-               group: params[:group],
-               metadata: params[:metadata]
-             },
+             internal_user(params),
              %{
-              email: params[:username],
-              password: params[:password]
-            },
+               email: params[:username],
+               password: params[:password]
+             },
              %{backend: backend}
            )
            |> repo.insert() do
         {:ok, user} ->
-          domain_user!(%{user | id: params[:uid]}, backend, repo)
+          domain_user!(user, backend, repo)
 
         {:error, error} ->
           Repo.rollback(error)
       end
     end)
+  end
+
+  defp internal_user(%{uid: uid} = params) when is_binary(uid) and uid != "" do
+    %Internal.User{id: uid, group: params[:group], metadata: params[:metadata]}
+  end
+
+  defp internal_user(params) do
+    %Internal.User{group: params[:group], metadata: params[:metadata]}
   end
 
   @impl BorutaIdentity.Admin

@@ -309,11 +309,16 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       log_lines = first_day_log_lines ++ second_day_log_lines
 
       assert %{
-               "time_scale_unit" => "day",
+               "time_scale_unit" => "hour",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 60
-             } = json_response(conn, 200)
+             } = response = json_response(conn, 200)
+
+      assert is_map(response["request_counts"])
+      assert is_map(response["request_times"])
+      assert is_map(response["status_codes"])
+      assert is_list(response["labels"])
 
       File.rm!(LogRotate.path(:boruta_web, :request, first_day))
       File.rm!(LogRotate.path(:boruta_web, :request, second_day))
@@ -571,11 +576,16 @@ defmodule BorutaAdminWeb.LogsControllerTest do
       log_lines = first_day_log_lines ++ second_day_log_lines
 
       assert %{
-               "time_scale_unit" => "day",
+               "time_scale_unit" => "hour",
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 60
-             } = json_response(conn, 200)
+             } = response = json_response(conn, 200)
+
+      assert is_map(response["business_event_counts"])
+      assert is_map(response["counts"])
+      assert is_list(response["actions"])
+      assert is_list(response["domains"])
 
       File.rm!(LogRotate.path(:boruta_web, :business, first_day))
       File.rm!(LogRotate.path(:boruta_web, :business, second_day))

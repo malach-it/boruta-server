@@ -178,7 +178,7 @@ defmodule BorutaWeb.Logger do
           token_type: token_type,
           expires_in: expires_in,
           refresh_token: refresh_token
-        } = metadata,
+        },
         _
       ) do
     log_line = [

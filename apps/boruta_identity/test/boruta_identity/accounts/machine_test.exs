@@ -8,44 +8,6 @@ defmodule BorutaIdentity.Accounts.MachineTest do
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.ResourceOwners
 
-  @machine_did "did-key-z6Mkmachine"
-
-  setup do
-    bypass = Bypass.open()
-
-    config = Application.get_env(:boruta, Boruta.Oauth)
-
-    Application.put_env(
-      :boruta,
-      Boruta.Oauth,
-      Keyword.merge(config, did_service_config(bypass))
-    )
-
-    Bypass.stub(bypass, "POST", "/create", fn conn ->
-      Plug.Conn.resp(
-        conn,
-        201,
-        Jason.encode!(%{"didState" => %{"did" => @machine_did}})
-      )
-    end)
-
-    Bypass.stub(bypass, "GET", "/identifiers/:did", fn conn ->
-      Plug.Conn.resp(
-        conn,
-        200,
-        Jason.encode!(%{
-          "didDocument" => %{
-            "verificationMethod" => [%{"publicKeyJwk" => public_jwk_fixture()}]
-          }
-        })
-      )
-    end)
-
-    on_exit(fn -> Application.put_env(:boruta, Boruta.Oauth, config) end)
-
-    :ok
-  end
-
   describe "domain_user!/2" do
     test "creates a machine user from a did generated from the resource owner id_token jwk" do
       backend = insert(:backend)
@@ -54,14 +16,14 @@ defmodule BorutaIdentity.Accounts.MachineTest do
       assert {:ok, %User{} = user} =
                Machine.domain_user!(%ResourceOwner{sub: id_token}, backend)
 
+      machine_did = machine_did()
+
       assert user.id
-      assert user.uid == @machine_did
-      assert user.username == @machine_did
+      assert user.uid == machine_did
+      assert user.username == machine_did()
       assert user.account_type == Machine.account_type()
       assert user.backend_id == backend.id
-      assert user.metadata["sub"]["value"] == @machine_did
-      assert user.metadata["claims"]["value"]["machine_name"] == "machine"
-      assert user.metadata["claims"]["value"]["sub"] == "did:example:machine"
+      assert user.metadata == %{}
     end
 
     test "creates a machine user without an id_token sub claim" do
@@ -71,11 +33,11 @@ defmodule BorutaIdentity.Accounts.MachineTest do
       assert {:ok, %User{} = user} =
                Machine.domain_user!(%ResourceOwner{sub: id_token}, backend)
 
-      assert user.uid == @machine_did
-      assert user.username == @machine_did
-      assert user.metadata["sub"]["value"] == @machine_did
-      assert user.metadata["claims"]["value"]["machine_name"] == "machine"
-      refute Map.has_key?(user.metadata["claims"]["value"], "sub")
+      machine_did = machine_did()
+
+      assert user.uid == machine_did
+      assert user.username == machine_did
+      assert user.metadata == %{}
     end
 
     test "upserts a machine user by backend and generated did" do
@@ -91,12 +53,15 @@ defmodule BorutaIdentity.Accounts.MachineTest do
       assert {:ok, %User{id: ^user_id} = user} =
                Machine.domain_user!(%ResourceOwner{sub: updated_id_token}, backend)
 
-      assert user.metadata["claims"]["value"]["machine_name"] == "updated-machine"
+      assert user.username == machine_did()
+      assert user.metadata == %{}
+
+      machine_did = machine_did()
 
       assert Repo.aggregate(
                from(u in User,
                  where:
-                   u.backend_id == ^backend.id and u.uid == ^@machine_did and
+                   u.backend_id == ^backend.id and u.uid == ^machine_did and
                      u.account_type == ^Machine.account_type()
                ),
                :count
@@ -117,19 +82,13 @@ defmodule BorutaIdentity.Accounts.MachineTest do
       assert {:ok, %ResourceOwner{} = resource_owner} =
                ResourceOwners.get_by(id_token: id_token, scope: "")
 
+      machine_did = machine_did()
+
       assert %User{} = user = Repo.get!(User, resource_owner.sub)
-      assert user.uid == @machine_did
+      assert user.uid == machine_did
       assert user.account_type == Machine.account_type()
       assert user.backend_id == Backend.default!().id
     end
-  end
-
-  defp did_service_config(bypass) do
-    [
-      did_registrar_base_url: "http://localhost:#{bypass.port}",
-      did_resolver_base_url: "http://localhost:#{bypass.port}",
-      universal_did_auth: %{type: "bearer", token: "token"}
-    ]
   end
 
   defp id_token_fixture(sub, claims \\ %{}) do
@@ -140,6 +99,12 @@ defmodule BorutaIdentity.Accounts.MachineTest do
 
   defp id_token_fixture_without_sub(claims) do
     sign_id_token(claims)
+  end
+
+  defp machine_did do
+    {:ok, did, _jwk} = Boruta.Did.create("key", public_jwk_fixture())
+
+    did
   end
 
   defp sign_id_token(claims) do

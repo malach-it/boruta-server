@@ -6,10 +6,10 @@ defmodule BorutaAdmin.Tokens do
   import Ecto.Query
   import Boruta.Ecto.OauthMapper, only: [to_oauth_schema: 1]
 
-  alias Boruta.Ecto.Token
   alias Boruta.AccessTokensAdapter
   alias Boruta.AgentTokensAdapter
   alias Boruta.CodesAdapter
+  alias Boruta.Ecto.Token
   alias Boruta.Oauth
   alias BorutaAuth.Repo
   alias BorutaIdentity.Accounts.User

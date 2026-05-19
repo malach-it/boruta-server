@@ -53,6 +53,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     |> cast(attrs, [:email, :password])
     |> validate_required([:email, :password])
     |> change(backend_id: backend.id)
+    |> validate_email()
     |> validate_password(opts)
   end
 
@@ -61,6 +62,17 @@ defmodule BorutaIdentity.Accounts.Internal.User do
     |> cast(attrs, [:email, :hashed_password])
     |> validate_required([:email, :hashed_password])
     |> change(backend_id: backend.id)
+    |> validate_email()
+  end
+
+  defp validate_email(changeset) do
+    changeset
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
+    |> validate_length(:email, max: 160)
+    |> unique_constraint([:backend_id, :email],
+      error_key: :email,
+      message: "has already been taken"
+    )
   end
 
   defp validate_password(changeset, opts) do

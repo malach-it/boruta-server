@@ -26,11 +26,13 @@ defmodule BorutaAdmin.Application do
   end
 
   def setup_database do
-    Enum.each([BorutaAdmin.Repo], fn repo ->
+    repos = [BorutaAdmin.Repo, BorutaAuth.Repo, BorutaIdentity.Repo]
+
+    Enum.each(repos, fn repo ->
       repo.__adapter__().storage_up(repo.config())
     end)
 
-    Enum.each([BorutaAdmin.Repo], fn repo ->
+    Enum.each(repos, fn repo ->
       Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
     end)
 

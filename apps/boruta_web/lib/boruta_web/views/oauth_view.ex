@@ -157,28 +157,11 @@ defmodule BorutaWeb.OauthView do
       }
 
       response =
-        case authorization_code do
-          nil -> response
-          authorization_code -> Map.put(response, :authorization_code, authorization_code)
-        end
-
-      response =
-        case id_token do
-          nil -> response
-          id_token -> Map.put(response, :id_token, id_token)
-        end
-
-      response =
-        case access_token do
-          nil -> response
-          access_token -> Map.put(response, :access_token, access_token)
-        end
-
-      response =
-        case agent_token do
-          nil -> response
-          agent_token -> Map.put(response, :agent_token, agent_token)
-        end
+        response
+        |> put_optional(:authorization_code, authorization_code)
+        |> put_optional(:id_token, id_token)
+        |> put_optional(:access_token, access_token)
+        |> put_optional(:agent_token, agent_token)
 
       response =
         case authorization_details do
@@ -196,6 +179,9 @@ defmodule BorutaWeb.OauthView do
         options
       )
     end
+
+    defp put_optional(response, _key, nil), do: response
+    defp put_optional(response, key, value), do: Map.put(response, key, value)
   end
 
   defimpl Jason.Encoder, for: Boruta.Oauth.IntrospectResponse do
