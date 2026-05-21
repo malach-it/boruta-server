@@ -38,6 +38,12 @@ defmodule BorutaGateway.Upstreams.Upstream do
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
           unauthorized_response: String.t() | nil,
+          rate_limit_enabled: boolean(),
+          rate_limit_count: integer(),
+          rate_limit_time_unit: String.t(),
+          rate_limit_penality: integer(),
+          rate_limit_timeout: integer(),
+          rate_limit_memory_length: integer(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -63,6 +69,12 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:forwarded_token_secret, :string)
     field(:forwarded_token_public_key, :string)
     field(:forwarded_token_private_key, :string)
+    field(:rate_limit_enabled, :boolean, default: false)
+    field(:rate_limit_count, :integer, default: 10)
+    field(:rate_limit_time_unit, :string, default: "second")
+    field(:rate_limit_penality, :integer, default: 500)
+    field(:rate_limit_timeout, :integer, default: 5_000)
+    field(:rate_limit_memory_length, :integer, default: 50)
 
     field(:http_client, :any, virtual: true)
 
@@ -120,12 +132,23 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :forbidden_response,
       :unauthorized_response,
       :forwarded_token_signature_alg,
-      :forwarded_token_secret
+      :forwarded_token_secret,
+      :rate_limit_enabled,
+      :rate_limit_count,
+      :rate_limit_time_unit,
+      :rate_limit_penality,
+      :rate_limit_timeout,
+      :rate_limit_memory_length
     ])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_inclusion(:pool_size, 1..100)
     |> validate_inclusion(:pool_count, 1..10)
+    |> validate_inclusion(:rate_limit_count, 1..100_000)
+    |> validate_inclusion(:rate_limit_time_unit, ["millisecond", "second", "minute"])
+    |> validate_inclusion(:rate_limit_penality, 0..600_000)
+    |> validate_inclusion(:rate_limit_timeout, 0..600_000)
+    |> validate_inclusion(:rate_limit_memory_length, 1..10_000)
     |> unique_constraint([:node_name, :host, :port, :uris])
     |> maybe_put_forwarded_token_secret()
     |> maybe_generate_key_pair()

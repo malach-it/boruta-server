@@ -6,6 +6,7 @@
         <a id="general-configuration" @click="openTab" class="active item">General configuration</a>
         <a id="uris" @click="openTab" class="item">URIs</a>
         <a id="authorization" @click="openTab" class="item">Authorization</a>
+        <a id="security" @click="openTab" class="item">Security</a>
       </div>
       <div ref="form">
         <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
@@ -117,6 +118,39 @@
             </div>
           </div>
         </div>
+        <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+          <h3>Rate limiting</h3>
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.rate_limit_enabled">
+              <label>Enable rate limiting</label>
+            </div>
+          </div>
+          <div v-if="upstream.rate_limit_enabled">
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_count }">
+              <label>Request count</label>
+              <input type="number" v-model="upstream.rate_limit_count" min="1" placeholder="10">
+            </div>
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_time_unit }">
+              <label>Time unit</label>
+              <select v-model="upstream.rate_limit_time_unit">
+                <option v-for="unit in rateLimitTimeUnits" :key="unit" :value="unit">{{ unit }}</option>
+              </select>
+            </div>
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_penality }">
+              <label>Penality (ms)</label>
+              <input type="number" v-model="upstream.rate_limit_penality" min="0" placeholder="500">
+            </div>
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_timeout }">
+              <label>Timeout (ms)</label>
+              <input type="number" v-model="upstream.rate_limit_timeout" min="0" placeholder="5000">
+            </div>
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_memory_length }">
+              <label>Memory length</label>
+              <input type="number" v-model="upstream.rate_limit_memory_length" min="1" placeholder="50">
+            </div>
+          </div>
+        </div>
       </div>
       <div class="actions">
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
@@ -141,7 +175,8 @@ export default {
   data () {
     return {
       nodeNames: [],
-      forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms
+      forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms,
+      rateLimitTimeUnits: Upstream.rateLimitTimeUnits
     }
   },
   mounted () {

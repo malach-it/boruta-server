@@ -54,6 +54,28 @@ defmodule BorutaGateway.UpstreamsTest do
       assert {:ok, %Upstream{}} = Upstreams.create_upstream(@valid_attrs)
     end
 
+    test "create_upstream/1 with rate limiting data creates an upstream" do
+      assert {:ok,
+              %Upstream{
+                rate_limit_enabled: true,
+                rate_limit_count: 20,
+                rate_limit_time_unit: "minute",
+                rate_limit_penality: 1_000,
+                rate_limit_timeout: 10_000,
+                rate_limit_memory_length: 10
+              }} =
+               Upstreams.create_upstream(
+                 Map.merge(@valid_attrs, %{
+                   rate_limit_enabled: true,
+                   rate_limit_count: 20,
+                   rate_limit_time_unit: "minute",
+                   rate_limit_penality: 1_000,
+                   rate_limit_timeout: 10_000,
+                   rate_limit_memory_length: 10
+                 })
+               )
+    end
+
     test "create_upstream/1 generates a secret with HS* algorithms" do
       assert {:ok, %Upstream{forwarded_token_secret: forwarded_token_secret}} =
                Upstreams.create_upstream(
@@ -105,7 +127,10 @@ defmodule BorutaGateway.UpstreamsTest do
                 errors: [
                   node_name:
                     {"has already been taken",
-                     [constraint: :unique, constraint_name: "upstreams_node_name_host_port_uris_index"]}
+                     [
+                       constraint: :unique,
+                       constraint_name: "upstreams_node_name_host_port_uris_index"
+                     ]}
                 ]
               }} = Upstreams.create_upstream(@valid_attrs)
     end

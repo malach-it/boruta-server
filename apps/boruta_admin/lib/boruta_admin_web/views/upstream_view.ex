@@ -40,7 +40,13 @@ defmodule BorutaAdminWeb.UpstreamView do
       forwarded_token_signature_alg: upstream.forwarded_token_signature_alg,
       forwarded_token_secret: upstream.forwarded_token_secret,
       forwarded_token_private_key: upstream.forwarded_token_private_key,
-      forwarded_token_public_key: upstream.forwarded_token_public_key
+      forwarded_token_public_key: upstream.forwarded_token_public_key,
+      rate_limit_enabled: upstream.rate_limit_enabled,
+      rate_limit_count: upstream.rate_limit_count,
+      rate_limit_time_unit: upstream.rate_limit_time_unit,
+      rate_limit_penality: upstream.rate_limit_penality,
+      rate_limit_timeout: upstream.rate_limit_timeout,
+      rate_limit_memory_length: upstream.rate_limit_memory_length
     }
   end
 end

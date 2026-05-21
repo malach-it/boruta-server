@@ -9,7 +9,13 @@ const defaults = {
   required_scopes: [],
   pool_size: 10,
   pool_count: 1,
-  max_idle_time: 10
+  max_idle_time: 10,
+  rate_limit_enabled: false,
+  rate_limit_count: 10,
+  rate_limit_time_unit: 'second',
+  rate_limit_penality: 500,
+  rate_limit_timeout: 5000,
+  rate_limit_memory_length: 50
 }
 
 const assign = {
@@ -26,6 +32,12 @@ const assign = {
   forwarded_token_secret: function ({ forwarded_token_secret }) { this.forwarded_token_secret = forwarded_token_secret },
   forwarded_token_public_key: function ({ forwarded_token_public_key }) { this.forwarded_token_public_key = forwarded_token_public_key },
   forwarded_token_private_key: function ({ forwarded_token_private_key }) { this.forwarded_token_private_key = forwarded_token_private_key },
+  rate_limit_enabled: function ({ rate_limit_enabled }) { this.rate_limit_enabled = rate_limit_enabled },
+  rate_limit_count: function ({ rate_limit_count }) { this.rate_limit_count = rate_limit_count },
+  rate_limit_time_unit: function ({ rate_limit_time_unit }) { this.rate_limit_time_unit = rate_limit_time_unit },
+  rate_limit_penality: function ({ rate_limit_penality }) { this.rate_limit_penality = rate_limit_penality },
+  rate_limit_timeout: function ({ rate_limit_timeout }) { this.rate_limit_timeout = rate_limit_timeout },
+  rate_limit_memory_length: function ({ rate_limit_memory_length }) { this.rate_limit_memory_length = rate_limit_memory_length },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
   },
@@ -113,7 +125,13 @@ class Upstream {
       forwarded_token_signature_alg,
       forwarded_token_secret,
       forwarded_token_private_key,
-      forwarded_token_public_key
+      forwarded_token_public_key,
+      rate_limit_enabled,
+      rate_limit_count,
+      rate_limit_time_unit,
+      rate_limit_penality,
+      rate_limit_timeout,
+      rate_limit_memory_length
     } = this
 
     return {
@@ -139,7 +157,13 @@ class Upstream {
       forwarded_token_signature_alg,
       forwarded_token_secret,
       forwarded_token_private_key,
-      forwarded_token_public_key
+      forwarded_token_public_key,
+      rate_limit_enabled,
+      rate_limit_count,
+      rate_limit_time_unit,
+      rate_limit_penality,
+      rate_limit_timeout,
+      rate_limit_memory_length
     }
   }
 }
@@ -186,6 +210,12 @@ Upstream.forwardedTokenSignatureAlgorithms = [
   "RS256",
   "RS384",
   "RS512"
+]
+
+Upstream.rateLimitTimeUnits = [
+  "millisecond",
+  "second",
+  "minute"
 ]
 
 export default Upstream

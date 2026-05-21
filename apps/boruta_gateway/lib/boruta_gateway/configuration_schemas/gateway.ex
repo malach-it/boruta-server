@@ -28,6 +28,15 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "pool_count" => %{"type" => "number"},
         "pool_size" => %{"type" => "number"},
         "max_idle_time" => %{"type" => "number"},
+        "rate_limit_enabled" => %{"type" => "boolean"},
+        "rate_limit_count" => %{"type" => "number"},
+        "rate_limit_time_unit" => %{
+          "type" => "string",
+          "pattern" => "^(millisecond|second|minute)$"
+        },
+        "rate_limit_penality" => %{"type" => "number"},
+        "rate_limit_timeout" => %{"type" => "number"},
+        "rate_limit_memory_length" => %{"type" => "number"},
         "required_scopes" => %{
           "type" => "object",
           "patternProperties" => %{
@@ -74,6 +83,15 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "pool_count" => %{"type" => "number"},
         "pool_size" => %{"type" => "number"},
         "max_idle_time" => %{"type" => "number"},
+        "rate_limit_enabled" => %{"type" => "boolean"},
+        "rate_limit_count" => %{"type" => "number"},
+        "rate_limit_time_unit" => %{
+          "type" => "string",
+          "pattern" => "^(millisecond|second|minute)$"
+        },
+        "rate_limit_penality" => %{"type" => "number"},
+        "rate_limit_timeout" => %{"type" => "number"},
+        "rate_limit_memory_length" => %{"type" => "number"},
         "required_scopes" => %{
           "type" => "object",
           "patternProperties" => %{

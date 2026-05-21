@@ -9,7 +9,7 @@ defmodule BorutaAuth.Plugs.RateLimit do
 
     @base_unit :millisecond
 
-    @memory_length 50
+    @default_memory_length 50
 
     @time_unit_stamps [
       millisecond: 1,
@@ -21,6 +21,8 @@ defmodule BorutaAuth.Plugs.RateLimit do
       Agent.start_link(fn -> %{} end, name: __MODULE__)
     end
 
+    def default_memory_length, do: @default_memory_length
+
     def get(ip, time_unit) do
       Agent.get(__MODULE__, fn counter ->
         Map.get(counter, ip, [])
@@ -31,13 +33,17 @@ defmodule BorutaAuth.Plugs.RateLimit do
     end
 
     def throttling_timeout(ip, count, time_unit, penality) do
+      throttling_timeout(ip, count, time_unit, penality, @default_memory_length)
+    end
+
+    def throttling_timeout(ip, count, time_unit, penality, memory_length) do
       now = :os.system_time(@base_unit)
 
       request_rates =
         Agent.get(__MODULE__, fn counter ->
           Map.get(counter, ip, [])
           |> Enum.filter(fn timestamp ->
-            timestamp > now - @memory_length * @time_unit_stamps[time_unit]
+            timestamp > now - memory_length * @time_unit_stamps[time_unit]
           end)
         end)
         |> Enum.group_by(fn timestamp ->
@@ -45,7 +51,7 @@ defmodule BorutaAuth.Plugs.RateLimit do
         end)
 
       timeout =
-        Enum.map(0..(@memory_length - 1), fn i ->
+        Enum.map(0..(memory_length - 1), fn i ->
           current = floor(now - i * @time_unit_stamps[time_unit])
 
           Map.get(request_rates, div(current, @time_unit_stamps[time_unit]), [])
@@ -66,12 +72,16 @@ defmodule BorutaAuth.Plugs.RateLimit do
     end
 
     def increment(ip, time_unit) do
+      increment(ip, time_unit, @default_memory_length)
+    end
+
+    def increment(ip, time_unit, memory_length) do
       Agent.update(__MODULE__, fn counter ->
         timestamps =
           Map.get(counter, ip, [])
           |> Enum.filter(fn timestamp ->
             timestamp >
-              :os.system_time(@base_unit) - @memory_length * @time_unit_stamps[time_unit]
+              :os.system_time(@base_unit) - memory_length * @time_unit_stamps[time_unit]
           end)
 
         Map.put(
@@ -87,18 +97,21 @@ defmodule BorutaAuth.Plugs.RateLimit do
 
   def call(conn, options) do
     remote_ip = :inet.ntoa(conn.remote_ip)
+    key = Keyword.get(options, :key, remote_ip)
     max_timeout = options[:timeout]
+    count = options[:count]
+    time_unit = options[:time_unit]
+    memory_length = Keyword.get(options, :memory_length, Counter.default_memory_length())
 
-    case Counter.throttling_timeout(
-           remote_ip,
-           options[:count],
-           options[:time_unit],
-           options[:penality]
-         ) do
+    throttle(conn, key, count, time_unit, options[:penality], max_timeout, memory_length)
+  end
+
+  defp throttle(conn, key, count, time_unit, penality, max_timeout, memory_length) do
+    case Counter.throttling_timeout(key, count, time_unit, penality, memory_length) do
       timeout when timeout < max_timeout ->
         :timer.sleep(timeout)
 
-        Counter.increment(remote_ip, options[:time_unit])
+        Counter.increment(key, time_unit, memory_length)
         conn
 
       _ ->
