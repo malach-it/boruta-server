@@ -107,9 +107,8 @@ defmodule BorutaGateway.Plug.Authorize do
     access_token =
       case get_session(conn, :token) do
         nil ->
-          with {:ok, value} <- bearer_token(conn) do
-            value
-          else
+          case bearer_token(conn) do
+            {:ok, value} -> value
             _ -> ""
           end
 

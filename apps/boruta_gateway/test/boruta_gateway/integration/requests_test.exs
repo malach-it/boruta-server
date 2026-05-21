@@ -2,10 +2,10 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   use ExUnit.Case, async: false
   use BorutaGateway.DataCase
 
-  alias BorutaAuth.Plugs.RateLimit.Counter
   alias Boruta.AccessTokensAdapter
   alias Boruta.ClientsAdapter
   alias Boruta.Ecto.Admin
+  alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Gateway
   alias BorutaGateway.Repo
