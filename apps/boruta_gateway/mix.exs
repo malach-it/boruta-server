@@ -42,6 +42,7 @@ defmodule BorutaGateway.MixProject do
       {:finch, "~> 0.10"},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
+      {:secure_random, "~> 0.5"},
       {:telemetry, "~> 1.0"},
       {:yaml_elixir, "~> 2.9"}
     ]

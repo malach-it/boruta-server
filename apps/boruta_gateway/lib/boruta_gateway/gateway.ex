@@ -482,7 +482,7 @@ defmodule BorutaGateway.Gateway do
   defp request_id(payload) do
     case Regex.run(~r{[X|x]-[R|r]equest-[I|i]d\: ([^\r]+)}, payload) do
       [_, request_id] -> request_id
-      nil -> System.unique_integer([:positive]) |> Integer.to_string()
+      nil -> SecureRandom.hex(4)
     end
   end
 

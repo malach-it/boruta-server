@@ -96,6 +96,37 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "generates request ids with secure random entropy when none is provided" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_request_id_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
+
+          assert {:ok, %Finch.Response{body: body, status: 404}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "No upstream has been found corresponding to the given request."
+
+          assert_receive {:gateway_request_log, %{request_id: request_id}}
+          assert request_id =~ ~r/^[0-9a-f]{8}$/
+        after
+          :telemetry.detach(:gateway_request_id_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns a 401 when unauthorized" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
