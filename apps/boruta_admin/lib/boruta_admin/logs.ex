@@ -375,15 +375,17 @@ defmodule BorutaAdmin.Logs do
       {"upstream time", "upstream_time"}
     ]
     |> Enum.reduce(gateway_times, fn {label, attribute}, gateway_times ->
-      case parse_microsecond_time(attributes[attribute]) do
-        nil ->
-          gateway_times
+      attributes[attribute]
+      |> parse_microsecond_time()
+      |> put_gateway_time(gateway_times, label, truncated_time)
+    end)
+  end
 
-        time ->
-          Map.merge(gateway_times, %{label => %{truncated_time => time / 1000}}, fn _, a, b ->
-            Map.merge(a, b, fn _, i, j -> (i + j) / 2 end)
-          end)
-      end
+  defp put_gateway_time(nil, gateway_times, _label, _truncated_time), do: gateway_times
+
+  defp put_gateway_time(time, gateway_times, label, truncated_time) do
+    Map.merge(gateway_times, %{label => %{truncated_time => time / 1000}}, fn _, a, b ->
+      Map.merge(a, b, fn _, i, j -> (i + j) / 2 end)
     end)
   end
 
