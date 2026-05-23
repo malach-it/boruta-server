@@ -330,8 +330,8 @@ defmodule BorutaGateway.Gateway do
   defp activate_upstream_socket(socket, :ssl), do: :ssl.setopts(socket, active: :once)
 
   @doc false
-  def upstream_socket_options(%Upstream{keepalive: keepalive}) do
-    [:binary, {:packet, :raw}, {:active, false}, {:keepalive, keepalive}]
+  def upstream_socket_options(%Upstream{}) do
+    [:binary, {:packet, :raw}, {:active, false}]
   end
 
   defp close_downstream(socket, state) do

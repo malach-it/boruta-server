@@ -33,7 +33,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
           required_scopes: map(),
           strip_uri: boolean(),
           authorize: boolean(),
-          keepalive: boolean(),
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
           unauthorized_response: String.t() | nil,
@@ -58,7 +57,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:required_scopes, :map, default: %{})
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
-    field(:keepalive, :boolean, default: false)
     field(:error_content_type, :string, default: "application/json")
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
@@ -93,7 +91,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :strip_uri,
       :authorize,
       :required_scopes,
-      :keepalive,
       :error_content_type,
       :forwarded_token_signature_alg,
       :forwarded_token_secret,

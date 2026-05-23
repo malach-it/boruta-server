@@ -31,7 +31,6 @@ defmodule BorutaAdminWeb.UpstreamView do
       strip_uri: upstream.strip_uri,
       authorize: upstream.authorize,
       required_scopes: upstream.required_scopes,
-      keepalive: upstream.keepalive,
       error_content_type: upstream.error_content_type,
       forbidden_response: upstream.forbidden_response,
       unauthorized_response: upstream.unauthorized_response,

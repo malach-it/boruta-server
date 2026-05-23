@@ -11,7 +11,6 @@ configuration:
       host: "httpbin.patatoid.fr"
       port: 80
       uris: ["/httpbin"]
-      keepalive: true
       required_scopes:
         GET: ["test"]
       scheme: "http"
@@ -26,7 +25,6 @@ configuration:
       host: "httpbin.patatoid.fr"
       port: 80
       uris: ["/httpbin"]
-      keepalive: true
       required_scopes:
         GET: ["test"]
       scheme: "http"

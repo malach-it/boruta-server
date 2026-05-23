@@ -33,12 +33,6 @@
             <label>Port</label>
             <input type="text" v-model="upstream.port" placeholder="443">
           </div>
-          <div class="ui field segment">
-            <div class="ui toggle checkbox">
-              <input type="checkbox" v-model="upstream.keepalive">
-              <label>Keep upstream connection alive</label>
-            </div>
-          </div>
         </div>
         <div ref="uris" data-tab="uris" class="ui bottom attached tab segment">
           <h2>URIs</h2>
