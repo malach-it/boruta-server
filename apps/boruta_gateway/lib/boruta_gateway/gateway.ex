@@ -45,7 +45,8 @@ defmodule BorutaGateway.Gateway do
             {Gateway,
              [
                listen_socket: listen_socket,
-               match_function: args[:match_function]
+               match_function: args[:match_function],
+               num_acceptors: args[:num_acceptors]
              ]},
             id: :"http_proxy_server_acceptor_#{i}"
           )
@@ -79,6 +80,7 @@ defmodule BorutaGateway.Gateway do
     defstruct [
       :listen_socket,
       :match_function,
+      :num_acceptors,
       :agent,
       :socket,
       :client_socket,
@@ -111,6 +113,7 @@ defmodule BorutaGateway.Gateway do
      %State{
        listen_socket: args[:listen_socket],
        match_function: args[:match_function] || (&Upstreams.match/1),
+       num_acceptors: args[:num_acceptors],
        agent: agent
      }}
   end
@@ -176,7 +179,7 @@ defmodule BorutaGateway.Gateway do
     path_info = String.split(path, "/", trim: true)
 
     with %Upstream{} = upstream <- state.match_function.(path_info),
-         :ok <- rate_limit(state.agent, socket, upstream),
+         :ok <- rate_limit({state.agent, state.num_acceptors}, socket, upstream),
          {:ok, token} <- Authorization.authorize(payload, method, upstream) do
       case upstream.scheme do
         "http" ->
@@ -453,7 +456,7 @@ defmodule BorutaGateway.Gateway do
   end
 
   defp rate_limit(
-         agent,
+        {agent, num_acceptors},
          socket,
          %Upstream{
            rate_limit_enabled: true,
@@ -467,7 +470,7 @@ defmodule BorutaGateway.Gateway do
     time_unit = String.to_existing_atom(time_unit)
     key = {:gateway_upstream, upstream.id, remote_ip(socket)}
 
-    case Counter.throttling_timeout(agent, key, count, time_unit, penality, memory_length) do
+    case Counter.throttling_timeout(agent, key, div(count, num_acceptors) + 1, time_unit, penality, memory_length) do
       timeout when timeout < max_timeout ->
         :timer.sleep(timeout)
         Counter.increment(agent, key, time_unit, memory_length)
