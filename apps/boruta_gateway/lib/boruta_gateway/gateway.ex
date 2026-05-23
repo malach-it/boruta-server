@@ -79,7 +79,6 @@ defmodule BorutaGateway.Gateway do
     defstruct [
       :listen_socket,
       :match_function,
-      :agent,
       :socket,
       :client_socket,
       :start,
@@ -103,15 +102,13 @@ defmodule BorutaGateway.Gateway do
   @impl GenServer
   def init(args) do
     Process.flag(:trap_exit, true)
-    {:ok, agent} = Agent.start_link(fn -> %{} end)
 
     send(self(), :accept)
 
     {:ok,
      %State{
        listen_socket: args[:listen_socket],
-       match_function: args[:match_function] || (&Upstreams.match/1),
-       agent: agent
+       match_function: args[:match_function] || (&Upstreams.match/1)
      }}
   end
 
@@ -176,7 +173,7 @@ defmodule BorutaGateway.Gateway do
     path_info = String.split(path, "/", trim: true)
 
     with %Upstream{} = upstream <- state.match_function.(path_info),
-         :ok <- rate_limit(state.agent, socket, upstream),
+         :ok <- rate_limit(socket, upstream),
          {:ok, token} <- Authorization.authorize(payload, method, upstream) do
       case upstream.scheme do
         "http" ->
@@ -453,7 +450,6 @@ defmodule BorutaGateway.Gateway do
   end
 
   defp rate_limit(
-         agent,
          socket,
          %Upstream{
            rate_limit_enabled: true,
@@ -467,10 +463,10 @@ defmodule BorutaGateway.Gateway do
     time_unit = String.to_existing_atom(time_unit)
     key = {:gateway_upstream, upstream.id, remote_ip(socket)}
 
-    case Counter.throttling_timeout(agent, key, count, time_unit, penality, memory_length) do
+    case Counter.throttling_timeout(key, count, time_unit, penality, memory_length) do
       timeout when timeout < max_timeout ->
         :timer.sleep(timeout)
-        Counter.increment(agent, key, time_unit, memory_length)
+        Counter.increment(key, time_unit, memory_length)
         :ok
 
       _ ->
@@ -478,7 +474,7 @@ defmodule BorutaGateway.Gateway do
     end
   end
 
-  defp rate_limit(_agent, _socket, %Upstream{}), do: :ok
+  defp rate_limit(_socket, %Upstream{}), do: :ok
 
   defp remote_ip(socket) do
     case :inet.peername(socket) do
