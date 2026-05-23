@@ -137,11 +137,22 @@ defmodule BorutaGateway.Gateway do
   end
 
   def handle_info({:tcp_closed, socket}, %State{socket: socket} = state) do
-    {:ok, socket} = :gen_tcp.accept(state.listen_socket)
-    :inet.setopts(socket, active: :once)
+    case :gen_tcp.accept(state.listen_socket) do
+      {:ok, socket} ->
+        :inet.setopts(socket, active: :once)
 
-    {:noreply,
-     %{state | socket: socket, client_socket: nil, response: nil, response_headers_sent: false}}
+        {:noreply,
+         %{
+           state
+           | socket: socket,
+             client_socket: nil,
+             response: nil,
+             response_headers_sent: false
+         }}
+
+      {:error, _error} ->
+        {:stop, :shutdown, state}
+    end
   end
 
   def handle_info({:tcp_closed, socket}, %State{client_socket: socket} = state) do
