@@ -23,8 +23,8 @@ defmodule BorutaAuth.Plugs.RateLimit do
 
     def default_memory_length, do: @default_memory_length
 
-    def get(ip, time_unit) do
-      Agent.get(__MODULE__, fn counter ->
+    def get(agent, ip, time_unit) do
+      Agent.get(agent || __MODULE__, fn counter ->
         Map.get(counter, ip, [])
       end)
       |> Enum.count(fn timestamp ->
@@ -32,15 +32,15 @@ defmodule BorutaAuth.Plugs.RateLimit do
       end)
     end
 
-    def throttling_timeout(ip, count, time_unit, penality) do
-      throttling_timeout(ip, count, time_unit, penality, @default_memory_length)
+    def throttling_timeout(agent, ip, count, time_unit, penality) do
+      throttling_timeout(agent, ip, count, time_unit, penality, @default_memory_length)
     end
 
-    def throttling_timeout(ip, count, time_unit, penality, memory_length) do
+    def throttling_timeout(agent, ip, count, time_unit, penality, memory_length) do
       now = :os.system_time(@base_unit)
 
       request_rates =
-        Agent.get(__MODULE__, fn counter ->
+        Agent.get(agent || __MODULE__, fn counter ->
           Map.get(counter, ip, [])
           |> Enum.filter(fn timestamp ->
             timestamp > now - memory_length * @time_unit_stamps[time_unit]
@@ -71,12 +71,12 @@ defmodule BorutaAuth.Plugs.RateLimit do
       end
     end
 
-    def increment(ip, time_unit) do
-      increment(ip, time_unit, @default_memory_length)
+    def increment(agent, ip, time_unit) do
+      increment(agent, ip, time_unit, @default_memory_length)
     end
 
-    def increment(ip, time_unit, memory_length) do
-      Agent.update(__MODULE__, fn counter ->
+    def increment(agent, ip, time_unit, memory_length) do
+      Agent.update(agent || __MODULE__, fn counter ->
         timestamps =
           Map.get(counter, ip, [])
           |> Enum.filter(fn timestamp ->
@@ -107,11 +107,11 @@ defmodule BorutaAuth.Plugs.RateLimit do
   end
 
   defp throttle(conn, key, count, time_unit, penality, max_timeout, memory_length) do
-    case Counter.throttling_timeout(key, count, time_unit, penality, memory_length) do
+    case Counter.throttling_timeout(__MODULE__.Counter, key, count, time_unit, penality, memory_length) do
       timeout when timeout < max_timeout ->
         :timer.sleep(timeout)
 
-        Counter.increment(key, time_unit, memory_length)
+        Counter.increment(__MODULE__.Counter, key, time_unit, memory_length)
         conn
 
       _ ->
