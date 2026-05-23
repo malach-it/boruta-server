@@ -41,7 +41,7 @@ config :boruta_admin, BorutaAdmin.Repo,
   pool_size: 10
 
 config :boruta_identity, Boruta.Accounts,
-  secret_key_base: "secret"
+  secret_key_base: System.get_env("SECRET_KEY_BASE", "secret")
 
 config :libcluster,
   topologies: [
@@ -50,6 +50,6 @@ config :libcluster,
       config: [hosts: []],
       connect: {:net_kernel, :connect_node, []},
       disconnect: {:erlang, :disconnect_node, []},
-      list_nodes: {:erlang, :nodes, [:connected]},
+      list_nodes: {:erlang, :nodes, [:connected]}
     ]
   ]

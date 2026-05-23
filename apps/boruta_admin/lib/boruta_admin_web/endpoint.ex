@@ -1,14 +1,8 @@
 defmodule BorutaAdminWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boruta_admin
 
-  # sets the same session as :boruta_web
-  @session_options [
-    store: :cookie,
-    key: "_boruta_web_key",
-    signing_salt: "OCKBuS86"
-  ]
-
   plug RemoteIp
+
   plug Plug.Static,
     at: "/",
     from: :boruta_admin,
@@ -32,8 +26,22 @@ defmodule BorutaAdminWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session, @session_options
+  plug :put_configured_session
   plug BorutaAdminWeb.Router
+
+  def put_configured_session(conn, _) do
+    Plug.Session.call(conn, Plug.Session.init(session_options()))
+  end
+
+  defp session_options do
+    endpoint_config = Application.get_env(:boruta_admin, BorutaAdminWeb.Endpoint)
+
+    [
+      store: :cookie,
+      key: endpoint_config[:session_cookie_key],
+      signing_salt: endpoint_config[:session_cookie_signing_salt]
+    ]
+  end
 
   def log_level(%{path_info: ["healthcheck" | _]}), do: false
   def log_level(%{path_info: ["favicon.ico" | _]}), do: false

@@ -7,10 +7,20 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
   url: [host: "localhost"],
   # url: [host: "localhost", path: "/accounts"],
   server: false,
-  secret_key_base: "Caq0kwgjLGwxoEVPOxUhEiZ3AG2nADaNYi+ceWh2RuAgKF6vv/FfwqM/P7cDcNrR",
+  secret_key_base:
+    System.get_env(
+      "SECRET_KEY_BASE",
+      "Caq0kwgjLGwxoEVPOxUhEiZ3AG2nADaNYi+ceWh2RuAgKF6vv/FfwqM/P7cDcNrR"
+    ),
+  session_cookie_key: System.get_env("BORUTA_SESSION_COOKIE_KEY", "_boruta_web_key"),
+  session_cookie_signing_salt: System.get_env("BORUTA_SESSION_COOKIE_SIGNING_SALT", "OCKBuS86"),
   render_errors: [view: BorutaIdentityWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: BorutaIdentity.PubSub,
   live_view: [signing_salt: "9q0RPs/i"]
+
+config :boruta_identity, BorutaIdentityWeb.Authenticable,
+  remember_me_cookie:
+    System.get_env("BORUTA_REMEMBER_ME_COOKIE", "_boruta_identity_web_user_remember_me")
 
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

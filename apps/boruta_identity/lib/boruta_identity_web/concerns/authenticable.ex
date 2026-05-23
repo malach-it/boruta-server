@@ -12,11 +12,15 @@ defmodule BorutaIdentityWeb.Authenticable do
   # the token expiry itself in UserToken.
   @session_key :user_token
   @max_age 60 * 60 * 24 * 60
-  @remember_me_cookie "_boruta_identity_web_user_remember_me"
+  @default_remember_me_cookie "_boruta_identity_web_user_remember_me"
   @remember_me_options [sign: true, max_age: @max_age, same_site: "Lax"]
 
   @spec remember_me_cookie() :: String.t()
-  def remember_me_cookie, do: @remember_me_cookie
+  def remember_me_cookie do
+    :boruta_identity
+    |> Application.get_env(BorutaIdentityWeb.Authenticable, [])
+    |> Keyword.get(:remember_me_cookie, @default_remember_me_cookie)
+  end
 
   @spec store_user_session(conn :: Plug.Conn.t(), session_token :: String.t()) ::
           conn :: Plug.Conn.t()
@@ -38,13 +42,13 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec remove_user_session(conn :: Plug.Conn.t()) :: conn :: Plug.Conn.t()
   def remove_user_session(conn) do
     conn
-    |> delete_resp_cookie(@remember_me_cookie)
+    |> delete_resp_cookie(remember_me_cookie())
     |> delete_session(@session_key)
   end
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => remember_me})
        when remember_me in ["true", "on"] do
-    put_resp_cookie(conn, @remember_me_cookie, token, @remember_me_options)
+    put_resp_cookie(conn, remember_me_cookie(), token, @remember_me_options)
   end
 
   defp maybe_write_remember_me_cookie(conn, _token, _params) do

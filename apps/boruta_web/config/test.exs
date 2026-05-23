@@ -3,12 +3,20 @@ import Config
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: 4002],
   server: false,
-  secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
+  secret_key_base:
+    System.get_env(
+      "SECRET_KEY_BASE",
+      "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
+    )
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
   http: [port: 4003],
   server: false,
-  secret_key_base: "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
+  secret_key_base:
+    System.get_env(
+      "SECRET_KEY_BASE",
+      "averysecretkeybaseaverysecretkeybaseaverysecretkeybaseaverysecretkeybase"
+    )
 
 config :boruta_web, BorutaWeb.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
@@ -31,7 +39,8 @@ config :boruta_auth, BorutaAuth.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :boruta_identity, Boruta.Accounts, secret_key_base: "secret"
+config :boruta_identity, Boruta.Accounts,
+  secret_key_base: System.get_env("SECRET_KEY_BASE", "secret")
 
 config :logger, level: :warn
 
@@ -42,7 +51,7 @@ config :libcluster,
       config: [hosts: []],
       connect: {:net_kernel, :connect_node, []},
       disconnect: {:erlang, :disconnect_node, []},
-      list_nodes: {:erlang, :nodes, [:connected]},
+      list_nodes: {:erlang, :nodes, [:connected]}
     ]
   ]
 

@@ -51,30 +51,55 @@ config :boruta_gateway,
 config :boruta_web, BorutaWeb.Endpoint,
   http: [
     port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer(),
-    ip: System.get_env("BORUTA_OAUTH_BIND", "::") |> String.to_charlist() |> :inet.parse_address() |> elem(1),
+    ip:
+      System.get_env("BORUTA_OAUTH_BIND", "::")
+      |> String.to_charlist()
+      |> :inet.parse_address()
+      |> elem(1),
     transport_options: [
       num_acceptors: String.to_integer(System.get_env("BORUTA_OAUTH_ACCEPTORS", "8"))
     ]
   ],
-  url: [scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"), host: System.get_env("BORUTA_OAUTH_HOST")],
-  secret_key_base: System.get_env("SECRET_KEY_BASE")
+  url: [
+    scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"),
+    host: System.get_env("BORUTA_OAUTH_HOST")
+  ],
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
+  session_cookie_key: System.get_env("BORUTA_SESSION_COOKIE_KEY", "_boruta_web_key"),
+  session_cookie_signing_salt: System.get_env("BORUTA_SESSION_COOKIE_SIGNING_SALT", "OCKBuS86")
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  url: [scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"), host: System.get_env("BORUTA_OAUTH_HOST"), path: "/accounts", port: System.get_env("BORUTA_OAUTH_PORT")],
-  secret_key_base: System.get_env("SECRET_KEY_BASE")
+  url: [
+    scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"),
+    host: System.get_env("BORUTA_OAUTH_HOST"),
+    path: "/accounts",
+    port: System.get_env("BORUTA_OAUTH_PORT")
+  ],
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
+  session_cookie_key: System.get_env("BORUTA_SESSION_COOKIE_KEY", "_boruta_web_key"),
+  session_cookie_signing_salt: System.get_env("BORUTA_SESSION_COOKIE_SIGNING_SALT", "OCKBuS86")
+
+config :boruta_identity, BorutaIdentityWeb.Authenticable,
+  remember_me_cookie:
+    System.get_env("BORUTA_REMEMBER_ME_COOKIE", "_boruta_identity_web_user_remember_me")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [
     port: System.get_env("BORUTA_ADMIN_PORT") |> String.to_integer(),
-    ip: System.get_env("BORUTA_ADMIN_BIND", "::") |> String.to_charlist() |> :inet.parse_address() |> elem(1),
+    ip:
+      System.get_env("BORUTA_ADMIN_BIND", "::")
+      |> String.to_charlist()
+      |> :inet.parse_address()
+      |> elem(1),
     protocol_options: [idle_timeout: 3_600_000, inactivity_timeout: 3_600_000]
   ],
   url: [scheme: "https", host: System.get_env("BORUTA_ADMIN_HOST")],
-  secret_key_base: System.get_env("SECRET_KEY_BASE")
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
+  session_cookie_key: System.get_env("BORUTA_SESSION_COOKIE_KEY", "_boruta_web_key"),
+  session_cookie_signing_salt: System.get_env("BORUTA_SESSION_COOKIE_SIGNING_SALT", "OCKBuS86")
 
 config :boruta_admin,
-  configuration_path:
-    System.get_env("BORUTA_CONFIGURATION_PATH")
+  configuration_path: System.get_env("BORUTA_CONFIGURATION_PATH")
 
 config :boruta_web, BorutaAdminWeb.Authorization,
   oauth2: [
@@ -92,8 +117,10 @@ config :boruta, Boruta.Oauth,
     authorization_code: 600
   ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL"),
-  did_resolver_base_url: System.get_env("DID_RESOLVER_BASE_URL", "https://api.godiddy.com/1.0.0/universal-resolver"),
-  did_registrar_base_url: System.get_env("DID_REGISTRAR_BASE_URL", "https://api.godiddy.com/1.0.0/universal-registrar"),
+  did_resolver_base_url:
+    System.get_env("DID_RESOLVER_BASE_URL", "https://api.godiddy.com/1.0.0/universal-resolver"),
+  did_registrar_base_url:
+    System.get_env("DID_REGISTRAR_BASE_URL", "https://api.godiddy.com/1.0.0/universal-registrar"),
   universal_did_auth: %{
     type: "bearer",
     token: System.get_env("DID_SERVICES_API_KEY")

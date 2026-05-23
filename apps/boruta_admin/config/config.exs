@@ -14,7 +14,13 @@ config :boruta_admin, BorutaAdminWeb.Endpoint,
     host: "localhost",
     protocol_options: [idle_timeout: 3_600_000, inactivity_timeout: 3_600_000]
   ],
-  secret_key_base: "Caq0kwgjLGwxoEVPOxUhEiZ3AG2nADaNYi+ceWh2RuAgKF6vv/FfwqM/P7cDcNrR",
+  secret_key_base:
+    System.get_env(
+      "SECRET_KEY_BASE",
+      "Caq0kwgjLGwxoEVPOxUhEiZ3AG2nADaNYi+ceWh2RuAgKF6vv/FfwqM/P7cDcNrR"
+    ),
+  session_cookie_key: System.get_env("BORUTA_SESSION_COOKIE_KEY", "_boruta_web_key"),
+  session_cookie_signing_salt: System.get_env("BORUTA_SESSION_COOKIE_SIGNING_SALT", "OCKBuS86"),
   render_errors: [view: BorutaAdminWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: BorutaAdmin.PubSub,
   live_view: [signing_salt: "mtlt3we/"]
