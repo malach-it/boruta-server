@@ -82,31 +82,31 @@
                 <TextEditor :content="upstream.unauthorized_response" @codeUpdate="setUnauthorizedResponse" />
               </div>
             </div>
-          </div>
-          <h3>Forwarded authorization</h3>
-          <div class="ui segment">
-            <div class="inline fields" :class="{ 'error': upstream.errors?.forwarded_token_signature_alg }">
-              <label>Forwarded token signature algorithm</label>
-              <div class="field" v-for="alg in forwardedTokenSignatureAlgorithms" :key="alg">
-                <div class="ui radio checkbox">
-                  <label>{{ alg }}</label>
-                  <input type="radio" v-model="upstream.forwarded_token_signature_alg" :value="alg" />
+            <h3>Forwarded authorization</h3>
+            <div class="ui segment">
+              <div class="inline fields" :class="{ 'error': upstream.errors?.forwarded_token_signature_alg }">
+                <label>Forwarded token signature algorithm</label>
+                <div class="field" v-for="alg in forwardedTokenSignatureAlgorithms" :key="alg">
+                  <div class="ui radio checkbox">
+                    <label>{{ alg }}</label>
+                    <input type="radio" v-model="upstream.forwarded_token_signature_alg" :value="alg" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div v-if="isHsAlgorithm" class="field" :class="{ 'error': upstream.errors?.forwarded_token_secret }">
-            <label>Forwarded token secret <em>(leave blank to autogenerate)</em></label>
-            <input type="text" v-model="upstream.forwarded_token_secret" placeholder="text">
-          </div>
-          <div v-if="isRsAlgorithm">
-            <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_private_key }">
-              <label>Forwarded token private key <em>(leave blank to autogenerate)</em></label>
-              <textarea v-model="upstream.forwarded_token_private_key"></textarea>
+            <div v-if="isHsAlgorithm" class="field" :class="{ 'error': upstream.errors?.forwarded_token_secret }">
+              <label>Forwarded token secret <em>(leave blank to autogenerate)</em></label>
+              <input type="text" v-model="upstream.forwarded_token_secret" placeholder="text">
             </div>
-            <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_public_key }">
-              <label>Forwarded token public key</label>
-              <textarea v-model="upstream.forwarded_token_public_key"></textarea>
+            <div v-if="isRsAlgorithm">
+              <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_private_key }">
+                <label>Forwarded token private key <em>(leave blank to autogenerate)</em></label>
+                <textarea v-model="upstream.forwarded_token_private_key"></textarea>
+              </div>
+              <div class="field" :class="{ 'error': upstream.errors?.forwarded_token_public_key }">
+                <label>Forwarded token public key</label>
+                <textarea v-model="upstream.forwarded_token_public_key"></textarea>
+              </div>
             </div>
           </div>
         </div>
