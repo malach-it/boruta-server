@@ -61,6 +61,11 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "uses upstream keepalive in socket options" do
+      assert {:keepalive, true} in Gateway.upstream_socket_options(%Upstream{keepalive: true})
+      assert {:keepalive, false} in Gateway.upstream_socket_options(%Upstream{keepalive: false})
+    end
+
     test "returns a 404 when no upstream persisted" do
       Sandbox.unboxed_run(Repo, fn ->
         try do

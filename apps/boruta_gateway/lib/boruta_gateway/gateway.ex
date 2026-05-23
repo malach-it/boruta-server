@@ -163,7 +163,7 @@ defmodule BorutaGateway.Gateway do
           case :gen_tcp.connect(
                  upstream.host |> String.to_charlist(),
                  upstream.port,
-                 [:binary, {:packet, :raw}, {:active, false}],
+                 upstream_socket_options(upstream),
                  @connect_timeout
                ) do
             {:ok, client_socket} ->
@@ -184,13 +184,11 @@ defmodule BorutaGateway.Gateway do
           case :ssl.connect(
                  upstream.host |> String.to_charlist(),
                  upstream.port,
-                 [
-                   :binary,
-                   {:packet, :raw},
-                   {:active, false},
-                   {:verify, :verify_peer},
-                   {:cacerts, :public_key.cacerts_get()}
-                 ],
+                 upstream_socket_options(upstream) ++
+                   [
+                     {:verify, :verify_peer},
+                     {:cacerts, :public_key.cacerts_get()}
+                   ],
                  @connect_timeout
                ) do
             {:ok, client_socket} ->
@@ -330,6 +328,11 @@ defmodule BorutaGateway.Gateway do
 
   defp activate_upstream_socket(socket, :tcp), do: :inet.setopts(socket, active: :once)
   defp activate_upstream_socket(socket, :ssl), do: :ssl.setopts(socket, active: :once)
+
+  @doc false
+  def upstream_socket_options(%Upstream{keepalive: keepalive}) do
+    [:binary, {:packet, :raw}, {:active, false}, {:keepalive, keepalive}]
+  end
 
   defp close_downstream(socket, state) do
     :gen_tcp.close(socket)

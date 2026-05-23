@@ -54,6 +54,11 @@ defmodule BorutaGateway.UpstreamsTest do
       assert {:ok, %Upstream{}} = Upstreams.create_upstream(@valid_attrs)
     end
 
+    test "create_upstream/1 with keepalive creates an upstream" do
+      assert {:ok, %Upstream{keepalive: true}} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :keepalive, true))
+    end
+
     test "create_upstream/1 with rate limiting data creates an upstream" do
       assert {:ok,
               %Upstream{

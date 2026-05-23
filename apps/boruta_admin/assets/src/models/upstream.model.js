@@ -10,6 +10,7 @@ const defaults = {
   pool_size: 10,
   pool_count: 1,
   max_idle_time: 10,
+  keepalive: false,
   rate_limit_enabled: false,
   rate_limit_count: 10,
   rate_limit_time_unit: 'second',
@@ -27,6 +28,7 @@ const assign = {
   pool_size: function ({ pool_size }) { this.pool_size = pool_size },
   pool_count: function ({ pool_count }) { this.pool_count = pool_count },
   max_idle_time: function ({ max_idle_time }) { this.max_idle_time = max_idle_time },
+  keepalive: function ({ keepalive }) { this.keepalive = keepalive },
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
   forwarded_token_signature_alg: function ({ forwarded_token_signature_alg }) { this.forwarded_token_signature_alg = forwarded_token_signature_alg },
   forwarded_token_secret: function ({ forwarded_token_secret }) { this.forwarded_token_secret = forwarded_token_secret },
@@ -115,6 +117,7 @@ class Upstream {
       pool_size,
       pool_count,
       max_idle_time,
+      keepalive,
       uris,
       strip_uri,
       authorize,
@@ -143,6 +146,7 @@ class Upstream {
       pool_size,
       pool_count,
       max_idle_time,
+      keepalive,
       uris: uris.map(({ uri }) => uri),
       required_scopes: required_scopes.reduce((acc, { model: { name }, method }) => {
         acc[method] = acc[method] || []

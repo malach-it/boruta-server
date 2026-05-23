@@ -28,6 +28,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "pool_count" => %{"type" => "number"},
         "pool_size" => %{"type" => "number"},
         "max_idle_time" => %{"type" => "number"},
+        "keepalive" => %{"type" => "boolean"},
         "rate_limit_enabled" => %{"type" => "boolean"},
         "rate_limit_count" => %{"type" => "number"},
         "rate_limit_time_unit" => %{
@@ -83,6 +84,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "pool_count" => %{"type" => "number"},
         "pool_size" => %{"type" => "number"},
         "max_idle_time" => %{"type" => "number"},
+        "keepalive" => %{"type" => "boolean"},
         "rate_limit_enabled" => %{"type" => "boolean"},
         "rate_limit_count" => %{"type" => "number"},
         "rate_limit_time_unit" => %{

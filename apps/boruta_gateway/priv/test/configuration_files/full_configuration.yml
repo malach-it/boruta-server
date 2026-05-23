@@ -12,6 +12,7 @@ configuration:
       port: 80
       uris: ["/httpbin"]
       max_idle_time: 10
+      keepalive: true
       pool_count: 1
       pool_size: 10
       required_scopes:
@@ -29,6 +30,7 @@ configuration:
       port: 80
       uris: ["/httpbin"]
       max_idle_time: 10
+      keepalive: true
       pool_count: 1
       pool_size: 10
       required_scopes:

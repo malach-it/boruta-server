@@ -35,6 +35,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
           required_scopes: map(),
           strip_uri: boolean(),
           authorize: boolean(),
+          keepalive: boolean(),
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
           unauthorized_response: String.t() | nil,
@@ -62,6 +63,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:pool_size, :integer, default: 10)
     field(:pool_count, :integer, default: 1)
     field(:max_idle_time, :integer, default: 10)
+    field(:keepalive, :boolean, default: false)
     field(:error_content_type, :string)
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
@@ -128,6 +130,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :pool_size,
       :pool_count,
       :max_idle_time,
+      :keepalive,
       :error_content_type,
       :forbidden_response,
       :unauthorized_response,

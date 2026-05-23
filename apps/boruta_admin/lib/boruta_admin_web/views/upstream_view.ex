@@ -34,6 +34,7 @@ defmodule BorutaAdminWeb.UpstreamView do
       pool_size: upstream.pool_size,
       pool_count: upstream.pool_count,
       max_idle_time: upstream.max_idle_time,
+      keepalive: upstream.keepalive,
       error_content_type: upstream.error_content_type,
       forbidden_response: upstream.forbidden_response,
       unauthorized_response: upstream.unauthorized_response,

@@ -45,6 +45,12 @@
             <label>Max idle time</label>
             <input type="number" v-model="upstream.max_idle_time" placeholder="10">
           </div>
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.keepalive">
+              <label>Keep upstream connection alive</label>
+            </div>
+          </div>
         </div>
         <div ref="uris" data-tab="uris" class="ui bottom attached tab segment">
           <h2>URIs</h2>
