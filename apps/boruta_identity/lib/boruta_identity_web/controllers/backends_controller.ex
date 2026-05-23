@@ -46,13 +46,18 @@ defmodule BorutaIdentityWeb.BackendsController do
     end
   end
 
-  def callback(conn, %{"federated_server_name" => federated_server_name} = params) do
+  def callback(conn, %{
+    "id" => backend_id,
+    "federated_server_name" => federated_server_name
+  } = params) do
     conn = request_from_session(conn)
     client_id = client_id_from_request(conn)
+    backend = IdentityProviders.get_backend!(backend_id)
 
     FederatedAccounts.create_federated_session(
       conn,
       client_id,
+      backend,
       federated_server_name,
       params["code"] || "",
       __MODULE__

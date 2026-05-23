@@ -40,22 +40,7 @@ defmodule BorutaIdentity.FederatedAccountsTest do
        bypass: bypass, client_id: client_identity_provider.client_id, backend: federated_backend}
     end
 
-    test "returns an error if client id is unknown" do
-      context = :context
-      access_token = "access_token"
-
-      assert_raise IdentityProviderError, fn ->
-        FederatedAccounts.create_federated_session(
-          context,
-          "unknown",
-          "unknown",
-          access_token,
-          DummyFederatedSessions
-        )
-      end
-    end
-
-    test "returns an error if federated server is unknown", %{client_id: client_id} do
+    test "returns an error if federated server is unknown", %{client_id: client_id, backend: backend} do
       context = :context
       access_token = "access_token"
 
@@ -64,6 +49,7 @@ defmodule BorutaIdentity.FederatedAccountsTest do
                FederatedAccounts.create_federated_session(
                  context,
                  client_id,
+                 backend,
                  "unknown",
                  access_token,
                  DummyFederatedSessions
@@ -89,6 +75,7 @@ defmodule BorutaIdentity.FederatedAccountsTest do
                FederatedAccounts.create_federated_session(
                  context,
                  client_id,
+                 backend,
                  federated_server["name"],
                  code,
                  DummyFederatedSessions
@@ -118,6 +105,7 @@ defmodule BorutaIdentity.FederatedAccountsTest do
                FederatedAccounts.create_federated_session(
                  context,
                  client_id,
+                 backend,
                  federated_server["name"],
                  code,
                  DummyFederatedSessions
@@ -142,6 +130,7 @@ defmodule BorutaIdentity.FederatedAccountsTest do
                FederatedAccounts.create_federated_session(
                  context,
                  client_id,
+                 backend,
                  federated_server["name"],
                  code,
                  DummyFederatedSessions

@@ -41,6 +41,7 @@ defmodule BorutaIdentity.FederatedAccounts do
   @spec create_federated_session(
           context :: any(),
           client_id :: String.t(),
+          backend :: Backend.t(),
           federated_server_name :: any(),
           code :: String.t(),
           module :: atom()
@@ -48,12 +49,13 @@ defmodule BorutaIdentity.FederatedAccounts do
   defwithclientidp create_federated_session(
                      context,
                      client_id,
+                     backend,
                      federated_server_name,
                      code,
                      module
                    ) do
     try do
-      case Backend.federated_oauth_client(client_idp.backend, federated_server_name) do
+      case Backend.federated_oauth_client(backend, federated_server_name) do
         nil ->
           raise IdentityProviderError, "Could not fetch associated federated server."
 
