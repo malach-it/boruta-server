@@ -2,14 +2,31 @@ import axios from 'axios'
 import Scope from './scope.model'
 import { addClientErrorInterceptor } from './utils'
 
+const defaultForbiddenResponse = JSON.stringify({
+  error: 'FORBIDDEN',
+  message: 'You are forbidden to access this resource.'
+}, null, 2)
+
+const defaultUnauthorizedResponse = JSON.stringify({
+  error: 'UNAUTHORIZED',
+  message: 'You are unauthorized to access this resource.'
+}, null, 2)
+
 const defaults = {
   errors: null,
   node_name: 'global',
   uris: [],
   required_scopes: [],
-  pool_size: 10,
-  pool_count: 1,
-  max_idle_time: 10
+  error_content_type: 'application/json',
+  forbidden_response: defaultForbiddenResponse,
+  unauthorized_response: defaultUnauthorizedResponse,
+  keepalive: false,
+  rate_limit_enabled: false,
+  rate_limit_count: 10,
+  rate_limit_time_unit: 'second',
+  rate_limit_penality: 500,
+  rate_limit_timeout: 5000,
+  rate_limit_memory_length: 50
 }
 
 const assign = {
@@ -18,14 +35,18 @@ const assign = {
   scheme: function ({ scheme }) { this.scheme = scheme },
   host: function ({ host }) { this.host = host },
   port: function ({ port }) { this.port = port },
-  pool_size: function ({ pool_size }) { this.pool_size = pool_size },
-  pool_count: function ({ pool_count }) { this.pool_count = pool_count },
-  max_idle_time: function ({ max_idle_time }) { this.max_idle_time = max_idle_time },
+  keepalive: function ({ keepalive }) { this.keepalive = keepalive },
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
   forwarded_token_signature_alg: function ({ forwarded_token_signature_alg }) { this.forwarded_token_signature_alg = forwarded_token_signature_alg },
   forwarded_token_secret: function ({ forwarded_token_secret }) { this.forwarded_token_secret = forwarded_token_secret },
   forwarded_token_public_key: function ({ forwarded_token_public_key }) { this.forwarded_token_public_key = forwarded_token_public_key },
   forwarded_token_private_key: function ({ forwarded_token_private_key }) { this.forwarded_token_private_key = forwarded_token_private_key },
+  rate_limit_enabled: function ({ rate_limit_enabled }) { this.rate_limit_enabled = rate_limit_enabled },
+  rate_limit_count: function ({ rate_limit_count }) { this.rate_limit_count = rate_limit_count },
+  rate_limit_time_unit: function ({ rate_limit_time_unit }) { this.rate_limit_time_unit = rate_limit_time_unit },
+  rate_limit_penality: function ({ rate_limit_penality }) { this.rate_limit_penality = rate_limit_penality },
+  rate_limit_timeout: function ({ rate_limit_timeout }) { this.rate_limit_timeout = rate_limit_timeout },
+  rate_limit_memory_length: function ({ rate_limit_memory_length }) { this.rate_limit_memory_length = rate_limit_memory_length },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
   },
@@ -36,8 +57,8 @@ const assign = {
     }, {})
   },
   error_content_type: function ({ error_content_type }) { this.error_content_type = error_content_type },
-  forbidden_response: function ({ forbidden_response }) { this.forbidden_response = forbidden_response },
-  unauthorized_response: function ({ unauthorized_response }) { this.unauthorized_response = unauthorized_response }
+  forbidden_response: function ({ forbidden_response }) { this.forbidden_response = forbidden_response ?? defaultForbiddenResponse },
+  unauthorized_response: function ({ unauthorized_response }) { this.unauthorized_response = unauthorized_response ?? defaultUnauthorizedResponse }
 }
 
 class Upstream {
@@ -100,9 +121,7 @@ class Upstream {
       scheme,
       host,
       port,
-      pool_size,
-      pool_count,
-      max_idle_time,
+      keepalive,
       uris,
       strip_uri,
       authorize,
@@ -113,7 +132,13 @@ class Upstream {
       forwarded_token_signature_alg,
       forwarded_token_secret,
       forwarded_token_private_key,
-      forwarded_token_public_key
+      forwarded_token_public_key,
+      rate_limit_enabled,
+      rate_limit_count,
+      rate_limit_time_unit,
+      rate_limit_penality,
+      rate_limit_timeout,
+      rate_limit_memory_length
     } = this
 
     return {
@@ -122,9 +147,7 @@ class Upstream {
       scheme,
       host,
       port,
-      pool_size,
-      pool_count,
-      max_idle_time,
+      keepalive,
       uris: uris.map(({ uri }) => uri),
       required_scopes: required_scopes.reduce((acc, { model: { name }, method }) => {
         acc[method] = acc[method] || []
@@ -139,7 +162,13 @@ class Upstream {
       forwarded_token_signature_alg,
       forwarded_token_secret,
       forwarded_token_private_key,
-      forwarded_token_public_key
+      forwarded_token_public_key,
+      rate_limit_enabled,
+      rate_limit_count,
+      rate_limit_time_unit,
+      rate_limit_penality,
+      rate_limit_timeout,
+      rate_limit_memory_length
     }
   }
 }
@@ -186,6 +215,12 @@ Upstream.forwardedTokenSignatureAlgorithms = [
   "RS256",
   "RS384",
   "RS512"
+]
+
+Upstream.rateLimitTimeUnits = [
+  "millisecond",
+  "second",
+  "minute"
 ]
 
 export default Upstream

@@ -24,8 +24,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
       token_generator: 0
     ]
 
-  alias BorutaGateway.Upstreams.ClientSupervisor
-
   @type t :: %__MODULE__{
           node_name: String.t(),
           scheme: String.t(),
@@ -35,9 +33,16 @@ defmodule BorutaGateway.Upstreams.Upstream do
           required_scopes: map(),
           strip_uri: boolean(),
           authorize: boolean(),
+          keepalive: boolean(),
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
           unauthorized_response: String.t() | nil,
+          rate_limit_enabled: boolean(),
+          rate_limit_count: integer(),
+          rate_limit_time_unit: String.t(),
+          rate_limit_penality: integer(),
+          rate_limit_timeout: integer(),
+          rate_limit_memory_length: integer(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -53,47 +58,27 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:required_scopes, :map, default: %{})
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
-    field(:pool_size, :integer, default: 10)
-    field(:pool_count, :integer, default: 1)
-    field(:max_idle_time, :integer, default: 10)
-    field(:error_content_type, :string)
+    field(:keepalive, :boolean, default: false)
+    field(:error_content_type, :string, default: "application/json")
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
     field(:forwarded_token_signature_alg, :string)
     field(:forwarded_token_secret, :string)
     field(:forwarded_token_public_key, :string)
     field(:forwarded_token_private_key, :string)
-
-    field(:http_client, :any, virtual: true)
+    field(:rate_limit_enabled, :boolean, default: false)
+    field(:rate_limit_count, :integer, default: 10)
+    field(:rate_limit_time_unit, :string, default: "second")
+    field(:rate_limit_penality, :integer, default: 500)
+    field(:rate_limit_timeout, :integer, default: 5_000)
+    field(:rate_limit_memory_length, :integer, default: 50)
 
     timestamps()
   end
 
-  def with_http_client(%__MODULE__{http_client: nil} = upstream) do
-    # TODO manage failure
-    {:ok, http_client} = ClientSupervisor.client_for_upstream(upstream)
-
-    %{upstream | http_client: http_client}
-  end
-
-  def with_http_client(%__MODULE__{http_client: http_client} = upstream)
-      when is_pid(http_client) do
-    ClientSupervisor.kill(http_client)
-    # TODO manage failure
-    {:ok, http_client} =
-      Enum.reduce_while(1..100, http_client, fn _i, http_client ->
-        :timer.sleep(10)
-
-        case Process.alive?(http_client) do
-          true ->
-            {:cont, http_client}
-
-          false ->
-            {:halt, ClientSupervisor.client_for_upstream(upstream)}
-        end
-      end)
-
-    %{upstream | http_client: http_client}
+  def required_scopes(%__MODULE__{required_scopes: required_scopes}, method) do
+    default_scopes = Map.get(required_scopes, "*", [])
+    Map.get(required_scopes, method, default_scopes)
   end
 
   @doc false
@@ -108,19 +93,25 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :strip_uri,
       :authorize,
       :required_scopes,
-      :pool_size,
-      :pool_count,
-      :max_idle_time,
+      :keepalive,
       :error_content_type,
-      :forbidden_response,
-      :unauthorized_response,
       :forwarded_token_signature_alg,
-      :forwarded_token_secret
+      :forwarded_token_secret,
+      :rate_limit_enabled,
+      :rate_limit_count,
+      :rate_limit_time_unit,
+      :rate_limit_penality,
+      :rate_limit_timeout,
+      :rate_limit_memory_length
     ])
+    |> cast(attrs, [:forbidden_response, :unauthorized_response], empty_values: [])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
-    |> validate_inclusion(:pool_size, 1..100)
-    |> validate_inclusion(:pool_count, 1..10)
+    |> validate_inclusion(:rate_limit_count, 1..100_000)
+    |> validate_inclusion(:rate_limit_time_unit, ["millisecond", "second", "minute"])
+    |> validate_inclusion(:rate_limit_penality, 0..600_000)
+    |> validate_inclusion(:rate_limit_timeout, 0..600_000)
+    |> validate_inclusion(:rate_limit_memory_length, 1..10_000)
     |> unique_constraint([:node_name, :host, :port, :uris])
     |> maybe_put_forwarded_token_secret()
     |> maybe_generate_key_pair()

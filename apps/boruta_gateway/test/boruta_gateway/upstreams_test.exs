@@ -51,7 +51,45 @@ defmodule BorutaGateway.UpstreamsTest do
     end
 
     test "create_upstream/1 with valid data creates a upstream" do
-      assert {:ok, %Upstream{}} = Upstreams.create_upstream(@valid_attrs)
+      assert {:ok, %Upstream{error_content_type: "application/json"}} =
+               Upstreams.create_upstream(@valid_attrs)
+    end
+
+    test "create_upstream/1 with keepalive creates an upstream" do
+      assert {:ok, %Upstream{keepalive: true}} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :keepalive, true))
+    end
+
+    test "create_upstream/1 preserves blank error responses" do
+      assert {:ok, %Upstream{forbidden_response: "", unauthorized_response: ""}} =
+               Upstreams.create_upstream(
+                 Map.merge(@valid_attrs, %{
+                   forbidden_response: "",
+                   unauthorized_response: ""
+                 })
+               )
+    end
+
+    test "create_upstream/1 with rate limiting data creates an upstream" do
+      assert {:ok,
+              %Upstream{
+                rate_limit_enabled: true,
+                rate_limit_count: 20,
+                rate_limit_time_unit: "minute",
+                rate_limit_penality: 1_000,
+                rate_limit_timeout: 10_000,
+                rate_limit_memory_length: 10
+              }} =
+               Upstreams.create_upstream(
+                 Map.merge(@valid_attrs, %{
+                   rate_limit_enabled: true,
+                   rate_limit_count: 20,
+                   rate_limit_time_unit: "minute",
+                   rate_limit_penality: 1_000,
+                   rate_limit_timeout: 10_000,
+                   rate_limit_memory_length: 10
+                 })
+               )
     end
 
     test "create_upstream/1 generates a secret with HS* algorithms" do
@@ -105,7 +143,10 @@ defmodule BorutaGateway.UpstreamsTest do
                 errors: [
                   node_name:
                     {"has already been taken",
-                     [constraint: :unique, constraint_name: "upstreams_node_name_host_port_uris_index"]}
+                     [
+                       constraint: :unique,
+                       constraint_name: "upstreams_node_name_host_port_uris_index"
+                     ]}
                 ]
               }} = Upstreams.create_upstream(@valid_attrs)
     end

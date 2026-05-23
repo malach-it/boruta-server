@@ -43,6 +43,7 @@ config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.SMTP
 config :boruta_gateway,
   port: System.get_env("BORUTA_GATEWAY_PORT") |> String.to_integer(),
   sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT") |> String.to_integer(),
+  num_acceptors: System.get_env("BORUTA_GATEWAY_ACCEPTORS", "8") |> String.to_integer(),
   configuration_path:
     System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH", "config/example-configuration.yml"),
   server: true
@@ -52,7 +53,7 @@ config :boruta_web, BorutaWeb.Endpoint,
     port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer(),
     ip: System.get_env("BORUTA_OAUTH_BIND", "::") |> String.to_charlist() |> :inet.parse_address() |> elem(1),
     transport_options: [
-      num_acceptors: String.to_integer(System.get_env("WEB_ACCEPTORS", "64"))
+      num_acceptors: String.to_integer(System.get_env("BORUTA_OAUTH_ACCEPTORS", "8"))
     ]
   ],
   url: [scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"), host: System.get_env("BORUTA_OAUTH_HOST")],

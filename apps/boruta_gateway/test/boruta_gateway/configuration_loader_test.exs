@@ -49,6 +49,7 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
     assert Repo.all(Upstream) |> Enum.empty?()
 
     Application.delete_env(ConfigurationLoader, :node_name)
+
     configuration_file_path =
       :code.priv_dir(:boruta_gateway)
       |> Path.join("/test/configuration_files/full_configuration.yml")
@@ -64,9 +65,7 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
                required_scopes: %{"GET" => ["test"]},
                strip_uri: true,
                authorize: true,
-               pool_size: 10,
-               pool_count: 1,
-               max_idle_time: 10,
+               keepalive: true,
                error_content_type: "test",
                forbidden_response: "test",
                unauthorized_response: "test",
@@ -84,16 +83,14 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
                required_scopes: %{"GET" => ["test"]},
                strip_uri: true,
                authorize: true,
-               pool_size: 10,
-               pool_count: 1,
-               max_idle_time: 10,
+               keepalive: true,
                error_content_type: "test",
                forbidden_response: "test",
                unauthorized_response: "test",
                forwarded_token_signature_alg: "HS384",
                forwarded_token_secret: "test",
                forwarded_token_public_key: nil,
-               forwarded_token_private_key: nil,
+               forwarded_token_private_key: nil
              }
            ] = Repo.all(Upstream)
   end

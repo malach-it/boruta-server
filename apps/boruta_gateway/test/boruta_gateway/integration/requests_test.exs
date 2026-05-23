@@ -1,17 +1,16 @@
 defmodule BorutaGateway.RequestsIntegrationTest do
   use ExUnit.Case, async: false
-  use Plug.Test
   use BorutaGateway.DataCase
 
   alias Boruta.AccessTokensAdapter
   alias Boruta.ClientsAdapter
   alias Boruta.Ecto.Admin
+  alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Gateway
   alias BorutaGateway.Repo
   alias BorutaGateway.RequestsIntegrationTest.HttpClient
   alias BorutaGateway.Upstreams
-  alias BorutaGateway.Upstreams.Client
   alias BorutaGateway.Upstreams.Upstream
   alias Ecto.Adapters.SQL.Sandbox
 
@@ -59,6 +58,11 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           Repo.delete_all(Upstream)
         end
       end)
+    end
+
+    test "uses upstream keepalive in socket options" do
+      assert {:keepalive, true} in Gateway.upstream_socket_options(%Upstream{keepalive: true})
+      assert {:keepalive, false} in Gateway.upstream_socket_options(%Upstream{keepalive: false})
     end
 
     test "returns a 404 when no upstream persisted" do
@@ -154,6 +158,42 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                      false
                  end)
         after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "returns a 429 when upstream rate limit is reached" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          {:ok, upstream} =
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "should.not.be.called",
+              port: 80,
+              uris: ["/limited"],
+              rate_limit_enabled: true,
+              rate_limit_count: 1,
+              rate_limit_time_unit: "second",
+              rate_limit_penality: 100,
+              rate_limit_timeout: 1,
+              rate_limit_memory_length: 50
+            })
+
+          key = {:gateway_upstream, upstream.id, ~c"127.0.0.1"}
+
+          Agent.update(Counter, fn _counter ->
+            %{key => List.duplicate(:os.system_time(:millisecond), 7)}
+          end)
+
+          Process.sleep(100)
+
+          request = Finch.build(:get, "http://127.0.0.1:7777/limited", [], "")
+
+          assert {:ok, %Finch.Response{body: "", status: 429}} =
+                   Finch.request(request, HttpClient)
+        after
+          Agent.update(Counter, fn _counter -> %{} end)
           Repo.delete_all(Upstream)
         end
       end)
@@ -595,8 +635,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
 
             upstream = Repo.all(Upstream) |> List.first()
-            signer = Client.signer(upstream)
-            assert {:ok, claims} = Client.Token.verify(token, signer)
+            signer = Gateway.signer(upstream)
+            assert {:ok, claims} = Gateway.Token.verify(token, signer)
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 

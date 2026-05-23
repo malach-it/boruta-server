@@ -25,9 +25,6 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
           }
         },
         "strip_uri" => %{"type" => "boolean"},
-        "pool_count" => %{"type" => "number"},
-        "pool_size" => %{"type" => "number"},
-        "max_idle_time" => %{"type" => "number"},
         "required_scopes" => %{
           "type" => "object",
           "patternProperties" => %{
@@ -72,9 +69,6 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
           }
         },
         "strip_uri" => %{"type" => "boolean"},
-        "pool_count" => %{"type" => "number"},
-        "pool_size" => %{"type" => "number"},
-        "max_idle_time" => %{"type" => "number"},
         "required_scopes" => %{
           "type" => "object",
           "patternProperties" => %{

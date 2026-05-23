@@ -11,9 +11,7 @@ configuration:
       host: "httpbin.patatoid.fr"
       port: 80
       uris: ["/httpbin"]
-      max_idle_time: 10
-      pool_count: 1
-      pool_size: 10
+      keepalive: true
       required_scopes:
         GET: ["test"]
       scheme: "http"
@@ -28,9 +26,7 @@ configuration:
       host: "httpbin.patatoid.fr"
       port: 80
       uris: ["/httpbin"]
-      max_idle_time: 10
-      pool_count: 1
-      pool_size: 10
+      keepalive: true
       required_scopes:
         GET: ["test"]
       scheme: "http"

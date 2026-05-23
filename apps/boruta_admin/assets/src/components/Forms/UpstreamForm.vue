@@ -6,6 +6,7 @@
         <a id="general-configuration" @click="openTab" class="active item">General configuration</a>
         <a id="uris" @click="openTab" class="item">URIs</a>
         <a id="authorization" @click="openTab" class="item">Authorization</a>
+        <a id="security" @click="openTab" class="item">Security</a>
       </div>
       <div ref="form">
         <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
@@ -32,17 +33,11 @@
             <label>Port</label>
             <input type="text" v-model="upstream.port" placeholder="443">
           </div>
-          <div class="field" :class="{ 'error': upstream.errors?.pool_count }">
-            <label>Pool count</label>
-            <input type="number" v-model="upstream.pool_count" placeholder="10">
-          </div>
-          <div class="field" :class="{ 'error': upstream.errors?.pool_size }">
-            <label>Pool size</label>
-            <input type="number" v-model="upstream.pool_size" placeholder="10">
-          </div>
-          <div class="field" :class="{ 'error': upstream.errors?.max_idle_time }">
-            <label>Max idle time</label>
-            <input type="number" v-model="upstream.max_idle_time" placeholder="10">
+          <div class="ui field segment">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.keepalive">
+              <label>Keep upstream connection alive</label>
+            </div>
           </div>
         </div>
         <div ref="uris" data-tab="uris" class="ui bottom attached tab segment">
@@ -79,15 +74,19 @@
             <h4>Error templates</h4>
             <div class="field" :class="{ 'error': upstream.errors?.error_content_type }">
               <label>Error content type</label>
-              <input type="text" v-model="upstream.error_content_type" placeholder="text">
+              <input type="text" v-model="upstream.error_content_type" placeholder="application/json">
             </div>
             <div class="field" :class="{ 'error': upstream.errors?.forbidden_response }">
               <label>Forbidden response</label>
-              <textarea v-model="upstream.forbidden_response" placeholder="You are forbidden to access this resource."></textarea>
+              <div class="error-response-editor">
+                <TextEditor :content="upstream.forbidden_response" @codeUpdate="setForbiddenResponse" />
+              </div>
             </div>
             <div class="field" :class="{ 'error': upstream.errors?.unauthorized_response }">
               <label>Unauthorized response</label>
-              <textarea v-model="upstream.unauthorized_response" placeholder="You are unauthorized to access this resource."></textarea>
+              <div class="error-response-editor">
+                <TextEditor :content="upstream.unauthorized_response" @codeUpdate="setUnauthorizedResponse" />
+              </div>
             </div>
           </div>
           <h3>Forwarded authorization</h3>
@@ -117,6 +116,39 @@
             </div>
           </div>
         </div>
+        <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+          <h3>Rate limiting</h3>
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.rate_limit_enabled">
+              <label>Enable rate limiting</label>
+            </div>
+          </div>
+          <div v-if="upstream.rate_limit_enabled">
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_count }">
+              <label>Request count</label>
+              <input type="number" v-model="upstream.rate_limit_count" min="1" placeholder="10">
+            </div>
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_time_unit }">
+              <label>Time unit</label>
+              <select v-model="upstream.rate_limit_time_unit">
+                <option v-for="unit in rateLimitTimeUnits" :key="unit" :value="unit">{{ unit }}</option>
+              </select>
+            </div>
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_penality }">
+              <label>Penality (ms)</label>
+              <input type="number" v-model="upstream.rate_limit_penality" min="0" placeholder="500">
+            </div>
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_timeout }">
+              <label>Timeout (ms)</label>
+              <input type="number" v-model="upstream.rate_limit_timeout" min="0" placeholder="5000">
+            </div>
+            <div class="field" :class="{ 'error': upstream.errors?.rate_limit_memory_length }">
+              <label>Memory length</label>
+              <input type="number" v-model="upstream.rate_limit_memory_length" min="1" placeholder="50">
+            </div>
+          </div>
+        </div>
       </div>
       <div class="actions">
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
@@ -130,18 +162,21 @@ import Scope from '../../models/scope.model'
 import Upstream from '../../models/upstream.model'
 import GatewayScopesField from '../../components/Forms/GatewayScopesField.vue'
 import FormErrors from '../../components/Forms/FormErrors.vue'
+import TextEditor from '../../components/Forms/TextEditor.vue'
 
 export default {
   name: 'upstream-form',
   props: ['upstream', 'action'],
   components: {
     FormErrors,
-    GatewayScopesField
+    GatewayScopesField,
+    TextEditor
   },
   data () {
     return {
       nodeNames: [],
-      forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms
+      forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms,
+      rateLimitTimeUnits: Upstream.rateLimitTimeUnits
     }
   },
   mounted () {
@@ -177,6 +212,12 @@ export default {
         1
       )
     },
+    setForbiddenResponse (content) {
+      this.upstream.forbidden_response = content
+    },
+    setUnauthorizedResponse (content) {
+      this.upstream.unauthorized_response = content
+    },
     openTab (e) {
       const tab = e.target.id
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
@@ -211,6 +252,10 @@ export default {
 
 <style scoped lang="scss">
 .upstream-form {
+  .error-response-editor {
+    height: 220px;
+  }
+
   .field {
     position: relative;
     &.upstreams input {

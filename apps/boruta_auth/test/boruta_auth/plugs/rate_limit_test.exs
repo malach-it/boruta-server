@@ -23,6 +23,35 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
       assert RateLimit.call(conn, options) == conn
       assert RateLimit.call(b_conn, options) == b_conn
     end
+
+    test "request can be tracked with a custom key", %{conn: conn} do
+      options = [
+        key: {:upstream, "id", "ip"},
+        time_unit: :second,
+        count: 5,
+        penality: 500,
+        timeout: 5_000
+      ]
+
+      assert RateLimit.call(conn, options) == conn
+
+      assert Agent.get(RateLimit.Counter, fn counter ->
+               Map.has_key?(counter, {:upstream, "id", "ip"})
+             end)
+    end
+
+    test "request can use a custom memory length", %{conn: conn} do
+      options = [
+        key: {:upstream, "id", "ip"},
+        time_unit: :second,
+        count: 5,
+        penality: 500,
+        timeout: 5_000,
+        memory_length: 1
+      ]
+
+      assert RateLimit.call(conn, options) == conn
+    end
   end
 
   describe "Counter.get" do
@@ -96,6 +125,26 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
       end)
 
       assert RateLimit.Counter.throttling_timeout(ip, count, time_unit, penality) == 0
+    end
+
+    test "accepts a configurable memory length" do
+      :timer.sleep(1000)
+      ip = :ip
+      time_unit = :second
+      penality = 100
+      count = 1
+
+      Agent.update(RateLimit.Counter, fn _counter ->
+        %{
+          ip => [
+            :os.system_time(:millisecond),
+            :os.system_time(:millisecond),
+            :os.system_time(:millisecond)
+          ]
+        }
+      end)
+
+      assert RateLimit.Counter.throttling_timeout(ip, count, time_unit, penality, 1) == 300
     end
   end
 

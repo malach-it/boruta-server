@@ -18,4 +18,5 @@ config :boruta_gateway,
   server: true,
   sidecar_server: true,
   port: 7777,
-  sidecar_port: 7778
+  sidecar_port: 7778,
+  num_acceptors: 8

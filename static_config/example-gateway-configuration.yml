@@ -7,9 +7,7 @@ configuration:
       unauthorized_response: "unauthorized"
       forwarded_token_secret: "this is a secret"
       forwarded_token_signature_alg: "HS512"
-      pool_count: 1
-      pool_size: 10
-      max_idle_time: 10
+      keepalive: false
       scheme: "https"
       host: "httpbin.boruta.patatoid.fr"
       port: 443
@@ -21,9 +19,7 @@ configuration:
       unauthorized_response: "unauthorized"
       forwarded_token_secret: "this is a secret"
       forwarded_token_signature_alg: "HS512"
-      pool_count: 1
-      pool_size: 10
-      max_idle_time: 10
+      keepalive: false
       scheme: "https"
       host: "protected-httpbin.boruta.patatoid.fr"
       port: 443

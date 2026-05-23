@@ -7,7 +7,13 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
   @create_attrs %{
     scheme: "https",
     host: "host.test",
-    port: 7777
+    port: 7777,
+    rate_limit_enabled: true,
+    rate_limit_count: 20,
+    rate_limit_time_unit: "minute",
+    rate_limit_penality: 1_000,
+    rate_limit_timeout: 10_000,
+    rate_limit_memory_length: 10
   }
   @update_attrs %{
     host: "host.update"
@@ -127,6 +133,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
       configuration_file_path =
         :code.priv_dir(:boruta_gateway)
         |> Path.join("/test/configuration_files/full_configuration.yml")
+
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
@@ -138,6 +145,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
       configuration_file_path =
         :code.priv_dir(:boruta_gateway)
         |> Path.join("/test/configuration_files/full_configuration.yml")
+
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
@@ -149,7 +157,16 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
     @tag authorized: ["upstreams:manage:all"]
     test "renders upstream when data is valid", %{conn: conn} do
       conn = post(conn, Routes.admin_upstream_path(conn, :create), upstream: @create_attrs)
-      assert %{"id" => _id} = json_response(conn, 201)["data"]
+
+      assert %{
+               "id" => _id,
+               "rate_limit_enabled" => true,
+               "rate_limit_count" => 20,
+               "rate_limit_time_unit" => "minute",
+               "rate_limit_penality" => 1_000,
+               "rate_limit_timeout" => 10_000,
+               "rate_limit_memory_length" => 10
+             } = json_response(conn, 201)["data"]
     end
 
     @tag authorized: ["upstreams:manage:all"]

@@ -4,6 +4,10 @@
 
 ## [unreleased]
 
+### Changed
+
+- [auth] configure oauth acceptor count, default to 8
+
 ### Fixed
 
 - [admin] claim deletion for verifiable credential arrays

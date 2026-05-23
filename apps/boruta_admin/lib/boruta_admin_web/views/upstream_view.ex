@@ -31,16 +31,20 @@ defmodule BorutaAdminWeb.UpstreamView do
       strip_uri: upstream.strip_uri,
       authorize: upstream.authorize,
       required_scopes: upstream.required_scopes,
-      pool_size: upstream.pool_size,
-      pool_count: upstream.pool_count,
-      max_idle_time: upstream.max_idle_time,
+      keepalive: upstream.keepalive,
       error_content_type: upstream.error_content_type,
       forbidden_response: upstream.forbidden_response,
       unauthorized_response: upstream.unauthorized_response,
       forwarded_token_signature_alg: upstream.forwarded_token_signature_alg,
       forwarded_token_secret: upstream.forwarded_token_secret,
       forwarded_token_private_key: upstream.forwarded_token_private_key,
-      forwarded_token_public_key: upstream.forwarded_token_public_key
+      forwarded_token_public_key: upstream.forwarded_token_public_key,
+      rate_limit_enabled: upstream.rate_limit_enabled,
+      rate_limit_count: upstream.rate_limit_count,
+      rate_limit_time_unit: upstream.rate_limit_time_unit,
+      rate_limit_penality: upstream.rate_limit_penality,
+      rate_limit_timeout: upstream.rate_limit_timeout,
+      rate_limit_memory_length: upstream.rate_limit_memory_length
     }
   end
 end

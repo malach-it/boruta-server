@@ -699,7 +699,7 @@
                 "upstream": {
                   "authorize": true,
                   "host": "from.api",
-                  "pool_size": 10,
+                  "keepalive": false,
                   "port": "80",
                   "required_scopes": {
                     "GET": [
@@ -838,7 +838,7 @@
                 "upstream": {
                   "authorize": true,
                   "host": "from.api.updated",
-                  "pool_size": 10,
+                  "keepalive": false,
                   "port": "80",
                   "required_scopes": {
                     "GET": [
@@ -1643,7 +1643,7 @@
           "upstream": {
             "authorize": true,
             "host": "from.api",
-            "pool_size": 10,
+            "keepalive": false,
             "port": "80",
             "required_scopes": {
               "GET": [
@@ -1663,7 +1663,7 @@
         "required": [
           "authorize",
           "host",
-          "pool_size",
+          "keepalive",
           "port",
           "required_scopes",
           "scheme",
@@ -1678,9 +1678,8 @@
           "host": {
             "type": "string"
           },
-          "pool_size": {
-            "type": "integer",
-            "format": "int32"
+          "keepalive": {
+            "type": "boolean"
           },
           "port": {
             "type": "string"
@@ -1705,7 +1704,7 @@
         "example": {
           "authorize": true,
           "host": "from.api",
-          "pool_size": 10,
+          "keepalive": false,
           "port": "80",
           "required_scopes": {
             "GET": [
@@ -1755,7 +1754,7 @@
           "upstream": {
             "authorize": true,
             "host": "from.api.updated",
-            "pool_size": 10,
+            "keepalive": false,
             "port": "80",
             "required_scopes": {
               "GET": [

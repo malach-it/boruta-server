@@ -11,6 +11,7 @@ defmodule BorutaGateway.Gateway do
 
   use GenServer
 
+  alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.Gateway.Authorization
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
@@ -153,6 +154,7 @@ defmodule BorutaGateway.Gateway do
     path_info = String.split(path, "/", trim: true)
 
     with %Upstream{} = upstream <- state.match_function.(path_info),
+         :ok <- rate_limit(socket, upstream),
          {:ok, token} <- Authorization.authorize(payload, method, upstream) do
       _connect = :os.system_time(:microsecond) - start
 
@@ -161,7 +163,7 @@ defmodule BorutaGateway.Gateway do
           case :gen_tcp.connect(
                  upstream.host |> String.to_charlist(),
                  upstream.port,
-                 [:binary, {:packet, :raw}, {:active, false}],
+                 upstream_socket_options(upstream),
                  @connect_timeout
                ) do
             {:ok, client_socket} ->
@@ -182,13 +184,11 @@ defmodule BorutaGateway.Gateway do
           case :ssl.connect(
                  upstream.host |> String.to_charlist(),
                  upstream.port,
-                 [
-                   :binary,
-                   {:packet, :raw},
-                   {:active, false},
-                   {:verify, :verify_peer},
-                   {:cacerts, :public_key.cacerts_get()}
-                 ],
+                 upstream_socket_options(upstream) ++
+                   [
+                     {:verify, :verify_peer},
+                     {:cacerts, :public_key.cacerts_get()}
+                   ],
                  @connect_timeout
                ) do
             {:ok, client_socket} ->
@@ -244,6 +244,11 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
+
+        {:noreply, close_downstream(socket, state)}
+
+      :rate_limited ->
+        :gen_tcp.send(socket, "HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\n\r\n")
 
         {:noreply, close_downstream(socket, state)}
     end
@@ -324,6 +329,11 @@ defmodule BorutaGateway.Gateway do
   defp activate_upstream_socket(socket, :tcp), do: :inet.setopts(socket, active: :once)
   defp activate_upstream_socket(socket, :ssl), do: :ssl.setopts(socket, active: :once)
 
+  @doc false
+  def upstream_socket_options(%Upstream{keepalive: keepalive}) do
+    [:binary, {:packet, :raw}, {:active, false}, {:keepalive, keepalive}]
+  end
+
   defp close_downstream(socket, state) do
     :gen_tcp.close(socket)
     send(self(), :accept)
@@ -366,6 +376,40 @@ defmodule BorutaGateway.Gateway do
         response: nil,
         response_headers_sent: false
     }
+  end
+
+  defp rate_limit(
+         socket,
+         %Upstream{
+           rate_limit_enabled: true,
+           rate_limit_count: count,
+           rate_limit_time_unit: time_unit,
+           rate_limit_penality: penality,
+           rate_limit_timeout: max_timeout,
+           rate_limit_memory_length: memory_length
+         } = upstream
+       ) do
+    time_unit = String.to_existing_atom(time_unit)
+    key = {:gateway_upstream, upstream.id, remote_ip(socket)}
+
+    case Counter.throttling_timeout(key, count, time_unit, penality, memory_length) do
+      timeout when timeout < max_timeout ->
+        :timer.sleep(timeout)
+        Counter.increment(key, time_unit, memory_length)
+        :ok
+
+      _ ->
+        :rate_limited
+    end
+  end
+
+  defp rate_limit(_socket, %Upstream{}), do: :ok
+
+  defp remote_ip(socket) do
+    case :inet.peername(socket) do
+      {:ok, {address, _port}} -> :inet.ntoa(address)
+      _error -> :unknown
+    end
   end
 
   defp transform_header(payload, upstream, nil) do
