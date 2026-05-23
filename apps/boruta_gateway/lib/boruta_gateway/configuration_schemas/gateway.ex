@@ -25,9 +25,6 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
           }
         },
         "strip_uri" => %{"type" => "boolean"},
-        "pool_count" => %{"type" => "number"},
-        "pool_size" => %{"type" => "number"},
-        "max_idle_time" => %{"type" => "number"},
         "keepalive" => %{"type" => "boolean"},
         "rate_limit_enabled" => %{"type" => "boolean"},
         "rate_limit_count" => %{"type" => "number"},
@@ -81,9 +78,6 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
           }
         },
         "strip_uri" => %{"type" => "boolean"},
-        "pool_count" => %{"type" => "number"},
-        "pool_size" => %{"type" => "number"},
-        "max_idle_time" => %{"type" => "number"},
         "keepalive" => %{"type" => "boolean"},
         "rate_limit_enabled" => %{"type" => "boolean"},
         "rate_limit_count" => %{"type" => "number"},

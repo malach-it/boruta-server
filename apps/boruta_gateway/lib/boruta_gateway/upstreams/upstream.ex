@@ -24,8 +24,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
       token_generator: 0
     ]
 
-  alias BorutaGateway.Upstreams.ClientSupervisor
-
   @type t :: %__MODULE__{
           node_name: String.t(),
           scheme: String.t(),
@@ -60,9 +58,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:required_scopes, :map, default: %{})
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
-    field(:pool_size, :integer, default: 10)
-    field(:pool_count, :integer, default: 1)
-    field(:max_idle_time, :integer, default: 10)
     field(:keepalive, :boolean, default: false)
     field(:error_content_type, :string)
     field(:forbidden_response, :string)
@@ -78,36 +73,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:rate_limit_timeout, :integer, default: 5_000)
     field(:rate_limit_memory_length, :integer, default: 50)
 
-    field(:http_client, :any, virtual: true)
-
     timestamps()
-  end
-
-  def with_http_client(%__MODULE__{http_client: nil} = upstream) do
-    # TODO manage failure
-    {:ok, http_client} = ClientSupervisor.client_for_upstream(upstream)
-
-    %{upstream | http_client: http_client}
-  end
-
-  def with_http_client(%__MODULE__{http_client: http_client} = upstream)
-      when is_pid(http_client) do
-    ClientSupervisor.kill(http_client)
-    # TODO manage failure
-    {:ok, http_client} =
-      Enum.reduce_while(1..100, http_client, fn _i, http_client ->
-        :timer.sleep(10)
-
-        case Process.alive?(http_client) do
-          true ->
-            {:cont, http_client}
-
-          false ->
-            {:halt, ClientSupervisor.client_for_upstream(upstream)}
-        end
-      end)
-
-    %{upstream | http_client: http_client}
   end
 
   def required_scopes(%__MODULE__{required_scopes: required_scopes}, method) do
@@ -127,9 +93,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :strip_uri,
       :authorize,
       :required_scopes,
-      :pool_size,
-      :pool_count,
-      :max_idle_time,
       :keepalive,
       :error_content_type,
       :forbidden_response,
@@ -145,8 +108,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
     ])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
-    |> validate_inclusion(:pool_size, 1..100)
-    |> validate_inclusion(:pool_count, 1..10)
     |> validate_inclusion(:rate_limit_count, 1..100_000)
     |> validate_inclusion(:rate_limit_time_unit, ["millisecond", "second", "minute"])
     |> validate_inclusion(:rate_limit_penality, 0..600_000)

@@ -11,7 +11,6 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   alias BorutaGateway.Repo
   alias BorutaGateway.RequestsIntegrationTest.HttpClient
   alias BorutaGateway.Upstreams
-  alias BorutaGateway.Upstreams.Client
   alias BorutaGateway.Upstreams.Upstream
   alias Ecto.Adapters.SQL.Sandbox
 
@@ -636,8 +635,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
 
             upstream = Repo.all(Upstream) |> List.first()
-            signer = Client.signer(upstream)
-            assert {:ok, claims} = Client.Token.verify(token, signer)
+            signer = Gateway.signer(upstream)
+            assert {:ok, claims} = Gateway.Token.verify(token, signer)
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 

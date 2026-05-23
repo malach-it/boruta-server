@@ -41,9 +41,7 @@ defmodule BorutaGateway.MixProject do
       {:ex_json_schema, "~> 0.9"},
       {:finch, "~> 0.10"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
-      {:remote_ip, "~> 1.1"},
       {:telemetry, "~> 1.0"},
       {:yaml_elixir, "~> 2.9"}
     ]

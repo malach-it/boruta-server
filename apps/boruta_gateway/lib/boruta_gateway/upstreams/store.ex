@@ -7,7 +7,6 @@ defmodule BorutaGateway.Upstreams.Store do
 
   alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Repo
-  alias BorutaGateway.Upstreams.ClientSupervisor
   alias BorutaGateway.Upstreams.Upstream
 
   def start_link do
@@ -75,9 +74,6 @@ defmodule BorutaGateway.Upstreams.Store do
   def handle_cast(:hydrate, state) do
     upstreams =
       Repo.all(Upstream)
-      |> Enum.map(fn upstream ->
-        Upstream.with_http_client(upstream)
-      end)
       |> structure()
 
     {:noreply, %{state | hydrated: true, upstreams: upstreams}}
@@ -115,7 +111,6 @@ defmodule BorutaGateway.Upstreams.Store do
         Upstream,
         Enum.map(record, fn {key, value} -> {String.to_atom(key), value} end)
       )
-      |> Upstream.with_http_client()
 
     upstreams
     |> Enum.map(fn {_uri, upstream} -> upstream end)
@@ -135,8 +130,8 @@ defmodule BorutaGateway.Upstreams.Store do
     upstreams
     |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> Enum.map(fn
-      %{id: ^updated_id, http_client: http_client} ->
-        Upstream.with_http_client(%{updated | http_client: http_client})
+      %{id: ^updated_id} ->
+        updated
 
       upstream ->
         upstream
@@ -148,13 +143,8 @@ defmodule BorutaGateway.Upstreams.Store do
     upstreams
     |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> Enum.reject(fn
-      %{id: ^id, http_client: http_client} ->
-        # TODO manage failure
-        true = ClientSupervisor.kill(http_client)
-        true
-
-      _ ->
-        false
+      %{id: ^id} -> true
+      _ -> false
     end)
     |> structure()
   end

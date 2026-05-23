@@ -3,7 +3,6 @@ defmodule BorutaGateway.Upstreams.StoreTest do
   use BorutaGateway.DataCase
 
   alias BorutaGateway.ConfigurationLoader
-  alias BorutaGateway.Upstreams.Client
   alias BorutaGateway.Upstreams.Store
   alias BorutaGateway.Upstreams.Upstream
   alias Ecto.Adapters.SQL.Sandbox
@@ -19,17 +18,17 @@ defmodule BorutaGateway.Upstreams.StoreTest do
 
         upstreams = Store.all()
 
-        assert Enum.any?(upstreams, fn
-                 {["path1"], %{id: id, http_client: http_client}} ->
-                   id == a.id && Process.alive?(http_client)
+        assert Enum.any?(upstreams["global"], fn
+                 {["path1"], %{id: id}} ->
+                   id == a.id
 
                  _ ->
                    false
                end)
 
-        assert Enum.any?(upstreams, fn
-                 {["path2"], %{id: id, http_client: http_client}} ->
-                   id == b.id && Process.alive?(http_client)
+        assert Enum.any?(upstreams["global"], fn
+                 {["path2"], %{id: id}} ->
+                   id == b.id
 
                  _ ->
                    false
@@ -52,8 +51,8 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         upstreams = Store.all()
 
         assert Enum.any?(upstreams["global"], fn
-                 {["path"], %{host: "updated.host", http_client: http_client} = upstream} ->
-                   assert Client.upstream(http_client).host == upstream.host
+                 {["path"], %{host: "updated.host"}} ->
+                   true
 
                  _ ->
                    false
@@ -71,25 +70,21 @@ defmodule BorutaGateway.Upstreams.StoreTest do
         :timer.sleep(100)
         upstreams = Store.all()
 
-        assert {_path, %Upstream{http_client: http_client}} =
+        assert {_path, %Upstream{}} =
                  Enum.find(upstreams["global"], fn
                    {["path"], %{id: id}} -> id == a.id
                    _ -> false
                  end)
-
-        assert Process.alive?(http_client)
 
         Repo.delete(a)
         :timer.sleep(100)
 
         upstreams = Store.all()
 
-        assert Enum.all?(upstreams, fn
+        assert Enum.all?(upstreams["global"] || [], fn
                  {["path"], %{id: id}} -> id != a.id
                  _ -> false
                end)
-
-        refute Process.alive?(http_client)
       after
         Repo.delete_all(Upstream)
       end
@@ -138,9 +133,11 @@ defmodule BorutaGateway.Upstreams.StoreTest do
 
     test "return sidecar matching upstream from static configuration" do
       Application.delete_env(ConfigurationLoader, :node_name)
+
       configuration_file_path =
         :code.priv_dir(:boruta_gateway)
         |> Path.join("/test/configuration_files/full_configuration.yml")
+
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
       :timer.sleep(100)
 
