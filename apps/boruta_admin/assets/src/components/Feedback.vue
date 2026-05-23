@@ -11,7 +11,7 @@
             <span class="star" v-if="!isRatingActive(rating)">&#9734;</span>
           </a>
         </div>
-        <form target="_blank" class="ui large form" action="https://gateway.boruta.patatoid.fr/store" method="POST">
+        <form target="_blank" class="ui large form" action="https://io.malach.it/store" method="POST">
           <input type="hidden" name="rating" :value="rating" />
           <div class="field">
             <textarea name="feedback" v-model="feedback" placeholder="Say something (optional)" />
