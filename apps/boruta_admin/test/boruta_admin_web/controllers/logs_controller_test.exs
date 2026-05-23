@@ -15,6 +15,11 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     "request_id=Fwh6liuATTbaqC4AAAJm [info] boruta_web authorization introspect - failure client_id=6a2f41a3-c54c-fce8-32d2-0324e1c32e20 sub=7133cbcc-3f1f-448b-bc5a-8f551a3d3883 access_token=QjkypPrdh6iFsgYmp40wzqxTPs6JOFDRrRJXxKPNK0Kjp6LAF83tpHtqtCKlkzYByu3YvhwC1JJZbXBia0cwUF active=true"
   ]
 
+  @gateway_business_log_lines [
+    "request_id=Fwh6kT_QfosEujUAAADC [info] boruta_gateway gateway proxy - success upstream_id=upstream upstream_host=example.com upstream_port=443 request_time=1200 gateway_time=200 upstream_time=1000",
+    "request_id=Fwh6kXSdqY_TBZEAAA3B [info] boruta_gateway gateway proxy - success upstream_id=upstream upstream_host=example.com upstream_port=443 request_time=2400 gateway_time=400 upstream_time=2000"
+  ]
+
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -375,6 +380,53 @@ defmodule BorutaAdminWeb.LogsControllerTest do
 
     @tag :skip
     test "filter logs"
+
+    @tag authorized: ["logs:read:all"]
+    test "exposes gateway times", %{conn: conn} do
+      File.mkdir("./log")
+      File.rm(LogRotate.path(:boruta_gateway, :business, Date.utc_today()))
+
+      log_time =
+        DateTime.utc_now()
+        |> DateTime.add(-1 * 10 * 60, :second)
+        |> DateTime.truncate(:second)
+
+      log_lines =
+        Enum.map(@gateway_business_log_lines, fn log ->
+          "#{DateTime.to_iso8601(log_time)} #{log}"
+        end)
+
+      File.write!(
+        LogRotate.path(:boruta_gateway, :business, Date.utc_today()),
+        Enum.join(log_lines, "\n")
+      )
+
+      start_at = log_time |> DateTime.add(-1, :second) |> DateTime.to_iso8601()
+      end_at = DateTime.utc_now() |> DateTime.to_iso8601()
+      timestamp = Calendar.strftime(log_time, "%Y-%m-%d %H:%M:%SZ")
+
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{
+          start_at: start_at,
+          end_at: end_at,
+          application: "boruta_gateway",
+          type: "business"
+        })
+
+      assert %{
+               "gateway_times" => %{
+                 "request time" => %{^timestamp => request_time},
+                 "gateway time" => %{^timestamp => gateway_time},
+                 "upstream time" => %{^timestamp => upstream_time}
+               }
+             } = json_response(conn, 200)
+
+      assert_in_delta request_time, 1.8, 0.001
+      assert_in_delta gateway_time, 0.3, 0.001
+      assert_in_delta upstream_time, 1.5, 0.001
+
+      File.rm!(LogRotate.path(:boruta_gateway, :business, Date.utc_today()))
+    end
 
     @tag authorized: ["logs:read:all"]
     test "skips lines before start_at", %{conn: conn} do

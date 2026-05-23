@@ -136,6 +136,7 @@ defmodule BorutaAdmin.Logs do
         log_count: 0,
         counts: %{},
         business_event_counts: %{},
+        gateway_times: %{},
         domains: [],
         actions: []
       },
@@ -145,7 +146,8 @@ defmodule BorutaAdmin.Logs do
            label: label,
            status: status,
            domain: domain,
-           action: action
+           action: action,
+           attributes: attributes
          },
          %{
            time_scale_unit: time_scale_unit,
@@ -154,6 +156,7 @@ defmodule BorutaAdmin.Logs do
            log_count: log_count,
            counts: counts,
            business_event_counts: business_event_counts,
+           gateway_times: gateway_times,
            domains: domains,
            actions: actions
          } ->
@@ -180,6 +183,7 @@ defmodule BorutaAdmin.Logs do
             Map.merge(business_event_counts, %{label => %{truncated_time => 1}}, fn _, a, b ->
               Map.merge(a, b, fn _, i, j -> i + j end)
             end),
+          gateway_times: update_gateway_times(gateway_times, attributes, truncated_time),
           counts:
             Map.merge(counts, %{label => %{status => 1}}, fn _, a, b ->
               Map.merge(a, b, fn _, i, j -> i + j end)
@@ -339,9 +343,56 @@ defmodule BorutaAdmin.Logs do
             application: application,
             domain: String.slice("#{application} - #{domain}", 0..70),
             action: String.slice("#{application} - #{domain} #{action}", 0..70),
-            status: status
+            status: status,
+            attributes: parse_log_attributes(log_line)
           }
         end
+    end
+  end
+
+  defp parse_log_attributes(log_line) do
+    case String.split(log_line, " - ", parts: 2) do
+      [_prefix, status_and_attributes] ->
+        status_and_attributes
+        |> String.split(" ")
+        |> Enum.drop(1)
+        |> Enum.reduce(%{}, fn attribute, attributes ->
+          case String.split(attribute, "=", parts: 2) do
+            [key, value] -> Map.put(attributes, key, value)
+            _ -> attributes
+          end
+        end)
+
+      _ ->
+        %{}
+    end
+  end
+
+  defp update_gateway_times(gateway_times, attributes, truncated_time) do
+    [
+      {"request time", "request_time"},
+      {"gateway time", "gateway_time"},
+      {"upstream time", "upstream_time"}
+    ]
+    |> Enum.reduce(gateway_times, fn {label, attribute}, gateway_times ->
+      case parse_microsecond_time(attributes[attribute]) do
+        nil ->
+          gateway_times
+
+        time ->
+          Map.merge(gateway_times, %{label => %{truncated_time => time / 1000}}, fn _, a, b ->
+            Map.merge(a, b, fn _, i, j -> (i + j) / 2 end)
+          end)
+      end
+    end)
+  end
+
+  defp parse_microsecond_time(nil), do: nil
+
+  defp parse_microsecond_time(time) do
+    case Integer.parse(time) do
+      {time, ""} -> time
+      _ -> nil
     end
   end
 

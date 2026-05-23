@@ -13,6 +13,7 @@ const assign = {
   log_count: function ({ log_count }) { this.log_count = log_count },
   counts: function ({ counts }) { this.counts = counts },
   business_event_counts: function ({ business_event_counts }) { this.business_event_counts = business_event_counts },
+  gateway_times: function ({ gateway_times }) { this.gateway_times = gateway_times },
   domains: function ({ domains }) { this.domains = domains },
   actions: function ({ actions }) { this.actions = actions }
 
