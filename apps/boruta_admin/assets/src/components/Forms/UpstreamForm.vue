@@ -74,15 +74,19 @@
             <h4>Error templates</h4>
             <div class="field" :class="{ 'error': upstream.errors?.error_content_type }">
               <label>Error content type</label>
-              <input type="text" v-model="upstream.error_content_type" placeholder="text">
+              <input type="text" v-model="upstream.error_content_type" placeholder="application/json">
             </div>
             <div class="field" :class="{ 'error': upstream.errors?.forbidden_response }">
               <label>Forbidden response</label>
-              <textarea v-model="upstream.forbidden_response" placeholder="You are forbidden to access this resource."></textarea>
+              <div class="error-response-editor">
+                <TextEditor :content="upstream.forbidden_response" @codeUpdate="setForbiddenResponse" />
+              </div>
             </div>
             <div class="field" :class="{ 'error': upstream.errors?.unauthorized_response }">
               <label>Unauthorized response</label>
-              <textarea v-model="upstream.unauthorized_response" placeholder="You are unauthorized to access this resource."></textarea>
+              <div class="error-response-editor">
+                <TextEditor :content="upstream.unauthorized_response" @codeUpdate="setUnauthorizedResponse" />
+              </div>
             </div>
           </div>
           <h3>Forwarded authorization</h3>
@@ -158,13 +162,15 @@ import Scope from '../../models/scope.model'
 import Upstream from '../../models/upstream.model'
 import GatewayScopesField from '../../components/Forms/GatewayScopesField.vue'
 import FormErrors from '../../components/Forms/FormErrors.vue'
+import TextEditor from '../../components/Forms/TextEditor.vue'
 
 export default {
   name: 'upstream-form',
   props: ['upstream', 'action'],
   components: {
     FormErrors,
-    GatewayScopesField
+    GatewayScopesField,
+    TextEditor
   },
   data () {
     return {
@@ -206,6 +212,12 @@ export default {
         1
       )
     },
+    setForbiddenResponse (content) {
+      this.upstream.forbidden_response = content
+    },
+    setUnauthorizedResponse (content) {
+      this.upstream.unauthorized_response = content
+    },
     openTab (e) {
       const tab = e.target.id
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
@@ -240,6 +252,10 @@ export default {
 
 <style scoped lang="scss">
 .upstream-form {
+  .error-response-editor {
+    height: 220px;
+  }
+
   .field {
     position: relative;
     &.upstreams input {

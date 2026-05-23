@@ -51,7 +51,8 @@ defmodule BorutaGateway.UpstreamsTest do
     end
 
     test "create_upstream/1 with valid data creates a upstream" do
-      assert {:ok, %Upstream{}} = Upstreams.create_upstream(@valid_attrs)
+      assert {:ok, %Upstream{error_content_type: "application/json"}} =
+               Upstreams.create_upstream(@valid_attrs)
     end
 
     test "create_upstream/1 with keepalive creates an upstream" do

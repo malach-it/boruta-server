@@ -2,11 +2,28 @@ import axios from 'axios'
 import Scope from './scope.model'
 import { addClientErrorInterceptor } from './utils'
 
+const defaultForbiddenResponse = JSON.stringify({
+  error: 'FORBIDDEN',
+  message: 'You are forbidden to access this resource.'
+}, null, 2)
+
+const defaultUnauthorizedResponse = JSON.stringify({
+  error: 'UNAUTHORIZED',
+  message: 'You are unauthorized to access this resource.'
+}, null, 2)
+
+const defaultIfBlank = (value, defaultValue) => {
+  return value?.trim() ? value : defaultValue
+}
+
 const defaults = {
   errors: null,
   node_name: 'global',
   uris: [],
   required_scopes: [],
+  error_content_type: 'application/json',
+  forbidden_response: defaultForbiddenResponse,
+  unauthorized_response: defaultUnauthorizedResponse,
   keepalive: false,
   rate_limit_enabled: false,
   rate_limit_count: 10,
@@ -44,8 +61,8 @@ const assign = {
     }, {})
   },
   error_content_type: function ({ error_content_type }) { this.error_content_type = error_content_type },
-  forbidden_response: function ({ forbidden_response }) { this.forbidden_response = forbidden_response },
-  unauthorized_response: function ({ unauthorized_response }) { this.unauthorized_response = unauthorized_response }
+  forbidden_response: function ({ forbidden_response }) { this.forbidden_response = forbidden_response ?? defaultForbiddenResponse },
+  unauthorized_response: function ({ unauthorized_response }) { this.unauthorized_response = unauthorized_response ?? defaultUnauthorizedResponse }
 }
 
 class Upstream {
@@ -144,8 +161,8 @@ class Upstream {
       strip_uri,
       authorize,
       error_content_type,
-      forbidden_response,
-      unauthorized_response,
+      forbidden_response: defaultIfBlank(forbidden_response, defaultForbiddenResponse),
+      unauthorized_response: defaultIfBlank(unauthorized_response, defaultUnauthorizedResponse),
       forwarded_token_signature_alg,
       forwarded_token_secret,
       forwarded_token_private_key,

@@ -59,7 +59,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
     field(:keepalive, :boolean, default: false)
-    field(:error_content_type, :string)
+    field(:error_content_type, :string, default: "application/json")
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
     field(:forwarded_token_signature_alg, :string)
