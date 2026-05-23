@@ -53,7 +53,7 @@ config :boruta_web, BorutaWeb.Endpoint,
     port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer(),
     ip: System.get_env("BORUTA_OAUTH_BIND", "::") |> String.to_charlist() |> :inet.parse_address() |> elem(1),
     transport_options: [
-      num_acceptors: String.to_integer(System.get_env("WEB_ACCEPTORS", "64"))
+      num_acceptors: String.to_integer(System.get_env("BORUTA_OAUTH_ACCEPTORS", "8"))
     ]
   ],
   url: [scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"), host: System.get_env("BORUTA_OAUTH_HOST")],
