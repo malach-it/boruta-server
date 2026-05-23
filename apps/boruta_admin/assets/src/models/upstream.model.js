@@ -12,10 +12,6 @@ const defaultUnauthorizedResponse = JSON.stringify({
   message: 'You are unauthorized to access this resource.'
 }, null, 2)
 
-const defaultIfBlank = (value, defaultValue) => {
-  return value?.trim() ? value : defaultValue
-}
-
 const defaults = {
   errors: null,
   node_name: 'global',
@@ -161,8 +157,8 @@ class Upstream {
       strip_uri,
       authorize,
       error_content_type,
-      forbidden_response: defaultIfBlank(forbidden_response, defaultForbiddenResponse),
-      unauthorized_response: defaultIfBlank(unauthorized_response, defaultUnauthorizedResponse),
+      forbidden_response,
+      unauthorized_response,
       forwarded_token_signature_alg,
       forwarded_token_secret,
       forwarded_token_private_key,

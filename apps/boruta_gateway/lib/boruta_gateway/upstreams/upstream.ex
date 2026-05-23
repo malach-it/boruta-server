@@ -95,8 +95,6 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :required_scopes,
       :keepalive,
       :error_content_type,
-      :forbidden_response,
-      :unauthorized_response,
       :forwarded_token_signature_alg,
       :forwarded_token_secret,
       :rate_limit_enabled,
@@ -106,6 +104,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :rate_limit_timeout,
       :rate_limit_memory_length
     ])
+    |> cast(attrs, [:forbidden_response, :unauthorized_response], empty_values: [])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_inclusion(:rate_limit_count, 1..100_000)
