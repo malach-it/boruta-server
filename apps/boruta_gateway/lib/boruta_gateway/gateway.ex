@@ -82,6 +82,12 @@ defmodule BorutaGateway.Gateway do
       :socket,
       :client_socket,
       :start,
+      :upstream_start,
+      :request_id,
+      :method,
+      :path,
+      :remote_ip,
+      :upstream,
       :request,
       :response,
       :response_headers_sent,
@@ -149,6 +155,8 @@ defmodule BorutaGateway.Gateway do
   def handle_info({:tcp, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
     start = :os.system_time(:microsecond)
     [_, method, path] = Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
+    request_id = request_id(payload)
+    state = %{state | remote_ip: request_remote_ip(payload, socket)}
     # [_, host] = Regex.run(~r{[H|h]ost\: ([^\r]+)}, payload)
 
     path_info = String.split(path, "/", trim: true)
@@ -156,8 +164,6 @@ defmodule BorutaGateway.Gateway do
     with %Upstream{} = upstream <- state.match_function.(path_info),
          :ok <- rate_limit(socket, upstream),
          {:ok, token} <- Authorization.authorize(payload, method, upstream) do
-      _connect = :os.system_time(:microsecond) - start
-
       case upstream.scheme do
         "http" ->
           case :gen_tcp.connect(
@@ -167,15 +173,28 @@ defmodule BorutaGateway.Gateway do
                  @connect_timeout
                ) do
             {:ok, client_socket} ->
-              _connected = :os.system_time(:microsecond) - start
               :ok = :gen_tcp.send(client_socket, transform_header(payload, upstream, token))
+              upstream_start = :os.system_time(:microsecond)
 
               :inet.setopts(socket, active: :once)
               :inet.setopts(client_socket, active: :once)
-              {:noreply, %{state | client_socket: client_socket, start: start}}
+
+              {:noreply,
+               %{
+                 state
+                 | client_socket: client_socket,
+                   start: start,
+                   upstream_start: upstream_start,
+                   request_id: request_id,
+                   method: method,
+                   path: path,
+                   remote_ip: state.remote_ip,
+                   upstream: upstream
+               }}
 
             {:error, _error} ->
               :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
+              log_exchange(state, start, request_id, method, path, upstream, 503, :failure)
 
               {:noreply, close_downstream(socket, state)}
           end
@@ -194,13 +213,27 @@ defmodule BorutaGateway.Gateway do
             {:ok, client_socket} ->
               _connected = :os.system_time(:microsecond) - start
               :ok = :ssl.send(client_socket, transform_header(payload, upstream, token))
+              upstream_start = :os.system_time(:microsecond)
 
               :inet.setopts(socket, active: :once)
               :ssl.setopts(client_socket, active: :once)
-              {:noreply, %{state | client_socket: client_socket, start: start}}
+
+              {:noreply,
+               %{
+                 state
+                 | client_socket: client_socket,
+                   start: start,
+                   upstream_start: upstream_start,
+                   request_id: request_id,
+                   method: method,
+                   path: path,
+                   remote_ip: state.remote_ip,
+                   upstream: upstream
+               }}
 
             {:error, _error} ->
               :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
+              log_exchange(state, start, request_id, method, path, upstream, 503, :failure)
 
               {:noreply, close_downstream(socket, state)}
           end
@@ -218,6 +251,7 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
+        log_exchange(state, start, request_id, method, path, nil, 404, :failure)
 
         {:noreply, close_downstream(socket, state)}
 
@@ -231,6 +265,7 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
+        log_exchange(state, start, request_id, method, path, nil, 401, :failure)
 
         {:noreply, close_downstream(socket, state)}
 
@@ -244,11 +279,13 @@ defmodule BorutaGateway.Gateway do
         )
 
         _response = :os.system_time(:microsecond) - start
+        log_exchange(state, start, request_id, method, path, nil, 403, :failure)
 
         {:noreply, close_downstream(socket, state)}
 
       :rate_limited ->
         :gen_tcp.send(socket, "HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\n\r\n")
+        log_exchange(state, start, request_id, method, path, nil, 429, :failure)
 
         {:noreply, close_downstream(socket, state)}
     end
@@ -342,6 +379,13 @@ defmodule BorutaGateway.Gateway do
       state
       | socket: nil,
         client_socket: nil,
+        start: nil,
+        upstream_start: nil,
+        request_id: nil,
+        method: nil,
+        path: nil,
+        remote_ip: nil,
+        upstream: nil,
         request: nil,
         response: nil,
         response_headers_sent: false
@@ -349,6 +393,7 @@ defmodule BorutaGateway.Gateway do
   end
 
   defp close_exchange(state, upstream_socket, :tcp) do
+    log_completed_exchange(state)
     :gen_tcp.close(state.socket)
     :gen_tcp.close(upstream_socket)
     send(self(), :accept)
@@ -357,6 +402,13 @@ defmodule BorutaGateway.Gateway do
       state
       | socket: nil,
         client_socket: nil,
+        start: nil,
+        upstream_start: nil,
+        request_id: nil,
+        method: nil,
+        path: nil,
+        remote_ip: nil,
+        upstream: nil,
         request: nil,
         response: nil,
         response_headers_sent: false
@@ -364,6 +416,7 @@ defmodule BorutaGateway.Gateway do
   end
 
   defp close_exchange(state, upstream_socket, :ssl) do
+    log_completed_exchange(state)
     :gen_tcp.close(state.socket)
     :ssl.close(upstream_socket)
     send(self(), :accept)
@@ -372,6 +425,13 @@ defmodule BorutaGateway.Gateway do
       state
       | socket: nil,
         client_socket: nil,
+        start: nil,
+        upstream_start: nil,
+        request_id: nil,
+        method: nil,
+        path: nil,
+        remote_ip: nil,
+        upstream: nil,
         request: nil,
         response: nil,
         response_headers_sent: false
@@ -411,6 +471,73 @@ defmodule BorutaGateway.Gateway do
       _error -> :unknown
     end
   end
+
+  defp request_remote_ip(payload, socket) do
+    case Regex.run(~r{(?:^|\r\n)x-real-ip:\s*([^\r]+)}i, payload) do
+      [_, remote_ip] -> remote_ip
+      nil -> remote_ip(socket)
+    end
+  end
+
+  defp request_id(payload) do
+    case Regex.run(~r{[X|x]-[R|r]equest-[I|i]d\: ([^\r]+)}, payload) do
+      [_, request_id] -> request_id
+      nil -> System.unique_integer([:positive]) |> Integer.to_string()
+    end
+  end
+
+  defp log_completed_exchange(%State{start: nil}), do: :ok
+
+  defp log_completed_exchange(%State{} = state) do
+    status = state.response && status_code(state.response)
+
+    log_exchange(
+      state,
+      state.start,
+      state.request_id,
+      state.method,
+      state.path,
+      state.upstream,
+      status,
+      :success
+    )
+  end
+
+  defp log_exchange(_state, _start, _request_id, _method, _path, _upstream, nil, _status), do: :ok
+
+  defp log_exchange(state, start, request_id, method, path, upstream, status, business_status) do
+    stop = :os.system_time(:microsecond)
+    request_time = stop - start
+    upstream_time = upstream_time(state, stop)
+
+    :telemetry.execute(
+      [:boruta_gateway, :request, :stop],
+      %{duration: request_time},
+      %{
+        request_id: request_id,
+        method: method,
+        path: path,
+        status: status,
+        remote_ip: state.remote_ip || remote_ip(state.socket)
+      }
+    )
+
+    :telemetry.execute(
+      [:boruta_gateway, :proxy, business_status],
+      %{
+        request_time: request_time,
+        gateway_time: request_time - upstream_time,
+        upstream_time: upstream_time
+      },
+      %{
+        request_id: request_id,
+        upstream: upstream
+      }
+    )
+  end
+
+  defp upstream_time(%State{upstream_start: nil}, _stop), do: 0
+  defp upstream_time(%State{upstream_start: upstream_start}, stop), do: stop - upstream_start
 
   defp transform_header(payload, upstream, nil) do
     transform_header(payload, upstream, false)

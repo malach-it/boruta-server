@@ -63,13 +63,34 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     test "returns a 404 when no upstream persisted" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
+          parent = self()
+          handler_id = :gateway_real_ip_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/no_upstream",
+              [{"x-real-ip", "203.0.113.1"}],
+              ""
+            )
 
           assert {:ok, %Finch.Response{body: body, status: 404}} =
                    Finch.request(request, HttpClient)
 
           assert body == "No upstream has been found corresponding to the given request."
+
+          assert_receive {:gateway_request_log, %{remote_ip: "203.0.113.1"}}
         after
+          :telemetry.detach(:gateway_real_ip_test)
           Repo.delete_all(Upstream)
         end
       end)

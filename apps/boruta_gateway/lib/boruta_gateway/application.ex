@@ -63,6 +63,7 @@ defmodule BorutaGateway.Application do
           children
       end
 
+    BorutaGateway.Logger.start()
     setup_database()
     Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor)
   end

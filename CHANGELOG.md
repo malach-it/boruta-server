@@ -4,6 +4,11 @@
 
 ## [unreleased]
 
+### Added
+
+- [gateway] optional upstream rate imiting configuration
+- [gateway] recover request and business logs
+
 ### Changed
 
 - [auth] configure oauth acceptor count, default to 8
