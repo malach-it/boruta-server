@@ -341,6 +341,7 @@ defmodule BorutaGateway.Gateway do
        ) do
     response = (state.response || "") <> payload
     :gen_tcp.send(state.socket, payload)
+    state = %{state | response: response}
 
     case message_complete?(response) do
       true ->
@@ -348,7 +349,7 @@ defmodule BorutaGateway.Gateway do
 
       false ->
         activate_upstream_socket(socket, transport)
-        {:noreply, %{state | response: response}}
+        {:noreply, state}
     end
   end
 
@@ -361,7 +362,7 @@ defmodule BorutaGateway.Gateway do
 
         case message_complete?(response) do
           true ->
-            {:noreply, close_exchange(state, socket, transport)}
+            {:noreply, close_exchange(%{state | response: response}, socket, transport)}
 
           false ->
             activate_upstream_socket(socket, transport)

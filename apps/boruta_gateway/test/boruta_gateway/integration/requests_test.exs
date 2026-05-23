@@ -281,6 +281,48 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "logs successful requests" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_successful_request_log_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, measurements, metadata})
+            end,
+            :ok
+          )
+
+          with_upstream_server(&teapot_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: true
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/httpbin/status/418", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 418}} =
+                     Finch.request(request, HttpClient)
+
+            assert body =~ ~r/teapot/
+            assert_receive {:gateway_request_log, %{duration: duration}, %{status: 418}}
+            assert duration > 0
+          end)
+        after
+          :telemetry.detach(:gateway_successful_request_log_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns response root uri stripped", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
