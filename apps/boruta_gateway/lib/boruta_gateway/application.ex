@@ -28,7 +28,7 @@ defmodule BorutaGateway.Application do
                    [
                      port: Application.fetch_env!(:boruta_gateway, :port),
                      match_function: &Upstreams.match/1,
-                     num_acceptors: 10
+                     num_acceptors: Application.get_env(:boruta_gateway, :num_acceptors, 8)
                    ]
                  ]},
               id: :server
@@ -51,7 +51,7 @@ defmodule BorutaGateway.Application do
                    [
                      port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
                      match_function: &Upstreams.sidecar_match/1,
-                     num_acceptors: 10
+                     num_acceptors: Application.get_env(:boruta_gateway, :num_acceptors, 8)
                    ]
                  ]},
               id: :sidecar_server

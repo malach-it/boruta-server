@@ -11,4 +11,5 @@ config :boruta_gateway,
   server: true,
   sidecar_server: true,
   port: System.get_env("BORUTA_GATEWAY_PORT", "5000") |> String.to_integer(),
-  sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT", "5001") |> String.to_integer()
+  sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT", "5001") |> String.to_integer(),
+  num_acceptors: System.get_env("BORUTA_GATEWAY_ACCEPTORS", "8") |> String.to_integer()
