@@ -213,7 +213,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     test "returns a 429 when upstream rate limit is reached" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
-          {:ok, _upstream} =
+          {:ok, upstream} =
             Upstreams.create_upstream(%{
               scheme: "http",
               host: "should.not.be.called",
@@ -227,18 +227,18 @@ defmodule BorutaGateway.RequestsIntegrationTest do
               rate_limit_memory_length: 50
             })
 
+          key = {:gateway_upstream, upstream.id, ~c"127.0.0.1"}
+
+          Agent.update(Counter, fn _counter ->
+            %{key => List.duplicate(:os.system_time(:millisecond), 7)}
+          end)
+
+          Process.sleep(100)
+
           request = Finch.build(:get, "http://127.0.0.1:7777/limited", [], "")
 
-          response =
-            Enum.reduce_while(1..100, nil, fn _i, _last_response ->
-              case Finch.request(request, HttpClient) do
-                {:ok, %Finch.Response{status: 429} = response} -> {:halt, response}
-                {:ok, %Finch.Response{status: 503} = response} -> {:cont, response}
-                other -> {:halt, other}
-              end
-            end)
-
-          assert %Finch.Response{body: "", status: 429} = response
+          assert {:ok, %Finch.Response{body: "", status: 429}} =
+                   Finch.request(request, HttpClient)
         after
           Agent.update(Counter, fn _counter -> %{} end)
           Repo.delete_all(Upstream)

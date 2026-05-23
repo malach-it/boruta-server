@@ -60,21 +60,21 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
       ip = :ip
       time_unit = :second
 
-      assert RateLimit.Counter.get(RateLimit.Counter, ip, time_unit) == 0
+      assert RateLimit.Counter.get(ip, time_unit) == 0
       Agent.update(RateLimit.Counter, fn _counter -> %{ip => [:os.system_time(:millisecond)]} end)
-      assert RateLimit.Counter.get(RateLimit.Counter, ip, time_unit) == 1
+      assert RateLimit.Counter.get(ip, time_unit) == 1
 
       Agent.update(RateLimit.Counter, fn _counter ->
         %{ip => [:os.system_time(:millisecond), :os.system_time(:millisecond)]}
       end)
 
-      assert RateLimit.Counter.get(RateLimit.Counter, ip, time_unit) == 2
+      assert RateLimit.Counter.get(ip, time_unit) == 2
 
       Agent.update(RateLimit.Counter, fn _counter ->
         %{ip => [:os.system_time(:millisecond), :os.system_time(:millisecond) - 1000]}
       end)
 
-      assert RateLimit.Counter.get(RateLimit.Counter, ip, time_unit) == 1
+      assert RateLimit.Counter.get(ip, time_unit) == 1
     end
   end
 
@@ -87,26 +87,10 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
       count = 1
 
       Agent.update(RateLimit.Counter, fn _counter -> %{} end)
-
-      assert RateLimit.Counter.throttling_timeout(
-               RateLimit.Counter,
-               ip,
-               count,
-               time_unit,
-               penality,
-               RateLimit.Counter.default_memory_length()
-             ) == 0
+      assert RateLimit.Counter.throttling_timeout(ip, count, time_unit, penality) == 0
 
       Agent.update(RateLimit.Counter, fn _counter -> %{ip => [:os.system_time(:millisecond)]} end)
-
-      assert RateLimit.Counter.throttling_timeout(
-               RateLimit.Counter,
-               ip,
-               count,
-               time_unit,
-               penality,
-               RateLimit.Counter.default_memory_length()
-             ) == 0
+      assert RateLimit.Counter.throttling_timeout(ip, count, time_unit, penality) == 0
 
       Agent.update(RateLimit.Counter, fn _counter ->
         %{
@@ -122,14 +106,7 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
         }
       end)
 
-      assert RateLimit.Counter.throttling_timeout(
-               RateLimit.Counter,
-               ip,
-               count,
-               time_unit,
-               penality,
-               RateLimit.Counter.default_memory_length()
-             ) == 700
+      assert RateLimit.Counter.throttling_timeout(ip, count, time_unit, penality) == 700
 
       Agent.update(RateLimit.Counter, fn _counter ->
         %{
@@ -141,27 +118,13 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
         }
       end)
 
-      assert RateLimit.Counter.throttling_timeout(
-               RateLimit.Counter,
-               ip,
-               count,
-               time_unit,
-               penality,
-               RateLimit.Counter.default_memory_length()
-             ) == 200
+      assert RateLimit.Counter.throttling_timeout(ip, count, time_unit, penality) == 200
 
       Agent.update(RateLimit.Counter, fn _counter ->
         %{ip => [:os.system_time(:millisecond), :os.system_time(:millisecond) - 1000]}
       end)
 
-      assert RateLimit.Counter.throttling_timeout(
-               RateLimit.Counter,
-               ip,
-               count,
-               time_unit,
-               penality,
-               RateLimit.Counter.default_memory_length()
-             ) == 0
+      assert RateLimit.Counter.throttling_timeout(ip, count, time_unit, penality) == 0
     end
 
     test "accepts a configurable memory length" do
@@ -181,15 +144,7 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
         }
       end)
 
-      assert RateLimit.Counter.throttling_timeout(
-               RateLimit.Counter,
-               ip,
-               count,
-               time_unit,
-               penality,
-               1
-             ) ==
-               300
+      assert RateLimit.Counter.throttling_timeout(ip, count, time_unit, penality, 1) == 300
     end
   end
 
@@ -204,24 +159,14 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
                |> Enum.count(fn timestamp -> timestamp > :os.system_time(:millisecond) - 1000 end)
              end) == 0
 
-      RateLimit.Counter.increment(
-        RateLimit.Counter,
-        ip,
-        time_unit,
-        RateLimit.Counter.default_memory_length()
-      )
+      RateLimit.Counter.increment(ip, time_unit)
 
       assert Agent.get(RateLimit.Counter, fn %{^ip => timestamps} ->
                timestamps
                |> Enum.count(fn timestamp -> timestamp > :os.system_time(:millisecond) - 1000 end)
              end) == 1
 
-      RateLimit.Counter.increment(
-        RateLimit.Counter,
-        ip,
-        time_unit,
-        RateLimit.Counter.default_memory_length()
-      )
+      RateLimit.Counter.increment(ip, time_unit)
 
       assert Agent.get(RateLimit.Counter, fn %{^ip => timestamps} ->
                timestamps
@@ -229,13 +174,7 @@ defmodule BorutaAuth.Plugs.RateLimitTest do
              end) == 2
 
       :timer.sleep(1000)
-
-      RateLimit.Counter.increment(
-        RateLimit.Counter,
-        ip,
-        time_unit,
-        RateLimit.Counter.default_memory_length()
-      )
+      RateLimit.Counter.increment(ip, time_unit)
 
       assert Agent.get(RateLimit.Counter, fn %{^ip => timestamps} ->
                timestamps
