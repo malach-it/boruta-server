@@ -27,30 +27,23 @@ defmodule BorutaIdentityWeb.BackendsController do
       ) do
     backend = IdentityProviders.get_backend!(backend_id)
 
-    conn =
-      case client_id_from_request(conn) do
-        nil ->
-          raise IdentityProviderError, "Client identifier not provided."
-
-        _client_id ->
-          put_session(conn, :request, params["request"])
-      end
-
-    case Backend.federated_oauth_client(backend, federated_server_name) do
-      nil ->
-        raise IdentityProviderError, "Could not fetch associated federated server"
-
-      _oauth_client ->
-        conn
-        |> redirect(external: Backend.federated_login_url(backend, federated_server_name))
+    if is_nil(client_id_from_request(conn)) do
+      raise IdentityProviderError, "Client identifier not provided."
     end
+
+    if is_nil(Backend.federated_oauth_client(backend, federated_server_name)) do
+      raise IdentityProviderError, "Could not fetch associated federated server"
+    end
+
+    conn
+    |> redirect(external: Backend.federated_login_url(backend, federated_server_name, params["request"]))
   end
 
   def callback(conn, %{
     "id" => backend_id,
     "federated_server_name" => federated_server_name
   } = params) do
-    conn = request_from_session(conn)
+    conn = assign(conn, :request, params["state"])
     client_id = client_id_from_request(conn)
     backend = IdentityProviders.get_backend!(backend_id)
 
@@ -66,7 +59,6 @@ defmodule BorutaIdentityWeb.BackendsController do
 
   @impl BorutaIdentity.Accounts.FederatedSessionApplication
   def user_authenticated(conn, user, session_token) do
-    conn = request_from_session(conn)
     client_id = client_id_from_request(conn)
 
     :telemetry.execute(
@@ -91,7 +83,6 @@ defmodule BorutaIdentityWeb.BackendsController do
         message: message,
         template: template
       }) do
-    conn = request_from_session(conn)
     client_id = client_id_from_request(conn)
 
     :telemetry.execute(
@@ -111,21 +102,9 @@ defmodule BorutaIdentityWeb.BackendsController do
     |> render("template.html",
       template: template,
       assigns: %{
+        request: conn.query_params["state"],
         errors: [message]
       }
     )
-  end
-
-  defp request_from_session(conn) do
-    case get_session(conn, :request) do
-      nil ->
-        raise IdentityProviderError, "Could not get request information."
-
-      request ->
-        %{
-          conn
-          | query_params: Map.put(conn.query_params, "request", request)
-        }
-    end
   end
 end

@@ -363,7 +363,9 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
   @spec federated_login_url(backend :: t(), federated_server_name :: String.t()) ::
           login_url :: String.t()
-  def federated_login_url(%__MODULE__{} = backend, federated_server_name) do
+  @spec federated_login_url(backend :: t(), federated_server_name :: String.t(), state :: String.t()) ::
+          login_url :: String.t()
+  def federated_login_url(%__MODULE__{} = backend, federated_server_name, state \\ "") do
     case federated_oauth_client(backend, federated_server_name) do
       nil ->
         ""
@@ -374,7 +376,8 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
             Enum.join(
               [federated_server_scope(backend, federated_server_name)],
               " "
-            )
+            ),
+          state: state
         )
     end
   end

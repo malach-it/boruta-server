@@ -126,10 +126,10 @@ defmodule BorutaIdentityWeb.Authenticable do
   end
 
   @spec client_id_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
-  def client_id_from_request(%Plug.Conn{query_params: query_params}) do
+  def client_id_from_request(%Plug.Conn{query_params: %{"request" => request}}) do
     with {:ok, claims} <-
            BorutaIdentityWeb.Token.verify(
-             query_params["request"] || "",
+             request || "",
              BorutaIdentityWeb.Token.application_signer()
            ),
          {:ok, client_id} <- Map.fetch(claims, "client_id") do
@@ -138,6 +138,21 @@ defmodule BorutaIdentityWeb.Authenticable do
       _ -> nil
     end
   end
+
+  def client_id_from_request(%Plug.Conn{assigns: %{request: request}}) do
+    with {:ok, claims} <-
+           BorutaIdentityWeb.Token.verify(
+             request || "",
+             BorutaIdentityWeb.Token.application_signer()
+           ),
+         {:ok, client_id} <- Map.fetch(claims, "client_id") do
+      client_id
+    else
+      _ -> nil
+    end
+  end
+
+  def client_id_from_request(conn), do: dbg conn
 
   @spec user_return_to_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
   def user_return_to_from_request(%Plug.Conn{query_params: query_params}) do

@@ -31,7 +31,7 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   def context(context, %{conn: conn, identity_provider: identity_provider} = assigns) do
     %Plug.Conn{query_params: query_params} = conn
-    request = Map.get(query_params, "request")
+    request = assigns[:request] || Map.get(query_params, "request")
     backend = identity_provider.backend
 
     federated_servers =
@@ -181,7 +181,7 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   defp paths(conn, assigns) do
     %Plug.Conn{query_params: query_params} = conn
-    request = Map.get(query_params, "request")
+    request = assigns[:request] || Map.get(query_params, "request")
 
     %{
       boruta_logo_path: Routes.static_path(BorutaIdentityWeb.Endpoint, "/images/logo-yellow.png"),
