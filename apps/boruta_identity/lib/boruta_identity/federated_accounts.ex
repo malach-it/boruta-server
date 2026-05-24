@@ -64,22 +64,28 @@ defmodule BorutaIdentity.FederatedAccounts do
             OAuth2.Client.get_token!(oauth_client, code: code)
 
           with %User{} = user <-
-                 Federated.domain_user!(federated_server_name, token.access_token, client_idp.backend),
+                 Federated.domain_user!(
+                   federated_server_name,
+                   token.access_token,
+                   client_idp.backend
+                 ),
                {:ok, user, session_token} <- Sessions.create_user_session(user) do
             module.user_authenticated(context, user, session_token)
           end
       end
     rescue
-    error in OAuth2.Error ->
+      error in OAuth2.Error ->
         module.authentication_failure(context, %SessionError{
           message: error.reason,
           template: new_session_template(client_idp)
         })
-    error in IdentityProviderError ->
+
+      error in IdentityProviderError ->
         module.authentication_failure(context, %SessionError{
           message: error.message,
           template: new_session_template(client_idp)
         })
+
       error ->
         Logger.error("Federation failed " <> inspect(error))
 
