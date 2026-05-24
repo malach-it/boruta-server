@@ -30,6 +30,16 @@
             </div>
             <div class="ui attribute list">
               <div class="item">
+                <span class="header">ID</span>
+                <span class="description">{{ user.id }}</span>
+                <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
+              </div>
+              <div class="item">
+                <span class="header">UID</span>
+                <span class="description">{{ user.uid }}</span>
+                <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
+              </div>
+              <div class="item">
                 <span class="header">Email</span>
                 <span class="description">{{ user.email }}</span>
                 <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
