@@ -152,7 +152,7 @@ defmodule BorutaIdentityWeb.Authenticable do
     end
   end
 
-  def client_id_from_request(conn), do: nil
+  def client_id_from_request(_conn), do: nil
 
   @spec user_return_to_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
   def user_return_to_from_request(%Plug.Conn{query_params: %{"request" => request}}) do
