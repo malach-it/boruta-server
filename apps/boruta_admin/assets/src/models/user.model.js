@@ -21,7 +21,7 @@ const assign = {
   id: function ({ id }) { this.id = id },
   uid: function ({ uid }) { this.uid = uid },
   backend: function ({ backend }) { this.backend = backend },
-  email: function ({ email }) { this.email = email },
+  username: function ({ username }) { this.username = username },
   totp_registered_at: function ({ totp_registered_at }) { this.totp_registered_at = totp_registered_at },
   federated_metadata: function ({ federated_metadata }) { this.federated_metadata = federated_metadata },
   metadata: function ({ metadata: rawMetadata }) {
@@ -119,7 +119,7 @@ class User {
   }
 
   get serialized () {
-    const { id, email, password, metadata: rawMetadata, group, authorized_scopes, roles, organizations } = this
+    const { id, username, password, metadata: rawMetadata, group, authorized_scopes, roles, organizations } = this
 
     const metadata = {}
 
@@ -135,7 +135,7 @@ class User {
 
     return {
       id,
-      email,
+      username,
       password,
       metadata,
       group,

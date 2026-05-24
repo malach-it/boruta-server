@@ -14,9 +14,9 @@
             <option :value="backend.id" v-for="backend in backends" :key="backend.id">{{ backend.name }}</option>
           </select>
         </div>
-        <div class="field" v-if="!user.isPersisted" :class="{ 'error': user.errors?.email }">
-          <label>Email</label>
-          <input type="text" v-model="user.email" placeholder="email@example.com" />
+        <div class="field" v-if="!user.isPersisted" :class="{ 'error': user.errors?.username }">
+          <label>Username</label>
+          <input type="text" v-model="user.username" placeholder="email@example.com" />
         </div>
         <div class="field" v-if="!user.isPersisted" :class="{ 'error': user.errors?.password }">
           <label>Password</label>

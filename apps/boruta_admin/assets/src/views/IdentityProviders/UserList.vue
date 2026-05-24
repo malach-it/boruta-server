@@ -40,8 +40,8 @@
                 <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item">
-                <span class="header">Email</span>
-                <span class="description">{{ user.email }}</span>
+                <span class="header">Username</span>
+                <span class="description">{{ user.username }}</span>
                 <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item" v-if="user.roles.length">

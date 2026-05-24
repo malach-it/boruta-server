@@ -139,7 +139,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
         post(conn, Routes.admin_user_path(conn, :create), %{
           "backend_id" => insert(:backend).id,
           "user" => %{
-            "email" => email
+            "username" => email
           }
         })
 
@@ -160,12 +160,12 @@ defmodule BorutaAdminWeb.UserControllerTest do
         post(conn, Routes.admin_user_path(conn, :create), %{
           "backend_id" => insert(:backend).id,
           "user" => %{
-            "email" => email,
+            "username" => email,
             "password" => valid_user_password()
           }
         })
 
-      assert %{"id" => _id, "email" => ^email} = json_response(conn, 200)["data"]
+      assert %{"id" => _id, "username" => ^email} = json_response(conn, 200)["data"]
     end
 
     @tag authorized: ["users:manage:all"]
@@ -177,7 +177,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
         post(conn, Routes.admin_user_path(conn, :create), %{
           "backend_id" => insert(:backend).id,
           "user" => %{
-            "email" => unique_user_email(),
+            "username" => unique_user_email(),
             "password" => valid_user_password(),
             "authorized_scopes" => [%{"id" => scope.id}]
           }
@@ -198,7 +198,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
         post(conn, Routes.admin_user_path(conn, :create), %{
           "backend_id" => insert(:backend).id,
           "user" => %{
-            "email" => unique_user_email(),
+            "username" => unique_user_email(),
             "password" => valid_user_password(),
             "organizations" => [%{"id" => organization.id}]
           }
@@ -220,7 +220,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
         post(conn, Routes.admin_user_path(conn, :create), %{
           "backend_id" => insert(:backend).id,
           "user" => %{
-            "email" => unique_user_email(),
+            "username" => unique_user_email(),
             "password" => valid_user_password(),
             "roles" => [%{"id" => role.id}]
           }
@@ -254,7 +254,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
         post(conn, Routes.admin_user_path(conn, :create), %{
           "backend_id" => insert(:backend).id,
           "user" => %{
-            "email" => email
+            "username" => email
           }
         })
 
