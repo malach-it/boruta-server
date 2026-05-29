@@ -853,6 +853,13 @@ export default {
   .token-actions {
     float: right;
     margin: 0 0 1rem 1rem;
+    @media (max-width: 768px) {
+      float: none;
+      margin: 0;
+      .button {
+        width: 100%;
+      }
+    }
   }
 
   .chain-title,
