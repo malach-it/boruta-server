@@ -106,8 +106,6 @@ defmodule BorutaWeb.Logger do
         _,
         _measurements,
         %{
-          access_token: access_token,
-          code: code,
           type: type,
           response_mode: response_mode,
           expires_in: expires_in,
@@ -128,8 +126,6 @@ defmodule BorutaWeb.Logger do
       log_attribute("sub", current_user && current_user.uid),
       log_attribute("type", type),
       log_attribute("response_mode", response_mode),
-      log_attribute("access_token", access_token),
-      log_attribute("code", code),
       log_attribute("expires_in", expires_in)
     ]
 
@@ -172,12 +168,9 @@ defmodule BorutaWeb.Logger do
         %{
           client_id: client_id,
           sub: sub,
-          access_token: access_token,
-          agent_token: agent_token,
           token_type: token_type,
-          expires_in: expires_in,
-          refresh_token: refresh_token
-        } = metadata,
+          expires_in: expires_in
+        },
         _
       ) do
     log_line = [
@@ -190,12 +183,8 @@ defmodule BorutaWeb.Logger do
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
-      log_attribute("access_token", access_token),
-      log_attribute("agent_token", agent_token),
-      log_attribute("authorization_code", metadata[:authorization_code]),
       log_attribute("token_type", token_type),
-      log_attribute("expires_in", expires_in),
-      log_attribute("refresh_token", refresh_token)
+      log_attribute("expires_in", expires_in)
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -239,11 +228,8 @@ defmodule BorutaWeb.Logger do
       log_attribute("client_id", metadata[:client_id]),
       log_attribute("sub", metadata[:sub]),
       log_attribute("code_id", metadata[:code_id]),
-      log_attribute("code", metadata[:code]),
-      log_attribute("response_type", quoted(metadata[:response_type])),
-      log_attribute("requested_scope", quoted(metadata[:requested_scope])),
-      log_attribute("id_token", metadata[:id_token]),
-      log_attribute("vp_token", metadata[:vp_token])
+      quoted_log_attribute("response_type", metadata[:response_type]),
+      quoted_log_attribute("requested_scope", metadata[:requested_scope])
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -261,7 +247,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("code_id", metadata[:code_id]),
       log_attribute("status", metadata[:status]),
       log_attribute("error", metadata[:error]),
-      log_attribute("error_description", quoted(metadata[:error_description]))
+      quoted_log_attribute("error_description", metadata[:error_description])
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -273,8 +259,7 @@ defmodule BorutaWeb.Logger do
         %{
           active: active,
           client_id: client_id,
-          sub: sub,
-          token: token
+          sub: sub
         },
         _
       ) do
@@ -288,7 +273,6 @@ defmodule BorutaWeb.Logger do
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
-      log_attribute("access_token", token),
       log_attribute("active", active)
     ]
 
@@ -301,8 +285,7 @@ defmodule BorutaWeb.Logger do
         %{
           status: status,
           error: error,
-          error_description: error_description,
-          token: token
+          error_description: error_description
         },
         _
       ) do
@@ -314,7 +297,6 @@ defmodule BorutaWeb.Logger do
       "introspect",
       " - ",
       "failure",
-      log_attribute("access_token", token),
       log_attribute("status", status),
       log_attribute("error", error),
       log_attribute("error_description", ~s{"#{error_description}"})
@@ -326,9 +308,7 @@ defmodule BorutaWeb.Logger do
   def authorization_revoke_success_handler(
         _,
         _measurements,
-        %{
-          token: token
-        },
+        %{},
         _
       ) do
     log_line = [
@@ -338,8 +318,7 @@ defmodule BorutaWeb.Logger do
       ?\s,
       "revoke",
       " - ",
-      "success",
-      log_attribute("access_token", token)
+      "success"
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -351,8 +330,7 @@ defmodule BorutaWeb.Logger do
         %{
           status: status,
           error: error,
-          error_description: error_description,
-          token: token
+          error_description: error_description
         },
         _
       ) do
@@ -364,7 +342,6 @@ defmodule BorutaWeb.Logger do
       "revoke",
       " - ",
       "failure",
-      log_attribute("access_token", token),
       log_attribute("status", status),
       log_attribute("error", error),
       log_attribute("error_description", ~s{"#{error_description}"})
@@ -375,9 +352,8 @@ defmodule BorutaWeb.Logger do
 
   defp log_attribute(_key, nil), do: ""
   defp log_attribute(key, attribute), do: " #{key}=#{attribute}"
-
-  defp quoted(nil), do: nil
-  defp quoted(attribute), do: ~s{"#{attribute}"}
+  defp quoted_log_attribute(_key, nil), do: ""
+  defp quoted_log_attribute(key, attribute), do: log_attribute(key, ~s{"#{attribute}"})
 
   # From Phoenix.Logger
   defp log_level(nil, _conn), do: :info

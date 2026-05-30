@@ -88,21 +88,33 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def public_client?(
         %Plug.Conn{
-          query_params: %{"response_type" => "code" <> _rest, "client_metadata" => _client_metadata}
+          query_params: %{
+            "response_type" => "code" <> _rest,
+            "client_metadata" => _client_metadata
+          }
         } = conn
-  ), do: {:preauthorized, conn}
+      ),
+      do: {:preauthorized, conn}
 
   def public_client?(
         %Plug.Conn{
-          query_params: %{"response_type" => "id_token" <> _rest, "client_metadata" => _client_metadata}
+          query_params: %{
+            "response_type" => "id_token" <> _rest,
+            "client_metadata" => _client_metadata
+          }
         } = conn
-  ), do: {:preauthorized, conn}
+      ),
+      do: {:preauthorized, conn}
 
   def public_client?(
         %Plug.Conn{
-          query_params: %{"response_type" => "vp_token" <> _rest, "client_metadata" => _client_metadata}
+          query_params: %{
+            "response_type" => "vp_token" <> _rest,
+            "client_metadata" => _client_metadata
+          }
         } = conn
-  ), do: {:preauthorized, conn}
+      ),
+      do: {:preauthorized, conn}
 
   def public_client?(conn), do: {:unchanged, conn}
 
@@ -339,8 +351,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         response_types: response_types
       }) do
     case Enum.map(@public_response_types, &String.split(&1, " "))
-    |> List.first()
-    |> Enum.member?(Enum.split(response_types, " ") |> List.first()) do
+         |> List.first()
+         |> Enum.member?(Enum.split(response_types, " ") |> List.first()) do
       true ->
         Oauth.authorize(
           conn,
@@ -424,8 +436,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       [:authorization, :authorize, :success],
       %{},
       %{
-        access_token: response.access_token && response.access_token.value,
-        code: response.code && response.code.value,
         type: response.type,
         response_mode: response.response_mode,
         expires_in: response.expires_in,
@@ -708,11 +718,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     anonymous_sub =
       case conn.query_params["client_id"] do
-        "did:" <> _key = did -> did
-        _ -> case conn.query_params["client_metadata"] do
-          nil -> nil
-          _ -> "unknown"
-        end
+        "did:" <> _key = did ->
+          did
+
+        _ ->
+          case conn.query_params["client_metadata"] do
+            nil -> nil
+            _ -> "unknown"
+          end
       end
 
     scope =

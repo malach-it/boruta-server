@@ -11,7 +11,7 @@ defmodule BorutaWeb.LoggerTest do
   end
 
   describe "authorization_token_success_handler/4" do
-    test "logs the authorization code" do
+    test "does not log bearer credentials" do
       log =
         capture_log([level: :info], fn ->
           BorutaWeb.Logger.authorization_token_success_handler(
@@ -21,18 +21,21 @@ defmodule BorutaWeb.LoggerTest do
               client_id: "client-id",
               sub: "user-id",
               access_token: "access-token",
-              agent_token: nil,
+              agent_token: "agent-token",
               authorization_code: "authorization-code",
               token_type: "bearer",
               expires_in: 60,
-              refresh_token: nil
+              refresh_token: "refresh-token"
             },
             nil
           )
         end)
 
       assert log =~ "authorization token - success"
-      assert log =~ "authorization_code=authorization-code"
+      refute log =~ "access-token"
+      refute log =~ "agent-token"
+      refute log =~ "refresh-token"
+      refute log =~ "authorization-code"
     end
   end
 
@@ -46,12 +49,11 @@ defmodule BorutaWeb.LoggerTest do
             %{
               client_id: "client-id",
               sub: "user-id",
-              code: "code-value",
               code_id: "code-id",
               response_type: "id_token",
               requested_scope: "openid",
-              id_token: true,
-              vp_token: false
+              id_token: "id-token",
+              vp_token: "vp-token"
             },
             nil
           )
@@ -59,9 +61,9 @@ defmodule BorutaWeb.LoggerTest do
 
       assert log =~ "authorization direct_post - success"
       assert log =~ "client_id=client-id"
-      assert log =~ "code=code-value"
       assert log =~ ~s(response_type="id_token")
-      assert log =~ "id_token=true"
+      refute log =~ "id-token"
+      refute log =~ "vp-token"
     end
   end
 
