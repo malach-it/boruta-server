@@ -34,6 +34,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaWeb.PresentationServer
 
   @public_response_types ["id_token", "code", "vp_token"]
+  @presentation_timeout 30_000
 
   def authorize(%Plug.Conn{} = conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -81,6 +82,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
       {:message, message} ->
         chunk(conn, "event: message\ndata: #{message}\n\n")
+    after
+      @presentation_timeout ->
+        PresentationServer.cancel_presentation(code)
+        chunk(conn, "event: timeout\ndata: timeout\n\n")
     end
 
     conn
