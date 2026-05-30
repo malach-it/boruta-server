@@ -17,6 +17,7 @@ defmodule BorutaGateway.Gateway do
   alias BorutaGateway.Upstreams.Upstream
 
   @connect_timeout 5_000
+  @default_max_response_buffer_bytes 10_000_000
 
   defmodule Server do
     @moduledoc false
@@ -165,138 +166,77 @@ defmodule BorutaGateway.Gateway do
 
   def handle_info({:tcp, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
     start = :os.system_time(:microsecond)
-    [_, method, path] = Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
     request_id = request_id(payload)
     state = %{state | remote_ip: request_remote_ip(payload, socket)}
-    # [_, host] = Regex.run(~r{[H|h]ost\: ([^\r]+)}, payload)
 
-    path_info = String.split(path, "/", trim: true)
+    case parse_request_line(payload) do
+      {:ok, method, path} ->
+        path_info = String.split(path, "/", trim: true)
 
-    with %Upstream{} = upstream <- state.match_function.(path_info),
-         :ok <- rate_limit(socket, upstream),
-         {:ok, token} <- Authorization.authorize(payload, method, upstream) do
-      case upstream.scheme do
-        "http" ->
-          case :gen_tcp.connect(
-                 upstream.host |> String.to_charlist(),
-                 upstream.port,
-                 upstream_socket_options(upstream),
-                 @connect_timeout
-               ) do
-            {:ok, client_socket} ->
-              :ok = :gen_tcp.send(client_socket, transform_header(payload, upstream, token))
-              upstream_start = :os.system_time(:microsecond)
+        with %Upstream{} = upstream <- state.match_function.(path_info),
+             :ok <- rate_limit(socket, upstream),
+             {:ok, token} <- Authorization.authorize(payload, method, upstream) do
+          connect_upstream(
+            socket,
+            payload,
+            state,
+            start,
+            request_id,
+            method,
+            path,
+            upstream,
+            token
+          )
+        else
+          nil ->
+            response = "No upstream has been found corresponding to the given request."
 
-              :inet.setopts(socket, active: :once)
-              :inet.setopts(client_socket, active: :once)
+            :gen_tcp.send(
+              socket,
+              "HTTP/1.1 404 Not Found\r\n" <>
+                "Content-Length: 62\r\n\r\n" <>
+                response
+            )
 
-              {:noreply,
-               %{
-                 state
-                 | client_socket: client_socket,
-                   start: start,
-                   upstream_start: upstream_start,
-                   request_id: request_id,
-                   method: method,
-                   path: path,
-                   remote_ip: state.remote_ip,
-                   upstream: upstream
-               }}
+            log_exchange(state, start, request_id, method, path, nil, 404, :failure)
 
-            {:error, _error} ->
-              :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-              log_exchange(state, start, request_id, method, path, upstream, 503, :failure)
+            {:noreply, close_downstream(socket, state)}
 
-              {:noreply, close_downstream(socket, state)}
-          end
+          {:unauthorized, content_type, response} ->
+            :gen_tcp.send(
+              socket,
+              "HTTP/1.1 401 Unauthorized\r\n" <>
+                "Content-Type: #{content_type}\r\n" <>
+                "Content-Length: #{byte_size(response)}\r\n\r\n" <>
+                response
+            )
 
-        "https" ->
-          case :ssl.connect(
-                 upstream.host |> String.to_charlist(),
-                 upstream.port,
-                 upstream_socket_options(upstream) ++
-                   [
-                     {:verify, :verify_peer},
-                     {:cacerts, :public_key.cacerts_get()}
-                   ],
-                 @connect_timeout
-               ) do
-            {:ok, client_socket} ->
-              _connected = :os.system_time(:microsecond) - start
-              :ok = :ssl.send(client_socket, transform_header(payload, upstream, token))
-              upstream_start = :os.system_time(:microsecond)
+            log_exchange(state, start, request_id, method, path, nil, 401, :failure)
 
-              :inet.setopts(socket, active: :once)
-              :ssl.setopts(client_socket, active: :once)
+            {:noreply, close_downstream(socket, state)}
 
-              {:noreply,
-               %{
-                 state
-                 | client_socket: client_socket,
-                   start: start,
-                   upstream_start: upstream_start,
-                   request_id: request_id,
-                   method: method,
-                   path: path,
-                   remote_ip: state.remote_ip,
-                   upstream: upstream
-               }}
+          {:forbidden, content_type, response} ->
+            :gen_tcp.send(
+              socket,
+              "HTTP/1.1 403 Forbidden\r\n" <>
+                "Content-Type: #{content_type}\r\n" <>
+                "Content-Length: #{byte_size(response)}\r\n\r\n" <>
+                response
+            )
 
-            {:error, _error} ->
-              :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-              log_exchange(state, start, request_id, method, path, upstream, 503, :failure)
+            log_exchange(state, start, request_id, method, path, nil, 403, :failure)
 
-              {:noreply, close_downstream(socket, state)}
-          end
-      end
-    else
-      # TODO close client socket in case of failure
-      nil ->
-        response = "No upstream has been found corresponding to the given request."
+            {:noreply, close_downstream(socket, state)}
 
-        :gen_tcp.send(
-          socket,
-          "HTTP/1.1 404 Not Found\r\n" <>
-            "Content-Length: 62\r\n\r\n" <>
-            response
-        )
+          :rate_limited ->
+            :gen_tcp.send(socket, "HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\n\r\n")
+            log_exchange(state, start, request_id, method, path, nil, 429, :failure)
 
-        _response = :os.system_time(:microsecond) - start
-        log_exchange(state, start, request_id, method, path, nil, 404, :failure)
+            {:noreply, close_downstream(socket, state)}
+        end
 
-        {:noreply, close_downstream(socket, state)}
-
-      {:unauthorized, content_type, response} ->
-        :gen_tcp.send(
-          socket,
-          "HTTP/1.1 401 Unauthorized\r\n" <>
-            "Content-Type: #{content_type}\r\n" <>
-            "Content-Length: #{byte_size(response)}\r\n\r\n" <>
-            response
-        )
-
-        _response = :os.system_time(:microsecond) - start
-        log_exchange(state, start, request_id, method, path, nil, 401, :failure)
-
-        {:noreply, close_downstream(socket, state)}
-
-      {:forbidden, content_type, response} ->
-        :gen_tcp.send(
-          socket,
-          "HTTP/1.1 403 Forbidden\r\n" <>
-            "Content-Type: #{content_type}\r\n" <>
-            "Content-Length: #{byte_size(response)}\r\n\r\n" <>
-            response
-        )
-
-        _response = :os.system_time(:microsecond) - start
-        log_exchange(state, start, request_id, method, path, nil, 403, :failure)
-
-        {:noreply, close_downstream(socket, state)}
-
-      :rate_limited ->
-        :gen_tcp.send(socket, "HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\n\r\n")
-        log_exchange(state, start, request_id, method, path, nil, 429, :failure)
+      {:error, :bad_request} ->
+        :gen_tcp.send(socket, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
 
         {:noreply, close_downstream(socket, state)}
     end
@@ -333,6 +273,83 @@ defmodule BorutaGateway.Gateway do
     {:stop, reason}
   end
 
+  defp connect_upstream(socket, payload, state, start, request_id, method, path, upstream, token) do
+    case upstream.scheme do
+      "http" ->
+        case :gen_tcp.connect(
+               upstream.host |> String.to_charlist(),
+               upstream.port,
+               upstream_socket_options(upstream),
+               @connect_timeout
+             ) do
+          {:ok, client_socket} ->
+            :ok = :gen_tcp.send(client_socket, transform_header(payload, upstream, token))
+            upstream_start = :os.system_time(:microsecond)
+
+            :inet.setopts(socket, active: :once)
+            :inet.setopts(client_socket, active: :once)
+
+            {:noreply,
+             %{
+               state
+               | client_socket: client_socket,
+                 start: start,
+                 upstream_start: upstream_start,
+                 request_id: request_id,
+                 method: method,
+                 path: path,
+                 remote_ip: state.remote_ip,
+                 upstream: upstream
+             }}
+
+          {:error, _error} ->
+            :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
+            log_exchange(state, start, request_id, method, path, upstream, 503, :failure)
+
+            {:noreply, close_downstream(socket, state)}
+        end
+
+      "https" ->
+        case :ssl.connect(
+               upstream.host |> String.to_charlist(),
+               upstream.port,
+               upstream_socket_options(upstream) ++
+                 [
+                   {:verify, :verify_peer},
+                   {:cacerts, :public_key.cacerts_get()}
+                 ],
+               @connect_timeout
+             ) do
+          {:ok, client_socket} ->
+            _connected = :os.system_time(:microsecond) - start
+            :ok = :ssl.send(client_socket, transform_header(payload, upstream, token))
+            upstream_start = :os.system_time(:microsecond)
+
+            :inet.setopts(socket, active: :once)
+            :ssl.setopts(client_socket, active: :once)
+
+            {:noreply,
+             %{
+               state
+               | client_socket: client_socket,
+                 start: start,
+                 upstream_start: upstream_start,
+                 request_id: request_id,
+                 method: method,
+                 path: path,
+                 remote_ip: state.remote_ip,
+                 upstream: upstream
+             }}
+
+          {:error, _error} ->
+            :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
+            log_exchange(state, start, request_id, method, path, upstream, 503, :failure)
+
+            {:noreply, close_downstream(socket, state)}
+        end
+    end
+  end
+
   defp forward_response_payload(
          %State{response_headers_sent: true} = state,
          socket,
@@ -340,39 +357,55 @@ defmodule BorutaGateway.Gateway do
          transport
        ) do
     response = (state.response || "") <> payload
-    :gen_tcp.send(state.socket, payload)
-    state = %{state | response: response}
 
-    case message_complete?(response) do
-      true ->
-        {:noreply, close_exchange(state, socket, transport)}
+    if response_buffer_exceeded?(response) do
+      {:noreply, close_buffered_response(state, socket, transport)}
+    else
+      :gen_tcp.send(state.socket, payload)
+      state = %{state | response: response}
 
-      false ->
-        activate_upstream_socket(socket, transport)
-        {:noreply, state}
+      case message_complete?(response) do
+        true ->
+          {:noreply, close_exchange(state, socket, transport)}
+
+        false ->
+          activate_upstream_socket(socket, transport)
+          {:noreply, state}
+      end
     end
   end
 
   defp forward_response_payload(state, socket, payload, transport) do
     response = (state.response || "") <> payload
 
-    case split_headers(response) do
-      {:ok, header, body} ->
-        :gen_tcp.send(state.socket, clean_response_headers(header) <> "\r\n\r\n" <> body)
+    if response_buffer_exceeded?(response) do
+      :gen_tcp.send(state.socket, "HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n")
 
-        case message_complete?(response) do
-          true ->
-            {:noreply, close_exchange(%{state | response: response}, socket, transport)}
+      {:noreply,
+       close_exchange(%{state | response: "HTTP/1.1 502 Bad Gateway"}, socket, transport)}
+    else
+      case split_headers(response) do
+        {:ok, header, body} ->
+          :gen_tcp.send(state.socket, clean_response_headers(header) <> "\r\n\r\n" <> body)
 
-          false ->
-            activate_upstream_socket(socket, transport)
-            {:noreply, %{state | response: response, response_headers_sent: true}}
-        end
+          case message_complete?(response) do
+            true ->
+              {:noreply, close_exchange(%{state | response: response}, socket, transport)}
 
-      :error ->
-        activate_upstream_socket(socket, transport)
-        {:noreply, %{state | response: response}}
+            false ->
+              activate_upstream_socket(socket, transport)
+              {:noreply, %{state | response: response, response_headers_sent: true}}
+          end
+
+        :error ->
+          activate_upstream_socket(socket, transport)
+          {:noreply, %{state | response: response}}
+      end
     end
+  end
+
+  defp close_buffered_response(state, socket, transport) do
+    close_exchange(%{state | response: nil}, socket, transport)
   end
 
   defp activate_upstream_socket(socket, :tcp), do: :inet.setopts(socket, active: :once)
@@ -496,6 +529,25 @@ defmodule BorutaGateway.Gateway do
       [_, request_id] -> request_id
       nil -> SecureRandom.hex(4)
     end
+  end
+
+  defp parse_request_line(payload) do
+    case Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload) do
+      [_, method, path] -> {:ok, method, path}
+      _ -> {:error, :bad_request}
+    end
+  end
+
+  defp response_buffer_exceeded?(response) do
+    byte_size(response) > max_response_buffer_bytes()
+  end
+
+  defp max_response_buffer_bytes do
+    Application.get_env(
+      :boruta_gateway,
+      :max_response_buffer_bytes,
+      @default_max_response_buffer_bytes
+    )
   end
 
   defp log_completed_exchange(%State{start: nil}), do: :ok

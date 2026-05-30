@@ -96,6 +96,64 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "returns a 400 for malformed request lines" do
+      {:ok, socket} =
+        :gen_tcp.connect(~c"localhost", 7777, [:binary, {:packet, :raw}, {:active, false}], 1_000)
+
+      :ok = :gen_tcp.send(socket, "BAD\r\n\r\n")
+
+      assert {:ok, response} = :gen_tcp.recv(socket, 0, 1_000)
+      assert response =~ "HTTP/1.1 400 Bad Request"
+
+      :gen_tcp.close(socket)
+    end
+
+    test "closes oversized upstream response buffers" do
+      previous_max_response_buffer_bytes =
+        Application.get_env(:boruta_gateway, :max_response_buffer_bytes)
+
+      Application.put_env(:boruta_gateway, :max_response_buffer_bytes, 64)
+
+      on_exit(fn ->
+        case previous_max_response_buffer_bytes do
+          nil ->
+            Application.delete_env(:boruta_gateway, :max_response_buffer_bytes)
+
+          value ->
+            Application.put_env(:boruta_gateway, :max_response_buffer_bytes, value)
+        end
+      end)
+
+      with_upstream_server(
+        fn request ->
+          assert request =~ "GET /large HTTP/1.1"
+
+          response_body(String.duplicate("a", 100), status: "200 OK", content_type: "text/plain")
+        end,
+        fn port ->
+          Sandbox.unboxed_run(Repo, fn ->
+            try do
+              Upstreams.create_upstream(%{
+                scheme: "http",
+                host: "127.0.0.1",
+                port: port,
+                uris: ["/large"],
+                authorize: false
+              })
+
+              Process.sleep(100)
+
+              request = Finch.build(:get, "http://localhost:7777/large", [], "")
+
+              assert {:ok, %Finch.Response{status: 502}} = Finch.request(request, HttpClient)
+            after
+              Repo.delete_all(Upstream)
+            end
+          end)
+        end
+      )
+    end
+
     test "generates request ids with secure random entropy when none is provided" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
