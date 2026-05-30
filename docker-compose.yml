@@ -6,10 +6,7 @@ volumes:
 services:
   postgres:
     image: postgres:14
-    environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-      POSTGRES_DATABASE: "boruta_release"
+    env_file: "./.env.example"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -34,11 +31,7 @@ services:
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-      POSTGRES_DATABASE: "boruta_release"
       POSTGRES_HOST: "postgres"
     depends_on:
       postgres:
         condition: service_healthy
-
