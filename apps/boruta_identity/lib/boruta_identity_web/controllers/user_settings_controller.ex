@@ -15,6 +15,14 @@ defmodule BorutaIdentityWeb.UserSettingsController do
   alias BorutaIdentity.Accounts.SettingsError
   alias BorutaIdentityWeb.TemplateView
 
+  @user_update_params %{
+    "current_password" => :current_password,
+    "email" => :email,
+    "metadata" => :metadata,
+    "password" => :password,
+    "password_confirmation" => :password_confirmation
+  }
+
   def edit(conn, _params) do
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
@@ -28,13 +36,14 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     current_user = conn.assigns[:current_user]
 
     user_update_params =
-      Enum.reduce(user_params, %{}, fn {key, value}, acc ->
-        try do
-          Map.put(acc, String.to_existing_atom(key), value)
-        rescue
-          ArgumentError -> acc
+      user_params
+      |> Enum.flat_map(fn {key, value} ->
+        case Map.fetch(@user_update_params, key) do
+          {:ok, param} -> [{param, value}]
+          :error -> []
         end
       end)
+      |> Enum.into(%{})
 
     Accounts.update_user(
       conn,
@@ -159,6 +168,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     conn
     |> remove_user_session()
     |> put_flash(:info, "User data destroyed.")
+
     Accounts.delete_session(conn, client_id, session_token, __MODULE__)
   end
 

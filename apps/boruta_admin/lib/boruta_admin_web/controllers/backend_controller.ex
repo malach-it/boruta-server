@@ -57,8 +57,12 @@ defmodule BorutaAdminWeb.BackendController do
   end
 
   def email_template(conn, %{"backend_id" => id, "template_type" => template_type}) do
-    template = IdentityProviders.get_backend_email_template!(id, String.to_atom(template_type))
-    render(conn, "show_email_template.json", email_template: template)
+    with {:ok, template_type} <- EmailTemplate.fetch_template_type(template_type) do
+      template = IdentityProviders.get_backend_email_template!(id, template_type)
+      render(conn, "show_email_template.json", email_template: template)
+    else
+      :error -> raise Ecto.NoResultsError, queryable: EmailTemplate
+    end
   end
 
   def update_email_template(conn, %{
@@ -66,17 +70,24 @@ defmodule BorutaAdminWeb.BackendController do
         "template_type" => template_type,
         "template" => template_params
       }) do
-    template = IdentityProviders.get_backend_email_template!(id, String.to_atom(template_type))
-
-    with {:ok, %EmailTemplate{} = template} <-
+    with {:ok, template_type} <- EmailTemplate.fetch_template_type(template_type),
+         template = IdentityProviders.get_backend_email_template!(id, template_type),
+         {:ok, %EmailTemplate{} = template} <-
            IdentityProviders.upsert_email_template(template, template_params) do
       render(conn, "show_email_template.json", email_template: template)
+    else
+      :error -> raise Ecto.NoResultsError, queryable: EmailTemplate
+      error -> error
     end
   end
 
   def delete_email_template(conn, %{"backend_id" => id, "template_type" => template_type}) do
-    template = IdentityProviders.delete_email_template!(id, String.to_atom(template_type))
-    render(conn, "show_email_template.json", email_template: template)
+    with {:ok, template_type} <- EmailTemplate.fetch_template_type(template_type) do
+      template = IdentityProviders.delete_email_template!(id, template_type)
+      render(conn, "show_email_template.json", email_template: template)
+    else
+      :error -> raise Ecto.NoResultsError, queryable: EmailTemplate
+    end
   end
 
   # TODO client backend association

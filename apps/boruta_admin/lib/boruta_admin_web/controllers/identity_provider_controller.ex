@@ -24,7 +24,10 @@ defmodule BorutaAdminWeb.IdentityProviderController do
            IdentityProviders.create_identity_provider(identity_provider_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.admin_identity_provider_path(conn, :show, identity_provider))
+      |> put_resp_header(
+        "location",
+        Routes.admin_identity_provider_path(conn, :show, identity_provider)
+      )
       |> render("show.json", identity_provider: identity_provider)
     end
   end
@@ -47,14 +50,19 @@ defmodule BorutaAdminWeb.IdentityProviderController do
     identity_provider = IdentityProviders.get_identity_provider!(id)
 
     with :ok <- ensure_open_for_edition(id),
-         {:ok, %IdentityProvider{}} <- IdentityProviders.delete_identity_provider(identity_provider) do
+         {:ok, %IdentityProvider{}} <-
+           IdentityProviders.delete_identity_provider(identity_provider) do
       send_resp(conn, :no_content, "")
     end
   end
 
   def template(conn, %{"identity_provider_id" => id, "template_type" => template_type}) do
-    template = IdentityProviders.get_identity_provider_template!(id, String.to_atom(template_type))
-    render(conn, "show_template.json", template: template)
+    with {:ok, template_type} <- Template.fetch_template_type(template_type) do
+      template = IdentityProviders.get_identity_provider_template!(id, template_type)
+      render(conn, "show_template.json", template: template)
+    else
+      :error -> raise Ecto.NoResultsError, queryable: Template
+    end
   end
 
   def update_template(conn, %{
@@ -62,17 +70,24 @@ defmodule BorutaAdminWeb.IdentityProviderController do
         "template_type" => template_type,
         "template" => template_params
       }) do
-    template = IdentityProviders.get_identity_provider_template!(id, String.to_atom(template_type))
-
-    with {:ok, %Template{} = template} <-
+    with {:ok, template_type} <- Template.fetch_template_type(template_type),
+         template = IdentityProviders.get_identity_provider_template!(id, template_type),
+         {:ok, %Template{} = template} <-
            IdentityProviders.upsert_template(template, template_params) do
       render(conn, "show_template.json", template: template)
+    else
+      :error -> raise Ecto.NoResultsError, queryable: Template
+      error -> error
     end
   end
 
   def delete_template(conn, %{"identity_provider_id" => id, "template_type" => template_type}) do
-    template = IdentityProviders.delete_identity_provider_template!(id, String.to_atom(template_type))
-    render(conn, "show_template.json", template: template)
+    with {:ok, template_type} <- Template.fetch_template_type(template_type) do
+      template = IdentityProviders.delete_identity_provider_template!(id, template_type)
+      render(conn, "show_template.json", template: template)
+    else
+      :error -> raise Ecto.NoResultsError, queryable: Template
+    end
   end
 
   defp ensure_open_for_edition(identity_provider_id) do
@@ -82,6 +97,7 @@ defmodule BorutaAdminWeb.IdentityProviderController do
     case IdentityProviders.get_identity_provider_by_client_id(admin_ui_client_id) do
       %IdentityProvider{id: ^identity_provider_id} ->
         {:error, :protected_resource}
+
       _ ->
         :ok
     end

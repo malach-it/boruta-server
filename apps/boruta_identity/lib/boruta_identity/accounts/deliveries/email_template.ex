@@ -67,11 +67,23 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
 
   def template_types, do: @template_types
 
+  def fetch_template_type(type) when is_binary(type) do
+    case Enum.find(@template_types, &(Atom.to_string(&1) == type)) do
+      nil -> :error
+      type -> {:ok, type}
+    end
+  end
+
+  def fetch_template_type(type) when type in @template_types, do: {:ok, type}
+  def fetch_template_type(_type), do: :error
+
   @spec default_txt_content(type :: template_type()) :: template_content :: String.t()
-  def default_txt_content(type) when type in @template_types, do: @default_templates[:"txt_#{type}"]
+  def default_txt_content(type) when type in @template_types,
+    do: @default_templates[:"txt_#{type}"]
 
   @spec default_html_content(type :: template_type()) :: template_content :: String.t()
-  def default_html_content(type) when type in @template_types, do: @default_templates[:"html_#{type}"]
+  def default_html_content(type) when type in @template_types,
+    do: @default_templates[:"html_#{type}"]
 
   @spec default_template(type :: template_type()) :: %__MODULE__{} | nil
   def default_template(type) when type in @template_types do
@@ -112,10 +124,10 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
         changeset
 
       _ ->
-        change(
-          changeset,
-          txt_content: default_txt_content(changeset |> fetch_field!(:type) |> String.to_atom())
-        )
+        case changeset |> fetch_field!(:type) |> fetch_template_type() do
+          {:ok, type} -> change(changeset, txt_content: default_txt_content(type))
+          :error -> changeset
+        end
     end
   end
 
@@ -125,10 +137,10 @@ defmodule BorutaIdentity.Accounts.EmailTemplate do
         changeset
 
       _ ->
-        change(
-          changeset,
-          html_content: default_html_content(changeset |> fetch_field!(:type) |> String.to_atom())
-        )
+        case changeset |> fetch_field!(:type) |> fetch_template_type() do
+          {:ok, type} -> change(changeset, html_content: default_html_content(type))
+          :error -> changeset
+        end
     end
   end
 end

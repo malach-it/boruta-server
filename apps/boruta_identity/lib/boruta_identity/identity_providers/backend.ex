@@ -314,7 +314,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   def implementation(%__MODULE__{type: type}, account_type \\ nil) do
     case account_type do
       nil ->
-        String.to_atom(type)
+        backend_type(type)
 
       account_type ->
         account_implementations()[account_type]
@@ -363,7 +363,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
   @spec federated_login_url(backend :: t(), federated_server_name :: String.t()) ::
           login_url :: String.t()
-  @spec federated_login_url(backend :: t(), federated_server_name :: String.t(), state :: String.t()) ::
+  @spec federated_login_url(
+          backend :: t(),
+          federated_server_name :: String.t(),
+          state :: String.t()
+        ) ::
           login_url :: String.t()
   def federated_login_url(%__MODULE__{} = backend, federated_server_name, state \\ "") do
     case federated_oauth_client(backend, federated_server_name) do
@@ -701,10 +705,18 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   defp set_default(changeset), do: changeset
 
   defp validate_backend_by_type(changeset) do
-    type = get_field(changeset, :type)
-
-    validate_backend(changeset, String.to_atom(type))
+    case get_field(changeset, :type) |> backend_type() do
+      nil -> changeset
+      type -> validate_backend(changeset, type)
+    end
   end
+
+  defp backend_type(type) when is_binary(type) do
+    Enum.find(@backend_types, &(Atom.to_string(&1) == type))
+  end
+
+  defp backend_type(type) when type in @backend_types, do: type
+  defp backend_type(_type), do: nil
 
   defp validate_backend(changeset, Internal) do
     changeset
