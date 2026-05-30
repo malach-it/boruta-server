@@ -61,9 +61,7 @@ defmodule BorutaAdminWeb.BackendController do
       {:ok, template_type} ->
         template = IdentityProviders.get_backend_email_template!(id, template_type)
         render(conn, "show_email_template.json", email_template: template)
-
-      :error ->
-        raise Ecto.NoResultsError, queryable: EmailTemplate
+      :error -> raise Ecto.NoResultsError, queryable: EmailTemplate
     end
   end
 
@@ -88,9 +86,7 @@ defmodule BorutaAdminWeb.BackendController do
       {:ok, template_type} ->
         template = IdentityProviders.delete_email_template!(id, template_type)
         render(conn, "show_email_template.json", email_template: template)
-
-      :error ->
-        raise Ecto.NoResultsError, queryable: EmailTemplate
+      :error -> raise Ecto.NoResultsError, queryable: EmailTemplate
     end
   end
 
