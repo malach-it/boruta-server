@@ -211,9 +211,11 @@ defmodule BorutaAdmin.Logs do
       |> Enum.map(&LogRotate.path(application, type, &1))
       |> Enum.filter(&File.exists?/1)
 
-    if Enum.reduce(paths, 0, fn path, _acc -> File.stat!(path).size end) > @max_file_size do
+    max_file_size = max_file_size()
+
+    if total_file_size(paths) > max_file_size do
       raise BorutaAdmin.Logs.FileTooLargeError,
-            "Requested for more than #{@max_file_size} bytes of logs, could not perform the request."
+            "Requested for more than #{max_file_size} bytes of logs, could not perform the request."
     end
 
     paths
@@ -237,6 +239,16 @@ defmodule BorutaAdmin.Logs do
           true
       end
     end)
+  end
+
+  defp total_file_size(paths) do
+    Enum.reduce(paths, 0, fn path, acc -> acc + File.stat!(path).size end)
+  end
+
+  defp max_file_size do
+    :boruta_admin
+    |> Application.get_env(__MODULE__, [])
+    |> Keyword.get(:max_file_size, @max_file_size)
   end
 
   defp parse_request_log(log_line) do
