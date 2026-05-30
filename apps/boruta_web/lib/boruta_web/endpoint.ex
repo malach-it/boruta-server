@@ -52,7 +52,9 @@ defmodule BorutaWeb.Endpoint do
     [
       store: :cookie,
       key: endpoint_config[:session_cookie_key],
-      signing_salt: endpoint_config[:session_cookie_signing_salt]
+      signing_salt: endpoint_config[:session_cookie_signing_salt],
+      secure: true,
+      same_site: "Lax"
     ]
   end
 

@@ -13,7 +13,7 @@ defmodule BorutaIdentityWeb.Authenticable do
   @session_key :user_token
   @max_age 60 * 60 * 24 * 60
   @default_remember_me_cookie "_boruta_identity_web_user_remember_me"
-  @remember_me_options [sign: true, max_age: @max_age, same_site: "Lax"]
+  @remember_me_options [sign: true, max_age: @max_age, secure: true, same_site: "Lax"]
 
   @spec remember_me_cookie() :: String.t()
   def remember_me_cookie do
