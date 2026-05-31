@@ -76,12 +76,6 @@
               :chart-data="tokenTypeChartData"
               :options="tokenTypeChartOptions"
               height="190" />
-            <div class="token-types-empty" v-else-if="!pending">
-              <div class="ui icon header">
-                <i class="chart pie icon"></i>
-                No tokens found
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -96,8 +90,6 @@
 
       <div class="ui stackable grid token-list-row">
         <div class="sixteen wide column">
-          <div class="ui active centered inline loader" v-if="pending"></div>
-
           <div class="ui styled fluid accordion token-list-accordion" v-if="tokens.length">
             <div
               class="chain-accordion"
@@ -297,13 +289,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="ui placeholder segment" v-else-if="!pending">
-            <div class="ui icon header">
-              <i class="key icon"></i>
-              No tokens found
             </div>
           </div>
         </div>
