@@ -169,6 +169,40 @@ defmodule BorutaAdminWeb.UserControllerTest do
     end
 
     @tag authorized: ["users:manage:all"]
+    test "creates a user with a custom uid", %{conn: conn} do
+      uid = SecureRandom.uuid()
+
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "backend_id" => insert(:backend).id,
+          "user" => %{
+            "uid" => uid,
+            "username" => unique_user_email(),
+            "password" => valid_user_password()
+          }
+        })
+
+      assert %{"uid" => ^uid} = json_response(conn, 200)["data"]
+      assert %Internal.User{id: ^uid} = Repo.get!(Internal.User, uid)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "autogenerates user uid when custom uid is blank", %{conn: conn} do
+      conn =
+        post(conn, Routes.admin_user_path(conn, :create), %{
+          "backend_id" => insert(:backend).id,
+          "user" => %{
+            "uid" => "",
+            "username" => unique_user_email(),
+            "password" => valid_user_password()
+          }
+        })
+
+      assert %{"uid" => uid} = json_response(conn, 200)["data"]
+      assert %Internal.User{id: ^uid} = Repo.get!(Internal.User, uid)
+    end
+
+    @tag authorized: ["users:manage:all"]
     test "creates user with authorized scopes", %{
       conn: conn,
       existing_scope: scope
@@ -446,6 +480,22 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
       assert %{"id" => ^id, "group" => ^group} = json_response(conn, 200)["data"]
       assert %User{group: ^group} = Repo.get!(User, id)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "updates user with blocked", %{
+      conn: conn,
+      user: %User{id: id} = user
+    } do
+      conn =
+        put(conn, Routes.admin_user_path(conn, :update, user),
+          user: %{
+            "blocked" => true
+          }
+        )
+
+      assert %{"id" => ^id, "blocked" => true} = json_response(conn, 200)["data"]
+      assert %User{blocked: true} = Repo.get!(User, id)
     end
 
     @tag authorized: ["users:manage:all"]

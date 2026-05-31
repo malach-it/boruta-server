@@ -142,6 +142,21 @@ defmodule BorutaIdentity.AdminTest do
       assert {:ok, %User{}} = Admin.create_user(backend, params)
     end
 
+    test "creates a user with a custom uid", %{backend: backend} do
+      uid = SecureRandom.uuid()
+      params = %{uid: uid, username: "test@created.email", password: "a valid password"}
+
+      assert {:ok, %User{uid: ^uid}} = Admin.create_user(backend, params)
+      assert %Internal.User{id: ^uid} = Repo.get!(Internal.User, uid)
+    end
+
+    test "autogenerates user uid when custom uid is blank", %{backend: backend} do
+      params = %{uid: "", username: "test@created.email", password: "a valid password"}
+
+      assert {:ok, %User{uid: uid}} = Admin.create_user(backend, params)
+      assert %Internal.User{id: ^uid} = Repo.get!(Internal.User, uid)
+    end
+
     test "creates a user with metadata", %{backend: backend} do
       metadata_field = %{
         "attribute_name" => "attribute_test"
@@ -201,6 +216,7 @@ defmodule BorutaIdentity.AdminTest do
       }
 
       assert Enum.empty?(Repo.all(Internal.User))
+
       assert_raise Ecto.InvalidChangesetError, fn ->
         Admin.create_user(backend, params) == {:error, %Ecto.Changeset{}}
       end

@@ -36,7 +36,7 @@ config :boruta_gateway, BorutaGateway.Repo,
 config :boruta_auth, BorutaAuth.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway_test",
+  database: System.get_env("POSTGRES_DATABASE") || "boruta_identity_test",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
@@ -57,11 +57,9 @@ config :boruta_web, BorutaAdminWeb.Authorization,
   sub_restricted: System.get_env("BORUTA_SUB_RESTRICTED", nil),
   organization_restricted: System.get_env("BORUTA_ORGANIZATION_RESTRICTED", nil)
 
-config :boruta_identity, BorutaIdentity.SMTP,
-  adapter: Swoosh.Adapters.Test
+config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.Test
 
-config :boruta_identity, BorutaIdentity.LdapRepo,
-  adapter: BorutaIdentity.LdapRepoMock
+config :boruta_identity, BorutaIdentity.LdapRepo, adapter: BorutaIdentity.LdapRepoMock
 
 # Print only warnings and errors during test
 config :logger, level: :warn

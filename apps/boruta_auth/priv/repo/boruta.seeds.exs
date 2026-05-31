@@ -89,6 +89,14 @@ BorutaAuth.Repo.insert(
   on_conflict: :nothing
 )
 
+BorutaAuth.Repo.insert(
+  %Boruta.Ecto.Scope{
+    name: "tokens:read:all",
+    label: "Read all tokens"
+  },
+  on_conflict: :nothing
+)
+
 client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
 
 client =
@@ -156,7 +164,8 @@ user =
         "upstreams:manage:all",
         "identity-providers:manage:all",
         "configuration:manage:all",
-        "logs:read:all"
+        "logs:read:all",
+        "tokens:read:all"
       ])
       |> Enum.map(fn %{id: scope_id} ->
         %BorutaIdentity.Accounts.UserAuthorizedScope{

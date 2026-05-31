@@ -290,12 +290,13 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         Enum.join(second_day_log_lines, "\n")
       )
 
-      start_at =
-        DateTime.utc_now()
-        |> DateTime.add(-1 * 10 * 24 * 3600 - 1, :second)
-        |> DateTime.to_iso8601()
+      start_at = first_day |> DateTime.new!(~T[00:00:00], "Etc/UTC") |> DateTime.to_iso8601()
 
-      end_at = DateTime.utc_now() |> DateTime.to_iso8601()
+      end_at =
+        second_day
+        |> Date.add(1)
+        |> DateTime.new!(~T[00:00:00], "Etc/UTC")
+        |> DateTime.to_iso8601()
 
       conn =
         get(conn, Routes.admin_logs_path(conn, :index), %{
@@ -312,7 +313,12 @@ defmodule BorutaAdminWeb.LogsControllerTest do
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 60
-             } = json_response(conn, 200)
+             } = response = json_response(conn, 200)
+
+      assert is_map(response["request_counts"])
+      assert is_map(response["request_times"])
+      assert is_map(response["status_codes"])
+      assert is_list(response["labels"])
 
       File.rm!(LogRotate.path(:boruta_web, :request, first_day))
       File.rm!(LogRotate.path(:boruta_web, :request, second_day))
@@ -551,12 +557,13 @@ defmodule BorutaAdminWeb.LogsControllerTest do
         Enum.join(second_day_log_lines, "\n")
       )
 
-      start_at =
-        DateTime.utc_now()
-        |> DateTime.add(-1 * 10 * 24 * 3600 - 1, :second)
-        |> DateTime.to_iso8601()
+      start_at = first_day |> DateTime.new!(~T[00:00:00], "Etc/UTC") |> DateTime.to_iso8601()
 
-      end_at = DateTime.utc_now() |> DateTime.to_iso8601()
+      end_at =
+        second_day
+        |> Date.add(1)
+        |> DateTime.new!(~T[00:00:00], "Etc/UTC")
+        |> DateTime.to_iso8601()
 
       conn =
         get(conn, Routes.admin_logs_path(conn, :index), %{
@@ -573,7 +580,12 @@ defmodule BorutaAdminWeb.LogsControllerTest do
                "overflow" => false,
                "log_lines" => ^log_lines,
                "log_count" => 60
-             } = json_response(conn, 200)
+             } = response = json_response(conn, 200)
+
+      assert is_map(response["business_event_counts"])
+      assert is_map(response["counts"])
+      assert is_list(response["actions"])
+      assert is_list(response["domains"])
 
       File.rm!(LogRotate.path(:boruta_web, :business, first_day))
       File.rm!(LogRotate.path(:boruta_web, :business, second_day))

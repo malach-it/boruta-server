@@ -18,7 +18,7 @@
             <input type="text" v-model="backend.name" placeholder="Shiny new backend">
           </div>
           <div class="ui info message">
-            Default backend will be used in case of resource owner password credentials requests.
+            Default backend will be used in case of resource owner password credentials requests and to store machine (server / wallet) users.
           </div>
           <div class="field" :class="{ 'error': backend.errors?.is_default }">
             <div class="ui toggle checkbox">

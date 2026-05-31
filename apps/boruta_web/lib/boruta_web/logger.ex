@@ -174,10 +174,11 @@ defmodule BorutaWeb.Logger do
           sub: sub,
           access_token: access_token,
           agent_token: agent_token,
+          authorization_code: authorization_code,
           token_type: token_type,
           expires_in: expires_in,
           refresh_token: refresh_token
-        } = metadata,
+        },
         _
       ) do
     log_line = [
@@ -192,7 +193,7 @@ defmodule BorutaWeb.Logger do
       log_attribute("sub", sub),
       log_attribute("access_token", access_token),
       log_attribute("agent_token", agent_token),
-      log_attribute("authorization_code", metadata[:authorization_code]),
+      log_attribute("authorization_code", authorization_code),
       log_attribute("token_type", token_type),
       log_attribute("expires_in", expires_in),
       log_attribute("refresh_token", refresh_token)
@@ -238,10 +239,10 @@ defmodule BorutaWeb.Logger do
       "success",
       log_attribute("client_id", metadata[:client_id]),
       log_attribute("sub", metadata[:sub]),
-      log_attribute("code_id", metadata[:code_id]),
       log_attribute("code", metadata[:code]),
-      log_attribute("response_type", quoted(metadata[:response_type])),
-      log_attribute("requested_scope", quoted(metadata[:requested_scope])),
+      log_attribute("code_id", metadata[:code_id]),
+      quoted_log_attribute("response_type", metadata[:response_type]),
+      quoted_log_attribute("requested_scope", metadata[:requested_scope]),
       log_attribute("id_token", metadata[:id_token]),
       log_attribute("vp_token", metadata[:vp_token])
     ]
@@ -258,10 +259,13 @@ defmodule BorutaWeb.Logger do
       "direct_post",
       " - ",
       "failure",
+      log_attribute("client_id", metadata[:client_id]),
+      log_attribute("sub", metadata[:sub]),
+      log_attribute("code", metadata[:code]),
       log_attribute("code_id", metadata[:code_id]),
       log_attribute("status", metadata[:status]),
       log_attribute("error", metadata[:error]),
-      log_attribute("error_description", quoted(metadata[:error_description]))
+      quoted_log_attribute("error_description", metadata[:error_description])
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -375,9 +379,8 @@ defmodule BorutaWeb.Logger do
 
   defp log_attribute(_key, nil), do: ""
   defp log_attribute(key, attribute), do: " #{key}=#{attribute}"
-
-  defp quoted(nil), do: nil
-  defp quoted(attribute), do: ~s{"#{attribute}"}
+  defp quoted_log_attribute(_key, nil), do: ""
+  defp quoted_log_attribute(key, attribute), do: log_attribute(key, ~s{"#{attribute}"})
 
   # From Phoenix.Logger
   defp log_level(nil, _conn), do: :info

@@ -32,6 +32,7 @@ defmodule BorutaIdentity.Accounts.User do
           password: String.t() | nil,
           metadata: map(),
           federated_metadata: map(),
+          blocked: boolean(),
           totp_secret: String.t() | nil,
           webauthn_challenge: String.t() | nil,
           confirmed_at: DateTime.t() | nil,
@@ -54,11 +55,13 @@ defmodule BorutaIdentity.Accounts.User do
     "required" => ["value", "status"]
   }
 
-  def account_types, do: [
-    BorutaIdentity.Accounts.Federated.account_type(),
-    BorutaIdentity.Accounts.Internal.account_type(),
-    BorutaIdentity.Accounts.Ldap.account_type()
-  ]
+  def account_types,
+    do: [
+      BorutaIdentity.Accounts.Federated.account_type(),
+      BorutaIdentity.Accounts.Internal.account_type(),
+      BorutaIdentity.Accounts.Ldap.account_type(),
+      BorutaIdentity.Accounts.Machine.account_type()
+    ]
 
   @derive {Inspect, except: [:password]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
@@ -73,6 +76,7 @@ defmodule BorutaIdentity.Accounts.User do
     field(:last_login_at, :utc_datetime_usec)
     field(:metadata, :map, default: %{})
     field(:federated_metadata, :map, default: %{})
+    field(:blocked, :boolean, default: false)
     field(:totp_secret, :string)
     field(:totp_registered_at, :utc_datetime_usec)
     field(:webauthn_challenge, :string)
@@ -100,6 +104,7 @@ defmodule BorutaIdentity.Accounts.User do
       :group,
       :metadata,
       :federated_metadata,
+      :blocked,
       :account_type
     ])
     |> metadata_template_filter(backend)
@@ -111,7 +116,7 @@ defmodule BorutaIdentity.Accounts.User do
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:metadata, :group])
+    |> cast(attrs, [:metadata, :group, :blocked])
     |> validate_group()
     |> validate_metadata()
   end

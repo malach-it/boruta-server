@@ -17,8 +17,10 @@ defmodule BorutaIdentity.Admin do
   @type user_params ::
           %{
             optional(:username) => String.t(),
+            optional(:uid) => String.t(),
             optional(:password) => String.t(),
             optional(:group) => String.t(),
+            optional(:blocked) => boolean(),
             optional(:metadata) => map(),
             optional(:roles) => list(map()),
             optional(:authorized_scopes) => list(map()),
@@ -78,16 +80,30 @@ defmodule BorutaIdentity.Admin do
   """
   @spec get_user(id :: Ecto.UUID.t()) :: user :: User.t() | nil
   def get_user(id) do
-    Repo.one(
-      from(u in User,
-        left_join: as in assoc(u, :authorized_scopes),
-        left_join: r in assoc(u, :roles),
-        left_join: o in assoc(u, :organizations),
-        join: b in assoc(u, :backend),
-        preload: [authorized_scopes: as, roles: r, backend: b, organizations: o],
-        where: u.id == ^id
-      )
-    )
+    case Ecto.UUID.cast(id) do
+      {:ok, user_id} ->
+        Repo.one(
+          from(u in User,
+            left_join: as in assoc(u, :authorized_scopes),
+            left_join: r in assoc(u, :roles),
+            left_join: o in assoc(u, :organizations),
+            left_join: b in assoc(u, :backend),
+            preload: [authorized_scopes: as, backend: b],
+            where: u.id == ^user_id
+          )
+        )
+      _ ->
+        Repo.one(
+          from(u in User,
+            left_join: as in assoc(u, :authorized_scopes),
+            left_join: r in assoc(u, :roles),
+            left_join: o in assoc(u, :organizations),
+            left_join: b in assoc(u, :backend),
+            preload: [authorized_scopes: as, backend: b],
+            where: u.username == ^id
+          )
+        )
+    end
   end
 
   use BorutaIdentity.PostUserCreationHook
@@ -102,6 +118,7 @@ defmodule BorutaIdentity.Admin do
              :create_user,
              [backend, params]
            ),
+         {:ok, user} <- update_user_blocked(user, params),
          {:ok, user} <- update_user_authorized_scopes(user, params[:authorized_scopes] || []),
          {:ok, user} <- update_user_organizations(user, params[:organizations] || []),
          {:ok, user} <- update_user_roles(user, params[:roles] || []) do
@@ -151,13 +168,14 @@ defmodule BorutaIdentity.Admin do
         password_index =
           Enum.find_index(headers, fn header -> header == opts[:password_header] end)
 
-        metadata_headers = Enum.map(opts[:metadata_headers] || [], fn metadata_header ->
-          [origin, target] = String.split(metadata_header, ">")
+        metadata_headers =
+          Enum.map(opts[:metadata_headers] || [], fn metadata_header ->
+            [origin, target] = String.split(metadata_header, ">")
 
-          header_index = Enum.find_index(headers, fn header -> header == origin end)
-          {target, header_index}
-        end)
-        |> Enum.into(%{})
+            header_index = Enum.find_index(headers, fn header -> header == origin end)
+            {target, header_index}
+          end)
+          |> Enum.into(%{})
 
         %{
           username: {"username", username_index},
@@ -171,17 +189,24 @@ defmodule BorutaIdentity.Admin do
     |> Stream.map(fn row ->
       case opts[:hash_password] do
         true ->
-          create_params = %{
-            username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
-            password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
-          } |> Map.put(:metadata, Enum.map(headers[:metadata], fn header ->
-            {elem(header, 0), %{
-              "value" => Enum.at(row, elem(header, 1)),
-              "status" => "valid",
-              "display" => ["status", "origin"],
-              "origin" => "import - #{:os.system_time(:second)}"
-            }}
-          end) |> Enum.into(%{}))
+          create_params =
+            %{
+              username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
+              password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
+            }
+            |> Map.put(
+              :metadata,
+              Enum.map(headers[:metadata], fn header ->
+                {elem(header, 0),
+                 %{
+                   "value" => Enum.at(row, elem(header, 1)),
+                   "status" => "valid",
+                   "display" => ["status", "origin"],
+                   "origin" => "import - #{:os.system_time(:second)}"
+                 }}
+              end)
+              |> Enum.into(%{})
+            )
 
           create_user(backend, create_params)
 
@@ -304,6 +329,14 @@ defmodule BorutaIdentity.Admin do
     end
   end
 
+  defp update_user_blocked(user, %{blocked: blocked}) do
+    user
+    |> User.changeset(%{blocked: blocked})
+    |> Repo.update()
+  end
+
+  defp update_user_blocked(user, _params), do: {:ok, user}
+
   @spec update_user(user :: User.t(), user_params :: user_params()) ::
           {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
   def update_user(user, user_params) do
@@ -338,7 +371,10 @@ defmodule BorutaIdentity.Admin do
       user ->
         # TODO delete both provider and domain users in a transaction
         # TODO manage identity federated users
-        with :ok <- apply(Backend.implementation(user.backend, user.account_type), :delete_user, [user.uid]) do
+        with :ok <-
+               apply(Backend.implementation(user.backend, user.account_type), :delete_user, [
+                 user.uid
+               ]) do
           Repo.delete(user)
         end
     end

@@ -42,6 +42,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   alias BorutaIdentity.Accounts.Federated
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Ldap
+  alias BorutaIdentity.Accounts.Machine
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
   alias BorutaIdentityWeb.Router.Helpers, as: Routes
@@ -75,7 +76,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   @backend_types [Internal, Ldap]
 
   def account_implementations do
-    Enum.map([Internal, Federated, Ldap], fn module ->
+    Enum.map([Internal, Federated, Ldap, Machine], fn module ->
       {apply(module, :account_type, []), module}
     end)
     |> Enum.into(%{})

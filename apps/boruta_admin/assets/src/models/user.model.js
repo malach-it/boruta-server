@@ -11,10 +11,12 @@ const defaults = {
   authorized_scopes: [],
   roles: [],
   organizations: [],
+  uid: '',
   backend_id: '',
   backend: new Backend(),
   metadata: {},
-  federated_metadata: {}
+  federated_metadata: {},
+  blocked: false
 }
 
 const assign = {
@@ -24,6 +26,7 @@ const assign = {
   username: function ({ username }) { this.username = username },
   totp_registered_at: function ({ totp_registered_at }) { this.totp_registered_at = totp_registered_at },
   federated_metadata: function ({ federated_metadata }) { this.federated_metadata = federated_metadata },
+  blocked: function ({ blocked }) { this.blocked = blocked },
   metadata: function ({ metadata: rawMetadata }) {
     const metadata = {}
 
@@ -119,7 +122,7 @@ class User {
   }
 
   get serialized () {
-    const { id, username, password, metadata: rawMetadata, group, authorized_scopes, roles, organizations } = this
+    const { id, uid, username, password, metadata: rawMetadata, group, blocked, authorized_scopes, roles, organizations } = this
 
     const metadata = {}
 
@@ -135,10 +138,12 @@ class User {
 
     return {
       id,
+      uid,
       username,
       password,
       metadata,
       group,
+      blocked,
       authorized_scopes: authorized_scopes.map(({ model }) => model.serialized),
       roles: roles.map(({ model }) => model.serialized),
       organizations: organizations.map(({ model }) => model.serialized)

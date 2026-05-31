@@ -77,6 +77,7 @@ defmodule BorutaAdmin.Logs do
             :second -> truncated_time
             :minute -> %{truncated_time | second: 0}
             :hour -> %{truncated_time | second: 0, minute: 0}
+            :day -> %{truncated_time | second: 0, minute: 0, hour: 0}
           end
 
         normalized_duration =
@@ -168,6 +169,7 @@ defmodule BorutaAdmin.Logs do
             :second -> truncated_time
             :minute -> %{truncated_time | second: 0}
             :hour -> %{truncated_time | second: 0, minute: 0}
+            :day -> %{truncated_time | second: 0, minute: 0, hour: 0}
           end
 
         %{
@@ -410,7 +412,8 @@ defmodule BorutaAdmin.Logs do
     case DateTime.diff(end_at, start_at, :second) do
       duration when duration < 60 * 60 -> :second
       duration when duration < 60 * 60 * 24 -> :minute
-      _duration -> :hour
+      duration when duration < 60 * 60 * 24 * 7 -> :hour
+      _duration -> :day
     end
   end
 end

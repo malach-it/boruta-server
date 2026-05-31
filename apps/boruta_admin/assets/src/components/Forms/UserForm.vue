@@ -14,6 +14,10 @@
             <option :value="backend.id" v-for="backend in backends" :key="backend.id">{{ backend.name }}</option>
           </select>
         </div>
+        <div class="field" v-if="!user.isPersisted" :class="{ 'error': user.errors?.uid || user.errors?.id }">
+          <label>User UID</label>
+          <input type="text" v-model="user.uid" placeholder="Must be an UUIDv4 - Leave blank to autogenerate" />
+        </div>
         <div class="field" v-if="!user.isPersisted" :class="{ 'error': user.errors?.username }">
           <label>Username</label>
           <input type="text" v-model="user.username" placeholder="email@example.com" />
@@ -25,6 +29,12 @@
         <div class="field" :class="{ 'error': user.errors?.group }">
           <label>Group</label>
           <input type="text" v-model="user.group" />
+        </div>
+        <div class="field" :class="{ 'error': user.errors?.blocked }">
+          <div class="ui toggle checkbox">
+            <input type="checkbox" v-model="user.blocked">
+            <label>Blocked</label>
+          </div>
         </div>
         <section v-if="user.backend.metadata_fields.length">
           <h3>Metadata</h3>

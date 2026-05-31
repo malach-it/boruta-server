@@ -25,7 +25,8 @@ defmodule BorutaAdminWeb.ScopeController do
       "scopes:manage:all",
       "users:manage:all",
       "clients:manage:all",
-      "identity-providers:manage:all"
+      "identity-providers:manage:all",
+      "tokens:read:all"
     ]
     when action in [:index]
   )

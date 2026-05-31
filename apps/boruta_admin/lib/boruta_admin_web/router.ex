@@ -39,6 +39,8 @@ defmodule BorutaAdminWeb.Router do
     resources("/scopes", ScopeController, except: [:new, :edit])
     resources("/roles", RoleController, except: [:new, :edit])
     resources("/key-pairs", KeyPairController, except: [:new, :edit])
+    resources("/tokens", TokenController, only: [:index])
+    post("/tokens/:id/revoke", TokenController, :revoke)
     post("/key-pairs/:id/rotate", KeyPairController, :rotate)
     resources("/clients", ClientController, except: [:new, :edit])
     post("/clients/:id/regenerate_did", ClientController, :regenerate_did)
@@ -81,6 +83,7 @@ defmodule BorutaAdminWeb.Router do
         as: :template
       )
     end
+
     resources "/backends", BackendController, except: [:new, :edit] do
       get("/email-templates/:template_type", BackendController, :email_template, as: :email_template)
 

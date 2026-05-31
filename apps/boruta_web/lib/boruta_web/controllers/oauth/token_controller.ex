@@ -28,6 +28,7 @@ defmodule BorutaWeb.Oauth.TokenController do
         sub: response.token.sub,
         access_token: response.access_token,
         agent_token: response.agent_token,
+        authorization_code: response.authorization_code,
         token_type: response.token_type,
         expires_in: response.expires_in,
         refresh_token: response.refresh_token
@@ -87,6 +88,13 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   @impl Boruta.Openid.DirectPostApplication
   def code_not_found(conn) do
+    log_direct_post_failure(%{
+      code_id: conn.path_params["code_id"],
+      status: :not_found,
+      error: :invalid_code,
+      error_description: "Code not found."
+    })
+
     send_resp(conn, 404, "")
   end
 
@@ -97,6 +105,13 @@ defmodule BorutaWeb.Oauth.TokenController do
         error: error,
         error_description: error_description
       }) do
+    log_direct_post_failure(%{
+      code_id: conn.path_params["code_id"],
+      status: status,
+      error: error,
+      error_description: error_description
+    })
+
     conn
     |> put_status(status)
     |> put_view(OauthView)
@@ -104,12 +119,21 @@ defmodule BorutaWeb.Oauth.TokenController do
   end
 
   def authentication_failure(conn, %Error{} = error) do
+    log_direct_post_failure(%{
+      code_id: conn.path_params["code_id"],
+      status: error.status,
+      error: error.error,
+      error_description: error.error_description
+    })
+
     redirect(conn, external: Error.redirect_to_url(error))
   end
 
   @impl Boruta.Openid.DirectPostApplication
   def direct_post_success(conn, %DirectPostResponse{vp_token: vp_token} = response)
       when not is_nil(vp_token) do
+    log_direct_post_success(response)
+
     {:ok, %{"kid" => kid}} = Joken.peek_header(vp_token)
 
     case tl(String.split(response.code.response_type, " ")) do
@@ -152,6 +176,8 @@ defmodule BorutaWeb.Oauth.TokenController do
         %DirectPostResponse{id_token: id_token, error: %Error{}} = response
       )
       when not is_nil(id_token) do
+    log_direct_post_failure(response)
+
     {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
 
     params = %{
@@ -171,6 +197,8 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   def direct_post_success(conn, %DirectPostResponse{id_token: id_token, code: code} = response)
       when not is_nil(id_token) do
+    log_direct_post_success(response)
+
     {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
 
     case tl(String.split(response.code.response_type, " ")) do
@@ -206,5 +234,46 @@ defmodule BorutaWeb.Oauth.TokenController do
         PresentationServer.authenticated(code.value, redirect_uri)
         redirect(conn, external: redirect_uri)
     end
+  end
+
+  defp log_direct_post_success(%DirectPostResponse{code: code} = response) do
+    :telemetry.execute(
+      [:authorization, :direct_post, :success],
+      %{},
+      direct_post_metadata(response, code)
+    )
+  end
+
+  defp log_direct_post_failure(%DirectPostResponse{code: code, error: error} = response) do
+    :telemetry.execute(
+      [:authorization, :direct_post, :failure],
+      %{},
+      response
+      |> direct_post_metadata(code)
+      |> Map.merge(%{
+        status: error.status,
+        error: error.error,
+        error_description: error.error_description
+      })
+    )
+  end
+
+  defp log_direct_post_failure(metadata) do
+    :telemetry.execute(
+      [:authorization, :direct_post, :failure],
+      %{},
+      metadata
+    )
+  end
+
+  defp direct_post_metadata(%DirectPostResponse{}, code) do
+    %{
+      client_id: code.client && code.client.id,
+      sub: code.sub,
+      code: code.value,
+      code_id: code.id,
+      response_type: code.response_type,
+      requested_scope: code.requested_scope
+    }
   end
 end

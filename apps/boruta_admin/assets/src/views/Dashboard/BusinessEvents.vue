@@ -30,19 +30,21 @@
                   <option :value="application" v-for="application in businessEventFiltersData.applications">{{ application }}</option>
                 </select>
               </div>
-              <div class="field">
-                <label>Domain</label>
-                <select @change="getLogs()" v-model="businessEventFilter.domain" :disabled="pending">
-                  <option value=''>All domains</option>
-                  <option :value="domain" v-for="domain in businessEventFiltersData.domains">{{ domain }}</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Action</label>
-                <select @change="getLogs()" v-model="businessEventFilter.action" :disabled="pending">
-                  <option value=''>All actions</option>
-                  <option :value="action" v-for="action in businessEventFiltersData.actions">{{ action }}</option>
-                </select>
+              <div class="two fields">
+                <div class="field">
+                  <label>Domain</label>
+                  <select @change="getLogs()" v-model="businessEventFilter.domain" :disabled="pending">
+                    <option value=''>All domains</option>
+                    <option :value="domain" v-for="domain in businessEventFiltersData.domains">{{ domain }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Action</label>
+                  <select @change="getLogs()" v-model="businessEventFilter.action" :disabled="pending">
+                    <option value=''>All actions</option>
+                    <option :value="action" v-for="action in businessEventFiltersData.actions">{{ action }}</option>
+                  </select>
+                </div>
               </div>
             </div>
             <div class="six wide log-count column">
@@ -52,6 +54,8 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="ui segment">
         <div class="ui stackable grid">
           <div class="ten wide filter-form column">
             <LineChart :chartData="businessEventCounts" :options="businessEventCountsOptions" height="500" :key="graphRerenders" />
