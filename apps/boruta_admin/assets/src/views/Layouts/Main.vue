@@ -524,6 +524,7 @@ export default {
     }
     .field {
       padding-bottom: 1em;
+      margin: 0;
       &.error label {
         color: #9f3a38!important;
       }

@@ -112,7 +112,6 @@
             <option v-for="adapter in signaturesAdapters" :value="adapter">{{ adapter }}</option>
           </select>
         </div>
-
         <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Universal.Signatures'">
           <div class="ui info message">
             The usage of the Universal adapter requires an account, please contact Godiddy services <a href="https://godiddy.com/contact" target="_blank">https://godiddy.com/contact</a> and set the API key as an environment variable.
@@ -207,32 +206,65 @@
           </div>
         </div>
         <h3>Authorization</h3>
-        <div class="field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="client.enforce_dpop">
-            <label>Enforce Demonstration Proof-of-Possession (DPoP)</label>
+        <div class="ui authorization segment">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="client.enforce_dpop">
+              <label>Enforce Demonstration Proof-of-Possession (DPoP)</label>
+            </div>
           </div>
         </div>
-        <div class="field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="client.enforce_tx_code">
-            <label>Enforce pre-authorized code transaction code</label>
+        <div class="ui authorization segment">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="client.enforce_tx_code">
+              <label>Enforce pre-authorized code transaction code</label>
+            </div>
           </div>
         </div>
-        <div class="field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="client.authorize_scope">
-            <label>Authorize scopes</label>
+        <div class="ui authorization segment">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="client.authorize_scope">
+              <label>Authorize scopes</label>
+            </div>
+          </div>
+          <div class="field" :class="{ 'error': client.errors?.authorized_scopes }" v-if="client.authorize_scope">
+            <hr />
+            <ScopesField :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </div>
         </div>
-        <div class="field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="client.check_public_client_id">
-            <label>Check public client id</label>
+        <div class="ui authorization segment">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="client.check_public_client_id">
+              <label>Check public client id</label>
+            </div>
           </div>
         </div>
-        <div class="field" :class="{ 'error': client.errors?.authorized_scopes }">
-          <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+        <div class="ui authorization segment">
+          <div class="field" :class="{ 'error': client.errors?.trusted_authorities }">
+            <div class="ui toggle checkbox">
+              <input
+                type="checkbox"
+                :checked="client.trusted_authorities !== null"
+                @change="toggleTrustedAuthorities"
+              >
+              <label>Trusted authorities</label>
+            </div>
+          </div>
+          <div v-if="client.trusted_authorities !== null">
+            <hr />
+            <div class="ui segment">
+              <div class="editor field">
+                <TextEditor
+                  v-if="client.trusted_authorities !== null"
+                  :content="client.trusted_authorities || ''"
+                  @codeUpdate="setTrustedAuthorities"
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <h3>PKCE configuration</h3>
         <div class="ui segment">
@@ -277,6 +309,7 @@ import Client from '../../models/client.model'
 import ScopesField from './ScopesField.vue'
 import IdentityProviderField from './IdentityProviderField.vue'
 import FormErrors from './FormErrors.vue'
+import TextEditor from './TextEditor.vue'
 
 export default {
   name: 'client-form',
@@ -284,7 +317,8 @@ export default {
   components: {
     ScopesField,
     IdentityProviderField,
-    FormErrors
+    FormErrors,
+    TextEditor
   },
   data() {
     return {
@@ -330,6 +364,12 @@ export default {
     },
     setIdentityProvider (identityProvider) {
       this.client.identity_provider = { model: identityProvider }
+    },
+    setTrustedAuthorities (trustedAuthorities) {
+      this.client.trusted_authorities = trustedAuthorities
+    },
+    toggleTrustedAuthorities (event) {
+      this.client.trusted_authorities = event.target.checked ? '' : null
     },
     addScope () {
       this.client.authorized_scopes.push({ model: new Scope() })
@@ -417,6 +457,17 @@ export default {
     pre {
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+  }
+  .authorization.segment>.field {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .authorization .editor.field {
+    height: 180px;
+
+    .editor {
+      overflow: auto;
     }
   }
 }

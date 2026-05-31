@@ -375,6 +375,7 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
           "items" => %{"type" => "string"}
         },
         "token_endpoint_jwt_auth_alg" => %{"type" => "string"},
+        "trusted_authorities" => %{"type" => ["string", "null"]},
         "userinfo_signed_response_alg" => %{"type" => "string"}
       },
       "required" => [],

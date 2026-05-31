@@ -80,10 +80,19 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
     @tag authorized: ["clients:manage:all"]
     test "renders client when data is valid", %{conn: conn, identity_provider: identity_provider} do
-      create_attrs = %{@create_attrs | identity_provider: %{id: identity_provider.id}}
+      trusted_authorities = "did:example:issuer"
+
+      create_attrs =
+        @create_attrs
+        |> Map.put(:identity_provider, %{id: identity_provider.id})
+        |> Map.put(:trusted_authorities, trusted_authorities)
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
-      assert %{"id" => _id} = json_response(create, 201)["data"]
+
+      assert %{
+               "id" => _id,
+               "trusted_authorities" => ^trusted_authorities
+             } = json_response(create, 201)["data"]
     end
   end
 
@@ -148,8 +157,21 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
       assert %{
                "id" => ^id,
-               "redirect_uris" => ["http://updated.redirect.uri"]
+               "redirect_uris" => ["http://updated.redirect.uri"],
+               "trusted_authorities" => nil
              } = json_response(conn, 200)["data"]
+    end
+
+    @tag authorized: ["clients:manage:all"]
+    test "sets trusted authorities to nil", %{conn: conn} do
+      client = insert(:client, trusted_authorities: "did:example:issuer")
+
+      conn =
+        put(conn, Routes.admin_client_path(conn, :update, client),
+          client: Map.put(@update_attrs, :trusted_authorities, nil)
+        )
+
+      assert %{"trusted_authorities" => nil} = json_response(conn, 200)["data"]
     end
 
     @tag :skip
@@ -174,9 +196,12 @@ defmodule BorutaAdminWeb.ClientControllerTest do
       public_key = client.public_key
 
       conn = post(conn, Routes.admin_client_path(conn, :regenerate_key_pair, client))
-      assert %{"data" => %{
-        "public_key" => new_public_key
-      }} = json_response(conn, 200)
+
+      assert %{
+               "data" => %{
+                 "public_key" => new_public_key
+               }
+             } = json_response(conn, 200)
 
       assert new_public_key != public_key
     end

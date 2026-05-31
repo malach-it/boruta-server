@@ -21,6 +21,7 @@ defmodule BorutaAdminWeb.ClientView do
       id: client.id,
       public_client_id: client.public_client_id,
       check_public_client_id: client.check_public_client_id,
+      trusted_authorities: client.trusted_authorities,
       name: client.name,
       secret: client.secret,
       confidential: client.confidential,
