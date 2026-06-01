@@ -57,11 +57,13 @@ defmodule BorutaAdminWeb.IdentityProviderController do
   end
 
   def template(conn, %{"identity_provider_id" => id, "template_type" => template_type}) do
-    with {:ok, template_type} <- Template.fetch_template_type(template_type) do
-      template = IdentityProviders.get_identity_provider_template!(id, template_type)
-      render(conn, "show_template.json", template: template)
-    else
-      :error -> raise Ecto.NoResultsError, queryable: Template
+    case Template.fetch_template_type(template_type) do
+      {:ok, template_type} ->
+        template = IdentityProviders.get_identity_provider_template!(id, template_type)
+        render(conn, "show_template.json", template: template)
+
+      :error ->
+        raise Ecto.NoResultsError, queryable: Template
     end
   end
 
@@ -82,11 +84,13 @@ defmodule BorutaAdminWeb.IdentityProviderController do
   end
 
   def delete_template(conn, %{"identity_provider_id" => id, "template_type" => template_type}) do
-    with {:ok, template_type} <- Template.fetch_template_type(template_type) do
-      template = IdentityProviders.delete_identity_provider_template!(id, template_type)
-      render(conn, "show_template.json", template: template)
-    else
-      :error -> raise Ecto.NoResultsError, queryable: Template
+    case Template.fetch_template_type(template_type) do
+      {:ok, template_type} ->
+        template = IdentityProviders.delete_identity_provider_template!(id, template_type)
+        render(conn, "show_template.json", template: template)
+
+      :error ->
+        raise Ecto.NoResultsError, queryable: Template
     end
   end
 

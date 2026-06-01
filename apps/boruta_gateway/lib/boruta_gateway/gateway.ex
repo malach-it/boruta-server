@@ -176,17 +176,14 @@ defmodule BorutaGateway.Gateway do
         with %Upstream{} = upstream <- state.match_function.(path_info),
              :ok <- rate_limit(socket, upstream),
              {:ok, token} <- Authorization.authorize(payload, method, upstream) do
-          connect_upstream(
-            socket,
-            payload,
-            state,
-            start,
-            request_id,
-            method,
-            path,
-            upstream,
-            token
-          )
+          request = %{
+            start: start,
+            request_id: request_id,
+            method: method,
+            path: path
+          }
+
+          connect_upstream(socket, payload, state, upstream, token, request)
         else
           nil ->
             response = "No upstream has been found corresponding to the given request."
@@ -273,7 +270,7 @@ defmodule BorutaGateway.Gateway do
     {:stop, reason}
   end
 
-  defp connect_upstream(socket, payload, state, start, request_id, method, path, upstream, token) do
+  defp connect_upstream(socket, payload, state, upstream, token, request) do
     case upstream.scheme do
       "http" ->
         case :gen_tcp.connect(
@@ -293,18 +290,28 @@ defmodule BorutaGateway.Gateway do
              %{
                state
                | client_socket: client_socket,
-                 start: start,
+                 start: request.start,
                  upstream_start: upstream_start,
-                 request_id: request_id,
-                 method: method,
-                 path: path,
+                 request_id: request.request_id,
+                 method: request.method,
+                 path: request.path,
                  remote_ip: state.remote_ip,
                  upstream: upstream
              }}
 
           {:error, _error} ->
             :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-            log_exchange(state, start, request_id, method, path, upstream, 503, :failure)
+
+            log_exchange(
+              state,
+              request.start,
+              request.request_id,
+              request.method,
+              request.path,
+              upstream,
+              503,
+              :failure
+            )
 
             {:noreply, close_downstream(socket, state)}
         end
@@ -321,7 +328,7 @@ defmodule BorutaGateway.Gateway do
                @connect_timeout
              ) do
           {:ok, client_socket} ->
-            _connected = :os.system_time(:microsecond) - start
+            _connected = :os.system_time(:microsecond) - request.start
             :ok = :ssl.send(client_socket, transform_header(payload, upstream, token))
             upstream_start = :os.system_time(:microsecond)
 
@@ -332,18 +339,28 @@ defmodule BorutaGateway.Gateway do
              %{
                state
                | client_socket: client_socket,
-                 start: start,
+                 start: request.start,
                  upstream_start: upstream_start,
-                 request_id: request_id,
-                 method: method,
-                 path: path,
+                 request_id: request.request_id,
+                 method: request.method,
+                 path: request.path,
                  remote_ip: state.remote_ip,
                  upstream: upstream
              }}
 
           {:error, _error} ->
             :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-            log_exchange(state, start, request_id, method, path, upstream, 503, :failure)
+
+            log_exchange(
+              state,
+              request.start,
+              request.request_id,
+              request.method,
+              request.path,
+              upstream,
+              503,
+              :failure
+            )
 
             {:noreply, close_downstream(socket, state)}
         end
