@@ -195,6 +195,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `POSTGRES_HOST`                      | The database host provided in postgreSQL connections. |
 | `POOL_SIZE`                          | The postgreSQL pool size of each application, the real connection count will be twice that value. |
 | `MAX_LOG_RETENTION_DAYS`             | The number of days the logs are kept to the server. This value defaults to 60. |
+| `LIBCLUSTER_HOSTS`                   | A comma-separated list of Erlang node names used for libcluster Docker Compose discovery, for example `boruta@boruta-1,boruta@boruta-2`. |
 | `K8S_NAMESPACE`                      | If set along with K8S_SELECTOR, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
 | `K8S_SELECTOR`                       | If set along with K8S_NAMESPACE, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
 | `BORUTA_ADMIN_OAUTH_CLIENT_ID`       | An uuidv4 string representing the admin oauth client id. It will be part of the client seeded in the setup task. |
@@ -212,8 +213,20 @@ In order to authenticate to the administration interface you will be asked for c
 | `BORUTA_OAUTH_PORT`                  | The port where boruta oauth server will be exposed on. |
 | `BORUTA_OAUTH_ACCEPTORS`             | The number of acceptor processes for the boruta oauth server. Defaults to 8. |
 | `BORUTA_OAUTH_BASE_URL`              | The base URL where boruta oauth server http endpoint will be deployed to (without trailing slash). |
-| `BORUTA_GATEWAY_PORT`                | The port where boruta gateway will be exposed on. |
-| `BORUTA_GATEWAY_SIDECAR_PORT`        | The port where boruta microgateway will be exposed on. |
+| `BORUTA_GATEWAY_SERVER`              | Enables the HTTP gateway listener. Defaults to true. |
+| `BORUTA_GATEWAY_PORT`                | The port where boruta gateway will be exposed on. Defaults to 8083. |
+| `BORUTA_GATEWAY_SIDECAR`             | Enables the HTTP microgateway listener. Defaults to true. |
+| `BORUTA_GATEWAY_SIDECAR_PORT`        | The port where boruta microgateway will be exposed on. Defaults to 8084. |
+| `BORUTA_GATEWAY_PROXY_SERVER`        | Enables the HTTP forward proxy listener. Defaults to true. |
+| `BORUTA_GATEWAY_PROXY_PORT`          | The port where boruta HTTP forward proxy will be exposed on. Defaults to 5555. |
+| `BORUTA_GATEWAY_HTTPS_PROXY_SERVER`  | Enables the HTTPS forward proxy listener. Defaults to true. |
+| `BORUTA_GATEWAY_HTTPS_PROXY_PORT`    | The port where boruta HTTPS forward proxy will be exposed on. Defaults to 4444. |
+| `BORUTA_GATEWAY_HTTPS_SERVER`        | Enables the HTTPS gateway listener. Defaults to false. |
+| `BORUTA_GATEWAY_HTTPS_PORT`          | The port where boruta HTTPS gateway will be exposed on. Defaults to 8043. |
+| `BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE` | Requires and verifies client certificates on the HTTPS gateway listener. Defaults to false. |
+| `BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER` | Enables the HTTPS microgateway listener. Defaults to false. |
+| `BORUTA_GATEWAY_SIDECAR_HTTPS_PORT`  | The port where boruta HTTPS microgateway will be exposed on. Defaults to 8044. |
+| `BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE` | Requires and verifies client certificates on the HTTPS microgateway listener. Defaults to false. |
 | `BORUTA_GATEWAY_ACCEPTORS`           | The number of acceptor processes for the gateway and microgateway. Defaults to 8. |
 | `BORUTA_GATEWAY_CONFIGURATION_PATH`  | The path containing the gateway static configuration. |
 | `BORUTA_CONFIGURATION_PATH`          | The path containing the boruta static configuration. |

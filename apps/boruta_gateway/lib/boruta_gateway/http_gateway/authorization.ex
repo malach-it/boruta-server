@@ -1,4 +1,4 @@
-defmodule BorutaGateway.Gateway.Authorization do
+defmodule BorutaGateway.HttpGateway.Authorization do
   @moduledoc false
 
   alias Boruta.Oauth

@@ -41,12 +41,27 @@ config :boruta_identity, Boruta.Accounts, secret_key_base: System.get_env("SECRE
 config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.SMTP
 
 config :boruta_gateway,
-  port: System.get_env("BORUTA_GATEWAY_PORT") |> String.to_integer(),
-  sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT") |> String.to_integer(),
+  port: System.get_env("BORUTA_GATEWAY_PORT", "8083") |> String.to_integer(),
+  sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT", "8084") |> String.to_integer(),
+  proxy_port: System.get_env("BORUTA_GATEWAY_PROXY_PORT", "5555") |> String.to_integer(),
+  https_proxy_port:
+    System.get_env("BORUTA_GATEWAY_HTTPS_PROXY_PORT", "4444") |> String.to_integer(),
+  https_port: System.get_env("BORUTA_GATEWAY_HTTPS_PORT", "8043") |> String.to_integer(),
+  sidecar_https_port:
+    System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_PORT", "8044") |> String.to_integer(),
   num_acceptors: System.get_env("BORUTA_GATEWAY_ACCEPTORS", "8") |> String.to_integer(),
   configuration_path:
     System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH", "config/example-configuration.yml"),
-  server: true
+  server: System.get_env("BORUTA_GATEWAY_SERVER", "false") == "true",
+  sidecar_server: System.get_env("BORUTA_GATEWAY_SIDECAR", "false") == "true",
+  proxy_server: System.get_env("BORUTA_GATEWAY_PROXY_SERVER", "false") == "true",
+  https_proxy_server: System.get_env("BORUTA_GATEWAY_HTTPS_PROXY_SERVER", "false") == "true",
+  https_server: System.get_env("BORUTA_GATEWAY_HTTPS_SERVER", "false") == "true",
+  sidecar_https_server: System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER", "false") == "true",
+  https_verify_client_certificate:
+    System.get_env("BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true",
+  sidecar_https_verify_client_certificate:
+    System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true"
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [
@@ -129,30 +144,51 @@ config :boruta, Boruta.Oauth,
 config :boruta_auth, BorutaAuth.LogRotate,
   max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60"))
 
-if System.get_env("K8S_NAMESPACE") && System.get_env("K8S_SELECTOR") do
-  config :libcluster,
-    topologies: [
-      k8s: [
-        strategy: Cluster.Strategy.Kubernetes,
-        config: [
-          mode: :ip,
-          kubernetes_ip_lookup_mode: :pods,
-          kubernetes_node_basename: "boruta",
-          kubernetes_selector: System.get_env("K8S_SELECTOR"),
-          kubernetes_namespace: System.get_env("K8S_NAMESPACE"),
-          polling_interval: 10_000
+libcluster_hosts =
+  "LIBCLUSTER_HOSTS"
+  |> System.get_env("")
+  |> String.split(",", trim: true)
+  |> Enum.map(&String.trim/1)
+  |> Enum.reject(&(&1 == ""))
+
+cond do
+  System.get_env("K8S_NAMESPACE") && System.get_env("K8S_SELECTOR") ->
+    config :libcluster,
+      topologies: [
+        k8s: [
+          strategy: Cluster.Strategy.Kubernetes,
+          config: [
+            mode: :ip,
+            kubernetes_ip_lookup_mode: :pods,
+            kubernetes_node_basename: "boruta",
+            kubernetes_selector: System.get_env("K8S_SELECTOR"),
+            kubernetes_namespace: System.get_env("K8S_NAMESPACE"),
+            polling_interval: 10_000
+          ]
         ]
       ]
-    ]
-else
-  config :libcluster,
-    topologies: [
-      example: [
-        strategy: Cluster.Strategy.Epmd,
-        config: [hosts: []],
-        connect: {:net_kernel, :connect_node, []},
-        disconnect: {:erlang, :disconnect_node, []},
-        list_nodes: {:erlang, :nodes, [:connected]}
+
+  libcluster_hosts != [] ->
+    config :libcluster,
+      topologies: [
+        docker_compose: [
+          strategy: Cluster.Strategy.Epmd,
+          config: [hosts: Enum.map(libcluster_hosts, &String.to_atom/1)],
+          connect: {:net_kernel, :connect_node, []},
+          disconnect: {:erlang, :disconnect_node, []},
+          list_nodes: {:erlang, :nodes, [:connected]}
+        ]
       ]
-    ]
+
+  true ->
+    config :libcluster,
+      topologies: [
+        example: [
+          strategy: Cluster.Strategy.Epmd,
+          config: [hosts: []],
+          connect: {:net_kernel, :connect_node, []},
+          disconnect: {:erlang, :disconnect_node, []},
+          list_nodes: {:erlang, :nodes, [:connected]}
+        ]
+      ]
 end

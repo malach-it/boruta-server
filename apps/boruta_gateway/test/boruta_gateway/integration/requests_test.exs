@@ -7,7 +7,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   alias Boruta.Ecto.Admin
   alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.ConfigurationLoader
-  alias BorutaGateway.Gateway
+  alias BorutaGateway.HttpGateway
   alias BorutaGateway.Repo
   alias BorutaGateway.RequestsIntegrationTest.HttpClient
   alias BorutaGateway.Upstreams
@@ -381,6 +381,33 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "returns response when exact upstream uri is stripped" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&root_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: true
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/httpbin", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "root"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns response root uri stripped", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -455,8 +482,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                    } = Jason.decode!(body)
 
             assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
-            signer = Gateway.signer(upstream)
-            assert {:ok, claims} = Gateway.Token.verify(token, signer)
+            signer = HttpGateway.signer(upstream)
+            assert {:ok, claims} = HttpGateway.Token.verify(token, signer)
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 
@@ -782,8 +809,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
 
             upstream = Repo.all(Upstream) |> List.first()
-            signer = Gateway.signer(upstream)
-            assert {:ok, claims} = Gateway.Token.verify(token, signer)
+            signer = HttpGateway.signer(upstream)
+            assert {:ok, claims} = HttpGateway.Token.verify(token, signer)
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 
@@ -998,8 +1025,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                    } = Jason.decode!(body)
 
             assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
-            signer = Gateway.signer(upstream)
-            assert {:ok, claims} = Gateway.Token.verify(token, signer)
+            signer = HttpGateway.signer(upstream)
+            assert {:ok, claims} = HttpGateway.Token.verify(token, signer)
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 
@@ -1046,6 +1073,12 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     assert request =~ "GET /status/418 HTTP/1.1"
 
     response_body("I'm a teapot", status: "418 I'm a teapot", content_type: "text/plain")
+  end
+
+  defp root_response(request) do
+    assert request =~ "GET / HTTP/1.1"
+
+    response_body("root", content_type: "text/plain")
   end
 
   defp echo_headers_response(request) do

@@ -35,6 +35,30 @@ defmodule BorutaAdmin.ConfigurationLoader do
       node_name
   end
 
+  @spec aliases() :: aliases :: list(String.t())
+  def aliases do
+    case Application.get_env(__MODULE__, :aliases) do
+      nil ->
+        path = Application.get_env(:boruta_admin, :configuration_path)
+
+        %{
+          "configuration" => configuration
+        } = YamlElixir.read_from_file!(path)
+
+        aliases = Map.get(configuration, "aliases", []) |> with_default_aliases()
+        Application.put_env(__MODULE__, :aliases, aliases)
+        aliases
+
+      aliases ->
+        with_default_aliases(aliases)
+    end
+  rescue
+    _ ->
+      aliases = with_default_aliases([])
+      Application.put_env(__MODULE__, :aliases, aliases)
+      aliases
+  end
+
   @spec from_file!(configuration_file_path :: String.t()) ::
           {:ok, result :: map()} | {:error, reason :: String.t()}
   def from_file!(path) do
@@ -48,10 +72,39 @@ defmodule BorutaAdmin.ConfigurationLoader do
   end
 
   def load_configuration(configuration) do
+    case Map.fetch(configuration, "aliases") do
+      {:ok, aliases} -> Application.put_env(__MODULE__, :aliases, with_default_aliases(aliases))
+      :error -> Application.put_env(__MODULE__, :aliases, with_default_aliases([]))
+    end
+
     load_configuration(configuration, %{})
   end
 
-  def load_configuration(%{"gateway" => gateway_configurations} = configuration, result) when is_list(gateway_configurations) do
+  defp with_default_aliases(aliases) do
+    aliases
+    |> Kernel.++([node_hostname()])
+    |> Enum.reject(&(&1 in [nil, ""]))
+    |> Enum.uniq()
+  end
+
+  defp node_hostname do
+    node()
+    |> Atom.to_string()
+    |> String.split("@", parts: 2)
+    |> case do
+      [_name, host] ->
+        host
+
+      [_name] ->
+        case :inet.gethostname() do
+          {:ok, hostname} -> to_string(hostname)
+          {:error, _reason} -> nil
+        end
+    end
+  end
+
+  def load_configuration(%{"gateway" => gateway_configurations} = configuration, result)
+      when is_list(gateway_configurations) do
     result =
       Map.put(
         result,
@@ -80,7 +133,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "gateway"), result)
   end
 
-  def load_configuration(%{"microgateway" => gateway_configurations} = configuration, result) when is_list(gateway_configurations) do
+  def load_configuration(%{"microgateway" => gateway_configurations} = configuration, result)
+      when is_list(gateway_configurations) do
     result =
       Map.put(
         result,
@@ -119,7 +173,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "microgateway"), result)
   end
 
-  def load_configuration(%{"organization" => organization_configurations} = configuration, result) when is_list(organization_configurations) do
+  def load_configuration(%{"organization" => organization_configurations} = configuration, result)
+      when is_list(organization_configurations) do
     result =
       Map.put(
         result,
@@ -151,7 +206,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "organization"), result)
   end
 
-  def load_configuration(%{"backend" => backend_configurations} = configuration, result) when is_list(backend_configurations) do
+  def load_configuration(%{"backend" => backend_configurations} = configuration, result)
+      when is_list(backend_configurations) do
     result =
       Map.put(
         result,
@@ -186,7 +242,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
   def load_configuration(
         %{"identity_provider" => identity_provider_configurations} = configuration,
         result
-      ) when is_list(identity_provider_configurations) do
+      )
+      when is_list(identity_provider_configurations) do
     result =
       Map.put(
         result,
@@ -218,7 +275,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "identity_provider"), result)
   end
 
-  def load_configuration(%{"client" => client_configurations} = configuration, result) when is_list(client_configurations) do
+  def load_configuration(%{"client" => client_configurations} = configuration, result)
+      when is_list(client_configurations) do
     result =
       Map.put(
         result,
@@ -250,7 +308,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "client"), result)
   end
 
-  def load_configuration(%{"scope" => scope_configurations} = configuration, result) when is_list(scope_configurations) do
+  def load_configuration(%{"scope" => scope_configurations} = configuration, result)
+      when is_list(scope_configurations) do
     result =
       Map.put(
         result,
@@ -282,7 +341,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
     load_configuration(Map.delete(configuration, "scope"), result)
   end
 
-  def load_configuration(%{"role" => role_configurations} = configuration, result) when is_list(role_configurations) do
+  def load_configuration(%{"role" => role_configurations} = configuration, result)
+      when is_list(role_configurations) do
     result =
       Map.put(
         result,
@@ -317,7 +377,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
   def load_configuration(
         %{"error_template" => error_template_configurations} = configuration,
         result
-      ) when is_list(error_template_configurations) do
+      )
+      when is_list(error_template_configurations) do
     result =
       Map.put(
         result,

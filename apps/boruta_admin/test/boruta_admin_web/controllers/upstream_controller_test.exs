@@ -1,6 +1,7 @@
 defmodule BorutaAdminWeb.UpstreamControllerTest do
   use BorutaAdminWeb.ConnCase, async: false
 
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -8,6 +9,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
     scheme: "https",
     host: "host.test",
     port: 7777,
+    mtls_enabled: true,
     rate_limit_enabled: true,
     rate_limit_count: 20,
     rate_limit_time_unit: "minute",
@@ -135,6 +137,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
         |> Path.join("/test/configuration_files/full_configuration.yml")
 
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
+      Application.delete_env(ConfigurationLoader, :node_name)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
       assert json_response(conn, 200)["data"] == ["full-configuration"]
@@ -147,6 +150,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
         |> Path.join("/test/configuration_files/full_configuration.yml")
 
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
+      Application.delete_env(ConfigurationLoader, :node_name)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
       assert json_response(conn, 200)["data"] == ["full-configuration"]
@@ -160,6 +164,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
 
       assert %{
                "id" => _id,
+               "mtls_enabled" => true,
                "rate_limit_enabled" => true,
                "rate_limit_count" => 20,
                "rate_limit_time_unit" => "minute",

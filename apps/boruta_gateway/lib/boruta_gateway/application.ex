@@ -5,67 +5,144 @@ defmodule BorutaGateway.Application do
 
   use Application
 
-  alias BorutaGateway.Upstreams
+  alias BorutaGateway.{ServiceRegistry, Upstreams}
 
   @impl Application
   def start(_type, _args) do
     children = [
       BorutaGateway.Repo,
       %{
+        id: ServiceRegistry,
+        start: {ServiceRegistry, :start_link, []}
+      },
+      %{
         id: Upstreams.Store,
         start: {Upstreams.Store, :start_link, []}
       }
     ]
 
-    children =
-      case Application.get_env(:boruta_gateway, :server) do
-        true ->
-          [
-            %{
-              start:
-                {BorutaGateway.Gateway.Server, :start,
-                 [
-                   [
-                     port: Application.fetch_env!(:boruta_gateway, :port),
-                     match_function: &Upstreams.match/1,
-                     num_acceptors: Application.get_env(:boruta_gateway, :num_acceptors, 8)
-                   ]
-                 ]},
-              id: :server
-            }
-            | children
-          ]
-
-        _ ->
-          children
-      end
-
-    children =
-      case Application.get_env(:boruta_gateway, :sidecar_server) do
-        true ->
-          [
-            %{
-              start:
-                {BorutaGateway.Gateway.Server, :start,
-                 [
-                   [
-                     port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
-                     match_function: &Upstreams.sidecar_match/1,
-                     num_acceptors: Application.get_env(:boruta_gateway, :num_acceptors, 8)
-                   ]
-                 ]},
-              id: :sidecar_server
-            }
-            | children
-          ]
-
-        _ ->
-          children
-      end
+    children = children ++ enabled_node_service_child_specs()
 
     BorutaGateway.Logger.start()
     setup_database()
     Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor)
+  end
+
+  def enabled_node_service_child_specs do
+    acceptors_count = Application.get_env(:boruta_gateway, :num_acceptors, 8)
+
+    [
+      {Application.get_env(:boruta_gateway, :proxy_server, true),
+       proxy_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :https_proxy_server, true),
+       https_proxy_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :server, false),
+       gateway_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :sidecar_server, false),
+       sidecar_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :https_server, false),
+       https_gateway_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :sidecar_https_server, false),
+       sidecar_https_server_child_spec(acceptors_count)}
+    ]
+    |> Enum.filter(fn {enabled?, _child_spec} -> enabled? end)
+    |> Enum.map(fn {_enabled?, child_spec} -> child_spec end)
+  end
+
+  defp gateway_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpGateway.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :port),
+             match_function: &Upstreams.match/1,
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :server
+    }
+  end
+
+  defp sidecar_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpGateway.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
+             match_function: &Upstreams.sidecar_match/1,
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :sidecar_server
+    }
+  end
+
+  defp https_gateway_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpsGateway.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :https_port),
+             match_function: &Upstreams.match/1,
+             verify_client_certificate:
+               Application.get_env(:boruta_gateway, :https_verify_client_certificate, false),
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :https_server
+    }
+  end
+
+  defp sidecar_https_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpsGateway.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :sidecar_https_port),
+             match_function: &Upstreams.sidecar_match/1,
+             verify_client_certificate:
+               Application.get_env(
+                 :boruta_gateway,
+                 :sidecar_https_verify_client_certificate,
+                 false
+               ),
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :sidecar_https_server
+    }
+  end
+
+  defp proxy_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpProxy.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :proxy_port),
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :proxy_server
+    }
+  end
+
+  defp https_proxy_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpProxy.HttpsServer, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :https_proxy_port),
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :https_proxy_server
+    }
   end
 
   def setup_database do

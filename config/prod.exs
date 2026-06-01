@@ -35,8 +35,8 @@ config :boruta_admin, BorutaAdmin.Repo,
   pool_size: 10
 
 config :boruta_gateway,
-  server: true,
-  sidecar_server: true
+  server: System.get_env("BORUTA_GATEWAY_SERVER", "true") == "true",
+  sidecar_server: System.get_env("BORUTA_GATEWAY_SIDECAR", "true") == "true"
 
 config :boruta_web, BorutaWeb.Endpoint,
   server: true,
