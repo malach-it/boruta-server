@@ -2,20 +2,51 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
-## [unreleased]
+## [0.9.1] - 2026-06-01
 
 ### Added
 
-- [gateway] optional upstream rate imiting configuration
-- [gateway] recover request and business logs
+- [gateway] upstreams can rate-limit traffic
+- [gateway] request and business event history in the administration dashboard
+- [admin] administrators can see user identifiers in user lists
+- [infra] operators can benchmark OAuth grants and gateway requests
+- [infra] request count documentation for OAuth and OpenID4VC flows
 
 ### Changed
 
-- [auth] configure oauth acceptor count, default to 8
+- [auth] OAuth acceptor count can be configured and defaults to 8
+- [gateway] gateway acceptor count can be configured
+- [gateway] authorization returns clearer OAuth error responses
+- [gateway] upstream authorization includes configured scopes
+- [gateway] keepalive tuning is removed from gateway configuration
+- [infra] deployment secrets are provided through environment variables
+- [admin] gateway configuration fields are easier to read
+- [admin] user displays prefer usernames over emails
 
 ### Fixed
 
-- [admin] claim deletion for verifiable credential arrays
+- [admin] verifiable credential array claims can be deleted
+- [admin] feedback form
+- [admin] gateway dashboard request times graph
+- [gateway] upstream routes match paths correctly
+- [gateway] empty forwarded token headers are ignored
+- [gateway] successful requests appear in logs
+- [identity] users are redirected correctly after federated sign in
+- [identity] federation error pages render correctly
+
+### Security
+
+- [admin][identity] upgrade vulnerable npm packages
+- [auth] OAuth token state values are handled without atom exhaustion risk
+- [gateway] reduce exposure of local runtime artifacts in container builds
+- [gateway] malformed requests are handled more safely
+- [identity] user settings values are handled without atom exhaustion risk
+- [identity] development environment defaults are sanitized
+- [infra] aggregate log responses are size-limited
+- [infra] redact OAuth credentials from logs
+- [infra] remove local deployment secrets
+- [web] close presentation SSE streams when clients disconnect
+- [web] require secure cookies
 
 ## [0.9.0] - 2026-05-18
 
