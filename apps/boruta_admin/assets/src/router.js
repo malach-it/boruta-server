@@ -17,10 +17,10 @@ import Client from "./views/Clients/Client.vue";
 import EditClient from "./views/Clients/EditClient.vue";
 
 import Upstreams from "./views/Upstreams.vue";
-import UpstreamList from "./views/Upstreams/UpstreamList.vue";
 import Upstream from "./views/Upstreams/Upstream.vue";
 import NewUpstream from "./views/Upstreams/NewUpstream.vue";
 import EditUpstream from "./views/Upstreams/EditUpstream.vue";
+import ServiceRegistry from "./views/Upstreams/ServiceRegistry.vue";
 
 import IdentityProviders from "./views/IdentityProviders.vue";
 import IdentityProviderList from "./views/IdentityProviders/IdentityProviderList.vue";
@@ -384,12 +384,12 @@ const router = createRouter({
           path: "/upstreams",
           component: Upstreams,
           name: "upstreams",
-          redirect: "/upstreams/",
+          redirect: "/upstreams/service-registry",
           children: [
             {
-              path: "",
-              name: "upstream-list",
-              component: UpstreamList,
+              path: "/upstreams/service-registry",
+              name: "service-registry",
+              component: ServiceRegistry,
             },
             {
               path: "/upstreams/new",

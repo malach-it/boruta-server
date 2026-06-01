@@ -36,6 +36,13 @@
                 <i class="server icon"></i>
                 <span>Upstreams</span>
               </a>
+              <div class="dropdown">
+                <div class="subitem">
+                  <router-link :to="{ name: 'service-registry' }">
+                    <span>service registry</span>
+                  </router-link>
+                </div>
+              </div>
             </div>
           </router-link>
           <router-link
@@ -290,6 +297,11 @@ export default {
   }
   h3, h4, h5 {
     margin: .5em 0;
+  }
+  h2 {
+    @media (max-width: 768px) {
+      margin-left: 1rem;
+    }
   }
   .actions {
     float: right;

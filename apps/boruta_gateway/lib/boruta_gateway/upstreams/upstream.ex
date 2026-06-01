@@ -36,6 +36,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
           unauthorized_response: String.t() | nil,
+          mtls_enabled: boolean(),
           rate_limit_enabled: boolean(),
           rate_limit_count: integer(),
           rate_limit_time_unit: String.t(),
@@ -64,6 +65,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:forwarded_token_secret, :string)
     field(:forwarded_token_public_key, :string)
     field(:forwarded_token_private_key, :string)
+    field(:mtls_enabled, :boolean, default: false)
     field(:rate_limit_enabled, :boolean, default: false)
     field(:rate_limit_count, :integer, default: 10)
     field(:rate_limit_time_unit, :string, default: "second")
@@ -94,6 +96,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :error_content_type,
       :forwarded_token_signature_alg,
       :forwarded_token_secret,
+      :mtls_enabled,
       :rate_limit_enabled,
       :rate_limit_count,
       :rate_limit_time_unit,
@@ -104,6 +107,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> cast(attrs, [:forbidden_response, :unauthorized_response], empty_values: [])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
+    |> validate_mtls_configuration()
     |> validate_inclusion(:rate_limit_count, 1..100_000)
     |> validate_inclusion(:rate_limit_time_unit, ["millisecond", "second", "minute"])
     |> validate_inclusion(:rate_limit_penality, 0..600_000)
@@ -146,6 +150,14 @@ defmodule BorutaGateway.Upstreams.Upstream do
   end
 
   defp validate_required_scopes_format(changeset), do: changeset
+
+  defp validate_mtls_configuration(changeset) do
+    case {get_field(changeset, :mtls_enabled), get_field(changeset, :scheme)} do
+      {true, "https"} -> changeset
+      {true, _scheme} -> add_error(changeset, :mtls_enabled, "requires https scheme")
+      _ -> changeset
+    end
+  end
 
   defp maybe_put_forwarded_token_secret(%Ecto.Changeset{data: data, changes: changes} = changeset) do
     signature_algorithm = get_field(changeset, :forwarded_token_signature_alg)

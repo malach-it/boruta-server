@@ -2,6 +2,33 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [Unreleased]
+
+### Added
+
+- [gateway] HTTP and HTTPS forward proxies
+- [gateway] HTTPS gateway and sidecar listeners
+- [gateway] service registry root CA and node certificate generation
+- [gateway] service registry records expose node gateway and proxy listener configuration
+- [gateway] service registry records expose certificate paths and node certificates
+- [gateway] gateway listeners can be configured with `BORUTA_GATEWAY_SERVER` and `BORUTA_GATEWAY_SIDECAR`
+- [gateway] upstreams can require mTLS
+- [gateway] static configuration supports node aliases
+- [admin] service registry node upstreams are displayed in the upstreams section
+- [admin] gateway and proxy configuration is folded in service registry records
+- [auth] EPMD cluster hosts can be configured with `LIBCLUSTER_HOSTS`
+- [infra] docker compose runs multiple Boruta nodes with static gateway configuration
+
+### Changed
+
+- [gateway] mesh proxy traffic routes through service registry records
+- [admin] upstream creation and edition use service registry records
+- [infra] release node distribution and cookie can be configured with environment variables
+
+### Fixed
+
+- [gateway] service registry database notifications remain small when records include certificates and configuration
+
 ## [0.9.1] - 2026-06-01
 
 ### Added

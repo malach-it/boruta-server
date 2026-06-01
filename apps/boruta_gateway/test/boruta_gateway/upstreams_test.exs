@@ -87,6 +87,22 @@ defmodule BorutaGateway.UpstreamsTest do
                )
     end
 
+    test "create_upstream/1 with mTLS enabled creates an https upstream" do
+      assert {:ok, %Upstream{mtls_enabled: true}} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :mtls_enabled, true))
+    end
+
+    test "create_upstream/1 with mTLS enabled rejects http upstreams" do
+      assert {:error, changeset} =
+               Upstreams.create_upstream(
+                 @valid_attrs
+                 |> Map.put(:scheme, "http")
+                 |> Map.put(:mtls_enabled, true)
+               )
+
+      assert changeset.errors[:mtls_enabled] == {"requires https scheme", []}
+    end
+
     test "create_upstream/1 generates a secret with HS* algorithms" do
       assert {:ok, %Upstream{forwarded_token_secret: forwarded_token_secret}} =
                Upstreams.create_upstream(

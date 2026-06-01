@@ -1,4 +1,4 @@
-defmodule BorutaGateway.Gateway do
+defmodule BorutaGateway.HttpGateway do
   @moduledoc false
 
   defmodule Token do
@@ -12,7 +12,8 @@ defmodule BorutaGateway.Gateway do
   use GenServer
 
   alias BorutaAuth.Plugs.RateLimit.Counter
-  alias BorutaGateway.Gateway.Authorization
+  alias BorutaGateway.Certificate
+  alias BorutaGateway.HttpGateway.Authorization
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -24,7 +25,7 @@ defmodule BorutaGateway.Gateway do
 
     use GenServer
 
-    alias BorutaGateway.Gateway
+    alias BorutaGateway.HttpGateway
 
     def start(args) do
       GenServer.start_link(__MODULE__, args)
@@ -43,12 +44,12 @@ defmodule BorutaGateway.Gateway do
       children =
         Enum.map(1..args[:num_acceptors], fn i ->
           Supervisor.child_spec(
-            {Gateway,
+            {HttpGateway,
              [
                listen_socket: listen_socket,
                match_function: args[:match_function]
              ]},
-            id: :"http_proxy_server_acceptor_#{i}"
+            id: :"http_gateway_server_acceptor_#{i}"
           )
         end)
 
@@ -69,8 +70,19 @@ defmodule BorutaGateway.Gateway do
     @impl GenServer
     def terminate(_reason, state) do
       :gen_tcp.close(state[:listen_socket])
+      stop_acceptor_supervisor(state[:supervisor])
 
       :ok
+    end
+
+    defp stop_acceptor_supervisor(nil), do: :ok
+
+    defp stop_acceptor_supervisor(supervisor) do
+      if Process.alive?(supervisor) do
+        Supervisor.stop(supervisor, :normal, 5_000)
+      end
+    catch
+      :exit, _reason -> :ok
     end
   end
 
@@ -320,11 +332,7 @@ defmodule BorutaGateway.Gateway do
         case :ssl.connect(
                upstream.host |> String.to_charlist(),
                upstream.port,
-               upstream_socket_options(upstream) ++
-                 [
-                   {:verify, :verify_peer},
-                   {:cacerts, :public_key.cacerts_get()}
-                 ],
+               upstream_ssl_options(upstream),
                @connect_timeout
              ) do
           {:ok, client_socket} ->
@@ -432,6 +440,20 @@ defmodule BorutaGateway.Gateway do
   def upstream_socket_options(%Upstream{}) do
     [:binary, {:packet, :raw}, {:active, false}]
   end
+
+  defp upstream_ssl_options(%Upstream{} = upstream) do
+    upstream_socket_options(upstream) ++
+      [
+        {:verify, :verify_peer},
+        {:cacerts, Certificate.gateway_cacerts()}
+      ] ++ mtls_options(upstream)
+  end
+
+  defp mtls_options(%Upstream{mtls_enabled: true}) do
+    Certificate.ssl_options()
+  end
+
+  defp mtls_options(%Upstream{}), do: []
 
   defp close_downstream(socket, state) do
     :gen_tcp.close(socket)
@@ -632,13 +654,7 @@ defmodule BorutaGateway.Gateway do
     upstream_path =
       case upstream do
         %Upstream{strip_uri: true, uris: uris} ->
-          Enum.reduce(uris, path, fn
-            "/", _ ->
-              path
-
-            uri, path ->
-              String.replace_prefix(path, uri, "")
-          end)
+          strip_upstream_path(path, uris)
 
         %Upstream{strip_uri: false} ->
           path
@@ -679,6 +695,22 @@ defmodule BorutaGateway.Gateway do
 
     transform_header(payload, upstream, true)
   end
+
+  defp strip_upstream_path(path, uris) do
+    uris
+    |> Enum.reduce(path, fn
+      "/", path ->
+        path
+
+      uri, path ->
+        String.replace_prefix(path, uri, "")
+    end)
+    |> normalize_upstream_path()
+  end
+
+  defp normalize_upstream_path(""), do: "/"
+  defp normalize_upstream_path("?" <> query), do: "/?" <> query
+  defp normalize_upstream_path(path), do: path
 
   defp clean_request_headers(payload, preserve_forwarded_authorization?) do
     rejected_headers = [

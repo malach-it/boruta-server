@@ -165,6 +165,12 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
 
     ConfigurationLoader.from_file!(configuration_file_path)
 
+    assert ConfigurationLoader.aliases() == [
+             "full-configuration.local",
+             "full-configuration.internal",
+             node_hostname()
+           ]
+
     assert [
              %Upstream{
                scheme: "http",
@@ -300,5 +306,15 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              label: "boruta username",
              public: true
            } = BorutaAuth.Repo.all(Scope) |> List.last()
+  end
+
+  defp node_hostname do
+    node()
+    |> Atom.to_string()
+    |> String.split("@", parts: 2)
+    |> case do
+      [_name, host] -> host
+      [_name] -> :inet.gethostname() |> elem(1) |> to_string()
+    end
   end
 end

@@ -29,6 +29,30 @@ defmodule BorutaGateway.ConfigurationLoader do
       node_name
   end
 
+  @spec aliases() :: aliases :: list(String.t())
+  def aliases do
+    case Application.get_env(__MODULE__, :aliases) do
+      nil ->
+        path = Application.get_env(:boruta_gateway, :configuration_path)
+
+        %{
+          "configuration" => configuration
+        } = YamlElixir.read_from_file!(path)
+
+        aliases = Map.get(configuration, "aliases", []) |> with_default_aliases()
+        Application.put_env(__MODULE__, :aliases, aliases)
+        aliases
+
+      aliases ->
+        with_default_aliases(aliases)
+    end
+  rescue
+    _ ->
+      aliases = with_default_aliases([])
+      Application.put_env(__MODULE__, :aliases, aliases)
+      aliases
+  end
+
   @spec from_file!(configuration_file_path :: String.t()) :: :ok
   def from_file!(path) do
     %{"configuration" => configuration} = YamlElixir.read_from_file!(path)
@@ -38,7 +62,35 @@ defmodule BorutaGateway.ConfigurationLoader do
       :error -> :ok
     end
 
+    case Map.fetch(configuration, "aliases") do
+      {:ok, aliases} -> Application.put_env(__MODULE__, :aliases, with_default_aliases(aliases))
+      :error -> Application.put_env(__MODULE__, :aliases, with_default_aliases([]))
+    end
+
     load_configuration!(configuration)
+  end
+
+  defp with_default_aliases(aliases) do
+    aliases
+    |> Kernel.++([node_hostname()])
+    |> Enum.reject(&(&1 in [nil, ""]))
+    |> Enum.uniq()
+  end
+
+  defp node_hostname do
+    node()
+    |> Atom.to_string()
+    |> String.split("@", parts: 2)
+    |> case do
+      [_name, host] ->
+        host
+
+      [_name] ->
+        case :inet.gethostname() do
+          {:ok, hostname} -> to_string(hostname)
+          {:error, _reason} -> nil
+        end
+    end
   end
 
   defp load_configuration!(%{"gateway" => gateway_configurations} = configuration) do
