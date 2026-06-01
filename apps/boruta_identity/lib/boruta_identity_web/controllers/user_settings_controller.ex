@@ -28,9 +28,13 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     current_user = conn.assigns[:current_user]
 
     user_update_params =
-      user_params
-      |> Enum.map(fn {key, value} -> {String.to_atom(key), value} end)
-      |> Enum.into(%{})
+      Enum.reduce(user_params, %{}, fn {key, value}, acc ->
+        try do
+          Map.put(acc, String.to_existing_atom(key), value)
+        rescue
+          ArgumentError -> acc
+        end
+      end)
 
     Accounts.update_user(
       conn,
