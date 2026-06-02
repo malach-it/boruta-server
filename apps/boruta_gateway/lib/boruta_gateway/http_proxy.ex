@@ -15,16 +15,16 @@ defmodule BorutaGateway.HttpProxy do
   defmodule Server do
     @moduledoc false
 
-    use GenServer
+    use Supervisor
 
     alias BorutaGateway.Certificate
     alias BorutaGateway.HttpProxy
 
     def start(args) do
-      GenServer.start_link(__MODULE__, args)
+      Supervisor.start_link(__MODULE__, args)
     end
 
-    @impl GenServer
+    @impl Supervisor
     def init(args) do
       transport = Keyword.get(args, :transport, :tcp)
 
@@ -39,36 +39,7 @@ defmodule BorutaGateway.HttpProxy do
           )
         end)
 
-      Process.flag(:trap_exit, true)
-
-      with {:ok, supervisor} <- Supervisor.start_link(children, strategy: :one_for_one) do
-        {:ok, supervisor: supervisor, listen_socket: listen_socket, transport: transport}
-      end
-    end
-
-    @impl GenServer
-    def handle_info({:EXIT, _pid, reason}, state) do
-      close_listen_socket(state[:listen_socket], state[:transport])
-
-      {:stop, reason, state}
-    end
-
-    @impl GenServer
-    def terminate(_reason, state) do
-      close_listen_socket(state[:listen_socket], state[:transport])
-      stop_acceptor_supervisor(state[:supervisor])
-
-      :ok
-    end
-
-    defp stop_acceptor_supervisor(nil), do: :ok
-
-    defp stop_acceptor_supervisor(supervisor) do
-      if Process.alive?(supervisor) do
-        Supervisor.stop(supervisor, :normal, 5_000)
-      end
-    catch
-      :exit, _reason -> :ok
+      Supervisor.init(children, strategy: :one_for_one)
     end
 
     defp listen(:ssl, port) do
@@ -94,9 +65,6 @@ defmodule BorutaGateway.HttpProxy do
         {:reuseaddr, true}
       ])
     end
-
-    defp close_listen_socket(socket, :ssl), do: :ssl.close(socket)
-    defp close_listen_socket(socket, _transport), do: :gen_tcp.close(socket)
   end
 
   defmodule HttpsServer do

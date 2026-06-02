@@ -23,15 +23,15 @@ defmodule BorutaGateway.HttpsGateway do
   defmodule Server do
     @moduledoc false
 
-    use GenServer
+    use Supervisor
 
     alias BorutaGateway.HttpsGateway
 
     def start(args) do
-      GenServer.start_link(__MODULE__, args)
+      Supervisor.start_link(__MODULE__, args)
     end
 
-    @impl GenServer
+    @impl Supervisor
     def init(args) do
       verify_client_certificate =
         resolve_verify_client_certificate(args[:verify_client_certificate])
@@ -61,36 +61,7 @@ defmodule BorutaGateway.HttpsGateway do
           )
         end)
 
-      Process.flag(:trap_exit, true)
-
-      with {:ok, supervisor} <- Supervisor.start_link(children, strategy: :one_for_one) do
-        {:ok, supervisor: supervisor, listen_socket: listen_socket}
-      end
-    end
-
-    @impl GenServer
-    def handle_info({:EXIT, _pid, reason}, state) do
-      :ssl.close(state[:listen_socket])
-
-      {:stop, reason, state}
-    end
-
-    @impl GenServer
-    def terminate(_reason, state) do
-      :ssl.close(state[:listen_socket])
-      stop_acceptor_supervisor(state[:supervisor])
-
-      :ok
-    end
-
-    defp stop_acceptor_supervisor(nil), do: :ok
-
-    defp stop_acceptor_supervisor(supervisor) do
-      if Process.alive?(supervisor) do
-        Supervisor.stop(supervisor, :normal, 5_000)
-      end
-    catch
-      :exit, _reason -> :ok
+      Supervisor.init(children, strategy: :one_for_one)
     end
 
     defp client_certificate_options(true) do
