@@ -16,7 +16,10 @@
                 </div>
               </div>
             </div>
-            <CurrentNodeUpstreams :node-name="upstream.node_name" />
+            <CurrentNodeUpstreams
+              ref="currentNodeUpstreams"
+              :node-name="upstream.node_name"
+              :edited-upstream-id="upstream.id" />
             <router-link :to="{ name: 'service-registry' }" class="ui right floated button">Back</router-link>
           </div>
         </div>
@@ -64,6 +67,7 @@ export default {
       this.success = false
       return this.upstream.save().then(() => {
         this.success = true
+        this.$refs.currentNodeUpstreams.getUpstreams()
       }).catch()
     }
   }

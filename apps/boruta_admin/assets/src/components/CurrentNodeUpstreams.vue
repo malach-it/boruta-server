@@ -6,7 +6,11 @@
       {{ error }}
     </div>
     <div class="ui relaxed divided list" v-else-if="currentNodeUpstreams.length">
-      <div class="item" v-for="currentUpstream in currentNodeUpstreams" :key="currentUpstream.id">
+      <div
+        class="item"
+        v-for="currentUpstream in currentNodeUpstreams"
+        :class="{ 'edited-upstream': isEditedUpstream(currentUpstream) }"
+        :key="currentUpstream.id">
         <div class="content">
           <router-link
             :to="{ name: 'edit-upstream', params: { upstreamId: currentUpstream.id } }"
@@ -30,7 +34,7 @@ import Upstream from '../models/upstream.model'
 
 export default {
   name: 'current-node-upstreams',
-  props: ['nodeName'],
+  props: ['nodeName', 'editedUpstreamId'],
   data () {
     return {
       upstreams: {},
@@ -56,6 +60,9 @@ export default {
       }).catch((error) => {
         this.error = error.response?.data?.message || error.message
       })
+    },
+    isEditedUpstream (upstream) {
+      return this.editedUpstreamId && `${upstream.id}` === `${this.editedUpstreamId}`
     }
   }
 }
@@ -72,6 +79,13 @@ export default {
 
   .message {
     margin-bottom: 0;
+  }
+
+  .item.edited-upstream {
+    background: #f4fbf8;
+    border-left: 3px solid #21ba45;
+    margin-left: -.75rem;
+    padding-left: .75rem;
   }
 }
 </style>
