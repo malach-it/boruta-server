@@ -16,15 +16,14 @@
             <th>Node</th>
             <th>IP address</th>
             <th>Aliases</th>
-            <th>Status</th>
-            <th></th>
+            <th colspan="2">Status</th>
           </tr>
         </thead>
         <tbody>
           <template v-for="record in filteredRecords" :key="record.id">
             <tr>
               <td class="collapsing">
-                <button class="ui mini icon button" v-on:click="toggleRecord(record)">
+                <button class="ui mini fold icon button" v-on:click="toggleRecord(record)">
                   <i class="angle icon" :class="isExpanded(record) ? 'down' : 'right'"></i>
                 </button>
               </td>
@@ -103,8 +102,7 @@
                       <th>Paths</th>
                       <th>Authorization</th>
                       <th>mTLS</th>
-                      <th>Rate limit</th>
-                      <th></th>
+                      <th colspan="2">Rate limit</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -349,6 +347,18 @@ export default {
 
   .ui.card>.content>.header, .ui.card>.content>.description {
     color: inherit;
+  }
+
+  @media (max-width: 768px) {
+    .button {
+      width: 100%;
+    }
+    .fold.button {
+      text-align: left;
+    }
+    .service.card {
+      margin: auto;
+    }
   }
 }
 </style>
