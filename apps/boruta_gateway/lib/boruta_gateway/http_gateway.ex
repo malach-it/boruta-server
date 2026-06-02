@@ -23,15 +23,15 @@ defmodule BorutaGateway.HttpGateway do
   defmodule Server do
     @moduledoc false
 
-    use GenServer
+    use Supervisor
 
     alias BorutaGateway.HttpGateway
 
     def start(args) do
-      GenServer.start_link(__MODULE__, args)
+      Supervisor.start_link(__MODULE__, args)
     end
 
-    @impl GenServer
+    @impl Supervisor
     def init(args) do
       {:ok, listen_socket} =
         :gen_tcp.listen(args[:port], [
@@ -53,36 +53,7 @@ defmodule BorutaGateway.HttpGateway do
           )
         end)
 
-      Process.flag(:trap_exit, true)
-
-      with {:ok, supervisor} <- Supervisor.start_link(children, strategy: :one_for_one) do
-        {:ok, supervisor: supervisor, listen_socket: listen_socket}
-      end
-    end
-
-    @impl GenServer
-    def handle_info({:EXIT, _pid, reason}, state) do
-      :gen_tcp.close(state[:listen_socket])
-
-      {:stop, reason, state}
-    end
-
-    @impl GenServer
-    def terminate(_reason, state) do
-      :gen_tcp.close(state[:listen_socket])
-      stop_acceptor_supervisor(state[:supervisor])
-
-      :ok
-    end
-
-    defp stop_acceptor_supervisor(nil), do: :ok
-
-    defp stop_acceptor_supervisor(supervisor) do
-      if Process.alive?(supervisor) do
-        Supervisor.stop(supervisor, :normal, 5_000)
-      end
-    catch
-      :exit, _reason -> :ok
+      Supervisor.init(children, strategy: :one_for_one)
     end
   end
 

@@ -60,7 +60,8 @@ defmodule BorutaGateway.Application do
              num_acceptors: num_acceptors
            ]
          ]},
-      id: :server
+      id: :server,
+      type: :supervisor
     }
   end
 
@@ -75,7 +76,8 @@ defmodule BorutaGateway.Application do
              num_acceptors: num_acceptors
            ]
          ]},
-      id: :sidecar_server
+      id: :sidecar_server,
+      type: :supervisor
     }
   end
 
@@ -92,7 +94,8 @@ defmodule BorutaGateway.Application do
              num_acceptors: num_acceptors
            ]
          ]},
-      id: :https_server
+      id: :https_server,
+      type: :supervisor
     }
   end
 
@@ -113,7 +116,8 @@ defmodule BorutaGateway.Application do
              num_acceptors: num_acceptors
            ]
          ]},
-      id: :sidecar_https_server
+      id: :sidecar_https_server,
+      type: :supervisor
     }
   end
 
@@ -127,7 +131,8 @@ defmodule BorutaGateway.Application do
              num_acceptors: num_acceptors
            ]
          ]},
-      id: :proxy_server
+      id: :proxy_server,
+      type: :supervisor
     }
   end
 
@@ -141,7 +146,8 @@ defmodule BorutaGateway.Application do
              num_acceptors: num_acceptors
            ]
          ]},
-      id: :https_proxy_server
+      id: :https_proxy_server,
+      type: :supervisor
     }
   end
 
