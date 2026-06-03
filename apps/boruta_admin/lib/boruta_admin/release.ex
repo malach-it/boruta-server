@@ -2,6 +2,10 @@ defmodule BorutaAdmin.Release do
   @moduledoc false
 
   def load_configuration do
+    Application.ensure_all_started(:boruta_auth)
+    Application.ensure_all_started(:boruta_identity)
+    Application.ensure_all_started(:boruta_web)
+    Application.ensure_all_started(:boruta_gateway)
     Application.ensure_all_started(:boruta_admin)
 
     configuration_path = Application.get_env(:boruta_admin, :configuration_path)
