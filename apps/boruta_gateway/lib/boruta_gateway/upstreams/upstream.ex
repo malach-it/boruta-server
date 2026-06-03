@@ -44,6 +44,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
           rate_limit_penality: integer(),
           rate_limit_timeout: integer(),
           rate_limit_memory_length: integer(),
+          managed_by: String.t() | nil,
+          managed_id: String.t() | nil,
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -74,6 +76,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:rate_limit_penality, :integer, default: 500)
     field(:rate_limit_timeout, :integer, default: 5_000)
     field(:rate_limit_memory_length, :integer, default: 50)
+    field(:managed_by, :string)
+    field(:managed_id, :string)
 
     timestamps()
   end
@@ -99,13 +103,17 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :error_content_type,
       :forwarded_token_signature_alg,
       :forwarded_token_secret,
+      :forwarded_token_public_key,
+      :forwarded_token_private_key,
       :mtls_enabled,
       :rate_limit_enabled,
       :rate_limit_count,
       :rate_limit_time_unit,
       :rate_limit_penality,
       :rate_limit_timeout,
-      :rate_limit_memory_length
+      :rate_limit_memory_length,
+      :managed_by,
+      :managed_id
     ])
     |> cast(attrs, [:forbidden_response, :unauthorized_response], empty_values: [])
     |> validate_required([:scheme, :host, :port])
