@@ -104,6 +104,7 @@ metadata:
 - `boruta.patatoid.fr/unauthorized-response`
 - `boruta.patatoid.fr/forwarded-token-signature-alg`
 - `boruta.patatoid.fr/forwarded-token-secret`
+- `boruta.patatoid.fr/mtls-enabled`
 - `boruta.patatoid.fr/rate-limit-*`
 
 The controller watches ingresses matching `boruta_ingress_class`. For the default
@@ -113,6 +114,11 @@ playbook, use:
 spec:
   ingressClassName: boruta
 ```
+
+`boruta.patatoid.fr/mtls-enabled: "true"` enables client-certificate
+authentication when the gateway connects to the upstream service. It requires an
+HTTPS backend, so set `boruta.patatoid.fr/backend-protocol: "HTTPS"` or
+`nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"` on the same ingress.
 
 ## Local Access
 
