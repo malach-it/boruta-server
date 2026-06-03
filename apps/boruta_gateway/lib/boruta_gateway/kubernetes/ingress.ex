@@ -117,97 +117,37 @@ defmodule BorutaGateway.Kubernetes.Ingress do
           "boruta.patatoid.fr/forwarded-token-private-key"
         )
         |> put_boolean_annotation(annotations, :mtls_enabled, "boruta.patatoid.fr/mtls-enabled")
-
-      upstream =
-        case Map.has_key?(annotations, "boruta.patatoid.fr/strip-uri") do
-          true ->
-            Map.put(
-              upstream,
-              :strip_uri,
-              truthy_annotation?(annotations, "boruta.patatoid.fr/strip-uri")
-            )
-
-          false ->
-            upstream
-        end
-
-      upstream =
-        case Map.has_key?(annotations, "boruta.patatoid.fr/rate-limit-enabled") do
-          true ->
-            Map.put(
-              upstream,
-              :rate_limit_enabled,
-              truthy_annotation?(annotations, "boruta.patatoid.fr/rate-limit-enabled")
-            )
-
-          false ->
-            upstream
-        end
-
-      upstream =
-        case Map.has_key?(annotations, "boruta.patatoid.fr/rate-limit-count") do
-          true ->
-            Map.put(
-              upstream,
-              :rate_limit_count,
-              integer_annotation(annotations, "boruta.patatoid.fr/rate-limit-count")
-            )
-
-          false ->
-            upstream
-        end
-
-      upstream =
-        case Map.has_key?(annotations, "boruta.patatoid.fr/rate-limit-time-unit") do
-          true ->
-            Map.put(
-              upstream,
-              :rate_limit_time_unit,
-              string_annotation(annotations, "boruta.patatoid.fr/rate-limit-time-unit")
-            )
-
-          false ->
-            upstream
-        end
-
-      upstream =
-        case Map.has_key?(annotations, "boruta.patatoid.fr/rate-limit-penality") do
-          true ->
-            Map.put(
-              upstream,
-              :rate_limit_penality,
-              integer_annotation(annotations, "boruta.patatoid.fr/rate-limit-penality")
-            )
-
-          false ->
-            upstream
-        end
-
-      upstream =
-        case Map.has_key?(annotations, "boruta.patatoid.fr/rate-limit-timeout") do
-          true ->
-            Map.put(
-              upstream,
-              :rate_limit_timeout,
-              integer_annotation(annotations, "boruta.patatoid.fr/rate-limit-timeout")
-            )
-
-          false ->
-            upstream
-        end
-
-      upstream =
-        case Map.has_key?(annotations, "boruta.patatoid.fr/rate-limit-memory-length") do
-          true ->
-            Map.put(
-              upstream,
-              :rate_limit_memory_length,
-              integer_annotation(annotations, "boruta.patatoid.fr/rate-limit-memory-length")
-            )
-
-          false ->
-            upstream
-        end
+        |> put_boolean_annotation(annotations, :strip_uri, "boruta.patatoid.fr/strip-uri")
+        |> put_boolean_annotation(
+          annotations,
+          :rate_limit_enabled,
+          "boruta.patatoid.fr/rate-limit-enabled"
+        )
+        |> put_integer_annotation(
+          annotations,
+          :rate_limit_count,
+          "boruta.patatoid.fr/rate-limit-count"
+        )
+        |> put_string_annotation(
+          annotations,
+          :rate_limit_time_unit,
+          "boruta.patatoid.fr/rate-limit-time-unit"
+        )
+        |> put_integer_annotation(
+          annotations,
+          :rate_limit_penality,
+          "boruta.patatoid.fr/rate-limit-penality"
+        )
+        |> put_integer_annotation(
+          annotations,
+          :rate_limit_timeout,
+          "boruta.patatoid.fr/rate-limit-timeout"
+        )
+        |> put_integer_annotation(
+          annotations,
+          :rate_limit_memory_length,
+          "boruta.patatoid.fr/rate-limit-memory-length"
+        )
 
       [upstream]
     else
@@ -267,28 +207,18 @@ defmodule BorutaGateway.Kubernetes.Ingress do
     end
   end
 
-  defp truthy_annotation?(annotations, key) do
-    annotations
-    |> Map.get(key, "false")
+  defp truthy?(value) when is_binary(value) do
+    value
     |> String.downcase()
-    |> truthy?()
-  end
-
-  defp truthy?(value), do: value in ["true", "1", "yes"]
-
-  defp integer_annotation(annotations, key) do
-    annotations
-    |> Map.get(key, "")
-    |> String.to_integer()
-  end
-
-  defp string_annotation(annotations, key) do
-    annotations
-    |> Map.get(key, "")
+    |> then(&(&1 in ["true", "1", "yes"]))
   end
 
   defp put_boolean_annotation(upstream, annotations, field, key) do
     put_annotation(upstream, annotations, field, key, &truthy?/1)
+  end
+
+  defp put_integer_annotation(upstream, annotations, field, key) do
+    put_annotation(upstream, annotations, field, key, &String.to_integer/1)
   end
 
   defp put_string_annotation(upstream, annotations, field, key) do
