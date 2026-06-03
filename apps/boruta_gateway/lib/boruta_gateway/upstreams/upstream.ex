@@ -47,6 +47,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
           rate_limit_memory_length: integer(),
           noise_cancelling_enabled: boolean(),
           noise_cancelling_model: binary() | nil,
+          managed_by: String.t() | nil,
+          managed_id: String.t() | nil,
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -81,6 +83,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:noise_cancelling_enabled, :boolean, default: false)
     field(:noise_cancelling_model, :binary)
     field(:openapi_spec, :string, virtual: true)
+    field(:managed_by, :string)
+    field(:managed_id, :string)
 
     timestamps()
   end
@@ -107,6 +111,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :error_content_type,
       :forwarded_token_signature_alg,
       :forwarded_token_secret,
+      :forwarded_token_public_key,
+      :forwarded_token_private_key,
       :mtls_enabled,
       :rate_limit_enabled,
       :rate_limit_count,
@@ -115,7 +121,9 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :rate_limit_timeout,
       :rate_limit_memory_length,
       :noise_cancelling_enabled,
-      :openapi_spec
+      :openapi_spec,
+      :managed_by,
+      :managed_id
     ])
     |> cast(attrs, [:forbidden_response, :unauthorized_response], empty_values: [])
     |> validate_required([:scheme, :host, :port])
