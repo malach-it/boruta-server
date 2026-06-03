@@ -9,11 +9,6 @@ defmodule BorutaGateway.Repo.Migrations.AddKubernetesIngressFieldsToUpstreams do
 
     drop_if_exists(index(:upstreams, [:node_name, :host, :port, :uris], unique: true))
 
-    execute("""
-    CREATE UNIQUE INDEX upstreams_node_name_host_port_uris_index
-    ON upstreams (node_name, COALESCE(virtual_host, ''), host, port, uris)
-    """)
-
     create(
       unique_index(:upstreams, [:managed_by, :managed_id],
         where: "managed_by IS NOT NULL AND managed_id IS NOT NULL"
