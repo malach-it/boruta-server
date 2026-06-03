@@ -81,6 +81,27 @@ The loader reads the file from `BORUTA_CONFIGURATION_PATH`. The loader is
 idempotent: applying the same configuration again updates existing resources
 instead of creating duplicates.
 
+The static configuration can also provide the Boruta service-registry cluster
+CA used for gateway mTLS:
+
+```yaml
+configuration:
+  cluster_ca:
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      ...
+      -----END CERTIFICATE-----
+    private_key: |
+      -----BEGIN PRIVATE KEY-----
+      ...
+      -----END PRIVATE KEY-----
+```
+
+When `cluster_ca` is present, Boruta validates that the certificate and private
+key match, upserts the service-registry root record, and loads the certificate as
+a trusted CA. Keep the private key out of committed playbooks; mount or template
+it from a secret source for shared environments.
+
 The job has `ttlSecondsAfterFinished: 300`. If the job already exists and has
 completed, Kubernetes will not automatically rerun it only because the ConfigMap
 changed. Delete the existing job before reapplying when you need to force a new

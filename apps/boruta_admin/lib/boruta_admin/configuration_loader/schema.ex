@@ -3,6 +3,19 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
 
   alias ExJsonSchema.Schema
 
+  def cluster_ca do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "certificate" => %{"type" => "string"},
+        "private_key" => %{"type" => "string"}
+      },
+      "required" => ["certificate", "private_key"],
+      "additionalProperties" => false
+    }
+    |> Schema.resolve()
+  end
+
   def gateway do
     %{
       "type" => "object",

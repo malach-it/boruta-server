@@ -82,14 +82,14 @@ defmodule BorutaIdentity.Configuration.ErrorTemplate do
   end
 
   defp put_default(changeset) do
-    case fetch_change(changeset, :content) do
-      {:ok, content} when not is_nil(content) ->
+    case get_field(changeset, :content) do
+      content when not is_nil(content) ->
         changeset
 
       _ ->
         change(
           changeset,
-          content: default_template(changeset |> fetch_field!(:type) |> String.to_integer())
+          content: default_content(changeset |> fetch_field!(:type) |> String.to_integer())
         )
     end
   end

@@ -209,6 +209,35 @@ defmodule BorutaGateway.ServiceRegistry do
     end
   end
 
+  @spec upsert_root_record!(root_ca :: %{certificate: String.t(), private_key: String.t()}) ::
+          Record.t()
+  def upsert_root_record!(%{certificate: certificate, private_key: private_key} = root_ca) do
+    if Certificate.root_ca_valid?(root_ca) do
+      attrs = %{
+        node_name: @root_node_name,
+        erlang_node_name: nil,
+        ip_address: @root_ip_address,
+        aliases: [],
+        certificate: certificate,
+        private_key: private_key,
+        configuration: %{},
+        status: @root_status
+      }
+
+      record =
+        case Repo.get_by(Record, node_name: @root_node_name, ip_address: @root_ip_address) do
+          nil -> %Record{}
+          %Record{} = record -> record
+        end
+
+      record
+      |> Record.changeset(attrs)
+      |> Repo.insert_or_update!()
+    else
+      raise ArgumentError, "invalid cluster CA certificate/private_key pair"
+    end
+  end
+
   @spec touch_current_record!() :: non_neg_integer()
   def touch_current_record! do
     touch_record!(current_ip_address(), ConfigurationLoader.node_name())

@@ -4,6 +4,8 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
   alias Boruta.Ecto.Client
   alias Boruta.Ecto.Scope
   alias BorutaAdmin.ConfigurationLoader
+  alias BorutaGateway.Certificate
+  alias BorutaGateway.ServiceRegistry.Record
   alias BorutaGateway.Upstreams.Upstream
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Configuration.ErrorTemplate
@@ -152,6 +154,43 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
             %{
               error_template: ["Error template does not exist."]
             }} = ConfigurationLoader.from_file!(configuration_file_path)
+  end
+
+  test "loads a cluster CA" do
+    root_ca = Certificate.generate_root_ca_pem!()
+    paths = Certificate.paths()
+
+    File.write!(paths.root_ca_certificate, "stale certificate")
+    File.write!(paths.root_ca_private_key, "stale private key")
+
+    assert %{cluster_ca: []} =
+             ConfigurationLoader.load_configuration(%{
+               "cluster_ca" => %{
+                 "certificate" => root_ca.certificate,
+                 "private_key" => root_ca.private_key
+               }
+             })
+
+    assert %Record{
+             node_name: "__cluster_ca__",
+             ip_address: "__cluster_ca__",
+             certificate: certificate,
+             private_key: private_key,
+             status: "root"
+           } = BorutaGateway.Repo.get_by(Record, node_name: "__cluster_ca__")
+
+    assert certificate == root_ca.certificate
+    assert private_key == root_ca.private_key
+    assert File.read!(paths.root_ca_certificate) == root_ca.certificate
+    assert File.read!(paths.root_ca_private_key) == root_ca.private_key
+
+    assert %{cluster_ca: ["Invalid cluster CA certificate/private_key pair."]} =
+             ConfigurationLoader.load_configuration(%{
+               "cluster_ca" => %{
+                 "certificate" => root_ca.certificate,
+                 "private_key" => "invalid"
+               }
+             })
   end
 
   test "loads a file" do
