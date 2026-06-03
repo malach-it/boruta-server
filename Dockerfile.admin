@@ -43,6 +43,8 @@ FROM elixir:1.20-otp-29-alpine
 
 RUN apk --no-cache --update add openssl
 
+RUN apk --no-cache --update add openssl
+
 WORKDIR /app
 
 COPY --from=builder /app/_build/prod/rel/boruta_admin ./
