@@ -116,6 +116,7 @@ defmodule BorutaGateway.Kubernetes.Ingress do
           :forwarded_token_private_key,
           "boruta.patatoid.fr/forwarded-token-private-key"
         )
+        |> put_boolean_annotation(annotations, :mtls_enabled, "boruta.patatoid.fr/mtls-enabled")
 
       upstream =
         case Map.has_key?(annotations, "boruta.patatoid.fr/strip-uri") do

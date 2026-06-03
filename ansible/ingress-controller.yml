@@ -557,6 +557,7 @@
                 {"error":"UNAUTHORIZED","message":"You are unauthorized to access this resource."}
               boruta.patatoid.fr/forwarded-token-signature-alg: "HS256"
               boruta.patatoid.fr/forwarded-token-secret: "change-me"
+              boruta.patatoid.fr/mtls-enabled: "false"
               boruta.patatoid.fr/rate-limit-enabled: "true"
               boruta.patatoid.fr/rate-limit-count: "10"
               boruta.patatoid.fr/rate-limit-time-unit: "second"
