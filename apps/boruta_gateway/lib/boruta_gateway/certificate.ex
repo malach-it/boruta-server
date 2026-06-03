@@ -355,7 +355,7 @@ defmodule BorutaGateway.Certificate do
     _error -> []
   end
 
-  defp write_root_ca!(%{certificate: certificate, private_key: private_key}) do
+  def write_root_ca!(%{certificate: certificate, private_key: private_key}) do
     paths = paths()
 
     paths.root_ca_certificate

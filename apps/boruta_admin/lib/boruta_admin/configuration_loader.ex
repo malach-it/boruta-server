@@ -9,6 +9,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
   alias BorutaAdmin.ConfigurationLoader.Schema
   alias BorutaAuth.Repo, as: BorutaAuthRepo
   alias BorutaGateway.Repo, as: BorutaGatewayRepo
+  alias BorutaGateway.Certificate
+  alias BorutaGateway.ServiceRegistry
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
   alias BorutaIdentity.Accounts.Role
@@ -113,6 +115,32 @@ defmodule BorutaAdmin.ConfigurationLoader do
           {:error, _reason} -> nil
         end
     end
+  end
+
+  def load_configuration(%{"cluster_ca" => cluster_ca_configuration} = configuration, result)
+      when is_map(cluster_ca_configuration) do
+    result =
+      Map.put(
+        result,
+        :cluster_ca,
+        with :ok <-
+               ExJsonSchema.Validator.validate(
+                 Schema.cluster_ca(),
+                 cluster_ca_configuration,
+                 error_formatter: BorutaFormatter
+               ),
+             {:ok, _record} <- upsert_cluster_ca(cluster_ca_configuration) do
+          []
+        else
+          {:error, %Ecto.Changeset{} = changeset} ->
+            [changeset]
+
+          {:error, errors} ->
+            List.wrap(errors)
+        end
+      )
+
+    load_configuration(Map.delete(configuration, "cluster_ca"), result)
   end
 
   def load_configuration(%{"gateway" => gateway_configurations} = configuration, result)
@@ -437,6 +465,20 @@ defmodule BorutaAdmin.ConfigurationLoader do
   end
 
   def load_configuration(%{}, result), do: result
+
+  defp upsert_cluster_ca(%{"certificate" => certificate, "private_key" => private_key}) do
+    root_ca = %{certificate: certificate, private_key: private_key}
+
+    if Certificate.root_ca_valid?(root_ca) do
+      record = ServiceRegistry.upsert_root_record!(root_ca)
+      Certificate.write_root_ca!(root_ca)
+      Certificate.load_trusted_certificates!([certificate])
+
+      {:ok, record}
+    else
+      {:error, ["Invalid cluster CA certificate/private_key pair."]}
+    end
+  end
 
   defp upsert_upstream(attrs) do
     case get_upstream(attrs) do
