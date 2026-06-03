@@ -82,7 +82,7 @@ idempotent: applying the same configuration again updates existing resources
 instead of creating duplicates.
 
 The static configuration can also provide the Boruta service-registry cluster
-CA used for gateway mTLS:
+CA used for gateway TLS/mTLS:
 
 ```yaml
 configuration:
