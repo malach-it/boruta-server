@@ -15,6 +15,9 @@
           <router-link
             :to="{ name: 'edit-upstream', params: { upstreamId: currentUpstream.id } }"
             class="header">{{ currentUpstream.baseUrl }}</router-link>
+          <div class="meta" v-if="currentUpstream.virtual_host">
+            {{ currentUpstream.virtual_host }}
+          </div>
           <div class="description">
             <span v-for="path in currentUpstream.uris" class="ui teal label" :key="path.uri">
               {{ path.uri }}

@@ -32,6 +32,7 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   node_name: function ({ node_name }) { this.node_name = node_name },
+  virtual_host: function ({ virtual_host }) { this.virtual_host = virtual_host },
   scheme: function ({ scheme }) { this.scheme = scheme },
   host: function ({ host }) { this.host = host },
   port: function ({ port }) { this.port = port },
@@ -118,6 +119,7 @@ class Upstream {
     const {
       id,
       node_name,
+      virtual_host,
       scheme,
       host,
       port,
@@ -144,6 +146,7 @@ class Upstream {
     return {
       id,
       node_name,
+      virtual_host,
       scheme,
       host,
       port,

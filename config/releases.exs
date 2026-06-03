@@ -65,7 +65,7 @@ config :boruta_gateway,
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [
-    port: System.get_env("BORUTA_OAUTH_PORT") |> String.to_integer(),
+    port: System.get_env("BORUTA_OAUTH_PORT", "8080") |> String.to_integer(),
     ip:
       System.get_env("BORUTA_OAUTH_BIND", "::")
       |> String.to_charlist()
@@ -88,7 +88,7 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
     scheme: System.get_env("BORUTA_OAUTH_SCHEME", "https"),
     host: System.get_env("BORUTA_OAUTH_HOST"),
     path: "/accounts",
-    port: System.get_env("BORUTA_OAUTH_PORT")
+    port: System.get_env("BORUTA_OAUTH_PORT", "8080")
   ],
   secret_key_base: System.get_env("SECRET_KEY_BASE"),
   session_cookie_key: System.get_env("BORUTA_SESSION_COOKIE_KEY", "_boruta_web_key"),
@@ -100,7 +100,7 @@ config :boruta_identity, BorutaIdentityWeb.Authenticable,
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
   http: [
-    port: System.get_env("BORUTA_ADMIN_PORT") |> String.to_integer(),
+    port: System.get_env("BORUTA_ADMIN_PORT", "8081") |> String.to_integer(),
     ip:
       System.get_env("BORUTA_ADMIN_BIND", "::")
       |> String.to_charlist()

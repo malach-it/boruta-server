@@ -163,7 +163,7 @@ defmodule BorutaGateway.HttpsGateway do
       {:ok, method, path} ->
         path_info = String.split(path, "/", trim: true)
 
-        with %Upstream{} = upstream <- state.match_function.(path_info),
+        with %Upstream{} = upstream <- match_upstream(state.match_function, payload, path_info),
              :ok <- rate_limit(socket, upstream),
              {:ok, token} <- Authorization.authorize(payload, method, upstream) do
           connect_upstream(
@@ -565,6 +565,20 @@ defmodule BorutaGateway.HttpsGateway do
     case Regex.run(~r{(?:^|\r\n)x-real-ip:\s*([^\r]+)}i, payload) do
       [_, remote_ip] -> remote_ip
       nil -> remote_ip(socket)
+    end
+  end
+
+  defp request_host(payload) do
+    case Regex.run(~r{(?:^|\r\n)host:\s*([^\r]+)}i, payload) do
+      [_, host] -> host
+      nil -> nil
+    end
+  end
+
+  defp match_upstream(match_function, payload, path_info) do
+    case :erlang.fun_info(match_function, :arity) do
+      {:arity, 2} -> match_function.(request_host(payload), path_info)
+      {:arity, 1} -> match_function.(path_info)
     end
   end
 

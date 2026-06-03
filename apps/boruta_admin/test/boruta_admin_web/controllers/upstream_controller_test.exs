@@ -6,6 +6,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
   alias BorutaGateway.Upstreams.Upstream
 
   @create_attrs %{
+    virtual_host: "virtual.host.test",
     scheme: "https",
     host: "host.test",
     port: 7777,
@@ -164,6 +165,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
 
       assert %{
                "id" => _id,
+               "virtual_host" => "virtual.host.test",
                "mtls_enabled" => true,
                "rate_limit_enabled" => true,
                "rate_limit_count" => 20,

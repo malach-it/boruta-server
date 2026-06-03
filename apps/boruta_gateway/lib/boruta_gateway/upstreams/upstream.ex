@@ -26,6 +26,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
 
   @type t :: %__MODULE__{
           node_name: String.t(),
+          virtual_host: String.t() | nil,
           scheme: String.t(),
           host: String.t(),
           port: integer(),
@@ -51,6 +52,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
   @foreign_key_type :binary_id
   schema "upstreams" do
     field(:node_name, :string, default: "global")
+    field(:virtual_host, :string)
     field(:scheme, :string)
     field(:host, :string)
     field(:port, :integer)
@@ -86,6 +88,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     upstream
     |> cast(attrs, [
       :node_name,
+      :virtual_host,
       :scheme,
       :host,
       :port,
@@ -113,7 +116,9 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> validate_inclusion(:rate_limit_penality, 0..600_000)
     |> validate_inclusion(:rate_limit_timeout, 0..600_000)
     |> validate_inclusion(:rate_limit_memory_length, 1..10_000)
-    |> unique_constraint([:node_name, :host, :port, :uris])
+    |> unique_constraint([:node_name, :virtual_host, :host, :port, :uris],
+      name: :upstreams_node_name_host_port_uris_index
+    )
     |> maybe_put_forwarded_token_secret()
     |> maybe_generate_key_pair()
     |> validate_uris()
