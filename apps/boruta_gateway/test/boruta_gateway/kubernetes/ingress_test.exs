@@ -92,7 +92,13 @@ defmodule BorutaGateway.Kubernetes.IngressTest do
             "boruta.patatoid.fr/forwarded-token-secret" => "secret",
             "boruta.patatoid.fr/forwarded-token-public-key" => "public",
             "boruta.patatoid.fr/forwarded-token-private-key" => "private",
-            "boruta.patatoid.fr/mtls-enabled" => "true"
+            "boruta.patatoid.fr/mtls-enabled" => "true",
+            "boruta.patatoid.fr/rate-limit-enabled" => "true",
+            "boruta.patatoid.fr/rate-limit-count" => "10",
+            "boruta.patatoid.fr/rate-limit-time-unit" => "second",
+            "boruta.patatoid.fr/rate-limit-penality" => "1000",
+            "boruta.patatoid.fr/rate-limit-timeout" => "10000",
+            "boruta.patatoid.fr/rate-limit-memory-length" => "10"
           }
         },
         "spec" => %{
@@ -128,7 +134,13 @@ defmodule BorutaGateway.Kubernetes.IngressTest do
                forwarded_token_secret: "secret",
                forwarded_token_public_key: "public",
                forwarded_token_private_key: "private",
-               mtls_enabled: true
+               mtls_enabled: true,
+               rate_limit_enabled: true,
+               rate_limit_count: 10,
+               rate_limit_time_unit: "second",
+               rate_limit_penality: 1000,
+               rate_limit_timeout: 10000,
+               rate_limit_memory_length: 10
              }
            ] = Ingress.desired_upstreams(ingresses, [])
   end
