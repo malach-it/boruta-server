@@ -24,6 +24,7 @@ defmodule BorutaAdminWeb.UpstreamView do
     %{
       id: upstream.id,
       node_name: upstream.node_name,
+      virtual_host: upstream.virtual_host,
       scheme: upstream.scheme,
       host: upstream.host,
       port: upstream.port,

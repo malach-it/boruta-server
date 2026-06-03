@@ -98,6 +98,7 @@
                 <table class="ui very basic compact table" v-if="upstreamsFor(record).length">
                   <thead>
                     <tr>
+                      <th>Host</th>
                       <th>Base URL</th>
                       <th>Paths</th>
                       <th>Authorization</th>
@@ -107,6 +108,7 @@
                   </thead>
                   <tbody>
                     <tr v-for="upstream in upstreamsFor(record)" :key="upstream.id">
+                      <td>{{ upstream.virtual_host || '-' }}</td>
                       <td>{{ upstream.baseUrl }}</td>
                       <td>
                         <span v-for="path in upstream.uris" class="ui teal label" :key="path.uri">
@@ -286,6 +288,7 @@ export default {
       return [
         upstream.id,
         upstream.node_name,
+        upstream.virtual_host,
         upstream.scheme,
         upstream.host,
         upstream.port,

@@ -56,7 +56,7 @@ defmodule BorutaGateway.Application do
          [
            [
              port: Application.fetch_env!(:boruta_gateway, :port),
-             match_function: &Upstreams.match/1,
+             match_function: &Upstreams.match/2,
              num_acceptors: num_acceptors
            ]
          ]},
@@ -72,7 +72,7 @@ defmodule BorutaGateway.Application do
          [
            [
              port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
-             match_function: &Upstreams.sidecar_match/1,
+             match_function: &Upstreams.sidecar_match/2,
              num_acceptors: num_acceptors
            ]
          ]},
@@ -88,7 +88,7 @@ defmodule BorutaGateway.Application do
          [
            [
              port: Application.fetch_env!(:boruta_gateway, :https_port),
-             match_function: &Upstreams.match/1,
+             match_function: &Upstreams.match/2,
              verify_client_certificate:
                Application.get_env(:boruta_gateway, :https_verify_client_certificate, false),
              num_acceptors: num_acceptors
@@ -106,7 +106,7 @@ defmodule BorutaGateway.Application do
          [
            [
              port: Application.fetch_env!(:boruta_gateway, :sidecar_https_port),
-             match_function: &Upstreams.sidecar_match/1,
+             match_function: &Upstreams.sidecar_match/2,
              verify_client_certificate:
                Application.get_env(
                  :boruta_gateway,

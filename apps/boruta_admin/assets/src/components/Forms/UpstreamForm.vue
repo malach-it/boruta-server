@@ -18,6 +18,10 @@
               <option v-for="name in availableNodeNames" :value="name" :key="name">{{ name }}</option>
             </select>
           </div>
+          <div class="field" :class="{ 'error': upstream.errors?.virtual_host }">
+            <label>Virtual host <i>(leave blank to match any)</i></label>
+            <input type="text" v-model="upstream.virtual_host" placeholder="api.example.com">
+          </div>
           <div class="field" :class="{ 'error': upstream.errors?.scheme }">
             <label>Scheme</label>
             <select v-model="upstream.scheme" placeholder="https">
