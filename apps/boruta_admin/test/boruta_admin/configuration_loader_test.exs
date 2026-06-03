@@ -227,6 +227,23 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
 
     assert %ErrorTemplate{type: "500", content: "test"} =
              BorutaIdentity.Repo.all(ErrorTemplate) |> List.last()
+
+    counts = configuration_counts()
+
+    assert {:ok,
+            %{
+              backend: [],
+              client: [],
+              error_template: [],
+              gateway: [],
+              identity_provider: [],
+              microgateway: [],
+              organization: [],
+              role: [],
+              scope: []
+            }} = ConfigurationLoader.from_file!(configuration_file_path)
+
+    assert configuration_counts() == counts
   end
 
   test "loads example file" do
@@ -316,5 +333,18 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       [_name, host] -> host
       [_name] -> :inet.gethostname() |> elem(1) |> to_string()
     end
+  end
+
+  defp configuration_counts do
+    %{
+      upstreams: BorutaGateway.Repo.aggregate(Upstream, :count),
+      backends: BorutaIdentity.Repo.aggregate(Backend, :count),
+      identity_providers: BorutaIdentity.Repo.aggregate(IdentityProvider, :count),
+      clients: BorutaAuth.Repo.aggregate(Client, :count),
+      scopes: BorutaAuth.Repo.aggregate(Scope, :count),
+      roles: BorutaIdentity.Repo.aggregate(Role, :count),
+      organizations: BorutaIdentity.Repo.aggregate(Organization, :count),
+      error_templates: BorutaIdentity.Repo.aggregate(ErrorTemplate, :count)
+    }
   end
 end
