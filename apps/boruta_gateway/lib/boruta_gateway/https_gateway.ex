@@ -155,9 +155,47 @@ defmodule BorutaGateway.HttpsGateway do
   end
 
   def handle_info({:ssl, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
+    payload = buffered_request_payload(state, payload)
+
+    unless request_headers_complete?(payload) do
+      :ssl.setopts(socket, active: :once)
+
+      {:noreply, %{state | request: payload}}
+    else
+      handle_downstream_request(socket, payload, state)
+    end
+  end
+
+  def handle_info({:tcp, socket, payload}, %State{client_socket: socket} = state) do
+    forward_response_payload(state, socket, payload, :tcp)
+  end
+
+  def handle_info({:ssl, socket, payload}, %State{client_socket: socket} = state) do
+    forward_response_payload(state, socket, payload, :ssl)
+  end
+
+  def handle_info({:ssl, socket, payload}, %State{socket: socket} = state) do
+    activate_downstream(socket)
+
+    case state.client_socket do
+      {:sslsocket, _, _} ->
+        :ssl.send(state.client_socket, payload)
+
+      _ ->
+        :gen_tcp.send(state.client_socket, payload)
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info(_info, state) do
+    {:noreply, state}
+  end
+
+  defp handle_downstream_request(socket, payload, state) do
     start = :os.system_time(:microsecond)
     request_id = request_id(payload)
-    state = %{state | remote_ip: request_remote_ip(payload, socket)}
+    state = %{state | remote_ip: request_remote_ip(payload, socket), request: nil}
 
     case parse_request_line(payload) do
       {:ok, method, path} ->
@@ -232,32 +270,6 @@ defmodule BorutaGateway.HttpsGateway do
 
         {:noreply, close_downstream(socket, state)}
     end
-  end
-
-  def handle_info({:tcp, socket, payload}, %State{client_socket: socket} = state) do
-    forward_response_payload(state, socket, payload, :tcp)
-  end
-
-  def handle_info({:ssl, socket, payload}, %State{client_socket: socket} = state) do
-    forward_response_payload(state, socket, payload, :ssl)
-  end
-
-  def handle_info({:ssl, socket, payload}, %State{socket: socket} = state) do
-    activate_downstream(socket)
-
-    case state.client_socket do
-      {:sslsocket, _, _} ->
-        :ssl.send(state.client_socket, payload)
-
-      _ ->
-        :gen_tcp.send(state.client_socket, payload)
-    end
-
-    {:noreply, state}
-  end
-
-  def handle_info(_info, state) do
-    {:noreply, state}
   end
 
   @impl GenServer
@@ -574,6 +586,11 @@ defmodule BorutaGateway.HttpsGateway do
       nil -> nil
     end
   end
+
+  defp buffered_request_payload(%State{request: nil}, payload), do: payload
+  defp buffered_request_payload(%State{request: request}, payload), do: request <> payload
+
+  defp request_headers_complete?(payload), do: String.contains?(payload, "\r\n\r\n")
 
   defp match_upstream(match_function, payload, path_info) do
     case :erlang.fun_info(match_function, :arity) do
