@@ -105,6 +105,17 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
            ] = Repo.all(Upstream)
   end
 
+  test "upserts static upstreams when loading a file again" do
+    configuration_file_path =
+      :code.priv_dir(:boruta_gateway)
+      |> Path.join("/test/configuration_files/full_configuration.yml")
+
+    ConfigurationLoader.from_file!(configuration_file_path)
+    ConfigurationLoader.from_file!(configuration_file_path)
+
+    assert Repo.aggregate(Upstream, :count) == 2
+  end
+
   test "adds the node hostname to aliases by default" do
     previous_aliases = Application.get_env(ConfigurationLoader, :aliases)
     Application.put_env(ConfigurationLoader, :aliases, ["service.local"])

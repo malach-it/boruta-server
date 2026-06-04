@@ -4,8 +4,9 @@ defmodule BorutaGateway.Application do
   @moduledoc false
 
   use Application
+  require Logger
 
-  alias BorutaGateway.{ServiceRegistry, Upstreams}
+  alias BorutaGateway.{ConfigurationLoader, ServiceRegistry, Upstreams}
 
   @impl Application
   def start(_type, _args) do
@@ -25,6 +26,7 @@ defmodule BorutaGateway.Application do
 
     BorutaGateway.Logger.start()
     setup_database()
+    load_configuration()
     Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor)
   end
 
@@ -161,5 +163,37 @@ defmodule BorutaGateway.Application do
     end)
 
     :ok
+  end
+
+  defp load_configuration do
+    with {:ok, configuration_path} <- configuration_path() do
+      Logger.info("Loading gateway static configuration from #{configuration_path}")
+
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(BorutaGateway.Repo, fn _repo ->
+          ConfigurationLoader.from_file!(configuration_path)
+        end)
+    end
+
+    :ok
+  end
+
+  defp configuration_path do
+    configuration_path = Application.get_env(:boruta_gateway, :configuration_path)
+    explicit_configuration_path = System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH")
+
+    cond do
+      is_nil(configuration_path) ->
+        :ignore
+
+      File.regular?(configuration_path) ->
+        {:ok, configuration_path}
+
+      explicit_configuration_path in [nil, ""] ->
+        :ignore
+
+      true ->
+        raise "gateway static configuration file does not exist: #{configuration_path}"
+    end
   end
 end

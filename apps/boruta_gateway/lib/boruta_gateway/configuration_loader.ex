@@ -1,8 +1,12 @@
 defmodule BorutaGateway.ConfigurationLoader do
   @moduledoc false
 
+  import Ecto.Query, warn: false
+
   alias BorutaGateway.ConfigurationSchemas.GatewaySchema
+  alias BorutaGateway.Repo
   alias BorutaGateway.Upstreams
+  alias BorutaGateway.Upstreams.Upstream
 
   @spec node_name() :: node_name :: String.t()
   def node_name do
@@ -98,7 +102,7 @@ defmodule BorutaGateway.ConfigurationLoader do
       Enum.map(gateway_configurations, fn gateway_configuration ->
         case ExJsonSchema.Validator.validate(GatewaySchema.gateway(), gateway_configuration) do
           :ok ->
-            {:ok, _upstream} = Upstreams.create_upstream(gateway_configuration)
+            {:ok, _upstream} = upsert_upstream(gateway_configuration)
 
             :ok
 
@@ -125,7 +129,7 @@ defmodule BorutaGateway.ConfigurationLoader do
                microgateway_configuration
              ) do
           :ok ->
-            {:ok, _upstream} = Upstreams.create_upstream(microgateway_configuration)
+            {:ok, _upstream} = upsert_upstream(microgateway_configuration)
 
             :ok
 
@@ -138,4 +142,33 @@ defmodule BorutaGateway.ConfigurationLoader do
   end
 
   defp load_configuration!(%{}), do: :ok
+
+  defp upsert_upstream(attrs) do
+    case get_upstream(attrs) do
+      nil -> Upstreams.create_upstream(attrs)
+      %Upstream{} = upstream -> Upstreams.update_upstream(upstream, attrs)
+    end
+  end
+
+  defp get_upstream(attrs) do
+    node_name = Map.get(attrs, "node_name", "global")
+    virtual_host = Map.get(attrs, "virtual_host")
+    host = Map.get(attrs, "host")
+    port = Map.get(attrs, "port")
+    uris = Map.get(attrs, "uris", [])
+
+    Upstream
+    |> where(
+      [upstream],
+      upstream.node_name == ^node_name and upstream.host == ^host and upstream.port == ^port and
+        upstream.uris == ^uris
+    )
+    |> where_virtual_host(virtual_host)
+    |> Repo.one()
+  end
+
+  defp where_virtual_host(query, nil), do: where(query, [upstream], is_nil(upstream.virtual_host))
+
+  defp where_virtual_host(query, virtual_host),
+    do: where(query, [upstream], upstream.virtual_host == ^virtual_host)
 end
