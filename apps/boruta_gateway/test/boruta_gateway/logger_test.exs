@@ -24,14 +24,15 @@ defmodule BorutaGateway.LoggerTest do
               method: "GET",
               path: "/upstream",
               status: 200,
-              remote_ip: ~c"127.0.0.1"
+              remote_ip: ~c"127.0.0.1",
+              tls: "mtls"
             },
             :ok
           )
         end)
 
       assert log =~ "request_id=request-id"
-      assert log =~ "boruta_gateway GET /upstream - sent 200 from 127.0.0.1 in 1ms"
+      assert log =~ "boruta_gateway GET /upstream - sent 200 from 127.0.0.1 tls=mtls in 1ms"
     end
   end
 
@@ -48,7 +49,8 @@ defmodule BorutaGateway.LoggerTest do
             },
             %{
               request_id: "request-id",
-              upstream: %Upstream{id: "upstream-id", host: "example.com", port: 443}
+              upstream: %Upstream{id: "upstream-id", host: "example.com", port: 443},
+              upstream_tls: "mtls"
             },
             :ok
           )
@@ -59,6 +61,7 @@ defmodule BorutaGateway.LoggerTest do
       assert log =~ "upstream_id=upstream-id"
       assert log =~ "upstream_host=example.com"
       assert log =~ "upstream_port=443"
+      assert log =~ "upstream_tls=mtls"
       assert log =~ "request_time=1500"
       assert log =~ "gateway_time=500"
       assert log =~ "upstream_time=1000"

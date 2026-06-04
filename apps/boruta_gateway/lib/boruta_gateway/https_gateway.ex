@@ -640,7 +640,8 @@ defmodule BorutaGateway.HttpsGateway do
         method: method,
         path: path,
         status: status,
-        remote_ip: state.remote_ip || remote_ip(state.socket)
+        remote_ip: state.remote_ip || remote_ip(state.socket),
+        tls: downstream_tls(state.socket)
       }
     )
 
@@ -653,13 +654,28 @@ defmodule BorutaGateway.HttpsGateway do
       },
       %{
         request_id: request_id,
-        upstream: upstream
+        upstream: upstream,
+        upstream_tls: upstream_tls(upstream)
       }
     )
   end
 
   defp upstream_time(%State{upstream_start: nil}, _stop), do: 0
   defp upstream_time(%State{upstream_start: upstream_start}, stop), do: stop - upstream_start
+
+  defp downstream_tls(nil), do: nil
+
+  defp downstream_tls(socket) do
+    case :ssl.peercert(socket) do
+      {:ok, _certificate} -> "mtls"
+      {:error, _reason} -> "tls"
+    end
+  end
+
+  defp upstream_tls(%Upstream{scheme: "https", mtls_enabled: true}), do: "mtls"
+  defp upstream_tls(%Upstream{scheme: "https"}), do: "tls"
+  defp upstream_tls(%Upstream{}), do: "http"
+  defp upstream_tls(nil), do: nil
 
   defp transform_header(payload, upstream, nil) do
     transform_header(payload, upstream, false)
