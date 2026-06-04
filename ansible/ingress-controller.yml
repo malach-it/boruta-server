@@ -255,6 +255,7 @@
                   - id: 00000000-0000-0000-0000-000000000001
                     secret: secret
                     name: Example client
+                    response_mode: post
                     identity_provider:
                       id: 00000000-0000-0000-0000-000000000001
                     redirect_uris:
