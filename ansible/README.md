@@ -60,6 +60,7 @@ ansible-playbook ansible/ingress-controller.yml \
 | `boruta_ingress_watch_namespace` | `boruta_namespace` | Namespace watched for ingress/service resources. Use `*` for cluster-wide watch. |
 | `boruta_ingress_node_name` | `global` | Gateway node name used by the ingress controller. |
 | `boruta_ingress_replicas` | `2` | Number of gateway ingress-controller replicas. |
+| `boruta_oauth_host` | `auth.boruta.local` | Hostname used for the Boruta OAuth ingress and generated OAuth URLs. |
 | `boruta_gateway_image` | `boruta-gateway:local.4` | Gateway image. The default expects a locally loaded image. |
 | `boruta_admin_image` | `ghcr.io/malach-it/boruta-admin:0.9.1` | Image used by the configuration-loader job. |
 | `boruta_auth_image` | `ghcr.io/malach-it/boruta-auth:0.9.1` | Image used by the Boruta Auth deployment. |
