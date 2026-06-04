@@ -1,33 +1,42 @@
 # Boruta ingress controller playbook
 
-This directory contains Kubernetes playbooks for Boruta. The main Boruta ingress
-controller scenario is defined in `ingress-controller.yml`.
+This directory contains Kubernetes playbooks for Boruta. The local Boruta ingress
+controller scenario is split between `ingress-controller.yml`, `oauth.yml`, and
+`kagome.yml`.
 
 ## Purpose
 
-`ingress-controller.yml` deploys a local Boruta ingress-controller stack:
+`ingress-controller.yml` deploys the local Boruta ingress-controller stack:
 
 - a namespace for the Boruta components;
 - RBAC for watching Kubernetes `Ingress` and `Service` resources;
 - a PostgreSQL deployment and service;
 - a Boruta Gateway deployment configured as a Kubernetes ingress controller;
-- a `NodePort` service exposing HTTP and HTTPS entry points;
+- a `NodePort` service exposing HTTP and HTTPS entry points.
+
+`oauth.yml` deploys the OAuth example surface:
+
 - a static Boruta Admin configuration `ConfigMap`;
 - a one-shot `Job` using `boruta-admin` to load that configuration;
 - a Boruta Auth deployment, service, and example ingress.
 
-The playbook is intended for development and staging-style Kubernetes clusters.
-It currently uses a local gateway image and GHCR-hosted Boruta Auth/Admin images.
+`kagome.yml` deploys the Kagome example upstream:
+
+- a separate `kagome` namespace;
+- a Kagome static configuration `ConfigMap`;
+- a Kagome deployment and service;
+- an ingress handled by the Boruta ingress controller.
+
+The playbooks are intended for development and staging-style Kubernetes clusters.
+They currently use GHCR-hosted Boruta Gateway/Auth/Admin/Kagome images.
 
 ## Prerequisites
 
 - Ansible with the `kubernetes.core` collection installed.
 - Access to a Kubernetes cluster from the current kubeconfig context.
 - Python Kubernetes client dependencies available to Ansible.
-- The Boruta Gateway image referenced by `boruta_gateway_image` available on the
-  target nodes. The default is local-only and uses `imagePullPolicy: Never`.
 - DNS or local hosts entries for the example hostnames you want to call, such as
-  `auth.boruta.local`.
+  `auth.boruta.local` and `kagome.local`.
 
 Example install command for the Ansible collection:
 
@@ -40,15 +49,22 @@ ansible-galaxy collection install kubernetes.core
 From the repository root:
 
 ```sh
-ansible-playbook ansible/ingress-controller.yml
+ansible-playbook -i ansible/hosts ansible/ingress-controller.yml
+ansible-playbook -i ansible/hosts ansible/oauth.yml
+ansible-playbook -i ansible/hosts ansible/kagome.yml
 ```
 
 To override variables at runtime:
 
 ```sh
-ansible-playbook ansible/ingress-controller.yml \
+ansible-playbook -i ansible/hosts ansible/ingress-controller.yml \
   -e boruta_namespace=boruta-staging \
-  -e boruta_gateway_image=boruta-gateway:local.4
+  -e boruta_gateway_image=ghcr.io/malach-it/boruta-gateway:kubernetes-ingress-controller.alpha.7
+ansible-playbook -i ansible/hosts ansible/oauth.yml \
+  -e boruta_namespace=boruta-staging \
+  -e boruta_oauth_host=auth.boruta.local
+ansible-playbook -i ansible/hosts ansible/kagome.yml \
+  -e kagome_mtls_enabled=true
 ```
 
 ## Main Variables
@@ -58,19 +74,48 @@ ansible-playbook ansible/ingress-controller.yml \
 | `boruta_namespace` | `boruta-staging` | Kubernetes namespace for the stack. |
 | `boruta_ingress_class` | `boruta` | Ingress class watched by the controller. |
 | `boruta_ingress_watch_namespace` | `boruta_namespace` | Namespace watched for ingress/service resources. Use `*` for cluster-wide watch. |
+| `boruta_libcluster_namespace` | `*` | Namespace used by libcluster Kubernetes pod discovery. Use `*` for cluster-wide discovery. |
+| `boruta_libcluster_selector` | `identity_platform=boruta` | Pod selector used by libcluster Kubernetes discovery. |
 | `boruta_ingress_node_name` | `global` | Gateway node name used by the ingress controller. |
 | `boruta_ingress_replicas` | `2` | Number of gateway ingress-controller replicas. |
+| `boruta_release_cookie` | `cookie` | Erlang distribution cookie shared by clustered releases. |
+| `boruta_oauth_scheme` | `http` | Scheme used by the Boruta Auth deployment. |
 | `boruta_oauth_host` | `auth.boruta.local` | Hostname used for the Boruta OAuth ingress and generated OAuth URLs. |
-| `boruta_gateway_image` | `boruta-gateway:local.4` | Gateway image. The default expects a locally loaded image. |
-| `boruta_admin_image` | `ghcr.io/malach-it/boruta-admin:0.9.1` | Image used by the configuration-loader job. |
-| `boruta_auth_image` | `ghcr.io/malach-it/boruta-auth:0.9.1` | Image used by the Boruta Auth deployment. |
+| `boruta_oauth_port` | `8080` | Internal Boruta Auth HTTP port. |
+| `boruta_oauth_base_url` | `http://auth.boruta.local:30080` | Public base URL used by the Boruta Auth deployment. |
+| `boruta_gateway_image` | `ghcr.io/malach-it/boruta-gateway:kubernetes-ingress-controller.alpha.7` | Gateway image. |
+| `boruta_admin_image` | `ghcr.io/malach-it/boruta-admin:kubernetes-ingress-controller.alpha.7` | Image used by the configuration-loader job. |
+| `boruta_auth_image` | `ghcr.io/malach-it/boruta-auth:kubernetes-ingress-controller.alpha.7` | Image used by the Boruta Auth deployment. |
+| `boruta_kagome_image` | `ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.4` | Kagome image. |
+| `kagome_mtls_enabled` | `true` | Enables mTLS verification for the Kagome ingress/backend example. |
 | `boruta_ingress_http_node_port` | `30080` | NodePort for HTTP traffic. |
 | `boruta_ingress_https_node_port` | `30443` | NodePort for HTTPS traffic. |
 | `boruta_configuration_path` | `/app/config/static-configuration.yml` | Path where the static config is mounted in the loader job. |
 
+Variables common to the split playbooks live in `group_vars/all`. Run with
+`-i ansible/hosts` or another inventory so Ansible loads those shared defaults.
+
+## Kubernetes Clustering
+
+The ingress, OAuth, and Kagome deployments set:
+
+```yaml
+K8S_NAMESPACE: "{{ boruta_libcluster_namespace }}"
+K8S_SELECTOR: "{{ boruta_libcluster_selector }}"
+```
+
+The default namespace wildcard enables cluster-wide pod discovery. The ingress
+playbook creates cluster-scoped pod RBAC for libcluster when
+`boruta_libcluster_namespace` is `*`; otherwise it creates namespace-scoped
+RBAC in the configured namespace.
+
+Pods that should participate in discovery must match
+`boruta_libcluster_selector`. The Boruta ingress controller, OAuth deployment,
+and Kagome deployment use `identity_platform: "boruta"` labels for that purpose.
+
 ## Configuration Loader
 
-The playbook creates a `ConfigMap` named by `boruta_configuration_name`, with a
+`oauth.yml` creates a `ConfigMap` named by `boruta_configuration_name`, with a
 `static-configuration.yml` entry based on the Boruta Admin example configuration.
 It is mounted into a Kubernetes `Job` that runs:
 
@@ -110,7 +155,7 @@ load:
 
 ```sh
 kubectl -n boruta-staging delete job boruta-static-configuration-loader
-ansible-playbook ansible/ingress-controller.yml
+ansible-playbook -i ansible/hosts ansible/oauth.yml
 ```
 
 ## Ingress Annotations
@@ -163,8 +208,10 @@ curl http://auth.boruta.local:30080/healthcheck
 
 - The default PostgreSQL password and Boruta secrets are development values.
   Override them for any shared environment.
-- `boruta_gateway_image` defaults to a local image with `imagePullPolicy: Never`.
-  Change both the image and pull policy in the playbook if the gateway image is
-  pulled from a registry.
+- Run `ingress-controller.yml` before `oauth.yml`; the OAuth deployment and
+  configuration loader use the shared `boruta-env` `ConfigMap` created by the
+  ingress playbook.
+- Run `kagome.yml` after `ingress-controller.yml` when you want the Kagome
+  example ingress and upstream.
 - Setting `boruta_ingress_watch_namespace='*'` switches RBAC from `Role` and
   `RoleBinding` to `ClusterRole` and `ClusterRoleBinding`.
