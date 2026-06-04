@@ -26,7 +26,6 @@
               ---
               version: "1.0"
               configuration:
-                node_name: "kagome"
                 aliases:
                   - "kagome-web.kagome.svc.cluster.local"
                 microgateway:
@@ -49,7 +48,7 @@
             labels:
               identity_platform: "boruta"
           spec:
-            replicas: 1
+            replicas: 3
             selector:
               matchLabels:
                 app: kagome
