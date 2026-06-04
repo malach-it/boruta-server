@@ -1,9 +1,5 @@
 - hosts: localhost
   vars:
-    kagome_postgres_user: "postgres"
-    kagome_postgres_password: "3GxM0PgMMw"
-    kagome_postgres_database: "boruta"
-    kagome_postgres_host: "postgres.boruta-staging.svc.cluster.local"
     boruta_kagome_image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.4"
     boruta_kagome_image_pull_policy: "Always"
     kagome_mtls_enabled: "true"
@@ -50,6 +46,8 @@
           metadata:
             name: kagome
             namespace: kagome
+            labels:
+              identity_platform: "boruta"
           spec:
             replicas: 1
             selector:
@@ -60,6 +58,7 @@
                 name: kagome
                 labels:
                   app: kagome
+                  identity_platform: "boruta"
               spec:
                 containers:
                   - image: "{{ boruta_kagome_image }}"
@@ -67,15 +66,19 @@
                     name: kagome
                     env:
                       - name: POSTGRES_USER
-                        value: "{{ kagome_postgres_user }}"
+                        value: "{{ boruta_postgres_user }}"
                       - name: POSTGRES_PASSWORD
-                        value: "{{ kagome_postgres_password }}"
+                        value: "{{ boruta_postgres_password }}"
                       - name: POSTGRES_DATABASE
-                        value: "{{ kagome_postgres_database }}"
+                        value: "{{ boruta_postgres_database }}"
                       - name: POSTGRES_HOST
-                        value: "{{ kagome_postgres_host }}"
+                        value: "{{ boruta_postgres_name }}.{{ boruta_namespace }}.svc.cluster.local"
                       - name: RELEASE_COOKIE
-                        value: "cookie"
+                        value: "{{ boruta_release_cookie }}"
+                      - name: K8S_NAMESPACE
+                        value: "{{ boruta_libcluster_namespace }}"
+                      - name: K8S_SELECTOR
+                        value: "{{ boruta_libcluster_selector }}"
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "/config/kagome-config.yml"
                       - name: BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER
@@ -133,7 +136,7 @@
               boruta.patatoid.fr/mtls-enabled: "{{ kagome_mtls_enabled }}"
               boruta.patatoid.fr/backend-protocol: "https"
           spec:
-            ingressClassName: boruta
+            ingressClassName: "{{ boruta_ingress_class }}"
             rules:
             - host: kagome.local
               http:

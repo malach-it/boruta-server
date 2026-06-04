@@ -23,4 +23,5 @@ apps/*/log/**
 
 .vscode
 
-/ansible/group_vars
+/ansible/group_vars/*
+!/ansible/group_vars/all

@@ -1,0 +1,14 @@
+---
+boruta_namespace: "boruta-staging"
+boruta_name: "boruta"
+boruta_ingress_class: "boruta"
+boruta_ingress_http_node_port: "30080"
+boruta_ingress_https_node_port: "30443"
+boruta_libcluster_namespace: "*"
+boruta_libcluster_selector: "identity_platform=boruta"
+boruta_release_cookie: "cookie"
+
+boruta_postgres_name: "postgres"
+boruta_postgres_user: "postgres"
+boruta_postgres_password: "3GxM0PgMMw"
+boruta_postgres_database: "boruta"
