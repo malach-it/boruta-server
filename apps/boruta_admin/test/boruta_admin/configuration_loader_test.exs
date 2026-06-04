@@ -256,7 +256,44 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              BorutaIdentity.Repo.get_by(IdentityProvider, name: "test")
              |> BorutaIdentity.Repo.preload(:templates)
 
-    assert %Client{name: "test"} = BorutaAuth.Repo.all(Client) |> List.last()
+    assert %Client{
+             name: "test",
+             public_client_id: "https://test.client",
+             check_public_client_id: true,
+             secret: "secret",
+             confidential: true,
+             redirect_uris: ["https://test.client/callback"],
+             authorized_resources: ["https://resource.test"],
+             supported_grant_types: ["client_credentials", "authorization_code"],
+             authorize_scope: true,
+             enforce_dpop: true,
+             enforce_tx_code: true,
+             access_token_ttl: 10,
+             agent_token_ttl: 10,
+             authorization_code_ttl: 10,
+             authorization_request_ttl: 10,
+             refresh_token_ttl: 10,
+             id_token_ttl: 10,
+             pkce: true,
+             public_refresh_token: true,
+             public_revoke: true,
+             id_token_signature_alg: "HS256",
+             token_endpoint_auth_methods: ["client_secret_basic"],
+             token_endpoint_jwt_auth_alg: "HS256",
+             userinfo_signed_response_alg: "HS256",
+             jwt_public_key: "public-key",
+             jwks_uri: "https://test.client/.well-known/jwks.json",
+             id_token_kid: "test-kid",
+             logo_uri: "https://test.client/logo.png",
+             metadata: %{"custom" => "value"},
+             response_mode: "post",
+             signatures_adapter: "Elixir.Boruta.Internal.Signatures",
+             key_pair_type: %{
+               "type" => "rsa",
+               "modulus_size" => "2048",
+               "exponent_size" => "65537"
+             }
+           } = BorutaAuth.Repo.all(Client) |> List.last()
 
     assert %Scope{name: "test"} = BorutaAuth.Repo.all(Scope) |> List.last()
 
