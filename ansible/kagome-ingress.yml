@@ -1,0 +1,147 @@
+- hosts: localhost
+  vars:
+    kagome_postgres_user: "postgres"
+    kagome_postgres_password: "3GxM0PgMMw"
+    kagome_postgres_database: "boruta"
+    kagome_postgres_host: "postgres.boruta-staging.svc.cluster.local"
+    boruta_kagome_image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.4"
+    boruta_kagome_image_pull_policy: "Always"
+    kagome_mtls_enabled: "true"
+
+  tasks:
+    - name: Create a k8s namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        name: kagome
+        kind: Namespace
+        state: present
+
+    - name: Create static configuration file
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "kagome-configuration"
+            namespace: "kagome"
+          data:
+            kagome-config.yml: |
+              ---
+              version: "1.0"
+              configuration:
+                node_name: "kagome"
+                aliases:
+                  - "kagome-web.kagome.svc.cluster.local"
+                microgateway:
+                  - scheme: "http"
+                    port: 4000
+                    virtual_host: "kagome-web.kagome.svc.cluster.local"
+                    host: "localhost"
+                    uris: ["/"]
+                    strip_uri: false
+
+    - name: Create kagome deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: kagome
+            namespace: kagome
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: kagome
+            template:
+              metadata:
+                name: kagome
+                labels:
+                  app: kagome
+              spec:
+                containers:
+                  - image: "{{ boruta_kagome_image }}"
+                    imagePullPolicy: "{{ boruta_kagome_image_pull_policy }}"
+                    name: kagome
+                    env:
+                      - name: POSTGRES_USER
+                        value: "{{ kagome_postgres_user }}"
+                      - name: POSTGRES_PASSWORD
+                        value: "{{ kagome_postgres_password }}"
+                      - name: POSTGRES_DATABASE
+                        value: "{{ kagome_postgres_database }}"
+                      - name: POSTGRES_HOST
+                        value: "{{ kagome_postgres_host }}"
+                      - name: RELEASE_COOKIE
+                        value: "cookie"
+                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
+                        value: "/config/kagome-config.yml"
+                      - name: BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER
+                        value: "true"
+                      - name: BORUTA_GATEWAY_SIDECAR_HTTPS_PORT
+                        value: "8044"
+                      - name: BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE
+                        value: "{{ kagome_mtls_enabled }}"
+
+                    volumeMounts:
+                      - name: static-configuration
+                        mountPath: "/config"
+                        readOnly: true
+                    readinessProbe:
+                      tcpSocket:
+                        port: 8044
+                volumes:
+                  - name: static-configuration
+                    configMap:
+                      name: "kagome-configuration"
+                      items:
+                        - key: kagome-config.yml
+                          path: kagome-config.yml
+
+    - name: Create kagome Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: kagome-web
+            namespace: kagome
+            labels:
+              app: kagome
+          spec:
+            selector:
+              app: kagome
+            ports:
+            - protocol: TCP
+              targetPort: 8044
+              name: kagome-https
+              port: 8044
+
+    - name: Create kagome Ingress
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: main-ingress
+            namespace: kagome
+            annotations:
+              boruta.patatoid.fr/mtls-enabled: "{{ kagome_mtls_enabled }}"
+              boruta.patatoid.fr/backend-protocol: "https"
+          spec:
+            ingressClassName: boruta
+            rules:
+            - host: kagome.local
+              http:
+                paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: kagome-web
+                      port:
+                        number: 8044
