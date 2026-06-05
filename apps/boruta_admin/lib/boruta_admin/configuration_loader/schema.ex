@@ -240,6 +240,10 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
                 },
                 "required" => ["name"],
                 "additionalProperties" => false
+              },
+              "scopes" => %{
+                "type" => "array",
+                "items" => %{"type" => "string"}
               }
             },
             "required" => [
