@@ -1,0 +1,13 @@
+---
+version: "1.0"
+configuration:
+  name: kagome-2
+  aliases:
+    - "kagome.2.docker"
+  microgateway:
+    - scheme: "http"
+      port: 4000
+      virtual_host: "kagome-2"
+      host: "localhost"
+      uris: ["/"]
+      strip_uri: false

@@ -1,7 +1,7 @@
 volumes:
   boruta-logs:
 
-x-boruta-cluster-hosts: &boruta-cluster-hosts "boruta@boruta-1,boruta@boruta-2"
+x-boruta-cluster-hosts: &boruta-cluster-hosts "boruta@boruta-1,boruta@boruta-2,boruta@kagome-1,boruta@kagome-2"
 
 services:
   postgres:
@@ -86,3 +86,53 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  kagome_1:
+    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.4"
+    env_file: "./.env.example"
+    environment:
+      MIX_ENV: "prod"
+      POSTGRES_HOST: "postgres"
+      BORUTA_GATEWAY_CONFIGURATION_PATH: "/app/config/kagome-1.yml"
+      BORUTA_GATEWAY_SERVER: "false"
+      BORUTA_GATEWAY_HTTPS_SERVER: "false"
+      BORUTA_GATEWAY_SIDECAR: "false"
+      BORUTA_GATEWAY_PROXY_SERVER: "false"
+      BORUTA_GATEWAY_HTTPS_PROXY_SERVER: "false"
+      BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER: "true"
+      BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE: "true"
+      RELEASE_DISTRIBUTION: "sname"
+      RELEASE_NODE: "boruta@kagome-1"
+      RELEASE_COOKIE: "boruta-docker-compose"
+      LIBCLUSTER_HOSTS: *boruta-cluster-hosts
+    networks:
+      default:
+        aliases:
+          - kagome-1
+    volumes:
+      - "./docker/config/kagome-1.yml:/app/config/kagome-1.yml"
+
+  kagome_2:
+    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.4"
+    env_file: "./.env.example"
+    environment:
+      MIX_ENV: "prod"
+      POSTGRES_HOST: "postgres"
+      BORUTA_GATEWAY_CONFIGURATION_PATH: "/app/config/kagome-2.yml"
+      BORUTA_GATEWAY_SERVER: "false"
+      BORUTA_GATEWAY_HTTPS_SERVER: "false"
+      BORUTA_GATEWAY_SIDECAR: "false"
+      BORUTA_GATEWAY_PROXY_SERVER: "false"
+      BORUTA_GATEWAY_HTTPS_PROXY_SERVER: "false"
+      BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER: "true"
+      BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE: "true"
+      RELEASE_DISTRIBUTION: "sname"
+      RELEASE_NODE: "boruta@kagome-2"
+      RELEASE_COOKIE: "boruta-docker-compose"
+      LIBCLUSTER_HOSTS: *boruta-cluster-hosts
+    networks:
+      default:
+        aliases:
+          - kagome-2
+    volumes:
+      - "./docker/config/kagome-2.yml:/app/config/kagome-2.yml"
