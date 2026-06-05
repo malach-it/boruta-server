@@ -4,6 +4,13 @@ configuration:
   name: kagome-2
   aliases:
     - "kagome.2.docker"
+  gateway:
+    - scheme: "https"
+      mtls_enabled: true
+      port: 8043
+      host: "kagome-2"
+      uris: ["/kagome-2"]
+      strip_uri: true
   microgateway:
     - scheme: "http"
       port: 4000
