@@ -157,12 +157,12 @@ defmodule BorutaGateway.HttpsGateway do
   def handle_info({:ssl, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
     payload = buffered_request_payload(state, payload)
 
-    unless request_headers_complete?(payload) do
+    if request_headers_complete?(payload) do
+      handle_downstream_request(socket, payload, state)
+    else
       :ssl.setopts(socket, active: :once)
 
       {:noreply, %{state | request: payload}}
-    else
-      handle_downstream_request(socket, payload, state)
     end
   end
 
