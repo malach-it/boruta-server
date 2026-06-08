@@ -6,7 +6,12 @@
       @abort="abortDelete"
       @consent="deleteConsent"
     />
-    <Credentials :credentials="credentials" @deleteCredential="deleteCredential" />
+    <Credentials
+      :credentials="credentials"
+      :exportable="true"
+      @deleteCredential="deleteCredential"
+      @importCredentials="importCredentials"
+    />
     <div class="reader-overlay" :class="{ 'hidden': !scanning }" @click="hide()">
       <video ref="reader" id="reader"></video>
     </div>
@@ -72,6 +77,9 @@ export default defineComponent({
     },
     abortDelete (eventKey) {
       this.deleteConsentEventKey = null
+    },
+    importCredentials (credentials) {
+      this.$store.commit('importCredentials', credentials)
     }
   }
 })
