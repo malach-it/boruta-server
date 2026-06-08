@@ -4,6 +4,11 @@
       <img src="./assets/accounts/wallet/images/logo.png" />
     </router-link>
   </div>
+  <div class="ui container">
+    <div class="ui warning message">
+      This wallet is aimed for demo purposes, credentials are stored in cleartext in this browser. Only use this wallet on a trusted device that you control.
+    </div>
+  </div>
   <router-view/>
 </template>
 
@@ -28,7 +33,9 @@ html, body {
   background: #f8f8f8;
   min-height: 100vh;
 }
-
+.warning.message {
+  text-align: center;
+}
 nav {
   text-align: center;
   padding: 30px;
