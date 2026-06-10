@@ -214,12 +214,7 @@ export default defineComponent({
       this.importing = true
 
       try {
-        const { plaintext } = await compactDecrypt(this.importJwe, textEncoder.encode(this.importPassword), {
-          keyManagementAlgorithms: ['PBES2-HS256+A128KW'],
-          contentEncryptionAlgorithms: ['A256GCM']
-        })
-        const payload = JSON.parse(textDecoder.decode(plaintext))
-        const credentials = this.parseImportedCredentials(payload)
+        const credentials = await this.parseImportedCredentials(this.importJwe, this.importPassword)
 
         this.$emit('importCredentials', credentials)
         this.hideImportPrompt()
@@ -231,18 +226,45 @@ export default defineComponent({
         this.importPassword = ''
       }
     },
-    parseImportedCredentials (payload) {
+    async parseImportedCredentials (content, password) {
+      const payload = await this.parseImportPayload(content, password)
+
       if (payload?.type != 'boruta-wallet-credentials' || !Array.isArray(payload.credentials)) {
         throw new Error('Unsupported credentials import file.')
       }
 
-      return payload.credentials.map(({ credentialId, format, credential }) => {
+      return payload.credentials.map(({ jwe, credentialId, format, credential }) => {
+        if (jwe) {
+          return { jwe }
+        }
+
         if (!credentialId || !format || !credential) {
           throw new Error('Invalid credentials import file.')
         }
 
         return { credentialId, format, credential }
       })
+    },
+    async parseImportPayload (content, password) {
+      try {
+        const payload = JSON.parse(content)
+
+        if (Array.isArray(payload) && payload.every(({ jwe }) => typeof jwe == 'string')) {
+          return {
+            type: 'boruta-wallet-credentials',
+            credentials: payload
+          }
+        }
+
+        return payload
+      } catch (_error) {
+        const { plaintext } = await compactDecrypt(content, textEncoder.encode(password), {
+          keyManagementAlgorithms: ['PBES2-HS256+A128KW'],
+          contentEncryptionAlgorithms: ['A256GCM']
+        })
+
+        return JSON.parse(textDecoder.decode(plaintext))
+      }
     },
     async exportCredentials () {
       if (!this.exportPassword) return

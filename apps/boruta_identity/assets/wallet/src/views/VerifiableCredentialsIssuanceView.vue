@@ -70,6 +70,7 @@ export default defineComponent({
       keyConsentEventKey: null,
       generateKeyConsentEventKey: null,
       insertConsentEventKey: null,
+      selectedKeyPassword: null,
       fetchingCredential: false,
       error: null
     }
@@ -100,16 +101,17 @@ export default defineComponent({
     })
   },
   methods: {
-    async selectKey (identifier) {
+    async selectKey (identifier, did, password) {
+      this.selectedKeyPassword = password
       this.keyConsentEventKey = null
-      eventHandler.dispatch('extract_key-approval', this.credentialId, identifier)
+      eventHandler.dispatch('extract_key-approval', this.credentialId, { identifier, password })
     },
     insertConsent (eventKey) {
       eventHandler.dispatch('insert_credential-approval', eventKey)
       this.keyConsentEventKey = null
     },
     generateKeyConsent (eventKey) {
-      eventHandler.dispatch('generate_key-approval', '')
+      eventHandler.dispatch('generate_key-approval', '', { password: this.selectedKeyPassword })
       this.generateKeyConsentEventKey = null
     },
     abortKeyConsent () {
@@ -117,6 +119,7 @@ export default defineComponent({
       this.generateKeyConsentEventKey = null
       this.fetchingCredential = false
       this.keyIdentifier = null
+      this.selectedKeyPassword = null
     },
     abortInsertConsent () {
       this.insertConsentEventKey = null
@@ -146,6 +149,7 @@ export default defineComponent({
     },
     resetKeySelect () {
       localStorage.removeItem('keySelection')
+      this.selectedKeyPassword = null
     }
   }
 })
@@ -160,4 +164,3 @@ export default defineComponent({
   }
 }
 </style>
-

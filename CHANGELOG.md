@@ -2,6 +2,12 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [unreleased]
+
+### Changed
+
+- [wallet] (breaking) credentials and key selection use password-protected local storage
+
 ## [0.9.1] - 2026-06-01
 
 ### Added

@@ -6,6 +6,9 @@
       @abort="abortDelete"
       @consent="deleteConsent"
     />
+    <div class="ui container" v-if="credentialsError">
+      <div class="ui error message">{{ credentialsError }}</div>
+    </div>
     <Credentials
       :credentials="credentials"
       :exportable="true"
@@ -40,6 +43,7 @@ export default defineComponent({
     }
   },
   mounted () {
+    this.$store.commit('refreshCredentials')
     this.qrScanner = new QrScanner(this.$refs.reader, result => {
       const url = new URL(result)
       this.qrScanner?.stop()
@@ -54,7 +58,8 @@ export default defineComponent({
     params () {
       return this.$route.query
     },
-    ...mapGetters(['credentials'])
+    ...mapGetters(['credentials']),
+    ...mapGetters(['credentialsError'])
   },
   methods: {
     scan () {
