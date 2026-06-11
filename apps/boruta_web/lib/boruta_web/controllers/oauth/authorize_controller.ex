@@ -296,21 +296,19 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp prompt_redirection(
          %Plug.Conn{query_params: %{"prompt" => "none"} = query_params} = conn,
+         nil
+       ) do
+    {:redirected, prompt_none_error(conn, query_params, "User is not logged in.")}
+  end
+
+  defp prompt_redirection(
+         %Plug.Conn{query_params: %{"prompt" => "none"} = query_params} = conn,
          current_user
        ) do
-    case ensure_mfa(conn, current_user) do
-      :ok ->
-        {:authorize, do_authorize(conn, current_user)}
-
-      {:error, _action, reason} ->
-        {:redirected,
-         authorize_error(conn, %Error{
-           status: :unauthorized,
-           format: :fragment,
-           redirect_uri: query_params["redirect_uri"],
-           error: :login_required,
-           error_description: reason
-         })}
+    if prompt_none_preauthorized?(conn) do
+      prompt_none_mfa_redirection(conn, query_params, current_user)
+    else
+      {:redirected, prompt_none_error(conn, query_params, "User authorization is required.")}
     end
   end
 
@@ -327,6 +325,35 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp prompt_redirection(conn, _current_user), do: {:unchanged, conn}
+
+  defp prompt_none_mfa_redirection(conn, query_params, current_user) do
+    case ensure_mfa(conn, current_user) do
+      :ok ->
+        {:unchanged, conn}
+
+      {:error, _action, reason} ->
+        {:redirected, prompt_none_error(conn, query_params, reason)}
+    end
+  end
+
+  defp prompt_none_preauthorized?(conn) do
+    conn
+    |> get_session(:preauthorizations)
+    |> case do
+      nil -> false
+      preauthorizations -> Map.get(preauthorizations, request_param(conn), false)
+    end
+  end
+
+  defp prompt_none_error(conn, query_params, reason) do
+    authorize_error(conn, %Error{
+      status: :unauthorized,
+      format: :fragment,
+      redirect_uri: query_params["redirect_uri"],
+      error: :login_required,
+      error_description: reason
+    })
+  end
 
   defp preauthorize(conn, nil), do: {:unchanged, conn}
 

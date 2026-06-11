@@ -206,6 +206,34 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                )
     end
 
+    test "returns an error with prompt=none when current_user is not preauthorized", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner,
+      redirect_uri: redirect_uri
+    } do
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
+
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+      assert redirected_to(conn) =~ ~r/error=login_required/
+      assert redirected_to(conn) =~ ~r/User\+authorization\+is\+required/
+    end
+
     test "logs in with an expired max_age and current_user", %{
       conn: conn,
       client: client,
