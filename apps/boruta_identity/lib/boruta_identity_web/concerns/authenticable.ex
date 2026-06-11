@@ -74,17 +74,12 @@ defmodule BorutaIdentityWeb.Authenticable do
   def request_param(conn) do
     case Oauth.Request.authorize_request(conn, %Oauth.ResourceOwner{sub: ""}) do
       {:ok, %_{client_id: "did:" <> _key, scope: scope}} ->
-        user_return_to =
-          current_path(conn)
-          |> String.replace(~r/prompt=(login|none)/, "")
-          |> String.replace(~r/max_age=(\d+)/, "")
-
         {:ok, jwt, _payload} =
           Joken.encode_and_sign(
             %{
               "client_id" => ClientsAdapter.public!().id,
               "scope" => scope,
-              "user_return_to" => user_return_to
+              "user_return_to" => user_return_to(conn)
             },
             BorutaIdentityWeb.Token.application_signer()
           )
@@ -92,18 +87,12 @@ defmodule BorutaIdentityWeb.Authenticable do
         jwt
 
       {:ok, %_{client_id: client_id, scope: scope}} ->
-        # NOTE remove prompt and max_age params affecting redirections
-        user_return_to =
-          current_path(conn)
-          |> String.replace(~r/prompt=(login|none)/, "")
-          |> String.replace(~r/max_age=(\d+)/, "")
-
         {:ok, jwt, _payload} =
           Joken.encode_and_sign(
             %{
               "client_id" => client_id,
               "scope" => scope,
-              "user_return_to" => user_return_to
+              "user_return_to" => user_return_to(conn)
             },
             BorutaIdentityWeb.Token.application_signer()
           )
@@ -114,6 +103,26 @@ defmodule BorutaIdentityWeb.Authenticable do
         ""
     end
   end
+
+  defp user_return_to(conn) do
+    uri = current_path(conn) |> URI.parse()
+
+    query =
+      uri.query
+      |> decode_query()
+      |> Map.drop(["prompt", "max_age"])
+      |> encode_query()
+
+    uri
+    |> Map.put(:query, query)
+    |> URI.to_string()
+  end
+
+  defp decode_query(nil), do: %{}
+  defp decode_query(query), do: URI.decode_query(query)
+
+  defp encode_query(query) when query == %{}, do: nil
+  defp encode_query(query), do: URI.encode_query(query)
 
   @spec scope_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
   def scope_from_request(%Plug.Conn{query_params: query_params}) do
