@@ -440,6 +440,8 @@ defmodule BorutaGateway.HttpsGateway do
     upstream_socket_options(upstream) ++
       [
         {:verify, :verify_peer},
+        {:server_name_indication, String.to_charlist(upstream.host)},
+        {:customize_hostname_check, [fqdn: String.to_charlist(upstream.host)]},
         {:cacerts, Certificate.gateway_cacerts()}
       ] ++ mtls_options(upstream)
   end
