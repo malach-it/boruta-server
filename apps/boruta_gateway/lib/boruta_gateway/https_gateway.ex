@@ -199,7 +199,7 @@ defmodule BorutaGateway.HttpsGateway do
 
     case parse_request_line(payload) do
       {:ok, method, path} ->
-        path_info = String.split(path, "/", trim: true)
+        path_info = path_info(path)
 
         with %Upstream{} = upstream <- match_upstream(state.match_function, payload, path_info),
              :ok <- rate_limit(socket, upstream),
@@ -613,6 +613,13 @@ defmodule BorutaGateway.HttpsGateway do
       [_, method, path] -> {:ok, method, path}
       _ -> {:error, :bad_request}
     end
+  end
+
+  defp path_info(path) do
+    path
+    |> String.split("?", parts: 2)
+    |> List.first()
+    |> String.split("/", trim: true)
   end
 
   defp response_buffer_exceeded?(response) do

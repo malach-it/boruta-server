@@ -408,6 +408,33 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "matches exact upstream uri with query string" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&query_string_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: false
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/httpbin?status=200", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "query"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns response root uri stripped", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -1163,6 +1190,12 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     assert request =~ "GET / HTTP/1.1"
 
     response_body("root", content_type: "text/plain")
+  end
+
+  defp query_string_response(request) do
+    assert request =~ "GET /httpbin?status=200 HTTP/1.1"
+
+    response_body("query", content_type: "text/plain")
   end
 
   defp request_line_rewrite_response(request) do
