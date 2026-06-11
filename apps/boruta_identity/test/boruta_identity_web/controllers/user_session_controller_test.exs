@@ -252,10 +252,23 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   describe "GET /users/log_out" do
     test "logs the user out", %{conn: conn, user: user, request: request} do
       conn =
-        conn |> log_in(user) |> get(Routes.user_session_path(conn, :delete, request: request))
+        conn
+        |> log_in(user)
+        |> init_test_session(
+          session_chosen: true,
+          preauthorizations: %{"request" => true},
+          totp_authenticated: %{"token" => true},
+          webauthn_authenticated: %{"token" => true}
+        )
+        |> get(Routes.user_session_path(conn, :delete, request: request))
 
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "Logged out successfully"
+      refute get_session(conn, :user_token)
+      refute get_session(conn, :session_chosen)
+      refute get_session(conn, :preauthorizations)
+      refute get_session(conn, :totp_authenticated)
+      refute get_session(conn, :webauthn_authenticated)
     end
 
     test "succeeds even if the user is not logged in", %{conn: conn, request: request} do

@@ -44,6 +44,10 @@ defmodule BorutaIdentityWeb.Authenticable do
     conn
     |> delete_resp_cookie(remember_me_cookie())
     |> delete_session(@session_key)
+    |> delete_session(:session_chosen)
+    |> delete_session(:preauthorizations)
+    |> delete_session(:totp_authenticated)
+    |> delete_session(:webauthn_authenticated)
   end
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => remember_me})
