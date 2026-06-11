@@ -705,9 +705,9 @@ defmodule BorutaGateway.HttpGateway do
 
     payload =
       Regex.replace(
-        ~r{[A|a]uthorization: ([^\r]+)\r\n},
+        ~r{(^|\r\n)authorization\s*:\s*([^\r\n]+)\r\n}i,
         payload,
-        "Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\1\r\n"
+        "\\1Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\2\r\n"
       )
 
     transform_header(payload, upstream, true)

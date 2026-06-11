@@ -550,16 +550,15 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
             Process.sleep(100)
 
-            request =
-              Finch.build(
-                :get,
-                "http://localhost:7777/httpbin/anything",
-                [{"authorization", "bearer #{access_token.value}"}],
-                ""
+            response =
+              raw_gateway_request(
+                "GET /httpbin/anything HTTP/1.1\r\n" <>
+                  "Host: localhost:7777\r\n" <>
+                  "AUTHORIZATION:BEARER #{access_token.value}\r\n\r\n"
               )
 
-            assert {:ok, %Finch.Response{body: body, status: 200}} =
-                     Finch.request(request, HttpClient)
+            assert response =~ "HTTP/1.1 200 OK"
+            body = raw_response_body(response)
 
             assert %{
                      "headers" => %{
@@ -574,7 +573,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 
-            assert forwarded_authorization == "bearer #{access_token.value}"
+            assert forwarded_authorization == "BEARER #{access_token.value}"
           end)
         after
           Repo.delete_all(Upstream)
@@ -1178,6 +1177,30 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       :gen_tcp.close(listen_socket)
       Task.shutdown(task, :brutal_kill)
     end
+  end
+
+  defp raw_gateway_request(request) do
+    {:ok, socket} =
+      :gen_tcp.connect(~c"localhost", 7777, [:binary, {:packet, :raw}, {:active, false}], 1_000)
+
+    :ok = :gen_tcp.send(socket, request)
+    response = recv_all(socket, "")
+    :gen_tcp.close(socket)
+
+    response
+  end
+
+  defp recv_all(socket, response) do
+    case :gen_tcp.recv(socket, 0, 1_000) do
+      {:ok, payload} -> recv_all(socket, response <> payload)
+      {:error, :closed} -> response
+      {:error, :timeout} -> response
+    end
+  end
+
+  defp raw_response_body(response) do
+    [_headers, body] = String.split(response, "\r\n\r\n", parts: 2)
+    body
   end
 
   defp teapot_response(request) do
