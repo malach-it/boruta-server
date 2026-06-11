@@ -575,7 +575,7 @@ defmodule BorutaGateway.HttpGateway do
   end
 
   defp parse_request_line(payload) do
-    case Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload) do
+    case Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD) ([^\s]+)}, payload) do
       [_, method, path] -> {:ok, method, path}
       _ -> {:error, :bad_request}
     end
@@ -660,7 +660,7 @@ defmodule BorutaGateway.HttpGateway do
   defp transform_header(payload, upstream, preserve_forwarded_authorization?)
        when is_boolean(preserve_forwarded_authorization?) do
     [_, _method, path] =
-      Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
+      Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD) ([^\s]+)}, payload)
 
     upstream_path =
       case upstream do
@@ -671,7 +671,9 @@ defmodule BorutaGateway.HttpGateway do
           path
       end
 
-    [_, _method, path] = Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
+    [_, _method, path] =
+      Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD) ([^\s]+)}, payload)
+
     payload = String.replace(payload, path, upstream_path)
 
     payload

@@ -543,6 +543,30 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "forwards HEAD requests" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&head_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/head"]
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:head, "http://localhost:7777/head", [], "")
+
+            assert {:ok, %Finch.Response{body: "", status: 200}} =
+                     Finch.request(request, HttpClient)
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns chunked response" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -1099,6 +1123,12 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     assert request =~ "GET /no-content HTTP/1.1"
 
     "HTTP/1.1 204 No Content\r\n\r\n"
+  end
+
+  defp head_response(request) do
+    assert request =~ "HEAD /head HTTP/1.1"
+
+    response_body("", content_type: "text/plain")
   end
 
   defp chunked_response(request) do
