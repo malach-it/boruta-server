@@ -32,12 +32,10 @@ services:
       - "4444:4444"
     volumes:
       - "boruta-logs:/app/log"
-      - "./static_config/boruta-1-gateway.yml:/app/config/boruta-gateway.yml:ro"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
       POSTGRES_HOST: "postgres"
-      BORUTA_GATEWAY_CONFIGURATION_PATH: "/app/config/boruta-gateway.yml"
       RELEASE_DISTRIBUTION: "sname"
       RELEASE_NODE: "boruta@boruta-1"
       RELEASE_COOKIE: "boruta-docker-compose"
@@ -68,12 +66,10 @@ services:
       - "9444:4444"
     volumes:
       - "boruta-logs:/app/log"
-      - "./static_config/boruta-2-gateway.yml:/app/config/boruta-gateway.yml:ro"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
       POSTGRES_HOST: "postgres"
-      BORUTA_GATEWAY_CONFIGURATION_PATH: "/app/config/boruta-gateway.yml"
       BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE: "true"
       RELEASE_DISTRIBUTION: "sname"
       RELEASE_NODE: "boruta@boruta-2"
