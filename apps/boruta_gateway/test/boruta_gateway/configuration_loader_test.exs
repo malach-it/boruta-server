@@ -5,6 +5,12 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
   alias BorutaGateway.Repo
   alias BorutaGateway.Upstreams.Upstream
 
+  setup do
+    Repo.delete_all(Upstream)
+
+    :ok
+  end
+
   test "returns an error with a bad configuration file" do
     assert Repo.all(Upstream) |> Enum.empty?()
 
@@ -56,6 +62,12 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
 
     ConfigurationLoader.from_file!(configuration_file_path)
 
+    assert ConfigurationLoader.aliases() == [
+             "full-configuration.local",
+             "full-configuration.internal",
+             node_hostname()
+           ]
+
     assert [
              %Upstream{
                scheme: "http",
@@ -92,4 +104,37 @@ defmodule BorutaGateway.ConfigurationLoaderTest do
              }
            ] = Repo.all(Upstream)
   end
+
+  test "upserts static upstreams when loading a file again" do
+    configuration_file_path =
+      :code.priv_dir(:boruta_gateway)
+      |> Path.join("/test/configuration_files/full_configuration.yml")
+
+    ConfigurationLoader.from_file!(configuration_file_path)
+    ConfigurationLoader.from_file!(configuration_file_path)
+
+    assert Repo.aggregate(Upstream, :count) == 2
+  end
+
+  test "adds the node hostname to aliases by default" do
+    previous_aliases = Application.get_env(ConfigurationLoader, :aliases)
+    Application.put_env(ConfigurationLoader, :aliases, ["service.local"])
+
+    assert ConfigurationLoader.aliases() == ["service.local", node_hostname()]
+
+    restore_env(:aliases, previous_aliases)
+  end
+
+  defp node_hostname do
+    node()
+    |> Atom.to_string()
+    |> String.split("@", parts: 2)
+    |> case do
+      [_name, host] -> host
+      [_name] -> :inet.gethostname() |> elem(1) |> to_string()
+    end
+  end
+
+  defp restore_env(key, nil), do: Application.delete_env(ConfigurationLoader, key)
+  defp restore_env(key, value), do: Application.put_env(ConfigurationLoader, key, value)
 end

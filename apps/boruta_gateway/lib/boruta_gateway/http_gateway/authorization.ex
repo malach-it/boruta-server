@@ -1,4 +1,4 @@
-defmodule BorutaGateway.Gateway.Authorization do
+defmodule BorutaGateway.HttpGateway.Authorization do
   @moduledoc false
 
   alias Boruta.Oauth
@@ -21,8 +21,7 @@ defmodule BorutaGateway.Gateway.Authorization do
   end
 
   def authorize(payload, method, upstream) do
-    with [_, authorization_header] <- Regex.run(~r{[A|a]uthorization\: ([^\r]+)}, payload),
-         [_header, value] <- Regex.run(~r/[B|b]earer (.+)/, authorization_header),
+    with {:ok, value} <- bearer_token(payload),
          {:ok, %Token{scope: scope} = token} <-
            Oauth.Authorization.AccessToken.authorize(value: value),
          {:ok, _} <- validate_scopes(scope, upstream.required_scopes, method) do
@@ -35,6 +34,13 @@ defmodule BorutaGateway.Gateway.Authorization do
       _error ->
         {:unauthorized, upstream.error_content_type || @default_error_content_type,
          upstream.unauthorized_response || @default_unauthorized_response}
+    end
+  end
+
+  defp bearer_token(payload) do
+    case Regex.run(~r{(?:^|\r\n)authorization\s*:\s*bearer\s+([^\r\n]+)}i, payload) do
+      [_, value] -> {:ok, String.trim(value)}
+      nil -> :error
     end
   end
 

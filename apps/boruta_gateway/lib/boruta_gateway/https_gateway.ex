@@ -1,4 +1,4 @@
-defmodule BorutaGateway.Gateway do
+defmodule BorutaGateway.HttpsGateway do
   @moduledoc false
 
   defmodule Token do
@@ -12,7 +12,8 @@ defmodule BorutaGateway.Gateway do
   use GenServer
 
   alias BorutaAuth.Plugs.RateLimit.Counter
-  alias BorutaGateway.Gateway.Authorization
+  alias BorutaGateway.Certificate
+  alias BorutaGateway.HttpsGateway.Authorization
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -22,56 +23,63 @@ defmodule BorutaGateway.Gateway do
   defmodule Server do
     @moduledoc false
 
-    use GenServer
+    use Supervisor
 
-    alias BorutaGateway.Gateway
+    alias BorutaGateway.HttpsGateway
 
     def start(args) do
-      GenServer.start_link(__MODULE__, args)
+      Supervisor.start_link(__MODULE__, args)
     end
 
-    @impl GenServer
+    @impl Supervisor
     def init(args) do
+      verify_client_certificate =
+        resolve_verify_client_certificate(args[:verify_client_certificate])
+
       {:ok, listen_socket} =
-        :gen_tcp.listen(args[:port], [
-          {:packet, :raw},
-          :binary,
-          {:active, false},
-          {:reuseaddr, true}
-        ])
+        :ssl.listen(
+          args[:port],
+          [
+            {:packet, :raw},
+            :binary,
+            {:active, false},
+            {:reuseaddr, true}
+          ] ++
+            Certificate.ssl_options() ++
+            client_certificate_options(verify_client_certificate)
+        )
 
       children =
         Enum.map(1..args[:num_acceptors], fn i ->
           Supervisor.child_spec(
-            {Gateway,
+            {HttpsGateway,
              [
                listen_socket: listen_socket,
                match_function: args[:match_function]
              ]},
-            id: :"http_proxy_server_acceptor_#{i}"
+            id: :"https_proxy_server_acceptor_#{i}"
           )
         end)
 
-      Process.flag(:trap_exit, true)
-
-      with {:ok, supervisor} <- Supervisor.start_link(children, strategy: :one_for_one) do
-        {:ok, supervisor: supervisor, listen_socket: listen_socket}
-      end
+      Supervisor.init(children, strategy: :one_for_one)
     end
 
-    @impl GenServer
-    def handle_info({:EXIT, _pid, reason}, state) do
-      :gen_tcp.close(state[:listen_socket])
-
-      {:stop, reason, state}
+    defp client_certificate_options(true) do
+      [
+        {:verify, :verify_peer},
+        {:fail_if_no_peer_cert, true},
+        {:cacerts, Certificate.cacerts()}
+      ]
     end
 
-    @impl GenServer
-    def terminate(_reason, state) do
-      :gen_tcp.close(state[:listen_socket])
+    defp client_certificate_options(_verify_client_certificate), do: []
 
-      :ok
+    defp resolve_verify_client_certificate({module, function, args}) do
+      apply(module, function, args)
     end
+
+    defp resolve_verify_client_certificate(verify_client_certificate),
+      do: verify_client_certificate
   end
 
   defmodule State do
@@ -119,37 +127,19 @@ defmodule BorutaGateway.Gateway do
   end
 
   def handle_info(:accept, state) do
-    case :gen_tcp.accept(state.listen_socket) do
+    case accept_downstream(state.listen_socket) do
       {:ok, socket} ->
-        :inet.setopts(socket, active: :once)
-
-        {:noreply,
-         %{
-           state
-           | socket: socket,
-             client_socket: nil,
-             response: nil,
-             response_headers_sent: false
-         }}
+        {:noreply, reset_exchange(state, socket)}
 
       {:error, _error} ->
         {:stop, :shutdown, state}
     end
   end
 
-  def handle_info({:tcp_closed, socket}, %State{socket: socket} = state) do
-    case :gen_tcp.accept(state.listen_socket) do
+  def handle_info({:ssl_closed, socket}, %State{socket: socket} = state) do
+    case accept_downstream(state.listen_socket) do
       {:ok, socket} ->
-        :inet.setopts(socket, active: :once)
-
-        {:noreply,
-         %{
-           state
-           | socket: socket,
-             client_socket: nil,
-             response: nil,
-             response_headers_sent: false
-         }}
+        {:noreply, reset_exchange(state, socket)}
 
       {:error, _error} ->
         {:stop, :shutdown, state}
@@ -164,78 +154,15 @@ defmodule BorutaGateway.Gateway do
     {:noreply, close_exchange(state, socket, :ssl)}
   end
 
-  def handle_info({:tcp, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
-    start = :os.system_time(:microsecond)
-    request_id = request_id(payload)
-    state = %{state | remote_ip: request_remote_ip(payload, socket)}
+  def handle_info({:ssl, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
+    payload = buffered_request_payload(state, payload)
 
-    case parse_request_line(payload) do
-      {:ok, method, path} ->
-        path_info = String.split(path, "/", trim: true)
+    if request_headers_complete?(payload) do
+      handle_downstream_request(socket, payload, state)
+    else
+      :ssl.setopts(socket, active: :once)
 
-        with %Upstream{} = upstream <- state.match_function.(path_info),
-             :ok <- rate_limit(socket, upstream),
-             {:ok, token} <- Authorization.authorize(payload, method, upstream) do
-          request = %{
-            start: start,
-            request_id: request_id,
-            method: method,
-            path: path
-          }
-
-          connect_upstream(socket, payload, state, upstream, token, request)
-        else
-          nil ->
-            response = "No upstream has been found corresponding to the given request."
-
-            :gen_tcp.send(
-              socket,
-              "HTTP/1.1 404 Not Found\r\n" <>
-                "Content-Length: 62\r\n\r\n" <>
-                response
-            )
-
-            log_exchange(state, start, request_id, method, path, nil, 404, :failure)
-
-            {:noreply, close_downstream(socket, state)}
-
-          {:unauthorized, content_type, response} ->
-            :gen_tcp.send(
-              socket,
-              "HTTP/1.1 401 Unauthorized\r\n" <>
-                "Content-Type: #{content_type}\r\n" <>
-                "Content-Length: #{byte_size(response)}\r\n\r\n" <>
-                response
-            )
-
-            log_exchange(state, start, request_id, method, path, nil, 401, :failure)
-
-            {:noreply, close_downstream(socket, state)}
-
-          {:forbidden, content_type, response} ->
-            :gen_tcp.send(
-              socket,
-              "HTTP/1.1 403 Forbidden\r\n" <>
-                "Content-Type: #{content_type}\r\n" <>
-                "Content-Length: #{byte_size(response)}\r\n\r\n" <>
-                response
-            )
-
-            log_exchange(state, start, request_id, method, path, nil, 403, :failure)
-
-            {:noreply, close_downstream(socket, state)}
-
-          :rate_limited ->
-            :gen_tcp.send(socket, "HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\n\r\n")
-            log_exchange(state, start, request_id, method, path, nil, 429, :failure)
-
-            {:noreply, close_downstream(socket, state)}
-        end
-
-      {:error, :bad_request} ->
-        :gen_tcp.send(socket, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
-
-        {:noreply, close_downstream(socket, state)}
+      {:noreply, %{state | request: payload}}
     end
   end
 
@@ -247,8 +174,8 @@ defmodule BorutaGateway.Gateway do
     forward_response_payload(state, socket, payload, :ssl)
   end
 
-  def handle_info({:tcp, socket, payload}, %State{socket: socket} = state) do
-    :inet.setopts(socket, active: :once)
+  def handle_info({:ssl, socket, payload}, %State{socket: socket} = state) do
+    activate_downstream(socket)
 
     case state.client_socket do
       {:sslsocket, _, _} ->
@@ -263,6 +190,86 @@ defmodule BorutaGateway.Gateway do
 
   def handle_info(_info, state) do
     {:noreply, state}
+  end
+
+  defp handle_downstream_request(socket, payload, state) do
+    start = :os.system_time(:microsecond)
+    request_id = request_id(payload)
+    state = %{state | remote_ip: request_remote_ip(payload, socket), request: nil}
+
+    case parse_request_line(payload) do
+      {:ok, method, path} ->
+        path_info = path_info(path)
+
+        with %Upstream{} = upstream <- match_upstream(state.match_function, payload, path_info),
+             :ok <- rate_limit(socket, upstream),
+             {:ok, token} <- Authorization.authorize(payload, method, upstream) do
+          connect_upstream(
+            socket,
+            payload,
+            state,
+            upstream,
+            token,
+            %{
+              start: start,
+              request_id: request_id,
+              method: method,
+              path: path
+            }
+          )
+        else
+          nil ->
+            response = "No upstream has been found corresponding to the given request."
+
+            send_downstream(
+              socket,
+              "HTTP/1.1 404 Not Found\r\n" <>
+                "Content-Length: 62\r\n\r\n" <>
+                response
+            )
+
+            log_exchange(state, start, request_id, method, path, nil, 404, :failure)
+
+            {:noreply, close_downstream(socket, state)}
+
+          {:unauthorized, content_type, response} ->
+            send_downstream(
+              socket,
+              "HTTP/1.1 401 Unauthorized\r\n" <>
+                "Content-Type: #{content_type}\r\n" <>
+                "Content-Length: #{byte_size(response)}\r\n\r\n" <>
+                response
+            )
+
+            log_exchange(state, start, request_id, method, path, nil, 401, :failure)
+
+            {:noreply, close_downstream(socket, state)}
+
+          {:forbidden, content_type, response} ->
+            send_downstream(
+              socket,
+              "HTTP/1.1 403 Forbidden\r\n" <>
+                "Content-Type: #{content_type}\r\n" <>
+                "Content-Length: #{byte_size(response)}\r\n\r\n" <>
+                response
+            )
+
+            log_exchange(state, start, request_id, method, path, nil, 403, :failure)
+
+            {:noreply, close_downstream(socket, state)}
+
+          :rate_limited ->
+            send_downstream(socket, "HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\n\r\n")
+            log_exchange(state, start, request_id, method, path, nil, 429, :failure)
+
+            {:noreply, close_downstream(socket, state)}
+        end
+
+      {:error, :bad_request} ->
+        send_downstream(socket, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
+
+        {:noreply, close_downstream(socket, state)}
+    end
   end
 
   @impl GenServer
@@ -283,7 +290,7 @@ defmodule BorutaGateway.Gateway do
             :ok = :gen_tcp.send(client_socket, transform_header(payload, upstream, token))
             upstream_start = :os.system_time(:microsecond)
 
-            :inet.setopts(socket, active: :once)
+            activate_downstream(socket)
             :inet.setopts(client_socket, active: :once)
 
             {:noreply,
@@ -300,7 +307,7 @@ defmodule BorutaGateway.Gateway do
              }}
 
           {:error, _error} ->
-            :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
+            send_downstream(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
 
             log_exchange(
               state,
@@ -320,11 +327,7 @@ defmodule BorutaGateway.Gateway do
         case :ssl.connect(
                upstream.host |> String.to_charlist(),
                upstream.port,
-               upstream_socket_options(upstream) ++
-                 [
-                   {:verify, :verify_peer},
-                   {:cacerts, :public_key.cacerts_get()}
-                 ],
+               upstream_ssl_options(upstream),
                @connect_timeout
              ) do
           {:ok, client_socket} ->
@@ -332,7 +335,7 @@ defmodule BorutaGateway.Gateway do
             :ok = :ssl.send(client_socket, transform_header(payload, upstream, token))
             upstream_start = :os.system_time(:microsecond)
 
-            :inet.setopts(socket, active: :once)
+            activate_downstream(socket)
             :ssl.setopts(client_socket, active: :once)
 
             {:noreply,
@@ -349,7 +352,7 @@ defmodule BorutaGateway.Gateway do
              }}
 
           {:error, _error} ->
-            :gen_tcp.send(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
+            send_downstream(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
 
             log_exchange(
               state,
@@ -378,7 +381,7 @@ defmodule BorutaGateway.Gateway do
     if response_buffer_exceeded?(response) do
       {:noreply, close_buffered_response(state, socket, transport)}
     else
-      :gen_tcp.send(state.socket, payload)
+      send_downstream(state.socket, payload)
       state = %{state | response: response}
 
       case message_complete?(response) do
@@ -396,14 +399,14 @@ defmodule BorutaGateway.Gateway do
     response = (state.response || "") <> payload
 
     if response_buffer_exceeded?(response) do
-      :gen_tcp.send(state.socket, "HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n")
+      send_downstream(state.socket, "HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n")
 
       {:noreply,
        close_exchange(%{state | response: "HTTP/1.1 502 Bad Gateway"}, socket, transport)}
     else
       case split_headers(response) do
         {:ok, header, body} ->
-          :gen_tcp.send(state.socket, clean_response_headers(header) <> "\r\n\r\n" <> body)
+          send_downstream(state.socket, clean_response_headers(header) <> "\r\n\r\n" <> body)
 
           case message_complete?(response) do
             true ->
@@ -433,8 +436,46 @@ defmodule BorutaGateway.Gateway do
     [:binary, {:packet, :raw}, {:active, false}]
   end
 
+  defp upstream_ssl_options(%Upstream{} = upstream) do
+    upstream_socket_options(upstream) ++
+      [
+        {:verify, :verify_peer},
+        {:server_name_indication, String.to_charlist(upstream.host)},
+        {:customize_hostname_check, [fqdn: String.to_charlist(upstream.host)]},
+        {:cacerts, Certificate.gateway_cacerts()}
+      ] ++ mtls_options(upstream)
+  end
+
+  defp mtls_options(%Upstream{mtls_enabled: true}) do
+    Certificate.ssl_options()
+  end
+
+  defp mtls_options(%Upstream{}), do: []
+
+  defp accept_downstream(listen_socket) do
+    with {:ok, socket} <- :ssl.transport_accept(listen_socket),
+         {:ok, socket} <- :ssl.handshake(socket) do
+      activate_downstream(socket)
+      {:ok, socket}
+    end
+  end
+
+  defp activate_downstream(socket), do: :ssl.setopts(socket, active: :once)
+  defp send_downstream(socket, payload), do: :ssl.send(socket, payload)
+  defp close_downstream_socket(socket), do: :ssl.close(socket)
+
+  defp reset_exchange(state, socket) do
+    %{
+      state
+      | socket: socket,
+        client_socket: nil,
+        response: nil,
+        response_headers_sent: false
+    }
+  end
+
   defp close_downstream(socket, state) do
-    :gen_tcp.close(socket)
+    close_downstream_socket(socket)
     send(self(), :accept)
 
     %{
@@ -456,7 +497,7 @@ defmodule BorutaGateway.Gateway do
 
   defp close_exchange(state, upstream_socket, :tcp) do
     log_completed_exchange(state)
-    :gen_tcp.close(state.socket)
+    close_downstream_socket(state.socket)
     :gen_tcp.close(upstream_socket)
     send(self(), :accept)
 
@@ -479,7 +520,7 @@ defmodule BorutaGateway.Gateway do
 
   defp close_exchange(state, upstream_socket, :ssl) do
     log_completed_exchange(state)
-    :gen_tcp.close(state.socket)
+    close_downstream_socket(state.socket)
     :ssl.close(upstream_socket)
     send(self(), :accept)
 
@@ -528,7 +569,7 @@ defmodule BorutaGateway.Gateway do
   defp rate_limit(_socket, %Upstream{}), do: :ok
 
   defp remote_ip(socket) do
-    case :inet.peername(socket) do
+    case :ssl.peername(socket) do
       {:ok, {address, _port}} -> :inet.ntoa(address)
       _error -> :unknown
     end
@@ -541,6 +582,25 @@ defmodule BorutaGateway.Gateway do
     end
   end
 
+  defp request_host(payload) do
+    case Regex.run(~r{(?:^|\r\n)host:\s*([^\r]+)}i, payload) do
+      [_, host] -> host
+      nil -> nil
+    end
+  end
+
+  defp buffered_request_payload(%State{request: nil}, payload), do: payload
+  defp buffered_request_payload(%State{request: request}, payload), do: request <> payload
+
+  defp request_headers_complete?(payload), do: String.contains?(payload, "\r\n\r\n")
+
+  defp match_upstream(match_function, payload, path_info) do
+    case :erlang.fun_info(match_function, :arity) do
+      {:arity, 2} -> match_function.(request_host(payload), path_info)
+      {:arity, 1} -> match_function.(path_info)
+    end
+  end
+
   defp request_id(payload) do
     case Regex.run(~r{[X|x]-[R|r]equest-[I|i]d\: ([^\r]+)}, payload) do
       [_, request_id] -> request_id
@@ -549,10 +609,17 @@ defmodule BorutaGateway.Gateway do
   end
 
   defp parse_request_line(payload) do
-    case Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload) do
+    case Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD) ([^\s]+)}, payload) do
       [_, method, path] -> {:ok, method, path}
       _ -> {:error, :bad_request}
     end
+  end
+
+  defp path_info(path) do
+    path
+    |> String.split("?", parts: 2)
+    |> List.first()
+    |> String.split("/", trim: true)
   end
 
   defp response_buffer_exceeded?(response) do
@@ -599,7 +666,8 @@ defmodule BorutaGateway.Gateway do
         method: method,
         path: path,
         status: status,
-        remote_ip: state.remote_ip || remote_ip(state.socket)
+        remote_ip: state.remote_ip || remote_ip(state.socket),
+        tls: downstream_tls(state.socket)
       }
     )
 
@@ -612,13 +680,28 @@ defmodule BorutaGateway.Gateway do
       },
       %{
         request_id: request_id,
-        upstream: upstream
+        upstream: upstream,
+        upstream_tls: upstream_tls(upstream)
       }
     )
   end
 
   defp upstream_time(%State{upstream_start: nil}, _stop), do: 0
   defp upstream_time(%State{upstream_start: upstream_start}, stop), do: stop - upstream_start
+
+  defp downstream_tls(nil), do: nil
+
+  defp downstream_tls(socket) do
+    case :ssl.peercert(socket) do
+      {:ok, _certificate} -> "mtls"
+      {:error, _reason} -> "tls"
+    end
+  end
+
+  defp upstream_tls(%Upstream{scheme: "https", mtls_enabled: true}), do: "mtls"
+  defp upstream_tls(%Upstream{scheme: "https"}), do: "tls"
+  defp upstream_tls(%Upstream{}), do: "http"
+  defp upstream_tls(nil), do: nil
 
   defp transform_header(payload, upstream, nil) do
     transform_header(payload, upstream, false)
@@ -627,25 +710,18 @@ defmodule BorutaGateway.Gateway do
   defp transform_header(payload, upstream, preserve_forwarded_authorization?)
        when is_boolean(preserve_forwarded_authorization?) do
     [_, _method, path] =
-      Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
+      Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD) ([^\s]+)}, payload)
 
     upstream_path =
       case upstream do
         %Upstream{strip_uri: true, uris: uris} ->
-          Enum.reduce(uris, path, fn
-            "/", _ ->
-              path
-
-            uri, path ->
-              String.replace_prefix(path, uri, "")
-          end)
+          strip_upstream_path(path, uris)
 
         %Upstream{strip_uri: false} ->
           path
       end
 
-    [_, _method, path] = Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
-    payload = String.replace(payload, path, upstream_path)
+    payload = replace_request_target(payload, upstream_path)
 
     payload
     |> clean_request_headers(preserve_forwarded_authorization?)
@@ -672,12 +748,58 @@ defmodule BorutaGateway.Gateway do
 
     payload =
       Regex.replace(
-        ~r{[A|a]uthorization: ([^\r]+)\r\n},
+        ~r{(^|\r\n)authorization\s*:\s*([^\r\n]+)\r\n}i,
         payload,
-        "Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\1\r\n"
+        "\\1Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\2\r\n"
       )
 
     transform_header(payload, upstream, true)
+  end
+
+  defp strip_upstream_path(path, uris) do
+    uris
+    |> Enum.sort_by(&byte_size/1, :desc)
+    |> Enum.find(fn uri -> upstream_uri_matches_path?(uri, path) end)
+    |> case do
+      nil ->
+        path
+
+      "/" ->
+        path
+
+      uri ->
+        String.replace_prefix(path, uri, "")
+    end
+    |> normalize_upstream_path()
+  end
+
+  defp upstream_uri_matches_path?("/", _path), do: true
+
+  defp upstream_uri_matches_path?(uri, path) do
+    path == uri ||
+      String.starts_with?(path, uri <> "/") ||
+      String.starts_with?(path, uri <> "?")
+  end
+
+  defp normalize_upstream_path(""), do: "/"
+  defp normalize_upstream_path("?" <> query), do: "/?" <> query
+  defp normalize_upstream_path(path), do: path
+
+  defp replace_request_target(payload, upstream_path) do
+    case String.split(payload, "\r\n", parts: 2) do
+      [request_line, rest] ->
+        replace_request_line_target(request_line, upstream_path) <> "\r\n" <> rest
+
+      [request_line] ->
+        replace_request_line_target(request_line, upstream_path)
+    end
+  end
+
+  defp replace_request_line_target(request_line, upstream_path) do
+    case String.split(request_line, " ", parts: 3) do
+      [method, _path, version] -> Enum.join([method, upstream_path, version], " ")
+      _ -> request_line
+    end
   end
 
   defp clean_request_headers(payload, preserve_forwarded_authorization?) do
@@ -805,10 +927,17 @@ defmodule BorutaGateway.Gateway do
         chunked_body_complete?(body)
 
       content_length = headers["content-length"] ->
-        byte_size(body) >= String.to_integer(content_length)
+        content_length_complete?(body, content_length)
 
       true ->
         false
+    end
+  end
+
+  defp content_length_complete?(body, content_length) do
+    case Integer.parse(content_length) do
+      {length, ""} when length >= 0 -> byte_size(body) >= length
+      _invalid_content_length -> false
     end
   end
 

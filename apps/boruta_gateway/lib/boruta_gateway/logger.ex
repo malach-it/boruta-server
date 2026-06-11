@@ -36,7 +36,7 @@ defmodule BorutaGateway.Logger do
           path: path,
           status: status,
           remote_ip: remote_ip
-        },
+        } = metadata,
         _config
       ) do
     request(%{
@@ -45,7 +45,8 @@ defmodule BorutaGateway.Logger do
       path: path,
       status: status,
       remote_ip: remote_ip,
-      duration: duration
+      duration: duration,
+      tls: Map.get(metadata, :tls)
     })
   end
 
@@ -59,7 +60,7 @@ defmodule BorutaGateway.Logger do
         %{
           request_id: request_id,
           upstream: upstream
-        },
+        } = metadata,
         _config
       ) do
     business(%{
@@ -68,7 +69,8 @@ defmodule BorutaGateway.Logger do
       upstream: upstream,
       request_time: request_time,
       gateway_time: gateway_time,
-      upstream_time: upstream_time
+      upstream_time: upstream_time,
+      upstream_tls: Map.get(metadata, :upstream_tls)
     })
   end
 
@@ -78,7 +80,8 @@ defmodule BorutaGateway.Logger do
          path: path,
          status: status,
          remote_ip: remote_ip,
-         duration: duration
+         duration: duration,
+         tls: tls
        }) do
     Logger.log(
       :info,
@@ -95,6 +98,7 @@ defmodule BorutaGateway.Logger do
           Integer.to_string(status),
           " from ",
           remote_ip,
+          log_attribute("tls", tls),
           " in ",
           duration(duration)
         ]
@@ -111,7 +115,8 @@ defmodule BorutaGateway.Logger do
          upstream: upstream,
          request_time: request_time,
          gateway_time: gateway_time,
-         upstream_time: upstream_time
+         upstream_time: upstream_time,
+         upstream_tls: upstream_tls
        }) do
     Logger.log(
       :info,
@@ -127,6 +132,7 @@ defmodule BorutaGateway.Logger do
           log_attribute("upstream_id", upstream && upstream.id),
           log_attribute("upstream_host", upstream && upstream.host),
           log_attribute("upstream_port", upstream && upstream.port),
+          log_attribute("upstream_tls", upstream_tls),
           log_attribute("request_time", request_time),
           log_attribute("gateway_time", gateway_time),
           log_attribute("upstream_time", upstream_time)

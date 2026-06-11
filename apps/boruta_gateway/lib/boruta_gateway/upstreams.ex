@@ -13,8 +13,16 @@ defmodule BorutaGateway.Upstreams do
     Store.match(path)
   end
 
+  def match(host, path) do
+    Store.match(host, path)
+  end
+
   def sidecar_match(path) do
     Store.sidecar_match(path)
+  end
+
+  def sidecar_match(host, path) do
+    Store.sidecar_match(host, path)
   end
 
   @doc """

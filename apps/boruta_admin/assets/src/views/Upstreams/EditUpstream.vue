@@ -16,7 +16,11 @@
                 </div>
               </div>
             </div>
-            <router-link :to="{ name: 'upstream-list' }" class="ui right floated button">Back</router-link>
+            <CurrentNodeUpstreams
+              ref="currentNodeUpstreams"
+              :node-name="upstream.node_name"
+              :edited-upstream-id="upstream.id" />
+            <router-link :to="{ name: 'service-registry' }" class="ui right floated button">Back</router-link>
           </div>
         </div>
         <div class="twelve wide column">
@@ -29,12 +33,14 @@
 
 <script>
 import Upstream from '../../models/upstream.model'
+import CurrentNodeUpstreams from '../../components/CurrentNodeUpstreams.vue'
 import UpstreamForm from '../../components/Forms/UpstreamForm.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'upstreams',
   components: {
+    CurrentNodeUpstreams,
     UpstreamForm,
     Toaster
   },
@@ -55,12 +61,13 @@ export default {
   },
   methods: {
     back () {
-      this.$router.push({ name: 'upstream-list' })
+      this.$router.push({ name: 'service-registry' })
     },
     updateUpstream () {
       this.success = false
       return this.upstream.save().then(() => {
         this.success = true
+        this.$refs.currentNodeUpstreams.getUpstreams()
       }).catch()
     }
   }

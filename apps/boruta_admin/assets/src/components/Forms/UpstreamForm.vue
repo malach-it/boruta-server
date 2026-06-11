@@ -15,8 +15,12 @@
             <label>Node</label>
             <select v-model="upstream.node_name" placeholder="global">
               <option value="global">global</option>
-              <option v-for="name in nodeNames" :value="name">{{ name }}</option>
+              <option v-for="name in availableNodeNames" :value="name" :key="name">{{ name }}</option>
             </select>
+          </div>
+          <div class="field" :class="{ 'error': upstream.errors?.virtual_host }">
+            <label>Virtual host <i>(leave blank to match any)</i></label>
+            <input type="text" v-model="upstream.virtual_host" placeholder="api.example.com">
           </div>
           <div class="field" :class="{ 'error': upstream.errors?.scheme }">
             <label>Scheme</label>
@@ -111,6 +115,13 @@
           </div>
         </div>
         <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+          <h3>Mutual TLS</h3>
+          <div class="field" :class="{ 'error': upstream.errors?.mtls_enabled }">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.mtls_enabled">
+              <label>Enable mutual TLS to upstream</label>
+            </div>
+          </div>
           <h3>Rate limiting</h3>
           <div class="field">
             <div class="ui toggle checkbox">
@@ -177,6 +188,10 @@ export default {
     Upstream.nodeList().then(nodes => this.nodeNames = nodes)
   },
   computed: {
+    availableNodeNames () {
+      return Array.from(new Set([this.upstream.node_name, ...this.nodeNames]))
+        .filter((name) => name && name !== 'global')
+    },
     isHsAlgorithm () {
       return this.upstream.forwarded_token_signature_alg?.match(/HS/)
     },

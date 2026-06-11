@@ -24,6 +24,7 @@ defmodule BorutaAdminWeb.UpstreamView do
     %{
       id: upstream.id,
       node_name: upstream.node_name,
+      virtual_host: upstream.virtual_host,
       scheme: upstream.scheme,
       host: upstream.host,
       port: upstream.port,
@@ -38,6 +39,7 @@ defmodule BorutaAdminWeb.UpstreamView do
       forwarded_token_secret: upstream.forwarded_token_secret,
       forwarded_token_private_key: upstream.forwarded_token_private_key,
       forwarded_token_public_key: upstream.forwarded_token_public_key,
+      mtls_enabled: upstream.mtls_enabled,
       rate_limit_enabled: upstream.rate_limit_enabled,
       rate_limit_count: upstream.rate_limit_count,
       rate_limit_time_unit: upstream.rate_limit_time_unit,

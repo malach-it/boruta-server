@@ -1,6 +1,7 @@
 ---
 configuration:
   node_name: "full-configuration"
+  aliases: ["full-configuration.local", "full-configuration.internal"]
   gateway:
     - authorize: true
       error_content_type: "test"

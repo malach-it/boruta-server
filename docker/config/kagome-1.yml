@@ -1,0 +1,27 @@
+---
+version: "1.0"
+configuration:
+  name: kagome-1
+  aliases:
+    - "kagome.1.docker"
+  gateway:
+    - scheme: "https"
+      mtls_enabled: true
+      port: 8043
+      host: "kagome-1"
+      uris: ["/kagome-1"]
+      strip_uri: true
+  microgateway:
+    - scheme: "http"
+      port: 4000
+      virtual_host: "kagome-1"
+      host: "localhost"
+      uris: ["/echo"]
+      strip_uri: false
+    - scheme: "https"
+      port: 8043
+      virtual_host: "kagome-1"
+      mtls_enabled: true
+      host: "kagome-2"
+      uris: ["/"]
+      strip_uri: false

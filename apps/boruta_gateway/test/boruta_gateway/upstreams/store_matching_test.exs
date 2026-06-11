@@ -22,6 +22,54 @@ defmodule BorutaGateway.Upstreams.StoreMatchingTest do
       assert id == matching_upstream.id
     end
 
+    test "prefers virtual host matches over path-only matches" do
+      matching_upstream = %Upstream{
+        id: SecureRandom.uuid(),
+        node_name: "global",
+        virtual_host: "api.example.com"
+      }
+
+      fallback_upstream = %Upstream{id: SecureRandom.uuid(), node_name: "global"}
+
+      state = %{
+        upstreams: %{
+          "global" => [
+            {["foo"], matching_upstream},
+            {["foo"], fallback_upstream}
+          ]
+        }
+      }
+
+      assert {:reply, %Upstream{id: id}, ^state} =
+               Store.handle_call({:match, "api.example.com", ["foo"]}, self(), state)
+
+      assert id == matching_upstream.id
+    end
+
+    test "falls back to path-only upstreams when host does not match" do
+      hosted_upstream = %Upstream{
+        id: SecureRandom.uuid(),
+        node_name: "global",
+        virtual_host: "api.example.com"
+      }
+
+      fallback_upstream = %Upstream{id: SecureRandom.uuid(), node_name: "global"}
+
+      state = %{
+        upstreams: %{
+          "global" => [
+            {["foo"], hosted_upstream},
+            {["foo"], fallback_upstream}
+          ]
+        }
+      }
+
+      assert {:reply, %Upstream{id: id}, ^state} =
+               Store.handle_call({:match, "admin.example.com", ["foo"]}, self(), state)
+
+      assert id == fallback_upstream.id
+    end
+
     test "does not match path segments out of order" do
       state = %{
         upstreams: %{

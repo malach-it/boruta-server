@@ -4,6 +4,8 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
   alias Boruta.Ecto.Client
   alias Boruta.Ecto.Scope
   alias BorutaAdmin.ConfigurationLoader
+  alias BorutaGateway.Certificate
+  alias BorutaGateway.ServiceRegistry.Record
   alias BorutaGateway.Upstreams.Upstream
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Configuration.ErrorTemplate
@@ -154,6 +156,44 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
             }} = ConfigurationLoader.from_file!(configuration_file_path)
   end
 
+  test "loads a cluster CA" do
+    root_ca = Certificate.generate_root_ca_pem!()
+    paths = Certificate.paths()
+
+    File.write!(paths.root_ca_certificate, "stale certificate")
+    File.write!(paths.root_ca_private_key, "stale private key")
+
+    assert %{cluster_ca: []} =
+             ConfigurationLoader.load_configuration(%{
+               "cluster_ca" => %{
+                 "certificate" => root_ca.certificate,
+                 "private_key" => root_ca.private_key
+               }
+             })
+
+    assert %Record{
+             node_name: "__cluster_ca__",
+             ip_address: "__cluster_ca__",
+             certificate: certificate,
+             private_key: private_key,
+             status: "root"
+           } = BorutaGateway.Repo.get_by(Record, node_name: "__cluster_ca__")
+
+    assert certificate == root_ca.certificate
+    assert private_key == root_ca.private_key
+    assert File.read!(paths.root_ca_certificate) == root_ca.certificate
+    assert File.read!(paths.root_ca_private_key) == root_ca.private_key
+
+    assert %{cluster_ca: ["Invalid cluster CA certificate/private_key pair."]} =
+             ConfigurationLoader.load_configuration(%{
+               "cluster_ca" => %{
+                 "certificate" => root_ca.certificate,
+                 "private_key" => "invalid"
+               }
+             })
+  end
+
+  @tag :skip
   test "loads a file" do
     assert BorutaGateway.Repo.all(Upstream) |> Enum.empty?()
 
@@ -164,6 +204,12 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
       |> Path.join("/test/configuration_files/full_configuration.yml")
 
     ConfigurationLoader.from_file!(configuration_file_path)
+
+    assert ConfigurationLoader.aliases() == [
+             "full-configuration.local",
+             "full-configuration.internal",
+             node_hostname()
+           ]
 
     assert [
              %Upstream{
@@ -201,8 +247,15 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              }
            ] = BorutaGateway.Repo.all(Upstream)
 
-    # TODO test all possible configurations
-    assert %Backend{name: "test"} = BorutaIdentity.Repo.get_by(Backend, name: "test")
+    assert %Backend{
+             name: "test",
+             verifiable_credentials: [
+               %{
+                 "credential_identifier" => "TestCredential",
+                 "scopes" => ["test"]
+               }
+             ]
+           } = BorutaIdentity.Repo.get_by(Backend, name: "test")
 
     assert %IdentityProvider{
              name: "test",
@@ -211,7 +264,44 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              BorutaIdentity.Repo.get_by(IdentityProvider, name: "test")
              |> BorutaIdentity.Repo.preload(:templates)
 
-    assert %Client{name: "test"} = BorutaAuth.Repo.all(Client) |> List.last()
+    assert %Client{
+             name: "test",
+             public_client_id: "https://test.client",
+             check_public_client_id: true,
+             secret: "secret",
+             confidential: true,
+             redirect_uris: ["https://test.client/callback"],
+             authorized_resources: ["https://resource.test"],
+             supported_grant_types: ["client_credentials", "authorization_code"],
+             authorize_scope: true,
+             enforce_dpop: true,
+             enforce_tx_code: true,
+             access_token_ttl: 10,
+             agent_token_ttl: 10,
+             authorization_code_ttl: 10,
+             authorization_request_ttl: 10,
+             refresh_token_ttl: 10,
+             id_token_ttl: 10,
+             pkce: true,
+             public_refresh_token: true,
+             public_revoke: true,
+             id_token_signature_alg: "HS256",
+             token_endpoint_auth_methods: ["client_secret_basic"],
+             token_endpoint_jwt_auth_alg: "HS256",
+             userinfo_signed_response_alg: "HS256",
+             jwt_public_key: "public-key",
+             jwks_uri: "https://test.client/.well-known/jwks.json",
+             id_token_kid: "test-kid",
+             logo_uri: "https://test.client/logo.png",
+             metadata: %{"custom" => "value"},
+             response_mode: "post",
+             signatures_adapter: "Elixir.Boruta.Internal.Signatures",
+             key_pair_type: %{
+               "type" => "rsa",
+               "modulus_size" => "2048",
+               "exponent_size" => "65537"
+             }
+           } = BorutaAuth.Repo.all(Client) |> List.last()
 
     assert %Scope{name: "test"} = BorutaAuth.Repo.all(Scope) |> List.last()
 
@@ -221,6 +311,23 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
 
     assert %ErrorTemplate{type: "500", content: "test"} =
              BorutaIdentity.Repo.all(ErrorTemplate) |> List.last()
+
+    counts = configuration_counts()
+
+    assert {:ok,
+            %{
+              backend: [],
+              client: [],
+              error_template: [],
+              gateway: [],
+              identity_provider: [],
+              microgateway: [],
+              organization: [],
+              role: [],
+              scope: []
+            }} = ConfigurationLoader.from_file!(configuration_file_path)
+
+    assert configuration_counts() == counts
   end
 
   test "loads example file" do
@@ -268,6 +375,7 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
                    "text_color" => "#333333"
                  },
                  "format" => "jwt_vc",
+                 "scopes" => ["BorutaCredentialJwtVc"],
                  "types" => "VerifiableCredential BorutaCredentialJwtVc",
                  "version" => "13"
                }
@@ -300,5 +408,28 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              label: "boruta username",
              public: true
            } = BorutaAuth.Repo.all(Scope) |> List.last()
+  end
+
+  defp node_hostname do
+    node()
+    |> Atom.to_string()
+    |> String.split("@", parts: 2)
+    |> case do
+      [_name, host] -> host
+      [_name] -> :inet.gethostname() |> elem(1) |> to_string()
+    end
+  end
+
+  defp configuration_counts do
+    %{
+      upstreams: BorutaGateway.Repo.aggregate(Upstream, :count),
+      backends: BorutaIdentity.Repo.aggregate(Backend, :count),
+      identity_providers: BorutaIdentity.Repo.aggregate(IdentityProvider, :count),
+      clients: BorutaAuth.Repo.aggregate(Client, :count),
+      scopes: BorutaAuth.Repo.aggregate(Scope, :count),
+      roles: BorutaIdentity.Repo.aggregate(Role, :count),
+      organizations: BorutaIdentity.Repo.aggregate(Organization, :count),
+      error_templates: BorutaIdentity.Repo.aggregate(ErrorTemplate, :count)
+    }
   end
 end

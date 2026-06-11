@@ -3,6 +3,19 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
 
   alias ExJsonSchema.Schema
 
+  def cluster_ca do
+    %{
+      "type" => "object",
+      "properties" => %{
+        "certificate" => %{"type" => "string"},
+        "private_key" => %{"type" => "string"}
+      },
+      "required" => ["certificate", "private_key"],
+      "additionalProperties" => false
+    }
+    |> Schema.resolve()
+  end
+
   def gateway do
     %{
       "type" => "object",
@@ -15,6 +28,7 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
         "forwarded_token_public_key" => %{"type" => "string"},
         "forwarded_token_secret" => %{"type" => "string"},
         "forwarded_token_signature_alg" => %{"type" => "string"},
+        "mtls_enabled" => %{"type" => "boolean"},
         "scheme" => %{"type" => "string", "pattern" => "^(http|https)$"},
         "host" => %{"type" => "string"},
         "port" => %{"type" => "number"},
@@ -59,6 +73,7 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
         "forwarded_token_public_key" => %{"type" => "string"},
         "forwarded_token_secret" => %{"type" => "string"},
         "forwarded_token_signature_alg" => %{"type" => "string"},
+        "mtls_enabled" => %{"type" => "boolean"},
         "scheme" => %{"type" => "string", "pattern" => "^(http|https)$"},
         "host" => %{"type" => "string"},
         "port" => %{"type" => "number"},
@@ -225,6 +240,10 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
                 },
                 "required" => ["name"],
                 "additionalProperties" => false
+              },
+              "scopes" => %{
+                "type" => "array",
+                "items" => %{"type" => "string"}
               }
             },
             "required" => [
@@ -295,6 +314,7 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
       "type" => "object",
       "properties" => %{
         "access_token_ttl" => %{"type" => "number"},
+        "agent_token_ttl" => %{"type" => "number"},
         "authorization_code_ttl" => %{"type" => "number"},
         "authorization_request_ttl" => %{"type" => "number"},
         "authorize_scope" => %{"type" => "boolean"},
@@ -308,9 +328,16 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
             }
           }
         },
+        "authorized_resources" => %{
+          "type" => "array",
+          "items" => %{"type" => "string"}
+        },
+        "check_public_client_id" => %{"type" => "boolean"},
         "confidential" => %{"type" => "boolean"},
         "enforce_dpop" => %{"type" => "boolean"},
+        "enforce_tx_code" => %{"type" => "boolean"},
         "id" => %{"type" => "string"},
+        "id_token_kid" => %{"type" => "string"},
         "id_token_signature_alg" => %{"type" => "string"},
         "id_token_ttl" => %{"type" => "number"},
         "identity_provider" => %{
@@ -319,9 +346,16 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
             "id" => %{"type" => "string"}
           }
         },
+        "jwk" => %{"type" => "object"},
         "jwt_public_key" => %{"type" => "string"},
+        "jwks_uri" => %{"type" => "string"},
+        "key_pair_id" => %{"type" => "string"},
+        "key_pair_type" => %{"type" => "object"},
+        "logo_uri" => %{"type" => "string"},
+        "metadata" => %{"type" => "object"},
         "name" => %{"type" => "string"},
         "pkce" => %{"type" => "boolean"},
+        "public_client_id" => %{"type" => "string"},
         "public_refresh_token" => %{"type" => "boolean"},
         "public_revoke" => %{"type" => "boolean"},
         "redirect_uris" => %{
@@ -329,7 +363,9 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
           "items" => %{"type" => "string"}
         },
         "refresh_token_ttl" => %{"type" => "number"},
+        "response_mode" => %{"type" => "string"},
         "secret" => %{"type" => "string"},
+        "signatures_adapter" => %{"type" => "string"},
         "supported_grant_types" => %{
           "type" => "array",
           "items" => %{"type" => "string"}

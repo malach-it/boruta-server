@@ -46,9 +46,21 @@ defmodule BorutaGateway.Upstreams.Store do
     GenServer.call(__MODULE__, {:match, path_info})
   end
 
+  @spec match(host :: String.t() | nil, path_info :: list(String.t())) ::
+          upstream :: Upstream.t() | nil
+  def match(host, path_info) do
+    GenServer.call(__MODULE__, {:match, host, path_info})
+  end
+
   @spec sidecar_match(path_info :: list(String.t())) :: upstream :: Upstream.t() | nil
   def sidecar_match(path_info) do
     GenServer.call(__MODULE__, {:sidecar_match, path_info})
+  end
+
+  @spec sidecar_match(host :: String.t() | nil, path_info :: list(String.t())) ::
+          upstream :: Upstream.t() | nil
+  def sidecar_match(host, path_info) do
+    GenServer.call(__MODULE__, {:sidecar_match, host, path_info})
   end
 
   def all do
@@ -61,13 +73,23 @@ defmodule BorutaGateway.Upstreams.Store do
   end
 
   def handle_call({:match, path_info}, _from, %{upstreams: upstreams} = state) do
-    {:reply, match_upstream(upstreams["global"] || [], path_info), state}
+    {:reply, match_upstream(upstreams["global"] || [], nil, path_info), state}
+  end
+
+  def handle_call({:match, host, path_info}, _from, %{upstreams: upstreams} = state) do
+    {:reply, match_upstream(upstreams["global"] || [], host, path_info), state}
   end
 
   def handle_call({:sidecar_match, path_info}, _from, %{upstreams: upstreams} = state) do
     node_name = ConfigurationLoader.node_name()
 
-    {:reply, match_upstream(upstreams[node_name] || [], path_info), state}
+    {:reply, match_upstream(upstreams[node_name] || [], nil, path_info), state}
+  end
+
+  def handle_call({:sidecar_match, host, path_info}, _from, %{upstreams: upstreams} = state) do
+    node_name = ConfigurationLoader.node_name()
+
+    {:reply, match_upstream(upstreams[node_name] || [], host, path_info), state}
   end
 
   @impl GenServer
@@ -97,7 +119,7 @@ defmodule BorutaGateway.Upstreams.Store do
         %{upstreams: upstreams} = state
       ) do
     upstreams =
-      Enum.reduce(upstreams, [], fn {_node_name, upstreams}, acc -> acc ++ (upstreams || []) end)
+      upstream_records(upstreams)
       |> update_upstreams(Jason.decode!(payload))
 
     state = %{state | upstreams: upstreams}
@@ -113,7 +135,6 @@ defmodule BorutaGateway.Upstreams.Store do
       )
 
     upstreams
-    |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> List.insert_at(0, new)
     |> structure()
   end
@@ -128,7 +149,6 @@ defmodule BorutaGateway.Upstreams.Store do
     updated_id = updated.id
 
     upstreams
-    |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> Enum.map(fn
       %{id: ^updated_id} ->
         updated
@@ -141,12 +161,18 @@ defmodule BorutaGateway.Upstreams.Store do
 
   defp update_upstreams(upstreams, %{"operation" => "DELETE", "record" => %{"id" => id}}) do
     upstreams
-    |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> Enum.reject(fn
       %{id: ^id} -> true
       _ -> false
     end)
     |> structure()
+  end
+
+  defp upstream_records(upstreams) do
+    upstreams
+    |> Enum.flat_map(fn {_node_name, upstreams} -> upstreams || [] end)
+    |> Enum.map(fn {_uri, upstream} -> upstream end)
+    |> Enum.uniq_by(& &1.id)
   end
 
   defp structure(upstreams) do
@@ -162,12 +188,44 @@ defmodule BorutaGateway.Upstreams.Store do
     |> Enum.group_by(fn {_path_info, %Upstream{node_name: node_name}} -> node_name end)
   end
 
-  defp match_upstream(upstreams, path_info) do
-    with {_prefix_info, upstream} <-
-           Enum.find(upstreams, fn {prefix_info, _upstream} ->
-             Enum.take(path_info, length(prefix_info)) == prefix_info
-           end) do
-      upstream
+  defp match_upstream(upstreams, host, path_info) do
+    match_hosted_upstream(upstreams, normalize_host(host), path_info) ||
+      match_unhosted_upstream(upstreams, path_info)
+  end
+
+  defp match_hosted_upstream(_upstreams, nil, _path_info), do: nil
+
+  defp match_hosted_upstream(upstreams, host, path_info) do
+    find_matching_upstream(upstreams, path_info, fn upstream ->
+      normalize_host(upstream.virtual_host) == host
+    end)
+  end
+
+  defp match_unhosted_upstream(upstreams, path_info) do
+    find_matching_upstream(upstreams, path_info, fn upstream -> is_nil(upstream.virtual_host) end)
+  end
+
+  defp find_matching_upstream(upstreams, path_info, upstream_matches?) do
+    upstreams
+    |> Enum.find(fn {prefix_info, upstream} ->
+      path_matches?(prefix_info, path_info) && upstream_matches?.(upstream)
+    end)
+    |> case do
+      {_prefix_info, upstream} -> upstream
+      nil -> nil
     end
+  end
+
+  defp path_matches?(prefix_info, path_info) do
+    Enum.take(path_info, length(prefix_info)) == prefix_info
+  end
+
+  defp normalize_host(nil), do: nil
+
+  defp normalize_host(host) do
+    host
+    |> String.split(":", parts: 2)
+    |> List.first()
+    |> String.downcase()
   end
 end

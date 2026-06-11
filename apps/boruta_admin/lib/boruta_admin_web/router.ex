@@ -46,6 +46,7 @@ defmodule BorutaAdminWeb.Router do
     resources("/users", UserController, except: [:new, :edit])
     resources("/organizations", OrganizationController, except: [:new, :edit])
     get("/upstreams/nodes", UpstreamController, :node_list)
+    get("/upstreams/service-registry", ServiceRegistryController, :index)
     resources("/upstreams", UpstreamController, except: [:new, :edit])
 
     scope "/configuration", as: :configuration do
@@ -81,8 +82,11 @@ defmodule BorutaAdminWeb.Router do
         as: :template
       )
     end
+
     resources "/backends", BackendController, except: [:new, :edit] do
-      get("/email-templates/:template_type", BackendController, :email_template, as: :email_template)
+      get("/email-templates/:template_type", BackendController, :email_template,
+        as: :email_template
+      )
 
       patch("/email-templates/:template_type", BackendController, :update_email_template,
         as: :email_template

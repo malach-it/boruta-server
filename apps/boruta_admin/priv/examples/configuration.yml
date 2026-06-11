@@ -11,6 +11,8 @@ configuration:
           credential_identifier: BorutaCredential
           format: jwt_vc
           types: VerifiableCredential BorutaCredentialJwtVc
+          scopes:
+            - BorutaCredentialJwtVc
           claims:
             - type: attribute
               name: boruta_username
