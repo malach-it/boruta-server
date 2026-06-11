@@ -45,6 +45,27 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert redirected_to(conn) =~ "/users/log_out"
     end
 
+    test "redirects public client to login with prompt=login", %{
+      conn: conn,
+      redirect_uri: redirect_uri
+    } do
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: "did:key:test",
+            redirect_uri: redirect_uri,
+            client_metadata: "{}",
+            prompt: "login",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+      assert redirected_to(conn) =~ "/users/log_out"
+    end
+
     test "returns an error with prompt=none without any current_user", %{
       conn: conn,
       client: client,
@@ -281,6 +302,32 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
             response_type: "id_token",
             client_id: client.id,
             redirect_uri: redirect_uri,
+            scope: "openid",
+            nonce: "nonce",
+            max_age: 0
+          })
+        )
+
+      assert redirected_to(conn) =~ "/users/log_out"
+    end
+
+    test "logs in public client with an expired max_age and current_user", %{
+      conn: conn,
+      resource_owner: resource_owner,
+      redirect_uri: redirect_uri
+    } do
+      conn =
+        conn
+        |> log_in(resource_owner)
+
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: "did:key:test",
+            redirect_uri: redirect_uri,
+            client_metadata: "{}",
             scope: "openid",
             nonce: "nonce",
             max_age: 0

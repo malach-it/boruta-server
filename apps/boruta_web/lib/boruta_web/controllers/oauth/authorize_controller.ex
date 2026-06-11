@@ -41,9 +41,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = put_unsigned_request(conn)
 
-    with {:unchanged, conn} <- public_client?(conn),
-         {:unchanged, conn} <- prompt_redirection(conn, current_user),
+    with {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
+         {:unchanged, conn} <- public_client?(conn),
          {:unchanged, conn} <- check_preauthorized(conn),
          {:unchanged, conn} <- redirect_if_mfa_required(conn, current_user),
          {:unchanged, conn} <- preauthorize(conn, current_user) do
@@ -91,37 +91,27 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     conn
   end
 
-  def public_client?(
-        %Plug.Conn{
-          query_params: %{
-            "response_type" => "code" <> _rest,
-            "client_metadata" => _client_metadata
-          }
-        } = conn
-      ),
-      do: {:preauthorized, conn}
+  def public_client?(conn) do
+    if public_client_request?(conn) do
+      {:preauthorized, conn}
+    else
+      {:unchanged, conn}
+    end
+  end
 
-  def public_client?(
-        %Plug.Conn{
-          query_params: %{
-            "response_type" => "id_token" <> _rest,
-            "client_metadata" => _client_metadata
-          }
-        } = conn
-      ),
-      do: {:preauthorized, conn}
+  defp public_client_request?(%Plug.Conn{
+         query_params: %{
+           "response_type" => response_type,
+           "client_metadata" => _client_metadata
+         }
+       }) do
+    response_type
+    |> String.split(" ")
+    |> List.first()
+    |> then(&(&1 in @public_response_types))
+  end
 
-  def public_client?(
-        %Plug.Conn{
-          query_params: %{
-            "response_type" => "vp_token" <> _rest,
-            "client_metadata" => _client_metadata
-          }
-        } = conn
-      ),
-      do: {:preauthorized, conn}
-
-  def public_client?(conn), do: {:unchanged, conn}
+  defp public_client_request?(_conn), do: false
 
   defp redirect_if_mfa_required(conn, current_user) do
     case ensure_mfa(conn, current_user) do
@@ -298,14 +288,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
          %Plug.Conn{query_params: %{"prompt" => "none"} = query_params} = conn,
          nil
        ) do
-    {:redirected, prompt_none_error(conn, query_params, "User is not logged in.")}
+    if public_client_request?(conn) do
+      {:unchanged, conn}
+    else
+      {:redirected, prompt_none_error(conn, query_params, "User is not logged in.")}
+    end
   end
 
   defp prompt_redirection(
          %Plug.Conn{query_params: %{"prompt" => "none"} = query_params} = conn,
          current_user
        ) do
-    if prompt_none_preauthorized?(conn) do
+    if public_client_request?(conn) || prompt_none_preauthorized?(conn) do
       prompt_none_mfa_redirection(conn, query_params, current_user)
     else
       {:redirected, prompt_none_error(conn, query_params, "User authorization is required.")}
