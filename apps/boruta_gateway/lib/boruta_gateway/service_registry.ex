@@ -611,8 +611,9 @@ defmodule BorutaGateway.ServiceRegistry do
            [],
            @touch_rpc_timeout
          ) do
+      updated_count when is_integer(updated_count) and updated_count > 0 -> :ok
       {:badrpc, reason} -> {:error, reason}
-      _response -> :ok
+      response -> {:error, {:unexpected_response, response}}
     end
   end
 
