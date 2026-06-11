@@ -4,9 +4,32 @@
 
 ## [unreleased]
 
+## [0.9.2] - 2026-06-11
+
+### Added
+
+- [openid] integration tests for OID4VCI credential issuance and OID4VP direct post flows
+
 ### Changed
 
 - [wallet] (breaking) credentials and key selection use password-protected local storage
+- [gateway] URI strip rewriting only updates the request-line path
+
+### Fixed
+
+- [auth] prompt and request object claims are validated before public client flows
+- [auth] prompt none requires a preauthenticated user
+- [auth] max age parameters must parse completely
+- [auth] WebAuthn state is cleared after authorization errors
+- [gateway] upstream TLS hostname verification
+- [gateway] HEAD request forwarding
+- [gateway] upstream matching ignores query strings and uses the longest matching upstream URI
+- [gateway] Authorization headers match bearer token schemes case-insensitively
+- [gateway] upstream store notifications are deduplicated
+- [gateway] malformed Content-Length responses are handled safely
+- [identity] auth flow state is cleared on logout
+- [identity] auth return query parameters are parsed correctly
+- [identity] sessions are marked chosen after user selection
 
 ## [0.9.1] - 2026-06-01
 
