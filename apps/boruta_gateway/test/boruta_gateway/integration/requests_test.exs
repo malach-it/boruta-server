@@ -443,6 +443,39 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "strips upstream uri only from request line" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&request_line_rewrite_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: true
+            })
+
+            Process.sleep(100)
+
+            request =
+              Finch.build(
+                :post,
+                "http://localhost:7777/httpbin/rewrite",
+                [{"x-original-path", "/httpbin/rewrite"}],
+                "/httpbin/rewrite"
+              )
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "rewritten"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do
@@ -1103,6 +1136,16 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     assert request =~ "GET / HTTP/1.1"
 
     response_body("root", content_type: "text/plain")
+  end
+
+  defp request_line_rewrite_response(request) do
+    assert request =~ "POST /rewrite HTTP/1.1"
+    assert request =~ ~r/x-original-path: \/httpbin\/rewrite/i
+
+    assert [_headers, body] = String.split(request, "\r\n\r\n", parts: 2)
+    assert body == "/httpbin/rewrite"
+
+    response_body("rewritten", content_type: "text/plain")
   end
 
   defp echo_headers_response(request) do

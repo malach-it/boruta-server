@@ -671,10 +671,7 @@ defmodule BorutaGateway.HttpGateway do
           path
       end
 
-    [_, _method, path] =
-      Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD) ([^\s]+)}, payload)
-
-    payload = String.replace(payload, path, upstream_path)
+    payload = replace_request_target(payload, upstream_path)
 
     payload
     |> clean_request_headers(preserve_forwarded_authorization?)
@@ -724,6 +721,23 @@ defmodule BorutaGateway.HttpGateway do
   defp normalize_upstream_path(""), do: "/"
   defp normalize_upstream_path("?" <> query), do: "/?" <> query
   defp normalize_upstream_path(path), do: path
+
+  defp replace_request_target(payload, upstream_path) do
+    case String.split(payload, "\r\n", parts: 2) do
+      [request_line, rest] ->
+        replace_request_line_target(request_line, upstream_path) <> "\r\n" <> rest
+
+      [request_line] ->
+        replace_request_line_target(request_line, upstream_path)
+    end
+  end
+
+  defp replace_request_line_target(request_line, upstream_path) do
+    case String.split(request_line, " ", parts: 3) do
+      [method, _path, version] -> Enum.join([method, upstream_path, version], " ")
+      _ -> request_line
+    end
+  end
 
   defp clean_request_headers(payload, preserve_forwarded_authorization?) do
     rejected_headers = [
