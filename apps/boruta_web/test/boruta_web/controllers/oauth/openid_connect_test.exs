@@ -66,6 +66,36 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert redirected_to(conn) =~ ~r/error=login_required/
     end
 
+    test "ignores unsigned request claims", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri
+    } do
+      unsigned_request =
+        unsigned_jwt(%{
+          "client_id" => "bad-client",
+          "redirect_uri" => "http://evil.redirect.uri"
+        })
+
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            request: unsigned_request,
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+      assert redirected_to(conn) =~ ~r/#{redirect_uri}/
+      refute redirected_to(conn) =~ "http://evil.redirect.uri"
+      assert redirected_to(conn) =~ ~r/error=login_required/
+    end
+
     test "authorizes with prompt=none with anonymous client (verifiable presentation - wallet)",
          %{
            conn: conn,
@@ -590,4 +620,11 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   #     assert BorutaIdentity.Repo.get!(IdentityProvider, identity_provider_id)
   #   end
   # end
+
+  defp unsigned_jwt(claims) do
+    header = %{"alg" => "none"} |> Jason.encode!() |> Base.url_encode64(padding: false)
+    payload = claims |> Jason.encode!() |> Base.url_encode64(padding: false)
+
+    header <> "." <> payload <> "."
+  end
 end

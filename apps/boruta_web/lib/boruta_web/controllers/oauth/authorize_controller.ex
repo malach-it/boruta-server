@@ -732,15 +732,19 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp put_unsigned_request(%Plug.Conn{query_params: query_params} = conn) do
-    unsigned_request =
+    signed_request =
       with request <- Map.get(query_params, "request", ""),
-           {:ok, params} <- Joken.peek_claims(request) do
+           {:ok, params} <-
+             BorutaIdentityWeb.Token.verify(
+               request,
+               BorutaIdentityWeb.Token.application_signer()
+             ) do
         params
       else
         _ -> %{}
       end
 
-    query_params = Map.merge(query_params, unsigned_request)
+    query_params = Map.merge(query_params, signed_request)
 
     %{conn | query_params: query_params}
   end
