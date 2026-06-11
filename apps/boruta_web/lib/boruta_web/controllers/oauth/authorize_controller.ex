@@ -696,7 +696,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     now = DateTime.utc_now() |> DateTime.to_unix()
 
     with "" <> max_age <- max_age,
-         {max_age, _} <- Integer.parse(max_age),
+         {max_age, ""} <- Integer.parse(max_age),
          true <- now - DateTime.to_unix(current_user.last_login_at) >= max_age do
       true
     else
