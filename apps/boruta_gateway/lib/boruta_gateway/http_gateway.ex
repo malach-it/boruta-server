@@ -884,10 +884,17 @@ defmodule BorutaGateway.HttpGateway do
         chunked_body_complete?(body)
 
       content_length = headers["content-length"] ->
-        byte_size(body) >= String.to_integer(content_length)
+        content_length_complete?(body, content_length)
 
       true ->
         false
+    end
+  end
+
+  defp content_length_complete?(body, content_length) do
+    case Integer.parse(content_length) do
+      {length, ""} when length >= 0 -> byte_size(body) >= length
+      _invalid_content_length -> false
     end
   end
 

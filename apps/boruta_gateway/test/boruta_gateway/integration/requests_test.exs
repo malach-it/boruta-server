@@ -605,6 +605,34 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "closes malformed content length responses without crashing" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&malformed_content_length_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/bad-content-length"]
+            })
+
+            Process.sleep(100)
+
+            response =
+              raw_gateway_request(
+                "GET /bad-content-length HTTP/1.1\r\n" <>
+                  "Host: localhost:7777\r\n\r\n"
+              )
+
+            assert response =~ "HTTP/1.1 200 OK"
+            assert raw_response_body(response) == "bad-content-length"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns bodyless response without content length" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -1250,6 +1278,15 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     "HTTP/1.1 200 OK\r\n" <>
       "Content-Type: text/plain\r\n\r\n" <>
       "close-delimited"
+  end
+
+  defp malformed_content_length_response(request) do
+    assert request =~ "GET /bad-content-length HTTP/1.1"
+
+    "HTTP/1.1 200 OK\r\n" <>
+      "Content-Type: text/plain\r\n" <>
+      "Content-Length: nope\r\n\r\n" <>
+      "bad-content-length"
   end
 
   defp no_content_response(request) do
