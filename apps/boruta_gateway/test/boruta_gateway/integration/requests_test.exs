@@ -476,6 +476,33 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "strips longest matching upstream uri" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&overlapping_uri_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/api", "/api/v1"],
+              strip_uri: true
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/api/v1/users", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "longest"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do
@@ -1146,6 +1173,13 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     assert body == "/httpbin/rewrite"
 
     response_body("rewritten", content_type: "text/plain")
+  end
+
+  defp overlapping_uri_response(request) do
+    assert request =~ "GET /users HTTP/1.1"
+    refute request =~ "GET /v1/users HTTP/1.1"
+
+    response_body("longest", content_type: "text/plain")
   end
 
   defp echo_headers_response(request) do

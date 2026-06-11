@@ -708,14 +708,27 @@ defmodule BorutaGateway.HttpGateway do
 
   defp strip_upstream_path(path, uris) do
     uris
-    |> Enum.reduce(path, fn
-      "/", path ->
+    |> Enum.sort_by(&byte_size/1, :desc)
+    |> Enum.find(fn uri -> upstream_uri_matches_path?(uri, path) end)
+    |> case do
+      nil ->
         path
 
-      uri, path ->
+      "/" ->
+        path
+
+      uri ->
         String.replace_prefix(path, uri, "")
-    end)
+    end
     |> normalize_upstream_path()
+  end
+
+  defp upstream_uri_matches_path?("/", _path), do: true
+
+  defp upstream_uri_matches_path?(uri, path) do
+    path == uri ||
+      String.starts_with?(path, uri <> "/") ||
+      String.starts_with?(path, uri <> "?")
   end
 
   defp normalize_upstream_path(""), do: "/"
