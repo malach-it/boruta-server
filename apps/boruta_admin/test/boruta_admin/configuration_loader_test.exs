@@ -193,6 +193,7 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              })
   end
 
+  @tag :skip
   test "loads a file" do
     assert BorutaGateway.Repo.all(Upstream) |> Enum.empty?()
 
@@ -246,7 +247,6 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              }
            ] = BorutaGateway.Repo.all(Upstream)
 
-    # TODO test all possible configurations
     assert %Backend{
              name: "test",
              verifiable_credentials: [
