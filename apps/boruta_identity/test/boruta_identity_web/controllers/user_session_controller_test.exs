@@ -26,6 +26,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
     test "redirects if already logged in", %{conn: conn, user: user, request: request} do
       conn = conn |> log_in(user) |> get(Routes.user_session_path(conn, :new, request: request))
       assert redirected_to(conn) == "/user_return_to"
+      assert get_session(conn, :session_chosen)
     end
   end
 

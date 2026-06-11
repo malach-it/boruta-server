@@ -20,7 +20,6 @@ defmodule BorutaIdentityWeb.ChooseSessionController do
     current_user = conn.assigns[:current_user]
 
     conn
-    |> put_session(:session_chosen, true)
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html", template: template, assigns: %{current_user: current_user})
