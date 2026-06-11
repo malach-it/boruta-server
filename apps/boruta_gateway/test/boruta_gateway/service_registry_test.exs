@@ -390,6 +390,37 @@ defmodule BorutaGateway.ServiceRegistryTest do
     assert Repo.get!(Record, unresponsive_record.id)
   end
 
+  test "service registry process skips RPC touch for records without Erlang node names" do
+    Application.put_env(ConfigurationLoader, :node_name, "service-node")
+
+    static_record =
+      insert_record!(
+        node_name: "static-node",
+        erlang_node_name: nil,
+        ip_address: "10.0.0.10",
+        aliases: ["static.local"],
+        status: "online"
+      )
+
+    state = %{
+      ip_address: ServiceRegistry.current_ip_address(),
+      node_name: "service-node",
+      records: %{
+        "10.0.0.10" => static_record,
+        "static.local" => static_record
+      },
+      unresponsive_since: %{}
+    }
+
+    assert {:noreply, %{records: records, unresponsive_since: unresponsive_since}} =
+             ServiceRegistry.handle_info(:touch_service_registry_record, state)
+
+    assert records["10.0.0.10"] == static_record
+    assert records["static.local"] == static_record
+    assert unresponsive_since == %{}
+    assert Repo.get!(Record, static_record.id)
+  end
+
   @tag capture_log: true
   test "service registry process remembers record nodes when RPC touch updates no record" do
     Application.put_env(ConfigurationLoader, :node_name, "missing-node")

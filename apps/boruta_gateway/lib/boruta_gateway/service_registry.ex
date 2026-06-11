@@ -617,6 +617,8 @@ defmodule BorutaGateway.ServiceRegistry do
     end
   end
 
+  defp rpc_touch_record_node(%Record{}), do: :ok
+
   defp remember_unresponsive_record(record, unresponsive_since, deleted_ids, now, reason) do
     key = unresponsive_key(record)
     unresponsive_at = Map.get(unresponsive_since, key, now)
