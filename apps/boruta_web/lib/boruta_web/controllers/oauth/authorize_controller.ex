@@ -661,8 +661,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_authorize_error_event(conn, error)
 
     conn
-    |> delete_session(:session_chosen)
-    |> delete_session(:totp_authenticated)
+    |> delete_authentication_sessions()
     |> redirect(
       to:
         IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
@@ -676,8 +675,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_authorize_error_event(conn, error)
 
     conn
-    |> delete_session(:session_chosen)
-    |> delete_session(:totp_authenticated)
+    |> delete_authentication_sessions()
     |> redirect(external: Error.redirect_to_url(error))
   end
 
@@ -688,11 +686,17 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_authorize_error_event(conn, error)
 
     conn
-    |> delete_session(:session_chosen)
-    |> delete_session(:totp_authenticated)
+    |> delete_authentication_sessions()
     |> put_status(status)
 
     raise %BorutaWeb.AuthorizeError{message: error_description, plug_status: status}
+  end
+
+  defp delete_authentication_sessions(conn) do
+    conn
+    |> delete_session(:session_chosen)
+    |> delete_session(:totp_authenticated)
+    |> delete_session(:webauthn_authenticated)
   end
 
   defp emit_authorize_error_event(%Plug.Conn{query_params: query_params} = conn, error) do
