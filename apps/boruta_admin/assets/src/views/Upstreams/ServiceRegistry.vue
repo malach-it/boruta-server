@@ -102,9 +102,7 @@
                       <th>Host</th>
                       <th>Base URL</th>
                       <th>Paths</th>
-                      <th>Authorization</th>
-                      <th>mTLS</th>
-                      <th colspan="3">Rate limit</th>
+                      <th colspan="5"></th>
                     </tr>
                   </thead>
                   <tbody>
