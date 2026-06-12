@@ -401,23 +401,25 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       federated_server ->
         base_url = URI.parse(federated_server["base_url"])
 
-        with {:ok, endpoints} <- federated_server_urls(backend, federated_server) do
-          client =
-            OAuth2.Client.new(
-              strategy: AuthCodeStrategy,
-              token_method: :post,
-              client_id: federated_server["client_id"],
-              client_secret: federated_server["client_secret"],
-              site: base_url,
-              request_opts: [state: "boruta"],
-              authorize_url: endpoints.authorize_url,
-              token_url: endpoints.token_url,
-              redirect_uri: federated_redirect_url(backend, federated_server_name)
-            )
+        case federated_server_urls(backend, federated_server) do
+          {:ok, endpoints} ->
+            client =
+              OAuth2.Client.new(
+                strategy: AuthCodeStrategy,
+                token_method: :post,
+                client_id: federated_server["client_id"],
+                client_secret: federated_server["client_secret"],
+                site: base_url,
+                request_opts: [state: "boruta"],
+                authorize_url: endpoints.authorize_url,
+                token_url: endpoints.token_url,
+                redirect_uri: federated_redirect_url(backend, federated_server_name)
+              )
 
-          OAuth2.Client.put_serializer(client, "application/json", Jason)
-        else
-          _error -> nil
+            OAuth2.Client.put_serializer(client, "application/json", Jason)
+
+          _error ->
+            nil
         end
     end
   end
