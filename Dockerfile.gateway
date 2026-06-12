@@ -24,7 +24,7 @@ RUN mix release boruta_gateway --force --overwrite
 
 FROM elixir:1.18-otp-26-alpine
 
-RUN apk --no-cache --update add openssl-dev
+RUN apk --no-cache --update add openssl
 
 WORKDIR /app
 
