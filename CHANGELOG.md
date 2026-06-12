@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-06-12
+
 ### Added
 
 - [gateway] HTTP and HTTPS forward proxies
