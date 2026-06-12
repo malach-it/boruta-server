@@ -45,6 +45,8 @@ RUN mix release boruta_auth --force --overwrite
 
 FROM elixir:1.14-otp-25-alpine
 
+RUN apk --no-cache --update add openssl-dev
+
 WORKDIR /app
 
 COPY --from=builder /app/_build/prod/rel/boruta_auth ./
