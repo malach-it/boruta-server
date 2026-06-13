@@ -21,5 +21,7 @@ apps/*/priv/ssl/**
 apps/*/log/**
 
 .vscode
+.codex/config.toml
+.codex/boruta-hook.env
 
 /ansible/group_vars
