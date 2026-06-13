@@ -355,7 +355,7 @@ export default {
       type: this.$route.query.type || '',
       scope: this.$route.query.scope || '',
       dateFilter: {
-        startAt: this.$route.query.startAt || moment().utc().subtract(1, 'month').format("yyyy-MM-DDTHH:mm"),
+        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
         endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
       },
       currentPage: Number(this.$route.query.page || 1),
