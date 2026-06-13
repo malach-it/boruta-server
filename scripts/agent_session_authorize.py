@@ -246,7 +246,7 @@ def actor_id_token(actor: Actor, event_kind: str, user_prompt: str | None = None
         "event": event_kind,
         "event_kind": event_kind,
         "iat": now,
-        "exp": now + 3600,
+        "exp": now + 60,
     }
     if user_prompt:
         payload["user_prompt"] = user_prompt
