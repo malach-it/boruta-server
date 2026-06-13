@@ -780,19 +780,19 @@ def codex_output(
     hook_input: dict[str, Any],
     message: str | None = None,
     block: bool = False,
-    include_context: bool = True,
+    include_context: bool = False,
 ) -> dict[str, Any]:
     event = str(hook_input.get("hook_event_name") or "")
     output: dict[str, Any] = {}
 
-    if message:
+    if message and not block and not include_context:
         output["systemMessage"] = message
 
     if block and event in BLOCKABLE_EVENTS:
         output["decision"] = "block"
         output["reason"] = message or "Boruta authorization failed"
 
-    if include_context and message and event in CONTEXT_EVENTS:
+    if include_context and message and not block and event in CONTEXT_EVENTS:
         output["hookSpecificOutput"] = {
             "hookEventName": event,
             "additionalContext": message,
