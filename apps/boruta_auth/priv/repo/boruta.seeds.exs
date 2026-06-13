@@ -1,101 +1,80 @@
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "openid",
-    label: "OpenID Connect capabilities",
-    public: true
-  },
-  on_conflict: :nothing
-)
+admin_scope_definitions = [
+  {"openid", "OpenID Connect capabilities"},
+  {"email", "Email"},
+  {"profile", "Profile"},
+  {"scopes:manage:all", "Manage all scopes"},
+  {"roles:manage:all", "Manage all roles"},
+  {"clients:manage:all", "Manage all clients"},
+  {"upstreams:manage:all", "Manage all upstreams"},
+  {"users:manage:all", "Manage all users"},
+  {"identity-providers:manage:all", "Manage all identity providers"},
+  {"configuration:manage:all", "Manage all configuration"},
+  {"logs:read:all", "Read all logs"},
+  {"tokens:read:all", "Read all tokens"}
+]
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "email",
-    label: "Email",
-    public: true
-  },
-  on_conflict: :nothing
-)
+admin_scopes =
+  Enum.map(admin_scope_definitions, fn {name, label} ->
+    {:ok, scope} =
+      BorutaAuth.Repo.insert(
+        %Boruta.Ecto.Scope{name: name, label: label},
+        on_conflict: :nothing
+      )
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "profile",
-    label: "Profile",
-    public: true
-  },
-  on_conflict: :nothing
-)
+    scope
+  end)
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "scopes:manage:all",
-    label: "Manage all scopes"
-  },
-  on_conflict: :nothing
-)
+{:ok, admin_role} =
+  BorutaIdentity.Admin.create_role(%{
+    name: "Boruta Administrator",
+    scopes: admin_scopes
+  })
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "roles:manage:all",
-    label: "Manage all roles"
-  },
-  on_conflict: :nothing
-)
+codex_scope_definitions = [
+  {"codex:event:userpromptsubmit", "Codex user prompt submission"},
+  {"codex:event:pretooluse", "Codex pre tool use"},
+  {"codex:event:permissionrequest", "Codex permission request"},
+  {"codex:event:posttooluse", "Codex post tool use"},
+  {"codex:event:stop", "Codex turn stop"},
+  {"codex:prompt:submit", "Submit Codex prompts"},
+  {"codex:permission:request", "Request Codex permissions"},
+  {"codex:permission:escalated", "Use escalated Codex permissions"},
+  {"codex:session:stop", "Stop Codex sessions"},
+  {"codex:tool:use", "Use Codex tools"},
+  {"codex:tool:read", "Use read-only Codex tools"},
+  {"codex:tool:sensitive", "Use sensitive Codex tools"},
+  {"codex:tool:result", "Receive Codex tool results"},
+  {"codex:tool:bash", "Use Codex bash tool"},
+  {"codex:tool:shell", "Use Codex shell tool"},
+  {"codex:tool:exec-command", "Use Codex command execution tool"},
+  {"codex:tool:functions-exec-command", "Use Codex command execution tool"},
+  {"codex:tool:functions-write-stdin", "Use Codex process stdin tool"},
+  {"codex:tool:write-stdin", "Use Codex process stdin tool"},
+  {"codex:tool:apply-patch", "Use Codex patch tool"},
+  {"codex:tool:imagegen", "Use Codex image generation tool"},
+  {"codex:file:patch", "Patch files through Codex"},
+  {"codex:image:generate", "Generate images through Codex"},
+  {"codex:process:stdin", "Write to Codex process stdin"}
+]
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "clients:manage:all",
-    label: "Manage all clients"
-  },
-  on_conflict: :nothing
-)
+codex_scopes =
+  Enum.map(codex_scope_definitions, fn {name, label} ->
+    {:ok, scope} =
+      BorutaAuth.Repo.insert(
+        %Boruta.Ecto.Scope{name: name, label: label},
+        on_conflict: :nothing
+      )
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "upstreams:manage:all",
-    label: "Manage all upstreams"
-  },
-  on_conflict: :nothing
-)
+    scope
+  end)
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "users:manage:all",
-    label: "Manage all users"
-  },
-  on_conflict: :nothing
-)
+{:ok, codex_role} =
+  BorutaIdentity.Admin.create_role(%{
+    name: "Codex agent",
+    scopes: codex_scopes
+  })
 
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "identity-providers:manage:all",
-    label: "Manage all identity providers"
-  },
-  on_conflict: :nothing
-)
-
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "configuration:manage:all",
-    label: "Manage all configuration"
-  },
-  on_conflict: :nothing
-)
-
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "logs:read:all",
-    label: "Read all logs"
-  },
-  on_conflict: :nothing
-)
-
-BorutaAuth.Repo.insert(
-  %Boruta.Ecto.Scope{
-    name: "tokens:read:all",
-    label: "Read all tokens"
-  },
-  on_conflict: :nothing
-)
+codex_scope_names = Enum.map(codex_scope_definitions, fn {name, _label} -> name end)
 
 client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
 
@@ -156,17 +135,7 @@ user =
     {:ok, user} ->
       user = BorutaIdentity.Accounts.Internal.domain_user!(user, backend)
 
-      Boruta.Ecto.Admin.get_scopes_by_names([
-        "users:manage:all",
-        "clients:manage:all",
-        "scopes:manage:all",
-        "roles:manage:all",
-        "upstreams:manage:all",
-        "identity-providers:manage:all",
-        "configuration:manage:all",
-        "logs:read:all",
-        "tokens:read:all"
-      ])
+      admin_scopes
       |> Enum.map(fn %{id: scope_id} ->
         %BorutaIdentity.Accounts.UserAuthorizedScope{
           scope_id: scope_id,
