@@ -244,7 +244,6 @@ def actor_id_token(actor: Actor, event_kind: str, user_prompt: str | None = None
         "sub": actor.actor_id,
         "actor_type": actor.actor_type,
         "event": event_kind,
-        "event_kind": event_kind,
         "iat": now,
         "exp": now + 60,
     }
@@ -417,7 +416,6 @@ def main() -> None:
             "sub": actor.actor_id,
             "actor_type": actor.actor_type,
             "event": args.event_kind,
-            "event_kind": args.event_kind,
             **({"user_prompt": args.user_prompt} if args.user_prompt else {}),
         },
         "id_token_preview": truncate(token),
