@@ -14,9 +14,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlencode, urlparse
-from urllib.request import Request, urlopen
 
 
 DEFAULT_ACTOR_BY_EVENT = {
@@ -46,7 +44,6 @@ USER_PROMPT_KEYS = (
     "user_prompt",
     "message",
 )
-DEFAULT_ADMIN_SCOPE = "scopes:manage:all"
 DEFAULT_OAUTH_BASE_URL = "http://localhost:8080"
 DEFAULT_BROWSER_REDIRECT_URI = "http://127.0.0.1:8765/oauth-callback"
 DEFAULT_DOCKER_COMPOSE_COMMAND = "docker compose up -d"
@@ -158,12 +155,6 @@ def pre_tool_use_scopes(hook_input: dict[str, Any], tool_name: str) -> list[str]
         scopes.append("codex:tool:read")
 
     return scopes
-
-
-def scope_names(scope: str | None) -> list[str]:
-    if not scope:
-        return []
-    return list(dict.fromkeys(part for part in scope.split() if part))
 
 
 def enabled(name: str, default: bool = False) -> bool:
@@ -300,35 +291,6 @@ def docker_compose_startup(hook_input: dict[str, Any], root: Path, state_file: s
 
     write_session_marker(marker_path, session_id, root)
     return None
-
-
-def read_scope_marker(path: Path) -> dict[str, Any]:
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, OSError, json.JSONDecodeError):
-        return {}
-    return payload if isinstance(payload, dict) else {}
-
-
-def write_scope_marker(path: Path, session_id: str, root: Path, scopes: list[str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=str(path.parent))
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as tmp:
-            json.dump({
-                "session_id": session_id,
-                "repo_root": str(root),
-                "scopes": scopes,
-                "updated_at": int(time.time()),
-            }, tmp, indent=2)
-            tmp.write("\n")
-            tmp.flush()
-            os.fsync(tmp.fileno())
-        os.chmod(tmp_name, 0o600)
-        os.replace(tmp_name, path)
-    finally:
-        if os.path.exists(tmp_name):
-            os.unlink(tmp_name)
 
 
 def truncate(value: str) -> str:
