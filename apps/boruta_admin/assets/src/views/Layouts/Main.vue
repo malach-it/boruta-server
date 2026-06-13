@@ -705,6 +705,35 @@ export default {
       background: rgba(255,255,255,.08);
     }
   }
+  .ui.styled.accordion {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255, 255, 255, 0.1)!important;
+    box-shadow: none;
+    color: white;
+
+    .accordion,
+    .title,
+    .content {
+      background: transparent;
+      color: white;
+    }
+  }
+  .tokens-dashboard {
+    .chain-id,
+    .token-id,
+    .token-detail-summary {
+      color: rgba(255, 255, 255, .65);
+    }
+
+    .token-accordion {
+      border-top-color: rgba(255, 255, 255, .1);
+    }
+
+    .token-claims {
+      background: rgba(255, 255, 255, .08);
+      color: white;
+    }
+  }
   .ui.breadcrumb {
     .divider {
       color: white!important;
