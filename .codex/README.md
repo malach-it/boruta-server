@@ -1,7 +1,8 @@
 # Boruta Codex Hook Example
 
 This directory contains a local Codex hook example that authorizes Codex events
-through Boruta.
+through Boruta. Note that it is a Proof of Concept and not aimed for production
+yet.
 
 ## Introduction
 
