@@ -1,10 +1,5 @@
 - hosts: localhost
   tasks:
-    - name: Add stable bitnami repo
-      kubernetes.core.helm_repository:
-        name: bitnami
-        repo_url: https://charts.bitnami.com/bitnami
-
     - name: Add stable jetstack repo
       kubernetes.core.helm_repository:
         name: jetstack
@@ -17,29 +12,15 @@
         kind: Namespace
         state: present
 
-          # - name: Install cert-manager helm package
-          #   kubernetes.core.helm:
-          #     name: cert-manager
-          #     chart_ref: jetstack/cert-manager
-          #     chart_version: 1.11.1
-          #     release_namespace: cert-manager
-          #     create_namespace: true
-          #     values:
-          #       installCRDs: true
-
-            # upgrade looks to be complicated, variable names contain breaking changes
-            # the master configuration file - https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
-            #
-            # - name: Install postgres helm package
-            #   kubernetes.core.helm:
-            #     name: postgres
-            #     chart_ref: bitnami/postgresql
-            #     chart_version: "12.2.7"
-            #     release_namespace: boruta-staging
-            #     values:
-            #       global.postgresql.auth.postgresPassword: "{{ postgresql_password }}"
-            #       primary.extendedConfiguration: |
-            #         max_connections = 1024
+    - name: Install cert-manager helm package
+      kubernetes.core.helm:
+        name: cert-manager
+        chart_ref: jetstack/cert-manager
+        chart_version: 1.11.1
+        release_namespace: cert-manager
+        create_namespace: true
+        values:
+          installCRDs: true
 
     - name: Create libcluster role
       kubernetes.core.k8s:
@@ -120,26 +101,6 @@
                       name: boruta-gateway
                       port:
                         number: 5000
-            - host: "{{ httpbin_sidecar_host }}"
-              http:
-                paths:
-                - path: /
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: boruta-httpbin-sidecar
-                      port:
-                        number: 5001
-            - host: "{{ protected_httpbin_sidecar_host }}"
-              http:
-                paths:
-                - path: /
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: boruta-protected-httpbin-sidecar
-                      port:
-                        number: 5001
             - host: "{{ oauth_host }}"
               http:
                 paths:
@@ -165,8 +126,6 @@
                 - "{{ oauth_host }}"
                 - "{{ admin_host }}"
                 - "{{ gateway_host }}"
-                - "{{ httpbin_sidecar_host }}"
-                - "{{ protected_httpbin_sidecar_host }}"
                 secretName: boruta-staging-cert
 
     - name: create boruta app ConfigMap
@@ -180,13 +139,13 @@
             namespace: boruta-staging
           data:
             SECRET_KEY_BASE: "{{ secret_key_base }}"
-            POSTGRES_USER: postgres
+            POSTGRES_USER: "{{ postgresql_user }}"
             POSTGRES_PASSWORD: "{{ postgresql_password }}"
             POSTGRES_DATABASE: boruta
             POSTGRES_HOST: postgres-postgresql
             MAX_LOG_RETENTION_DAYS: "180"
             K8S_NAMESPACE: boruta-staging
-            K8S_SELECTOR: app=boruta
+            K8S_SELECTOR: deployment=boruta
             BORUTA_ADMIN_OAUTH_CLIENT_ID: "{{ admin_client_id }}"
             BORUTA_ADMIN_OAUTH_CLIENT_SECRET: "{{ admin_client_secret }}"
             BORUTA_ADMIN_OAUTH_BASE_URL: "{{ oauth_base_url }}"
@@ -198,11 +157,105 @@
             BORUTA_OAUTH_HOST: "{{ oauth_host }}"
             BORUTA_OAUTH_PORT: "4001"
             BORUTA_OAUTH_BASE_URL: "{{ oauth_base_url }}"
+            BORUTA_GATEWAY_SERVER: "true"
             BORUTA_GATEWAY_PORT: "5000"
+            BORUTA_GATEWAY_SIDECAR: "false"
             BORUTA_GATEWAY_SIDECAR_PORT: "5001"
+            BORUTA_GATEWAY_PROXY_SERVER: "false"
+            BORUTA_GATEWAY_HTTPS_PROXY_SERVER: "false"
+            BORUTA_GATEWAY_HTTPS_SERVER: "false"
+            BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER: "false"
             BORUTA_ORGANIZATION_RESTRICTED: "{{ boruta_organization_restricted }}"
             DID_SERVICES_API_KEY: "{{ did_services_api_key }}"
             POOL_SIZE: "5"
+
+    - name: Create Postgres Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: postgres-postgresql
+            namespace: boruta-staging
+            labels:
+              app: postgres
+          spec:
+            clusterIP: None
+            selector:
+              app: postgres
+            ports:
+            - protocol: TCP
+              targetPort: 5432
+              name: postgres
+              port: 5432
+
+    - name: Create Postgres StatefulSet
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: postgres
+            namespace: boruta-staging
+          spec:
+            serviceName: postgres-postgresql
+            replicas: 1
+            selector:
+              matchLabels:
+                app: postgres
+            template:
+              metadata:
+                labels:
+                  app: postgres
+              spec:
+                containers:
+                - name: postgres
+                  image: postgres:16-alpine
+                  command:
+                  - postgres
+                  - -c
+                  - max_connections=1024
+                  env:
+                  - name: POSTGRES_USER
+                    value: "{{ postgresql_user }}"
+                  - name: POSTGRES_PASSWORD
+                    value: "{{ postgresql_password }}"
+                  - name: POSTGRES_DB
+                    value: boruta
+                  ports:
+                  - name: postgres
+                    containerPort: 5432
+                  readinessProbe:
+                    exec:
+                      command:
+                      - pg_isready
+                      - -U
+                      - "{{ postgresql_user }}"
+                    initialDelaySeconds: 5
+                    periodSeconds: 10
+                  volumeMounts:
+                  - name: data
+                    mountPath: /var/lib/postgresql/data
+                    subPath: postgres
+            volumeClaimTemplates:
+            - metadata:
+                name: data
+              spec:
+                storageClassName: standard-rwo
+                accessModes:
+                - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 10Gi
+
+    - name: Wait for Postgres readiness
+      shell: "kubectl -n boruta-staging rollout status statefulset/postgres"
+      retries: 6
+      delay: 5
+      register: postgres_result
+      until: postgres_result.rc == 0
 
     - name: Setup boruta auth database
       register: database_setup
@@ -248,36 +301,30 @@
               requests:
                 storage: 5Gi
 
-    - name: Get blue/green deployment status
-      kubernetes.core.k8s_info:
-        kind: Service
-        namespace: boruta-staging
-        label_selectors:
-          - "app=boruta"
-      register: boruta_services
-
-    - name: Create Boruta blue/green deployment
+    - name: Create Boruta deployment
       kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: apps/v1
           kind: Deployment
           metadata:
-            name: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+            name: boruta
             namespace: boruta-staging
           spec:
             replicas: 1
             strategy:
-              type: Recreate
-              rollingUpdate: null
+              type: RollingUpdate
+              rollingUpdate:
+                maxSurge: 1
+                maxUnavailable: 0
             selector:
               matchLabels:
-                deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+                deployment: boruta
             template:
               metadata:
                 name: boruta
                 labels:
-                  deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+                  deployment: boruta
                   app: boruta
               spec:
                 volumes:
@@ -304,8 +351,8 @@
                 imagePullSecrets:
                 - name: dockerconfigjson-github-com
 
-    - name: Wait for deployment readyness
-      shell: "kubectl -n boruta-staging wait --for=condition=Ready po --all -l deployment={{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+    - name: Wait for deployment readiness
+      shell: "kubectl -n boruta-staging rollout status deployment/boruta"
       retries: 6
       delay: 5
       register: result
@@ -324,7 +371,7 @@
               app: boruta
           spec:
             selector:
-              deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+              deployment: boruta
             ports:
             - protocol: TCP
               targetPort: 4001
@@ -344,7 +391,7 @@
               app: boruta
           spec:
             selector:
-              deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+              deployment: boruta
             ports:
             - protocol: TCP
               targetPort: 4002
@@ -364,59 +411,9 @@
               app: boruta
           spec:
             selector:
-              deployment: "{{ 'boruta-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-blue' }}"
+              deployment: boruta
             ports:
             - protocol: TCP
               targetPort: 5000
               name: gateway-tcp
               port: 5000
-
-    - name: Create httpbin sidecar Service
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: boruta-httpbin-sidecar
-            namespace: boruta-staging
-            labels:
-              app: boruta-httpbin
-          spec:
-            selector:
-              deployment: "{{ 'boruta-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-httpbin-blue' else 'boruta-httpbin-blue' }}"
-            ports:
-            - protocol: TCP
-              targetPort: 5001
-              name: httpbin-tcp
-              port: 5001
-
-    - name: Create protected httpbin sidecar Service
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: boruta-protected-httpbin-sidecar
-            namespace: boruta-staging
-            labels:
-              app: boruta-protected-httpbin
-          spec:
-            selector:
-              deployment: "{{ 'boruta-protected-httpbin-green' if boruta_services.resources[0].spec.selector.deployment == 'boruta-protected-httpbin-blue' else 'boruta-protected-httpbin-blue' }}"
-            ports:
-            - protocol: TCP
-              targetPort: 5001
-              name: gateway-tcp
-              port: 5001
-
-    - name: Delete Boruta blue/green deployment
-      kubernetes.core.k8s:
-        state: absent
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: "{{ 'boruta-blue' if boruta_services.resources[0].spec.selector.deployment == 'boruta-blue' else 'boruta-green' }}"
-            namespace: boruta-staging

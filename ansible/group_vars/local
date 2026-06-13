@@ -1,4 +1,5 @@
 ---
+postgresql_user: "{{ lookup('env', 'BORUTA_POSTGRES_USER') | default('postgres', true) }}"
 postgresql_password: "{{ lookup('env', 'BORUTA_POSTGRES_PASSWORD') }}"
 
 oauth_host: oauth.boruta.local
