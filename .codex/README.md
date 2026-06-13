@@ -32,8 +32,9 @@ attempt.
 
 1. Copy `.codex/config.example.toml` to `.codex/config.toml`.
 2. Replace `/absolute/path/to/boruta-server` with this checkout path.
-3. Export the variables from `.codex/boruta-hook.env.example` with local
-values.
+3. Copy `.codex/boruta-hook.env.example` to `.codex/boruta-hook.env` and fill
+in local values. The example hook configuration loads this file before running
+the hook.
 4. Ensure Boruta is running at `BORUTA_OAUTH_BASE_URL`, or keep
 `BORUTA_CODEX_HOOK_DOCKER_COMPOSE_START=true` to let the hook run Docker
 Compose once per Codex session.
