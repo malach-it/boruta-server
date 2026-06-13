@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import secrets
 import shlex
 import subprocess
 import sys
@@ -451,7 +452,7 @@ class BrowserCallback:
             self.condition.notify_all()
 
 
-def browser_callback_server(redirect_uri: str, callback: BrowserCallback) -> HTTPServer:
+def browser_callback_server(redirect_uri: str, callback: BrowserCallback, expected_state: str) -> HTTPServer:
     parsed = urlparse(redirect_uri)
     if parsed.scheme not in ("http", "https") or not parsed.hostname or not parsed.port:
         raise RuntimeError("browser redirect URI must include an http host and explicit port")
@@ -459,8 +460,14 @@ def browser_callback_server(redirect_uri: str, callback: BrowserCallback) -> HTT
     class CallbackHandler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             query = parse_qs(urlparse(self.path).query)
+            state = first_query_value(query, "state")
             code = first_query_value(query, "code")
             error = first_query_value(query, "error_description") or first_query_value(query, "error")
+
+            if state != expected_state:
+                callback.set_error("authorization callback state mismatch")
+                self.respond_html("Authorization callback state mismatch.", status=400)
+                return
 
             if code:
                 callback.set_code(code)
@@ -527,7 +534,8 @@ def browser_authorization_code(
     redirect_uri = browser_redirect_uri()
     previous_code = None if reset_chain else read_previous_authorization_code(state_file)
     callback = BrowserCallback()
-    server = browser_callback_server(redirect_uri, callback)
+    state = secrets.token_urlsafe(32)
+    server = browser_callback_server(redirect_uri, callback, state)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
@@ -535,7 +543,7 @@ def browser_authorization_code(
         "client_id": browser_client_id(),
         "redirect_uri": redirect_uri,
         "response_type": "code",
-        "state": "codex-hook",
+        "state": state,
     }
     if scope:
         params["scope"] = scope
