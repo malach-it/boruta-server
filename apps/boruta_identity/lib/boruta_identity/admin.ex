@@ -88,7 +88,7 @@ defmodule BorutaIdentity.Admin do
             left_join: r in assoc(u, :roles),
             left_join: o in assoc(u, :organizations),
             left_join: b in assoc(u, :backend),
-            preload: [authorized_scopes: as, backend: b],
+            preload: [authorized_scopes: as, roles: r, organizations: o, backend: b],
             where: u.id == ^user_id
           )
         )
@@ -99,7 +99,7 @@ defmodule BorutaIdentity.Admin do
             left_join: r in assoc(u, :roles),
             left_join: o in assoc(u, :organizations),
             left_join: b in assoc(u, :backend),
-            preload: [authorized_scopes: as, backend: b],
+            preload: [authorized_scopes: as, roles: r, organizations: o, backend: b],
             where: u.username == ^id
           )
         )
