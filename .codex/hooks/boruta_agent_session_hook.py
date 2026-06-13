@@ -877,7 +877,7 @@ def main() -> int:
     if state_file:
         command.extend(["--state-file", state_file])
 
-    if os.getenv("BORUTA_CODEX_HOOK_SHOW_REQUEST"):
+    if enabled("BORUTA_CODEX_HOOK_SHOW_REQUEST"):
         command.append("--show-request")
 
     marker_path = session_marker_path(state_file)
@@ -906,7 +906,7 @@ def main() -> int:
         )))
         return 0
 
-    if os.getenv("BORUTA_CODEX_HOOK_DRY_RUN"):
+    if enabled("BORUTA_CODEX_HOOK_DRY_RUN", default=False):
         command.append("--dry-run")
 
     result = subprocess.run(
@@ -920,7 +920,7 @@ def main() -> int:
     if result.returncode == 0:
         if reset_session_id:
             write_session_marker(marker_path, reset_session_id, root)
-        if os.getenv("BORUTA_CODEX_HOOK_VERBOSE"):
+        if enabled("BORUTA_CODEX_HOOK_VERBOSE"):
             print(json.dumps(codex_output(hook_input, result.stdout.strip())))
         elif enabled("BORUTA_CODEX_HOOK_STATUS", default=True):
             parsed_result = authorizer_result(result.stdout)
