@@ -68,17 +68,26 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def upsert_client_identity_provider(client_id, identity_provider_id) do
-    clear_identity_provider_by_client_id_cache()
+    result =
+      %ClientIdentityProvider{}
+      |> ClientIdentityProvider.changeset(%{
+        client_id: client_id,
+        identity_provider_id: identity_provider_id
+      })
+      |> Repo.insert(
+        on_conflict: [set: [identity_provider_id: identity_provider_id]],
+        conflict_target: :client_id
+      )
 
-    %ClientIdentityProvider{}
-    |> ClientIdentityProvider.changeset(%{
-      client_id: client_id,
-      identity_provider_id: identity_provider_id
-    })
-    |> Repo.insert(
-      on_conflict: [set: [identity_provider_id: identity_provider_id]],
-      conflict_target: :client_id
-    )
+    with {:ok, _client_identity_provider} <- result do
+      clear_identity_provider_by_client_id_cache(client_id)
+    end
+
+    result
+  end
+
+  defp clear_identity_provider_by_client_id_cache(client_id) do
+    :ok = BorutaIdentity.Cache.delete({__MODULE__, :identity_provider_by_client_id, client_id})
   end
 
   defp clear_identity_provider_by_client_id_cache do
@@ -106,6 +115,8 @@ defmodule BorutaIdentity.IdentityProviders do
 
     case Repo.delete_all(query) do
       {1, [client_identity_provider]} ->
+        clear_identity_provider_by_client_id_cache(client_id)
+
         {:ok, client_identity_provider}
 
       {0, []} ->
