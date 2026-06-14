@@ -354,16 +354,33 @@ defmodule BorutaGateway.Certificate do
   end
 
   defp decode_certificate!(certificate_path) do
-    certificate_path
-    |> File.read!()
+    content = File.read!(certificate_path)
+
+    case decode_certificate(content) do
+      {:ok, certificate} ->
+        certificate
+
+      :error ->
+        with {:ok, decoded_content} <- Base.decode64(String.trim(content)),
+             {:ok, certificate} <- decode_certificate(decoded_content) do
+          certificate
+        else
+          _error ->
+            raise "certificate file does not contain a PEM certificate: #{certificate_path}"
+        end
+    end
+  end
+
+  defp decode_certificate(content) do
+    content
     |> :public_key.pem_decode()
     |> Enum.find(fn
       {:Certificate, _der, _encoding} -> true
       _entry -> false
     end)
     |> case do
-      {:Certificate, der, _encoding} -> der
-      _entry -> raise "certificate file does not contain a PEM certificate: #{certificate_path}"
+      {:Certificate, der, _encoding} -> {:ok, der}
+      _entry -> :error
     end
   end
 
@@ -416,8 +433,25 @@ defmodule BorutaGateway.Certificate do
   defp normalize_cacert(_cacert), do: []
 
   defp decode_private_key!(private_key_path) do
-    private_key_path
-    |> File.read!()
+    content = File.read!(private_key_path)
+
+    case decode_private_key(content) do
+      {:ok, private_key} ->
+        private_key
+
+      :error ->
+        with {:ok, decoded_content} <- Base.decode64(String.trim(content)),
+             {:ok, private_key} <- decode_private_key(decoded_content) do
+          private_key
+        else
+          _error ->
+            raise "private key file does not contain a PEM private key: #{private_key_path}"
+        end
+    end
+  end
+
+  defp decode_private_key(content) do
+    content
     |> :public_key.pem_decode()
     |> Enum.find(fn
       {:Certificate, _der, _encoding} -> false
@@ -425,13 +459,13 @@ defmodule BorutaGateway.Certificate do
     end)
     |> case do
       {key_type, der, :not_encrypted} ->
-        {key_type, der}
+        {:ok, {key_type, der}}
 
       {key_type, der, encryption_info} ->
-        {key_type, der, encryption_info}
+        {:ok, {key_type, der, encryption_info}}
 
       _entry ->
-        raise "private key file does not contain a PEM private key: #{private_key_path}"
+        :error
     end
   end
 
