@@ -775,6 +775,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       extra_claims:
         Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata),
       authorization_details: VerifiableCredentials.authorization_details(current_user, scope),
+      credential_configuration: VerifiableCredentials.credential_configuration(current_user),
       presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
     }
   end
