@@ -16,7 +16,12 @@ defmodule BorutaGateway.Certificate do
 
     File.mkdir_p!(directory)
 
-    generate!(certificate_path, private_key_path, root_ca)
+    if existing_certificate?(certificate_path, private_key_path) do
+      maybe_write_root_ca!(root_ca)
+      cache_ssl_options!(certificate_path, private_key_path)
+    else
+      generate!(certificate_path, private_key_path, root_ca)
+    end
   end
 
   def generate_root_ca_pem! do
@@ -159,6 +164,27 @@ defmodule BorutaGateway.Certificate do
   defp unique_suffix do
     System.unique_integer([:positive, :monotonic])
   end
+
+  defp existing_certificate?(certificate_path, private_key_path) do
+    File.exists?(certificate_path) &&
+      File.exists?(private_key_path) &&
+      loadable_certificate?(certificate_path, private_key_path)
+  end
+
+  defp loadable_certificate?(certificate_path, private_key_path) do
+    decode_certificate!(certificate_path)
+    decode_private_key!(private_key_path)
+
+    true
+  rescue
+    _error -> false
+  end
+
+  defp maybe_write_root_ca!(%{certificate: _certificate, private_key: _private_key} = root_ca) do
+    write_root_ca!(root_ca)
+  end
+
+  defp maybe_write_root_ca!(_root_ca), do: :ok
 
   defp generate!(certificate_path, private_key_path, nil) do
     args = [
