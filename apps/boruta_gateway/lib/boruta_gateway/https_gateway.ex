@@ -717,7 +717,7 @@ defmodule BorutaGateway.HttpsGateway do
 
     payload
     |> clean_request_headers(preserve_forwarded_authorization?)
-    |> put_header("Host", upstream.host)
+    |> put_header("Host", upstream_host_header(upstream))
   end
 
   defp transform_header(payload, upstream, token) do
@@ -763,6 +763,11 @@ defmodule BorutaGateway.HttpsGateway do
   defp normalize_upstream_path(""), do: "/"
   defp normalize_upstream_path("?" <> query), do: "/?" <> query
   defp normalize_upstream_path(path), do: path
+
+  defp upstream_host_header(%Upstream{virtual_host: virtual_host}) when is_binary(virtual_host),
+    do: virtual_host
+
+  defp upstream_host_header(%Upstream{host: host}), do: host
 
   defp clean_request_headers(payload, preserve_forwarded_authorization?) do
     rejected_headers = [

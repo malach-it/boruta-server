@@ -609,6 +609,39 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "preserves virtual host when forwarding to an ingress upstream" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&echo_headers_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/.well-known/acme-challenge"],
+              virtual_host: "admin.boruta.patatoid.fr"
+            })
+
+            Process.sleep(100)
+
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/.well-known/acme-challenge/token",
+                [{"host", "admin.boruta.patatoid.fr"}],
+                ""
+              )
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert %{"headers" => %{"Host" => "admin.boruta.patatoid.fr"}} = Jason.decode!(body)
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "does not forward hop-by-hop response headers" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
