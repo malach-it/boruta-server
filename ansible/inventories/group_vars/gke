@@ -1,0 +1,167 @@
+---
+# Values come from the process environment first, then from .env.production.
+# Override BORUTA_ENV_FILE when running with another env file.
+boruta_env_file: "{{ lookup('env', 'BORUTA_ENV_FILE') | default(inventory_dir ~ '/../../.env.production', true) }}"
+
+# Core stack
+boruta_namespace: >-
+  {{ lookup('env', 'BORUTA_NAMESPACE')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_NAMESPACE type=properties file=' ~ boruta_env_file ~ ' default=boruta-staging'), true) }}
+boruta_name: >-
+  {{ lookup('env', 'BORUTA_NAME')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_NAME type=properties file=' ~ boruta_env_file ~ ' default=boruta'), true) }}
+boruta_ingress_class: >-
+  {{ lookup('env', 'BORUTA_INGRESS_CLASS')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_CLASS type=properties file=' ~ boruta_env_file ~ ' default=boruta'), true) }}
+boruta_ingress_http_node_port: >-
+  {{ lookup('env', 'BORUTA_INGRESS_HTTP_NODE_PORT')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_HTTP_NODE_PORT type=properties file=' ~ boruta_env_file ~ ' default=30080'), true) }}
+boruta_ingress_https_node_port: >-
+  {{ lookup('env', 'BORUTA_INGRESS_HTTPS_NODE_PORT')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_HTTPS_NODE_PORT type=properties file=' ~ boruta_env_file ~ ' default=30443'), true) }}
+boruta_ingress_load_balancer_ip: >-
+  {{ lookup('env', 'BORUTA_INGRESS_LOAD_BALANCER_IP')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_LOAD_BALANCER_IP type=properties file=' ~ boruta_env_file ~ ' default=35.204.103.196'), true) }}
+
+# Clustering
+boruta_libcluster_namespace: >-
+  {{ lookup('env', 'BORUTA_LIBCLUSTER_NAMESPACE')
+    | default(lookup('env', 'K8S_NAMESPACE'), true)
+    | default(lookup('ansible.builtin.ini', 'BORUTA_LIBCLUSTER_NAMESPACE type=properties file=' ~ boruta_env_file ~ ' default='), true)
+    | default(lookup('ansible.builtin.ini', 'K8S_NAMESPACE type=properties file=' ~ boruta_env_file ~ ' default='), true)
+    | default('*', true) }}
+boruta_libcluster_selector: >-
+  {{ lookup('env', 'BORUTA_LIBCLUSTER_SELECTOR')
+    | default(lookup('env', 'K8S_SELECTOR'), true)
+    | default(
+        lookup('ansible.builtin.ini', 'BORUTA_LIBCLUSTER_SELECTOR type=properties file=' ~ boruta_env_file ~ ' default=')
+        | default(lookup('ansible.builtin.ini', 'K8S_SELECTOR type=properties file=' ~ boruta_env_file ~ ' default='), true)
+        | default('identity_platform=boruta', true),
+        true
+      ) }}
+boruta_release_cookie: >-
+  {{ lookup('env', 'RELEASE_COOKIE')
+    | default(lookup('ansible.builtin.ini', 'RELEASE_COOKIE type=properties file=' ~ boruta_env_file ~ ' default=cookie'), true) }}
+
+# PostgreSQL
+boruta_postgres_name: >-
+  {{ lookup('env', 'BORUTA_POSTGRES_NAME')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_POSTGRES_NAME type=properties file=' ~ boruta_env_file ~ ' default=postgres'), true) }}
+boruta_postgres_user: >-
+  {{ lookup('env', 'BORUTA_POSTGRES_USER')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_POSTGRES_USER type=properties file=' ~ boruta_env_file ~ ' default=postgres'), true) }}
+boruta_postgres_password: >-
+  {{ lookup('env', 'BORUTA_POSTGRES_PASSWORD')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_POSTGRES_PASSWORD type=properties file=' ~ boruta_env_file ~ ' default='), true) }}
+boruta_postgres_database: >-
+  {{ lookup('env', 'BORUTA_POSTGRES_DATABASE')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_POSTGRES_DATABASE type=properties file=' ~ boruta_env_file ~ ' default=boruta'), true) }}
+
+# Compatibility aliases for the legacy deployment playbook.
+postgresql_user: "{{ boruta_postgres_user }}"
+postgresql_password: "{{ boruta_postgres_password }}"
+
+# Public Admin and OAuth endpoints
+boruta_admin_host: >-
+  {{ lookup('env', 'BORUTA_ADMIN_HOST')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_ADMIN_HOST type=properties file=' ~ boruta_env_file ~ ' default=admin.boruta.patatoid.fr'), true) }}
+boruta_admin_port: >-
+  {{ lookup('env', 'BORUTA_ADMIN_PORT')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_ADMIN_PORT type=properties file=' ~ boruta_env_file ~ ' default=8081'), true) }}
+boruta_admin_base_url: >-
+  {{ lookup('env', 'BORUTA_ADMIN_BASE_URL')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_ADMIN_BASE_URL type=properties file=' ~ boruta_env_file ~ ' default=https://admin.boruta.patatoid.fr'), true) }}
+boruta_admin_oauth_client_id: >-
+  {{ lookup('env', 'BORUTA_ADMIN_OAUTH_CLIENT_ID')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_ADMIN_OAUTH_CLIENT_ID type=properties file=' ~ boruta_env_file ~ ' default=00000000-0000-0000-0000-000000000001'), true) }}
+boruta_auth_namespace: >-
+  {{ lookup('env', 'BORUTA_AUTH_NAMESPACE')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_AUTH_NAMESPACE type=properties file=' ~ boruta_env_file ~ ' default=' ~ boruta_namespace), true) }}
+boruta_oauth_environment_name: >-
+  {{ lookup('env', 'BORUTA_OAUTH_ENVIRONMENT_NAME')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_OAUTH_ENVIRONMENT_NAME type=properties file=' ~ boruta_env_file ~ ' default=' ~ boruta_name ~ '-oauth-env'), true) }}
+boruta_oauth_scheme: >-
+  {{ lookup('env', 'BORUTA_OAUTH_SCHEME')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_OAUTH_SCHEME type=properties file=' ~ boruta_env_file ~ ' default=http'), true) }}
+boruta_oauth_host: >-
+  {{ lookup('env', 'BORUTA_OAUTH_HOST')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_OAUTH_HOST type=properties file=' ~ boruta_env_file ~ ' default=auth.boruta.local'), true) }}
+boruta_oauth_port: >-
+  {{ lookup('env', 'BORUTA_OAUTH_PORT')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_OAUTH_PORT type=properties file=' ~ boruta_env_file ~ ' default=8080'), true) }}
+boruta_oauth_base_url: >-
+  {{ lookup('env', 'BORUTA_OAUTH_BASE_URL')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_OAUTH_BASE_URL type=properties file=' ~ boruta_env_file ~ ' default=' ~ boruta_oauth_scheme ~ '://' ~ boruta_oauth_host ~ ':' ~ boruta_ingress_http_node_port), true) }}
+
+# Compatibility aliases for the legacy deployment playbook.
+oauth_host: "{{ boruta_oauth_host }}"
+admin_host: "{{ boruta_admin_host }}"
+gateway_host: >-
+  {{ lookup('env', 'BORUTA_GATEWAY_HOST')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_GATEWAY_HOST type=properties file=' ~ boruta_env_file ~ ' default=gateway.boruta.patatoid.fr'), true) }}
+oauth_base_url: "{{ boruta_oauth_base_url }}"
+boruta_base_url: "{{ boruta_admin_base_url }}"
+
+# Seed/admin secrets and deployment metadata
+admin_client_id: "{{ boruta_admin_oauth_client_id }}"
+admin_client_secret: >-
+  {{ lookup('env', 'BORUTA_ADMIN_OAUTH_CLIENT_SECRET')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_ADMIN_OAUTH_CLIENT_SECRET type=properties file=' ~ boruta_env_file ~ ' default='), true) }}
+admin_email: >-
+  {{ lookup('env', 'BORUTA_ADMIN_EMAIL')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_ADMIN_EMAIL type=properties file=' ~ boruta_env_file ~ ' default='), true) }}
+admin_password: >-
+  {{ lookup('env', 'BORUTA_ADMIN_PASSWORD')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_ADMIN_PASSWORD type=properties file=' ~ boruta_env_file ~ ' default='), true) }}
+secret_key_base: >-
+  {{ lookup('env', 'SECRET_KEY_BASE')
+    | default(lookup('ansible.builtin.ini', 'SECRET_KEY_BASE type=properties file=' ~ boruta_env_file ~ ' default='), true) }}
+boruta_organization_restricted: >-
+  {{ lookup('env', 'BORUTA_ORGANIZATION_RESTRICTED')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_ORGANIZATION_RESTRICTED type=properties file=' ~ boruta_env_file ~ ' default='), true) }}
+did_services_api_key: >-
+  {{ lookup('env', 'DID_SERVICES_API_KEY')
+    | default(lookup('ansible.builtin.ini', 'DID_SERVICES_API_KEY type=properties file=' ~ boruta_env_file ~ ' default='), true) }}
+release_tag: >-
+  {{ lookup('env', 'RELEASE_TAG')
+    | default(lookup('ansible.builtin.ini', 'RELEASE_TAG type=properties file=' ~ boruta_env_file ~ ' default=master'), true) }}
+boruta_gateway_certificate_mount_path: >-
+  {{ lookup('env', 'BORUTA_GATEWAY_CERTIFICATE_MOUNT_PATH')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_GATEWAY_CERTIFICATE_MOUNT_PATH type=properties file=' ~ boruta_env_file ~ ' default=/app/lib/boruta_gateway-0.1.0/priv/ssl'), true) }}
+boruta_gateway_tls_secret_name: >-
+  {{ lookup('env', 'BORUTA_GATEWAY_TLS_SECRET_NAME')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_GATEWAY_TLS_SECRET_NAME type=properties file=' ~ boruta_env_file ~ ' default=boruta-ingress-tls'), true) }}
+boruta_logs_pvc_name: >-
+  {{ lookup('env', 'BORUTA_LOGS_PVC_NAME')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_LOGS_PVC_NAME type=properties file=' ~ boruta_env_file ~ ' default=' ~ boruta_name ~ '-logs'), true) }}
+boruta_logs_storage_class: >-
+  {{ lookup('env', 'BORUTA_LOGS_STORAGE_CLASS')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_LOGS_STORAGE_CLASS type=properties file=' ~ boruta_env_file ~ ' default=standard-rwo'), true) }}
+boruta_logs_access_mode: >-
+  {{ lookup('env', 'BORUTA_LOGS_ACCESS_MODE')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_LOGS_ACCESS_MODE type=properties file=' ~ boruta_env_file ~ ' default=ReadWriteOnce'), true) }}
+kagome_namespace: >-
+  {{ lookup('env', 'KAGOME_NAMESPACE')
+    | default(lookup('ansible.builtin.ini', 'KAGOME_NAMESPACE type=properties file=' ~ boruta_env_file ~ ' default=' ~ boruta_namespace), true) }}
+boruta_ingress_tls_dns_names: >-
+  {{ (lookup('env', 'BORUTA_INGRESS_TLS_DNS_NAMES')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_TLS_DNS_NAMES type=properties file=' ~ boruta_env_file ~ ' default='), true))
+    .split(',')
+    | map('trim')
+    | reject('equalto', '')
+    | list
+    | default([boruta_oauth_host, boruta_admin_host, gateway_host], true) }}
+
+# cert-manager and Let's Encrypt
+cert_manager_namespace: >-
+  {{ lookup('env', 'CERT_MANAGER_NAMESPACE')
+    | default(lookup('ansible.builtin.ini', 'CERT_MANAGER_NAMESPACE type=properties file=' ~ boruta_env_file ~ ' default=cert-manager'), true) }}
+letsencrypt_cluster_issuer_name: >-
+  {{ lookup('env', 'LETSENCRYPT_CLUSTER_ISSUER_NAME')
+    | default(lookup('ansible.builtin.ini', 'LETSENCRYPT_CLUSTER_ISSUER_NAME type=properties file=' ~ boruta_env_file ~ ' default=letsencrypt-prod'), true) }}
+letsencrypt_email: >-
+  {{ lookup('env', 'LETSENCRYPT_EMAIL')
+    | default(lookup('ansible.builtin.ini', 'LETSENCRYPT_EMAIL type=properties file=' ~ boruta_env_file ~ ' default=admin@boruta.patatoid.fr'), true) }}
+letsencrypt_server: >-
+  {{ lookup('env', 'LETSENCRYPT_SERVER')
+    | default(lookup('ansible.builtin.ini', 'LETSENCRYPT_SERVER type=properties file=' ~ boruta_env_file ~ ' default=https://acme-v02.api.letsencrypt.org/directory'), true) }}
