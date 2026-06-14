@@ -108,7 +108,7 @@ export default defineComponent({
     },
     insertConsent (eventKey) {
       eventHandler.dispatch('insert_credential-approval', eventKey)
-      this.keyConsentEventKey = null
+      this.insertConsentEventKey = null
     },
     generateKeyConsent (eventKey) {
       eventHandler.dispatch('generate_key-approval', '', { password: this.selectedKeyPassword })
@@ -139,6 +139,7 @@ export default defineComponent({
         this.insertConsentEventKey = this.credentialId
       })
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {
+        this.fetchingCredential = false
         this.$store.commit('refreshCredentials')
         this.$router.push({ name: 'home' })
         this.resetKeySelect()
