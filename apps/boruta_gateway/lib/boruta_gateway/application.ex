@@ -6,7 +6,7 @@ defmodule BorutaGateway.Application do
   use Application
   require Logger
 
-  alias BorutaGateway.{ConfigurationLoader, Kubernetes, ServiceRegistry, Upstreams}
+  alias BorutaGateway.{Certificate, ConfigurationLoader, Kubernetes, ServiceRegistry, Upstreams}
 
   @impl Application
   def start(_type, _args) do
@@ -107,6 +107,7 @@ defmodule BorutaGateway.Application do
              match_function: &Upstreams.match/2,
              verify_client_certificate:
                Application.get_env(:boruta_gateway, :https_verify_client_certificate, false),
+             ssl_options: gateway_mounted_certificate_ssl_options(),
              num_acceptors: num_acceptors
            ]
          ]},
@@ -114,6 +115,19 @@ defmodule BorutaGateway.Application do
       type: :supervisor
     }
   end
+
+  defp gateway_mounted_certificate_ssl_options do
+    certificate_path = System.get_env("BORUTA_GATEWAY_MOUNTED_CERTIFICATE_PATH")
+    private_key_path = System.get_env("BORUTA_GATEWAY_MOUNTED_PRIVATE_KEY_PATH")
+
+    if present?(certificate_path) && present?(private_key_path) do
+      Certificate.ssl_options(certificate_path, private_key_path)
+    else
+      Certificate.ssl_options()
+    end
+  end
+
+  defp present?(value), do: value not in [nil, ""]
 
   defp sidecar_https_server_child_spec(num_acceptors) do
     %{
