@@ -227,6 +227,8 @@
             BORUTA_GATEWAY_PORT: "{{ boruta_gateway_http_port | string }}"
             BORUTA_GATEWAY_HTTPS_SERVER: "{{ boruta_gateway_https_enabled | bool | ternary('true', 'false') }}"
             BORUTA_GATEWAY_HTTPS_PORT: "{{ boruta_gateway_https_port | string }}"
+            BORUTA_GATEWAY_MOUNTED_CERTIFICATE_PATH: "{{ boruta_gateway_mounted_certificate_path }}"
+            BORUTA_GATEWAY_MOUNTED_PRIVATE_KEY_PATH: "{{ boruta_gateway_mounted_private_key_path }}"
             BORUTA_GATEWAY_KUBERNETES_INGRESS_CONTROLLER: "true"
             BORUTA_GATEWAY_KUBERNETES_NAMESPACE: "{{ boruta_ingress_watch_namespace }}"
             BORUTA_GATEWAY_KUBERNETES_INGRESS_CLASS: "{{ boruta_ingress_class }}"
@@ -421,6 +423,14 @@
                       items:
                         - key: ingress-config.yml
                           path: ingress-config.yml
+                  - name: gateway-tls
+                    secret:
+                      secretName: "{{ boruta_gateway_tls_secret_name }}"
+                      items:
+                        - key: tls.crt
+                          path: tls.crt
+                        - key: tls.key
+                          path: tls.key
                 containers:
                   - name: boruta-gateway
                     image: "{{ boruta_gateway_image }}"
@@ -453,6 +463,9 @@
                         mountPath: "/app/log"
                       - name: static-configuration
                         mountPath: "/config"
+                        readOnly: true
+                      - name: gateway-tls
+                        mountPath: "{{ boruta_gateway_mounted_certificate_dir }}"
                         readOnly: true
 
     - name: Create ingress controller service
