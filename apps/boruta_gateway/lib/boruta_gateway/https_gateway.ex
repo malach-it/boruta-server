@@ -36,6 +36,8 @@ defmodule BorutaGateway.HttpsGateway do
       verify_client_certificate =
         resolve_verify_client_certificate(args[:verify_client_certificate])
 
+      ssl_options = server_ssl_options(args)
+
       {:ok, listen_socket} =
         :ssl.listen(
           args[:port],
@@ -45,7 +47,7 @@ defmodule BorutaGateway.HttpsGateway do
             {:active, false},
             {:reuseaddr, true}
           ] ++
-            Certificate.ssl_options() ++
+            ssl_options ++
             client_certificate_options(verify_client_certificate)
         )
 
@@ -73,6 +75,13 @@ defmodule BorutaGateway.HttpsGateway do
     end
 
     defp client_certificate_options(_verify_client_certificate), do: []
+
+    defp server_ssl_options(args) do
+      case Keyword.fetch(args, :ssl_options) do
+        {:ok, ssl_options} -> ssl_options
+        :error -> Certificate.ssl_options()
+      end
+    end
 
     defp resolve_verify_client_certificate({module, function, args}) do
       apply(module, function, args)

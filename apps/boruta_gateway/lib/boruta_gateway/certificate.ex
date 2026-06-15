@@ -95,6 +95,13 @@ defmodule BorutaGateway.Certificate do
     end
   end
 
+  def ssl_options(certificate_path, private_key_path) do
+    [
+      {:cert, decode_certificate!(certificate_path)},
+      {:key, decode_private_key!(private_key_path)}
+    ]
+  end
+
   def paths do
     directory = directory()
 
@@ -316,14 +323,9 @@ defmodule BorutaGateway.Certificate do
   end
 
   defp cache_ssl_options!(certificate_path, private_key_path) do
-    ssl_options = [
-      {:cert, decode_certificate!(certificate_path)},
-      {:key, decode_private_key!(private_key_path)}
-    ]
-
     :boruta_gateway
     |> Application.get_env(__MODULE__, [])
-    |> Keyword.put(:ssl_options, ssl_options)
+    |> Keyword.put(:ssl_options, ssl_options(certificate_path, private_key_path))
     |> then(&Application.put_env(:boruta_gateway, __MODULE__, &1))
   end
 
