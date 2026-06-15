@@ -131,6 +131,15 @@ boruta_gateway_certificate_mount_path: >-
 boruta_gateway_tls_secret_name: >-
   {{ lookup('env', 'BORUTA_GATEWAY_TLS_SECRET_NAME')
     | default(lookup('ansible.builtin.ini', 'BORUTA_GATEWAY_TLS_SECRET_NAME type=properties file=' ~ boruta_env_file ~ ' default=boruta-ingress-tls'), true) }}
+boruta_gateway_mounted_certificate_dir: >-
+  {{ lookup('env', 'BORUTA_GATEWAY_MOUNTED_CERTIFICATE_DIR')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_GATEWAY_MOUNTED_CERTIFICATE_DIR type=properties file=' ~ boruta_env_file ~ ' default=/var/run/boruta/gateway-tls'), true) }}
+boruta_gateway_mounted_certificate_path: >-
+  {{ lookup('env', 'BORUTA_GATEWAY_MOUNTED_CERTIFICATE_PATH')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_GATEWAY_MOUNTED_CERTIFICATE_PATH type=properties file=' ~ boruta_env_file ~ ' default=' ~ boruta_gateway_mounted_certificate_dir ~ '/tls.crt'), true) }}
+boruta_gateway_mounted_private_key_path: >-
+  {{ lookup('env', 'BORUTA_GATEWAY_MOUNTED_PRIVATE_KEY_PATH')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_GATEWAY_MOUNTED_PRIVATE_KEY_PATH type=properties file=' ~ boruta_env_file ~ ' default=' ~ boruta_gateway_mounted_certificate_dir ~ '/tls.key'), true) }}
 boruta_logs_pvc_name: >-
   {{ lookup('env', 'BORUTA_LOGS_PVC_NAME')
     | default(lookup('ansible.builtin.ini', 'BORUTA_LOGS_PVC_NAME type=properties file=' ~ boruta_env_file ~ ' default=' ~ boruta_name ~ '-logs'), true) }}
