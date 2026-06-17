@@ -198,52 +198,6 @@
                       - name: logs
                         mountPath: "/app/log"
 
-    - name: Load static configuration
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: batch/v1
-          kind: Job
-          metadata:
-            name: "{{ boruta_configuration_name }}-loader"
-            namespace: "{{ boruta_auth_namespace }}"
-          spec:
-            ttlSecondsAfterFinished: 300
-            template:
-              spec:
-                enableServiceLinks: false
-                restartPolicy: OnFailure
-                containers:
-                  - name: boruta-admin
-                    image: "{{ boruta_admin_image }}"
-                    imagePullPolicy: Always
-                    command:
-                      - /bin/sh
-                      - -c
-                      - /app/bin/boruta_admin eval "BorutaAdmin.Release.load_configuration() |> dbg"
-                    envFrom:
-                      - configMapRef:
-                          name: "{{ boruta_oauth_environment_name }}"
-                    env:
-                      - name: BORUTA_CONFIGURATION_PATH
-                        value: "{{ boruta_configuration_path }}"
-                      - name: SECRET_KEY_BASE
-                        value: "2uL/gXlOy7426pT8GhWBLet+8dJXAwOkDQ19FYPqSxnEs/VqrBRobonzow4LjDUg"
-                    volumeMounts:
-                      - name: logs
-                        mountPath: "/app/log"
-                      - name: static-configuration
-                        mountPath: "{{ boruta_configuration_path }}"
-                        subPath: static-configuration.yml
-                        readOnly: true
-                volumes:
-                  - name: logs
-                    persistentVolumeClaim:
-                      claimName: "{{ boruta_logs_pvc_name }}"
-                  - name: static-configuration
-                    configMap:
-                      name: "{{ boruta_configuration_name }}"
-
     - name: Create boruta admin deployment
       kubernetes.core.k8s:
         state: present
@@ -344,7 +298,11 @@
             annotations:
               boruta.patatoid.fr/strip-uri: "false"
               boruta.patatoid.fr/authorize: "false"
-              boruta.patatoid.fr/mtls-enabled: "false"
+              boruta.patatoid.fr/rate-limit-enabled: "true"
+              boruta.patatoid.fr/rate-limit-count: "5"
+              boruta.patatoid.fr/rate-limit-time-unit: "second"
+              boruta.patatoid.fr/rate-limit-penality: "500"
+              boruta.patatoid.fr/rate-limit-memory-length: "50"
           spec:
             ingressClassName: "{{ boruta_ingress_class }}"
             rules:
@@ -392,7 +350,11 @@
               boruta.patatoid.fr/strip-uri: "true"
               boruta.patatoid.fr/authorize: "false"
               boruta.patatoid.fr/mtls-enabled: "false"
-              boruta.patatoid.fr/rate-limit-enabled: "false"
+              boruta.patatoid.fr/rate-limit-enabled: "true"
+              boruta.patatoid.fr/rate-limit-count: "5"
+              boruta.patatoid.fr/rate-limit-time-unit: "second"
+              boruta.patatoid.fr/rate-limit-penality: "500"
+              boruta.patatoid.fr/rate-limit-memory-length: "50"
           spec:
             ingressClassName: "{{ boruta_ingress_class }}"
             rules:
