@@ -6,7 +6,7 @@ defmodule BorutaGateway.Application do
   use Application
   require Logger
 
-  alias BorutaGateway.{Certificate, ConfigurationLoader, Kubernetes, ServiceRegistry, Upstreams}
+  alias BorutaGateway.{Certificate, ConfigurationLoader, ServiceRegistry, Upstreams}
 
   @impl Application
   def start(_type, _args) do
