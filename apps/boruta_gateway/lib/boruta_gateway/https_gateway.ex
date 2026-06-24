@@ -166,12 +166,12 @@ defmodule BorutaGateway.HttpsGateway do
   def handle_info({:ssl, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
     payload = buffered_request_payload(state, payload)
 
-    unless request_headers_complete?(payload) do
+    if request_headers_complete?(payload) do
+      handle_downstream_request(socket, payload, state)
+    else
       :ssl.setopts(socket, active: :once)
 
       {:noreply, %{state | request: payload}}
-    else
-      handle_downstream_request(socket, payload, state)
     end
   end
 
@@ -208,7 +208,7 @@ defmodule BorutaGateway.HttpsGateway do
 
     case parse_request_line(payload) do
       {:ok, method, path} ->
-        path_info = String.split(path, "/", trim: true)
+        path_info = path_info(path)
 
         with %Upstream{} = upstream <- match_upstream(state.match_function, payload, path_info),
              :ok <- rate_limit(socket, upstream),
@@ -449,6 +449,8 @@ defmodule BorutaGateway.HttpsGateway do
     upstream_socket_options(upstream) ++
       [
         {:verify, :verify_peer},
+        {:server_name_indication, String.to_charlist(upstream.host)},
+        {:customize_hostname_check, [fqdn: String.to_charlist(upstream.host)]},
         {:cacerts, Certificate.gateway_cacerts()}
       ] ++ mtls_options(upstream)
   end
@@ -616,10 +618,17 @@ defmodule BorutaGateway.HttpsGateway do
   end
 
   defp parse_request_line(payload) do
-    case Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload) do
+    case Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD) ([^\s]+)}, payload) do
       [_, method, path] -> {:ok, method, path}
       _ -> {:error, :bad_request}
     end
+  end
+
+  defp path_info(path) do
+    path
+    |> String.split("?", parts: 2)
+    |> List.first()
+    |> String.split("/", trim: true)
   end
 
   defp response_buffer_exceeded?(response) do
@@ -710,7 +719,7 @@ defmodule BorutaGateway.HttpsGateway do
   defp transform_header(payload, upstream, preserve_forwarded_authorization?)
        when is_boolean(preserve_forwarded_authorization?) do
     [_, _method, path] =
-      Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
+      Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD) ([^\s]+)}, payload)
 
     upstream_path =
       case upstream do
@@ -721,8 +730,7 @@ defmodule BorutaGateway.HttpsGateway do
           path
       end
 
-    [_, _method, path] = Regex.run(~r{^(GET|POST|PUT|PATCH|OPTIONS|DELETE) ([^\s]+)}, payload)
-    payload = String.replace(payload, path, upstream_path)
+    payload = replace_request_target(payload, upstream_path)
 
     payload
     |> clean_request_headers(preserve_forwarded_authorization?)
@@ -749,9 +757,9 @@ defmodule BorutaGateway.HttpsGateway do
 
     payload =
       Regex.replace(
-        ~r{[A|a]uthorization: ([^\r]+)\r\n},
+        ~r{(^|\r\n)authorization\s*:\s*([^\r\n]+)\r\n}i,
         payload,
-        "Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\1\r\n"
+        "\\1Authorization: bearer #{jwt}\r\nX-Forwarded-Authorization: \\2\r\n"
       )
 
     transform_header(payload, upstream, true)
@@ -759,14 +767,27 @@ defmodule BorutaGateway.HttpsGateway do
 
   defp strip_upstream_path(path, uris) do
     uris
-    |> Enum.reduce(path, fn
-      "/", path ->
+    |> Enum.sort_by(&byte_size/1, :desc)
+    |> Enum.find(fn uri -> upstream_uri_matches_path?(uri, path) end)
+    |> case do
+      nil ->
         path
 
-      uri, path ->
+      "/" ->
+        path
+
+      uri ->
         String.replace_prefix(path, uri, "")
-    end)
+    end
     |> normalize_upstream_path()
+  end
+
+  defp upstream_uri_matches_path?("/", _path), do: true
+
+  defp upstream_uri_matches_path?(uri, path) do
+    path == uri ||
+      String.starts_with?(path, uri <> "/") ||
+      String.starts_with?(path, uri <> "?")
   end
 
   defp normalize_upstream_path(""), do: "/"
@@ -777,6 +798,23 @@ defmodule BorutaGateway.HttpsGateway do
     do: virtual_host
 
   defp upstream_host_header(%Upstream{host: host}), do: host
+
+  defp replace_request_target(payload, upstream_path) do
+    case String.split(payload, "\r\n", parts: 2) do
+      [request_line, rest] ->
+        replace_request_line_target(request_line, upstream_path) <> "\r\n" <> rest
+
+      [request_line] ->
+        replace_request_line_target(request_line, upstream_path)
+    end
+  end
+
+  defp replace_request_line_target(request_line, upstream_path) do
+    case String.split(request_line, " ", parts: 3) do
+      [method, _path, version] -> Enum.join([method, upstream_path, version], " ")
+      _ -> request_line
+    end
+  end
 
   defp clean_request_headers(payload, preserve_forwarded_authorization?) do
     rejected_headers = [
@@ -903,10 +941,17 @@ defmodule BorutaGateway.HttpsGateway do
         chunked_body_complete?(body)
 
       content_length = headers["content-length"] ->
-        byte_size(body) >= String.to_integer(content_length)
+        content_length_complete?(body, content_length)
 
       true ->
         false
+    end
+  end
+
+  defp content_length_complete?(body, content_length) do
+    case Integer.parse(content_length) do
+      {length, ""} when length >= 0 -> byte_size(body) >= length
+      _invalid_content_length -> false
     end
   end
 

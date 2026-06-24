@@ -119,7 +119,7 @@ defmodule BorutaGateway.Upstreams.Store do
         %{upstreams: upstreams} = state
       ) do
     upstreams =
-      Enum.reduce(upstreams, [], fn {_node_name, upstreams}, acc -> acc ++ (upstreams || []) end)
+      upstream_records(upstreams)
       |> update_upstreams(Jason.decode!(payload))
 
     state = %{state | upstreams: upstreams}
@@ -135,7 +135,6 @@ defmodule BorutaGateway.Upstreams.Store do
       )
 
     upstreams
-    |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> List.insert_at(0, new)
     |> structure()
   end
@@ -150,7 +149,6 @@ defmodule BorutaGateway.Upstreams.Store do
     updated_id = updated.id
 
     upstreams
-    |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> Enum.map(fn
       %{id: ^updated_id} ->
         updated
@@ -163,12 +161,18 @@ defmodule BorutaGateway.Upstreams.Store do
 
   defp update_upstreams(upstreams, %{"operation" => "DELETE", "record" => %{"id" => id}}) do
     upstreams
-    |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> Enum.reject(fn
       %{id: ^id} -> true
       _ -> false
     end)
     |> structure()
+  end
+
+  defp upstream_records(upstreams) do
+    upstreams
+    |> Enum.flat_map(fn {_node_name, upstreams} -> upstreams || [] end)
+    |> Enum.map(fn {_uri, upstream} -> upstream end)
+    |> Enum.uniq_by(& &1.id)
   end
 
   defp structure(upstreams) do

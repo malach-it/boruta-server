@@ -34,6 +34,22 @@ configuration:
   backend:
     - id: 21b90c7e-8658-44c9-94c5-7a1af32045c4
       name: test
+      verifiable_credentials:
+        - version: "13"
+          credential_identifier: TestCredential
+          format: jwt_vc
+          types: VerifiableCredential TestCredential
+          scopes:
+            - test
+          claims:
+            - name: test
+              label: test
+              pointer: test
+          display:
+            name: Test credential
+            logo:
+              url: https://test.credential/logo.png
+              alt_text: Test credential logo
   identity_provider:
     - id: dce4eec9-db5c-4f08-abbd-fc57c6a11f99
       backend_id: 21b90c7e-8658-44c9-94c5-7a1af32045c4

@@ -8,8 +8,8 @@ defmodule BorutaAdmin.ConfigurationLoader do
   alias Boruta.Ecto.Scope
   alias BorutaAdmin.ConfigurationLoader.Schema
   alias BorutaAuth.Repo, as: BorutaAuthRepo
-  alias BorutaGateway.Repo, as: BorutaGatewayRepo
   alias BorutaGateway.Certificate
+  alias BorutaGateway.Repo, as: BorutaGatewayRepo
   alias BorutaGateway.ServiceRegistry
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream

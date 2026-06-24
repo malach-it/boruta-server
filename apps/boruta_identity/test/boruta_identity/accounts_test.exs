@@ -1766,8 +1766,9 @@ defmodule BorutaIdentity.AccountsTest do
     test "unconfirms user"
   end
 
-  @tag :skip
   describe "update_user/5 with ldap backend" do
+    @describetag :skip
+
     setup do
       backend = insert(:ldap_backend)
 

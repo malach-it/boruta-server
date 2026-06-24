@@ -41,9 +41,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn = put_unsigned_request(conn)
 
-    with {:unchanged, conn} <- public_client?(conn),
-         {:unchanged, conn} <- prompt_redirection(conn, current_user),
+    with {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
+         {:unchanged, conn} <- public_client?(conn),
          {:unchanged, conn} <- check_preauthorized(conn),
          {:unchanged, conn} <- redirect_if_mfa_required(conn, current_user),
          {:unchanged, conn} <- preauthorize(conn, current_user) do
@@ -91,37 +91,27 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     conn
   end
 
-  def public_client?(
-        %Plug.Conn{
-          query_params: %{
-            "response_type" => "code" <> _rest,
-            "client_metadata" => _client_metadata
-          }
-        } = conn
-      ),
-      do: {:preauthorized, conn}
+  def public_client?(conn) do
+    if public_client_request?(conn) do
+      {:preauthorized, conn}
+    else
+      {:unchanged, conn}
+    end
+  end
 
-  def public_client?(
-        %Plug.Conn{
-          query_params: %{
-            "response_type" => "id_token" <> _rest,
-            "client_metadata" => _client_metadata
-          }
-        } = conn
-      ),
-      do: {:preauthorized, conn}
+  defp public_client_request?(%Plug.Conn{
+         query_params: %{
+           "response_type" => response_type,
+           "client_metadata" => _client_metadata
+         }
+       }) do
+    response_type
+    |> String.split(" ")
+    |> List.first()
+    |> then(&(&1 in @public_response_types))
+  end
 
-  def public_client?(
-        %Plug.Conn{
-          query_params: %{
-            "response_type" => "vp_token" <> _rest,
-            "client_metadata" => _client_metadata
-          }
-        } = conn
-      ),
-      do: {:preauthorized, conn}
-
-  def public_client?(conn), do: {:unchanged, conn}
+  defp public_client_request?(_conn), do: false
 
   defp redirect_if_mfa_required(conn, current_user) do
     case ensure_mfa(conn, current_user) do
@@ -296,21 +286,23 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp prompt_redirection(
          %Plug.Conn{query_params: %{"prompt" => "none"} = query_params} = conn,
+         nil
+       ) do
+    if public_client_request?(conn) do
+      {:unchanged, conn}
+    else
+      {:redirected, prompt_none_error(conn, query_params, "User is not logged in.")}
+    end
+  end
+
+  defp prompt_redirection(
+         %Plug.Conn{query_params: %{"prompt" => "none"} = query_params} = conn,
          current_user
        ) do
-    case ensure_mfa(conn, current_user) do
-      :ok ->
-        {:authorize, do_authorize(conn, current_user)}
-
-      {:error, _action, reason} ->
-        {:redirected,
-         authorize_error(conn, %Error{
-           status: :unauthorized,
-           format: :fragment,
-           redirect_uri: query_params["redirect_uri"],
-           error: :login_required,
-           error_description: reason
-         })}
+    if public_client_request?(conn) || prompt_none_preauthorized?(conn) do
+      prompt_none_mfa_redirection(conn, query_params, current_user)
+    else
+      {:redirected, prompt_none_error(conn, query_params, "User authorization is required.")}
     end
   end
 
@@ -327,6 +319,35 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp prompt_redirection(conn, _current_user), do: {:unchanged, conn}
+
+  defp prompt_none_mfa_redirection(conn, query_params, current_user) do
+    case ensure_mfa(conn, current_user) do
+      :ok ->
+        {:unchanged, conn}
+
+      {:error, _action, reason} ->
+        {:redirected, prompt_none_error(conn, query_params, reason)}
+    end
+  end
+
+  defp prompt_none_preauthorized?(conn) do
+    conn
+    |> get_session(:preauthorizations)
+    |> case do
+      nil -> false
+      preauthorizations -> Map.get(preauthorizations, request_param(conn), false)
+    end
+  end
+
+  defp prompt_none_error(conn, query_params, reason) do
+    authorize_error(conn, %Error{
+      status: :unauthorized,
+      format: :fragment,
+      redirect_uri: query_params["redirect_uri"],
+      error: :login_required,
+      error_description: reason
+    })
+  end
 
   defp preauthorize(conn, nil), do: {:unchanged, conn}
 
@@ -640,8 +661,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_authorize_error_event(conn, error)
 
     conn
-    |> delete_session(:session_chosen)
-    |> delete_session(:totp_authenticated)
+    |> delete_authentication_sessions()
     |> redirect(
       to:
         IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
@@ -655,8 +675,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_authorize_error_event(conn, error)
 
     conn
-    |> delete_session(:session_chosen)
-    |> delete_session(:totp_authenticated)
+    |> delete_authentication_sessions()
     |> redirect(external: Error.redirect_to_url(error))
   end
 
@@ -667,11 +686,17 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_authorize_error_event(conn, error)
 
     conn
-    |> delete_session(:session_chosen)
-    |> delete_session(:totp_authenticated)
+    |> delete_authentication_sessions()
     |> put_status(status)
 
     raise %BorutaWeb.AuthorizeError{message: error_description, plug_status: status}
+  end
+
+  defp delete_authentication_sessions(conn) do
+    conn
+    |> delete_session(:session_chosen)
+    |> delete_session(:totp_authenticated)
+    |> delete_session(:webauthn_authenticated)
   end
 
   defp emit_authorize_error_event(%Plug.Conn{query_params: query_params} = conn, error) do
@@ -696,7 +721,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     now = DateTime.utc_now() |> DateTime.to_unix()
 
     with "" <> max_age <- max_age,
-         {max_age, _} <- Integer.parse(max_age),
+         {max_age, ""} <- Integer.parse(max_age),
          true <- now - DateTime.to_unix(current_user.last_login_at) >= max_age do
       true
     else
@@ -705,15 +730,19 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp put_unsigned_request(%Plug.Conn{query_params: query_params} = conn) do
-    unsigned_request =
+    signed_request =
       with request <- Map.get(query_params, "request", ""),
-           {:ok, params} <- Joken.peek_claims(request) do
+           {:ok, params} <-
+             BorutaIdentityWeb.Token.verify(
+               request,
+               BorutaIdentityWeb.Token.application_signer()
+             ) do
         params
       else
         _ -> %{}
       end
 
-    query_params = Map.merge(query_params, unsigned_request)
+    query_params = Map.merge(query_params, signed_request)
 
     %{conn | query_params: query_params}
   end
@@ -746,6 +775,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       extra_claims:
         Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata),
       authorization_details: VerifiableCredentials.authorization_details(current_user, scope),
+      credential_configuration: VerifiableCredentials.credential_configuration(current_user),
       presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
     }
   end

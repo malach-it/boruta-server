@@ -26,6 +26,7 @@ defmodule BorutaGateway.Application do
     children = children ++ enabled_node_service_child_specs()
 
     BorutaGateway.Logger.start()
+    BorutaAuth.LogRotate.rotate()
     setup_database()
     load_configuration()
     Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor)

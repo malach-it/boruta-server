@@ -15,6 +15,7 @@ defmodule BorutaIdentityWeb.ChooseSessionControllerTest do
         |> get(Routes.choose_session_path(conn, :index, %{request: request}))
 
       assert html_response(conn, 200) =~ "Continue ?"
+      refute get_session(conn, :session_chosen)
     end
 
     test "redirect to log in if identity provider disabled choose_session", %{
@@ -23,6 +24,7 @@ defmodule BorutaIdentityWeb.ChooseSessionControllerTest do
       request: request
     } do
       identity_provider |> Ecto.Changeset.change(choose_session: false) |> Repo.update()
+
       conn =
         conn
         |> log_in(user_fixture())

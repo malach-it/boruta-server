@@ -16,7 +16,7 @@ defmodule BorutaGateway.Certificate do
 
     File.mkdir_p!(directory)
 
-    if existing_certificate?(certificate_path, private_key_path) do
+    if is_nil(root_ca) && existing_certificate?(certificate_path, private_key_path) do
       maybe_write_root_ca!(root_ca)
       cache_ssl_options!(certificate_path, private_key_path)
     else

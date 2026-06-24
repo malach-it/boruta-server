@@ -313,6 +313,28 @@ defmodule BorutaIdentity.IdentityProvidersTest do
 
       assert IdentityProviders.get_identity_provider_by_client_id(client_id) == identity_provider
     end
+
+    test "returns updated identity provider after client association changes" do
+      %ClientIdentityProvider{client_id: client_id, identity_provider: old_identity_provider} =
+        insert(:client_identity_provider)
+
+      old_identity_provider = Repo.preload(old_identity_provider, backend: :email_templates)
+
+      new_identity_provider =
+        insert(:identity_provider) |> Repo.preload(backend: :email_templates)
+
+      assert IdentityProviders.get_identity_provider_by_client_id(client_id) ==
+               old_identity_provider
+
+      assert {:ok, %ClientIdentityProvider{}} =
+               IdentityProviders.upsert_client_identity_provider(
+                 client_id,
+                 new_identity_provider.id
+               )
+
+      assert IdentityProviders.get_identity_provider_by_client_id(client_id) ==
+               new_identity_provider
+    end
   end
 
   describe "get_identity_provider_template!/2" do

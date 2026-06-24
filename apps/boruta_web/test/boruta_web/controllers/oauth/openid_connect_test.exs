@@ -14,7 +14,10 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   describe "OpenID Connect flows" do
     setup %{conn: conn} do
       public_client = Admin.get_client!(ClientsAdapter.public!().id)
-      {:ok, _client} = Admin.update_client(public_client, %{supported_grant_types: Oauth.Client.grant_types()})
+
+      {:ok, _client} =
+        Admin.update_client(public_client, %{supported_grant_types: Oauth.Client.grant_types()})
+
       ClientStore.invalidate_public()
 
       resource_owner = user_fixture()
@@ -42,6 +45,27 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert redirected_to(conn) =~ "/users/log_out"
     end
 
+    test "redirects public client to login with prompt=login", %{
+      conn: conn,
+      redirect_uri: redirect_uri
+    } do
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: "did:key:test",
+            redirect_uri: redirect_uri,
+            client_metadata: "{}",
+            prompt: "login",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+      assert redirected_to(conn) =~ "/users/log_out"
+    end
+
     test "returns an error with prompt=none without any current_user", %{
       conn: conn,
       client: client,
@@ -63,10 +87,41 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert redirected_to(conn) =~ ~r/error=login_required/
     end
 
-    test "authorizes with prompt=none with anonymous client (verifiable presentation - wallet)", %{
+    test "ignores unsigned request claims", %{
       conn: conn,
+      client: client,
       redirect_uri: redirect_uri
     } do
+      unsigned_request =
+        unsigned_jwt(%{
+          "client_id" => "bad-client",
+          "redirect_uri" => "http://evil.redirect.uri"
+        })
+
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            request: unsigned_request,
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+      assert redirected_to(conn) =~ ~r/#{redirect_uri}/
+      refute redirected_to(conn) =~ "http://evil.redirect.uri"
+      assert redirected_to(conn) =~ ~r/error=login_required/
+    end
+
+    test "authorizes with prompt=none with anonymous client (verifiable presentation - wallet)",
+         %{
+           conn: conn,
+           redirect_uri: redirect_uri
+         } do
       conn =
         get(
           conn,
@@ -82,7 +137,10 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         )
 
       assert redirected_to(conn) =~ ~r/request=/
-      assert redirected_to(conn) =~ ~r/redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fopenid%2Fdirect_post%2F/
+
+      assert redirected_to(conn) =~
+               ~r/redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fopenid%2Fdirect_post%2F/
+
       assert redirected_to(conn) =~ ~r/#{redirect_uri}/
     end
 
@@ -105,7 +163,10 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         )
 
       assert redirected_to(conn) =~ ~r/request=/
-      assert redirected_to(conn) =~ ~r/redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fopenid%2Fdirect_post%2F/
+
+      assert redirected_to(conn) =~
+               ~r/redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fopenid%2Fdirect_post%2F/
+
       assert redirected_to(conn) =~ ~r/#{redirect_uri}/
     end
 
@@ -196,6 +257,34 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                )
     end
 
+    test "returns an error with prompt=none when current_user is not preauthorized", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner,
+      redirect_uri: redirect_uri
+    } do
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
+
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            prompt: "none",
+            scope: "openid",
+            nonce: "nonce"
+          })
+        )
+
+      assert redirected_to(conn) =~ ~r/error=login_required/
+      assert redirected_to(conn) =~ ~r/User\+authorization\+is\+required/
+    end
+
     test "logs in with an expired max_age and current_user", %{
       conn: conn,
       client: client,
@@ -213,6 +302,32 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
             response_type: "id_token",
             client_id: client.id,
             redirect_uri: redirect_uri,
+            scope: "openid",
+            nonce: "nonce",
+            max_age: 0
+          })
+        )
+
+      assert redirected_to(conn) =~ "/users/log_out"
+    end
+
+    test "logs in public client with an expired max_age and current_user", %{
+      conn: conn,
+      resource_owner: resource_owner,
+      redirect_uri: redirect_uri
+    } do
+      conn =
+        conn
+        |> log_in(resource_owner)
+
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "code",
+            client_id: "did:key:test",
+            redirect_uri: redirect_uri,
+            client_metadata: "{}",
             scope: "openid",
             nonce: "nonce",
             max_age: 0
@@ -262,6 +377,55 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         )
 
       assert url = redirected_to(conn)
+
+      assert [_, _id_token] =
+               Regex.run(
+                 ~r/#{redirect_uri}#id_token=(.+)/,
+                 url
+               )
+    end
+
+    test "does not expire login with a malformed max_age and current_user", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner,
+      redirect_uri: redirect_uri
+    } do
+      request_param =
+        Authenticable.request_param(
+          get(
+            conn,
+            Routes.authorize_path(conn, :authorize, %{
+              response_type: "id_token",
+              client_id: client.id,
+              redirect_uri: redirect_uri,
+              scope: "openid",
+              nonce: "nonce",
+              max_age: "0invalid"
+            })
+          )
+        )
+
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(preauthorizations: %{request_param => true})
+
+      conn =
+        get(
+          conn,
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "id_token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            scope: "openid",
+            nonce: "nonce",
+            max_age: "0invalid"
+          })
+        )
+
+      assert url = redirected_to(conn)
+      refute url =~ "/users/log_out"
 
       assert [_, _id_token] =
                Regex.run(
@@ -342,6 +506,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
           }
         ]
       )
+
       Boruta.Factory.insert(:scope, name: "well_known")
 
       conn = get(conn, Routes.openid_path(conn, :well_known))
@@ -350,7 +515,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                "authorization_endpoint" => "http://localhost:4000/oauth/authorize",
                "credential_endpoint" => "http://localhost:4000/openid/credential",
                "defered_credential_endpoint" => "http://localhost:4000/openid/defered-credential",
-               "pushed_authorization_request_endpoint" => "http://localhost:4000/oauth/pushed_authorization_request",
+               "pushed_authorization_request_endpoint" =>
+                 "http://localhost:4000/oauth/pushed_authorization_request",
                "credential_issuer" => "http://localhost:4000",
                "credentials_supported" => [],
                "credential_configurations_supported" => %{
@@ -501,4 +667,11 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   #     assert BorutaIdentity.Repo.get!(IdentityProvider, identity_provider_id)
   #   end
   # end
+
+  defp unsigned_jwt(claims) do
+    header = %{"alg" => "none"} |> Jason.encode!() |> Base.url_encode64(padding: false)
+    payload = claims |> Jason.encode!() |> Base.url_encode64(padding: false)
+
+    header <> "." <> payload <> "."
+  end
 end

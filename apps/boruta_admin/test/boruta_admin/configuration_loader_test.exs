@@ -246,8 +246,15 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              }
            ] = BorutaGateway.Repo.all(Upstream)
 
-    # TODO test all possible configurations
-    assert %Backend{name: "test"} = BorutaIdentity.Repo.get_by(Backend, name: "test")
+    assert %Backend{
+             name: "test",
+             verifiable_credentials: [
+               %{
+                 "credential_identifier" => "TestCredential",
+                 "scopes" => ["test"]
+               }
+             ]
+           } = BorutaIdentity.Repo.get_by(Backend, name: "test")
 
     assert %IdentityProvider{
              name: "test",
@@ -367,6 +374,7 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
                    "text_color" => "#333333"
                  },
                  "format" => "jwt_vc",
+                 "scopes" => ["BorutaCredentialJwtVc"],
                  "types" => "VerifiableCredential BorutaCredentialJwtVc",
                  "version" => "13"
                }

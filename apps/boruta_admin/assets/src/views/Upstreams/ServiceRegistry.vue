@@ -1,5 +1,6 @@
 <template>
   <div class="service-registry">
+    <Toaster :active="deleted" message="Upstream has been deleted" type="warning" />
     <div class="container">
       <div class="ui error message" v-if="error">
         {{ error }}
@@ -95,15 +96,13 @@
                     <pre class="certificate">{{ record.certificate }}</pre>
                   </details>
                 </div>
-                <table class="ui very basic compact table" v-if="upstreamsFor(record).length">
+                <table class="ui very basic compact upstream table" v-if="upstreamsFor(record).length">
                   <thead>
                     <tr>
                       <th>Host</th>
                       <th>Base URL</th>
                       <th>Paths</th>
-                      <th>Authorization</th>
-                      <th>mTLS</th>
-                      <th colspan="2">Rate limit</th>
+                      <th colspan="5"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -115,13 +114,21 @@
                           {{ path.uri }}
                         </span>
                       </td>
-                      <td>{{ upstream.authorize ? 'enabled' : 'disabled' }}</td>
-                      <td>{{ upstream.mtls_enabled ? 'enabled' : 'disabled' }}</td>
-                      <td>{{ upstream.rate_limit_enabled ? 'enabled' : 'disabled' }}</td>
+                      <td>Authorization {{ upstream.authorize ? 'enabled' : 'disabled' }}</td>
+                      <td>mTLS {{ upstream.mtls_enabled ? 'enabled' : 'disabled' }}</td>
+                      <td>Rate limiting {{ upstream.rate_limit_enabled ? 'enabled' : 'disabled' }}</td>
                       <td class="collapsing">
                         <router-link
                           :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"
                           class="ui tiny blue button">edit</router-link>
+                      </td>
+                      <td class="collapsing">
+                        <button
+                          type="button"
+                          class="ui tiny red button"
+                          v-on:click="deleteUpstream(upstream)">
+                          delete
+                        </button>
                       </td>
                     </tr>
                   </tbody>
@@ -146,11 +153,15 @@
 
 <script>
 import MiniSearch from 'minisearch'
+import Toaster from '../../components/Toaster.vue'
 import ServiceRegistryRecord from '../../models/service-registry-record.model'
 import Upstream from '../../models/upstream.model'
 
 export default {
   name: 'service-registry',
+  components: {
+    Toaster
+  },
   data () {
     return {
       records: [],
@@ -158,6 +169,7 @@ export default {
       expandedRecords: {},
       searchQuery: '',
       error: null,
+      deleted: false,
       pollingInterval: null
     }
   },
@@ -255,6 +267,19 @@ export default {
     },
     upstreamsFor (record) {
       return this.upstreams[record.node_name] || []
+    },
+    deleteUpstream (upstream) {
+      if (!confirm('Are you sure you want to delete this upstream?')) return
+
+      this.deleted = false
+      this.error = null
+
+      upstream.destroy().then(() => {
+        this.deleted = true
+        this.getData()
+      }).catch((error) => {
+        this.error = error.message || 'Could not delete upstream'
+      })
     },
     globalConfiguration () {
       const configuredRecord = this.records.find(({ configuration }) => configuration)

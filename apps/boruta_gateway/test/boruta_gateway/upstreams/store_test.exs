@@ -63,6 +63,35 @@ defmodule BorutaGateway.Upstreams.StoreTest do
     end)
   end
 
+  test "does not duplicate upstream routes when updating upstreams with multiple uris" do
+    Sandbox.unboxed_run(Repo, fn ->
+      try do
+        {:ok, upstream} =
+          Repo.insert(%Upstream{
+            host: "test1.host",
+            port: 1111,
+            uris: ["/path", "/other-path"]
+          })
+
+        :timer.sleep(100)
+
+        upstream = Ecto.Changeset.change(upstream, host: "updated.host")
+        {:ok, upstream} = Repo.update(upstream)
+        :timer.sleep(200)
+
+        entries =
+          Store.all()
+          |> Map.fetch!("global")
+          |> Enum.filter(fn {_path, %{id: id}} -> id == upstream.id end)
+
+        assert Enum.count(entries) == 2
+        assert Enum.all?(entries, fn {_path, %{host: host}} -> host == "updated.host" end)
+      after
+        Repo.delete_all(Upstream)
+      end
+    end)
+  end
+
   test "do not stores all deleted upstreams from repo" do
     Sandbox.unboxed_run(Repo, fn ->
       try do
