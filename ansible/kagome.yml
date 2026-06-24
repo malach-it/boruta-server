@@ -1,0 +1,168 @@
+- hosts: localhost
+  tasks:
+    - name: Create a k8s namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        name: "{{ kagome_namespace }}"
+        kind: Namespace
+        state: present
+
+    - name: Create static configuration file
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ kagome_configuration_name }}"
+            namespace: "{{ kagome_namespace }}"
+          data:
+            kagome-config.yml: |
+              ---
+              version: "1.0"
+              configuration:
+                aliases:
+                  - "kagome-web.{{ kagome_namespace }}.svc.cluster.local"
+                  - "kagome.boruta.patatoid.fr"
+                microgateway:
+                  - scheme: "http"
+                    port: 4000
+                    virtual_host: kagome.boruta.patatoid.fr
+                    host: "localhost"
+                    uris: ["/"]
+                    strip_uri: false
+
+    - name: Create kagome environment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ kagome_environment_name }}"
+            namespace: "{{ kagome_namespace }}"
+          data:
+            POSTGRES_USER: "{{ boruta_postgres_user }}"
+            POSTGRES_DATABASE: "{{ boruta_postgres_database }}"
+            POSTGRES_HOST: "{{ boruta_postgres_name }}.{{ boruta_namespace }}.svc.cluster.local"
+            K8S_NAMESPACE: "{{ boruta_libcluster_namespace }}"
+            K8S_SELECTOR: "{{ boruta_libcluster_selector }}"
+            BORUTA_GATEWAY_CONFIGURATION_PATH: "/config/kagome-config.yml"
+            BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER: "true"
+            BORUTA_GATEWAY_SIDECAR_HTTPS_PORT: "8044"
+            BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE: "{{ kagome_mtls_enabled }}"
+
+    - name: Create kagome secrets
+      no_log: true
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "{{ kagome_secret_name }}"
+            namespace: "{{ kagome_namespace }}"
+          type: Opaque
+          stringData:
+            POSTGRES_PASSWORD: "{{ boruta_postgres_password }}"
+            RELEASE_COOKIE: "{{ boruta_release_cookie }}"
+
+    - name: Create kagome deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: kagome
+            namespace: "{{ kagome_namespace }}"
+            labels:
+              identity_platform: "boruta"
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: kagome
+            template:
+              metadata:
+                name: kagome
+                labels:
+                  app: kagome
+                  identity_platform: "boruta"
+              spec:
+                enableServiceLinks: false
+                volumes:
+                  - name: logs
+                    persistentVolumeClaim:
+                      claimName: "{{ boruta_logs_pvc_name }}"
+                  - name: static-configuration
+                    configMap:
+                      name: "{{ kagome_configuration_name }}"
+                      items:
+                        - key: kagome-config.yml
+                          path: kagome-config.yml
+                containers:
+                  - image: "{{ boruta_kagome_image }}"
+                    imagePullPolicy: "{{ boruta_kagome_image_pull_policy }}"
+                    name: kagome
+                    envFrom:
+                      - configMapRef:
+                          name: "{{ kagome_environment_name }}"
+                      - secretRef:
+                          name: "{{ kagome_secret_name }}"
+
+                    volumeMounts:
+                      - name: logs
+                        mountPath: "/app/log"
+                      - name: static-configuration
+                        mountPath: "/config"
+                        readOnly: true
+                    readinessProbe:
+                      tcpSocket:
+                        port: 8044
+
+    - name: Create kagome Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: kagome-web
+            namespace: "{{ kagome_namespace }}"
+            labels:
+              app: kagome
+          spec:
+            selector:
+              app: kagome
+            ports:
+            - protocol: TCP
+              targetPort: 8044
+              name: kagome-https
+              port: 8044
+
+    - name: Create kagome Ingress
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: main-ingress
+            namespace: "{{ kagome_namespace }}"
+            annotations:
+              boruta.patatoid.fr/mtls-enabled: "{{ kagome_mtls_enabled }}"
+              boruta.patatoid.fr/backend-protocol: "https"
+          spec:
+            ingressClassName: "{{ boruta_ingress_class }}"
+            rules:
+            - host: kagome.boruta.patatoid.fr
+              http:
+                paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: kagome-web
+                      port:
+                        number: 8044

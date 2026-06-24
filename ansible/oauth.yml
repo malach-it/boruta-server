@@ -1,0 +1,370 @@
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Create oauth namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ boruta_auth_namespace }}"
+        state: present
+
+    - name: Create static configuration file
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ boruta_configuration_name }}"
+            namespace: "{{ boruta_auth_namespace }}"
+          data:
+            static-configuration.yml: |
+              # Example configuration file
+              ---
+              version: "1.0"
+              configuration:
+                backend:
+                  - id: 00000000-0000-0000-0000-000000000001
+                    name: Example backend
+                    is_default: true
+                    verifiable_credentials:
+                      - version: "13"
+                        credential_identifier: BorutaCredential
+                        format: jwt_vc
+                        types: VerifiableCredential BorutaCredentialJwtVc
+                        claims:
+                          - type: attribute
+                            name: boruta_username
+                            label: boruta username
+                            pointer: email
+                        display:
+                          name: Boruta username (JWT VC)
+                          background_color: "#ffd758"
+                          text_color: "#333333"
+                          logo:
+                            url: https://io.malach.it/assets/images/logo.png
+                            alt_text: malachit logo
+                    verifiable_presentations:
+                      - presentation_identifier: BorutaCredentialJwtVc
+                        presentation_definition: |
+                          {
+                            "id": "credential",
+                            "input_descriptors": [
+                              {
+                                "id": "boruta_username",
+                                "format": {
+                                  "jwt_vc": {}
+                                },
+                                "constraints": {
+                                  "fields": [
+                                    {
+                                      "path": [ "$.boruta_username" ],
+                                      "id": "Boruta account information",
+                                      "purpose": "Present account information to obtain access or further credentials"
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                identity_provider:
+                  - id: 00000000-0000-0000-0000-000000000001
+                    name: Example identity provider
+                    backend_id: 00000000-0000-0000-0000-000000000001
+                    consentable: true
+                    choose_session: true
+                    registrable: true
+                client:
+                  - id: 00000000-0000-0000-0000-000000000001
+                    secret: secret
+                    name: Example client
+                    response_mode: post
+                    identity_provider:
+                      id: 00000000-0000-0000-0000-000000000001
+                    redirect_uris:
+                      - https://redirect.uri.boruta
+                      - openid4vp://
+                      - http://{{ boruta_oauth_host }}:{{ boruta_ingress_http_node_port }}/accounts/wallet
+                      - https://{{ boruta_oauth_host }}:{{ boruta_ingress_https_node_port }}/accounts/wallet
+                      - {{ boruta_admin_base_url }}/oauth-callback
+                      - openid-credential-offer://
+                scope:
+                  - name: BorutaCredentialJwtVc
+                    label: boruta username
+                    public: true
+
+    - name: Create boruta oauth environment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ boruta_oauth_environment_name }}"
+            namespace: "{{ boruta_auth_namespace }}"
+          data:
+            MIX_ENV: prod
+            POSTGRES_USER: "{{ boruta_postgres_user }}"
+            POSTGRES_DATABASE: "{{ boruta_postgres_database }}"
+            POSTGRES_HOST: "{{ boruta_postgres_name }}.{{ boruta_namespace }}.svc.cluster.local"
+            K8S_NAMESPACE: "{{ boruta_libcluster_namespace }}"
+            K8S_SELECTOR: "{{ boruta_libcluster_selector }}"
+            BORUTA_CONFIGURATION_PATH: "{{ boruta_configuration_path }}"
+            BORUTA_OAUTH_SCHEME: "{{ boruta_oauth_scheme }}"
+            BORUTA_OAUTH_HOST: "{{ boruta_oauth_host }}"
+            BORUTA_OAUTH_PORT: "{{ boruta_oauth_port }}"
+            BORUTA_OAUTH_BASE_URL: "{{ boruta_oauth_base_url }}"
+            BORUTA_ADMIN_HOST: "{{ boruta_admin_host }}"
+            BORUTA_ADMIN_PORT: "{{ boruta_admin_port }}"
+            BORUTA_ADMIN_BASE_URL: "{{ boruta_admin_base_url }}"
+            BORUTA_ADMIN_OAUTH_CLIENT_ID: "{{ boruta_admin_oauth_client_id }}"
+            BORUTA_ADMIN_OAUTH_BASE_URL: "{{ boruta_oauth_base_url }}"
+
+    - name: Create boruta oauth secrets
+      no_log: true
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "{{ boruta_name }}-secrets"
+            namespace: "{{ boruta_auth_namespace }}"
+          type: Opaque
+          stringData:
+            POSTGRES_PASSWORD: "{{ boruta_postgres_password }}"
+            RELEASE_COOKIE: "{{ boruta_release_cookie }}"
+
+    - name: Create boruta auth deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ boruta_auth_name }}"
+            namespace: "{{ boruta_auth_namespace }}"
+            labels:
+              app: "{{ boruta_auth_name }}"
+              identity_platform: "boruta"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ boruta_auth_name }}"
+            template:
+              metadata:
+                labels:
+                  app: "{{ boruta_auth_name }}"
+                  identity_platform: "boruta"
+              spec:
+                enableServiceLinks: false
+                volumes:
+                  - name: logs
+                    persistentVolumeClaim:
+                      claimName: "{{ boruta_logs_pvc_name }}"
+                containers:
+                  - image: "{{ boruta_auth_image }}"
+                    name: boruta
+                    imagePullPolicy: Always
+                    envFrom:
+                      - configMapRef:
+                          name: "{{ boruta_oauth_environment_name }}"
+                      - secretRef:
+                          name: "{{ boruta_name }}-secrets"
+                    env:
+                      - name: K8S_NAMESPACE
+                        value: "{{ boruta_libcluster_namespace }}"
+                      - name: K8S_SELECTOR
+                        value: "{{ boruta_libcluster_selector }}"
+                      - name: SECRET_KEY_BASE
+                        value: "2uL/gXlOy7426pT8GhWBLet+8dJXAwOkDQ19FYPqSxnEs/VqrBRobonzow4LjDUg"
+                      - name: BORUTA_OAUTH_SCHEME
+                        value: "{{ boruta_oauth_scheme }}"
+                      - name: BORUTA_OAUTH_HOST
+                        value: "{{ boruta_oauth_host }}"
+                      - name: BORUTA_OAUTH_PORT
+                        value: "{{ boruta_oauth_port }}"
+                      - name: BORUTA_ADMIN_PORT
+                        value: "{{ boruta_admin_port }}"
+                      - name: BORUTA_OAUTH_BASE_URL
+                        value: "{{ boruta_oauth_base_url }}"
+                    readinessProbe:
+                      httpGet:
+                        path: /healthcheck
+                        port: "{{ boruta_oauth_port | int }}"
+                    volumeMounts:
+                      - name: logs
+                        mountPath: "/app/log"
+
+    - name: Create boruta admin deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ boruta_admin_name }}"
+            namespace: "{{ boruta_auth_namespace }}"
+            labels:
+              app: "{{ boruta_admin_name }}"
+              identity_platform: "boruta"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ boruta_admin_name }}"
+            template:
+              metadata:
+                labels:
+                  app: "{{ boruta_admin_name }}"
+                  identity_platform: "boruta"
+              spec:
+                enableServiceLinks: false
+                volumes:
+                  - name: logs
+                    persistentVolumeClaim:
+                      claimName: "{{ boruta_logs_pvc_name }}"
+                containers:
+                  - image: "{{ boruta_admin_image }}"
+                    name: boruta-admin
+                    imagePullPolicy: Always
+                    envFrom:
+                      - configMapRef:
+                          name: "{{ boruta_oauth_environment_name }}"
+                      - secretRef:
+                          name: "{{ boruta_name }}-secrets"
+                    env:
+                      - name: K8S_NAMESPACE
+                        value: "{{ boruta_libcluster_namespace }}"
+                      - name: K8S_SELECTOR
+                        value: "{{ boruta_libcluster_selector }}"
+                      - name: SECRET_KEY_BASE
+                        value: "2uL/gXlOy7426pT8GhWBLet+8dJXAwOkDQ19FYPqSxnEs/VqrBRobonzow4LjDUg"
+                      - name: BORUTA_ADMIN_HOST
+                        value: "{{ boruta_admin_host }}"
+                      - name: BORUTA_ADMIN_PORT
+                        value: "{{ boruta_admin_port }}"
+                      - name: BORUTA_ADMIN_BASE_URL
+                        value: "{{ boruta_admin_base_url }}"
+                      - name: BORUTA_ADMIN_OAUTH_CLIENT_ID
+                        value: "{{ boruta_admin_oauth_client_id }}"
+                      - name: BORUTA_ADMIN_OAUTH_BASE_URL
+                        value: "{{ boruta_oauth_base_url }}"
+                      - name: BORUTA_OAUTH_BASE_URL
+                        value: "{{ boruta_oauth_base_url }}"
+                    readinessProbe:
+                      httpGet:
+                        path: /
+                        port: "{{ boruta_admin_port | int }}"
+                    volumeMounts:
+                      - name: logs
+                        mountPath: "/app/log"
+
+    - name: Create boruta admin Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ boruta_admin_name }}"
+            namespace: "{{ boruta_auth_namespace }}"
+            labels:
+              app: "{{ boruta_admin_name }}"
+              identity_platform: "boruta"
+          spec:
+            selector:
+              app: "{{ boruta_admin_name }}"
+            ports:
+              - protocol: TCP
+                targetPort: "{{ boruta_admin_port | int }}"
+                name: admin-tcp
+                port: "{{ boruta_admin_port | int }}"
+
+    - name: Create boruta admin ingress
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: "{{ boruta_admin_name }}"
+            namespace: "{{ boruta_auth_namespace }}"
+            labels:
+              app: "{{ boruta_admin_name }}"
+              identity_platform: "boruta"
+            annotations:
+              boruta.patatoid.fr/strip-uri: "false"
+              boruta.patatoid.fr/authorize: "false"
+              boruta.patatoid.fr/rate-limit-enabled: "true"
+              boruta.patatoid.fr/rate-limit-count: "5"
+              boruta.patatoid.fr/rate-limit-time-unit: "second"
+              boruta.patatoid.fr/rate-limit-penality: "500"
+              boruta.patatoid.fr/rate-limit-memory-length: "50"
+          spec:
+            ingressClassName: "{{ boruta_ingress_class }}"
+            rules:
+              - host: "{{ boruta_admin_host }}"
+                http:
+                  paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: "{{ boruta_admin_name }}"
+                          port:
+                            number: "{{ boruta_admin_port | int }}"
+
+    - name: Create boruta auth Service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ boruta_auth_name }}"
+            namespace: "{{ boruta_auth_namespace }}"
+            labels:
+              app: "{{ boruta_auth_name }}"
+          spec:
+            selector:
+              app: "{{ boruta_auth_name }}"
+            ports:
+              - protocol: TCP
+                targetPort: "{{ boruta_oauth_port | int }}"
+                name: oauth-tcp
+                port: "{{ boruta_oauth_port | int }}"
+
+    - name: Create protected boruta auth ingress
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: "{{ boruta_auth_name }}"
+            namespace: "{{ boruta_auth_namespace }}"
+            annotations:
+              boruta.patatoid.fr/strip-uri: "true"
+              boruta.patatoid.fr/authorize: "false"
+              boruta.patatoid.fr/mtls-enabled: "false"
+              boruta.patatoid.fr/rate-limit-enabled: "true"
+              boruta.patatoid.fr/rate-limit-count: "5"
+              boruta.patatoid.fr/rate-limit-time-unit: "second"
+              boruta.patatoid.fr/rate-limit-penality: "500"
+              boruta.patatoid.fr/rate-limit-memory-length: "50"
+          spec:
+            ingressClassName: "{{ boruta_ingress_class }}"
+            rules:
+              - host: "{{ boruta_oauth_host }}"
+                http:
+                  paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: "{{ boruta_auth_name }}"
+                          port:
+                            number: "{{ boruta_oauth_port | int }}"

@@ -4,6 +4,52 @@
 
 ## [Unreleased]
 
+## [0.10.5] - 2026-06-24
+
+### Added
+
+- [gateway] mounted certificate and private key files can configure HTTPS gateway certificates
+
+### Fixed
+
+- [gateway] forward proxy requests appear in request logs
+- [gateway] compilation warnings
+- [wallet] credentials view navigation
+- [wallet] service worker cache reloads after application updates
+
+## [0.10.4] - 2026-06-14
+
+### Fixed
+
+- [admin] example links
+
+## [0.10.3] - 2026-06-14
+
+### Fixed
+
+- [wallet] credential issuance encrypts credentials correctly
+
+## [0.10.2] - 2026-06-14
+
+### Fixed
+
+- [wallet] credential issuance inserts credential consent
+
+## [0.10.1] - 2026-06-14
+
+### Changed
+
+- [admin] upstream security settings are displayed more clearly
+- [infra] Kubernetes deployment manifests are improved
+
+### Fixed
+
+- [admin] gateway request logs are displayed
+- [admin] client identity provider associations are saved correctly
+- [ssi] credential issuance fetches resource owner configuration correctly
+
+## [0.10.0] - 2026-06-12
+
 ### Added
 
 - [gateway] HTTP and HTTPS forward proxies

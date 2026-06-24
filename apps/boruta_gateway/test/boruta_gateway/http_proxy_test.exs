@@ -44,6 +44,66 @@ defmodule BorutaGateway.HttpProxyTest do
     assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
   end
 
+  test "logs CONNECT tunnel requests" do
+    start_service_registry(%{})
+
+    {:ok, upstream_listener} = listen()
+    {:ok, {_address, upstream_port}} = :inet.sockname(upstream_listener)
+
+    {upstream, upstream_ref} =
+      spawn_monitor(fn ->
+        {:ok, socket} = :gen_tcp.accept(upstream_listener)
+        :gen_tcp.close(socket)
+        :gen_tcp.close(upstream_listener)
+      end)
+
+    parent = self()
+    handler_id = :http_proxy_connect_request_log_test
+
+    :telemetry.attach(
+      handler_id,
+      [:boruta_gateway, :request, :stop],
+      fn _event, measurements, metadata, _config ->
+        send(parent, {:proxy_request_log, measurements, metadata})
+      end,
+      :ok
+    )
+
+    {:ok, proxy_port} = free_port()
+    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+
+    try do
+      {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+
+      :ok =
+        :gen_tcp.send(
+          socket,
+          "CONNECT localhost:#{upstream_port} HTTP/1.1\r\nHost: localhost:#{upstream_port}\r\n\r\n"
+        )
+
+      assert {:ok, "HTTP/1.1 200 Connection Established\r\n\r\n"} =
+               :gen_tcp.recv(socket, 0, 5_000)
+
+      assert_receive {:proxy_request_log, %{duration: duration},
+                      %{
+                        method: "CONNECT",
+                        path: "localhost:" <> _,
+                        status: 200,
+                        tls: "http"
+                      }},
+                     1_000
+
+      assert duration > 0
+
+      :gen_tcp.close(socket)
+    after
+      :telemetry.detach(handler_id)
+      GenServer.stop(proxy)
+    end
+
+    assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
+  end
+
   test "forwards absolute-form HTTP requests as origin-form upstream requests" do
     start_service_registry(%{})
 
@@ -84,6 +144,69 @@ defmodule BorutaGateway.HttpProxyTest do
 
     :gen_tcp.close(socket)
     GenServer.stop(proxy)
+    assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
+  end
+
+  test "logs forwarded HTTP requests with upstream response status" do
+    start_service_registry(%{})
+
+    {:ok, upstream_listener} = listen()
+    {:ok, {_address, upstream_port}} = :inet.sockname(upstream_listener)
+
+    {upstream, upstream_ref} =
+      spawn_monitor(fn ->
+        {:ok, socket} = :gen_tcp.accept(upstream_listener)
+        {:ok, _payload} = :gen_tcp.recv(socket, 0, 5_000)
+        :ok = :gen_tcp.send(socket, "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n")
+        :gen_tcp.close(socket)
+        :gen_tcp.close(upstream_listener)
+      end)
+
+    parent = self()
+    handler_id = :http_proxy_forwarded_request_log_test
+
+    :telemetry.attach(
+      handler_id,
+      [:boruta_gateway, :request, :stop],
+      fn _event, measurements, metadata, _config ->
+        send(parent, {:proxy_request_log, measurements, metadata})
+      end,
+      :ok
+    )
+
+    {:ok, proxy_port} = free_port()
+    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+
+    try do
+      {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+
+      :ok =
+        :gen_tcp.send(
+          socket,
+          "GET http://localhost:#{upstream_port}/forwarded?x=1 HTTP/1.1\r\n" <>
+            "Host: ignored.example\r\n\r\n"
+        )
+
+      assert {:ok, "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n"} =
+               :gen_tcp.recv(socket, 0, 5_000)
+
+      :gen_tcp.close(socket)
+
+      assert_receive {:proxy_request_log, %{duration: duration},
+                      %{
+                        method: "GET",
+                        path: "/forwarded?x=1",
+                        status: 204,
+                        tls: "http"
+                      }},
+                     1_000
+
+      assert duration > 0
+    after
+      :telemetry.detach(handler_id)
+      GenServer.stop(proxy)
+    end
+
     assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
   end
 

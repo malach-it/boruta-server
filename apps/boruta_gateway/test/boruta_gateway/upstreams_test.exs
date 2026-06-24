@@ -179,6 +179,40 @@ defmodule BorutaGateway.UpstreamsTest do
       assert_raise Ecto.NoResultsError, fn -> Upstreams.get_upstream!(upstream.id) end
     end
 
+    test "sync_managed_upstreams/2 upserts desired managed upstreams and deletes stale ones" do
+      manual_upstream = upstream_fixture(%{uris: ["/manual"]})
+
+      {:ok, stale_upstream} =
+        Upstreams.create_upstream(%{
+          node_name: "global",
+          virtual_host: "stale.example.com",
+          scheme: "http",
+          host: "stale.default.svc.cluster.local",
+          port: 80,
+          uris: ["/stale"],
+          managed_by: "kubernetes_ingress",
+          managed_id: "stale"
+        })
+
+      assert {:ok, [managed_upstream]} =
+               Upstreams.sync_managed_upstreams("kubernetes_ingress", [
+                 %{
+                   node_name: "global",
+                   virtual_host: "api.example.com",
+                   scheme: "http",
+                   host: "api.default.svc.cluster.local",
+                   port: 80,
+                   uris: ["/api"],
+                   managed_id: "api"
+                 }
+               ])
+
+      assert managed_upstream.managed_by == "kubernetes_ingress"
+      assert managed_upstream.managed_id == "api"
+      assert Upstreams.get_upstream!(manual_upstream.id)
+      assert_raise Ecto.NoResultsError, fn -> Upstreams.get_upstream!(stale_upstream.id) end
+    end
+
     test "change_upstream/1 returns a upstream changeset" do
       upstream = upstream_fixture()
       assert %Ecto.Changeset{} = Upstreams.change_upstream(upstream)

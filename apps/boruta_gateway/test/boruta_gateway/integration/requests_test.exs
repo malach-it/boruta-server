@@ -96,6 +96,78 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "logs first x-forwarded-for address as remote ip" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_forwarded_for_ip_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/no_upstream",
+              [{"x-forwarded-for", "198.51.100.42, 10.0.0.1"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, status: 404}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "No upstream has been found corresponding to the given request."
+
+          assert_receive {:gateway_request_log, %{remote_ip: "198.51.100.42"}}
+        after
+          :telemetry.detach(:gateway_forwarded_for_ip_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "logs forwarded header for address as remote ip" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_forwarded_header_ip_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/no_upstream",
+              [{"forwarded", "for=203.0.113.44;proto=https;by=10.0.0.1"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, status: 404}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "No upstream has been found corresponding to the given request."
+
+          assert_receive {:gateway_request_log, %{remote_ip: "203.0.113.44"}}
+        after
+          :telemetry.detach(:gateway_forwarded_header_ip_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns a 400 for malformed request lines" do
       {:ok, socket} =
         :gen_tcp.connect(~c"localhost", 7777, [:binary, {:packet, :raw}, {:active, false}], 1_000)
@@ -435,6 +507,88 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "logs request path without query string while forwarding the full target" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_queryless_log_path_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          with_upstream_server(&query_string_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: false
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/httpbin?status=200", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "query"
+            assert_receive {:gateway_request_log, %{path: "/httpbin"}}
+          end)
+        after
+          :telemetry.detach(:gateway_queryless_log_path_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "logs request path without fragment" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_fragmentless_log_path_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          {:ok, socket} =
+            :gen_tcp.connect(
+              ~c"localhost",
+              7777,
+              [:binary, {:packet, :raw}, {:active, false}],
+              1_000
+            )
+
+          :ok =
+            :gen_tcp.send(
+              socket,
+              "GET /fragmented#section HTTP/1.1\r\nHost: localhost\r\n\r\n"
+            )
+
+          assert {:ok, response} = :gen_tcp.recv(socket, 0, 1_000)
+          assert response =~ "HTTP/1.1 404 Not Found"
+          assert_receive {:gateway_request_log, %{path: "/fragmented"}}
+
+          :gen_tcp.close(socket)
+        after
+          :telemetry.detach(:gateway_fragmentless_log_path_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns response root uri stripped", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -740,6 +894,39 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             refute Map.has_key?(headers, "Upgrade")
             refute Map.has_key?(headers, "X-Forwarded-Authorization")
             assert headers["Host"] == "127.0.0.1"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "preserves virtual host when forwarding to an ingress upstream" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&echo_headers_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/.well-known/acme-challenge"],
+              virtual_host: "admin.boruta.patatoid.fr"
+            })
+
+            Process.sleep(100)
+
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/.well-known/acme-challenge/token",
+                [{"host", "admin.boruta.patatoid.fr"}],
+                ""
+              )
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert %{"headers" => %{"Host" => "admin.boruta.patatoid.fr"}} = Jason.decode!(body)
           end)
         after
           Repo.delete_all(Upstream)

@@ -542,9 +542,42 @@ defmodule BorutaGateway.HttpGateway do
   end
 
   defp request_remote_ip(payload, socket) do
+    forwarded_remote_ip(payload) || remote_ip(socket)
+  end
+
+  defp forwarded_remote_ip(payload) do
+    real_ip_header(payload) ||
+      x_forwarded_for_header(payload) ||
+      forwarded_header(payload)
+  end
+
+  defp real_ip_header(payload) do
     case Regex.run(~r{(?:^|\r\n)x-real-ip:\s*([^\r]+)}i, payload) do
-      [_, remote_ip] -> remote_ip
-      nil -> remote_ip(socket)
+      [_, remote_ip] -> String.trim(remote_ip)
+      nil -> nil
+    end
+  end
+
+  defp x_forwarded_for_header(payload) do
+    case Regex.run(~r{(?:^|\r\n)x-forwarded-for:\s*([^\r]+)}i, payload) do
+      [_, remote_ips] ->
+        remote_ips
+        |> String.split(",", parts: 2)
+        |> List.first()
+        |> String.trim()
+
+      nil ->
+        nil
+    end
+  end
+
+  defp forwarded_header(payload) do
+    case Regex.run(~r{(?:^|\r\n)forwarded:\s*[^\r]*for=\"?([^\";\r,]+)\"?}i, payload) do
+      [_, remote_ip] ->
+        remote_ip |> String.trim() |> String.trim_leading("[") |> String.trim_trailing("]")
+
+      nil ->
+        nil
     end
   end
 
@@ -630,9 +663,9 @@ defmodule BorutaGateway.HttpGateway do
       %{
         request_id: request_id,
         method: method,
-        path: path,
         status: status,
         remote_ip: state.remote_ip || remote_ip(state.socket),
+        path: log_path(path),
         tls: "http"
       }
     )
@@ -660,6 +693,12 @@ defmodule BorutaGateway.HttpGateway do
   defp upstream_tls(%Upstream{}), do: "http"
   defp upstream_tls(nil), do: nil
 
+  defp log_path(path) do
+    path
+    |> String.split(["?", "#"], parts: 2)
+    |> List.first()
+  end
+
   defp transform_header(payload, upstream, nil) do
     transform_header(payload, upstream, false)
   end
@@ -682,7 +721,7 @@ defmodule BorutaGateway.HttpGateway do
 
     payload
     |> clean_request_headers(preserve_forwarded_authorization?)
-    |> put_header("Host", upstream.host)
+    |> put_header("Host", upstream_host_header(upstream))
   end
 
   defp transform_header(payload, upstream, token) do
@@ -741,6 +780,11 @@ defmodule BorutaGateway.HttpGateway do
   defp normalize_upstream_path(""), do: "/"
   defp normalize_upstream_path("?" <> query), do: "/?" <> query
   defp normalize_upstream_path(path), do: path
+
+  defp upstream_host_header(%Upstream{virtual_host: virtual_host}) when is_binary(virtual_host),
+    do: virtual_host
+
+  defp upstream_host_header(%Upstream{host: host}), do: host
 
   defp replace_request_target(payload, upstream_path) do
     case String.split(payload, "\r\n", parts: 2) do

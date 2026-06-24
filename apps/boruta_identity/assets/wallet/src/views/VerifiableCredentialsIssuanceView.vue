@@ -22,6 +22,24 @@
         @abort="abortInsertConsent"
         @consent="insertConsent"
       />
+      <div class="password-modal" v-if="credentialPasswordEventKey">
+        <form class="ui form segment" @submit.prevent="submitCredentialPassword">
+          <h2>Encrypt credential</h2>
+          <div class="field">
+            <label>Password</label>
+            <input
+              type="password"
+              v-model="credentialPassword"
+              autocomplete="new-password"
+              autofocus
+            />
+          </div>
+          <div class="ui fluid two buttons">
+            <button class="ui orange button" type="button" @click="abortCredentialPassword">Abort</button>
+            <button class="ui green button" type="submit" :disabled="!credentialPassword">Encrypt</button>
+          </div>
+        </form>
+      </div>
       <KeySelect v-if="keyConsentEventKey && !error" @selected="selectKey" @abort="keyConsentEventKey = null"/>
       <div class="ui segment" v-for="authorizationDetail in authorizationDetails">
         <h2>
@@ -71,6 +89,8 @@ export default defineComponent({
       generateKeyConsentEventKey: null,
       insertConsentEventKey: null,
       selectedKeyPassword: null,
+      credentialPasswordEventKey: null,
+      credentialPassword: '',
       fetchingCredential: false,
       error: null
     }
@@ -108,7 +128,22 @@ export default defineComponent({
     },
     insertConsent (eventKey) {
       eventHandler.dispatch('insert_credential-approval', eventKey)
-      this.keyConsentEventKey = null
+      this.insertConsentEventKey = null
+    },
+    submitCredentialPassword () {
+      eventHandler.dispatch(
+        'access_credential-approval',
+        this.credentialPasswordEventKey,
+        this.credentialPassword
+      )
+      this.credentialPasswordEventKey = null
+      this.credentialPassword = ''
+    },
+    abortCredentialPassword () {
+      eventHandler.dispatch('access_credential-approval', this.credentialPasswordEventKey, null)
+      this.credentialPasswordEventKey = null
+      this.credentialPassword = ''
+      this.fetchingCredential = false
     },
     generateKeyConsent (eventKey) {
       eventHandler.dispatch('generate_key-approval', '', { password: this.selectedKeyPassword })
@@ -138,12 +173,17 @@ export default defineComponent({
       eventHandler.listen('insert_credential-request', this.credentialId, () => {
         this.insertConsentEventKey = this.credentialId
       })
+      eventHandler.listen('access_credential-request', this.credentialId, () => {
+        this.credentialPasswordEventKey = this.credentialId
+      })
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {
+        this.fetchingCredential = false
         this.$store.commit('refreshCredentials')
         this.$router.push({ name: 'home' })
         this.resetKeySelect()
       }).catch(({ error_description }) => {
-        this.error = error_description
+        this.error = error_description || 'Credential encryption was aborted.'
+        this.fetchingCredential = false
         this.resetKeySelect()
       })
     },
@@ -161,6 +201,22 @@ export default defineComponent({
   h1 {
     padding: 1em .5em;
     text-align: center
+  }
+}
+.password-modal {
+  position: fixed;
+  z-index: 1001;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .segment {
+    width: min(90vw, 28rem);
   }
 }
 </style>
