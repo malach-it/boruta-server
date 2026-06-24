@@ -630,9 +630,9 @@ defmodule BorutaGateway.HttpGateway do
       %{
         request_id: request_id,
         method: method,
-        path: path,
         status: status,
         remote_ip: state.remote_ip || remote_ip(state.socket),
+        path: log_path(path),
         tls: "http"
       }
     )
@@ -659,6 +659,12 @@ defmodule BorutaGateway.HttpGateway do
   defp upstream_tls(%Upstream{scheme: "https"}), do: "tls"
   defp upstream_tls(%Upstream{}), do: "http"
   defp upstream_tls(nil), do: nil
+
+  defp log_path(path) do
+    path
+    |> String.split(["?", "#"], parts: 2)
+    |> List.first()
+  end
 
   defp transform_header(payload, upstream, nil) do
     transform_header(payload, upstream, false)
