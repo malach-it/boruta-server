@@ -585,9 +585,42 @@ defmodule BorutaGateway.HttpsGateway do
   end
 
   defp request_remote_ip(payload, socket) do
+    forwarded_remote_ip(payload) || remote_ip(socket)
+  end
+
+  defp forwarded_remote_ip(payload) do
+    real_ip_header(payload) ||
+      x_forwarded_for_header(payload) ||
+      forwarded_header(payload)
+  end
+
+  defp real_ip_header(payload) do
     case Regex.run(~r{(?:^|\r\n)x-real-ip:\s*([^\r]+)}i, payload) do
-      [_, remote_ip] -> remote_ip
-      nil -> remote_ip(socket)
+      [_, remote_ip] -> String.trim(remote_ip)
+      nil -> nil
+    end
+  end
+
+  defp x_forwarded_for_header(payload) do
+    case Regex.run(~r{(?:^|\r\n)x-forwarded-for:\s*([^\r]+)}i, payload) do
+      [_, remote_ips] ->
+        remote_ips
+        |> String.split(",", parts: 2)
+        |> List.first()
+        |> String.trim()
+
+      nil ->
+        nil
+    end
+  end
+
+  defp forwarded_header(payload) do
+    case Regex.run(~r{(?:^|\r\n)forwarded:\s*[^\r]*for=\"?([^\";\r,]+)\"?}i, payload) do
+      [_, remote_ip] ->
+        remote_ip |> String.trim() |> String.trim_leading("[") |> String.trim_trailing("]")
+
+      nil ->
+        nil
     end
   end
 

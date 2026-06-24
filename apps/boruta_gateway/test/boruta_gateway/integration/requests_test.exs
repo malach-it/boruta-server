@@ -96,6 +96,78 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "logs first x-forwarded-for address as remote ip" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_forwarded_for_ip_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/no_upstream",
+              [{"x-forwarded-for", "198.51.100.42, 10.0.0.1"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, status: 404}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "No upstream has been found corresponding to the given request."
+
+          assert_receive {:gateway_request_log, %{remote_ip: "198.51.100.42"}}
+        after
+          :telemetry.detach(:gateway_forwarded_for_ip_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "logs forwarded header for address as remote ip" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_forwarded_header_ip_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          request =
+            Finch.build(
+              :get,
+              "http://localhost:7777/no_upstream",
+              [{"forwarded", "for=203.0.113.44;proto=https;by=10.0.0.1"}],
+              ""
+            )
+
+          assert {:ok, %Finch.Response{body: body, status: 404}} =
+                   Finch.request(request, HttpClient)
+
+          assert body == "No upstream has been found corresponding to the given request."
+
+          assert_receive {:gateway_request_log, %{remote_ip: "203.0.113.44"}}
+        after
+          :telemetry.detach(:gateway_forwarded_header_ip_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns a 400 for malformed request lines" do
       {:ok, socket} =
         :gen_tcp.connect(~c"localhost", 7777, [:binary, {:packet, :raw}, {:active, false}], 1_000)
