@@ -27,3 +27,10 @@ config :boruta_gateway,
   sidecar_https_port:
     System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_PORT", "8044") |> String.to_integer(),
   num_acceptors: System.get_env("BORUTA_GATEWAY_ACCEPTORS", "8") |> String.to_integer()
+
+config :boruta_gateway,
+  kubernetes_ingress_controller: false,
+  kubernetes_namespace: nil,
+  kubernetes_ingress_class: nil,
+  kubernetes_node_name: "global",
+  kubernetes_poll_interval: 10_000

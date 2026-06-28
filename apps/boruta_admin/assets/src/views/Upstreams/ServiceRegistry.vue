@@ -96,15 +96,13 @@
                     <pre class="certificate">{{ record.certificate }}</pre>
                   </details>
                 </div>
-                <table class="ui very basic compact table" v-if="upstreamsFor(record).length">
+                <table class="ui very basic compact upstream table" v-if="upstreamsFor(record).length">
                   <thead>
                     <tr>
                       <th>Host</th>
                       <th>Base URL</th>
                       <th>Paths</th>
-                      <th>Authorization</th>
-                      <th>mTLS</th>
-                      <th colspan="3">Rate limit</th>
+                      <th colspan="5"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -116,9 +114,9 @@
                           {{ path.uri }}
                         </span>
                       </td>
-                      <td>{{ upstream.authorize ? 'enabled' : 'disabled' }}</td>
-                      <td>{{ upstream.mtls_enabled ? 'enabled' : 'disabled' }}</td>
-                      <td>{{ upstream.rate_limit_enabled ? 'enabled' : 'disabled' }}</td>
+                      <td>Authorization {{ upstream.authorize ? 'enabled' : 'disabled' }}</td>
+                      <td>mTLS {{ upstream.mtls_enabled ? 'enabled' : 'disabled' }}</td>
+                      <td>Rate limiting {{ upstream.rate_limit_enabled ? 'enabled' : 'disabled' }}</td>
                       <td class="collapsing">
                         <router-link
                           :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"

@@ -193,7 +193,6 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
              })
   end
 
-  @tag :skip
   test "loads a file" do
     assert BorutaGateway.Repo.all(Upstream) |> Enum.empty?()
 

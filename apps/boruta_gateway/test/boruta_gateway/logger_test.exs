@@ -32,7 +32,8 @@ defmodule BorutaGateway.LoggerTest do
         end)
 
       assert log =~ "request_id=request-id"
-      assert log =~ "boruta_gateway GET /upstream - sent 200 from 127.0.0.1 tls=mtls in 1ms"
+      assert log =~ "boruta_gateway GET /upstream - sent 200 from 127.0.0.1 in 1ms"
+      refute log =~ "tls=mtls"
     end
   end
 

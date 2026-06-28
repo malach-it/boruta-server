@@ -16,7 +16,12 @@ defmodule BorutaGateway.Certificate do
 
     File.mkdir_p!(directory)
 
-    generate!(certificate_path, private_key_path, root_ca)
+    if is_nil(root_ca) && existing_certificate?(certificate_path, private_key_path) do
+      maybe_write_root_ca!(root_ca)
+      cache_ssl_options!(certificate_path, private_key_path)
+    else
+      generate!(certificate_path, private_key_path, root_ca)
+    end
   end
 
   def generate_root_ca_pem! do
@@ -95,6 +100,13 @@ defmodule BorutaGateway.Certificate do
     end
   end
 
+  def ssl_options(certificate_path, private_key_path) do
+    [
+      {:cert, decode_certificate!(certificate_path)},
+      {:key, decode_private_key!(private_key_path)}
+    ]
+  end
+
   def paths do
     directory = directory()
 
@@ -159,6 +171,27 @@ defmodule BorutaGateway.Certificate do
   defp unique_suffix do
     System.unique_integer([:positive, :monotonic])
   end
+
+  defp existing_certificate?(certificate_path, private_key_path) do
+    File.exists?(certificate_path) &&
+      File.exists?(private_key_path) &&
+      loadable_certificate?(certificate_path, private_key_path)
+  end
+
+  defp loadable_certificate?(certificate_path, private_key_path) do
+    decode_certificate!(certificate_path)
+    decode_private_key!(private_key_path)
+
+    true
+  rescue
+    _error -> false
+  end
+
+  defp maybe_write_root_ca!(%{certificate: _certificate, private_key: _private_key} = root_ca) do
+    write_root_ca!(root_ca)
+  end
+
+  defp maybe_write_root_ca!(_root_ca), do: :ok
 
   defp generate!(certificate_path, private_key_path, nil) do
     args = [
@@ -316,28 +349,40 @@ defmodule BorutaGateway.Certificate do
   end
 
   defp cache_ssl_options!(certificate_path, private_key_path) do
-    ssl_options = [
-      {:cert, decode_certificate!(certificate_path)},
-      {:key, decode_private_key!(private_key_path)}
-    ]
-
     :boruta_gateway
     |> Application.get_env(__MODULE__, [])
-    |> Keyword.put(:ssl_options, ssl_options)
+    |> Keyword.put(:ssl_options, ssl_options(certificate_path, private_key_path))
     |> then(&Application.put_env(:boruta_gateway, __MODULE__, &1))
   end
 
   defp decode_certificate!(certificate_path) do
-    certificate_path
-    |> File.read!()
+    content = File.read!(certificate_path)
+
+    case decode_certificate(content) do
+      {:ok, certificate} ->
+        certificate
+
+      :error ->
+        with {:ok, decoded_content} <- Base.decode64(String.trim(content)),
+             {:ok, certificate} <- decode_certificate(decoded_content) do
+          certificate
+        else
+          _error ->
+            raise "certificate file does not contain a PEM certificate: #{certificate_path}"
+        end
+    end
+  end
+
+  defp decode_certificate(content) do
+    content
     |> :public_key.pem_decode()
     |> Enum.find(fn
       {:Certificate, _der, _encoding} -> true
       _entry -> false
     end)
     |> case do
-      {:Certificate, der, _encoding} -> der
-      _entry -> raise "certificate file does not contain a PEM certificate: #{certificate_path}"
+      {:Certificate, der, _encoding} -> {:ok, der}
+      _entry -> :error
     end
   end
 
@@ -390,8 +435,25 @@ defmodule BorutaGateway.Certificate do
   defp normalize_cacert(_cacert), do: []
 
   defp decode_private_key!(private_key_path) do
-    private_key_path
-    |> File.read!()
+    content = File.read!(private_key_path)
+
+    case decode_private_key(content) do
+      {:ok, private_key} ->
+        private_key
+
+      :error ->
+        with {:ok, decoded_content} <- Base.decode64(String.trim(content)),
+             {:ok, private_key} <- decode_private_key(decoded_content) do
+          private_key
+        else
+          _error ->
+            raise "private key file does not contain a PEM private key: #{private_key_path}"
+        end
+    end
+  end
+
+  defp decode_private_key(content) do
+    content
     |> :public_key.pem_decode()
     |> Enum.find(fn
       {:Certificate, _der, _encoding} -> false
@@ -399,13 +461,13 @@ defmodule BorutaGateway.Certificate do
     end)
     |> case do
       {key_type, der, :not_encrypted} ->
-        {key_type, der}
+        {:ok, {key_type, der}}
 
       {key_type, der, encryption_info} ->
-        {key_type, der, encryption_info}
+        {:ok, {key_type, der, encryption_info}}
 
       _entry ->
-        raise "private key file does not contain a PEM private key: #{private_key_path}"
+        :error
     end
   end
 

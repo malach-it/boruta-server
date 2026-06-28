@@ -1,0 +1,496 @@
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Create ingress controller namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ boruta_namespace }}"
+        state: present
+
+    - name: Create ingress controller service account
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: "{{ boruta_ingress_service_account }}"
+            namespace: "{{ boruta_namespace }}"
+
+    - name: Create namespace-scoped ingress controller role
+      when: boruta_ingress_watch_namespace != '*'
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: Role
+          metadata:
+            name: "{{ boruta_ingress_controller_name }}"
+            namespace: "{{ boruta_ingress_watch_namespace }}"
+          rules:
+            - apiGroups: [""]
+              resources: ["services"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["networking.k8s.io"]
+              resources: ["ingresses"]
+              verbs: ["get", "list", "watch"]
+
+    - name: Bind namespace-scoped ingress controller role
+      when: boruta_ingress_watch_namespace != '*'
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: "{{ boruta_ingress_controller_name }}"
+            namespace: "{{ boruta_ingress_watch_namespace }}"
+          subjects:
+            - kind: ServiceAccount
+              name: "{{ boruta_ingress_service_account }}"
+              namespace: "{{ boruta_namespace }}"
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: Role
+            name: "{{ boruta_ingress_controller_name }}"
+
+    - name: Create cluster-scoped ingress controller role
+      when: boruta_ingress_watch_namespace == '*'
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRole
+          metadata:
+            name: "{{ boruta_ingress_controller_name }}"
+          rules:
+            - apiGroups: [""]
+              resources: ["services"]
+              verbs: ["get", "list", "watch"]
+            - apiGroups: ["networking.k8s.io"]
+              resources: ["ingresses"]
+              verbs: ["get", "list", "watch"]
+
+    - name: Bind cluster-scoped ingress controller role
+      when: boruta_ingress_watch_namespace == '*'
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: "{{ boruta_ingress_controller_name }}"
+          subjects:
+            - kind: ServiceAccount
+              name: "{{ boruta_ingress_service_account }}"
+              namespace: "{{ boruta_namespace }}"
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: "{{ boruta_ingress_controller_name }}"
+
+    - name: Create libcluster role
+      when: boruta_libcluster_namespace != '*'
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: Role
+          metadata:
+            name: libcluster-role
+            namespace: "{{ boruta_libcluster_namespace }}"
+          rules:
+          - apiGroups: [""]
+            resources: ["pods"]
+            verbs: ["get", "list", "watch"]
+
+    - name: Bind libcluster role
+      when: boruta_libcluster_namespace != '*'
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: libcluster-bindings
+            namespace: "{{ boruta_libcluster_namespace }}"
+          subjects:
+            - kind: ServiceAccount
+              name: default
+              namespace: "{{ boruta_namespace }}"
+            - kind: ServiceAccount
+              name: "{{ boruta_ingress_service_account }}"
+              namespace: "{{ boruta_namespace }}"
+          roleRef:
+            kind: Role
+            name: libcluster-role
+            apiGroup: rbac.authorization.k8s.io
+
+    - name: Create cluster-scoped libcluster role
+      when: boruta_libcluster_namespace == '*'
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRole
+          metadata:
+            name: libcluster-role
+          rules:
+          - apiGroups: [""]
+            resources: ["pods"]
+            verbs: ["get", "list", "watch"]
+
+    - name: Bind cluster-scoped libcluster role
+      when: boruta_libcluster_namespace == '*'
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: libcluster-bindings
+          subjects:
+            - kind: ServiceAccount
+              name: default
+              namespace: "{{ boruta_namespace }}"
+            - kind: ServiceAccount
+              name: "{{ boruta_ingress_service_account }}"
+              namespace: "{{ boruta_namespace }}"
+          roleRef:
+            kind: ClusterRole
+            name: libcluster-role
+            apiGroup: rbac.authorization.k8s.io
+
+    - name: Create Let's Encrypt cluster issuer
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: cert-manager.io/v1
+          kind: ClusterIssuer
+          metadata:
+            name: "{{ letsencrypt_cluster_issuer_name }}"
+          spec:
+            acme:
+              email: "{{ letsencrypt_email }}"
+              server: "{{ letsencrypt_server }}"
+              privateKeySecretRef:
+                name: "{{ letsencrypt_cluster_issuer_name }}-account-key"
+              solvers:
+                - http01:
+                    ingress:
+                      ingressClassName: "{{ boruta_ingress_class }}"
+                      ingressTemplate:
+                        metadata:
+                          labels:
+                            identity_platform: "boruta"
+                          annotations:
+                            kubernetes.io/ingress.class: "{{ boruta_ingress_class }}"
+                            boruta.patatoid.fr/authorize: "false"
+                            boruta.patatoid.fr/strip-uri: "false"
+                            boruta.patatoid.fr/mtls-enabled: "false"
+                            boruta.patatoid.fr/backend-protocol: "http"
+
+    - name: Create gateway TLS certificate
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: cert-manager.io/v1
+          kind: Certificate
+          metadata:
+            name: "{{ boruta_gateway_tls_secret_name }}"
+            namespace: "{{ boruta_namespace }}"
+          spec:
+            secretName: "{{ boruta_gateway_tls_secret_name }}"
+            issuerRef:
+              name: "{{ letsencrypt_cluster_issuer_name }}"
+              kind: ClusterIssuer
+            dnsNames: "{{ boruta_ingress_tls_dns_names }}"
+
+    - name: Create ingress controller environment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ boruta_name }}-env"
+            namespace: "{{ boruta_namespace }}"
+          data:
+            MIX_ENV: prod
+            POSTGRES_USER: "{{ boruta_postgres_user }}"
+            POSTGRES_DATABASE: "{{ boruta_postgres_database }}"
+            POSTGRES_HOST: "{{ boruta_postgres_host }}"
+            BORUTA_GATEWAY_ACCEPTORS: "{{ boruta_gateway_acceptors | string }}"
+            BORUTA_GATEWAY_SERVER: "{{ boruta_gateway_http_enabled }}"
+            BORUTA_GATEWAY_PORT: "{{ boruta_gateway_http_port | string }}"
+            BORUTA_GATEWAY_HTTPS_SERVER: "{{ boruta_gateway_https_enabled | bool | ternary('true', 'false') }}"
+            BORUTA_GATEWAY_HTTPS_PORT: "{{ boruta_gateway_https_port | string }}"
+            BORUTA_GATEWAY_MOUNTED_CERTIFICATE_PATH: "{{ boruta_gateway_mounted_certificate_path }}"
+            BORUTA_GATEWAY_MOUNTED_PRIVATE_KEY_PATH: "{{ boruta_gateway_mounted_private_key_path }}"
+            BORUTA_GATEWAY_KUBERNETES_INGRESS_CONTROLLER: "true"
+            BORUTA_GATEWAY_KUBERNETES_NAMESPACE: "{{ boruta_ingress_watch_namespace }}"
+            BORUTA_GATEWAY_KUBERNETES_INGRESS_CLASS: "{{ boruta_ingress_class }}"
+            BORUTA_GATEWAY_KUBERNETES_NODE_NAME: "{{ boruta_ingress_node_name }}"
+            BORUTA_GATEWAY_KUBERNETES_POLL_INTERVAL: "{{ boruta_ingress_poll_interval }}"
+            K8S_NAMESPACE: "{{ boruta_libcluster_namespace }}"
+            K8S_SELECTOR: "{{ boruta_libcluster_selector }}"
+
+    - name: Create ingress controller secrets
+      no_log: true
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "{{ boruta_name }}-secrets"
+            namespace: "{{ boruta_namespace }}"
+          type: Opaque
+          stringData:
+            POSTGRES_PASSWORD: "{{ boruta_postgres_password }}"
+            RELEASE_COOKIE: "{{ boruta_release_cookie }}"
+
+    - name: Create postgres persistent volume claim
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: "{{ boruta_postgres_name }}-data"
+            namespace: "{{ boruta_namespace }}"
+          spec:
+            storageClassName: standard-rwo
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: "{{ boruta_postgres_storage_size }}"
+
+    - name: Create postgres deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ boruta_postgres_name }}"
+            namespace: "{{ boruta_namespace }}"
+            labels:
+              app: "{{ boruta_postgres_name }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ boruta_postgres_name }}"
+            template:
+              metadata:
+                labels:
+                  app: "{{ boruta_postgres_name }}"
+              spec:
+                volumes:
+                  - name: postgres-data
+                    persistentVolumeClaim:
+                      claimName: "{{ boruta_postgres_name }}-data"
+                containers:
+                  - name: postgres
+                    image: "{{ boruta_postgres_image }}"
+                    imagePullPolicy: Always
+                    args:
+                      - "-c"
+                      - "max_connections=1024"
+                    ports:
+                      - name: postgres
+                        containerPort: 5432
+                    env:
+                      - name: POSTGRES_USER
+                        value: "{{ boruta_postgres_user }}"
+                      - name: POSTGRES_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: "{{ boruta_name }}-secrets"
+                            key: POSTGRES_PASSWORD
+                      - name: POSTGRES_DB
+                        value: "{{ boruta_postgres_database }}"
+                    readinessProbe:
+                      exec:
+                        command:
+                          - pg_isready
+                          - "-U"
+                          - "{{ boruta_postgres_user }}"
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                    livenessProbe:
+                      tcpSocket:
+                        port: postgres
+                      initialDelaySeconds: 30
+                      periodSeconds: 30
+                    volumeMounts:
+                      - name: postgres-data
+                        mountPath: /var/lib/postgresql/data
+                        subPath: postgres
+
+    - name: Create postgres service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ boruta_postgres_name }}"
+            namespace: "{{ boruta_namespace }}"
+            labels:
+              app: "{{ boruta_postgres_name }}"
+          spec:
+            selector:
+              app: "{{ boruta_postgres_name }}"
+            ports:
+              - name: postgres
+                protocol: TCP
+                port: 5432
+                targetPort: postgres
+
+    - name: Create logs persistent volume claim
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: "{{ boruta_logs_pvc_name }}"
+            namespace: "{{ boruta_namespace }}"
+          spec:
+            storageClassName: "{{ boruta_logs_storage_class }}"
+            accessModes:
+              - "{{ boruta_logs_access_mode }}"
+            resources:
+              requests:
+                storage: "{{ boruta_logs_storage_size }}"
+
+    - name: Create static configuration file
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "boruta-ingress-controller-configuration"
+            namespace: "{{ boruta_namespace }}"
+          data:
+            ingress-config.yml: |
+              ---
+              version: "1.0"
+              configuration:
+                aliases:
+                  - "kagome.boruta.patatoid.fr"
+                  - "admin.boruta.patatoid.fr"
+                  - "oauth.boruta.patatoid.fr"
+
+    - name: Create ingress controller deployment
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ boruta_ingress_controller_name }}"
+            namespace: "{{ boruta_namespace }}"
+            labels:
+              app: "{{ boruta_ingress_controller_name }}"
+              identity_platform: "boruta"
+          spec:
+            replicas: "{{ boruta_ingress_replicas | int }}"
+            selector:
+              matchLabels:
+                app: "{{ boruta_ingress_controller_name }}"
+            template:
+              metadata:
+                labels:
+                  app: "{{ boruta_ingress_controller_name }}"
+                  identity_platform: "boruta"
+              spec:
+                serviceAccountName: "{{ boruta_ingress_service_account }}"
+                enableServiceLinks: false
+                volumes:
+                  - name: logs
+                    persistentVolumeClaim:
+                      claimName: "{{ boruta_logs_pvc_name }}"
+                  - name: static-configuration
+                    configMap:
+                      name: "boruta-ingress-controller-configuration"
+                      items:
+                        - key: ingress-config.yml
+                          path: ingress-config.yml
+                  - name: gateway-tls
+                    secret:
+                      secretName: "{{ boruta_gateway_tls_secret_name }}"
+                      items:
+                        - key: tls.crt
+                          path: tls.crt
+                        - key: tls.key
+                          path: tls.key
+                containers:
+                  - name: boruta-gateway
+                    image: "{{ boruta_gateway_image }}"
+                    imagePullPolicy: Always
+                    ports:
+                      - name: http
+                        containerPort: "{{ boruta_gateway_http_port | int }}"
+                      - name: https
+                        containerPort: "{{ boruta_gateway_https_port | int }}"
+                    envFrom:
+                      - configMapRef:
+                          name: "{{ boruta_name }}-env"
+                      - secretRef:
+                          name: "{{ boruta_name }}-secrets"
+                    env:
+                      - name: BORUTA_GATEWAY_CONFIGURATION_PATH
+                        value: "/config/ingress-config.yml"
+                    readinessProbe:
+                      tcpSocket:
+                        port: http
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                    livenessProbe:
+                      tcpSocket:
+                        port: http
+                      initialDelaySeconds: 30
+                      periodSeconds: 30
+                    volumeMounts:
+                      - name: logs
+                        mountPath: "/app/log"
+                      - name: static-configuration
+                        mountPath: "/config"
+                        readOnly: true
+                      - name: gateway-tls
+                        mountPath: "{{ boruta_gateway_mounted_certificate_dir }}"
+                        readOnly: true
+
+    - name: Create ingress controller service
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ boruta_ingress_service_name }}"
+            namespace: "{{ boruta_namespace }}"
+            labels:
+              app: "{{ boruta_ingress_controller_name }}"
+          spec:
+            type: LoadBalancer
+            selector:
+              app: "{{ boruta_ingress_controller_name }}"
+            ports:
+              - name: http
+                protocol: TCP
+                port: 80
+                targetPort: http
+                nodePort: "{{ boruta_ingress_http_node_port | int }}"
+              - name: https
+                protocol: TCP
+                port: 443
+                targetPort: https
+                nodePort: "{{ boruta_ingress_https_node_port | int }}"

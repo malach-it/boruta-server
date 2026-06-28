@@ -198,6 +198,7 @@ In order to authenticate to the administration interface you will be asked for c
 | `LIBCLUSTER_HOSTS`                   | A comma-separated list of Erlang node names used for libcluster Docker Compose discovery, for example `boruta@boruta-1,boruta@boruta-2`. |
 | `K8S_NAMESPACE`                      | If set along with K8S_SELECTOR, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
 | `K8S_SELECTOR`                       | If set along with K8S_NAMESPACE, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
+| `BORUTA_GATEWAY_KUBERNETES_API_SERVER_NAME` | The DNS name used to verify the Kubernetes API server certificate when the ingress controller connects to the in-cluster API service. Defaults to `kubernetes.default.svc` when `KUBERNETES_SERVICE_HOST` is an IP address. |
 | `BORUTA_ADMIN_OAUTH_CLIENT_ID`       | An uuidv4 string representing the admin oauth client id. It will be part of the client seeded in the setup task. |
 | `BORUTA_ADMIN_OAUTH_CLIENT_SECRET`   | The admin oauth client secret. It will be part of the client seeded in the setup task. |
 | `BORUTA_ADMIN_OAUTH_BASE_URL`        | The URL base URL of the authorization server admin will use (linked to above client_id and secret, without trailing slash). |

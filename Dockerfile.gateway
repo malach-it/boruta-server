@@ -1,4 +1,4 @@
-FROM elixir:1.14-otp-25-alpine AS builder
+FROM elixir:1.18-otp-26-alpine AS builder
 
 RUN apk --no-cache --update add build-base git
 
@@ -29,11 +29,5 @@ RUN apk --no-cache --update add openssl
 WORKDIR /app
 
 COPY --from=builder /app/_build/prod/rel/boruta_gateway ./
-
-# File used for gateway static configuration, used in combination with `BORUTA_GATEWAY_CONFIGURATION_PATH` environment variable
-COPY /static_config/example-gateway-configuration.yml config/example-gateway-configuration.yml
-
-COPY /static_config/example-httpbin-configuration.yml config/example-httpbin-configuration.yml
-COPY /static_config/example-protected-httpbin-configuration.yml config/example-protected-httpbin-configuration.yml
 
 CMD ["/bin/sh", "-c", "/app/bin/boruta_gateway start"]

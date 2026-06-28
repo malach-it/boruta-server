@@ -36,7 +36,7 @@ defmodule BorutaGateway.Logger do
           path: path,
           status: status,
           remote_ip: remote_ip
-        } = metadata,
+        },
         _config
       ) do
     request(%{
@@ -45,8 +45,7 @@ defmodule BorutaGateway.Logger do
       path: path,
       status: status,
       remote_ip: remote_ip,
-      duration: duration,
-      tls: Map.get(metadata, :tls)
+      duration: duration
     })
   end
 
@@ -80,8 +79,7 @@ defmodule BorutaGateway.Logger do
          path: path,
          status: status,
          remote_ip: remote_ip,
-         duration: duration,
-         tls: tls
+         duration: duration
        }) do
     Logger.log(
       :info,
@@ -98,7 +96,6 @@ defmodule BorutaGateway.Logger do
           Integer.to_string(status),
           " from ",
           remote_ip,
-          log_attribute("tls", tls),
           " in ",
           duration(duration)
         ]

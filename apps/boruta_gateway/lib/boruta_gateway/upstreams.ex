@@ -120,4 +120,39 @@ defmodule BorutaGateway.Upstreams do
   def change_upstream(%Upstream{} = upstream) do
     Upstream.changeset(upstream, %{})
   end
+
+  def sync_managed_upstreams(managed_by, upstream_attrs) do
+    managed_ids = Enum.map(upstream_attrs, &Map.fetch!(&1, :managed_id))
+
+    Repo.transaction(fn ->
+      delete_stale_managed_upstreams(managed_by, managed_ids)
+
+      Enum.map(upstream_attrs, fn attrs ->
+        attrs = Map.put(attrs, :managed_by, managed_by)
+
+        case Repo.get_by(Upstream, managed_by: managed_by, managed_id: attrs.managed_id) do
+          nil ->
+            {:ok, upstream} = create_upstream(attrs)
+            upstream
+
+          %Upstream{} = upstream ->
+            {:ok, upstream} = update_upstream(upstream, attrs)
+            upstream
+        end
+      end)
+    end)
+  end
+
+  defp delete_stale_managed_upstreams(managed_by, []) do
+    Upstream
+    |> where([upstream], upstream.managed_by == ^managed_by)
+    |> Repo.delete_all()
+  end
+
+  defp delete_stale_managed_upstreams(managed_by, managed_ids) do
+    Upstream
+    |> where([upstream], upstream.managed_by == ^managed_by)
+    |> where([upstream], upstream.managed_id not in ^managed_ids)
+    |> Repo.delete_all()
+  end
 end
