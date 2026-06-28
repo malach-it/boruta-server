@@ -37,7 +37,7 @@ This server has also been certified against the [European Blockchain Service Inf
 
 ## Documentation
 
-Server documentation is available on github pages [here](https://malach-it.github.io/developers.boruta/docs/intro). It highlights how the server works, describing its architecture, parameters and the associated authentication / authorization flows. It is a Work In Progress, all feedback or contributions would be welcomed.
+Server documentation is available on github pages [here](https://malach-it.github.io/documentation.boruta/docs/intro). It highlights how the server works, describing its architecture, parameters and the associated authentication / authorization flows. It is a Work In Progress, all feedback or contributions would be welcomed.
 
 ## DID creation and resolution
 
