@@ -49,7 +49,7 @@ This project includes a demo wallet implemented for testing purposes. It is comp
 
 ## Installation
 
-The easiest way to try the server is by using docker compose as follow
+The easiest way to try the server is by using docker compose as follow:
 
 ### Run an instance from docker-compose
 
