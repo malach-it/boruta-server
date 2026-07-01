@@ -49,9 +49,23 @@ This project includes a demo wallet implemented for testing purposes. It is comp
 
 ## Installation
 
-A [loom presentation](https://www.loom.com/share/77006360fdac44bc9113fab9cf30aba5) about how to get a server up and running.
+The easiest way to try the server is by using docker compose as follow
 
-Note that the easiest way to try the server is by using docker compose.
+### Run an instance from docker-compose
+
+You can build and run the docker images as follow:
+
+```bash
+docker-compose up
+```
+
+The applications will be available on different ports (depending on the docker compose environment configuration):
+- http://localhost:8080 for the authorization server
+- http://localhost:8081 for the admin interface
+- http://localhost:8082 for the gateway
+- http://localhost:8083 for the microgateway
+
+Admin credentials are the one seeded and available in environment file.
 
 ### Run an instance from docker
 
@@ -76,22 +90,6 @@ The applications will be available on different ports (depending on the values p
 - http://localhost:4001 for the admin interface
 - http://localhost:4002 for the gateway
 - http://localhost:4003 for the microgateway
-
-Admin credentials are the one seeded and available in environment file.
-
-### Run an instance from docker-compose
-
-You can build and run the docker images as follow:
-
-```bash
-docker-compose up
-```
-
-The applications will be available on different ports (depending on the docker compose environment configuration):
-- http://localhost:8080 for the authorization server
-- http://localhost:8081 for the admin interface
-- http://localhost:8082 for the gateway
-- http://localhost:8083 for the microgateway
 
 Admin credentials are the one seeded and available in environment file.
 
