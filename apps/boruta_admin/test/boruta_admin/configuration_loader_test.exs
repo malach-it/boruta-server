@@ -374,7 +374,6 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
                    "text_color" => "#333333"
                  },
                  "format" => "jwt_vc",
-                 "scopes" => ["BorutaCredentialJwtVc"],
                  "types" => "VerifiableCredential BorutaCredentialJwtVc",
                  "version" => "13"
                }
