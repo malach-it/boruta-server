@@ -333,6 +333,14 @@ import Token from '../../models/token.model'
 
 Chart.register(...registerables)
 
+function defaultStartAt () {
+  return moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm")
+}
+
+function defaultEndAt () {
+  return moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+}
+
 export default {
   name: 'tokens-dashboard',
   components: {
@@ -355,8 +363,8 @@ export default {
       type: this.$route.query.type || '',
       scope: this.$route.query.scope || '',
       dateFilter: {
-        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+        startAt: this.$route.query.startAt || defaultStartAt(),
+        endAt: this.$route.query.endAt || defaultEndAt()
       },
       currentPage: Number(this.$route.query.page || 1),
       tokenQuery: this.$route.query.q || '',
@@ -696,9 +704,22 @@ export default {
         this.scope = scope || ''
         this.type = type || ''
         this.dateFilter = {
-          startAt: startAt || moment().utc().subtract(1, 'month').format("yyyy-MM-DDTHH:mm"),
-          endAt: endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+          startAt: startAt || defaultStartAt(),
+          endAt: endAt || defaultEndAt()
         }
+
+        if (!startAt || !endAt) {
+          this.$router.replace({
+            path: this.$route.path,
+            query: {
+              ...this.$route.query,
+              startAt: this.dateFilter.startAt,
+              endAt: this.dateFilter.endAt
+            }
+          })
+          return
+        }
+
         this.getTokens(page, q, client_id, scope, type, this.dateFilter.startAt, this.dateFilter.endAt)
       },
       deep: true,
