@@ -10,8 +10,11 @@ defmodule BorutaWeb.Oauth.TokenController do
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
   alias Boruta.Openid.DirectPostResponse
+  alias BorutaAuth.TokenUserData
   alias BorutaWeb.OauthView
   alias BorutaWeb.PresentationServer
+
+  action_fallback(BorutaWeb.FallbackController)
 
   def token(%Plug.Conn{} = conn, _params) do
     conn |> Oauth.token(__MODULE__)
@@ -84,6 +87,28 @@ defmodule BorutaWeb.Oauth.TokenController do
       end
 
     Openid.direct_post(conn, direct_post_params, __MODULE__)
+  end
+
+  def user_data(conn, %{
+        "id" => id,
+        "vp_token" => vp_token,
+        "client_id" => client_id,
+        "client_secret" => client_secret
+      }) do
+    with {:ok, client} <- authorize_client(client_id, client_secret),
+         {:ok, token} <- TokenUserData.store(id, vp_token, client.id) do
+      json(conn, %{data: %{id: token.id, user_data: TokenUserData.get(token)}})
+    end
+  end
+
+  def user_data(_conn, _params), do: {:error, :bad_request}
+
+  defp authorize_client(client_id, client_secret) do
+    Boruta.Oauth.Authorization.Client.authorize(
+      id: client_id,
+      source: %{type: "post", value: client_secret},
+      grant_type: "client_credentials"
+    )
   end
 
   @impl Boruta.Openid.DirectPostApplication

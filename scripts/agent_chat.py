@@ -96,7 +96,7 @@ class ClientKeySigner:
         payload = {
             "sub": key_id,
             "iat": now,
-            "exp": now + 3600,
+            "exp": now + 60,
         }
         signing_input = f"{base64_url_json(header)}.{base64_url_json(payload)}"
         signature = sign_rs512(self.private_key_path, signing_input.encode("ascii"))

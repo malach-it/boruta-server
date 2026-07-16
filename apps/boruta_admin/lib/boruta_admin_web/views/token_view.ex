@@ -1,9 +1,15 @@
 defmodule BorutaAdminWeb.TokenView do
   use BorutaAdminWeb, :view
 
+  import Boruta.Ecto.OauthMapper, only: [to_oauth_schema: 1]
+
   alias Boruta.Oauth
+  alias Boruta.Oauth.Client
   alias Boruta.Openid.VerifiablePresentations
+  alias BorutaAuth.TokenUserData
+  alias BorutaAdmin.Tokens
   alias BorutaAdminWeb.TokenView
+  alias BorutaWeb.Router.Helpers, as: WebRoutes
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Admin
 
@@ -22,6 +28,7 @@ defmodule BorutaAdminWeb.TokenView do
         Enum.map(tokens, fn token ->
           render(TokenView, "token.json",
             token: token,
+            conn: Map.get(assigns, :conn),
             previous_codes: Map.get(Map.get(assigns, :previous_codes, %{}), token.id, [])
           )
         end),
@@ -42,6 +49,7 @@ defmodule BorutaAdminWeb.TokenView do
       data:
         render(TokenView, "token.json",
           token: token,
+          conn: Map.get(assigns, :conn),
           previous_codes: Map.get(Map.get(assigns, :previous_codes, %{}), token.id, [])
         )
     }
@@ -54,12 +62,17 @@ defmodule BorutaAdminWeb.TokenView do
       response_type: token.response_type,
       value: token.value,
       id_token: token.id_token,
-      id_token_claims: verified_claims(token.id_token),
+      id_token_claims: verified_claims(token.id_token, token, Map.get(assigns, :conn)),
+      user_data: Tokens.user_data(token),
       refresh_token: token.refresh_token,
       previous_code: token.previous_code,
       previous_codes:
         Enum.map(Map.get(assigns, :previous_codes, []), fn previous_code ->
-          render(TokenView, "token.json", token: previous_code, previous_codes: [])
+          render(TokenView, "token.json",
+            token: previous_code,
+            conn: Map.get(assigns, :conn),
+            previous_codes: []
+          )
         end),
       previous_token: token.previous_token,
       agent_token: token.agent_token,
@@ -87,12 +100,13 @@ defmodule BorutaAdminWeb.TokenView do
 
   defp client(_client), do: nil
 
-  defp verified_claims(jwt) when is_binary(jwt) and jwt != "" do
+  defp verified_claims(jwt, token, conn) when is_binary(jwt) and jwt != "" do
     with {:ok, %{"alg" => alg} = headers} <- Joken.peek_header(jwt),
          {:ok, _jwk, claims} <- VerifiablePresentations.verify_jwt(extract_key(headers), alg, jwt) do
       %{
         verified: true,
-        claims: claims
+        claims: claims,
+        verifiable_presentation_url: verifiable_presentation_url(claims, token, conn)
       }
     else
       {:error, error} ->
@@ -109,7 +123,56 @@ defmodule BorutaAdminWeb.TokenView do
     end
   end
 
-  defp verified_claims(_jwt), do: nil
+  defp verified_claims(_jwt, _token, _conn), do: nil
+
+  defp verifiable_presentation_url(
+         %{
+           "agent_wallet_url" => agent_wallet_url,
+           "hook_presentation_definition" => hook_presentation_definition
+         },
+         token,
+         _conn
+       )
+       when is_binary(agent_wallet_url) and is_map(hook_presentation_definition) do
+    client = to_oauth_schema(token.client)
+    redirect_uri = WebRoutes.token_url(BorutaWeb.Endpoint, :user_data, token.id)
+    response_type = "vp_token"
+    response_mode = "direct_post"
+    nonce = TokenUserData.ensure_nonce(token)
+
+    claims = %{
+      iss: Boruta.Config.issuer(),
+      aud: client.id,
+      exp: :os.system_time(:seconds) + client.authorization_code_ttl,
+      nonce: nonce,
+      response_type: response_type,
+      response_mode: response_mode,
+      client_id: Boruta.Config.issuer(),
+      redirect_uri: redirect_uri,
+      scope: "openid",
+      presentation_definition: hook_presentation_definition
+    }
+
+    with "" <> request <- Client.Crypto.id_token_sign(claims, client) do
+      query =
+        URI.encode_query(%{
+          "client_id" => client.id,
+          "response_type" => response_type,
+          "response_mode" => response_mode,
+          "scope" => "openid",
+          "redirect_uri" => redirect_uri,
+          "request" => request
+        })
+
+      separator = if URI.parse(agent_wallet_url).query, do: "&", else: "?"
+
+      agent_wallet_url <> separator <> query
+    else
+      _error -> nil
+    end
+  end
+
+  defp verifiable_presentation_url(_claims, _token, _conn), do: nil
 
   defp extract_key(%{"jwk" => jwk}), do: {:jwk, jwk}
   defp extract_key(%{"kid" => did}), do: {:did, did}
