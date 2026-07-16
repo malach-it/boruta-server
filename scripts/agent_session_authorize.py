@@ -252,7 +252,6 @@ def sign_es256(private_key_path: Path, signing_input: bytes) -> bytes:
 def actor_id_token(
     actor: Actor,
     event_kind: str,
-    user_prompt: str | None = None,
     verifiable_presentation_url: str | None = None,
     agent_wallet_url: str | None = None,
     hook_presentation_definition: dict[str, object] | None = None,
@@ -269,8 +268,6 @@ def actor_id_token(
         "exp": now + 60,
         "cnf": {"jwk": jwk},
     }
-    if user_prompt:
-        payload["user_prompt"] = user_prompt
     if verifiable_presentation_url:
         payload["verifiable_presentation_url"] = verifiable_presentation_url
     if agent_wallet_url:
@@ -404,7 +401,6 @@ def main() -> None:
     parser.add_argument("--actor", required=True, help="Actor formatted as <actor_type>:<name>, e.g. assistant:codex")
     parser.add_argument("--previous-code", help="Previous Boruta authorization code. If omitted, no authorization_code parameter is sent.")
     parser.add_argument("--event-kind", default="tool_call")
-    parser.add_argument("--user-prompt", help="User prompt to include in the minted id_token claims")
     parser.add_argument("--verifiable-presentation-url", help="Deprecated: URL where the hook input credential can be presented")
     parser.add_argument("--agent-wallet-url", help="Wallet URL where the hook input credential can be presented")
     parser.add_argument("--hook-presentation-definition", help="Presentation definition JSON for the hook input credential")
@@ -426,7 +422,6 @@ def main() -> None:
     token = actor_id_token(
         actor,
         args.event_kind,
-        args.user_prompt,
         args.verifiable_presentation_url,
         args.agent_wallet_url,
         hook_presentation_definition,
@@ -460,7 +455,6 @@ def main() -> None:
             "actor_type": actor.actor_type,
             "event": args.event_kind,
             "cnf": {"jwk": ensure_public_jwk(actor)},
-            **({"user_prompt": args.user_prompt} if args.user_prompt else {}),
             **({"verifiable_presentation_url": args.verifiable_presentation_url} if args.verifiable_presentation_url else {}),
             **({"agent_wallet_url": args.agent_wallet_url} if args.agent_wallet_url else {}),
             **({"hook_presentation_definition": hook_presentation_definition} if hook_presentation_definition else {}),

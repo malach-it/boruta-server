@@ -47,11 +47,6 @@ SESSION_ID_ENV_KEYS = (
     "CODEX_SESSION_ID",
     "CODEX_CONVERSATION_ID",
 )
-USER_PROMPT_KEYS = (
-    "prompt",
-    "user_prompt",
-    "message",
-)
 DEFAULT_OAUTH_BASE_URL = "http://localhost:8080"
 DEFAULT_BROWSER_REDIRECT_URI = "http://127.0.0.1:8765/oauth-callback"
 DEFAULT_DOCKER_COMPOSE_COMMAND = "docker compose up -d"
@@ -99,18 +94,6 @@ def actor_for(hook_input: dict[str, Any]) -> str:
         return f"tool:{tool_name}"
 
     return os.getenv("BORUTA_CODEX_HOOK_ACTOR", DEFAULT_ACTOR_BY_EVENT.get(event, "assistant:codex"))
-
-
-def user_prompt_for(hook_input: dict[str, Any]) -> str | None:
-    if hook_input.get("hook_event_name") != "UserPromptSubmit":
-        return None
-
-    for key in USER_PROMPT_KEYS:
-        value = hook_input.get(key)
-        if isinstance(value, str) and value:
-            return value
-
-    return None
 
 
 def scope_for(hook_input: dict[str, Any]) -> str | None:
@@ -897,10 +880,6 @@ def main() -> int:
         event_kind(hook_input),
         "--chain-session",
     ]
-
-    user_prompt = user_prompt_for(hook_input)
-    if user_prompt:
-        command.extend(["--user-prompt", user_prompt])
 
     if wallet_url:
         command.extend(["--agent-wallet-url", wallet_url])
