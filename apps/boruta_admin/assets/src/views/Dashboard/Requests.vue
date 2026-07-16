@@ -190,11 +190,7 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-<<<<<<< Updated upstream
-              unit: 'hour',
-=======
               unit: this.timeScaleUnit || 'minute',
->>>>>>> Stashed changes
               round: true
             }
           }
