@@ -27,7 +27,7 @@ defmodule BorutaWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json", "jwt", "event-stream"])
-    plug RateLimit, count: 10, time_unit: :second, penality: 500, timeout: 5_000
+    plug RateLimit, count: 100, time_unit: :second, penality: 500, timeout: 5_000
   end
 
   scope "/", BorutaWeb do

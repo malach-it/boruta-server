@@ -83,6 +83,21 @@ Chart.register(...registerables)
 
 const MAX_LOG_LINES = 10000 // from backend limit
 
+function defaultDateFilter() {
+  return {
+    startAt: moment().utc().subtract(1, 'hour').format("yyyy-MM-DDTHH:mm"),
+    endAt: moment().utc().format("yyyy-MM-DDTHH:mm")
+  }
+}
+
+function dateFilterFromQuery(query) {
+  return {
+    ...defaultDateFilter(),
+    ...(query.startAt ? { startAt: query.startAt } : {}),
+    ...(query.endAt ? { endAt: query.endAt } : {})
+  }
+}
+
 export default {
   name: 'requests',
   components: {
@@ -95,7 +110,7 @@ export default {
       pending: false,
       error: false,
       maxLogLines: MAX_LOG_LINES,
-      timeScaleUnit: '',
+      timeScaleUnit: 'minute',
       requestLogs: [],
       logCount: 0,
       graphRerenders: 0,
@@ -103,10 +118,7 @@ export default {
         applications: ['boruta_web', 'boruta_identity', 'boruta_gateway', 'boruta_admin'],
         labels: []
       },
-      dateFilter: {
-        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
-      },
+      dateFilter: dateFilterFromQuery(this.$route.query),
       requestsFilter: {
         application: this.$route.query.application || 'boruta_web',
         label: this.$route.query.label || ''
@@ -152,7 +164,7 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: 'hour',
+              unit: this.timeScaleUnit || 'minute',
               round: true
             }
           }
@@ -178,7 +190,11 @@ export default {
           x: {
             type: 'timeseries',
             time: {
+<<<<<<< Updated upstream
               unit: 'hour',
+=======
+              unit: this.timeScaleUnit || 'minute',
+>>>>>>> Stashed changes
               round: true
             }
           }
@@ -334,10 +350,7 @@ export default {
     $route(to, from) {
       if (to.name !== 'request-logs') return
 
-      this.dateFilter = {
-        startAt: to.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
-      }
+      this.dateFilter = dateFilterFromQuery(to.query)
 
       this.requestsFilter = {
         application: to.query.application || 'boruta_web',

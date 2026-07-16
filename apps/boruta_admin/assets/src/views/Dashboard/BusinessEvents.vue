@@ -98,6 +98,21 @@ Chart.register(...registerables)
 
 const MAX_LOG_LINES = 10000 // from backend limit
 
+function defaultDateFilter() {
+  return {
+    startAt: moment().utc().subtract(1, 'hour').format("yyyy-MM-DDTHH:mm"),
+    endAt: moment().utc().format("yyyy-MM-DDTHH:mm")
+  }
+}
+
+function dateFilterFromQuery(query) {
+  return {
+    ...defaultDateFilter(),
+    ...(query.startAt ? { startAt: query.startAt } : {}),
+    ...(query.endAt ? { endAt: query.endAt } : {})
+  }
+}
+
 export default {
   name: 'business-events',
   components: {
@@ -137,7 +152,7 @@ export default {
       pending: false,
       error: false,
       maxLogLines: MAX_LOG_LINES,
-      timeScaleUnit: '',
+      timeScaleUnit: 'minute',
       businessEventLogs: [],
       logCount: 0,
       graphRerenders: 0,
@@ -146,10 +161,7 @@ export default {
         domains: [],
         actions: []
       },
-      dateFilter: {
-        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
-      },
+      dateFilter: dateFilterFromQuery(this.$route.query),
       businessEventFilter: {
         application: this.$route.query.application || 'boruta_web',
         domain: this.$route.query.domain || '',
@@ -184,8 +196,8 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: this.timeScaleUnit || 'hour',
-              round: this.timeScaleUnit || 'hour'
+              unit: this.timeScaleUnit || 'minute',
+              round: this.timeScaleUnit || 'minute'
             }
           }
         }
@@ -208,8 +220,8 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: this.timeScaleUnit || 'hour',
-              round: this.timeScaleUnit || 'hour'
+              unit: this.timeScaleUnit || 'minute',
+              round: this.timeScaleUnit || 'minute'
             }
           }
         }
@@ -370,10 +382,7 @@ export default {
     $route(to, from) {
       if (to.name !== 'business-event-logs') return
 
-      this.dateFilter = {
-        startAt: to.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
-      }
+      this.dateFilter = dateFilterFromQuery(to.query)
 
       this.businessEventFilter = {
         application: to.query.application || 'boruta_web',
