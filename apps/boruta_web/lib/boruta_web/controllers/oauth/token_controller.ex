@@ -158,7 +158,9 @@ defmodule BorutaWeb.Oauth.TokenController do
       "scope" => response.code.requested_scope,
       "state" => response.code.state,
       "code" => response.code.value,
-      "redirect_uri" => response.redirect_uri
+      "redirect_uri" => response.redirect_uri,
+      "presentation_definition" =>
+        encode_presentation_definition(response.presentation_definition)
     }
 
     redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
@@ -195,7 +197,9 @@ defmodule BorutaWeb.Oauth.TokenController do
           "scope" => response.code.requested_scope,
           "state" => response.code.state,
           "code" => response.code.value,
-          "redirect_uri" => response.redirect_uri
+          "redirect_uri" => response.redirect_uri,
+          "presentation_definition" =>
+            encode_presentation_definition(response.presentation_definition)
         }
 
         redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
@@ -204,4 +208,13 @@ defmodule BorutaWeb.Oauth.TokenController do
         redirect(conn, external: redirect_uri)
     end
   end
+
+  defp encode_presentation_definition(nil), do: nil
+
+  defp encode_presentation_definition(presentation_definition)
+       when is_binary(presentation_definition),
+       do: presentation_definition
+
+  defp encode_presentation_definition(presentation_definition),
+    do: Jason.encode!(presentation_definition)
 end
