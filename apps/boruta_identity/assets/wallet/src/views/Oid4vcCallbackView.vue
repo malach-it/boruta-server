@@ -52,7 +52,7 @@
       </div>
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
-    <div v-if="credentials.length">
+    <div v-if="mode == 'oid4vp' && credentials.length">
       <div v-for="input_descriptor of presentation_definition.input_descriptors">
         <div v-for="field of input_descriptor.constraints.fields">
           <p :key="field.path" v-if="field.id" class="ui purpose segment">
@@ -69,10 +69,34 @@
         </form>
       </div>
     </div>
-    <div class="ui segment" v-if="id_token">
-      <form method="POST" :action="redirect_uri" class="ui form large segment">
+    <div class="ui segment" v-if="mode == 'siopv2'">
+      <div class="ui segment" v-if="availableCredentials.length">
+        <h2 class="ui header">Available credential claims</h2>
+        <div class="ui divided items">
+          <div class="item" v-for="credential of availableCredentials" :key="credential.credential">
+            <div class="content">
+              <div class="header">{{ credential.credentialId }}</div>
+              <div class="meta">{{ credential.format }}</div>
+              <div class="description">
+                <div class="ui relaxed list">
+                  <label class="item" v-for="claim of credential.claims" :key="credential.credential + claim.key">
+                    <div class="ui checkbox">
+                      <input
+                        type="checkbox"
+                        :checked="isCredentialClaimSelected(credential, claim)"
+                        @change="toggleCredentialClaim(credential, claim)"
+                      />
+                      <label>{{ claim.key }}</label>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <form method="POST" :action="redirect_uri" class="ui form large segment" @submit.prevent="submitSiopv2Response">
         <input type="hidden" name="id_token" :value="id_token" />
-        <input type="hidden" name="metadata_policy" :value="metadata_policy">
         <button class="ui fluid blue button" type="submit">Present your cryptographic key</button>
       </form>
     </div>
@@ -84,7 +108,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { BorutaOauth, CustomEventHandler } from 'boruta-client'
+import { BorutaOauth, CredentialsStore, CustomEventHandler } from 'boruta-client'
 import { storage } from '../store'
 import VerifiableCredentialsIssuanceView from './VerifiableCredentialsIssuanceView.vue'
 
@@ -101,6 +125,7 @@ const oauth = new BorutaOauth({
 })
 
 const CREDENTIALS_KEY = 'boruta-client_credentials'
+const credentialsStore = new CredentialsStore(eventHandler, storage)
 
 export default defineComponent({
   name: 'Oid4vcCallbackView',
@@ -114,6 +139,9 @@ export default defineComponent({
       success: null,
       presentation: null,
       credentials: [],
+      availableCredentials: [],
+      selectedCredentialClaims: [],
+      siopv2Response: null,
       id_token: null,
       metadata_policy: "{}",
       redirect_uri: null,
@@ -128,11 +156,35 @@ export default defineComponent({
       credentialPasswordEventKey: null,
       credentialPassword: '',
       credentialPasswordError: null,
-      credentialPasswordRequestPending: false
+      credentialPasswordRequestPending: false,
+      credentialPasswordPurpose: null
     }
   },
   async mounted () {
     this.parseLocation()
+  },
+  computed: {
+    selectedPresentationDefinition () {
+      return {
+        id: 'wallet-selected-claims',
+        input_descriptors: this.selectedCredentialClaims.map(({ credentialId, format, claimKey, path }) => {
+          return {
+            id: `${credentialId}_${claimKey}`,
+            name: claimKey,
+            format: {
+              [format]: {}
+            },
+            constraints: {
+              fields: [
+                {
+                  path: [path]
+                }
+              ]
+            }
+          }
+        })
+      }
+    }
   },
   methods: {
     async parseLocation () {
@@ -171,6 +223,7 @@ export default defineComponent({
             this.credentialPassword = ''
             this.credentialPasswordError = null
             this.credentialPasswordRequestPending = true
+            this.credentialPasswordPurpose = 'presentation'
           })
 
           this.presentation_definition = presentation.presentation_definition
@@ -183,6 +236,7 @@ export default defineComponent({
 
       if (this.$route.query.response_type == 'id_token') {
         this.mode = 'siopv2'
+        this.redirect_uri = this.$route.query.redirect_uri
         eventHandler.listen('extract_key-request', this.$route.query.client_id, () => {
           this.keyConsentEventKey = this.$route.query.client_id
         })
@@ -191,14 +245,8 @@ export default defineComponent({
         })
 
         const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
-        client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
-          const keySelection = localStorage.getItem('keySelection') || ''
-          localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
-          this.id_token = id_token
-          this.redirect_uri = redirect_uri
-        }).catch(({ error_description }) => {
-          this.error = error_description
-        })
+        this.client = client
+        this.loadAvailableCredentials()
       }
 
       if (this.$route.query.credential_offer) {
@@ -224,9 +272,13 @@ export default defineComponent({
         eventHandler.dispatch('access_credential-approval', this.credentialPasswordEventKey, password)
       } else {
         try {
-          const credentials = await this.client.credentialsStore.credentials(password)
-          const result = await this.client.generatePresentation(this.presentation, credentials)
-          this.applyPresentationResult(result)
+          if (this.credentialPasswordPurpose == 'siopv2CredentialClaims') {
+            await this.loadAvailableCredentials(password)
+          } else {
+            const credentials = await this.client.credentialsStore.credentials(password)
+            const result = await this.client.generatePresentation(this.presentation, credentials)
+            this.applyPresentationResult(result)
+          }
         } catch (error) {
           this.credentialPassword = ''
           this.credentialPasswordError = 'Unable to unlock credentials.'
@@ -238,6 +290,7 @@ export default defineComponent({
       this.credentialPassword = ''
       this.credentialPasswordError = null
       this.credentialPasswordRequestPending = false
+      this.credentialPasswordPurpose = null
     },
     abortCredentialPassword () {
       if (this.credentialPasswordEventKey && this.credentialPasswordRequestPending) {
@@ -248,6 +301,55 @@ export default defineComponent({
       this.credentialPassword = ''
       this.credentialPasswordError = null
       this.credentialPasswordRequestPending = false
+      this.credentialPasswordPurpose = null
+    },
+    async loadAvailableCredentials (password = undefined) {
+      try {
+        eventHandler.listen('access_credential-request', CREDENTIALS_KEY, () => {
+          this.credentialPasswordEventKey = CREDENTIALS_KEY
+          this.credentialPassword = ''
+          this.credentialPasswordError = null
+          this.credentialPasswordRequestPending = true
+          this.credentialPasswordPurpose = 'presentation'
+        })
+
+        this.availableCredentials = await credentialsStore.credentials(password)
+      } catch (_error) {
+        this.credentialPasswordEventKey = CREDENTIALS_KEY
+        this.credentialPassword = ''
+        this.credentialPasswordError = 'Unable to unlock credentials.'
+        this.credentialPasswordRequestPending = false
+        this.credentialPasswordPurpose = 'siopv2CredentialClaims'
+      }
+    },
+    isCredentialClaimSelected (credential, claim) {
+      return this.selectedCredentialClaims.some(({ credentialId, claimKey }) => {
+        return credentialId == credential.credentialId && claimKey == claim.key
+      })
+    },
+    toggleCredentialClaim (credential, claim) {
+      const selectedClaim = {
+        credentialId: credential.credentialId,
+        format: credential.format,
+        claimKey: claim.key,
+        path: this.presentationDefinitionPath(credential, claim)
+      }
+      const currentIndex = this.selectedCredentialClaims.findIndex(({ credentialId, claimKey }) => {
+        return credentialId == selectedClaim.credentialId && claimKey == selectedClaim.claimKey
+      })
+
+      if (currentIndex >= 0) {
+        this.selectedCredentialClaims.splice(currentIndex, 1)
+      } else {
+        this.selectedCredentialClaims.push(selectedClaim)
+      }
+    },
+    presentationDefinitionPath (credential, claim) {
+      if (credential.format == 'jwt_vc' && claim.key != 'type') {
+        return `$.credentialSubject.${credential.credentialId}.${claim.key}`
+      }
+
+      return `$.${claim.key}`
     },
     applyPresentationResult ({ credentials, redirect_uri, vp_token, presentation_submission }) {
       const keySelection = localStorage.getItem('keySelection') || ''
@@ -301,6 +403,20 @@ export default defineComponent({
       this.generateKeyConsentEventKey = null
       this.selectedKeyPassword = null
     },
+    async submitSiopv2Response (event) {
+      const form = event.target
+
+      this.client.parseSiopv2Response(window.location, this.selectedPresentationDefinition).then((response) => {
+        const keySelection = localStorage.getItem('keySelection') || ''
+        localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
+        this.siopv2Response = response
+        this.id_token = response.id_token
+        this.redirect_uri = response.redirect_uri
+        this.$nextTick(() => form.submit())
+      }).catch(({ error_description }) => {
+        this.error = error_description
+      })
+    }
   },
   watch: {
     '$route.query': {
