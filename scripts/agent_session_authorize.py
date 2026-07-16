@@ -18,14 +18,28 @@ from urllib.request import Request, urlopen
 
 BASE_URL = os.getenv("BORUTA_OAUTH_BASE_URL", "http://localhost:8080").rstrip("/")
 CLIENT_ID = os.getenv(
-    "BORUTA_AGENT_CHAT_CLIENT_ID", "00000000-0000-0000-0000-000000000001"
+    "BORUTA_CODEX_HOOK_CLIENT_ID",
+    os.getenv("BORUTA_AGENT_CHAT_CLIENT_ID", "00000000-0000-0000-0000-000000000001"),
 )
-CLIENT_SECRET = os.getenv("BORUTA_AGENT_CHAT_CLIENT_SECRET", "")
-TOKEN_TARGET = os.getenv("BORUTA_AGENT_CHAT_TOKEN_TARGET", f"{BASE_URL}/oauth/token")
+CLIENT_SECRET = os.getenv(
+    "BORUTA_CODEX_HOOK_CLIENT_SECRET",
+    os.getenv("BORUTA_AGENT_CHAT_CLIENT_SECRET", ""),
+)
+TOKEN_TARGET = os.getenv(
+    "BORUTA_CODEX_HOOK_TOKEN_TARGET",
+    os.getenv("BORUTA_AGENT_CHAT_TOKEN_TARGET", f"{BASE_URL}/oauth/token"),
+)
 GRANT_TYPE = os.getenv("BORUTA_AGENT_SESSION_GRANT_TYPE", "code_chain")
-DEFAULT_SCOPE = os.getenv("BORUTA_AGENT_SESSION_SCOPE", os.getenv("BORUTA_AGENT_CHAT_SCOPE", ""))
-KEYS_DIR = Path(os.path.expanduser(os.getenv("BORUTA_AGENT_CHAT_KEYS_DIR", "~/.boruta/keys")))
-TOKEN_TIMEOUT_SECONDS = float(os.getenv("BORUTA_AGENT_CHAT_TOKEN_TIMEOUT", "5"))
+DEFAULT_SCOPE = os.getenv(
+    "BORUTA_AGENT_SESSION_SCOPE",
+    os.getenv("BORUTA_CODEX_HOOK_SCOPE", os.getenv("BORUTA_AGENT_CHAT_SCOPE", "")),
+)
+KEYS_DIR = Path(os.path.expanduser(
+    os.getenv("BORUTA_CODEX_HOOK_KEYS_DIR", os.getenv("BORUTA_AGENT_CHAT_KEYS_DIR", "~/.boruta/keys"))
+))
+TOKEN_TIMEOUT_SECONDS = float(
+    os.getenv("BORUTA_CODEX_HOOK_TOKEN_TIMEOUT", os.getenv("BORUTA_AGENT_CHAT_TOKEN_TIMEOUT", "5"))
+)
 DEFAULT_STATE_FILE = Path(os.path.expanduser(
     os.getenv("BORUTA_AGENT_SESSION_STATE_FILE", "~/.boruta/session-code-chain.json")
 ))
@@ -235,7 +249,14 @@ def sign_es256(private_key_path: Path, signing_input: bytes) -> bytes:
     return der_ecdsa_signature_to_raw(signature)
 
 
-def actor_id_token(actor: Actor, event_kind: str, user_prompt: str | None = None) -> str:
+def actor_id_token(
+    actor: Actor,
+    event_kind: str,
+    user_prompt: str | None = None,
+    verifiable_presentation_url: str | None = None,
+    agent_wallet_url: str | None = None,
+    hook_presentation_definition: dict[str, object] | None = None,
+) -> str:
     ensure_private_key(actor)
     jwk = ensure_public_jwk(actor)
     now = int(time.time())
@@ -246,9 +267,16 @@ def actor_id_token(actor: Actor, event_kind: str, user_prompt: str | None = None
         "event": event_kind,
         "iat": now,
         "exp": now + 60,
+        "cnf": {"jwk": jwk},
     }
     if user_prompt:
         payload["user_prompt"] = user_prompt
+    if verifiable_presentation_url:
+        payload["verifiable_presentation_url"] = verifiable_presentation_url
+    if agent_wallet_url:
+        payload["agent_wallet_url"] = agent_wallet_url
+    if hook_presentation_definition:
+        payload["hook_presentation_definition"] = hook_presentation_definition
     signing_input = f"{base64_url_json(header)}.{base64_url_json(payload)}"
     signature = sign_es256(actor.private_key_path, signing_input.encode("ascii"))
     return f"{signing_input}.{base64_url(signature)}"
@@ -377,6 +405,9 @@ def main() -> None:
     parser.add_argument("--previous-code", help="Previous Boruta authorization code. If omitted, no authorization_code parameter is sent.")
     parser.add_argument("--event-kind", default="tool_call")
     parser.add_argument("--user-prompt", help="User prompt to include in the minted id_token claims")
+    parser.add_argument("--verifiable-presentation-url", help="Deprecated: URL where the hook input credential can be presented")
+    parser.add_argument("--agent-wallet-url", help="Wallet URL where the hook input credential can be presented")
+    parser.add_argument("--hook-presentation-definition", help="Presentation definition JSON for the hook input credential")
     parser.add_argument("--scope", default=DEFAULT_SCOPE, help="OAuth scope to include in the token request")
     parser.add_argument("--dry-run", action="store_true", help="Create/validate keys and mint id_token, but do not call Boruta")
     parser.add_argument("--show-request", action="store_true", help="Print the Boruta token request and response with sensitive values redacted")
@@ -387,7 +418,19 @@ def main() -> None:
 
     actor = parse_actor(args.actor)
     scope = args.scope.strip() if args.scope else None
-    token = actor_id_token(actor, args.event_kind, args.user_prompt)
+    hook_presentation_definition = (
+        json.loads(args.hook_presentation_definition)
+        if args.hook_presentation_definition
+        else None
+    )
+    token = actor_id_token(
+        actor,
+        args.event_kind,
+        args.user_prompt,
+        args.verifiable_presentation_url,
+        args.agent_wallet_url,
+        hook_presentation_definition,
+    )
     if args.chain_session:
         previous_code = None if args.reset_chain else read_previous_code(args.state_file)
     else:
@@ -416,7 +459,11 @@ def main() -> None:
             "sub": actor.actor_id,
             "actor_type": actor.actor_type,
             "event": args.event_kind,
+            "cnf": {"jwk": ensure_public_jwk(actor)},
             **({"user_prompt": args.user_prompt} if args.user_prompt else {}),
+            **({"verifiable_presentation_url": args.verifiable_presentation_url} if args.verifiable_presentation_url else {}),
+            **({"agent_wallet_url": args.agent_wallet_url} if args.agent_wallet_url else {}),
+            **({"hook_presentation_definition": hook_presentation_definition} if hook_presentation_definition else {}),
         },
         "id_token_preview": truncate(token),
         "dry_run": args.dry_run,

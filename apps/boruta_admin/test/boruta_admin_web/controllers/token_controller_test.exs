@@ -4,6 +4,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
   import Boruta.Factory
 
   alias Boruta.Ecto.Token
+  alias Boruta.Oauth.Client
   alias Boruta.Openid.VerifiablePresentations
   alias BorutaAuth.Repo
   alias BorutaIdentity.Factory, as: IdentityFactory
@@ -22,6 +23,37 @@ defmodule BorutaAdminWeb.TokenControllerTest do
                "resource" => ["you are unauthorized to access this resource."]
              }
            }
+  end
+
+  describe "show" do
+    @tag authorized: ["tokens:read:all"]
+    test "returns a token", %{conn: conn} do
+      token = insert(:token)
+
+      response =
+        conn
+        |> get(Routes.admin_token_path(conn, :show, token.id))
+        |> json_response(200)
+        |> Map.get("data")
+
+      assert response["id"] == token.id
+      assert response["value"] == token.value
+    end
+
+    @tag authorized: ["tokens:read:all"]
+    test "keeps previous codes in response", %{conn: conn} do
+      code = insert(:token, type: "code", value: "authorization-code")
+      token = insert(:token, previous_code: code.value)
+
+      response =
+        conn
+        |> get(Routes.admin_token_path(conn, :show, token.id))
+        |> json_response(200)
+        |> Map.get("data")
+
+      assert response["id"] == token.id
+      assert response["previous_codes"] |> Enum.map(& &1["value"]) == ["authorization-code"]
+    end
   end
 
   describe "with bad scope" do
@@ -332,10 +364,34 @@ defmodule BorutaAdminWeb.TokenControllerTest do
           "jwk" => jwk
         })
 
-      {:ok, id_token, _claims} =
-        VerifiablePresentations.Token.generate_and_sign(%{"sub" => "did:example:id"}, signer)
+      presentation_definition = %{
+        "id" => "codex_hook_input",
+        "input_descriptors" => [
+          %{
+            "id" => "codex_hook_input",
+            "constraints" => %{
+              "fields" => [
+                %{
+                  "path" => ["$.credential_type"],
+                  "filter" => %{"type" => "string", "const" => "codex_hook_input"}
+                }
+              ]
+            }
+          }
+        ]
+      }
 
-      token = insert(:token, id_token: id_token)
+      {:ok, id_token, _claims} =
+        VerifiablePresentations.Token.generate_and_sign(
+          %{
+            "sub" => "did:example:id",
+            "agent_wallet_url" => "http://127.0.0.1:8766/accounts/wallet",
+            "hook_presentation_definition" => presentation_definition
+          },
+          signer
+        )
+
+      token = insert(:token, id_token: id_token, client: client)
 
       response =
         conn
@@ -347,6 +403,34 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       assert response["id_token"] == id_token
       assert response["id_token_claims"]["verified"] == true
       assert response["id_token_claims"]["claims"]["sub"] == "did:example:id"
+
+      verifiable_presentation_url = response["id_token_claims"]["verifiable_presentation_url"]
+      assert verifiable_presentation_url =~ "http://127.0.0.1:8766/accounts/wallet?"
+
+      query = URI.decode_query(URI.parse(verifiable_presentation_url).query)
+      assert query["response_type"] == "vp_token"
+      assert query["response_mode"] == "direct_post"
+      assert query["client_id"] == client.id
+      assert query["scope"] == "openid"
+      assert query["redirect_uri"] =~ "/oauth/tokens/#{token.id}/user-data"
+      assert is_binary(query["request"])
+      refute Map.has_key?(query, "presentation_definition")
+
+      {_, public_jwk} = JOSE.JWK.from_pem(client.public_key) |> JOSE.JWK.to_map()
+
+      assert {:ok, request_claims} =
+               Client.Crypto.verify_id_token_signature(query["request"], public_jwk)
+
+      assert request_claims["response_type"] == "vp_token"
+      assert request_claims["response_mode"] == "direct_post"
+      assert request_claims["client_id"] == Boruta.Config.issuer()
+      assert request_claims["aud"] == client.id
+      assert request_claims["scope"] == "openid"
+      assert request_claims["redirect_uri"] == query["redirect_uri"]
+      assert request_claims["presentation_definition"] == presentation_definition
+      assert is_binary(request_claims["nonce"])
+      assert request_claims["nonce"] != ""
+
       refute Map.has_key?(response, "vp_token")
       refute Map.has_key?(response, "vp_token_claims")
     end

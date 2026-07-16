@@ -5,6 +5,7 @@ import { addClientErrorInterceptor } from './utils'
 const defaults = {
   errors: null,
   client: null,
+  user_data: null,
   previous_codes: []
 }
 
@@ -15,6 +16,7 @@ const assign = {
   value: function ({ value }) { this.value = value },
   id_token: function ({ id_token }) { this.id_token = id_token },
   id_token_claims: function ({ id_token_claims }) { this.id_token_claims = id_token_claims },
+  user_data: function ({ user_data }) { this.user_data = user_data },
   refresh_token: function ({ refresh_token }) { this.refresh_token = refresh_token },
   previous_code: function ({ previous_code }) { this.previous_code = previous_code },
   previous_codes: function ({ previous_codes }) {
@@ -44,6 +46,17 @@ class Token {
     Object.keys(params).forEach((key) => {
       this[key] = params[key]
       assign[key].bind(this)(params)
+    })
+  }
+
+  refresh () {
+    return Token.api().get(`/${this.id}`).then(({ data: { data } }) => {
+      Object.keys(data).forEach((key) => {
+        this[key] = data[key]
+        assign[key].bind(this)(data)
+      })
+
+      return this
     })
   }
 }

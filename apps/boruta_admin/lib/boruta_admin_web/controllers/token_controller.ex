@@ -22,6 +22,7 @@ defmodule BorutaAdminWeb.TokenController do
     previous_codes = Tokens.previous_codes(tokens.entries)
 
     render(conn, "index.json",
+      conn: conn,
       tokens: tokens.entries,
       scopes: scopes,
       types: types,
@@ -36,11 +37,19 @@ defmodule BorutaAdminWeb.TokenController do
     )
   end
 
+  def show(conn, %{"id" => id}) do
+    with {:ok, token} <- Tokens.get_token(id) do
+      previous_codes = Tokens.previous_codes([token])
+
+      render(conn, "show.json", conn: conn, token: token, previous_codes: previous_codes)
+    end
+  end
+
   def revoke(conn, %{"id" => id}) do
     with {:ok, token} <- Tokens.revoke_access_token(id) do
       previous_codes = Tokens.previous_codes([token])
 
-      render(conn, "show.json", token: token, previous_codes: previous_codes)
+      render(conn, "show.json", conn: conn, token: token, previous_codes: previous_codes)
     end
   end
 end

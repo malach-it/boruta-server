@@ -6,6 +6,13 @@ hooks = true
 # .codex/boruta-hook.env and fill in local values. Keep local config/env files
 # out of git.
 
+[[hooks.SessionStart]]
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "sh -c 'set -a; . /absolute/path/to/boruta-server/.codex/boruta-hook.env; set +a; exec python3 /absolute/path/to/boruta-server/.codex/hooks/boruta_session_start_hook.py'"
+timeout = 15
+statusMessage = "Starting Boruta Codex wallet server"
+
 [[hooks.UserPromptSubmit]]
 [[hooks.UserPromptSubmit.hooks]]
 type = "command"

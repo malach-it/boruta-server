@@ -148,11 +148,21 @@
 
                     <div class="content" :class="{ active: isTokenExpanded(token) }">
                       <div class="ui segment">
-                        <div class="token-actions" v-if="canRevoke(token)">
+                        <div class="token-actions">
                           <button
+                            class="ui tiny basic button"
+                            :class="{ loading: token.isRefreshing }"
+                            :disabled="token.isRefreshing"
+                            type="button"
+                            @click="refreshToken(token)">
+                            <i class="sync alternate icon"></i>
+                            Refresh
+                          </button>
+                          <button
+                            v-if="canRevoke(token)"
                             class="ui tiny red button"
-                            :class="{ loading: isRevoking(token) }"
-                            :disabled="isRevoking(token)"
+                            :class="{ loading: token.isRevoking }"
+                            :disabled="token.isRevoking"
                             type="button"
                             @click="revokeToken(token)">
                             Revoke {{ token.type }}
@@ -272,9 +282,21 @@
                               <span class="ui tiny red label" v-else>not verified</span>
                             </span>
                           </div>
+
                           <div class="content" :class="{ active: isPresentationTokenExpanded(token, presentationToken) }">
                             <div class="ui segment">
                               <div class="ui attribute list token-claims-list" v-if="presentationToken.result?.claims">
+                                <div class="item" v-if="presentationToken.result.verifiable_presentation_url">
+                                  <span class="header">verifiable_presentation_url</span>
+                                  <a
+                                    class="description monospace token-presentation-url"
+                                    :href="presentationToken.result.verifiable_presentation_url"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    :title="presentationToken.result.verifiable_presentation_url">
+                                    {{ presentationToken.result.verifiable_presentation_url }}
+                                  </a>
+                                </div>
                                 <div class="item" v-for="claim in tokenClaimAttributes(presentationToken.result.claims)" :key="claim.name">
                                   <span class="header">{{ claim.name }}</span>
                                   <span class="description monospace">{{ claim.value }}</span>
@@ -282,6 +304,25 @@
                               </div>
                               <pre class="token-claims token-claims-error" v-else>{{ presentationToken.result?.error || 'No claims available.' }}</pre>
                             </div>
+                          </div>
+                        </div>
+
+                        <div class="ui styled fluid accordion token-detail-accordion" v-if="token.user_data">
+                          <div
+                            class="title"
+                            :class="{ active: isUserDataExpanded(token) }"
+                            @click.stop="toggleUserData(token)"
+                            @keyup.enter.stop="toggleUserData(token)"
+                            @keyup.space.stop.prevent="toggleUserData(token)"
+                            role="button"
+                            tabindex="0"
+                            :aria-expanded="isUserDataExpanded(token)">
+                            <i class="dropdown icon"></i>
+                            user_data
+                            <span class="token-detail-summary">{{ userDataSummary(token.user_data) }}</span>
+                          </div>
+                          <div class="content" :class="{ active: isUserDataExpanded(token) }">
+                            <pre class="token-claims">{{ formatClaimValue(token.user_data) }}</pre>
                           </div>
                         </div>
                       </div>
@@ -373,8 +414,8 @@ export default {
       expandedChainIds: [],
       expandedTokenIds: [],
       expandedUserTokenIds: [],
+      expandedUserDataTokenIds: [],
       expandedPresentationTokenIds: [],
-      revokingTokenIds: [],
       tokenTypeChartOptions: {
         animation: false,
         cutout: '30%',
@@ -563,6 +604,16 @@ export default {
 
       this.$router.push({ name: 'token-list', query })
     },
+    refreshToken (token) {
+      token.isRefreshing = true
+      this.errorMessage = false
+
+      token.refresh().catch((error) => {
+        this.errorMessage = error.response?.data?.message || 'An error has occured when refreshing token.'
+      }).finally(() => {
+        token.isRefreshing = false
+      })
+    },
     formatUnixDate (timestamp) {
       if (!timestamp) return '-'
 
@@ -592,13 +643,10 @@ export default {
         !token.revoked_at &&
         this.isActive(token)
     },
-    isRevoking (token) {
-      return this.revokingTokenIds.includes(token.id)
-    },
     revokeToken (token) {
       if (!window.confirm(`Revoke this ${token.type}?`)) return
 
-      this.revokingTokenIds = [...this.revokingTokenIds, token.id]
+      token.isRevoking = true
       this.errorMessage = false
 
       Token.revoke(token).then((revokedToken) => {
@@ -608,7 +656,7 @@ export default {
       }).catch((error) => {
         this.errorMessage = error.response?.data?.message || 'An error has occured when revoking token.'
       }).finally(() => {
-        this.revokingTokenIds = this.revokingTokenIds.filter((tokenId) => tokenId !== token.id)
+        token.isRevoking = false
       })
     },
     isCodeChain (group) {
@@ -655,6 +703,24 @@ export default {
     },
     tokenUserLabel (user) {
       return user.username || user.uid || user.id
+    },
+    isUserDataExpanded (token) {
+      return this.expandedUserDataTokenIds.includes(token.id)
+    },
+    toggleUserData (token) {
+      if (this.isUserDataExpanded(token)) {
+        this.expandedUserDataTokenIds = this.expandedUserDataTokenIds.filter((tokenId) => tokenId !== token.id)
+      } else {
+        this.expandedUserDataTokenIds = [...this.expandedUserDataTokenIds, token.id]
+      }
+    },
+    userDataSummary (userData) {
+      if (!userData || typeof userData !== 'object') return this.formatClaimValue(userData)
+
+      const keys = Object.keys(userData).sort()
+      if (!keys.length) return 'empty object'
+
+      return keys.slice(0, 4).join(', ') + (keys.length > 4 ? `, +${keys.length - 4}` : '')
     },
     presentationTokenKey (token, presentationToken) {
       return `${token.id}:${presentationToken.name}`
@@ -857,12 +923,16 @@ export default {
   }
 
   .token-actions {
+    display: flex;
     float: right;
+    gap: .5rem;
     margin: 0 0 1rem 1rem;
     @media (max-width: 768px) {
       float: none;
       margin: 0;
+      margin-bottom: 1rem;
       .button {
+        flex: 1 1 0;
         width: 100%;
       }
     }

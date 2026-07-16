@@ -215,6 +215,7 @@ export default {
   pre {
     margin: 0;
     overflow: hidden;
+    overflow-y: scroll;
     text-overflow: ellipsis;
   }
   hr {

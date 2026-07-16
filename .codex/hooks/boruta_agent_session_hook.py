@@ -16,8 +16,15 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
+HOOKS_DIR = Path(__file__).resolve().parent
+if str(HOOKS_DIR) not in sys.path:
+    sys.path.insert(0, str(HOOKS_DIR))
+
+import boruta_wallet_hook as wallet
+
 
 DEFAULT_ACTOR_BY_EVENT = {
+    "SessionStart": "assistant:codex",
     "UserPromptSubmit": "user:codex-user",
     "PreToolUse": "assistant:codex",
     "PermissionRequest": "assistant:codex",
@@ -26,8 +33,9 @@ DEFAULT_ACTOR_BY_EVENT = {
 }
 
 
-BLOCKABLE_EVENTS = {"UserPromptSubmit", "PreToolUse", "PermissionRequest", "Stop"}
+BLOCKABLE_EVENTS = {"UserPromptSubmit", "PreToolUse", "PermissionRequest"}
 CONTEXT_EVENTS = {"UserPromptSubmit", "PreToolUse", "PostToolUse"}
+BOOTSTRAP_ONLY_EVENTS = {"SessionStart"}
 SESSION_ID_KEYS = (
     "session_id",
     "conversation_id",
@@ -121,6 +129,8 @@ def scope_for(hook_input: dict[str, Any]) -> str | None:
 
     if event == "UserPromptSubmit":
         scopes.append("codex:prompt:submit")
+    elif event == "SessionStart":
+        scopes.append("codex:session:start")
     elif event == "PermissionRequest":
         scopes.append("codex:permission:request")
     elif event == "PostToolUse":
@@ -258,7 +268,7 @@ def docker_compose_timeout() -> float:
 
 
 def docker_compose_startup(hook_input: dict[str, Any], root: Path, state_file: str | None) -> str | None:
-    if hook_input.get("hook_event_name") != "UserPromptSubmit":
+    if hook_input.get("hook_event_name") not in {"SessionStart", "UserPromptSubmit"}:
         return None
     if not enabled("BORUTA_CODEX_HOOK_DOCKER_COMPOSE_START", default=True):
         return None
@@ -310,19 +320,29 @@ def oauth_base_url() -> str:
 def browser_client_id() -> str:
     return os.getenv(
         "BORUTA_CODEX_HOOK_BROWSER_CLIENT_ID",
-        os.getenv("BORUTA_AGENT_CHAT_CLIENT_ID", "00000000-0000-0000-0000-000000000001"),
+        os.getenv(
+            "BORUTA_CODEX_HOOK_CLIENT_ID",
+            os.getenv("BORUTA_AGENT_CHAT_CLIENT_ID", "00000000-0000-0000-0000-000000000001"),
+        ),
     )
 
 
 def browser_redirect_uri() -> str:
     return os.getenv(
         "BORUTA_CODEX_HOOK_BROWSER_REDIRECT_URI",
-        os.getenv("BORUTA_AGENT_CHAT_REDIRECT_URI", DEFAULT_BROWSER_REDIRECT_URI),
+        os.getenv(
+            "BORUTA_CODEX_HOOK_REDIRECT_URI",
+            os.getenv("BORUTA_AGENT_CHAT_REDIRECT_URI", DEFAULT_BROWSER_REDIRECT_URI),
+        ),
     )
 
 
 def browser_callback_host() -> str | None:
-    return os.getenv("BORUTA_CODEX_HOOK_BROWSER_CALLBACK_HOST") or os.getenv("BORUTA_AGENT_CHAT_CALLBACK_HOST")
+    return (
+        os.getenv("BORUTA_CODEX_HOOK_BROWSER_CALLBACK_HOST")
+        or os.getenv("BORUTA_CODEX_HOOK_CALLBACK_HOST")
+        or os.getenv("BORUTA_AGENT_CHAT_CALLBACK_HOST")
+    )
 
 
 def browser_timeout() -> float:
@@ -414,7 +434,12 @@ class BrowserCallback:
             self.condition.notify_all()
 
 
-def browser_callback_server(redirect_uri: str, callback: BrowserCallback, expected_state: str) -> HTTPServer:
+def browser_callback_server(
+    redirect_uri: str,
+    callback: BrowserCallback,
+    expected_state: str,
+    wallet_url: str | None = None,
+) -> HTTPServer:
     parsed = urlparse(redirect_uri)
     if parsed.scheme not in ("http", "https") or not parsed.hostname or not parsed.port:
         raise RuntimeError("browser redirect URI must include an http host and explicit port")
@@ -422,9 +447,16 @@ def browser_callback_server(redirect_uri: str, callback: BrowserCallback, expect
     class CallbackHandler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             query = parse_qs(urlparse(self.path).query)
-            state = first_query_value(query, "state")
-            code = first_query_value(query, "code")
-            error = first_query_value(query, "error_description") or first_query_value(query, "error")
+            state = wallet.first_query_value(query, "state")
+            code = wallet.first_query_value(query, "code")
+            error = wallet.first_query_value(query, "error_description") or wallet.first_query_value(query, "error")
+
+            if wallet_url and wallet.first_query_value(query, "request"):
+                wallet_target = wallet.append_query(wallet_url, urlparse(self.path).query)
+                self.send_response(302)
+                self.send_header("Location", wallet_target)
+                self.end_headers()
+                return
 
             if state != expected_state:
                 callback.set_error("authorization callback state mismatch")
@@ -460,11 +492,6 @@ def browser_callback_server(redirect_uri: str, callback: BrowserCallback, expect
     return HTTPServer((browser_callback_host() or parsed.hostname, parsed.port), CallbackHandler)
 
 
-def first_query_value(values: dict[str, list[str]], key: str) -> str | None:
-    value = values.get(key)
-    return value[0] if value else None
-
-
 def browser_authorization_status(
     hook_input: dict[str, Any],
     scope: str | None,
@@ -497,7 +524,8 @@ def browser_authorization_code(
     previous_code = None if reset_chain else read_previous_authorization_code(state_file)
     callback = BrowserCallback()
     state = secrets.token_urlsafe(32)
-    server = browser_callback_server(redirect_uri, callback, state)
+    wallet_url = wallet.wallet_server_url() if wallet.wallet_server_enabled() else None
+    server = browser_callback_server(redirect_uri, callback, state, wallet_url=wallet_url)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
@@ -750,6 +778,9 @@ def sensitive_tool_use(hook_input: dict[str, Any]) -> bool:
 
 
 def should_authorize_hook(hook_input: dict[str, Any]) -> bool:
+    if hook_input.get("hook_event_name") in BOOTSTRAP_ONLY_EVENTS | {"Stop"}:
+        return False
+
     if enabled("BORUTA_CODEX_HOOK_AUTHORIZE_ALL", default=True):
         return True
 
@@ -802,6 +833,10 @@ def codex_output(
 
 
 def main() -> int:
+    if enabled("BORUTA_CODEX_HOOK_SERVE_WALLET_SERVER", default=False):
+        root = Path(os.getenv("BORUTA_CODEX_HOOK_REPO_ROOT") or os.getcwd()).resolve()
+        return wallet.serve_wallet_server(root)
+
     raw_input = sys.stdin.read()
     try:
         hook_input = json.loads(raw_input or "{}")
@@ -812,13 +847,40 @@ def main() -> int:
     state_file = state_file_path()
     reset_state_on_user_prompt(hook_input, effective_state_file_path(state_file))
 
-    if not should_authorize_hook(hook_input):
+    root = repo_root(hook_input)
+    wallet_url = None
+    presentation_definition = None
+    if wallet.wallet_server_enabled() and hook_input.get("hook_event_name") not in BOOTSTRAP_ONLY_EVENTS:
+        try:
+            credential_path = wallet.store_hook_input_credential(
+                root,
+                hook_input,
+                actor_for(hook_input),
+                event_kind(hook_input),
+            )
+            wallet_url = wallet.agent_wallet_url()
+            presentation_definition = wallet.serialized_hook_presentation_definition(credential_path)
+        except Exception as error:
+            print(f"Boruta hook credential storage failed: {type(error).__name__}: {error}", file=sys.stderr)
+
+    session_id = session_id_for(hook_input, root)
+
+    wallet_startup_error = wallet.start_session_wallet_server(hook_input, root, state_file, session_id)
+    if wallet_startup_error:
+        print(json.dumps(codex_output(hook_input, wallet_startup_error)))
         return 0
 
-    root = repo_root(hook_input)
+    wallet_shutdown_error = wallet.stop_session_wallet_server(hook_input, root, state_file, session_id)
+    if wallet_shutdown_error:
+        print(json.dumps(codex_output(hook_input, wallet_shutdown_error)))
+        return 0
+
     startup_error = docker_compose_startup(hook_input, root, state_file)
     if startup_error:
         print(json.dumps(codex_output(hook_input, startup_error)))
+        return 0
+
+    if not should_authorize_hook(hook_input):
         return 0
 
     authorizer = root / "scripts" / "agent_session_authorize.py"
@@ -839,6 +901,12 @@ def main() -> int:
     user_prompt = user_prompt_for(hook_input)
     if user_prompt:
         command.extend(["--user-prompt", user_prompt])
+
+    if wallet_url:
+        command.extend(["--agent-wallet-url", wallet_url])
+
+    if presentation_definition:
+        command.extend(["--hook-presentation-definition", presentation_definition])
 
     scope = scope_for(hook_input)
     if scope:

@@ -11,6 +11,7 @@ defmodule BorutaAdmin.Tokens do
   alias Boruta.CodesAdapter
   alias Boruta.Ecto.Token
   alias Boruta.Oauth
+  alias BorutaAuth.TokenUserData
   alias BorutaAuth.Repo
   alias BorutaIdentity.Accounts.User
 
@@ -122,6 +123,13 @@ defmodule BorutaAdmin.Tokens do
     |> Enum.into(%{})
   end
 
+  def get_token(id) do
+    case Repo.get(Token, id) |> Repo.preload(:client) do
+      %Token{} = token -> {:ok, token}
+      nil -> {:error, :not_found}
+    end
+  end
+
   def revoke_access_token(id) do
     with %Token{} = token <- Repo.get(Token, id),
          :ok <- ensure_revocable_token(token),
@@ -133,6 +141,10 @@ defmodule BorutaAdmin.Tokens do
       error -> error
     end
   end
+
+  def store_user_data(id, vp_token), do: TokenUserData.store(id, vp_token)
+
+  def user_data(%Token{} = token), do: TokenUserData.get(token)
 
   defp filter_by_client(queryable, %{"client_id" => client_id})
        when is_binary(client_id) and client_id != "" do
@@ -337,7 +349,7 @@ defmodule BorutaAdmin.Tokens do
 
   defp do_previous_codes(%Token{previous_code: previous_code}, acc)
        when is_binary(previous_code) and previous_code != "" do
-    case Repo.get_by(Token, value: previous_code) do
+    case Repo.get_by(Token, value: previous_code) |> Repo.preload(:client) do
       %Token{} = previous_token -> do_previous_codes(previous_token, acc ++ [previous_token])
       _ -> acc
     end
