@@ -109,6 +109,8 @@
               </select>
             </div>
             <a class="ui fluid blue button" target="_blank" :href="presentationUrl">Trigger example presentation with associated boruta wallet (issue example credential first)</a>
+            <hr />
+            <a class="ui fluid blue button" target="_blank" :href="walletInitiatedPresentationUrl">Trigger example wallet initiated presentation with associated boruta wallet (issue example credential first)</a>
           </div>
         </div>
       </div>
@@ -145,11 +147,15 @@ export default {
     presentationUrl () {
       if (this.presentationRedirectUri.startsWith('http')) {
         return window.env.BORUTA_OAUTH_BASE_URL +
-          `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=id_token vp_token&client_metadata={}&scope=BorutaCredentialJwtVc`
+          `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=id_token vp_token&client_metadata={}`
       } else {
         return window.env.BORUTA_OAUTH_BASE_URL +
           `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&scope=BorutaCredentialJwtVc&response_type=vp_token&client_metadata={}`
       }
+    },
+    walletInitiatedPresentationUrl () {
+      return window.env.BORUTA_OAUTH_BASE_URL +
+        `/oauth/authorize?client_id=00000000-0000-0000-0000-000000000001&redirect_uri=${this.presentationRedirectUri}&&response_type=id_token vp_token&client_metadata={}`
     },
     preauthorizeUrl () {
      return window.env.BORUTA_OAUTH_BASE_URL +
