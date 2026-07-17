@@ -131,7 +131,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_id" => kid,
           "response_type" => Enum.join(response_types, " "),
           "client_metadata" => "{}",
-          "scope" => response.code.requested_scope,
+          "scope" => next_authorize_scope(response.code),
           "state" => response.code.state,
           "code" => response.code.value,
           "redirect_uri" => response.redirect_uri
@@ -155,7 +155,7 @@ defmodule BorutaWeb.Oauth.TokenController do
       "client_id" => kid,
       "response_type" => response.code.response_type,
       "client_metadata" => "{}",
-      "scope" => response.code.requested_scope,
+      "scope" => next_authorize_scope(response.code),
       "state" => response.code.state,
       "code" => response.code.value,
       "redirect_uri" => response.redirect_uri,
@@ -194,7 +194,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_id" => kid,
           "response_type" => Enum.join(response_types, " "),
           "client_metadata" => "{}",
-          "scope" => response.code.requested_scope,
+          "scope" => next_authorize_scope(response.code),
           "state" => response.code.state,
           "code" => response.code.value,
           "redirect_uri" => response.redirect_uri,
@@ -217,4 +217,11 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   defp encode_presentation_definition(presentation_definition),
     do: Jason.encode!(presentation_definition)
+
+  defp next_authorize_scope(%{scope: scope, requested_scope: requested_scope}) do
+    [scope, requested_scope]
+    |> Enum.flat_map(&Boruta.Oauth.Scope.split/1)
+    |> Enum.uniq()
+    |> Enum.join(" ")
+  end
 end
