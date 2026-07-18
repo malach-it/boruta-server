@@ -137,7 +137,6 @@ export default defineComponent({
         this.credentialPassword
       )
       this.credentialPasswordEventKey = null
-      this.credentialPassword = ''
     },
     abortCredentialPassword () {
       eventHandler.dispatch('access_credential-approval', this.credentialPasswordEventKey, null)
@@ -178,9 +177,10 @@ export default defineComponent({
       })
       this.client.getCredential(this.tokenResponse, credential_configuration_id, format).then((credential) => {
         this.fetchingCredential = false
-        this.$store.commit('refreshCredentials')
-        this.$router.push({ name: 'home' })
         this.resetKeySelect()
+        return this.$store.dispatch('refreshCredentials', this.credentialPassword)
+      }).then(() => {
+        this.$router.push({ name: 'home' })
       }).catch(({ error_description }) => {
         this.error = error_description || 'Credential encryption was aborted.'
         this.fetchingCredential = false

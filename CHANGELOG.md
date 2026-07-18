@@ -4,6 +4,25 @@
 
 ## [Unreleased]
 
+### Added
+
+- [ssi] SD-JWT verifiable credential support
+- [ssi] wallet-initiated presentation definition management
+- [admin] example wallet-initiated verifiable presentation link
+
+### Changed
+
+- [admin] request and business event dashboards default to the last hour with minute-scale graphs
+- [admin] example verifiable credential configuration no longer restricts issuance by scope
+- [docs] documentation links and installation instructions are updated
+
+### Fixed
+
+- [auth] verifiable presentation authorization chains forward requested scopes and presentation definitions
+- [gateway] request logs omit query strings and fragments while forwarding the full request target
+- [wallet] credential insertion skips the redundant credential display password prompt
+- [wallet] credential issuance waits for credentials refresh before navigation
+
 ## [0.10.5] - 2026-06-24
 
 ### Added
