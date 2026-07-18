@@ -2,7 +2,7 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
-## [Unreleased]
+## [0.10.6-beta.1] - 2026-07-18
 
 ### Added
 
