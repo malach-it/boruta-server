@@ -106,6 +106,10 @@
         </div>
       </div>
       <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+        <div class="field" v-if="client.bls_did_key">
+          <label>BLS12-381 DID key</label>
+          <input type="text" :value="client.bls_did_key" readonly />
+        </div>
         <h3>Signatures adapter</h3>
         <div class="field" :class="{ 'error': client.errors?.signatures_adapter }">
           <select v-model="client.signatures_adapter">

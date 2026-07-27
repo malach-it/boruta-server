@@ -13,6 +13,7 @@ const defaults = {
   organizations: [],
   backend_id: '',
   backend: new Backend(),
+  bls_did_key: null,
   metadata: {},
   federated_metadata: {}
 }
@@ -22,6 +23,7 @@ const assign = {
   uid: function ({ uid }) { this.uid = uid },
   backend: function ({ backend }) { this.backend = backend },
   username: function ({ username }) { this.username = username },
+  bls_did_key: function ({ bls_did_key }) { this.bls_did_key = bls_did_key },
   totp_registered_at: function ({ totp_registered_at }) { this.totp_registered_at = totp_registered_at },
   federated_metadata: function ({ federated_metadata }) { this.federated_metadata = federated_metadata },
   metadata: function ({ metadata: rawMetadata }) {

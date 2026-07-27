@@ -26,6 +26,10 @@
                   <span class="header">Username</span>
                   <span class="description">{{ user.username }}</span>
                 </div>
+                <div class="item">
+                  <span class="header">BLS12-381 DID key</span>
+                  <span class="description">{{ user.bls_did_key }}</span>
+                </div>
               </div>
             </div>
             <div class="ui segment" v-for="(attributes, federatedServerName) in user.federated_metadata">

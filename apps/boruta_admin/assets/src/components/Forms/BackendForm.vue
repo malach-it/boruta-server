@@ -351,6 +351,12 @@
               <label>Default value</label>
               <input type="text" v-model="field.default_value" placeholder="Polya">
             </div>
+            <div class="field" :class="{ 'error': backend.errors?.metadata_fields }">
+              <div class="ui toggle checkbox">
+                <input type="checkbox" v-model="field.phi_data_token">
+                <label>Phi data token</label>
+              </div>
+            </div>
           </div>
           <div class="field">
             <a class="ui blue fluid button" @click="addMetadataField()">Add a metadata field</a>

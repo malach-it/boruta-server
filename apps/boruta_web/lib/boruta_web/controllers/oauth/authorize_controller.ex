@@ -768,12 +768,17 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         scope -> scope
       end
 
+    extra_claims =
+      current_user
+      |> ResourceOwners.metadata(scope)
+      |> Map.merge(current_user.federated_metadata)
+
     %ResourceOwner{
       sub: current_user.id || anonymous_sub,
+      client_id: conn.query_params["client_id"],
       username: current_user.username,
       last_login_at: current_user.last_login_at,
-      extra_claims:
-        Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata),
+      extra_claims: extra_claims,
       authorization_details: VerifiableCredentials.authorization_details(current_user, scope),
       credential_configuration: VerifiableCredentials.credential_configuration(current_user),
       presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)

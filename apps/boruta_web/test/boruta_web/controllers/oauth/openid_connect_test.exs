@@ -9,6 +9,12 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
   alias Boruta.Ecto.Client
   alias Boruta.Ecto.ClientStore
   alias Boruta.Oauth
+  alias Boruta.Oauth.Authorization.AccessToken
+  alias Boruta.Oauth.TokenResponse
+  alias BorutaAuth.ClientBlsKeyPair
+  alias BorutaAuth.PhiAccessToken
+  alias BorutaIdentity.Repo
+  alias BorutaWeb.Oauth.TokenController
   alias BorutaIdentityWeb.Authenticable
 
   describe "OpenID Connect flows" do
@@ -215,6 +221,42 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       resource_owner: resource_owner,
       redirect_uri: redirect_uri
     } do
+      metadata_scope = "metadata:age"
+      insert(:scope, name: metadata_scope, public: true)
+
+      {:ok, _backend} =
+        resource_owner.backend
+        |> Ecto.Changeset.change(%{
+          metadata_fields: [
+            %{
+              "attribute_name" => "age",
+              "phi_data_token" => true,
+              "scopes" => [metadata_scope],
+              "user_editable" => true
+            }
+          ]
+        })
+        |> Repo.update()
+
+      {:ok, phi_data_token} =
+        BorutaAuth.BlsKeyPair.phi_data_token(resource_owner.bls_public_key, "age", 42)
+
+      {:ok, resource_owner} =
+        resource_owner
+        |> Ecto.Changeset.change(%{
+          metadata: %{
+            "age" => %{
+              "value" => 42,
+              "status" => "valid",
+              "display" => [],
+              "phi_data_token" => phi_data_token
+            }
+          }
+        })
+        |> Repo.update()
+
+      {:ok, client_key_pair} = ClientBlsKeyPair.get_or_create(client.id)
+
       request_param =
         Authenticable.request_param(
           get(
@@ -224,7 +266,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
               client_id: client.id,
               redirect_uri: redirect_uri,
               prompt: "none",
-              scope: "openid",
+              scope: "openid #{metadata_scope}",
               nonce: "nonce"
             })
           )
@@ -243,18 +285,42 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
             client_id: client.id,
             redirect_uri: redirect_uri,
             prompt: "none",
-            scope: "openid",
+            scope: "openid #{metadata_scope}",
             nonce: "nonce"
           })
         )
 
       assert url = redirected_to(conn)
 
-      assert [_, _id_token] =
+      assert [_, id_token] =
                Regex.run(
                  ~r/#{redirect_uri}#id_token=(.+)/,
                  url
                )
+
+      assert {:ok,
+              %{
+                "age" => 42,
+                "_proof" => %{
+                  "age" => %{
+                    "phi_data_token" => ^phi_data_token,
+                    "phi_access_token" => phi_access_token
+                  }
+                }
+              }} = Joken.peek_claims(id_token)
+
+      assert {:ok, _claims} =
+               Boruta.Oauth.Client.Crypto.verify_id_token_signature(
+                 id_token,
+                 JOSE.JWK.from_pem(client.public_key) |> JOSE.JWK.to_map()
+               )
+
+      assert PhiAccessToken.verify_with_private_keys(
+               phi_access_token,
+               phi_data_token,
+               resource_owner.bls_private_key,
+               client_key_pair.private_key
+             )
     end
 
     test "returns an error with prompt=none when current_user is not preauthorized", %{
@@ -467,6 +533,171 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert json_response(conn, 200)
     end
 
+    test "returns one sequential phi accumulator per consented metadata attribute", %{conn: conn} do
+      backend =
+        BorutaIdentity.Factory.insert(:backend,
+          metadata_fields: [
+            %{
+              "attribute_name" => "age",
+              "phi_data_token" => true,
+              "scopes" => ["profile"],
+              "user_editable" => true
+            },
+            %{
+              "attribute_name" => "city",
+              "phi_data_token" => true,
+              "scopes" => ["profile"],
+              "user_editable" => true
+            }
+          ]
+        )
+
+      user = user_fixture(%{backend: backend})
+
+      {:ok, phi_data_token} =
+        BorutaAuth.BlsKeyPair.phi_data_token(user.bls_public_key, "age", 42)
+
+      {:ok, city_phi_data_token} =
+        BorutaAuth.BlsKeyPair.phi_data_token(user.bls_public_key, "city", "Paris")
+
+      {:ok, user} =
+        user
+        |> Ecto.Changeset.change(%{
+          metadata: %{
+            "age" => %{
+              "value" => 42,
+              "status" => "valid",
+              "display" => [],
+              "phi_data_token" => phi_data_token
+            },
+            "city" => %{
+              "value" => "Paris",
+              "status" => "valid",
+              "display" => [],
+              "phi_data_token" => city_phi_data_token
+            }
+          }
+        })
+        |> Repo.update()
+
+      token = insert(:token, sub: user.id, scope: "profile")
+      {:ok, client_key_pair} = ClientBlsKeyPair.get_or_create(token.client.id)
+
+      {:ok, _client} =
+        token.client
+        |> Ecto.Changeset.change(%{userinfo_signed_response_alg: "HS512"})
+        |> BorutaAuth.Repo.update()
+
+      conn =
+        conn
+        |> put_req_header("authorization", "bearer #{token.value}")
+        |> post(Routes.userinfo_path(conn, :userinfo))
+
+      assert {:ok, claims} = Joken.peek_claims(response(conn, 200))
+
+      assert %{
+               "age" => 42,
+               "city" => "Paris",
+               "_proof" => %{
+                 "age" => %{
+                   "type" => "Bls12381G2SequentialAccumulator",
+                   "phi_data_token" => ^phi_data_token,
+                   "phi_access_token" => phi_access_token,
+                   "resource_owner_bls_did_key" => resource_owner_did,
+                   "resource_owner_key_proof" => %{
+                     "type" => "Bls12381G2RemainingPartyProof",
+                     "value" => resource_owner_key_proof
+                   }
+                 },
+                 "city" => %{
+                   "phi_data_token" => ^city_phi_data_token,
+                   "phi_access_token" => city_phi_access_token
+                 }
+               }
+             } = claims
+
+      assert resource_owner_did == user.bls_did_key
+
+      assert PhiAccessToken.verify_remaining_proof(
+               phi_access_token,
+               phi_data_token,
+               resource_owner_key_proof,
+               client_key_pair.public_key,
+               user.bls_public_key
+             )
+
+      assert PhiAccessToken.verify_with_private_keys(
+               phi_access_token,
+               phi_data_token,
+               user.bls_private_key,
+               client_key_pair.private_key
+             )
+
+      assert PhiAccessToken.verify_remaining(
+               phi_access_token,
+               phi_data_token,
+               client_key_pair.private_key,
+               user.bls_public_key
+             )
+
+      assert PhiAccessToken.verify_remaining(
+               phi_access_token,
+               phi_data_token,
+               user.bls_private_key,
+               client_key_pair.public_key
+             )
+
+      assert PhiAccessToken.verify_with_private_keys(
+               city_phi_access_token,
+               city_phi_data_token,
+               user.bls_private_key,
+               client_key_pair.private_key
+             )
+    end
+
+    test "does not return phi access proofs outside the consented scope", %{conn: conn} do
+      backend =
+        BorutaIdentity.Factory.insert(:backend,
+          metadata_fields: [
+            %{
+              "attribute_name" => "age",
+              "phi_data_token" => true,
+              "scopes" => ["metadata:age"],
+              "user_editable" => true
+            }
+          ]
+        )
+
+      user = user_fixture(%{backend: backend})
+
+      {:ok, phi_data_token} =
+        BorutaAuth.BlsKeyPair.phi_data_token(user.bls_public_key, "age", 42)
+
+      {:ok, _user} =
+        user
+        |> Ecto.Changeset.change(%{
+          metadata: %{
+            "age" => %{
+              "value" => 42,
+              "status" => "valid",
+              "display" => [],
+              "phi_data_token" => phi_data_token
+            }
+          }
+        })
+        |> Repo.update()
+
+      token = insert(:token, sub: user.id)
+      {:ok, _client_key_pair} = ClientBlsKeyPair.get_or_create(token.client.id)
+
+      conn =
+        conn
+        |> put_req_header("authorization", "bearer #{token.value}")
+        |> post(Routes.userinfo_path(conn, :userinfo))
+
+      refute Map.has_key?(json_response(conn, 200), "_proof")
+    end
+
     test "returns userinfo as jwt", %{conn: conn} do
       sub = user_fixture().id
 
@@ -482,6 +713,85 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         |> post(Routes.userinfo_path(conn, :userinfo))
 
       assert String.starts_with?(response(conn, 200), "ey")
+    end
+  end
+
+  describe "ID token phi proofs" do
+    test "carries resource-owner proofs into token endpoint ID-token claims", %{conn: conn} do
+      metadata_scope = "metadata:age"
+
+      backend =
+        BorutaIdentity.Factory.insert(:backend,
+          metadata_fields: [
+            %{
+              "attribute_name" => "age",
+              "phi_data_token" => true,
+              "scopes" => [metadata_scope],
+              "user_editable" => true
+            }
+          ]
+        )
+
+      user = user_fixture(%{backend: backend})
+
+      {:ok, phi_data_token} =
+        BorutaAuth.BlsKeyPair.phi_data_token(user.bls_public_key, "age", 42)
+
+      {:ok, user} =
+        user
+        |> Ecto.Changeset.change(%{
+          metadata: %{
+            "age" => %{
+              "value" => 42,
+              "status" => "valid",
+              "display" => [],
+              "phi_data_token" => phi_data_token
+            }
+          }
+        })
+        |> Repo.update()
+
+      persisted_token = insert(:token, sub: user.id, scope: "openid #{metadata_scope}")
+      {:ok, token} = AccessToken.authorize(value: persisted_token.value)
+      {:ok, client_key_pair} = ClientBlsKeyPair.get_or_create(token.client.id)
+
+      id_token =
+        Boruta.Oauth.IdToken.generate(
+          %{token: token},
+          nil
+        )
+
+      conn =
+        TokenController.token_success(conn, %TokenResponse{
+          expires_in: 3600,
+          token: token,
+          id_token: id_token.value
+        })
+
+      assert %{"id_token" => proofed_id_token} = json_response(conn, 200)
+
+      assert {:ok,
+              %{
+                "_proof" => %{
+                  "age" => %{
+                    "phi_data_token" => ^phi_data_token,
+                    "phi_access_token" => phi_access_token
+                  }
+                }
+              }} = Joken.peek_claims(proofed_id_token)
+
+      assert {:ok, _claims} =
+               Boruta.Oauth.Client.Crypto.verify_id_token_signature(
+                 proofed_id_token,
+                 JOSE.JWK.from_pem(token.client.public_key) |> JOSE.JWK.to_map()
+               )
+
+      assert PhiAccessToken.verify_with_private_keys(
+               phi_access_token,
+               phi_data_token,
+               user.bls_private_key,
+               client_key_pair.private_key
+             )
     end
   end
 

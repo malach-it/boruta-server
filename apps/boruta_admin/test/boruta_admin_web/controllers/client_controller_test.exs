@@ -4,6 +4,7 @@ defmodule BorutaAdminWeb.ClientControllerTest do
   use BorutaAdminWeb.ConnCase
 
   alias Boruta.Ecto.Client
+  alias BorutaAuth.ClientBlsKeyPair
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
 
   @create_attrs %{
@@ -83,7 +84,16 @@ defmodule BorutaAdminWeb.ClientControllerTest do
       create_attrs = %{@create_attrs | identity_provider: %{id: identity_provider.id}}
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
-      assert %{"id" => _id} = json_response(create, 201)["data"]
+
+      assert %{"id" => id, "bls_did_key" => "did:key:z" <> _ = bls_did_key} =
+               json_response(create, 201)["data"]
+
+      assert %ClientBlsKeyPair{
+               client_id: ^id,
+               private_key: <<_::binary-size(32)>>,
+               public_key: <<_::binary-size(48)>>,
+               did_key: ^bls_did_key
+             } = ClientBlsKeyPair.get(id)
     end
   end
 
@@ -148,8 +158,11 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
       assert %{
                "id" => ^id,
+               "bls_did_key" => "did:key:z" <> _,
                "redirect_uris" => ["http://updated.redirect.uri"]
              } = json_response(conn, 200)["data"]
+
+      assert %ClientBlsKeyPair{client_id: ^id} = ClientBlsKeyPair.get(id)
     end
 
     @tag :skip
@@ -174,9 +187,12 @@ defmodule BorutaAdminWeb.ClientControllerTest do
       public_key = client.public_key
 
       conn = post(conn, Routes.admin_client_path(conn, :regenerate_key_pair, client))
-      assert %{"data" => %{
-        "public_key" => new_public_key
-      }} = json_response(conn, 200)
+
+      assert %{
+               "data" => %{
+                 "public_key" => new_public_key
+               }
+             } = json_response(conn, 200)
 
       assert new_public_key != public_key
     end

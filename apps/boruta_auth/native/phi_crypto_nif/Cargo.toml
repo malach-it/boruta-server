@@ -1,0 +1,12 @@
+[package]
+name = "phi_crypto_nif"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "phi_crypto_nif"
+crate-type = ["cdylib"]
+
+[dependencies]
+blst = "0.3.16"
+rustler = "0.38.0"

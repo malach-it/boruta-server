@@ -18,6 +18,7 @@ defmodule BorutaIdentity.Accounts.User do
   import Ecto.Changeset
 
   alias BorutaIdentity.Accounts.Consent
+  alias BorutaAuth.BlsKeyPair
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.Accounts.UserToken
@@ -30,6 +31,9 @@ defmodule BorutaIdentity.Accounts.User do
           uid: String.t() | nil,
           username: String.t() | nil,
           password: String.t() | nil,
+          bls_private_key: binary() | nil,
+          bls_public_key: binary() | nil,
+          bls_did_key: String.t() | nil,
           metadata: map(),
           federated_metadata: map(),
           totp_secret: String.t() | nil,
@@ -49,18 +53,20 @@ defmodule BorutaIdentity.Accounts.User do
     "properties" => %{
       "value" => %{},
       "status" => %{"type" => "string"},
-      "display" => %{"type" => "array", "items" => %{"type" => "string"}}
+      "display" => %{"type" => "array", "items" => %{"type" => "string"}},
+      "phi_data_token" => %{"type" => "string"}
     },
     "required" => ["value", "status"]
   }
 
-  def account_types, do: [
-    BorutaIdentity.Accounts.Federated.account_type(),
-    BorutaIdentity.Accounts.Internal.account_type(),
-    BorutaIdentity.Accounts.Ldap.account_type()
-  ]
+  def account_types,
+    do: [
+      BorutaIdentity.Accounts.Federated.account_type(),
+      BorutaIdentity.Accounts.Internal.account_type(),
+      BorutaIdentity.Accounts.Ldap.account_type()
+    ]
 
-  @derive {Inspect, except: [:password]}
+  @derive {Inspect, except: [:password, :bls_private_key]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @foreign_key_type Ecto.UUID
   schema "users" do
@@ -80,6 +86,9 @@ defmodule BorutaIdentity.Accounts.User do
     field(:webauthn_public_key, CoseKey)
     field(:webauthn_registered_at, :utc_datetime_usec)
     field(:account_type, :string)
+    field(:bls_private_key, :binary, redact: true)
+    field(:bls_public_key, :binary)
+    field(:bls_did_key, :string)
 
     has_many(:user_tokens, UserToken)
     has_many(:authorized_scopes, UserAuthorizedScope)
@@ -102,7 +111,9 @@ defmodule BorutaIdentity.Accounts.User do
       :federated_metadata,
       :account_type
     ])
+    |> ensure_bls_key_pair()
     |> metadata_template_filter(backend)
+    |> compute_metadata(backend)
     |> validate_required([:backend_id, :uid, :username, :account_type])
     |> validate_inclusion(:account_type, account_types())
     |> validate_metadata()
@@ -112,9 +123,66 @@ defmodule BorutaIdentity.Accounts.User do
   def changeset(user, attrs \\ %{}) do
     user
     |> cast(attrs, [:metadata, :group])
+    |> ensure_bls_key_pair()
     |> validate_group()
     |> validate_metadata()
+    |> compute_metadata(user.backend)
   end
+
+  defp ensure_bls_key_pair(%Ecto.Changeset{data: %__MODULE__{bls_private_key: nil}} = changeset) do
+    %{private_key: private_key, public_key: public_key, did_key: did_key} =
+      BlsKeyPair.generate()
+
+    change(changeset,
+      bls_private_key: private_key,
+      bls_public_key: public_key,
+      bls_did_key: did_key
+    )
+  end
+
+  defp ensure_bls_key_pair(changeset), do: changeset
+
+  defp compute_metadata(changeset, %Backend{metadata_fields: metadata_fields}) do
+    Enum.reduce(metadata_fields, changeset, fn
+      %{"attribute_name" => attribute_name, "phi_data_token" => true}, changeset ->
+        metadata = get_field(changeset, :metadata) || %{}
+
+        with %{"value" => attribute_value} = attribute_metadata <- metadata[attribute_name],
+             {:ok, phi_data_token} <-
+               BlsKeyPair.phi_data_token(
+                 get_field(changeset, :bls_public_key),
+                 attribute_name,
+                 attribute_value
+               ) do
+          computed_metadata =
+            Map.put(attribute_metadata, "phi_data_token", phi_data_token)
+
+          put_change(changeset, :metadata, Map.put(metadata, attribute_name, computed_metadata))
+        else
+          _ ->
+            case metadata[attribute_name] do
+              %{} = attribute_metadata ->
+                put_change(
+                  changeset,
+                  :metadata,
+                  Map.put(
+                    metadata,
+                    attribute_name,
+                    Map.delete(attribute_metadata, "phi_data_token")
+                  )
+                )
+
+              _ ->
+                changeset
+            end
+        end
+
+      _field, changeset ->
+        changeset
+    end)
+  end
+
+  defp compute_metadata(changeset, _backend), do: changeset
 
   def login_changeset(user) do
     user
