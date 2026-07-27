@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@sd-jwt/decode": "^0.9.2",
-    "axios": "^1.15.0",
+    "axios": "^1.18.1",
     "boruta-client": "github:malach-it/boruta-client",
     "jose": "^5.10.0",
     "qr-scanner": "^1.4.2",
