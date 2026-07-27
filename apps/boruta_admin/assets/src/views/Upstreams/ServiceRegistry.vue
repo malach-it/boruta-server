@@ -6,7 +6,7 @@
         {{ error }}
       </div>
       <h2>Service registry</h2>
-      <div class="ui fluid icon input search">
+      <div class="ui fluid icon input search form">
         <input type="search" v-model="searchQuery" placeholder="Search service registry" />
         <i class="search icon"></i>
       </div>

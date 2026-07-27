@@ -672,6 +672,18 @@ export default {
       }
     }
   }
+  .ui.table {
+    color: white;
+    background: #1b1c1d;
+    border-color: rgba(255, 255, 255, .08);
+    thead th {
+      background: rgba(255, 255, 255, .05);
+      color: white;
+    }
+    td, th {
+      border-color: rgba(255, 255, 255, .08)
+    }
+  }
   .ui.form {
     position: relative;
     select, input, textarea {
@@ -726,6 +738,25 @@ export default {
   }
   .ui.header {
     color: white;
+  }
+  .ui.button, .ui.label {
+    opacity: 0.84;
+  }
+  .ui.message {
+    background: #393939;
+    color: white;
+    &.warning {
+      background: rgb(255, 250, 243, 0.84);
+      color: #573a08;
+    }
+    &.success {
+      background: rgb(252, 255, 245, 0.84);
+      color: #2c662d;
+    }
+    &.info {
+      background: rgb(248, 255, 255, 0.84);
+      color: #276f86;
+    }
   }
   .ui.list {
     &>.item .header {
