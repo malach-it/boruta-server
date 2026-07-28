@@ -91,4 +91,9 @@ export default {
     padding-left: .75rem;
   }
 }
+#app.dark {
+  .item.edited-upstream {
+    background: rgb(244, 251, 248, 0.84);
+  }
+}
 </style>
