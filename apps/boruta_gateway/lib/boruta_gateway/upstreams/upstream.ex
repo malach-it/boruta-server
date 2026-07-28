@@ -34,6 +34,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
           required_scopes: map(),
           strip_uri: boolean(),
           authorize: boolean(),
+          authorization_type: String.t(),
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
           unauthorized_response: String.t() | nil,
@@ -60,6 +61,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:required_scopes, :map, default: %{})
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
+    field(:authorization_type, :string, default: "oauth_bearer")
     field(:error_content_type, :string, default: "application/json")
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
@@ -95,6 +97,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :uris,
       :strip_uri,
       :authorize,
+      :authorization_type,
       :required_scopes,
       :error_content_type,
       :forwarded_token_signature_alg,
@@ -110,6 +113,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> cast(attrs, [:forbidden_response, :unauthorized_response], empty_values: [])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
+    |> validate_inclusion(:authorization_type, ["oauth_bearer", "http_basic"])
     |> validate_mtls_configuration()
     |> validate_inclusion(:rate_limit_count, 1..100_000)
     |> validate_inclusion(:rate_limit_time_unit, ["millisecond", "second", "minute"])

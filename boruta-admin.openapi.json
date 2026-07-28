@@ -1675,6 +1675,14 @@
           "authorize": {
             "type": "boolean"
           },
+          "authorization_type": {
+            "type": "string",
+            "enum": [
+              "oauth_bearer",
+              "http_basic"
+            ],
+            "default": "oauth_bearer"
+          },
           "host": {
             "type": "string"
           },
@@ -1703,6 +1711,7 @@
         },
         "example": {
           "authorize": true,
+          "authorization_type": "oauth_bearer",
           "host": "from.api",
           "keepalive": false,
           "port": "80",

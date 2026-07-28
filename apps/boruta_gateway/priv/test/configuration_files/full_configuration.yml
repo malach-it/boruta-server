@@ -4,6 +4,7 @@ configuration:
   aliases: ["full-configuration.local", "full-configuration.internal"]
   gateway:
     - authorize: true
+      authorization_type: "http_basic"
       error_content_type: "test"
       forbidden_response: "test"
       unauthorized_response: "test"

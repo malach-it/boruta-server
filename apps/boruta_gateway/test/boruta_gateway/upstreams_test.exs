@@ -51,8 +51,24 @@ defmodule BorutaGateway.UpstreamsTest do
     end
 
     test "create_upstream/1 with valid data creates a upstream" do
-      assert {:ok, %Upstream{error_content_type: "application/json"}} =
+      assert {:ok,
+              %Upstream{
+                authorization_type: "oauth_bearer",
+                error_content_type: "application/json"
+              }} =
                Upstreams.create_upstream(@valid_attrs)
+    end
+
+    test "create_upstream/1 accepts HTTP Basic authorization" do
+      assert {:ok, %Upstream{authorization_type: "http_basic"}} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :authorization_type, "http_basic"))
+    end
+
+    test "create_upstream/1 rejects unknown authorization types" do
+      assert {:error, changeset} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :authorization_type, "unknown"))
+
+      assert {"is invalid", _opts} = changeset.errors[:authorization_type]
     end
 
     test "create_upstream/1 preserves blank error responses" do

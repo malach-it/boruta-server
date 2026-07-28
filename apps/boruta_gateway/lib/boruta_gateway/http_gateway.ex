@@ -220,10 +220,14 @@ defmodule BorutaGateway.HttpGateway do
 
             {:noreply, close_downstream(socket, state)}
 
-          {:unauthorized, content_type, response} ->
+          {:unauthorized, content_type, response, challenge} ->
+            challenge_header =
+              if challenge, do: "WWW-Authenticate: #{challenge}\r\n", else: ""
+
             :gen_tcp.send(
               socket,
               "HTTP/1.1 401 Unauthorized\r\n" <>
+                challenge_header <>
                 "Content-Type: #{content_type}\r\n" <>
                 "Content-Length: #{byte_size(response)}\r\n\r\n" <>
                 response
@@ -668,6 +672,12 @@ defmodule BorutaGateway.HttpGateway do
 
   defp transform_header(payload, upstream, nil) do
     transform_header(payload, upstream, false)
+  end
+
+  defp transform_header(payload, upstream, :basic_authorized) do
+    payload
+    |> reject_headers(["authorization", "x-forwarded-authorization"])
+    |> transform_header(upstream, false)
   end
 
   defp transform_header(payload, upstream, preserve_forwarded_authorization?)

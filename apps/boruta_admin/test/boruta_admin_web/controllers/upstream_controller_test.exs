@@ -10,6 +10,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
     scheme: "https",
     host: "host.test",
     port: 7777,
+    authorization_type: "http_basic",
     mtls_enabled: true,
     rate_limit_enabled: true,
     rate_limit_count: 20,
@@ -166,6 +167,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
       assert %{
                "id" => _id,
                "virtual_host" => "virtual.host.test",
+               "authorization_type" => "http_basic",
                "mtls_enabled" => true,
                "rate_limit_enabled" => true,
                "rate_limit_count" => 20,

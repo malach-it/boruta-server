@@ -14,6 +14,21 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   alias BorutaGateway.Upstreams.Upstream
   alias Ecto.Adapters.SQL.Sandbox
 
+  defmodule BasicResourceOwners do
+    def get_by(username: "alice") do
+      {:ok, %Boruta.Oauth.ResourceOwner{sub: "user-id", username: "alice"}}
+    end
+
+    def get_by(username: _username), do: {:error, "Invalid username or password."}
+
+    def check_password(%Boruta.Oauth.ResourceOwner{username: "alice"}, "password"), do: :ok
+
+    def check_password(_resource_owner, _password),
+      do: {:error, "Invalid username or password."}
+
+    def authorized_scopes(_resource_owner), do: []
+  end
+
   setup_all do
     Finch.start_link(name: HttpClient)
 
@@ -336,6 +351,79 @@ defmodule BorutaGateway.RequestsIntegrationTest do
         after
           Repo.delete_all(Upstream)
         end
+      end)
+    end
+
+    test "authorizes HTTP Basic users without forwarding their credentials" do
+      with_basic_resource_owners(fn ->
+        Sandbox.unboxed_run(Repo, fn ->
+          try do
+            with_upstream_server(
+              fn request ->
+                refute request =~ ~r/(?:^|\r\n)authorization\s*:/i
+                teapot_response(request)
+              end,
+              fn port ->
+                Upstreams.create_upstream(%{
+                  scheme: "http",
+                  host: "127.0.0.1",
+                  port: port,
+                  uris: ["/basic"],
+                  strip_uri: true,
+                  authorize: true,
+                  authorization_type: "http_basic"
+                })
+
+                Process.sleep(100)
+
+                authorization = "Basic " <> Base.encode64("alice:password")
+
+                request =
+                  Finch.build(
+                    :get,
+                    "http://localhost:7777/basic/status/418",
+                    [{"authorization", authorization}],
+                    ""
+                  )
+
+                assert {:ok, %Finch.Response{body: body, status: 418}} =
+                         Finch.request(request, HttpClient)
+
+                assert body =~ ~r/teapot/
+              end
+            )
+          after
+            Repo.delete_all(Upstream)
+          end
+        end)
+      end)
+    end
+
+    test "challenges missing HTTP Basic credentials" do
+      with_basic_resource_owners(fn ->
+        Sandbox.unboxed_run(Repo, fn ->
+          try do
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "should.not.be.called",
+              port: 80,
+              uris: ["/basic"],
+              authorize: true,
+              authorization_type: "http_basic"
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/basic", [], "")
+
+            assert {:ok, %Finch.Response{headers: headers, status: 401}} =
+                     Finch.request(request, HttpClient)
+
+            assert {"www-authenticate", ~s(Basic realm="Boruta gateway", charset="UTF-8")} in headers
+          after
+            Repo.delete_all(Upstream)
+          end
+        end)
       end)
     end
 
@@ -1427,6 +1515,31 @@ defmodule BorutaGateway.RequestsIntegrationTest do
         _ -> headers
       end
     end)
+  end
+
+  defp with_basic_resource_owners(fun) do
+    previous_adapter =
+      Application.get_env(:boruta_gateway, :basic_authorization_resource_owners)
+
+    Application.put_env(
+      :boruta_gateway,
+      :basic_authorization_resource_owners,
+      BasicResourceOwners
+    )
+
+    try do
+      fun.()
+    after
+      if previous_adapter do
+        Application.put_env(
+          :boruta_gateway,
+          :basic_authorization_resource_owners,
+          previous_adapter
+        )
+      else
+        Application.delete_env(:boruta_gateway, :basic_authorization_resource_owners)
+      end
+    end
   end
 
   defp authorized_configuration_file(port, options \\ []) do

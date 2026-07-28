@@ -8,6 +8,10 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
       "type" => "object",
       "properties" => %{
         "authorize" => %{"type" => "boolean"},
+        "authorization_type" => %{
+          "type" => "string",
+          "pattern" => "^(oauth_bearer|http_basic)$"
+        },
         "error_content_type" => %{"type" => "string"},
         "forbidden_response" => %{"type" => "string"},
         "unauthorized_response" => %{"type" => "string"},
@@ -61,6 +65,10 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
       "properties" => %{
         "node_name" => %{"type" => "string"},
         "authorize" => %{"type" => "boolean"},
+        "authorization_type" => %{
+          "type" => "string",
+          "pattern" => "^(oauth_bearer|http_basic)$"
+        },
         "error_content_type" => %{"type" => "string"},
         "forbidden_response" => %{"type" => "string"},
         "unauthorized_response" => %{"type" => "string"},

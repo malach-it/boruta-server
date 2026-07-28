@@ -64,6 +64,16 @@
               <label>Authorize</label>
             </div>
           </div>
+          <div class="field" v-if="upstream.authorize" :class="{ 'error': upstream.errors?.authorization_type }">
+            <label>Authorization type</label>
+            <select v-model="upstream.authorization_type">
+              <option value="oauth_bearer">OAuth bearer token</option>
+              <option value="http_basic">HTTP Basic credentials</option>
+            </select>
+            <div class="ui info message" v-if="upstream.authorization_type === 'http_basic'">
+              Credentials are verified against users from the default backend and are not forwarded upstream.
+            </div>
+          </div>
           <div class="field" v-if="upstream.authorize" :class="{ 'error': upstream.errors?.required_scopes }">
             <label>Required scopes <i>(leave empty to not filter)</i></label>
             <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />

@@ -17,6 +17,7 @@ const defaults = {
   node_name: 'global',
   uris: [],
   required_scopes: [],
+  authorization_type: 'oauth_bearer',
   error_content_type: 'application/json',
   forbidden_response: defaultForbiddenResponse,
   unauthorized_response: defaultUnauthorizedResponse,
@@ -52,6 +53,7 @@ const assign = {
     this.uris = uris.map((uri) => ({ uri }))
   },
   authorize: function ({ authorize }) { this.authorize = authorize },
+  authorization_type: function ({ authorization_type }) { this.authorization_type = authorization_type },
   required_scopes: function ({ required_scopes }) {
     this.required_scopes = Object.keys(required_scopes).flatMap((method) => {
       return required_scopes[method].map(name => ({ model: new Scope({ name }), method: method }))
@@ -126,6 +128,7 @@ class Upstream {
       uris,
       strip_uri,
       authorize,
+      authorization_type,
       required_scopes,
       error_content_type,
       forbidden_response,
@@ -158,6 +161,7 @@ class Upstream {
       }, {}),
       strip_uri,
       authorize,
+      authorization_type,
       error_content_type,
       forbidden_response,
       unauthorized_response,

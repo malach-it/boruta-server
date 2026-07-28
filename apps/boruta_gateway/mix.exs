@@ -37,6 +37,7 @@ defmodule BorutaGateway.MixProject do
   defp deps do
     [
       {:boruta_auth, in_umbrella: true},
+      {:boruta_identity, in_umbrella: true},
       {:ecto_sql, "~> 3.0"},
       {:ex_json_schema, "~> 0.9"},
       {:finch, "~> 0.10"},

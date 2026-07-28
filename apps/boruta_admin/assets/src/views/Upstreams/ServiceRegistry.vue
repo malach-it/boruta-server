@@ -114,7 +114,10 @@
                           {{ path.uri }}
                         </span>
                       </td>
-                      <td>Authorization {{ upstream.authorize ? 'enabled' : 'disabled' }}</td>
+                      <td>
+                        Authorization
+                        {{ upstream.authorize ? `enabled (${authorizationTypeLabel(upstream)})` : 'disabled' }}
+                      </td>
                       <td>mTLS {{ upstream.mtls_enabled ? 'enabled' : 'disabled' }}</td>
                       <td>Rate limiting {{ upstream.rate_limit_enabled ? 'enabled' : 'disabled' }}</td>
                       <td class="collapsing">
@@ -319,6 +322,7 @@ export default {
         upstream.port,
         upstream.baseUrl,
         upstream.authorize ? 'authorization enabled' : 'authorization disabled',
+        this.authorizationTypeLabel(upstream),
         upstream.mtls_enabled ? 'mtls enabled' : 'mtls disabled',
         upstream.rate_limit_enabled ? 'rate limit enabled' : 'rate limit disabled',
         upstream.strip_uri ? 'strip uri enabled' : 'strip uri disabled',
@@ -327,6 +331,11 @@ export default {
           return [method, ...(scopes || [])]
         })
       ].filter((value) => value !== null && value !== undefined).join(' ')
+    },
+    authorizationTypeLabel (upstream) {
+      return upstream.authorization_type === 'http_basic'
+        ? 'HTTP Basic'
+        : 'OAuth bearer'
     }
   }
 }
