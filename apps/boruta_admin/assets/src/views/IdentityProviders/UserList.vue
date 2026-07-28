@@ -71,7 +71,7 @@
           <button
             :disabled="disableFirstPage"
             class="item"
-            @click="goToPage(1)">
+            @click="goToPage(currentPage - 1)">
             &lt;
           </button>
           <button
@@ -85,7 +85,7 @@
           <button
             :disabled="disableLastPage"
             class="item"
-            @click="goToPage(this.totalPages)">
+            @click="goToPage(currentPage + 1)">
             &gt;
           </button>
         </div>
@@ -109,8 +109,8 @@ export default {
       users: [],
       deleted: false,
       errorMessage: false,
-      currentPage: this.$route.query.page,
-      userQuery: this.$route.query.q,
+      currentPage: Number(this.$route.query.page) || 1,
+      userQuery: this.$route.query.q || '',
       totalPages: 1,
       totalEntries: 0,
       total_entries: 0,
@@ -137,10 +137,10 @@ export default {
       return meanPages
     },
     disableFirstPage () {
-      return this.meanPages[0] == 1
+      return this.currentPage <= 1
     },
     disableLastPage () {
-      return this.meanPages.slice(-1) == this.totalPages
+      return this.currentPage >= this.totalPages
     }
   },
   methods: {
@@ -155,7 +155,8 @@ export default {
       })
     },
     goToPage (pageNumber) {
-      const query = { page: pageNumber }
+      const page = Math.min(Math.max(Number(pageNumber) || 1, 1), this.totalPages)
+      const query = { page }
       if (this.userQuery) query.q = this.userQuery
 
       this.$router.push({ name: 'user-list', query })
@@ -179,6 +180,7 @@ export default {
   watch: {
     '$route.query': {
       handler ({ page, q }) {
+        this.userQuery = q || ''
         this.getUsers(page, q)
       },
       deep: true,
