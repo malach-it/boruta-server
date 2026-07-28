@@ -2,6 +2,7 @@ defmodule BorutaAdminWeb.ClientView do
   use BorutaAdminWeb, :view
 
   alias BorutaAdminWeb.ClientView
+  alias BorutaAuth.ClientBlsKeyPair
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
 
@@ -16,6 +17,8 @@ defmodule BorutaAdminWeb.ClientView do
   def render("client.json", %{client: client}) do
     identity_provider =
       IdentityProviders.get_identity_provider_by_client_id(client.id) || %IdentityProvider{}
+
+    bls_key_pair = ClientBlsKeyPair.get(client.id)
 
     %{
       id: client.id,
@@ -40,6 +43,7 @@ defmodule BorutaAdminWeb.ClientView do
       key_pair_type: client.key_pair_type,
       signatures_adapter: client.signatures_adapter,
       did: client.did,
+      bls_did_key: bls_key_pair && bls_key_pair.did_key,
       identity_provider: %{
         id: identity_provider.id,
         name: identity_provider.name

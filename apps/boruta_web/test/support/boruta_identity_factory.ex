@@ -4,6 +4,7 @@ defmodule BorutaIdentity.Factory do
   use ExMachina.Ecto, repo: BorutaIdentity.Repo
 
   alias BorutaIdentity.Accounts.Consent
+  alias BorutaAuth.BlsKeyPair
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.Role
   alias BorutaIdentity.Accounts.RoleScope
@@ -18,10 +19,15 @@ defmodule BorutaIdentity.Factory do
   @hashed_password "$argon2id$v=19$m=131072,t=8,p=4$9lPv7KsJogno0FlnhaRQXA$TeTY9FYjR1HJtZzg+N1z0oDC+0Mn7buPpOMhDP+M2Ik"
 
   def user_factory do
+    key_pair = BlsKeyPair.generate()
+
     %User{
       username: "user#{System.unique_integer()}@example.com",
       uid: SecureRandom.hex(),
-      backend: build(:backend)
+      backend: build(:backend),
+      bls_private_key: key_pair.private_key,
+      bls_public_key: key_pair.public_key,
+      bls_did_key: key_pair.did_key
     }
   end
 

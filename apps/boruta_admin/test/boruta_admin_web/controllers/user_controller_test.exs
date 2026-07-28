@@ -5,6 +5,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
   import BorutaIdentity.Factory
 
   alias Boruta.Ecto.Admin
+  alias BorutaAuth.BlsKeyPair
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
@@ -428,6 +429,54 @@ defmodule BorutaAdminWeb.UserControllerTest do
              } = json_response(conn, 200)["data"]
 
       assert %User{metadata: ^metadata} = Repo.get!(User, id)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "computes and saves a phi data token for configured metadata", %{
+      conn: conn,
+      user: %User{id: id, bls_public_key: bls_public_key, bls_did_key: bls_did_key} = user
+    } do
+      {:ok, _backend} =
+        Ecto.Changeset.change(user.backend, %{
+          metadata_fields: [
+            %{"attribute_name" => "profile", "user_editable" => true, "phi_data_token" => true}
+          ]
+        })
+        |> Repo.update()
+
+      profile = %{"active" => true, "name" => "Ada"}
+      {:ok, phi_data_token} = BlsKeyPair.phi_data_token(bls_public_key, "profile", profile)
+
+      conn =
+        put(conn, Routes.admin_user_path(conn, :update, user),
+          user: %{
+            "metadata" => %{
+              "profile" => %{"value" => profile, "status" => "valid", "display" => []}
+            }
+          }
+        )
+
+      assert %{
+               "id" => ^id,
+               "bls_did_key" => ^bls_did_key,
+               "metadata" => %{
+                 "profile" => %{
+                   "value" => ^profile,
+                   "status" => "valid",
+                   "display" => [],
+                   "phi_data_token" => ^phi_data_token
+                 }
+               }
+             } = json_response(conn, 200)["data"]
+
+      assert %User{
+               metadata: %{
+                 "profile" => %{
+                   "value" => ^profile,
+                   "phi_data_token" => ^phi_data_token
+                 }
+               }
+             } = Repo.get!(User, id)
     end
 
     @tag authorized: ["users:manage:all"]

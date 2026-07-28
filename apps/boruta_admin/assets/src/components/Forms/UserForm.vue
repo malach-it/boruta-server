@@ -30,11 +30,23 @@
           <h3>Metadata</h3>
           <div class="ui metadata segment" v-for="field in user.backend.metadata_fields">
             <h4>{{ field.attribute_name }}</h4>
+            <div class="field">
+              <input
+                type="text"
+                :value="user.metadata[field.attribute_name].phi_data_token"
+                placeholder="did:key:<computed on save>"
+                disabled
+              />
+            </div>
             <div class="ui three column stackable grid">
               <div class="column">
                 <div class="field" :class="{ 'error': user.errors?.metadata }">
                   <label>Value</label>
-                  <input type="text" v-model="user.metadata[field.attribute_name].value" placeholder="metadata" />
+                  <input
+                    type="text"
+                    v-model="user.metadata[field.attribute_name].value"
+                    placeholder="metadata"
+                  />
                 </div>
               </div>
               <div class="column">

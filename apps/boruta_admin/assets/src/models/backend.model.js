@@ -236,10 +236,12 @@ class Backend {
       password_hashing_alg,
       password_hashing_opts: formattedPasswordHashingOpts,
       metadata_fields: metadata_fields.map(
-        ({ attribute_name, user_editable, scopes }) => ({
+        ({ attribute_name, user_editable, scopes, default_value, phi_data_token }) => ({
           attribute_name,
           user_editable,
           scopes: scopes.map(({ name }) => name),
+          default_value,
+          phi_data_token,
         })
       ),
       federated_servers: federated_servers.map((federatedServer) => {

@@ -33,6 +33,7 @@ defmodule BorutaAdminWeb.UserView do
       id: user.id,
       uid: user.uid,
       username: user.username,
+      bls_did_key: user.bls_did_key,
       totp_registered_at: user.totp_registered_at,
       metadata: user.metadata,
       federated_metadata: user.federated_metadata,

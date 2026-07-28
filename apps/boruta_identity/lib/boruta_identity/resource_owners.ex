@@ -6,6 +6,7 @@ defmodule BorutaIdentity.ResourceOwners do
   use BorutaIdentityWeb, :controller
 
   alias Boruta.Oauth.ResourceOwner
+  alias Boruta.Oauth.IdToken
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Role
@@ -14,6 +15,7 @@ defmodule BorutaIdentity.ResourceOwners do
   alias BorutaIdentity.Accounts.VerifiablePresentations
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.Organization
+  alias BorutaIdentity.PhiAccessProof
 
   @impl Boruta.Oauth.ResourceOwners
   def get_by(username: username) do
@@ -86,6 +88,7 @@ defmodule BorutaIdentity.ResourceOwners do
   @impl Boruta.Oauth.ResourceOwners
   def authorized_scopes(%ResourceOwner{sub: "unknown"}), do: []
   def authorized_scopes(%ResourceOwner{sub: "did:" <> _key}), do: []
+
   def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do
     Accounts.get_user_scopes(sub) ++
       Enum.flat_map(Accounts.get_user_roles(sub), fn %{scopes: scopes} -> scopes end)
@@ -94,41 +97,58 @@ defmodule BorutaIdentity.ResourceOwners do
   def authorized_scopes(_), do: []
 
   @impl Boruta.Oauth.ResourceOwners
-  def claims(%ResourceOwner{sub: sub}, scope) do
+  def claims(%ResourceOwner{sub: sub, client_id: client_id, extra_claims: extra_claims}, scope) do
     case Accounts.get_user(sub) do
       %User{} = user ->
-        scope
-        |> Scope.split()
-        |> Enum.reduce(%{}, fn scope, acc -> merge_claims(scope, acc, user, sub) end)
-        |> Map.put("scope", scope)
+        claims =
+          scope
+          |> Scope.split()
+          |> Enum.reduce(%{}, fn scope, acc -> merge_claims(scope, acc, user, sub) end)
+          |> Map.put("scope", scope)
+
+        add_phi_access_proofs(claims, extra_claims, user, client_id, scope)
 
       _ ->
         %{}
     end
   end
 
+  defp add_phi_access_proofs(claims, extra_claims, user, client_id, scope) do
+    with client_id when is_binary(client_id) <- client_id,
+         disclosed_claims = Map.merge(claims, IdToken.format_claims(extra_claims)),
+         {:ok, proofed_claims} <-
+           PhiAccessProof.add_for_client(disclosed_claims, user, client_id, scope),
+         %{} = proofs <- proofed_claims["_proof"] do
+      Map.put(claims, "_proof", proofs)
+    else
+      _ -> claims
+    end
+  end
+
   @spec metadata(user :: User.t(), scope :: String.t()) :: metadata :: map()
-  def metadata(%User{username: username, metadata: %{} = metadata}, _scope) when metadata == %{}, do: %{
-    "email" => username
-  }
+  def metadata(%User{username: username, metadata: %{} = metadata}, _scope) when metadata == %{},
+    do: %{
+      "email" => username
+    }
 
   def metadata(user, scope) do
     user.metadata
     |> User.metadata_filter(user.backend)
     |> metadata_scope_filter(scope, user.backend)
     |> Enum.into(%{})
+    |> Map.delete("_proof")
     |> Map.put("email", user.username)
   end
 
   defp merge_claims(
-    "email",
-    acc,
-    %User{
-      username: username,
-      confirmed_at: confirmed_at
-    },
-    _sub
-  ) do
+         "email",
+         acc,
+         %User{
+           username: username,
+           confirmed_at: confirmed_at
+         },
+         _sub
+       ) do
     Map.merge(acc, %{
       "email" => username,
       "email_verified" => !!confirmed_at

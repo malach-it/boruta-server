@@ -5,6 +5,9 @@ defmodule BorutaIdentity.ResourceOwnersTest do
 
   alias Boruta.Ecto.Admin
   alias Boruta.Oauth.ResourceOwner
+  alias BorutaAuth.BlsKeyPair
+  alias BorutaAuth.ClientBlsKeyPair
+  alias BorutaAuth.PhiAccessToken
   alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.OrganizationUser
@@ -133,6 +136,91 @@ defmodule BorutaIdentity.ResourceOwnersTest do
   end
 
   describe "claims/2" do
+    test "adds one client-consented proof per disclosed metadata claim" do
+      user = user_fixture()
+      client = Boruta.Factory.insert(:client)
+      {:ok, client_key_pair} = ClientBlsKeyPair.get_or_create(client.id)
+
+      {:ok, backend} =
+        user.backend
+        |> Ecto.Changeset.change(%{
+          metadata_fields: [
+            %{
+              "attribute_name" => "age",
+              "phi_data_token" => true,
+              "scopes" => ["profile"],
+              "user_editable" => true
+            }
+          ]
+        })
+        |> Repo.update()
+
+      {:ok, phi_data_token} = BlsKeyPair.phi_data_token(user.bls_public_key, "age", 42)
+
+      {:ok, user} =
+        user
+        |> Ecto.Changeset.change(%{
+          metadata: %{
+            "age" => %{
+              "value" => 42,
+              "status" => "valid",
+              "display" => [],
+              "phi_data_token" => phi_data_token
+            }
+          }
+        })
+        |> Repo.update()
+
+      extra_claims =
+        user
+        |> Map.put(:backend, backend)
+        |> ResourceOwners.metadata("profile")
+
+      claims =
+        ResourceOwners.claims(
+          %ResourceOwner{
+            sub: user.id,
+            client_id: client.id,
+            extra_claims: extra_claims
+          },
+          "profile"
+        )
+
+      assert %{
+               "_proof" => %{
+                 "age" => %{
+                   "phi_data_token" => ^phi_data_token,
+                   "phi_access_token" => phi_access_token,
+                   "resource_owner_bls_did_key" => resource_owner_did,
+                   "resource_owner_key_proof" =>
+                     %{
+                       "value" => resource_owner_key_proof
+                     } = key_proof
+                 }
+               }
+             } = claims
+
+      assert resource_owner_did == user.bls_did_key
+      refute Map.has_key?(claims["_proof"]["age"], "client_bls_did_key")
+      refute Map.has_key?(claims["_proof"]["age"], "client_key_proof")
+      assert key_proof["type"] == "Bls12381G2RemainingPartyProof"
+
+      assert PhiAccessToken.verify_remaining_proof(
+               phi_access_token,
+               phi_data_token,
+               resource_owner_key_proof,
+               client_key_pair.public_key,
+               user.bls_public_key
+             )
+
+      assert PhiAccessToken.verify_with_private_keys(
+               phi_access_token,
+               phi_data_token,
+               user.bls_private_key,
+               client_key_pair.private_key
+             )
+    end
+
     test "returns user roles with profile in scope" do
       user = user_fixture()
       role = BorutaIdentity.Factory.insert(:role)
@@ -140,7 +228,9 @@ defmodule BorutaIdentity.ResourceOwnersTest do
       Repo.insert(%UserRole{user_id: user.id, role_id: role.id})
 
       role_name = role.name
-      assert %{"roles" => [^role_name]} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "profile")
+
+      assert %{"roles" => [^role_name]} =
+               ResourceOwners.claims(%ResourceOwner{sub: user.id}, "profile")
     end
 
     test "returns user organizations with profile in scope" do

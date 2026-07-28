@@ -19,7 +19,9 @@ tags*
 
 apps/*/priv/static/**
 apps/*/priv/ssl/**
+apps/*/priv/native/**
 apps/*/log/**
+apps/*/native/*/target/**
 
 .vscode
 

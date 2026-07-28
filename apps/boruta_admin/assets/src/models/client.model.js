@@ -31,6 +31,7 @@ const signaturesAdapters = [
 const defaults = {
   errors: null,
   key_pair_id: null,
+  bls_did_key: null,
   key_pair_type: { type: 'rsa', modulus_size: '2048', exponent_size: '65537' },
   signatures_adapter: 'Elixir.Boruta.Internal.Signatures',
   authorize_scopes: false,
@@ -59,6 +60,7 @@ const assign = {
   key_pair_type: function ({ key_pair_type }) { this.key_pair_type = key_pair_type },
   signatures_adapter: function ({ signatures_adapter }) { this.signatures_adapter = signatures_adapter },
   did: function ({ did }) { this.did = did },
+  bls_did_key: function ({ bls_did_key }) { this.bls_did_key = bls_did_key },
   access_token_ttl: function ({ access_token_ttl }) { this.access_token_ttl = access_token_ttl },
   authorization_code_ttl: function ({ authorization_code_ttl }) { this.authorization_code_ttl = authorization_code_ttl },
   refresh_token_ttl: function ({ refresh_token_ttl }) { this.refresh_token_ttl = refresh_token_ttl },

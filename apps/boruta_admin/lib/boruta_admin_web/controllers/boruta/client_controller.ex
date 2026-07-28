@@ -16,7 +16,12 @@ defmodule BorutaAdminWeb.ClientController do
   action_fallback(BorutaAdminWeb.FallbackController)
 
   def index(conn, _params) do
-    clients = Admin.list_clients()
+    clients =
+      Admin.list_clients()
+      |> Enum.map(fn client ->
+        {:ok, client} = Clients.ensure_bls_key_pair(client)
+        client
+      end)
 
     render(conn, "index.json", clients: clients)
   end
@@ -100,7 +105,9 @@ defmodule BorutaAdminWeb.ClientController do
   end
 
   defp get_client(client_id) do
-    Admin.get_client!(client_id)
+    client = Admin.get_client!(client_id)
+    {:ok, client} = Clients.ensure_bls_key_pair(client)
+    client
   end
 
   # TODO protect public client
