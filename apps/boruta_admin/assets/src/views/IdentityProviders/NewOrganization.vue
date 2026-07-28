@@ -1,8 +1,17 @@
 <template>
   <div class="new-organization">
     <Toaster :active="success" message="Organization has been created" type="success" />
-    <div class="ui container">
-      <OrganizationForm :organization="organization" @submit="createOrganization()" @back="back()" action="Create" />
+    <div class="container">
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <router-link :to="{ name: 'organization-list' }" class="ui right floated button">Back</router-link>
+          </div>
+        </div>
+        <div class="twelve wide column">
+          <OrganizationForm :organization="organization" @submit="createOrganization()" @back="back()" action="Create" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
