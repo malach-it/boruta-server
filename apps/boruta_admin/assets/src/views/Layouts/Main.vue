@@ -155,7 +155,7 @@
         <i class="ui sun icon"></i>
       </a>
       <Feedback />
-      &copy; 2025 malachit
+      &copy; 2026 malachit
     </footer>
   </div>
 </template>
