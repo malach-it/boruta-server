@@ -8,25 +8,6 @@
         @abort="abortKeyConsent"
         @consent="generateKeyConsent"
       />
-    <div class="credential-password" v-if="credentialPasswordEventKey">
-      <div class="ui center aligned segment">
-        <h2>Unlock credentials</h2>
-        <div class="ui error message" v-if="credentialPasswordError">{{ credentialPasswordError }}</div>
-        <div class="ui form">
-          <input
-            type="password"
-            v-model="credentialPassword"
-            placeholder="Credentials password"
-            autocomplete="current-password"
-            @keyup.enter="approveCredentialPassword"
-          />
-        </div>
-        <div class="ui fluid two buttons">
-          <button class="ui orange button" @click="abortCredentialPassword">Abort</button>
-          <button :disabled="!credentialPassword" class="ui green button" @click="approveCredentialPassword">Unlock</button>
-        </div>
-      </div>
-    </div>
     <div class="ui segment" v-if="error">
       <div class="ui placeholder segment">
         <div class="ui header">
@@ -52,7 +33,26 @@
       </div>
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
-    <div v-if="mode == 'oid4vp' && credentials.length">
+    <div v-if="mode == 'oid4vp'">
+      <div class="credential-password" v-if="credentialPasswordEventKey">
+        <div class="ui center aligned segment">
+          <h2>Unlock credentials</h2>
+          <div class="ui error message" v-if="credentialPasswordError">{{ credentialPasswordError }}</div>
+          <div class="ui form">
+            <input
+              type="password"
+              v-model="credentialPassword"
+              placeholder="Credentials password"
+              autocomplete="current-password"
+              @keyup.enter="approveCredentialPassword"
+            />
+          </div>
+          <div class="ui fluid two buttons">
+            <button class="ui orange button" @click="abortCredentialPassword">Abort</button>
+            <button :disabled="!credentialPassword" class="ui green button" @click="approveCredentialPassword">Unlock</button>
+          </div>
+        </div>
+      </div>
       <div v-for="input_descriptor of presentation_definition.input_descriptors">
         <div v-for="field of input_descriptor.constraints.fields">
           <p :key="field.path" v-if="field.id" class="ui purpose segment">
@@ -60,7 +60,12 @@
           </p>
         </div>
       </div>
-      <Credentials :credentials="credentials" delete-label="Unselect" @deleteCredential="deleteCredential" />
+      <Credentials
+        v-if="credentials.length"
+        :credentials="credentials"
+        delete-label="Unselect"
+        @deleteCredential="deleteCredential"
+        />
       <div class="ui segment">
         <form :action="redirect_uri" method="POST">
           <input type="hidden" name="vp_token" :value="vp_token" />
@@ -70,7 +75,32 @@
       </div>
     </div>
     <div class="ui segment" v-if="mode == 'siopv2'">
-      <div class="ui segment" v-if="availableCredentials.length">
+      <div class="ui form segment">
+        <div class="ui toggle checkbox">
+          <input type="checkbox" v-model="includePresentationDefinition" />
+          <label>Present credentials</label>
+        </div>
+      </div>
+      <div class="credential-password" v-if="includePresentationDefinition && credentialPasswordEventKey">
+        <div class="ui center aligned segment">
+          <h2>Unlock credentials</h2>
+          <div class="ui error message" v-if="credentialPasswordError">{{ credentialPasswordError }}</div>
+          <div class="ui form">
+            <input
+              type="password"
+              v-model="credentialPassword"
+              placeholder="Credentials password"
+              autocomplete="current-password"
+              @keyup.enter="approveCredentialPassword"
+            />
+          </div>
+          <div class="ui fluid two buttons">
+            <button class="ui orange button" @click="abortCredentialPassword">Abort</button>
+            <button :disabled="!credentialPassword" class="ui green button" @click="approveCredentialPassword">Unlock</button>
+          </div>
+        </div>
+      </div>
+      <div class="ui segment" v-if="includePresentationDefinition && availableCredentials.length">
         <h2 class="ui header">Available credential claims</h2>
         <div class="ui divided items">
           <div class="item" v-for="credential of availableCredentials" :key="credential.credential">
@@ -141,6 +171,7 @@ export default defineComponent({
       credentials: [],
       availableCredentials: [],
       selectedCredentialClaims: [],
+      includePresentationDefinition: false,
       siopv2Response: null,
       id_token: null,
       metadata_policy: "{}",
@@ -165,6 +196,8 @@ export default defineComponent({
   },
   computed: {
     selectedPresentationDefinition () {
+      if (!this.includePresentationDefinition) return null
+
       return {
         id: 'wallet-selected-claims',
         input_descriptors: this.selectedCredentialClaims.map(({ credentialId, format, claimKey, path }) => {
