@@ -81,17 +81,20 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     @tag authorized: ["clients:manage:all"]
     test "renders client when data is valid", %{conn: conn, identity_provider: identity_provider} do
       trusted_authorities = "did:example:issuer"
+      trusted_hosts = ["issuer.example.com"]
 
       create_attrs =
         @create_attrs
         |> Map.put(:identity_provider, %{id: identity_provider.id})
         |> Map.put(:trusted_authorities, trusted_authorities)
+        |> Map.put(:trusted_hosts, trusted_hosts)
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
 
       assert %{
                "id" => _id,
-               "trusted_authorities" => ^trusted_authorities
+               "trusted_authorities" => ^trusted_authorities,
+               "trusted_hosts" => ^trusted_hosts
              } = json_response(create, 201)["data"]
     end
   end
@@ -153,25 +156,28 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
     @tag authorized: ["clients:manage:all"]
     test "renders client when data is valid", %{conn: conn, client: %Client{id: id} = client} do
-      conn = put(conn, Routes.admin_client_path(conn, :update, client), client: @update_attrs)
+      trusted_hosts = ["status.example.com"]
+      update_attrs = Map.put(@update_attrs, :trusted_hosts, trusted_hosts)
+      conn = put(conn, Routes.admin_client_path(conn, :update, client), client: update_attrs)
 
       assert %{
                "id" => ^id,
                "redirect_uris" => ["http://updated.redirect.uri"],
-               "trusted_authorities" => nil
+               "trusted_authorities" => "",
+               "trusted_hosts" => ^trusted_hosts
              } = json_response(conn, 200)["data"]
     end
 
     @tag authorized: ["clients:manage:all"]
-    test "sets trusted authorities to nil", %{conn: conn} do
+    test "sets trusted authorities to an empty string", %{conn: conn} do
       client = insert(:client, trusted_authorities: "did:example:issuer")
 
       conn =
         put(conn, Routes.admin_client_path(conn, :update, client),
-          client: Map.put(@update_attrs, :trusted_authorities, nil)
+          client: Map.put(@update_attrs, :trusted_authorities, "")
         )
 
-      assert %{"trusted_authorities" => nil} = json_response(conn, 200)["data"]
+      assert %{"trusted_authorities" => ""} = json_response(conn, 200)["data"]
     end
 
     @tag :skip

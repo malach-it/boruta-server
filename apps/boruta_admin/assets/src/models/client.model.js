@@ -36,10 +36,11 @@ const defaults = {
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
+  trusted_hosts: [],
   id_token_signature_alg: 'RS512',
   token_endpoint_jwt_auth_alg: 'HS256',
   token_endpoint_auth_methods: ["client_secret_basic", "client_secret_post"],
-  trusted_authorities: null,
+  trusted_authorities: '',
   identity_provider: { model: new IdentityProvider() },
   grantTypes: allGrantTypes.map((label) => {
     return {
@@ -54,7 +55,10 @@ const assign = {
   public_client_id: function ({ public_client_id }) { this.public_client_id = public_client_id },
   check_public_client_id: function ({ check_public_client_id }) { this.check_public_client_id = check_public_client_id },
   trusted_authorities: function ({ trusted_authorities }) {
-    this.trusted_authorities = trusted_authorities
+    this.trusted_authorities = trusted_authorities || ''
+  },
+  trusted_hosts: function ({ trusted_hosts }) {
+    this.trusted_hosts = (trusted_hosts || []).map((host) => ({ host }))
   },
   name: function ({ name }) { this.name = name },
   confidential: function ({ confidential }) { this.confidential = confidential },
@@ -243,6 +247,7 @@ class Client {
       token_endpoint_auth_methods,
       jwt_public_key,
       trusted_authorities,
+      trusted_hosts,
       key_pair_id,
       key_pair_type,
       signatures_adapter,
@@ -279,6 +284,7 @@ class Client {
       token_endpoint_auth_methods,
       jwt_public_key,
       trusted_authorities,
+      trusted_hosts: trusted_hosts.map(({ host }) => host),
       key_pair_id,
       key_pair_type,
       signatures_adapter,

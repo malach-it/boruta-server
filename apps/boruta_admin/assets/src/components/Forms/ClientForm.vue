@@ -243,22 +243,23 @@
           </div>
         </div>
         <div class="ui authorization segment">
-          <div class="field" :class="{ 'error': client.errors?.trusted_authorities }">
-            <div class="ui toggle checkbox">
-              <input
-                type="checkbox"
-                :checked="client.trusted_authorities !== null"
-                @change="toggleTrustedAuthorities"
-              >
-              <label>Trusted authorities</label>
+          <div class="field" :class="{ 'error': client.errors?.trusted_hosts }">
+            <label>Trusted hosts</label>
+            <div v-for="(trustedHost, index) in client.trusted_hosts" class="field" :key="index">
+              <div class="ui right icon input">
+                <input type="text" v-model="trustedHost.host" placeholder="issuer.example.com" />
+                <i @click="deleteTrustedHost(trustedHost)" class="close icon"></i>
+              </div>
             </div>
+            <a @click.prevent="addTrustedHost()" class="ui blue fluid button">Add a trusted host</a>
           </div>
-          <div v-if="client.trusted_authorities !== null">
-            <hr />
+        </div>
+        <div class="ui authorization segment">
+          <div class="field" :class="{ 'error': client.errors?.trusted_authorities }">
+            <label>Trusted authorities</label>
             <div class="ui segment">
               <div class="editor field">
                 <TextEditor
-                  v-if="client.trusted_authorities !== null"
                   :content="client.trusted_authorities || ''"
                   @codeUpdate="setTrustedAuthorities"
                 />
@@ -362,14 +363,20 @@ export default {
         1
       )
     },
+    addTrustedHost () {
+      this.client.trusted_hosts.push({})
+    },
+    deleteTrustedHost (trustedHost) {
+      this.client.trusted_hosts.splice(
+        this.client.trusted_hosts.indexOf(trustedHost),
+        1
+      )
+    },
     setIdentityProvider (identityProvider) {
       this.client.identity_provider = { model: identityProvider }
     },
     setTrustedAuthorities (trustedAuthorities) {
       this.client.trusted_authorities = trustedAuthorities
-    },
-    toggleTrustedAuthorities (event) {
-      this.client.trusted_authorities = event.target.checked ? '' : null
     },
     addScope () {
       this.client.authorized_scopes.push({ model: new Scope() })

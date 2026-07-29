@@ -32,7 +32,8 @@ const labels = {
   'password_hashing_opts': 'Password hashing options',
   'redirect_uris': 'Redirect URIs',
   'refresh_token_ttl': 'Refresh token TTL',
-  'resource': 'Resource'
+  'resource': 'Resource',
+  'trusted_hosts': 'Trusted hosts'
 }
 
 export default {
