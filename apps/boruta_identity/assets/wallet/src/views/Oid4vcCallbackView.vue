@@ -64,6 +64,8 @@
         v-if="credentials.length"
         :credentials="credentials"
         delete-label="Unselect"
+        :show-claim-checkboxes="true"
+        :submitted-credentials="credentials"
         @deleteCredential="deleteCredential"
         />
       <div class="ui segment">
