@@ -24,7 +24,7 @@ defmodule BorutaAuth.MixProject do
 
   defp deps do
     [
-      {:boruta, git: "git@github.com:malach-it/boruta_auth-ghsa-5q9h-vf5j-fr2g.git", branch: "trusted-authorities"},
+      {:boruta, git: "https://github.com/malach-it/boruta_auth.git"},
       {:logger_file_backend, "~> 0.0.13"},
       {:nebulex, "~> 3.0", override: true},
       {:nebulex_distributed, "~> 3.0"},
