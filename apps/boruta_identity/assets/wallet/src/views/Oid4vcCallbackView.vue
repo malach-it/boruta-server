@@ -198,7 +198,7 @@ export default defineComponent({
   },
   computed: {
     selectedPresentationDefinition () {
-      if (!this.includePresentationDefinition) return null
+      if (!this.includePresentationDefinition) return {}
 
       return {
         id: 'wallet-selected-claims',
