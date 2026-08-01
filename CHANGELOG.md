@@ -4,6 +4,22 @@
 
 ## [Unreleased]
 
+### Added
+
+- [gateway] upstreams can use HTTP Basic authentication
+- [admin] clients can configure trusted hosts and trusted authorities
+
+### Changed
+
+- [admin] request and business event dashboards default to the last hour with minute-scale graphs
+- [admin] example verifiable credential configuration no longer restricts issuance by scope
+
+### Security
+
+- [auth] update the Boruta dependency to reject expired JWT client assertions ([CVE-2026-53431](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-xjv8-vmh5-xhf6))
+- [auth] update the Boruta dependency to prevent dynamic registration from creating over-privileged clients ([CVE-2026-65635](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-w869-fcf2-68vp))
+- [auth] update the Boruta dependency to prevent SSRF through remote URI fetching ([CVE-2026-54885](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-5q9h-vf5j-fr2g))
+
 ## [0.10.5] - 2026-06-24
 
 ### Added
