@@ -33,7 +33,7 @@
       </div>
       <router-link to="/" class="ui large fluid blue button">Back</router-link>
     </div>
-    <div v-if="mode == 'oid4vp'">
+    <div v-if="mode == 'oid4vp' && !error">
       <div class="credential-password" v-if="credentialPasswordEventKey">
         <div class="ui center aligned segment">
           <h2>Unlock credentials</h2>
@@ -53,7 +53,7 @@
           </div>
         </div>
       </div>
-      <div v-for="input_descriptor of presentation_definition.input_descriptors">
+      <div v-for="input_descriptor of presentation_definition?.input_descriptors">
         <div v-for="field of input_descriptor.constraints.fields">
           <p :key="field.path" v-if="field.id" class="ui purpose segment">
             <strong>{{ field.id }}</strong> {{ field.purpose }}
@@ -198,7 +198,7 @@ export default defineComponent({
   },
   computed: {
     selectedPresentationDefinition () {
-      if (!this.includePresentationDefinition) return {}
+      if (!this.includePresentationDefinition || !this.selectedCredentialClaims.length) return null
 
       return {
         id: 'wallet-selected-claims',
@@ -245,6 +245,15 @@ export default defineComponent({
 
         this.client = client
         client.parseVerifiablePresentationAuthorization(window.location).then((presentation) => {
+          const presentationDefinition = presentation.presentation_definition
+
+          if (!presentationDefinition || !Array.isArray(presentationDefinition.input_descriptors) || !presentationDefinition.input_descriptors.length) {
+            throw {
+              error: 'invalid_request',
+              error_description: 'Presentation definition must contain at least one input descriptor.'
+            }
+          }
+
           this.presentation = presentation
 
           eventHandler.listen('extract_key-request', this.presentation.id, () => {
@@ -261,7 +270,7 @@ export default defineComponent({
             this.credentialPasswordPurpose = 'presentation'
           })
 
-          this.presentation_definition = presentation.presentation_definition
+          this.presentation_definition = presentationDefinition
 
           return presentation
         }).then(this.client.generatePresentation.bind(this.client))
