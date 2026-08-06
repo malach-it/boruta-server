@@ -131,7 +131,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_id" => kid,
           "response_type" => Enum.join(response_types, " "),
           "client_metadata" => "{}",
-          "scope" => response.code.requested_scope,
+          "scope" => next_authorize_scope(response.code),
           "state" => response.code.state,
           "code" => response.code.value,
           "redirect_uri" => response.redirect_uri
@@ -155,10 +155,12 @@ defmodule BorutaWeb.Oauth.TokenController do
       "client_id" => kid,
       "response_type" => response.code.response_type,
       "client_metadata" => "{}",
-      "scope" => response.code.requested_scope,
+      "scope" => next_authorize_scope(response.code),
       "state" => response.code.state,
       "code" => response.code.value,
-      "redirect_uri" => response.redirect_uri
+      "redirect_uri" => response.redirect_uri,
+      "presentation_definition" =>
+        encode_presentation_definition(response.presentation_definition)
     }
 
     redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
@@ -192,10 +194,12 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_id" => kid,
           "response_type" => Enum.join(response_types, " "),
           "client_metadata" => "{}",
-          "scope" => response.code.requested_scope,
+          "scope" => next_authorize_scope(response.code),
           "state" => response.code.state,
           "code" => response.code.value,
-          "redirect_uri" => response.redirect_uri
+          "redirect_uri" => response.redirect_uri,
+          "presentation_definition" =>
+            encode_presentation_definition(response.presentation_definition)
         }
 
         redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
@@ -203,5 +207,21 @@ defmodule BorutaWeb.Oauth.TokenController do
         PresentationServer.authenticated(code.value, redirect_uri)
         redirect(conn, external: redirect_uri)
     end
+  end
+
+  defp encode_presentation_definition(nil), do: nil
+
+  defp encode_presentation_definition(presentation_definition)
+       when is_binary(presentation_definition),
+       do: presentation_definition
+
+  defp encode_presentation_definition(presentation_definition),
+    do: Jason.encode!(presentation_definition)
+
+  defp next_authorize_scope(%{scope: scope, requested_scope: requested_scope}) do
+    [scope, requested_scope]
+    |> Enum.flat_map(&Boruta.Oauth.Scope.split/1)
+    |> Enum.uniq()
+    |> Enum.join(" ")
   end
 end

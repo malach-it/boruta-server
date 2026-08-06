@@ -6,7 +6,7 @@
       @abort="abortDelete"
       @consent="deleteConsent"
     />
-    <div class="ui container" v-if="credentialsError">
+    <div class="ui segment container" v-if="credentialsError">
       <div class="ui error message">{{ credentialsError }}</div>
     </div>
     <div class="credential-password" v-if="credentialPasswordEventKey">
@@ -76,7 +76,7 @@ export default defineComponent({
     window.addEventListener('access_credential-request~' + CREDENTIALS_KEY, this.credentialPasswordRequestHandler)
   },
   mounted () {
-    this.$store.commit('refreshCredentials')
+    this.$store.dispatch('refreshCredentials')
     this.qrScanner = new QrScanner(this.$refs.reader, result => {
       const url = new URL(result)
       this.qrScanner?.stop()
@@ -116,7 +116,7 @@ export default defineComponent({
           { detail: this.credentialPassword }
         ))
       } else {
-        this.$store.commit('refreshCredentials', this.credentialPassword)
+        this.$store.dispatch('refreshCredentials', this.credentialPassword)
       }
 
       this.credentialPasswordEventKey = null

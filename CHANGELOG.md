@@ -2,12 +2,15 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
-## [Unreleased]
+## [0.10.6-beta.1] - 2026-07-18
 
 ### Added
 
 - [gateway] upstreams can use HTTP Basic authentication
 - [admin] clients can configure trusted hosts and trusted authorities
+- [ssi] SD-JWT verifiable credential support
+- [ssi] wallet-initiated presentation definition management
+- [admin] example wallet-initiated verifiable presentation link
 
 ### Changed
 
@@ -19,6 +22,15 @@
 - [auth] update the Boruta dependency to reject expired JWT client assertions ([CVE-2026-53431](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-xjv8-vmh5-xhf6))
 - [auth] update the Boruta dependency to prevent dynamic registration from creating over-privileged clients ([CVE-2026-65635](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-w869-fcf2-68vp))
 - [auth] update the Boruta dependency to prevent SSRF through remote URI fetching ([CVE-2026-54885](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-5q9h-vf5j-fr2g))
+- [docs] documentation links and installation instructions are updated
+
+### Fixed
+
+- [auth] verifiable presentation authorization chains forward requested scopes and presentation definitions
+- [gateway] request logs omit query strings and fragments while forwarding the full request target
+- [wallet] ID tokens without selected credential claims omit empty presentation definitions
+- [wallet] credential insertion skips the redundant credential display password prompt
+- [wallet] credential issuance waits for credentials refresh before navigation
 
 ## [0.10.5] - 2026-06-24
 
