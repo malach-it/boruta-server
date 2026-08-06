@@ -28,6 +28,7 @@
 
 - [auth] verifiable presentation authorization chains forward requested scopes and presentation definitions
 - [gateway] request logs omit query strings and fragments while forwarding the full request target
+- [wallet] ID tokens without selected credential claims omit empty presentation definitions
 - [wallet] credential insertion skips the redundant credential display password prompt
 - [wallet] credential issuance waits for credentials refresh before navigation
 
