@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- [ssi] SD-JWT verifiable credential support
+- [ssi] wallet-initiated presentation definition management
+- [admin] example wallet-initiated verifiable presentation link
+
 ## [0.11.1] - 2026-08-16
 
 ### Added
@@ -59,6 +65,15 @@
 - [gateway] omit URL query and fragment details from request logs
 - [gateway] enforce strict request framing to prevent pipelined requests and request bodies from bypassing authorization
 - [gateway] bound request headers, idle connections, and TLS handshakes to prevent gateway acceptor exhaustion
+- [docs] documentation links and installation instructions are updated
+
+### Fixed
+
+- [auth] verifiable presentation authorization chains forward requested scopes and presentation definitions
+- [gateway] request logs omit query strings and fragments while forwarding the full request target
+- [wallet] ID tokens without selected credential claims omit empty presentation definitions
+- [wallet] credential insertion skips the redundant credential display password prompt
+- [wallet] credential issuance waits for credentials refresh before navigation
 
 ## [0.10.5] - 2026-06-24
 
