@@ -55,6 +55,7 @@ defmodule BorutaGateway.Kubernetes.IngressTest do
                uris: ["/v1"],
                strip_uri: true,
                authorize: false,
+               authorization_type: "oauth_bearer",
                required_scopes: %{},
                managed_id: "apps|api|api.example.com|/v1|api-service|https"
              }
@@ -84,6 +85,7 @@ defmodule BorutaGateway.Kubernetes.IngressTest do
           "namespace" => "apps",
           "annotations" => %{
             "boruta.patatoid.fr/authorize" => "true",
+            "boruta.patatoid.fr/authorization-type" => "http_basic",
             "boruta.patatoid.fr/required-scopes" => Jason.encode!(%{"GET" => ["api:read"]}),
             "boruta.patatoid.fr/error-content-type" => "application/problem+json",
             "boruta.patatoid.fr/forbidden-response" => ~s({"error":"forbidden"}),
@@ -126,6 +128,7 @@ defmodule BorutaGateway.Kubernetes.IngressTest do
     assert [
              %{
                authorize: true,
+               authorization_type: "http_basic",
                required_scopes: %{"GET" => ["api:read"]},
                error_content_type: "application/problem+json",
                forbidden_response: ~s({"error":"forbidden"}),

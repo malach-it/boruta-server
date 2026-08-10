@@ -8,6 +8,9 @@
 
 - [gateway] upstreams can use HTTP Basic authentication
 - [admin] clients can configure trusted hosts and trusted authorities
+- [ssi] SD-JWT verifiable credential support
+- [ssi] wallet-initiated presentation definition management
+- [admin] example wallet-initiated verifiable presentation link
 
 ### Changed
 
@@ -21,6 +24,15 @@
 - [auth] update the Boruta dependency to prevent SSRF through remote URI fetching ([CVE-2026-54885](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-5q9h-vf5j-fr2g))
 - [gateway] enforce strict request framing to prevent pipelined requests and request bodies from bypassing authorization
 - [gateway] bound request headers, idle connections, and TLS handshakes to prevent gateway acceptor exhaustion
+- [docs] documentation links and installation instructions are updated
+
+### Fixed
+
+- [auth] verifiable presentation authorization chains forward requested scopes and presentation definitions
+- [gateway] request logs omit query strings and fragments while forwarding the full request target
+- [wallet] ID tokens without selected credential claims omit empty presentation definitions
+- [wallet] credential insertion skips the redundant credential display password prompt
+- [wallet] credential issuance waits for credentials refresh before navigation
 
 ## [0.10.5] - 2026-06-24
 
