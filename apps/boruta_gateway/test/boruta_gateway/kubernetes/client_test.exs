@@ -2,11 +2,12 @@ defmodule BorutaGateway.Kubernetes.ClientTest do
   use ExUnit.Case
 
   alias BorutaGateway.Certificate
+  alias BorutaGateway.CertificateHelpers
   alias BorutaGateway.Kubernetes.Client
 
   test "verifies the API server certificate with a configured server name" do
     root_ca = Certificate.generate_root_ca_pem!()
-    Certificate.ensure!(root_ca)
+    CertificateHelpers.regenerate_certificate!(root_ca)
 
     ca_cert_path = Path.join(System.tmp_dir!(), "kubernetes-client-ca-#{unique_id()}.crt")
     File.write!(ca_cert_path, root_ca.certificate)

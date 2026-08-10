@@ -2,6 +2,7 @@ defmodule BorutaGateway.HttpProxyTest do
   use ExUnit.Case
 
   alias BorutaGateway.Certificate
+  alias BorutaGateway.CertificateHelpers
   alias BorutaGateway.HttpProxy
   alias BorutaGateway.ServiceRegistry
   alias BorutaGateway.ServiceRegistry.Record
@@ -214,7 +215,7 @@ defmodule BorutaGateway.HttpProxyTest do
     start_service_registry(%{})
 
     root_ca = Certificate.generate_root_ca_pem!()
-    Certificate.ensure!(root_ca)
+    CertificateHelpers.regenerate_certificate!(root_ca)
 
     {:ok, upstream_listener} = listen()
     {:ok, {_address, upstream_port}} = :inet.sockname(upstream_listener)
@@ -367,7 +368,7 @@ defmodule BorutaGateway.HttpProxyTest do
     previous_sidecar_https_port = Application.fetch_env!(:boruta_gateway, :sidecar_https_port)
 
     root_ca = Certificate.generate_root_ca_pem!()
-    Certificate.ensure!(root_ca)
+    CertificateHelpers.regenerate_certificate!(root_ca)
     Certificate.load_trusted_certificates!([root_ca.certificate])
 
     {:ok, upstream_listener} = ssl_listen()
