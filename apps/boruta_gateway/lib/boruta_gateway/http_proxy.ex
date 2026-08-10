@@ -6,10 +6,13 @@ defmodule BorutaGateway.HttpProxy do
   use GenServer
 
   @connect_timeout 5_000
+  @default_idle_timeout 30_000
+  @default_max_request_header_bytes 65_536
   @default_http_port 80
   @default_https_port 443
 
   alias BorutaGateway.Certificate
+  alias BorutaGateway.HttpRequest
   alias BorutaGateway.ServiceRegistry
 
   defmodule Server do
@@ -34,7 +37,14 @@ defmodule BorutaGateway.HttpProxy do
       children =
         Enum.map(1..args[:num_acceptors], fn i ->
           Supervisor.child_spec(
-            {HttpProxy, [listen_socket: listen_socket, downstream_transport: transport]},
+            {HttpProxy,
+             [
+               listen_socket: listen_socket,
+               downstream_transport: transport,
+               idle_timeout: args[:idle_timeout],
+               handshake_timeout: args[:handshake_timeout],
+               max_request_header_bytes: args[:max_request_header_bytes]
+             ]},
             id: :"#{transport}_forward_proxy_acceptor_#{i}"
           )
         end)
@@ -94,7 +104,14 @@ defmodule BorutaGateway.HttpProxy do
       :method,
       :path,
       :remote_ip,
-      :response_status
+      :response_status,
+      :request,
+      :request_body_remaining,
+      :mode,
+      :idle_timeout,
+      :handshake_timeout,
+      :timeout_token,
+      :max_request_header_bytes
     ]
   end
 
@@ -110,7 +127,11 @@ defmodule BorutaGateway.HttpProxy do
     {:ok,
      %State{
        listen_socket: args[:listen_socket],
-       downstream_transport: args[:downstream_transport] || :tcp
+       downstream_transport: args[:downstream_transport] || :tcp,
+       idle_timeout: args[:idle_timeout] || @default_idle_timeout,
+       handshake_timeout: args[:handshake_timeout] || @default_idle_timeout,
+       max_request_header_bytes:
+         args[:max_request_header_bytes] || @default_max_request_header_bytes
      }}
   end
 
@@ -120,7 +141,11 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   def handle_info(:accept, state) do
-    case accept_downstream(state.listen_socket, state.downstream_transport) do
+    case accept_downstream(
+           state.listen_socket,
+           state.downstream_transport,
+           state.handshake_timeout
+         ) do
       {:ok, socket} ->
         state = %{
           state
@@ -132,7 +157,7 @@ defmodule BorutaGateway.HttpProxy do
 
         log_proxy(:info, state, "accepted", downstream_transport: state.downstream_transport)
 
-        {:noreply, state}
+        {:noreply, arm_idle_timeout(state)}
 
       {:error, error} ->
         log_accept_error(state, error)
@@ -157,49 +182,108 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   def handle_info({:tcp, socket, payload}, %State{socket: socket, upstream_socket: nil} = state) do
-    handle_downstream_payload(state, payload)
+    handle_initial_payload(state, payload)
   end
 
   def handle_info({:ssl, socket, payload}, %State{socket: socket, upstream_socket: nil} = state) do
-    handle_downstream_payload(state, payload)
+    handle_initial_payload(state, payload)
   end
 
-  def handle_info({:tcp, socket, payload}, %State{socket: socket} = state) do
+  def handle_info({:tcp, socket, payload}, %State{socket: socket, mode: :tunnel} = state) do
     send_upstream(state, payload)
     activate_downstream(socket, state.downstream_transport)
 
-    {:noreply, state}
+    {:noreply, arm_idle_timeout(state)}
   end
 
-  def handle_info({:ssl, socket, payload}, %State{socket: socket} = state) do
+  def handle_info({:ssl, socket, payload}, %State{socket: socket, mode: :tunnel} = state) do
     send_upstream(state, payload)
     activate_downstream(socket, state.downstream_transport)
 
-    {:noreply, state}
+    {:noreply, arm_idle_timeout(state)}
+  end
+
+  def handle_info({transport, socket, payload}, %State{socket: socket, mode: :request} = state)
+      when transport in [:tcp, :ssl] do
+    case HttpRequest.consume_body(payload, state.request_body_remaining) do
+      {:ok, payload, remaining} ->
+        send_upstream(state, payload)
+
+        if remaining > 0 do
+          activate_downstream(socket, state.downstream_transport)
+        end
+
+        {:noreply,
+         state
+         |> Map.put(:request_body_remaining, remaining)
+         |> arm_idle_timeout()}
+
+      {:error, :body_too_large} ->
+        {:noreply, close_exchange(state)}
+    end
   end
 
   def handle_info({:tcp, socket, payload}, %State{upstream_socket: socket} = state) do
     send_downstream(state, payload)
     :inet.setopts(socket, active: :once)
 
-    {:noreply, track_response_status(state, payload)}
+    {:noreply, state |> track_response_status(payload) |> arm_idle_timeout()}
   end
 
   def handle_info({:ssl, socket, payload}, %State{upstream_socket: socket} = state) do
     send_downstream(state, payload)
     :ssl.setopts(socket, active: :once)
 
-    {:noreply, track_response_status(state, payload)}
+    {:noreply, state |> track_response_status(payload) |> arm_idle_timeout()}
+  end
+
+  def handle_info(
+        {:idle_timeout, socket, token},
+        %State{socket: socket, timeout_token: token, upstream_socket: nil} = state
+      ) do
+    {:noreply, close_downstream(state)}
+  end
+
+  def handle_info(
+        {:idle_timeout, socket, token},
+        %State{socket: socket, timeout_token: token} = state
+      ) do
+    {:noreply, close_exchange(state)}
   end
 
   def handle_info(_info, state) do
     {:noreply, state}
   end
 
+  defp handle_initial_payload(%State{} = state, payload) do
+    payload = (state.request || "") <> payload
+
+    case HttpRequest.parse(payload, state.max_request_header_bytes) do
+      {:ok, request} ->
+        state = %{
+          state
+          | request: nil,
+            request_body_remaining: request.body_remaining,
+            mode: :request
+        }
+
+        handle_downstream_payload(arm_idle_timeout(state), request.payload)
+
+      {:more, request} ->
+        activate_downstream(state.socket, state.downstream_transport)
+        {:noreply, arm_idle_timeout(%{state | request: request})}
+
+      {:error, _reason} ->
+        log_proxy(:warning, state, "bad_request")
+        send_downstream(state, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
+        {:noreply, close_downstream(log_bad_request(state))}
+    end
+  end
+
   defp handle_downstream_payload(%State{} = state, payload) do
     case parse_request(payload) do
       {:connect, host, port, request} ->
-        connect_tunnel(track_request(state, request), host, port)
+        connect_tunnel(%{track_request(state, request) | mode: :tunnel}, host, port)
 
       {:request, scheme, host, port, payload, request} ->
         forward_request(track_request(state, request), scheme, host, port, payload)
@@ -277,7 +361,7 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   defp forward_request_direct(
-         %State{socket: socket} = state,
+         %State{} = state,
          "http",
          _host,
          _port,
@@ -300,10 +384,11 @@ defmodule BorutaGateway.HttpProxy do
         )
 
         :gen_tcp.send(upstream_socket, payload)
-        activate_downstream(socket, state.downstream_transport)
+        activate_request_body(state)
         :inet.setopts(upstream_socket, active: :once)
 
-        {:noreply, %{state | upstream_socket: upstream_socket, upstream_transport: :tcp}}
+        {:noreply,
+         %{state | upstream_socket: upstream_socket, upstream_transport: :tcp, mode: :request}}
 
       {:error, error} ->
         log_proxy(:warning, state, "direct_forward_request_failed",
@@ -319,7 +404,7 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   defp forward_request_direct(
-         %State{socket: socket} = state,
+         %State{} = state,
          "https",
          host,
          _port,
@@ -343,10 +428,11 @@ defmodule BorutaGateway.HttpProxy do
         )
 
         :ssl.send(upstream_socket, payload)
-        activate_downstream(socket, state.downstream_transport)
+        activate_request_body(state)
         :ssl.setopts(upstream_socket, active: :once)
 
-        {:noreply, %{state | upstream_socket: upstream_socket, upstream_transport: :ssl}}
+        {:noreply,
+         %{state | upstream_socket: upstream_socket, upstream_transport: :ssl, mode: :request}}
 
       {:error, error} ->
         log_proxy(:warning, state, "direct_forward_request_failed",
@@ -563,15 +649,15 @@ defmodule BorutaGateway.HttpProxy do
     [:binary, {:packet, :raw}, {:active, false}]
   end
 
-  defp accept_downstream(listen_socket, :ssl) do
+  defp accept_downstream(listen_socket, :ssl, handshake_timeout) do
     with {:ok, socket} <- :ssl.transport_accept(listen_socket),
-         {:ok, socket} <- :ssl.handshake(socket) do
+         {:ok, socket} <- :ssl.handshake(socket, handshake_timeout) do
       activate_downstream(socket, :ssl)
       {:ok, socket}
     end
   end
 
-  defp accept_downstream(listen_socket, :tcp) do
+  defp accept_downstream(listen_socket, :tcp, _handshake_timeout) do
     with {:ok, socket} <- :gen_tcp.accept(listen_socket) do
       activate_downstream(socket, :tcp)
       {:ok, socket}
@@ -580,6 +666,21 @@ defmodule BorutaGateway.HttpProxy do
 
   defp activate_downstream(socket, :ssl), do: :ssl.setopts(socket, active: :once)
   defp activate_downstream(socket, _transport), do: :inet.setopts(socket, active: :once)
+
+  defp activate_request_body(%State{request_body_remaining: remaining} = state)
+       when remaining > 0 do
+    activate_downstream(state.socket, state.downstream_transport)
+  end
+
+  defp activate_request_body(_state), do: :ok
+
+  defp arm_idle_timeout(%State{socket: nil} = state), do: state
+
+  defp arm_idle_timeout(%State{} = state) do
+    token = make_ref()
+    Process.send_after(self(), {:idle_timeout, state.socket, token}, state.idle_timeout)
+    %{state | timeout_token: token}
+  end
 
   defp send_downstream(%State{socket: socket, downstream_transport: :ssl}, payload) do
     :ssl.send(socket, payload)
@@ -641,7 +742,11 @@ defmodule BorutaGateway.HttpProxy do
         method: nil,
         path: nil,
         remote_ip: nil,
-        response_status: nil
+        response_status: nil,
+        request: nil,
+        request_body_remaining: 0,
+        mode: nil,
+        timeout_token: nil
     }
   end
 

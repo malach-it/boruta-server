@@ -14,10 +14,13 @@ defmodule BorutaGateway.HttpGateway do
   alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.Certificate
   alias BorutaGateway.HttpGateway.Authorization
+  alias BorutaGateway.HttpRequest
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
   @connect_timeout 5_000
+  @default_idle_timeout 30_000
+  @default_max_request_header_bytes 65_536
   @default_max_response_buffer_bytes 10_000_000
 
   defmodule Server do
@@ -47,7 +50,9 @@ defmodule BorutaGateway.HttpGateway do
             {HttpGateway,
              [
                listen_socket: listen_socket,
-               match_function: args[:match_function]
+               match_function: args[:match_function],
+               idle_timeout: args[:idle_timeout],
+               max_request_header_bytes: args[:max_request_header_bytes]
              ]},
             id: :"http_gateway_server_acceptor_#{i}"
           )
@@ -75,7 +80,11 @@ defmodule BorutaGateway.HttpGateway do
       :request,
       :response,
       :response_headers_sent,
-      :content_length
+      :content_length,
+      :request_body_remaining,
+      :idle_timeout,
+      :timeout_token,
+      :max_request_header_bytes
     ]
   end
 
@@ -92,7 +101,10 @@ defmodule BorutaGateway.HttpGateway do
     {:ok,
      %State{
        listen_socket: args[:listen_socket],
-       match_function: args[:match_function] || (&Upstreams.match/1)
+       match_function: args[:match_function] || (&Upstreams.match/1),
+       idle_timeout: args[:idle_timeout] || @default_idle_timeout,
+       max_request_header_bytes:
+         args[:max_request_header_bytes] || @default_max_request_header_bytes
      }}
   end
 
@@ -106,14 +118,12 @@ defmodule BorutaGateway.HttpGateway do
       {:ok, socket} ->
         :inet.setopts(socket, active: :once)
 
-        {:noreply,
-         %{
-           state
-           | socket: socket,
-             client_socket: nil,
-             response: nil,
-             response_headers_sent: false
-         }}
+        state =
+          state
+          |> reset_exchange(socket)
+          |> arm_idle_timeout()
+
+        {:noreply, state}
 
       {:error, _error} ->
         {:stop, :shutdown, state}
@@ -125,14 +135,12 @@ defmodule BorutaGateway.HttpGateway do
       {:ok, socket} ->
         :inet.setopts(socket, active: :once)
 
-        {:noreply,
-         %{
-           state
-           | socket: socket,
-             client_socket: nil,
-             response: nil,
-             response_headers_sent: false
-         }}
+        state =
+          state
+          |> reset_exchange(socket)
+          |> arm_idle_timeout()
+
+        {:noreply, state}
 
       {:error, _error} ->
         {:stop, :shutdown, state}
@@ -150,59 +158,88 @@ defmodule BorutaGateway.HttpGateway do
   def handle_info({:tcp, socket, payload}, %State{socket: socket, client_socket: nil} = state) do
     payload = buffered_request_payload(state, payload)
 
-    if request_headers_complete?(payload) do
-      handle_downstream_request(socket, payload, state)
-    else
-      :inet.setopts(socket, active: :once)
+    case HttpRequest.parse(payload, state.max_request_header_bytes) do
+      {:ok, request} ->
+        handle_downstream_request(socket, request, arm_idle_timeout(state))
 
-      {:noreply, %{state | request: payload}}
+      {:more, request} ->
+        :inet.setopts(socket, active: :once)
+        {:noreply, arm_idle_timeout(%{state | request: request})}
+
+      {:error, _reason} ->
+        :gen_tcp.send(socket, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
+        {:noreply, close_downstream(socket, state)}
     end
   end
 
   def handle_info({:tcp, socket, payload}, %State{client_socket: socket} = state) do
-    forward_response_payload(state, socket, payload, :tcp)
+    forward_response_payload(arm_idle_timeout(state), socket, payload, :tcp)
   end
 
   def handle_info({:ssl, socket, payload}, %State{client_socket: socket} = state) do
-    forward_response_payload(state, socket, payload, :ssl)
+    forward_response_payload(arm_idle_timeout(state), socket, payload, :ssl)
   end
 
   def handle_info({:tcp, socket, payload}, %State{socket: socket} = state) do
-    :inet.setopts(socket, active: :once)
+    case HttpRequest.consume_body(payload, state.request_body_remaining) do
+      {:ok, payload, remaining} ->
+        send_upstream(state.client_socket, payload)
 
-    case state.client_socket do
-      {:sslsocket, _, _} ->
-        :ssl.send(state.client_socket, payload)
+        if remaining > 0 do
+          :inet.setopts(socket, active: :once)
+        end
 
-      _ ->
-        :gen_tcp.send(state.client_socket, payload)
+        {:noreply,
+         state
+         |> Map.put(:request_body_remaining, remaining)
+         |> arm_idle_timeout()}
+
+      {:error, :body_too_large} ->
+        {:noreply,
+         close_exchange(state, state.client_socket, upstream_transport(state.client_socket))}
     end
+  end
 
-    {:noreply, state}
+  def handle_info(
+        {:idle_timeout, socket, token},
+        %State{socket: socket, timeout_token: token, client_socket: nil} = state
+      ) do
+    {:noreply, close_downstream(socket, state)}
+  end
+
+  def handle_info(
+        {:idle_timeout, socket, token},
+        %State{socket: socket, timeout_token: token} = state
+      ) do
+    {:noreply,
+     close_exchange(state, state.client_socket, upstream_transport(state.client_socket))}
   end
 
   def handle_info(_info, state) do
     {:noreply, state}
   end
 
-  defp handle_downstream_request(socket, payload, state) do
+  defp handle_downstream_request(socket, request, state) do
+    payload = request.header_payload
+    header = request.header
     start = :os.system_time(:microsecond)
-    request_id = request_id(payload)
-    state = %{state | remote_ip: request_remote_ip(payload, socket), request: nil}
+    request_id = request_id(header)
+    state = %{state | remote_ip: request_remote_ip(header, socket), request: nil}
 
-    case parse_request_line(payload) do
+    case parse_request_line(header) do
       {:ok, method, path} ->
         path_info = path_info(path)
 
-        with %Upstream{} = upstream <- match_upstream(state.match_function, payload, path_info),
+        with %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
              :ok <- rate_limit(socket, upstream),
-             {:ok, token} <- Authorization.authorize(payload, method, upstream) do
-          request = %{
-            start: start,
-            request_id: request_id,
-            method: method,
-            path: path
-          }
+             {:ok, token} <- Authorization.authorize(header, method, upstream) do
+          request =
+            Map.merge(request, %{
+              start: start,
+              request_id: request_id,
+              method: method,
+              path: path
+            })
 
           connect_upstream(socket, payload, state, upstream, token, request)
         else
@@ -279,10 +316,15 @@ defmodule BorutaGateway.HttpGateway do
                @connect_timeout
              ) do
           {:ok, client_socket} ->
-            :ok = :gen_tcp.send(client_socket, transform_header(payload, upstream, token))
+            :ok =
+              :gen_tcp.send(
+                client_socket,
+                transform_header(payload, upstream, token) <> request.body
+              )
+
             upstream_start = :os.system_time(:microsecond)
 
-            :inet.setopts(socket, active: :once)
+            activate_request_body(socket, request.body_remaining)
             :inet.setopts(client_socket, active: :once)
 
             {:noreply,
@@ -295,7 +337,8 @@ defmodule BorutaGateway.HttpGateway do
                  method: request.method,
                  path: request.path,
                  remote_ip: state.remote_ip,
-                 upstream: upstream
+                 upstream: upstream,
+                 request_body_remaining: request.body_remaining
              }}
 
           {:error, _error} ->
@@ -324,10 +367,16 @@ defmodule BorutaGateway.HttpGateway do
              ) do
           {:ok, client_socket} ->
             _connected = :os.system_time(:microsecond) - request.start
-            :ok = :ssl.send(client_socket, transform_header(payload, upstream, token))
+
+            :ok =
+              :ssl.send(
+                client_socket,
+                transform_header(payload, upstream, token) <> request.body
+              )
+
             upstream_start = :os.system_time(:microsecond)
 
-            :inet.setopts(socket, active: :once)
+            activate_request_body(socket, request.body_remaining)
             :ssl.setopts(client_socket, active: :once)
 
             {:noreply,
@@ -340,7 +389,8 @@ defmodule BorutaGateway.HttpGateway do
                  method: request.method,
                  path: request.path,
                  remote_ip: state.remote_ip,
-                 upstream: upstream
+                 upstream: upstream,
+                 request_body_remaining: request.body_remaining
              }}
 
           {:error, _error} ->
@@ -444,6 +494,38 @@ defmodule BorutaGateway.HttpGateway do
 
   defp mtls_options(%Upstream{}), do: []
 
+  defp activate_request_body(socket, remaining) when remaining > 0,
+    do: :inet.setopts(socket, active: :once)
+
+  defp activate_request_body(_socket, _remaining), do: :ok
+
+  defp send_upstream({:sslsocket, _, _} = socket, payload), do: :ssl.send(socket, payload)
+  defp send_upstream(socket, payload), do: :gen_tcp.send(socket, payload)
+
+  defp upstream_transport({:sslsocket, _, _}), do: :ssl
+  defp upstream_transport(_socket), do: :tcp
+
+  defp arm_idle_timeout(%State{socket: nil} = state), do: state
+
+  defp arm_idle_timeout(%State{} = state) do
+    token = make_ref()
+    Process.send_after(self(), {:idle_timeout, state.socket, token}, state.idle_timeout)
+    %{state | timeout_token: token}
+  end
+
+  defp reset_exchange(state, socket) do
+    %{
+      state
+      | socket: socket,
+        client_socket: nil,
+        request: nil,
+        request_body_remaining: 0,
+        response: nil,
+        response_headers_sent: false,
+        timeout_token: nil
+    }
+  end
+
   defp close_downstream(socket, state) do
     :gen_tcp.close(socket)
     send(self(), :accept)
@@ -460,8 +542,10 @@ defmodule BorutaGateway.HttpGateway do
         remote_ip: nil,
         upstream: nil,
         request: nil,
+        request_body_remaining: 0,
         response: nil,
-        response_headers_sent: false
+        response_headers_sent: false,
+        timeout_token: nil
     }
   end
 
@@ -483,8 +567,10 @@ defmodule BorutaGateway.HttpGateway do
         remote_ip: nil,
         upstream: nil,
         request: nil,
+        request_body_remaining: 0,
         response: nil,
-        response_headers_sent: false
+        response_headers_sent: false,
+        timeout_token: nil
     }
   end
 
@@ -506,8 +592,10 @@ defmodule BorutaGateway.HttpGateway do
         remote_ip: nil,
         upstream: nil,
         request: nil,
+        request_body_remaining: 0,
         response: nil,
-        response_headers_sent: false
+        response_headers_sent: false,
+        timeout_token: nil
     }
   end
 
@@ -561,8 +649,6 @@ defmodule BorutaGateway.HttpGateway do
 
   defp buffered_request_payload(%State{request: nil}, payload), do: payload
   defp buffered_request_payload(%State{request: request}, payload), do: request <> payload
-
-  defp request_headers_complete?(payload), do: String.contains?(payload, "\r\n\r\n")
 
   defp match_upstream(match_function, payload, path_info) do
     case :erlang.fun_info(match_function, :arity) do
