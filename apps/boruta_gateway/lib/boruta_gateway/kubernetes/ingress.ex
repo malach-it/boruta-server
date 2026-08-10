@@ -72,6 +72,7 @@ defmodule BorutaGateway.Kubernetes.Ingress do
         port: port,
         uris: [uri],
         authorize: false,
+        authorization_type: "oauth_bearer",
         required_scopes: %{},
         managed_id:
           managed_id(namespace, ingress_name, virtual_host, uri, service_name, service_port)
@@ -80,6 +81,11 @@ defmodule BorutaGateway.Kubernetes.Ingress do
       upstream =
         upstream
         |> put_boolean_annotation(annotations, :authorize, "boruta.patatoid.fr/authorize")
+        |> put_string_annotation(
+          annotations,
+          :authorization_type,
+          "boruta.patatoid.fr/authorization-type"
+        )
         |> put_map_annotation(annotations, :required_scopes, "boruta.patatoid.fr/required-scopes")
         |> put_string_annotation(
           annotations,

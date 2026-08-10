@@ -165,6 +165,7 @@ metadata:
 
 - `boruta.patatoid.fr/strip-uri`
 - `boruta.patatoid.fr/authorize`
+- `boruta.patatoid.fr/authorization-type`
 - `boruta.patatoid.fr/required-scopes`
 - `boruta.patatoid.fr/error-content-type`
 - `boruta.patatoid.fr/forbidden-response`
@@ -186,6 +187,10 @@ spec:
 authentication when the gateway connects to the upstream service. It requires an
 HTTPS backend, so set `boruta.patatoid.fr/backend-protocol: "HTTPS"` or
 `nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"` on the same ingress.
+
+`boruta.patatoid.fr/authorization-type` selects how an authorized upstream
+validates credentials. Supported values are `oauth_bearer` (the default) and
+`http_basic`.
 
 ## Local Access
 
