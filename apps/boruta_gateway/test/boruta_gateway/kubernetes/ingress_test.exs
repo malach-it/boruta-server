@@ -142,7 +142,7 @@ defmodule BorutaGateway.Kubernetes.IngressTest do
                rate_limit_count: 10,
                rate_limit_time_unit: "second",
                rate_limit_penality: 1000,
-               rate_limit_timeout: 10000,
+               rate_limit_timeout: 10_000,
                rate_limit_memory_length: 10
              }
            ] = Ingress.desired_upstreams(ingresses, [])
