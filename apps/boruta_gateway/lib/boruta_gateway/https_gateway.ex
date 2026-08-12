@@ -13,8 +13,8 @@ defmodule BorutaGateway.HttpsGateway do
 
   alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.Certificate
-  alias BorutaGateway.HttpsGateway.Authorization
   alias BorutaGateway.HttpRequest
+  alias BorutaGateway.HttpsGateway.Authorization
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
