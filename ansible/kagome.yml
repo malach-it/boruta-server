@@ -153,6 +153,14 @@
             annotations:
               boruta.patatoid.fr/mtls-enabled: "{{ kagome_mtls_enabled }}"
               boruta.patatoid.fr/backend-protocol: "https"
+              boruta.patatoid.fr/authorize: "true"
+              boruta.patatoid.fr/authorization-type: "http_basic"
+              boruta.patatoid.fr/required-scopes: "{\"GET\": [\"kagome\"]}"
+              boruta.patatoid.fr/rate-limit-enabled: "true"
+              boruta.patatoid.fr/rate-limit-count: "5"
+              boruta.patatoid.fr/rate-limit-time-unit: "second"
+              boruta.patatoid.fr/rate-limit-penality: "500"
+              boruta.patatoid.fr/rate-limit-memory-length: "50"
           spec:
             ingressClassName: "{{ boruta_ingress_class }}"
             rules:

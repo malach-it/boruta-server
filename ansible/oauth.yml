@@ -283,21 +283,22 @@
                 name: admin-tcp
                 port: "{{ boruta_admin_port | int }}"
 
-    - name: Create boruta admin ingress
+    - name: Create boruta admin website ingress
       kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
-            name: "{{ boruta_admin_name }}"
+            name: "{{ boruta_admin_name }}-panel"
             namespace: "{{ boruta_auth_namespace }}"
             labels:
               app: "{{ boruta_admin_name }}"
               identity_platform: "boruta"
             annotations:
               boruta.patatoid.fr/strip-uri: "false"
-              boruta.patatoid.fr/authorize: "false"
+              boruta.patatoid.fr/authorize: "true"
+              boruta.patatoid.fr/authorization-type: "http_basic"
               boruta.patatoid.fr/rate-limit-enabled: "true"
               boruta.patatoid.fr/rate-limit-count: "5"
               boruta.patatoid.fr/rate-limit-time-unit: "second"
@@ -310,6 +311,41 @@
                 http:
                   paths:
                     - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: "{{ boruta_admin_name }}"
+                          port:
+                            number: "{{ boruta_admin_port | int }}"
+
+    - name: Create boruta admin api ingress
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: "{{ boruta_admin_name }}-api"
+            namespace: "{{ boruta_auth_namespace }}"
+            labels:
+              app: "{{ boruta_admin_name }}"
+              identity_platform: "boruta"
+            annotations:
+              boruta.patatoid.fr/strip-uri: "false"
+              boruta.patatoid.fr/authorize: "false"
+              boruta.patatoid.fr/authorization-type: "oauth_bearer"
+              boruta.patatoid.fr/rate-limit-enabled: "true"
+              boruta.patatoid.fr/rate-limit-count: "5"
+              boruta.patatoid.fr/rate-limit-time-unit: "second"
+              boruta.patatoid.fr/rate-limit-penality: "500"
+              boruta.patatoid.fr/rate-limit-memory-length: "50"
+          spec:
+            ingressClassName: "{{ boruta_ingress_class }}"
+            rules:
+              - host: "{{ boruta_admin_host }}"
+                http:
+                  paths:
+                    - path: /api
                       pathType: Prefix
                       backend:
                         service:
