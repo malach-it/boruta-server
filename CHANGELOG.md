@@ -16,6 +16,7 @@
 
 ### Security
 
+- [infra] update the Plug dependency to address query and multipart parsing vulnerabilities and unsafe cookie attributes (CVE-2026-54892, CVE-2026-56813, CVE-2026-56814)
 - [auth] update the Boruta dependency to reject expired JWT client assertions ([CVE-2026-53431](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-xjv8-vmh5-xhf6))
 - [auth] update the Boruta dependency to prevent dynamic registration from creating over-privileged clients ([CVE-2026-65635](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-w869-fcf2-68vp))
 - [auth] update the Boruta dependency to prevent SSRF through remote URI fetching ([CVE-2026-54885](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-5q9h-vf5j-fr2g))
