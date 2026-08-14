@@ -11,6 +11,7 @@
 
 ### Changed
 
+- [infra] minimum supported Elixir version is 1.15
 - [admin] request and business event dashboards default to the last hour with minute-scale graphs
 - [admin] example verifiable credential configuration no longer restricts issuance by scope
 
