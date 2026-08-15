@@ -14,7 +14,19 @@
               <div class="ui list">
                 <div class="item" v-for="claim in credential.claims">
                   <div class="content">
-                    <a class="header">{{ claim.key }}</a>
+                    <div
+                      v-if="showClaimCheckboxes"
+                      class="ui disabled checkbox"
+                      :class="{ checked: isClaimPresentInSubmission(credential, claim) }"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="isClaimPresentInSubmission(credential, claim)"
+                        disabled
+                      />
+                      <label>{{ claim.key }}</label>
+                    </div>
+                    <a v-else class="header">{{ claim.key }}</a>
                     <div class="description">{{ claim.value }}</div>
                   </div>
                 </div>
@@ -156,7 +168,13 @@ const textDecoder = new TextDecoder()
 
 export default defineComponent({
   name: 'CredentialsView',
-  props: ['credentials', 'deleteLabel', 'exportable'],
+  props: [
+    'credentials',
+    'deleteLabel',
+    'exportable',
+    'showClaimCheckboxes',
+    'submittedCredentials'
+  ],
   data () {
     return {
       formattedCredentials: [],
@@ -171,6 +189,21 @@ export default defineComponent({
     }
   },
   methods: {
+    isClaimPresentInSubmission (credential, claim) {
+      return (this.submittedCredentials || []).some(submittedCredential => {
+        if (
+          submittedCredential.credentialId != credential.credentialId ||
+          submittedCredential.format != credential.format
+        ) {
+          return false
+        }
+
+        return (submittedCredential.claims || []).some(submittedClaim => {
+          return submittedClaim.key == claim.key &&
+            JSON.stringify(submittedClaim.value) == JSON.stringify(claim.value)
+        })
+      })
+    },
     showCredential (credential) {
       this.credential = credential
     },

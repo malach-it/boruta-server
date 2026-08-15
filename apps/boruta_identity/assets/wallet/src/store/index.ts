@@ -21,14 +21,11 @@ const store = createStore({
     }
   },
   mutations: {
-    async refreshCredentials(state, password) {
-      try {
-        state.credentialsError = null
-        state.credentials = await credentialsStore.credentials(password)
-      } catch (_error) {
-        state.credentials = []
-        state.credentialsError = 'Unable to unlock credentials.'
-      }
+    setCredentials(state, credentials) {
+      state.credentials = credentials
+    },
+    setCredentialsError(state, error) {
+      state.credentialsError = error
     },
     deleteCredential(state, credential) {
       credentialsStore.deleteCredential(credential.credential).then(credentials => {
@@ -62,6 +59,21 @@ const store = createStore({
     }
   },
   actions: {
+    async refreshCredentials({ state, commit }, password) {
+      if (!password && state.credentials.length) {
+        return false
+      }
+
+      try {
+        commit('setCredentialsError', null)
+        commit('setCredentials', await credentialsStore.credentials(password))
+
+        return true
+      } catch (_error) {
+        commit('setCredentials', [])
+        commit('setCredentialsError', 'Unable to unlock credentials.')
+      }
+    }
   },
   modules: {
   }
