@@ -22,6 +22,7 @@ defmodule BorutaAdmin.Logs do
 
   @max_file_size 100_000_000
   @max_log_lines 10_000
+  @log_attribute_regex ~r/([^\s=]+)=(?:"([^"]*)"|([^\s]+))/
   @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(\w+)/
   @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(( ([^\=]+)\=((\".+\")|([^\s]+)))+)/
 
@@ -32,6 +33,27 @@ defmodule BorutaAdmin.Logs do
           type :: atom(),
           query :: map()
         ) :: Enumerable.t()
+
+  @spec earliest_at(application :: atom(), type :: atom()) :: DateTime.t()
+  def earliest_at(application, type) do
+    earliest_date =
+      "./log/*_#{application}_#{type}.log"
+      |> Path.wildcard()
+      |> Enum.flat_map(fn path ->
+        path
+        |> Path.basename()
+        |> String.slice(0, 10)
+        |> Date.from_iso8601()
+        |> case do
+          {:ok, date} -> [date]
+          _ -> []
+        end
+      end)
+      |> Enum.min_by(&Date.to_gregorian_days/1, fn -> Date.utc_today() end)
+
+    DateTime.new!(earliest_date, ~T[00:00:00], "Etc/UTC")
+  end
+
   # credo:disable-for-next-line
   def read(start_at, end_at, application, :request = type, query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
@@ -142,6 +164,7 @@ defmodule BorutaAdmin.Logs do
         overflow: false,
         log_lines: [],
         log_count: 0,
+        events: [],
         counts: %{},
         business_event_counts: %{},
         gateway_times: %{},
@@ -151,10 +174,14 @@ defmodule BorutaAdmin.Logs do
       fn %{
            log_line: log_line,
            time: time,
+           request_id: request_id,
            label: label,
+           application: application,
            status: status,
            domain: domain,
            action: action,
+           event_domain: event_domain,
+           event_action: event_action,
            attributes: attributes
          },
          %{
@@ -162,6 +189,7 @@ defmodule BorutaAdmin.Logs do
            overflow: overflow,
            log_lines: log_lines,
            log_count: log_count,
+           events: events,
            counts: counts,
            business_event_counts: business_event_counts,
            gateway_times: gateway_times,
@@ -187,6 +215,26 @@ defmodule BorutaAdmin.Logs do
               false -> log_lines ++ [log_line]
             end,
           log_count: log_count + 1,
+          events:
+            case overflow do
+              true ->
+                events
+
+              false ->
+                [
+                  %{
+                    time: time,
+                    request_id: request_id,
+                    label: label,
+                    application: application,
+                    domain: event_domain,
+                    action: event_action,
+                    status: status,
+                    attributes: attributes
+                  }
+                  | events
+                ]
+            end,
           business_event_counts:
             Map.merge(business_event_counts, %{label => %{truncated_time => 1}}, fn _, a, b ->
               Map.merge(a, b, fn _, i, j -> i + j end)
@@ -335,6 +383,12 @@ defmodule BorutaAdmin.Logs do
           _ -> false
         end)
 
+      {:sub, value}, stream ->
+        Stream.filter(stream, fn
+          %{attributes: %{"sub" => ^value}} -> true
+          _ -> false
+        end)
+
       _, stream ->
         stream
     end)
@@ -363,6 +417,8 @@ defmodule BorutaAdmin.Logs do
             application: application,
             domain: String.slice("#{application} - #{domain}", 0..70),
             action: String.slice("#{application} - #{domain} #{action}", 0..70),
+            event_domain: domain,
+            event_action: action,
             status: status,
             attributes: parse_log_attributes(log_line)
           }
@@ -373,14 +429,16 @@ defmodule BorutaAdmin.Logs do
   defp parse_log_attributes(log_line) do
     case String.split(log_line, " - ", parts: 2) do
       [_prefix, status_and_attributes] ->
-        status_and_attributes
-        |> String.split(" ")
-        |> Enum.drop(1)
-        |> Enum.reduce(%{}, fn attribute, attributes ->
-          case String.split(attribute, "=", parts: 2) do
-            [key, value] -> Map.put(attributes, key, value)
-            _ -> attributes
-          end
+        @log_attribute_regex
+        |> Regex.scan(status_and_attributes)
+        |> Enum.reduce(%{}, fn [attribute, key | values], attributes ->
+          value =
+            case String.starts_with?(attribute, ~s{#{key}="}) do
+              true -> List.first(values) || ""
+              false -> List.last(values) || ""
+            end
+
+          Map.put(attributes, key, value)
         end)
 
       _ ->

@@ -73,6 +73,7 @@
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
       </div>
     </form>
+    <slot></slot>
   </div>
 </template>
 

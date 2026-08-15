@@ -3,7 +3,8 @@ import moment from 'moment'
 import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
-  errors: null
+  errors: null,
+  events: []
 }
 
 const assign = {
@@ -11,6 +12,7 @@ const assign = {
   overflow: function ({ overflow }) { this.overflow = overflow },
   log_lines: function ({ log_lines }) { this.log_lines = log_lines },
   log_count: function ({ log_count }) { this.log_count = log_count },
+  events: function ({ events }) { this.events = events },
   counts: function ({ counts }) { this.counts = counts },
   business_event_counts: function ({ business_event_counts }) { this.business_event_counts = business_event_counts },
   gateway_times: function ({ gateway_times }) { this.gateway_times = gateway_times },
@@ -41,13 +43,15 @@ LogStats.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-LogStats.all = function ({ startAt, endAt, application, domain, action }) {
+LogStats.all = function ({ startAt, endAt, application, domain, action, sub, eventsOnly }) {
   const params = new URLSearchParams()
-  params.append('start_at', moment.utc(startAt).toISOString())
+  params.append('start_at', startAt === 'all' ? 'all' : moment.utc(startAt).toISOString())
   params.append('end_at', moment.utc(endAt).toISOString())
   params.append('application', application)
   domain && params.append('query[domain]', domain)
   action && params.append('query[action]', action)
+  sub && params.append('query[sub]', sub)
+  eventsOnly && params.append('events_only', 'true')
   params.append('type', 'business')
 
   return this.api().get(`?${params.toString()}`).then(({ data }) => {

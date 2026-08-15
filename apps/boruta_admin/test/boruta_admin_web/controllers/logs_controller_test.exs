@@ -455,6 +455,90 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     test "filter logs"
 
     @tag authorized: ["logs:read:all"]
+    test "filters structured business events by user sub", %{conn: conn} do
+      File.mkdir("./log")
+      log_path = LogRotate.path(:boruta_web, :business, Date.utc_today())
+      File.rm(log_path)
+
+      log_time = DateTime.utc_now() |> DateTime.add(-60, :second) |> DateTime.truncate(:second)
+      target_sub = SecureRandom.uuid()
+      other_sub = SecureRandom.uuid()
+
+      target_log =
+        ~s{#{DateTime.to_iso8601(log_time)} request_id=target-request [info] boruta_web authorization authorize - success client_id=client sub=#{target_sub} type=code error_description="Invalid authorization request."}
+
+      other_log =
+        "#{DateTime.to_iso8601(log_time)} request_id=other-request [info] boruta_web authorization authorize - success client_id=client sub=#{other_sub} type=code"
+
+      File.write!(log_path, Enum.join([target_log, other_log], "\n") <> "\n")
+
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{
+          start_at: log_time |> DateTime.add(-1, :second) |> DateTime.to_iso8601(),
+          end_at: log_time |> DateTime.add(1, :second) |> DateTime.to_iso8601(),
+          application: "boruta_web",
+          type: "business",
+          events_only: "true",
+          query: %{sub: target_sub}
+        })
+
+      assert %{
+               "events" => [
+                 %{
+                   "label" => "boruta_web - authorization authorize",
+                   "request_id" => "target-request",
+                   "application" => "boruta_web",
+                   "domain" => "authorization",
+                   "action" => "authorize",
+                   "status" => "success",
+                   "time" => _time,
+                   "attributes" => %{
+                     "client_id" => "client",
+                     "error_description" => "Invalid authorization request.",
+                     "sub" => ^target_sub,
+                     "type" => "code"
+                   }
+                 }
+               ],
+               "log_count" => 1
+             } = response = json_response(conn, 200)
+
+      refute Map.has_key?(response, "log_lines")
+      refute inspect(response) =~ other_sub
+
+      File.rm!(log_path)
+    end
+
+    @tag authorized: ["logs:read:all"]
+    test "reads business events from the earliest available log", %{conn: conn} do
+      File.mkdir("./log")
+      log_path = LogRotate.path(:boruta_web, :business, Date.utc_today())
+      File.rm(log_path)
+
+      log_time = DateTime.utc_now() |> DateTime.add(-60, :second) |> DateTime.truncate(:second)
+
+      log =
+        "#{DateTime.to_iso8601(log_time)} request_id=all-request [info] boruta_web authorization authorize - success sub=user-sub"
+
+      File.write!(log_path, log <> "\n")
+
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{
+          start_at: "all",
+          end_at: log_time |> DateTime.add(1, :second) |> DateTime.to_iso8601(),
+          application: "boruta_web",
+          type: "business",
+          events_only: "true",
+          query: %{sub: "user-sub"}
+        })
+
+      assert %{"events" => [%{"request_id" => "all-request"}], "log_count" => 1} =
+               json_response(conn, 200)
+
+      File.rm!(log_path)
+    end
+
+    @tag authorized: ["logs:read:all"]
     test "exposes gateway times", %{conn: conn} do
       File.mkdir("./log")
       File.rm(LogRotate.path(:boruta_gateway, :business, Date.utc_today()))
