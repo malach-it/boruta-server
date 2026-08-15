@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-15
+
 ### Added
 
 - [gateway] upstreams can use HTTP Basic authentication
@@ -13,11 +15,16 @@
 ### Changed
 
 - [infra] minimum supported Elixir version is 1.15
+- [auth] API rate limiting defaults to 10 requests per second
 - [admin] request and business event dashboards default to the last hour with minute-scale graphs
 - [admin] example verifiable credential configuration no longer restricts issuance by scope
+- [admin] organization creation and dark theme layouts are improved
 
 ### Fixed
 
+- [admin] user pagination links navigate correctly
+- [admin] tables and upstream details display correctly in dark mode
+- [auth] Boruta dependency database migrations run correctly
 - [identity] identity provider updates invalidate cached client identity provider configuration
 
 ### Security
@@ -26,6 +33,8 @@
 - [auth] update the Boruta dependency to reject expired JWT client assertions ([CVE-2026-53431](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-xjv8-vmh5-xhf6))
 - [auth] update the Boruta dependency to prevent dynamic registration from creating over-privileged clients ([CVE-2026-65635](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-w869-fcf2-68vp))
 - [auth] update the Boruta dependency to prevent SSRF through remote URI fetching ([CVE-2026-54885](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-5q9h-vf5j-fr2g))
+- [admin] prevent request values from creating unbounded atoms
+- [gateway] omit URL query and fragment details from request logs
 - [gateway] enforce strict request framing to prevent pipelined requests and request bodies from bypassing authorization
 - [gateway] bound request headers, idle connections, and TLS handshakes to prevent gateway acceptor exhaustion
 
