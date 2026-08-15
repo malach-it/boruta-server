@@ -98,6 +98,8 @@ import RequestLogStats from '../../models/request-log-stats.model'
 Chart.register(...registerables)
 
 const MAX_LOG_LINES = 10000 // from backend limit
+const MAX_GRAPH_REQUEST_LABELS = 50
+const OTHER_REQUEST_LABEL = 'other'
 
 function defaultDateFilter() {
   return {
@@ -273,11 +275,18 @@ export default {
         this.requestLogs = log_lines
         this.logCount = log_count
         this.requestsFiltersData.labels = labels
+
+        const graphStats = limitGraphRequestLabels({
+          requestCounts: request_counts,
+          statusCodes: status_codes,
+          requestTimes: request_times
+        })
+
         this.requestsFiltersData.statusCodes = uniq(Object.values(status_codes).flatMap(Object.keys)).sort()
         this.requestsFiltersData.methods = methods
-        this.populateRequestCounts(request_counts)
-        this.populateStatusCodes(status_codes)
-        this.populateRequestTimes(request_times)
+        this.populateRequestCounts(graphStats.requestCounts)
+        this.populateStatusCodes(graphStats.statusCodes)
+        this.populateRequestTimes(graphStats.requestTimes)
         this.pending = false
       }).catch(error => this.error = error.message)
     },
@@ -403,6 +412,81 @@ function stringToColor(str) {
     colour += ('00' + value.toString(16)).substr(-2)
   }
   return colour
+}
+
+function limitGraphRequestLabels({ requestCounts, statusCodes, requestTimes }) {
+  const requestLabels = Object.keys(requestCounts)
+
+  if (requestLabels.length <= MAX_GRAPH_REQUEST_LABELS) {
+    return { requestCounts, statusCodes, requestTimes }
+  }
+
+  const displayedLabels = requestLabels
+    .sort((firstLabel, secondLabel) => {
+      const countDifference = total(requestCounts[secondLabel]) - total(requestCounts[firstLabel])
+      return countDifference || firstLabel.localeCompare(secondLabel)
+    })
+    .slice(0, MAX_GRAPH_REQUEST_LABELS - 1)
+
+  return {
+    requestCounts: groupSummedStats(requestCounts, displayedLabels),
+    statusCodes: groupSummedStats(statusCodes, displayedLabels),
+    requestTimes: groupRequestTimes(requestTimes, requestCounts, displayedLabels)
+  }
+}
+
+function groupSummedStats(stats, displayedLabels) {
+  const displayedLabelSet = new Set(displayedLabels)
+
+  return Object.entries(stats).reduce((groupedStats, [requestLabel, values]) => {
+    const graphLabel = displayedLabelSet.has(requestLabel) ? requestLabel : OTHER_REQUEST_LABEL
+    groupedStats[graphLabel] = groupedStats[graphLabel] || {}
+
+    Object.entries(values).forEach(([key, value]) => {
+      groupedStats[graphLabel][key] = (groupedStats[graphLabel][key] || 0) + value
+    })
+
+    return groupedStats
+  }, {})
+}
+
+function groupRequestTimes(requestTimes, requestCounts, displayedLabels) {
+  const displayedLabelSet = new Set(displayedLabels)
+
+  const groupedTimes = Object.entries(requestTimes).reduce(
+    (groupedStats, [requestLabel, values]) => {
+      const graphLabel = displayedLabelSet.has(requestLabel) ? requestLabel : OTHER_REQUEST_LABEL
+      groupedStats[graphLabel] = groupedStats[graphLabel] || {}
+
+      Object.entries(values).forEach(([timestamp, requestTime]) => {
+        const requestCount = requestCounts[requestLabel]?.[timestamp] || 1
+        const current = groupedStats[graphLabel][timestamp] || { total: 0, count: 0 }
+
+        groupedStats[graphLabel][timestamp] = {
+          total: current.total + requestTime * requestCount,
+          count: current.count + requestCount
+        }
+      })
+
+      return groupedStats
+    },
+    {}
+  )
+
+  return Object.entries(groupedTimes).reduce((averages, [requestLabel, values]) => {
+    averages[requestLabel] = Object.entries(values).reduce(
+      (requestLabelAverages, [timestamp, { total, count }]) => {
+        requestLabelAverages[timestamp] = total / count
+        return requestLabelAverages
+      },
+      {}
+    )
+    return averages
+  }, {})
+}
+
+function total(values) {
+  return Object.values(values).reduce((sum, value) => sum + value, 0)
 }
 </script>
 
