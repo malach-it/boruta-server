@@ -8,6 +8,7 @@
 
 - [gateway] upstreams can use HTTP Basic authentication
 - [admin] clients can configure trusted hosts and trusted authorities
+- [admin] request dashboard logs can be filtered by HTTP status and request method
 
 ### Changed
 

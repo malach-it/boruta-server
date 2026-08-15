@@ -15,6 +15,7 @@ const assign = {
   request_counts: function ({ request_counts }) { this.request_counts = request_counts },
   request_times: function ({ request_times }) { this.request_times = request_times },
   labels: function ({ labels }) { this.labels = labels },
+  methods: function ({ methods }) { this.methods = methods },
 }
 
 class LogStats {
@@ -39,12 +40,14 @@ LogStats.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-LogStats.all = function ({ startAt, endAt, application, label }) {
+LogStats.all = function ({ startAt, endAt, application, label, statusCode, method }) {
   const params = new URLSearchParams()
   params.append('start_at', moment.utc(startAt).toISOString())
   params.append('end_at', moment.utc(endAt).toISOString())
   params.append('application', application)
   label && params.append('query[label]', label)
+  statusCode && params.append('query[status_code]', statusCode)
+  method && params.append('query[method]', method)
   params.append('type', 'request')
 
   return this.api().get(`?${params.toString()}`).then(({ data }) => {

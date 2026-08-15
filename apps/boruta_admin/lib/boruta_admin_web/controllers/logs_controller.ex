@@ -23,7 +23,9 @@ defmodule BorutaAdminWeb.LogsController do
   @query_filters %{
     "action" => :action,
     "domain" => :domain,
-    "label" => :label
+    "label" => :label,
+    "method" => :method,
+    "status_code" => :status_code
   }
 
   action_fallback(BorutaAdminWeb.FallbackController)

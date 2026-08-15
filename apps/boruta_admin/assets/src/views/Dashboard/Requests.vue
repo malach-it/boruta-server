@@ -33,12 +33,28 @@
                   <option :value="application" v-for="application in requestsFiltersData.applications">{{ application }}</option>
                 </select>
               </div>
-              <div class="field">
-                <label>Request label</label>
-                <select @change="getLogs()" v-model="requestsFilter.label" :disabled="pending">
-                  <option value="">All request labels</option>
-                  <option :value="label" v-for="label in requestsFiltersData.labels">{{ label }}</option>
-                </select>
+              <div class="three fields">
+                <div class="field">
+                  <label>Request label</label>
+                  <select @change="getLogs()" v-model="requestsFilter.label" :disabled="pending">
+                    <option value="">All request labels</option>
+                    <option :value="label" v-for="label in requestsFiltersData.labels">{{ label }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>HTTP status</label>
+                  <select @change="getLogs()" v-model="requestsFilter.statusCode" :disabled="pending">
+                    <option value="">All HTTP statuses</option>
+                    <option :value="statusCode" v-for="statusCode in requestsFiltersData.statusCodes">{{ statusCode }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Request method</label>
+                  <select @change="getLogs()" v-model="requestsFilter.method" :disabled="pending">
+                    <option value="">All request methods</option>
+                    <option :value="method" v-for="method in requestsFiltersData.methods">{{ method }}</option>
+                  </select>
+                </div>
               </div>
             </div>
             <div class="six wide log-count column">
@@ -116,12 +132,16 @@ export default {
       graphRerenders: 0,
       requestsFiltersData: {
         applications: ['boruta_web', 'boruta_identity', 'boruta_gateway', 'boruta_admin'],
-        labels: []
+        labels: [],
+        statusCodes: [],
+        methods: []
       },
       dateFilter: dateFilterFromQuery(this.$route.query),
       requestsFilter: {
         application: this.$route.query.application || 'boruta_web',
-        label: this.$route.query.label || ''
+        label: this.$route.query.label || '',
+        statusCode: this.$route.query.statusCode || '',
+        method: this.$route.query.method || ''
       },
       statusCodes: {
         labels: [],
@@ -225,6 +245,8 @@ export default {
     },
     resetFilters() {
       this.requestsFiltersData.labels = []
+      this.requestsFiltersData.statusCodes = []
+      this.requestsFiltersData.methods = []
       if (!this.requestsFilter.label.match(this.requestsFilter.application)) {
         this.requestsFilter.label = ''
       }
@@ -243,13 +265,16 @@ export default {
         request_counts,
         status_codes,
         request_times,
-        labels
+        labels,
+        methods
       }) => {
         this.timeScaleUnit = time_scale_unit
         this.overflow = overflow
         this.requestLogs = log_lines
         this.logCount = log_count
         this.requestsFiltersData.labels = labels
+        this.requestsFiltersData.statusCodes = uniq(Object.values(status_codes).flatMap(Object.keys)).sort()
+        this.requestsFiltersData.methods = methods
         this.populateRequestCounts(request_counts)
         this.populateStatusCodes(status_codes)
         this.populateRequestTimes(request_times)
@@ -350,7 +375,9 @@ export default {
 
       this.requestsFilter = {
         application: to.query.application || 'boruta_web',
-        label: to.query.label || ''
+        label: to.query.label || '',
+        statusCode: to.query.statusCode || '',
+        method: to.query.method || ''
       }
 
       this.overflow = false

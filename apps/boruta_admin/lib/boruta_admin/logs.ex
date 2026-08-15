@@ -49,12 +49,14 @@ defmodule BorutaAdmin.Logs do
         status_codes: %{},
         request_counts: %{},
         request_times: %{},
-        labels: []
+        labels: [],
+        methods: []
       },
       fn %{
            label: label,
            log_line: log_line,
            time: time,
+           method: method,
            status_code: status_code,
            duration: duration,
            duration_unit: duration_unit
@@ -67,7 +69,8 @@ defmodule BorutaAdmin.Logs do
            status_codes: status_codes,
            request_counts: request_counts,
            request_times: request_times,
-           labels: labels
+           labels: labels,
+           methods: methods
          } ->
         overflow = overflow || log_count >= @max_log_lines
         truncated_time = DateTime.truncate(time, :second)
@@ -114,6 +117,11 @@ defmodule BorutaAdmin.Logs do
             case Enum.member?(labels, label) do
               false -> [label | labels] |> Enum.sort()
               true -> labels
+            end,
+          methods:
+            case Enum.member?(methods, method) do
+              false -> [method | methods] |> Enum.sort()
+              true -> methods
             end
         }
       end
@@ -302,7 +310,7 @@ defmodule BorutaAdmin.Logs do
       {_key, ""}, stream ->
         stream
 
-      {key, value}, stream when key in [:label] ->
+      {key, value}, stream when key in [:label, :method, :status_code] ->
         Stream.filter(stream, fn
           %{^key => ^value} -> true
           _ -> false

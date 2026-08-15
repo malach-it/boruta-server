@@ -114,8 +114,81 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     @tag :skip
     test "compute status codes"
 
-    @tag :skip
-    test "filter logs"
+    @tag authorized: ["logs:read:all"]
+    test "filters logs by HTTP status", %{conn: conn} do
+      File.mkdir("./log")
+      File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
+
+      log_time = DateTime.utc_now() |> DateTime.add(-60, :second) |> DateTime.truncate(:second)
+
+      log_lines =
+        Enum.map(@request_log_lines, fn log ->
+          "#{DateTime.to_iso8601(log_time)} #{log}"
+        end)
+
+      File.write!(
+        LogRotate.path(:boruta_web, :request, Date.utc_today()),
+        Enum.join(log_lines, "\n") <> "\n"
+      )
+
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{
+          start_at: log_time |> DateTime.add(-1, :second) |> DateTime.to_iso8601(),
+          end_at: log_time |> DateTime.add(1, :second) |> DateTime.to_iso8601(),
+          application: "boruta_web",
+          type: "request",
+          query: %{status_code: "401"}
+        })
+
+      expected_log_line = Enum.at(log_lines, 2)
+
+      assert %{
+               "log_lines" => [^expected_log_line],
+               "log_count" => 1,
+               "status_codes" => %{
+                 "boruta_web - POST /oauth/token" => %{"401" => 1}
+               }
+             } = json_response(conn, 200)
+
+      File.rm!(LogRotate.path(:boruta_web, :request, Date.utc_today()))
+    end
+
+    @tag authorized: ["logs:read:all"]
+    test "filters logs by request method", %{conn: conn} do
+      File.mkdir("./log")
+      File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
+
+      log_time = DateTime.utc_now() |> DateTime.add(-60, :second) |> DateTime.truncate(:second)
+
+      log_lines =
+        Enum.map(@request_log_lines, fn log ->
+          "#{DateTime.to_iso8601(log_time)} #{log}"
+        end)
+
+      File.write!(
+        LogRotate.path(:boruta_web, :request, Date.utc_today()),
+        Enum.join(log_lines, "\n") <> "\n"
+      )
+
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{
+          start_at: log_time |> DateTime.add(-1, :second) |> DateTime.to_iso8601(),
+          end_at: log_time |> DateTime.add(1, :second) |> DateTime.to_iso8601(),
+          application: "boruta_web",
+          type: "request",
+          query: %{method: "GET"}
+        })
+
+      expected_log_line = Enum.at(log_lines, 1)
+
+      assert %{
+               "log_lines" => [^expected_log_line],
+               "log_count" => 1,
+               "methods" => ["GET"]
+             } = json_response(conn, 200)
+
+      File.rm!(LogRotate.path(:boruta_web, :request, Date.utc_today()))
+    end
 
     @tag authorized: ["logs:read:all"]
     test "groups direct post requests by route in dashboard stats", %{conn: conn} do
