@@ -380,10 +380,44 @@
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
+            name: "{{ boruta_auth_name }}-unauthorized"
+            namespace: "{{ boruta_auth_namespace }}"
+            annotations:
+              boruta.patatoid.fr/strip-uri: "false"
+              boruta.patatoid.fr/authorize: "true"
+              boruta.patatoid.fr/authorization-type: "http_basic"
+              boruta.patatoid.fr/mtls-enabled: "false"
+              boruta.patatoid.fr/rate-limit-enabled: "true"
+              boruta.patatoid.fr/rate-limit-count: "5"
+              boruta.patatoid.fr/rate-limit-time-unit: "second"
+              boruta.patatoid.fr/rate-limit-penality: "500"
+              boruta.patatoid.fr/rate-limit-memory-length: "50"
+              boruta.patatoid.fr/rate-limit-timeout: "5000"
+          spec:
+            ingressClassName: "{{ boruta_ingress_class }}"
+            rules:
+              - host: "{{ boruta_oauth_host }}"
+                http:
+                  paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: "{{ boruta_auth_name }}"
+                          port:
+                            number: "{{ boruta_oauth_port | int }}"
+
+    - name: Create protected boruta auth ingress
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
             name: "{{ boruta_auth_name }}"
             namespace: "{{ boruta_auth_namespace }}"
             annotations:
-              boruta.patatoid.fr/strip-uri: "true"
+              boruta.patatoid.fr/strip-uri: "false"
               boruta.patatoid.fr/authorize: "false"
               boruta.patatoid.fr/mtls-enabled: "false"
               boruta.patatoid.fr/rate-limit-enabled: "true"
@@ -397,7 +431,35 @@
               - host: "{{ boruta_oauth_host }}"
                 http:
                   paths:
-                    - path: /
+                    - path: /.well-known
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: "{{ boruta_auth_name }}"
+                          port:
+                            number: "{{ boruta_oauth_port | int }}"
+                    - path: /accounts
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: "{{ boruta_auth_name }}"
+                          port:
+                            number: "{{ boruta_oauth_port | int }}"
+                    - path: /oauth
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: "{{ boruta_auth_name }}"
+                          port:
+                            number: "{{ boruta_oauth_port | int }}"
+                    - path: /openid
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: "{{ boruta_auth_name }}"
+                          port:
+                            number: "{{ boruta_oauth_port | int }}"
+                    - path: /did
                       pathType: Prefix
                       backend:
                         service:
