@@ -104,6 +104,29 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert identity_provider.name == "some updated name"
     end
 
+    test "update_identity_provider/2 invalidates cached identity providers by client ID" do
+      identity_provider = identity_provider_fixture(%{webauthnable: false})
+
+      %ClientIdentityProvider{client_id: client_id} =
+        insert(:client_identity_provider, identity_provider: identity_provider)
+
+      assert %IdentityProvider{webauthnable: false} =
+               IdentityProviders.get_identity_provider_by_client_id(client_id)
+
+      assert {:ok, %IdentityProvider{webauthnable: true}} =
+               IdentityProviders.update_identity_provider(identity_provider, %{
+                 webauthnable: true
+               })
+
+      assert {:ok, false} =
+               BorutaIdentity.Cache.has_key?(
+                 {IdentityProviders, :identity_provider_by_client_id, client_id}
+               )
+
+      assert %IdentityProvider{webauthnable: true} =
+               IdentityProviders.get_identity_provider_by_client_id(client_id)
+    end
+
     test "update_identity_provider/1 with valid data (with an existing template) creates a identity_provider" do
       identity_provider = identity_provider_fixture()
       template = insert(:template, identity_provider: identity_provider)

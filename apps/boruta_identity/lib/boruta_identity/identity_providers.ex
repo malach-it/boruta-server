@@ -47,7 +47,7 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def update_identity_provider(%IdentityProvider{} = identity_provider, attrs) do
-    clear_identity_provider_by_client_id_cache()
+    clear_identity_provider_by_client_id_cache(identity_provider)
     clear_identity_provider_templates_cache(identity_provider, attrs)
 
     identity_provider
@@ -56,7 +56,7 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def delete_identity_provider(%IdentityProvider{} = identity_provider) do
-    clear_identity_provider_by_client_id_cache()
+    clear_identity_provider_by_client_id_cache(identity_provider)
 
     identity_provider
     |> IdentityProvider.delete_changeset()
@@ -86,22 +86,19 @@ defmodule BorutaIdentity.IdentityProviders do
     result
   end
 
-  defp clear_identity_provider_by_client_id_cache(client_id) do
+  defp clear_identity_provider_by_client_id_cache(client_id) when is_binary(client_id) do
     :ok = BorutaIdentity.Cache.delete({__MODULE__, :identity_provider_by_client_id, client_id})
   end
 
-  defp clear_identity_provider_by_client_id_cache do
-    {:ok, _count} =
-      BorutaIdentity.Cache.delete_all(
-        query: [
-          {
-            {:entry, {BorutaIdentity.IdentityProviders, :identity_provider_by_client_id, :"$1"},
-             :"$2", :"$3", :"$4"},
-            [],
-            [true]
-          }
-        ]
-      )
+  defp clear_identity_provider_by_client_id_cache(%IdentityProvider{id: identity_provider_id}) do
+    ClientIdentityProvider
+    |> where(
+      [client_identity_provider],
+      client_identity_provider.identity_provider_id == ^identity_provider_id
+    )
+    |> select([client_identity_provider], client_identity_provider.client_id)
+    |> Repo.all()
+    |> Enum.each(&clear_identity_provider_by_client_id_cache/1)
 
     :ok
   end

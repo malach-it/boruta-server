@@ -15,6 +15,10 @@
 - [admin] request and business event dashboards default to the last hour with minute-scale graphs
 - [admin] example verifiable credential configuration no longer restricts issuance by scope
 
+### Fixed
+
+- [identity] identity provider updates invalidate cached client identity provider configuration
+
 ### Security
 
 - [infra] update the Plug dependency to address query and multipart parsing vulnerabilities and unsafe cookie attributes (CVE-2026-54892, CVE-2026-56813, CVE-2026-56814)
