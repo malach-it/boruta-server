@@ -26,6 +26,10 @@
                   <span class="header">Username</span>
                   <span class="description">{{ user.username }}</span>
                 </div>
+                <div class="item">
+                  <span class="header">Last login at</span>
+                  <span class="description">{{ formatDate(user.last_login_at) }}</span>
+                </div>
               </div>
             </div>
             <div class="ui segment" v-for="(attributes, federatedServerName) in user.federated_metadata">
@@ -75,6 +79,18 @@ export default {
     }
   },
   methods: {
+    formatDate(date) {
+      if (!date) return 'Never'
+
+      return new Date(date).toLocaleString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    },
     back() {
       this.$router.push({ name: 'user-list' })
     },

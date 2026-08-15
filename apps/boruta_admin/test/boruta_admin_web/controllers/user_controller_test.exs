@@ -109,6 +109,20 @@ defmodule BorutaAdminWeb.UserControllerTest do
     end
   end
 
+  describe "show user" do
+    @tag authorized: ["users:manage:all"]
+    test "renders the last login timestamp", %{conn: conn} do
+      last_login_at = DateTime.utc_now() |> DateTime.truncate(:second)
+      user = insert(:user, last_login_at: last_login_at)
+
+      conn = get(conn, Routes.admin_user_path(conn, :show, user))
+
+      assert %{"last_login_at" => rendered_last_login_at} = json_response(conn, 200)["data"]
+      assert {:ok, rendered_last_login_at, 0} = DateTime.from_iso8601(rendered_last_login_at)
+      assert DateTime.compare(rendered_last_login_at, last_login_at) == :eq
+    end
+  end
+
   describe "create user" do
     setup %{conn: conn} do
       {:ok, scope} = Admin.create_scope(%{name: "some:scope"})
