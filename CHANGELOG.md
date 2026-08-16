@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-08-16
+
 ### Added
 
 - [admin] user administration displays last login and detailed user activity history with selectable retention periods
