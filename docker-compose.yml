@@ -84,7 +84,7 @@ services:
         condition: service_healthy
 
   kagome_1:
-    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.4"
+    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.6"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
@@ -109,7 +109,7 @@ services:
       - "./docker/config/kagome-1.yml:/app/config/kagome-1.yml"
 
   kagome_2:
-    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.4"
+    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.6"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
