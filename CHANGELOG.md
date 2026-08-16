@@ -4,6 +4,23 @@
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-08-16
+
+### Added
+
+- [admin] administration API actions emit privacy-preserving business events with actor, resource, allowlisted change, and failure attributes
+- [admin] resource edit pages display resource activity history alongside configuration tabs
+
+### Changed
+
+- [admin] user activity includes administration events and refreshes when the activity tab opens
+- [admin] user searches accept exact user identifiers
+
+### Fixed
+
+- [admin] resource form submissions execute once
+- [infra] administration client seed enables the implicit and revoke grant types
+
 ## [0.11.1] - 2026-08-16
 
 ### Added
