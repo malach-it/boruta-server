@@ -389,6 +389,15 @@ defmodule BorutaAdmin.Logs do
           _ -> false
         end)
 
+      {:resource_id, value}, stream ->
+        Stream.filter(stream, fn
+          %{event_domain: event_domain, attributes: attributes} ->
+            Map.get(attributes, "#{event_domain}_id") == value
+
+          _ ->
+            false
+        end)
+
       _, stream ->
         stream
     end)

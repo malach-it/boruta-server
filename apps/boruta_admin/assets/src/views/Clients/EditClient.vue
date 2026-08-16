@@ -25,7 +25,11 @@
           </div>
         </div>
         <div class="twelve wide column">
-          <ClientForm :client="client" @submit="updateClient()" @back="back()" action="Update" />
+          <ClientForm :client="client" @submit="updateClient()" @back="back()" action="Update">
+            <template #activity>
+              <ResourceActivity :resource-id="client.id" />
+            </template>
+          </ClientForm>
         </div>
       </div>
     </div>
@@ -35,12 +39,14 @@
 <script>
 import Client from '../../models/client.model'
 import ClientForm from '../../components/Forms/ClientForm.vue'
+import ResourceActivity from '../../components/ResourceActivity.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'clients',
   components: {
     ClientForm,
+    ResourceActivity,
     Toaster
   },
   mounted () {

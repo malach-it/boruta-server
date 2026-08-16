@@ -28,7 +28,11 @@
           </div>
         </div>
         <div class="twelve wide column">
-          <IdentityProviderForm :identityProvider="identityProvider" @submit="updateIdentityProvider()" @back="back()" action="Update" />
+          <IdentityProviderForm :identityProvider="identityProvider" @submit="updateIdentityProvider()" @back="back()" action="Update">
+            <template #activity>
+              <ResourceActivity :resource-id="identityProvider.id" />
+            </template>
+          </IdentityProviderForm>
         </div>
       </div>
     </div>
@@ -38,12 +42,14 @@
 <script>
 import IdentityProvider from '../../models/identity-provider.model'
 import IdentityProviderForm from '../../components/Forms/IdentityProviderForm.vue'
+import ResourceActivity from '../../components/ResourceActivity.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'edit-identity-provider',
   components: {
     IdentityProviderForm,
+    ResourceActivity,
     Toaster
   },
   mounted () {

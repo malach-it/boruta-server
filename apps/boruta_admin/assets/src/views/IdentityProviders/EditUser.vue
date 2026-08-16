@@ -46,53 +46,55 @@
         </div>
         <div class="twelve wide column">
           <UserForm :user="user" @submit="updateUser()" @back="back()" action="Update">
-            <div class="ui user-activity segment">
-              <div class="activity-heading">
-                <h2>User activity <small>({{ activity.length }} events)</small></h2>
-                <div class="ui activity-range form">
-                  <div class="field">
-                    <label for="activity-range">Period</label>
-                    <select
-                      id="activity-range"
-                      v-model="activityRange"
-                      :disabled="activityPending"
-                      @change="getUserActivity()"
-                    >
-                      <option value="1">Last month</option>
-                      <option value="3">Last 3 months</option>
-                      <option value="6">Last 6 months</option>
-                      <option value="all">All</option>
-                    </select>
+            <template #activity>
+              <div class="user-activity">
+                <div class="activity-heading">
+                  <h2>User activity <small>({{ activity.length }} events)</small></h2>
+                  <div class="ui activity-range form">
+                    <div class="field">
+                      <label for="activity-range">Period</label>
+                      <select
+                        id="activity-range"
+                        v-model="activityRange"
+                        :disabled="activityPending"
+                        @change="getUserActivity()"
+                      >
+                        <option value="1">Last month</option>
+                        <option value="3">Last 3 months</option>
+                        <option value="6">Last 6 months</option>
+                        <option value="all">All</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="user-events">
-                <div class="ui active centered inline loader" v-if="activityPending"></div>
-                <div class="ui error message" v-else-if="activityError">
-                  {{ activityError }}
-                </div>
-                <div class="ui info message" v-else-if="!activity.length">
-                  No activity recorded during the selected period.
-                </div>
-                <template v-for="event in activity" :key="activityEventKey(event)">
-                  <div class="ui event segment">
-                    <div
-                      class="ui timestamp message"
-                      :class="{ 'success': event.status == 'success', 'error': event.status == 'failure' }"
-                      >
-                      {{ formatDate(event.time) }}
-                      <header>{{ event.label }} - {{ event.status }}</header>
-                    </div>
-                    <div class="ui four column stackable grid attribute list">
-                      <div class="column item" v-for="(value, key) in event.attributes">
-                        <span class="header">{{ key }}</span>
-                        <span class="description">{{ value }}</span>
+                <div class="user-events">
+                  <div class="ui active centered inline loader" v-if="activityPending"></div>
+                  <div class="ui error message" v-else-if="activityError">
+                    {{ activityError }}
+                  </div>
+                  <div class="ui info message" v-else-if="!activity.length">
+                    No activity recorded during the selected period.
+                  </div>
+                  <template v-for="event in activity" :key="activityEventKey(event)">
+                    <div class="ui event segment">
+                      <div
+                        class="ui timestamp message"
+                        :class="{ 'success': event.status == 'success', 'error': event.status == 'failure' }"
+                        >
+                        {{ formatDate(event.time) }}
+                        <header>{{ event.label }} - {{ event.status }}</header>
+                      </div>
+                      <div class="ui four column stackable grid attribute list">
+                        <div class="column item" v-for="(value, key) in event.attributes">
+                          <span class="header">{{ key }}</span>
+                          <span class="description">{{ value }}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </template>
+                  </template>
+                </div>
               </div>
-            </div>
+            </template>
           </UserForm>
         </div>
       </div>

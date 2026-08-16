@@ -5,6 +5,7 @@
       <div ref="tabularMenu" class="ui top attached stackable tabular menu">
         <a id="general-configuration" @click="openTab" class="active item">General configuration</a>
         <a id="authorization" @click="openTab" class="item">Authorization</a>
+        <a v-if="$slots.activity" id="activity" @click="openTab" class="item">Activity</a>
       </div>
       <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
         <h2>General configuration</h2>
@@ -69,11 +70,13 @@
         <h3>Authorized scopes</h3>
         <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
       </div>
-      <div class="actions">
+      <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
+        <slot v-if="activeTab === 'activity'" name="activity" />
+      </div>
+      <div class="actions" v-if="activeTab !== 'activity'">
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
       </div>
     </form>
-    <slot></slot>
   </div>
 </template>
 
@@ -99,6 +102,7 @@ export default {
   },
   data () {
     return {
+      activeTab: 'general-configuration',
       scopes: [],
       backends: []
     }
@@ -144,6 +148,7 @@ export default {
     },
     openTab (e) {
       const tab = e.target.id
+      this.activeTab = tab
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
         if (e.id == tab) {
           e.classList.add('active')

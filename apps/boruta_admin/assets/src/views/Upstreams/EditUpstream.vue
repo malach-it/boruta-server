@@ -24,7 +24,11 @@
           </div>
         </div>
         <div class="twelve wide column">
-          <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update" />
+          <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update">
+            <template #activity>
+              <ResourceActivity :resource-id="upstream.id" />
+            </template>
+          </UpstreamForm>
         </div>
       </div>
     </div>
@@ -35,6 +39,7 @@
 import Upstream from '../../models/upstream.model'
 import CurrentNodeUpstreams from '../../components/CurrentNodeUpstreams.vue'
 import UpstreamForm from '../../components/Forms/UpstreamForm.vue'
+import ResourceActivity from '../../components/ResourceActivity.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
@@ -42,6 +47,7 @@ export default {
   components: {
     CurrentNodeUpstreams,
     UpstreamForm,
+    ResourceActivity,
     Toaster
   },
   mounted () {

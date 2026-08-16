@@ -7,6 +7,7 @@
         <a id="uris" @click="openTab" class="item">URIs</a>
         <a id="authorization" @click="openTab" class="item">Authorization</a>
         <a id="security" @click="openTab" class="item">Security</a>
+        <a v-if="$slots.activity" id="activity" @click="openTab" class="item">Activity</a>
       </div>
       <div ref="form">
         <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
@@ -124,7 +125,7 @@
             </div>
           </div>
         </div>
-        <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+      <div ref="security" data-tab="security" class="ui bottom attached tab segment">
           <h3>Mutual TLS</h3>
           <div class="field" :class="{ 'error': upstream.errors?.mtls_enabled }">
             <div class="ui toggle checkbox">
@@ -165,7 +166,10 @@
           </div>
         </div>
       </div>
-      <div class="actions">
+      <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
+        <slot v-if="activeTab === 'activity'" name="activity" />
+      </div>
+      <div class="actions" v-if="activeTab !== 'activity'">
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
       </div>
     </form>
@@ -190,6 +194,7 @@ export default {
   },
   data () {
     return {
+      activeTab: 'general-configuration',
       nodeNames: [],
       forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms,
       rateLimitTimeUnits: Upstream.rateLimitTimeUnits
@@ -243,6 +248,7 @@ export default {
     },
     openTab (e) {
       const tab = e.target.id
+      this.activeTab = tab
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
         if (e.id == tab) {
           e.classList.add('active')

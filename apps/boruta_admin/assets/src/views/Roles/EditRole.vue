@@ -13,7 +13,9 @@
           </div>
         </div>
       </div>
-      <RoleForm :role="role" @submit="updateRole()" @back="back()" action="Update" />
+      <ResourceEditTabs :resource-id="role.id">
+        <RoleForm :role="role" @submit="updateRole()" @back="back()" action="Update" />
+      </ResourceEditTabs>
     </div>
   </div>
 </template>
@@ -21,12 +23,14 @@
 <script>
 import Role from '../../models/role.model'
 import RoleForm from '../../components/Forms/RoleForm.vue'
+import ResourceEditTabs from '../../components/ResourceEditTabs.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'roles',
   components: {
     RoleForm,
+    ResourceEditTabs,
     Toaster
   },
   mounted () {

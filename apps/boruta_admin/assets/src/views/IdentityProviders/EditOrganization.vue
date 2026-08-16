@@ -20,7 +20,9 @@
           </div>
         </div>
         <div class="twelve wide column">
-          <OrganizationForm :organization="organization" @submit="updateOrganization()" @back="back()" action="Update" />
+          <ResourceEditTabs :resource-id="organization.id">
+            <OrganizationForm :organization="organization" @submit="updateOrganization()" @back="back()" action="Update" />
+          </ResourceEditTabs>
         </div>
       </div>
     </div>
@@ -30,12 +32,14 @@
 <script>
 import Organization from '../../models/organization.model'
 import OrganizationForm from '../../components/Forms/OrganizationForm.vue'
+import ResourceEditTabs from '../../components/ResourceEditTabs.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'edit-organization',
   components: {
     OrganizationForm,
+    ResourceEditTabs,
     Toaster
   },
   mounted() {

@@ -28,7 +28,11 @@
           </div>
         </div>
         <div class="twelve wide column">
-          <BackendForm :backend="backend" @submit="updateBackend()" @back="back()" action="Update" />
+          <BackendForm :backend="backend" @submit="updateBackend()" @back="back()" action="Update">
+            <template #activity>
+              <ResourceActivity :resource-id="backend.id" />
+            </template>
+          </BackendForm>
         </div>
       </div>
     </div>
@@ -38,12 +42,14 @@
 <script>
 import Backend from '../../models/backend.model'
 import BackendForm from '../../components/Forms/BackendForm.vue'
+import ResourceActivity from '../../components/ResourceActivity.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'edit-backend',
   components: {
     BackendForm,
+    ResourceActivity,
     Toaster
   },
   mounted () {

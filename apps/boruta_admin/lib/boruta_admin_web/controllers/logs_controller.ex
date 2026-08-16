@@ -25,6 +25,7 @@ defmodule BorutaAdminWeb.LogsController do
     "domain" => :domain,
     "label" => :label,
     "method" => :method,
+    "resource_id" => :resource_id,
     "status_code" => :status_code,
     "sub" => :sub
   }

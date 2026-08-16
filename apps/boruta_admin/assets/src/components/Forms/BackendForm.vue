@@ -9,6 +9,7 @@
         <a id="identity-federation" @click="openTab" class="item">Identity federation</a>
         <a id="verifiable-credentials" @click="openTab" class="item">Verifiable credentials</a>
         <a id="user-metadata" @click="openTab" class="item">User metadata</a>
+        <a v-if="$slots.activity" id="activity" @click="openTab" class="item">Activity</a>
       </div>
       <div ref="form">
         <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
@@ -356,8 +357,11 @@
             <a class="ui blue fluid button" @click="addMetadataField()">Add a metadata field</a>
           </div>
         </div>
+        <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
+          <slot v-if="activeTab === 'activity'" name="activity" />
+        </div>
       </div>
-      <div class="actions">
+      <div class="actions" v-if="activeTab !== 'activity'">
         <button class="ui right floated violet button" type="submit">{{ action }}</button>
       </div>
     </form>
@@ -387,6 +391,7 @@ export default {
   },
   data () {
     return {
+      activeTab: 'general-configuration',
       passwordHashingAlgorithms: Backend.passwordHashingAlgorithms,
       ldapMasterPasswordVisible: false,
       smtpPasswordVisible: false,
@@ -502,6 +507,7 @@ export default {
     },
     openTab (e) {
       const tab = e.target.id
+      this.activeTab = tab
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
         if (e.id == tab) {
           e.classList.add('active')

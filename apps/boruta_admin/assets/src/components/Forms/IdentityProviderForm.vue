@@ -5,6 +5,7 @@
       <div ref="tabularMenu" class="ui top attached stackable tabular menu">
         <a id="general-configuration" @click="openTab" class="active item">General configuration</a>
         <a id="features" @click="openTab" class="item">Features</a>
+        <a v-if="$slots.activity" id="activity" @click="openTab" class="item">Activity</a>
       </div>
       <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
         <div class="field" :class="{ 'error': identityProvider.errors?.name }">
@@ -227,7 +228,10 @@
           </div>
         </section>
       </div>
-      <div class="actions">
+      <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
+        <slot v-if="activeTab === 'activity'" name="activity" />
+      </div>
+      <div class="actions" v-if="activeTab !== 'activity'">
         <button class="ui violet button" type="submit">{{ action }}</button>
       </div>
     </form>
@@ -247,6 +251,7 @@ export default {
   },
   data() {
     return {
+      activeTab: 'general-configuration',
       backends: []
     }
   },
@@ -282,6 +287,7 @@ export default {
     },
     openTab (e) {
       const tab = e.target.id
+      this.activeTab = tab
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
         if (e.id == tab) {
           e.classList.add('active')

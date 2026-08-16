@@ -510,6 +510,50 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     end
 
     @tag authorized: ["logs:read:all"]
+    test "filters admin business events by their resource identifier", %{conn: conn} do
+      File.mkdir("./log")
+      log_path = LogRotate.path(:boruta_admin, :business, Date.utc_today())
+      File.rm(log_path)
+
+      log_time = DateTime.utc_now() |> DateTime.add(-60, :second) |> DateTime.truncate(:second)
+      target_id = SecureRandom.uuid()
+      other_id = SecureRandom.uuid()
+
+      target_log =
+        "#{DateTime.to_iso8601(log_time)} request_id=target-request [info] boruta_admin client update - success client_id=#{target_id}"
+
+      other_log =
+        "#{DateTime.to_iso8601(log_time)} request_id=other-request [info] boruta_admin client update - success client_id=#{other_id} identity_provider_id=#{target_id}"
+
+      File.write!(log_path, Enum.join([target_log, other_log], "\n") <> "\n")
+
+      conn =
+        get(conn, Routes.admin_logs_path(conn, :index), %{
+          start_at: log_time |> DateTime.add(-1, :second) |> DateTime.to_iso8601(),
+          end_at: log_time |> DateTime.add(1, :second) |> DateTime.to_iso8601(),
+          application: "boruta_admin",
+          type: "business",
+          events_only: "true",
+          query: %{resource_id: target_id}
+        })
+
+      assert %{
+               "events" => [
+                 %{
+                   "request_id" => "target-request",
+                   "domain" => "client",
+                   "attributes" => %{"client_id" => ^target_id}
+                 }
+               ],
+               "log_count" => 1
+             } = response = json_response(conn, 200)
+
+      refute inspect(response) =~ other_id
+
+      File.rm!(log_path)
+    end
+
+    @tag authorized: ["logs:read:all"]
     test "reads business events from the earliest available log", %{conn: conn} do
       File.mkdir("./log")
       log_path = LogRotate.path(:boruta_web, :business, Date.utc_today())
