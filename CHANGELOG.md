@@ -7,6 +7,17 @@
 ### Added
 
 - [admin] user administration displays last login and detailed user activity history with selectable retention periods
+- [web] business event logs include direct post successes and failures and credential issuance
+
+### Changed
+
+- [admin] request dashboard graphs display the 50 most frequent labels and group the remainder as `Other`
+- [infra] development applications write to a shared, configurable log directory
+
+### Fixed
+
+- [admin] user activity correlates authorize, token, credential, and identity events consistently by user ID
+- [web] pre-authorized code credential offers emit authorize business events
 
 ## [0.11.0] - 2026-08-15
 
