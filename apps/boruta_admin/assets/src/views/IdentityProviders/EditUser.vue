@@ -253,6 +253,12 @@ export default {
         font-weight: bold;
       }
     }
+    @media (max-width: 768px) {
+      margin-top: 3.5em!important;
+      .timestamp {
+        top: -3em;
+      }
+    }
     .column {
       padding-bottom: 0!important;
     }
