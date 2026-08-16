@@ -13,11 +13,16 @@
 
 - [admin] request dashboard graphs display the 50 most frequent labels and group the remainder as `Other`
 - [infra] development applications write to a shared, configurable log directory
+- [infra] container images use Elixir 1.20, Erlang/OTP 29, and Alpine Linux, with OTP 29-compatible X509 and SMTP dependencies
 
 ### Fixed
 
 - [admin] user activity correlates authorize, token, credential, and identity events consistently by user ID
 - [web] pre-authorized code credential offers emit authorize business events
+
+### Security
+
+- [infra] target latest Elixir docker images mitigating supply chain issues
 
 ## [0.11.0] - 2026-08-15
 

@@ -1,4 +1,4 @@
-FROM elixir:1.18-otp-26-alpine AS builder
+FROM elixir:1.20-otp-29-alpine AS builder
 
 RUN apk --no-cache --update add build-base git
 
@@ -22,7 +22,7 @@ RUN mix compile
 WORKDIR /app
 RUN mix release boruta_gateway --force --overwrite
 
-FROM elixir:1.18-otp-26-alpine
+FROM elixir:1.20-otp-29-alpine
 
 RUN apk --no-cache --update add openssl
 
