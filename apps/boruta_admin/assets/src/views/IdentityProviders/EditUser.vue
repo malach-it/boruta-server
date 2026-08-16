@@ -153,7 +153,8 @@ export default {
 
       Promise.all([
         BusinessLogStats.all({ ...activityQuery, application: 'boruta_identity' }),
-        BusinessLogStats.all({ ...activityQuery, application: 'boruta_web' })
+        BusinessLogStats.all({ ...activityQuery, application: 'boruta_web' }),
+        BusinessLogStats.all({ ...activityQuery, application: 'boruta_admin' })
       ]).then((stats) => {
         const activity = stats
           .flatMap(({ events }) => events)

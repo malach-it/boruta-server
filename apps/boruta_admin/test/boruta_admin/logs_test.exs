@@ -5,6 +5,94 @@ defmodule BorutaAdmin.LogsTest do
   alias BorutaAuth.LogRotate
 
   describe "read/5" do
+    test "parses privacy-preserving business events without attributes" do
+      date = ~D[2099-01-01]
+      path = LogRotate.path(:boruta_admin, :business, date)
+
+      File.mkdir_p!("./log")
+
+      File.write!(
+        path,
+        "2099-01-01T00:00:01Z request_id=request-id [info] boruta_admin role update - success\n"
+      )
+
+      on_exit(fn -> File.rm(path) end)
+
+      stats =
+        Logs.read(
+          ~U[2099-01-01 00:00:00Z],
+          ~U[2099-01-02 00:00:00Z],
+          :boruta_admin,
+          :business,
+          %{}
+        )
+
+      assert [event] = stats.events
+
+      assert %{
+               time: ~U[2099-01-01 00:00:01Z],
+               label: "boruta_admin - role update",
+               status: "success",
+               attributes: %{}
+             } = event
+    end
+
+    test "decodes form-encoded admin business event attributes" do
+      date = ~D[2099-01-01]
+      path = LogRotate.path(:boruta_admin, :business, date)
+
+      File.mkdir_p!("./log")
+
+      File.write!(
+        path,
+        "2099-01-01T00:00:01Z request_id=request-id [info] boruta_admin client update - success supported_grant_types=authorization_code%2Crefresh_token template_type=login+template%0Aforged%3Dtrue\n"
+      )
+
+      on_exit(fn -> File.rm(path) end)
+
+      stats =
+        Logs.read(
+          ~U[2099-01-01 00:00:00Z],
+          ~U[2099-01-02 00:00:00Z],
+          :boruta_admin,
+          :business,
+          %{}
+        )
+
+      assert [event] = stats.events
+
+      assert event.attributes == %{
+               "supported_grant_types" => "authorization_code,refresh_token",
+               "template_type" => "login template\nforged=true"
+             }
+    end
+
+    test "does not decode attributes from other applications" do
+      date = ~D[2099-01-01]
+      path = LogRotate.path(:boruta_web, :business, date)
+
+      File.mkdir_p!("./log")
+
+      File.write!(
+        path,
+        "2099-01-01T00:00:01Z request_id=request-id [info] boruta_web authorization authorize - success value=literal%2Cvalue\n"
+      )
+
+      on_exit(fn -> File.rm(path) end)
+
+      stats =
+        Logs.read(
+          ~U[2099-01-01 00:00:00Z],
+          ~U[2099-01-02 00:00:00Z],
+          :boruta_web,
+          :business,
+          %{}
+        )
+
+      assert [event] = stats.events
+      assert event.attributes == %{"value" => "literal%2Cvalue"}
+    end
+
     test "rejects requests whose total log file size exceeds the limit" do
       first_date = ~D[2099-01-01]
       second_date = ~D[2099-01-02]

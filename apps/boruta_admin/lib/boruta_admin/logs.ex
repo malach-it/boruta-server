@@ -24,7 +24,7 @@ defmodule BorutaAdmin.Logs do
   @max_log_lines 10_000
   @log_attribute_regex ~r/([^\s=]+)=(?:"([^"]*)"|([^\s]+))/
   @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(\w+)/
-  @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(( ([^\=]+)\=((\".+\")|([^\s]+)))+)/
+  @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(?: ([^\=]+)=((\".+\")|([^\s]+)))*/
 
   @spec read(
           start_at :: DateTime.t(),
@@ -420,13 +420,13 @@ defmodule BorutaAdmin.Logs do
             event_domain: domain,
             event_action: action,
             status: status,
-            attributes: parse_log_attributes(log_line)
+            attributes: parse_log_attributes(log_line, application)
           }
         end
     end
   end
 
-  defp parse_log_attributes(log_line) do
+  defp parse_log_attributes(log_line, application) do
     case String.split(log_line, " - ", parts: 2) do
       [_prefix, status_and_attributes] ->
         @log_attribute_regex
@@ -438,13 +438,21 @@ defmodule BorutaAdmin.Logs do
               false -> List.last(values) || ""
             end
 
-          Map.put(attributes, key, value)
+          Map.put(attributes, key, decode_log_attribute(application, value))
         end)
 
       _ ->
         %{}
     end
   end
+
+  defp decode_log_attribute("boruta_admin", value) do
+    URI.decode_www_form(value)
+  rescue
+    ArgumentError -> value
+  end
+
+  defp decode_log_attribute(_application, value), do: value
 
   defp update_gateway_times(gateway_times, attributes, truncated_time) do
     [

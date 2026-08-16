@@ -157,7 +157,7 @@ export default {
       logCount: 0,
       graphRerenders: 0,
       businessEventFiltersData: {
-        applications: ['boruta_web', 'boruta_identity', 'boruta_gateway'],
+        applications: ['boruta_web', 'boruta_identity', 'boruta_admin', 'boruta_gateway'],
         domains: [],
         actions: []
       },
