@@ -1,5 +1,8 @@
 import Config
 
+config :boruta_auth, BorutaAuth.LogRotate,
+  log_directory: System.get_env("BORUTA_LOG_DIR", Path.expand("../log", __DIR__))
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, level: :debug
 

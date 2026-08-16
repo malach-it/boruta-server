@@ -1,5 +1,8 @@
 import Config
 
+config :boruta_auth, BorutaAuth.LogRotate,
+  log_directory: System.get_env("BORUTA_LOG_DIR", Path.expand("../../../log", __DIR__))
+
 config :boruta_admin, BorutaAdmin.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
