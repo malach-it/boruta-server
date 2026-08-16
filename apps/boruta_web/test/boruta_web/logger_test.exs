@@ -115,4 +115,29 @@ defmodule BorutaWeb.LoggerTest do
       assert log =~ ~s(error_description="Invalid direct post request.")
     end
   end
+
+  describe "credential_issue_success_handler/4" do
+    test "logs credential issuance without the credential" do
+      log =
+        capture_log([level: :info], fn ->
+          BorutaWeb.Logger.credential_issue_success_handler(
+            nil,
+            %{},
+            %{
+              client_id: "client-id",
+              sub: "user-id",
+              format: "jwt_vc",
+              credential: "credential"
+            },
+            nil
+          )
+        end)
+
+      assert log =~ "credential issue - success"
+      assert log =~ "client_id=client-id"
+      assert log =~ "sub=user-id"
+      assert log =~ "format=jwt_vc"
+      refute log =~ "credential\n"
+    end
+  end
 end

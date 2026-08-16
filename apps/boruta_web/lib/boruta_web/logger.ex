@@ -41,6 +41,11 @@ defmodule BorutaWeb.Logger do
         &__MODULE__.authorization_direct_post_failure_handler/4
       },
       {
+        :credential_issue_success,
+        [:credential, :issue, :success],
+        &__MODULE__.credential_issue_success_handler/4
+      },
+      {
         :authorization_introspect_success,
         [:authorization, :introspect, :success],
         &__MODULE__.authorization_introspect_success_handler/4
@@ -248,6 +253,28 @@ defmodule BorutaWeb.Logger do
       log_attribute("status", metadata[:status]),
       log_attribute("error", metadata[:error]),
       quoted_log_attribute("error_description", metadata[:error_description])
+    ]
+
+    Logger.log(:info, fn -> log_line end, type: :business)
+  end
+
+  def credential_issue_success_handler(
+        _,
+        _measurements,
+        %{client_id: client_id, sub: sub, format: format},
+        _
+      ) do
+    log_line = [
+      "boruta_web",
+      ?\s,
+      "credential",
+      ?\s,
+      "issue",
+      " - ",
+      "success",
+      log_attribute("client_id", client_id),
+      log_attribute("sub", sub),
+      log_attribute("format", format)
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)

@@ -16,6 +16,21 @@ defmodule BorutaWeb.CredentialControllerTest do
   end
 
   test "returns a credential with a valid credential type", %{conn: conn} do
+    test_pid = self()
+    handler_id = {__MODULE__, test_pid, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler_id,
+        [:credential, :issue, :success],
+        fn event, measurements, metadata, _config ->
+          send(test_pid, {event, measurements, metadata})
+        end,
+        nil
+      )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
+
     {_, public_jwk} = public_key_fixture() |> JOSE.JWK.from_pem() |> JOSE.JWK.to_map()
 
     signer =
@@ -69,6 +84,12 @@ defmodule BorutaWeb.CredentialControllerTest do
 
     assert %{"credential" => credential} = json_response(conn, 200)
     assert credential
+
+    assert_received {
+      [:credential, :issue, :success],
+      %{},
+      %{client_id: _client_id, sub: ^sub, format: "jwt_vc"}
+    }
   end
 
   @tag :skip
