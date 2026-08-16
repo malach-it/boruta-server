@@ -4,9 +4,12 @@
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-08-16
+
 ### Fixed
 
 - [infra] fix startup database migrations updating jose dependency
+- [infra] example Docker Compose services use the Kagome alpha.6 image
 
 ## [0.11.2] - 2026-08-16
 
