@@ -112,6 +112,21 @@ defmodule BorutaWeb.Integration.DirectPostTest do
     end
 
     test "oid4vp unauthorized with a bad vp_token", %{conn: conn} do
+      test_pid = self()
+      handler_id = {__MODULE__, test_pid}
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:authorization, :direct_post, :failure],
+          fn event, measurements, metadata, _config ->
+            send(test_pid, {event, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
       conn =
         post(
           conn,
@@ -123,6 +138,17 @@ defmodule BorutaWeb.Integration.DirectPostTest do
                "error" => "unauthorized",
                "error_description" => "{:error, :token_malformed}"
              }
+
+      assert_received {
+        [:authorization, :direct_post, :failure],
+        %{},
+        %{
+          code_id: "bad_code",
+          status: :unauthorized,
+          error: :unauthorized,
+          error_description: "{:error, :token_malformed}"
+        }
+      }
     end
 
     test "oid4vp authenticates with a valid vp_token", %{
@@ -130,6 +156,21 @@ defmodule BorutaWeb.Integration.DirectPostTest do
       code: code,
       vp_token: vp_token
     } do
+      test_pid = self()
+      handler_id = {__MODULE__, test_pid}
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:authorization, :direct_post, :success],
+          fn event, measurements, metadata, _config ->
+            send(test_pid, {event, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
       presentation_submission =
         Jason.encode!(%{
           "id" => "test",
@@ -161,6 +202,21 @@ defmodule BorutaWeb.Integration.DirectPostTest do
       assert redirected_to(conn) =~ ~r/#{code.redirect_uri}/
       assert redirected_to(conn) =~ ~r/code=#{code.value}/
       assert redirected_to(conn) =~ ~r/state=#{code.state}/
+
+      assert_received {
+        [:authorization, :direct_post, :success],
+        %{},
+        %{
+          client_id: client_id,
+          sub: sub,
+          code_id: code_id,
+          response_type: "vp_token"
+        }
+      }
+
+      assert client_id == code.client.id
+      assert sub == code.sub
+      assert code_id == code.id
     end
 
     @tag :skip
