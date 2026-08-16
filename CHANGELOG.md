@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- [infra] fix startup database migrations updating jose dependency
+
 ## [0.11.2] - 2026-08-16
 
 ### Added
