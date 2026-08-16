@@ -99,6 +99,7 @@ client =
          redirect_uris: [
            "#{System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4001")}/oauth-callback"
          ],
+         supported_grant_types: ["implicit", "revoke"],
          access_token_ttl: 3600,
          authorization_code_ttl: 60,
          public_revoke: true
