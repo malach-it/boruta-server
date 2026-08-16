@@ -223,11 +223,15 @@ export default {
   h2 {
     margin: 0;
   }
+  @media (max-width: 768px) {
+    flex-direction: column;
+    width: 100%;
+    .activity-range {
+      margin-left: auto;
+    }
+  }
 }
 
-.activity-range {
-  flex: 0 0 12em;
-}
 
 .user-events {
   position: relative;
