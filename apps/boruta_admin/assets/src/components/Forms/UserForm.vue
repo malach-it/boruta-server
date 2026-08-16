@@ -90,6 +90,7 @@ import FormErrors from './FormErrors.vue'
 export default {
   name: 'user-form',
   props: ['user', 'action'],
+  emits: ['submit', 'back'],
   components: {
     ScopesField,
     RolesField,
@@ -111,6 +112,9 @@ export default {
     })
   },
   methods: {
+    submit () {
+      this.$emit('submit')
+    },
     addScope () {
       this.user.authorized_scopes.push({ model: new Scope() })
     },

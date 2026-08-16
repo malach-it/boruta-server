@@ -24,8 +24,14 @@ import FormErrors from './FormErrors.vue'
 export default {
   name: 'organization-form',
   props: ['organization', 'action'],
+  emits: ['submit', 'back'],
   components: {
     FormErrors
+  },
+  methods: {
+    submit () {
+      this.$emit('submit')
+    }
   }
 }
 </script>

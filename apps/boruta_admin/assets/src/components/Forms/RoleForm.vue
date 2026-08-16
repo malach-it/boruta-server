@@ -25,6 +25,7 @@ import ScopesField from '../../components/Forms/ScopesField.vue'
 export default {
   name: 'role-form',
   props: ['role', 'action'],
+  emits: ['submit', 'back'],
   components: {
     FormErrors,
     ScopesField
@@ -32,6 +33,9 @@ export default {
   mounted () {
   },
   methods: {
+    submit () {
+      this.$emit('submit')
+    },
     back () {
       this.$emit('back')
     },

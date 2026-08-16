@@ -241,6 +241,7 @@ import FormErrors from './FormErrors.vue'
 export default {
   name: 'identity-provider-form',
   props: ['identityProvider', 'action'],
+  emits: ['submit', 'back'],
   components: {
     FormErrors
   },
@@ -276,6 +277,9 @@ export default {
     Backend.all().then(backends => this.backends = backends)
   },
   methods: {
+    submit () {
+      this.$emit('submit')
+    },
     openTab (e) {
       const tab = e.target.id
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {

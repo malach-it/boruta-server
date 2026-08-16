@@ -182,6 +182,7 @@ import TextEditor from '../../components/Forms/TextEditor.vue'
 export default {
   name: 'upstream-form',
   props: ['upstream', 'action'],
+  emits: ['submit', 'back'],
   components: {
     FormErrors,
     GatewayScopesField,
@@ -210,6 +211,9 @@ export default {
     }
   },
   methods: {
+    submit () {
+      this.$emit('submit')
+    },
     back () {
       this.$emit('back')
     },

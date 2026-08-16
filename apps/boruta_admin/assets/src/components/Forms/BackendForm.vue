@@ -377,6 +377,7 @@ import VerifiableCredentialClaim from '../../components/VerifiableCredentialClai
 export default {
   name: 'backend-form',
   props: ['backend', 'action'],
+  emits: ['submit', 'back'],
   components: {
     FormErrors,
     RolesField,
@@ -403,6 +404,9 @@ export default {
     })
   },
   methods: {
+    submit () {
+      this.$emit('submit')
+    },
     onAlgorithmChange () {
       this.backend.resetPasswordAlgorithmOpts()
       if (this.backend.isPersisted) {

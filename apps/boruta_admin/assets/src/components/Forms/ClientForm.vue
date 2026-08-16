@@ -315,6 +315,7 @@ import TextEditor from './TextEditor.vue'
 export default {
   name: 'client-form',
   props: ['client', 'action'],
+  emits: ['submit', 'back'],
   components: {
     ScopesField,
     IdentityProviderField,
