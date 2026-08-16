@@ -147,7 +147,7 @@ export default {
           ? 'all'
           : moment().utc().subtract(Number(this.activityRange), 'months'),
         endAt: moment().utc(),
-        sub: this.user.uid,
+        sub: this.user.id,
         eventsOnly: true
       }
 

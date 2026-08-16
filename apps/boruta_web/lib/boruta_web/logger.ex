@@ -110,7 +110,7 @@ defmodule BorutaWeb.Logger do
           response_mode: response_mode,
           expires_in: expires_in,
           client_id: client_id,
-          current_user: current_user
+          sub: sub
         },
         _
       ) do
@@ -123,7 +123,7 @@ defmodule BorutaWeb.Logger do
       " - ",
       "success",
       log_attribute("client_id", client_id),
-      log_attribute("sub", current_user && current_user.uid),
+      log_attribute("sub", sub),
       log_attribute("type", type),
       log_attribute("response_mode", response_mode),
       log_attribute("expires_in", expires_in)
@@ -153,7 +153,7 @@ defmodule BorutaWeb.Logger do
       " - ",
       "failure",
       log_attribute("client_id", client_id),
-      log_attribute("sub", current_user && current_user.uid),
+      log_attribute("sub", current_user && current_user.id),
       log_attribute("status", status),
       log_attribute("error", error),
       log_attribute("error_description", ~s{"#{error_description}"})

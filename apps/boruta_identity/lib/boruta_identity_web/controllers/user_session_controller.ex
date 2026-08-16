@@ -95,7 +95,8 @@ defmodule BorutaIdentityWeb.UserSessionController do
     conn
     |> put_flash(:warning, "You need to register a TOTP authenticator before continue.")
     |> redirect(
-      to: Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :new, %{request: query_params["request"]})
+      to:
+        Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :new, %{request: query_params["request"]})
     )
   end
 
@@ -118,7 +119,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
       [:authentication, :log_in, :success],
       %{},
       %{
-        sub: user.uid,
+        sub: user.id,
         backend: user.backend,
         client_id: client_id
       }
@@ -166,7 +167,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
       [:authentication, :log_out, :success],
       %{},
       %{
-        sub: user && user.uid,
+        sub: user && user.id,
         backend: user && user.backend,
         client_id: client_id
       }

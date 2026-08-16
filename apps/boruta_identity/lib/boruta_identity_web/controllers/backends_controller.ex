@@ -36,13 +36,18 @@ defmodule BorutaIdentityWeb.BackendsController do
     end
 
     conn
-    |> redirect(external: Backend.federated_login_url(backend, federated_server_name, params["request"]))
+    |> redirect(
+      external: Backend.federated_login_url(backend, federated_server_name, params["request"])
+    )
   end
 
-  def callback(conn, %{
-    "id" => backend_id,
-    "federated_server_name" => federated_server_name
-  } = params) do
+  def callback(
+        conn,
+        %{
+          "id" => backend_id,
+          "federated_server_name" => federated_server_name
+        } = params
+      ) do
     conn = assign(conn, :request, params["state"])
     client_id = client_id_from_request(conn)
     backend = IdentityProviders.get_backend!(backend_id)
@@ -65,7 +70,7 @@ defmodule BorutaIdentityWeb.BackendsController do
       [:authentication, :log_in, :success],
       %{},
       %{
-        sub: user.uid,
+        sub: user.id,
         backend: %{user.backend | type: Federated},
         client_id: client_id
       }

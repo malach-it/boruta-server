@@ -10,6 +10,30 @@ defmodule BorutaWeb.LoggerTest do
     on_exit(fn -> Logger.configure(level: previous_level) end)
   end
 
+  describe "authorization_authorize_success_handler/4" do
+    test "logs the correlated user id" do
+      log =
+        capture_log([level: :info], fn ->
+          BorutaWeb.Logger.authorization_authorize_success_handler(
+            nil,
+            %{},
+            %{
+              client_id: "client-id",
+              sub: "user-id",
+              type: "preauthorized_code",
+              response_mode: nil,
+              expires_in: 60
+            },
+            nil
+          )
+        end)
+
+      assert log =~ "authorization authorize - success"
+      assert log =~ "sub=user-id"
+      assert log =~ "type=preauthorized_code"
+    end
+  end
+
   describe "authorization_token_success_handler/4" do
     test "does not log bearer credentials" do
       log =

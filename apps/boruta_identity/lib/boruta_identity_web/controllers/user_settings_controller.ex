@@ -80,7 +80,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       %{},
       %{
         client_id: client_id,
-        sub: user.uid,
+        sub: user.id,
         backend: user.backend
       }
     )
@@ -103,7 +103,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       %{},
       %{
         client_id: client_id,
-        sub: user.uid,
+        sub: user.id,
         backend: user.backend,
         error: changeset
       }
@@ -132,7 +132,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       %{},
       %{
         client_id: client_id,
-        sub: user.uid,
+        sub: user.id,
         backend: user.backend,
         error: message
       }
@@ -180,7 +180,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
       [:authentication, :log_out, :success],
       %{},
       %{
-        sub: user && user.uid,
+        sub: user && user.id,
         backend: user && user.backend,
         client_id: client_id
       }

@@ -458,16 +458,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     client_id = query_params["client_id"]
     current_user = conn.assigns[:current_user]
 
-    :telemetry.execute(
-      [:authorization, :authorize, :success],
-      %{},
-      %{
-        type: response.type,
-        response_mode: response.response_mode,
-        expires_in: response.expires_in,
-        client_id: client_id,
-        current_user: current_user
-      }
+    emit_authorize_success_event(
+      response.type,
+      response.response_mode,
+      response.expires_in,
+      client_id,
+      current_user && current_user.id
     )
 
     conn
@@ -583,18 +579,22 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
         case Deliveries.deliver_tx_code(identity_provider.backend, current_user, tx_code) do
           :ok ->
+            conn =
+              conn
+              |> delete_session(:session_chosen)
+              |> put_layout(false)
+              |> put_view(TemplateView)
+              |> render("template.html",
+                template: template,
+                assigns: %{
+                  resource_owner: response.code.resource_owner,
+                  credential_offer: response,
+                  code: response.code.value
+                }
+              )
+
+            emit_credential_offer_authorize_success_event(response)
             conn
-            |> delete_session(:session_chosen)
-            |> put_layout(false)
-            |> put_view(TemplateView)
-            |> render("template.html",
-              template: template,
-              assigns: %{
-                resource_owner: response.code.resource_owner,
-                credential_offer: response,
-                code: response.code.value
-              }
-            )
 
           {:error, _error} ->
             {:error, :bad_request}
@@ -627,18 +627,22 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
             :credential_offer
           )
 
+        conn =
+          conn
+          |> delete_session(:session_chosen)
+          |> put_layout(false)
+          |> put_view(TemplateView)
+          |> render("template.html",
+            template: template,
+            assigns: %{
+              resource_owner: response.code.resource_owner,
+              credential_offer: response,
+              code: response.code.value
+            }
+          )
+
+        emit_credential_offer_authorize_success_event(response)
         conn
-        |> delete_session(:session_chosen)
-        |> put_layout(false)
-        |> put_view(TemplateView)
-        |> render("template.html",
-          template: template,
-          assigns: %{
-            resource_owner: response.code.resource_owner,
-            credential_offer: response,
-            code: response.code.value
-          }
-        )
 
       nil ->
         raise BorutaIdentity.Accounts.IdentityProviderError,
@@ -713,6 +717,39 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         error_description: error.error_description,
         client_id: client_id,
         current_user: current_user
+      }
+    )
+  end
+
+  defp emit_credential_offer_authorize_success_event(%CredentialOfferResponse{code: code}) do
+    expires_in =
+      case code.expires_at do
+        expires_at when is_integer(expires_at) ->
+          max(expires_at - System.system_time(:second), 0)
+
+        _expires_at ->
+          nil
+      end
+
+    emit_authorize_success_event(
+      code.type,
+      nil,
+      expires_in,
+      code.client && code.client.id,
+      code.sub
+    )
+  end
+
+  defp emit_authorize_success_event(type, response_mode, expires_in, client_id, sub) do
+    :telemetry.execute(
+      [:authorization, :authorize, :success],
+      %{},
+      %{
+        type: type,
+        response_mode: response_mode,
+        expires_in: expires_in,
+        client_id: client_id,
+        sub: sub
       }
     )
   end

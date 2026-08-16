@@ -61,7 +61,7 @@ defmodule BorutaIdentityWeb.UserConsentController do
       %{},
       %{
         client_id: client_id,
-        sub: current_user.uid,
+        sub: current_user.id,
         backend: current_user.backend,
         scopes: scopes
       }
@@ -82,7 +82,7 @@ defmodule BorutaIdentityWeb.UserConsentController do
       %{},
       %{
         client_id: client_id,
-        sub: current_user.uid,
+        sub: current_user.id,
         backend: current_user.backend,
         scopes: Ecto.Changeset.get_field(changeset, :scopes),
         message: message
