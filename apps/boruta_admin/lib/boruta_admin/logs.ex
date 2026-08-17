@@ -23,7 +23,7 @@ defmodule BorutaAdmin.Logs do
   @max_file_size 100_000_000
   @max_log_lines 10_000
   @log_attribute_regex ~r/([^\s=]+)=(?:"([^"]*)"|([^\s]+))/
-  @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(\w+)/
+  @request_log_regex ~r/\A(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(µs|ms)$/u
   @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(?: ([^\=]+)=((\".+\")|([^\s]+)))*/
 
   @spec read(

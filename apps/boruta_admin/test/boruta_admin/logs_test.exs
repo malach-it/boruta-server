@@ -93,6 +93,39 @@ defmodule BorutaAdmin.LogsTest do
       assert event.attributes == %{"value" => "literal%2Cvalue"}
     end
 
+    test "parses a microsecond request duration without engine-dependent backtracking" do
+      date = ~D[2099-01-03]
+      path = LogRotate.path(:boruta_web, :request, date)
+      time = ~U[2099-01-03 12:00:00Z]
+
+      File.mkdir_p!("./log")
+
+      File.write!(
+        path,
+        "2099-01-03T12:00:00.000Z request_id=request-id [info] boruta_web OPTIONS /oauth/revoke - sent 204 from 127.0.0.1 in 110µs\n"
+      )
+
+      on_exit(fn -> File.rm(path) end)
+
+      stats =
+        Logs.read(
+          ~U[2099-01-03 00:00:00Z],
+          ~U[2099-01-04 00:00:00Z],
+          :boruta_web,
+          :request,
+          %{}
+        )
+
+      assert stats.log_count == 1
+
+      assert_in_delta get_in(
+                        stats,
+                        [:request_times, "boruta_web - OPTIONS /oauth/revoke", time]
+                      ),
+                      0.11,
+                      0.000_001
+    end
+
     test "rejects requests whose total log file size exceeds the limit" do
       first_date = ~D[2099-01-01]
       second_date = ~D[2099-01-02]
