@@ -15,6 +15,7 @@ defmodule BorutaGateway.HttpGateway do
   alias BorutaGateway.Certificate
   alias BorutaGateway.HttpGateway.Authorization
   alias BorutaGateway.HttpRequest
+  alias BorutaGateway.NoiseCancelling
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -231,6 +232,7 @@ defmodule BorutaGateway.HttpGateway do
         path_info = path_info(path)
 
         with %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
+             :ok <- NoiseCancelling.check(upstream, method, path, state.remote_ip),
              :ok <- rate_limit(socket, upstream),
              {:ok, token} <- Authorization.authorize(header, method, upstream) do
           request =
@@ -254,6 +256,18 @@ defmodule BorutaGateway.HttpGateway do
             )
 
             log_exchange(state, start, request_id, method, path, nil, 404, :failure)
+
+            {:noreply, close_downstream(socket, state)}
+
+          {:noise, _prediction} ->
+            response = "No upstream has been found corresponding to the given request."
+
+            :gen_tcp.send(
+              socket,
+              "HTTP/1.1 404 Not Found\r\n" <>
+                "Content-Length: 62\r\n\r\n" <>
+                response
+            )
 
             {:noreply, close_downstream(socket, state)}
 

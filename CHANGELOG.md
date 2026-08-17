@@ -11,6 +11,7 @@
 - [gateway] Phi noise detection evaluates unmatched paths across the entire gateway
 - [gateway] Phi prediction accepts bounded recency-decayed request memory as context
 - [gateway] Phi memory can classify otherwise legal requests as contextual noise
+- [gateway] upstreams can train and apply noise cancellation from transient OpenAPI uploads while storing only the Phi binary
 
 ### Fixed
 
