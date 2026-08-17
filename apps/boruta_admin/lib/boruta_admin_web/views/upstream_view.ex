@@ -13,7 +13,7 @@ defmodule BorutaAdminWeb.UpstreamView do
   end
 
   def render("node_list.json", %{nodes: nodes}) do
-    %{data: nodes}
+    %{data: Enum.filter(nodes, &is_binary/1)}
   end
 
   def render("show.json", %{upstream: upstream}) do

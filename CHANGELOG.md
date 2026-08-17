@@ -8,6 +8,10 @@
 
 - [admin] current node upstream panel items link to their edit pages
 
+### Fixed
+
+- [admin] upstream node listing ignores failed cluster RPC responses
+
 ## [0.11.5] - 2026-08-17
 
 ### Fixed
