@@ -12,7 +12,11 @@ config :boruta, Boruta.Oauth,
 
 config :boruta_auth, BorutaAuth.Scheduler,
   jobs: [
-    {"@daily", {BorutaAuth.LogRotate, :rotate, []}}
+    [
+      schedule: "@daily",
+      task: {BorutaAuth.LogRotate, :rotate, []},
+      run_strategy: {Quantum.RunStrategy.All, :cluster}
+    ]
   ]
 
 config :boruta_auth, BorutaAuth.LogRotate,

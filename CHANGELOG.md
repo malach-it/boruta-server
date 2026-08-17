@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- [infra] daily log rotation reconfigures logger backends on every clustered node
 - [admin] request log parsing handles microsecond durations consistently with Erlang/OTP 29
 
 ## [0.11.3] - 2026-08-16
