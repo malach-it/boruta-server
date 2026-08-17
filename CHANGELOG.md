@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.11.4] - 2026-08-17
+
+### Fixed
+
+- [admin] request log parsing handles microsecond durations consistently with Erlang/OTP 29
+
 ## [0.11.3] - 2026-08-16
 
 ### Fixed
