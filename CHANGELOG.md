@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- [admin] current node upstream panel items link to their edit pages
+
 ## [0.11.5] - 2026-08-17
 
 ### Fixed

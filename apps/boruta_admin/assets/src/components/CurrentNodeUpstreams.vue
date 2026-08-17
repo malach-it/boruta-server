@@ -6,15 +6,14 @@
       {{ error }}
     </div>
     <div class="ui relaxed divided list" v-else-if="currentNodeUpstreams.length">
-      <div
+      <router-link
         class="item"
         v-for="currentUpstream in currentNodeUpstreams"
         :class="{ 'edited-upstream': isEditedUpstream(currentUpstream) }"
+        :to="{ name: 'edit-upstream', params: { upstreamId: currentUpstream.id } }"
         :key="currentUpstream.id">
         <div class="content">
-          <router-link
-            :to="{ name: 'edit-upstream', params: { upstreamId: currentUpstream.id } }"
-            class="header">{{ currentUpstream.baseUrl }}</router-link>
+          <div class="header">{{ currentUpstream.baseUrl }}</div>
           <div class="meta" v-if="currentUpstream.virtual_host">
             {{ currentUpstream.virtual_host }}
           </div>
@@ -24,7 +23,7 @@
             </span>
           </div>
         </div>
-      </div>
+      </router-link>
     </div>
     <div class="ui small message" v-else>
       No upstreams configured for this node.
