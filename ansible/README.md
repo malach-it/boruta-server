@@ -24,7 +24,7 @@ controller scenario is split between `ingress-controller.yml`, `oauth.yml`, and
 
 - a separate `kagome` namespace;
 - a Kagome static configuration `ConfigMap`;
-- a Kagome deployment and service;
+- a Kagome deployment with an OTP 29 Boruta Gateway sidecar, and a service;
 - an ingress handled by the Boruta ingress controller.
 
 The playbooks are intended for development and staging-style Kubernetes clusters.
@@ -59,7 +59,7 @@ To override variables at runtime:
 ```sh
 ansible-playbook -i ansible/hosts ansible/ingress-controller.yml \
   -e boruta_namespace=boruta-staging \
-  -e boruta_gateway_image=ghcr.io/malach-it/boruta-gateway:kubernetes-ingress-controller.alpha.7
+  -e boruta_gateway_image=ghcr.io/malach-it/boruta-gateway:kubernetes-ingress-controller.alpha.14
 ansible-playbook -i ansible/hosts ansible/oauth.yml \
   -e boruta_namespace=boruta-staging \
   -e boruta_oauth_host=auth.boruta.local
@@ -83,10 +83,10 @@ ansible-playbook -i ansible/hosts ansible/kagome.yml \
 | `boruta_oauth_host` | `auth.boruta.local` | Hostname used for the Boruta OAuth ingress and generated OAuth URLs. |
 | `boruta_oauth_port` | `8080` | Internal Boruta Auth HTTP port. |
 | `boruta_oauth_base_url` | `http://auth.boruta.local:30080` | Public base URL used by the Boruta Auth deployment. |
-| `boruta_gateway_image` | `ghcr.io/malach-it/boruta-gateway:kubernetes-ingress-controller.alpha.7` | Gateway image. |
-| `boruta_admin_image` | `ghcr.io/malach-it/boruta-admin:kubernetes-ingress-controller.alpha.7` | Image used by the configuration-loader job. |
-| `boruta_auth_image` | `ghcr.io/malach-it/boruta-auth:kubernetes-ingress-controller.alpha.7` | Image used by the Boruta Auth deployment. |
-| `boruta_kagome_image` | `ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.4` | Kagome image. |
+| `boruta_gateway_image` | `ghcr.io/malach-it/boruta-gateway:kubernetes-ingress-controller.alpha.14` | OTP 29 Gateway image, also used as Kagome's gateway sidecar. |
+| `boruta_admin_image` | `ghcr.io/malach-it/boruta-admin:0.11.5` | OTP 29 image used by the configuration-loader job. |
+| `boruta_auth_image` | `ghcr.io/malach-it/boruta-auth:0.11.5` | OTP 29 image used by the Boruta Auth deployment. |
+| `boruta_kagome_image` | `ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.6` | Kagome backend image; its bundled gateway is bypassed. |
 | `kagome_mtls_enabled` | `true` | Enables mTLS verification for the Kagome ingress/backend example. |
 | `boruta_ingress_http_node_port` | `30080` | NodePort for HTTP traffic. |
 | `boruta_ingress_https_node_port` | `30443` | NodePort for HTTPS traffic. |
