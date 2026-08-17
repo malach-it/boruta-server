@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- [gateway] native Phi model trains noise detection with degree-one and sparse degree-two terms over OpenAPI request contexts
+- [gateway] Phi request matching treats the root path as legal for every HTTP method
+- [gateway] Phi noise detection evaluates unmatched paths across the entire gateway
+- [gateway] Phi prediction accepts bounded recency-decayed request memory as context
+- [gateway] Phi memory can classify otherwise legal requests as contextual noise
+
 ### Fixed
 
 - [admin] fix sidebar upstream navigation

@@ -21,3 +21,7 @@ erl_crash.dump
 
 # Ignore package tarball (built via "mix hex.build").
 boruta_gateway-*.tar
+
+# Native Rust build and copied NIF artifacts are rebuilt by Rustler.
+/native/phi_noise_nif/target/
+/priv/native/
