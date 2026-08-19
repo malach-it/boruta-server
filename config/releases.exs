@@ -142,7 +142,12 @@ config :boruta, Boruta.Oauth,
   }
 
 config :boruta_auth, BorutaAuth.LogRotate,
-  max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60"))
+  max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60")),
+  enabled: System.get_env("DISABLE_FILE_LOGGING", "false") != "true"
+
+if System.get_env("DISABLE_FILE_LOGGING", "false") == "true" do
+  config :logger, backends: [:console]
+end
 
 libcluster_hosts =
   "LIBCLUSTER_HOSTS"

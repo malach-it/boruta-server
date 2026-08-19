@@ -2,6 +2,10 @@ defmodule BorutaAuth.LogRotate do
   @moduledoc false
 
   def rotate do
+    if enabled?(), do: rotate_logs(), else: :ok
+  end
+
+  defp rotate_logs do
     today = Date.utc_today()
 
     max_retention_days =
@@ -27,6 +31,12 @@ defmodule BorutaAuth.LogRotate do
         )
       end)
     end)
+  end
+
+  defp enabled? do
+    :boruta_auth
+    |> Application.get_env(BorutaAuth.LogRotate, [])
+    |> Keyword.get(:enabled, true)
   end
 
   @spec path(application :: atom(), type :: atom(), date :: Date.t()) :: path :: String.t()
