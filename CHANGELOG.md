@@ -27,6 +27,9 @@
 ### Security
 
 - [identity] blocking or deleting a user invalidates browser sessions, authorization codes, and access tokens; the admin API rejects bearer tokens belonging to blocked or deleted users
+- [identity] prevent password-reset and confirmation tokens from being exposed in new or retained request logs ([GHSA-xr62-x93r-6qmf](https://github.com/malach-it/boruta-server/security/advisories/GHSA-xr62-x93r-6qmf))
+- [identity] require WebAuthn authentication for users with a registered credential when it is not enforced by the identity provider ([GHSA-pf3v-7cr4-cw64](https://github.com/malach-it/boruta-server/security/advisories/GHSA-pf3v-7cr4-cw64))
+
 
 ## [0.12.0] - 2026-09-11
 
@@ -87,10 +90,6 @@
 - [ssi] fix outbound did requests TLS
 - [ssi] fix id token redirection scope forwarding
 - [ssi] fix vp token redirection scope forwarding
-
-### Security
-
-- [identity] require WebAuthn authentication for users with a registered credential when it is not enforced by the identity provider ([GHSA-pf3v-7cr4-cw64](https://github.com/malach-it/boruta-server/security/advisories/GHSA-pf3v-7cr4-cw64))
 
 ## [0.11.5] - 2026-08-17
 

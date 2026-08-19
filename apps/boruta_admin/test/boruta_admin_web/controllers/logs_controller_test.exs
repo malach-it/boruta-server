@@ -54,6 +54,41 @@ defmodule BorutaAdminWeb.LogsControllerTest do
 
   describe "index requesting requests logs" do
     @tag authorized: ["logs:read:all"]
+    test "redacts identity reset and confirmation tokens from retained logs", %{conn: conn} do
+      log_path = LogRotate.path(:boruta_identity, :request, Date.utc_today())
+      File.mkdir("./log")
+      File.rm(log_path)
+      on_exit(fn -> File.rm(log_path) end)
+
+      logged_at = DateTime.utc_now() |> DateTime.add(-1, :second)
+
+      reset_log =
+        "#{DateTime.to_iso8601(logged_at)} request_id=reset-request [info] boruta_identity GET /accounts/users/reset_password/reset-secret - sent 200 from 127.0.0.1 in 2ms"
+
+      confirmation_log =
+        "#{DateTime.to_iso8601(logged_at)} request_id=confirm-request [info] boruta_identity GET /accounts/users/confirm/confirmation-secret - sent 302 from 127.0.0.1 in 1ms"
+
+      File.write!(log_path, Enum.join([reset_log, confirmation_log], "\n") <> "\n")
+
+      response =
+        conn
+        |> get(Routes.admin_logs_path(conn, :index), %{
+          start_at: logged_at |> DateTime.add(-1, :second) |> DateTime.to_iso8601(),
+          end_at: DateTime.utc_now() |> DateTime.to_iso8601(),
+          application: "boruta_identity",
+          type: "request"
+        })
+        |> json_response(200)
+
+      serialized_response = Jason.encode!(response)
+
+      refute serialized_response =~ "reset-secret"
+      refute serialized_response =~ "confirmation-secret"
+      assert serialized_response =~ "/accounts/users/reset_password/:token"
+      assert serialized_response =~ "/accounts/users/confirm/:token"
+    end
+
+    @tag authorized: ["logs:read:all"]
     test "return today's logs", %{conn: conn} do
       File.mkdir("./log")
       File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
