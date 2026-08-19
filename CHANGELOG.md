@@ -12,6 +12,10 @@
 
 - [admin] upstream node listing ignores failed cluster RPC responses
 
+### Security
+
+- [identity] require WebAuthn authentication for users with a registered credential when it is not enforced by the identity provider ([GHSA-pf3v-7cr4-cw64](https://github.com/malach-it/boruta-server/security/advisories/GHSA-pf3v-7cr4-cw64))
+
 ## [0.11.5] - 2026-08-17
 
 ### Fixed

@@ -167,7 +167,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp do_enforce_mfa(
          %IdentityProvider{enforce_totp: false, enforce_webauthn: false},
-         %User{totp_registered_at: nil},
+         %User{totp_registered_at: nil, webauthn_registered_at: nil},
          _totp_authenticated,
          _webauthn_authenticated
        ) do
