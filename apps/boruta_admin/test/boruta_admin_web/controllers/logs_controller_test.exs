@@ -115,7 +115,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     test "compute status codes"
 
     @tag authorized: ["logs:read:all"]
-    test "filters logs by HTTP status", %{conn: conn} do
+    test "filters logs by HTTP status and text", %{conn: conn} do
       File.mkdir("./log")
       File.rm(LogRotate.path(:boruta_web, :request, Date.utc_today()))
 
@@ -137,7 +137,7 @@ defmodule BorutaAdminWeb.LogsControllerTest do
           end_at: log_time |> DateTime.add(1, :second) |> DateTime.to_iso8601(),
           application: "boruta_web",
           type: "request",
-          query: %{status_code: "401"}
+          query: %{status_code: "401", text: "/oauth/token"}
         })
 
       expected_log_line = Enum.at(log_lines, 2)

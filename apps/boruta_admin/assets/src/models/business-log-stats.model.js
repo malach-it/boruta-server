@@ -43,7 +43,7 @@ LogStats.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-LogStats.all = function ({ startAt, endAt, application, domain, action, sub, resourceId, eventsOnly }) {
+LogStats.all = function ({ startAt, endAt, application, domain, action, sub, resourceId, eventsOnly, text }) {
   const params = new URLSearchParams()
   params.append('start_at', startAt === 'all' ? 'all' : moment.utc(startAt).toISOString())
   params.append('end_at', moment.utc(endAt).toISOString())
@@ -52,6 +52,7 @@ LogStats.all = function ({ startAt, endAt, application, domain, action, sub, res
   action && params.append('query[action]', action)
   sub && params.append('query[sub]', sub)
   resourceId && params.append('query[resource_id]', resourceId)
+  text && params.append('query[text]', text)
   eventsOnly && params.append('events_only', 'true')
   params.append('type', 'business')
 

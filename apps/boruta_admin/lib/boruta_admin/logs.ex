@@ -16,11 +16,20 @@ defmodule BorutaAdmin.Logs.FileTooLargeError do
 end
 
 defmodule BorutaAdmin.Logs do
-  @moduledoc false
+  @moduledoc """
+  Reads and aggregates Boruta request and business-event logs.
 
-  alias BorutaAuth.LogRotate
+  The filesystem backend is used by default. A different backend can be set
+  with application configuration:
 
-  @max_file_size 100_000_000
+      config :boruta_admin, BorutaAdmin.Logs,
+        adapter: MyApp.LogsAdapter,
+        adapter_options: [custom_option: "value"]
+
+  Adapters implement `BorutaAdmin.Logs.Adapter` and return raw formatted log
+  lines. Parsing, filtering, and aggregation remain centralized in this module.
+  """
+
   @max_log_lines 10_000
   @log_attribute_regex ~r/([^\s=]+)=(?:"([^"]*)"|([^\s]+))/
   @request_log_regex ~r/\A(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(µs|ms)$/u
@@ -36,29 +45,15 @@ defmodule BorutaAdmin.Logs do
 
   @spec earliest_at(application :: atom(), type :: atom()) :: DateTime.t()
   def earliest_at(application, type) do
-    earliest_date =
-      "./log/*_#{application}_#{type}.log"
-      |> Path.wildcard()
-      |> Enum.flat_map(fn path ->
-        path
-        |> Path.basename()
-        |> String.slice(0, 10)
-        |> Date.from_iso8601()
-        |> case do
-          {:ok, date} -> [date]
-          _ -> []
-        end
-      end)
-      |> Enum.min_by(&Date.to_gregorian_days/1, fn -> Date.utc_today() end)
-
-    DateTime.new!(earliest_date, ~T[00:00:00], "Etc/UTC")
+    {adapter, options} = adapter()
+    adapter.earliest_at(application, type, options)
   end
 
   # credo:disable-for-next-line
   def read(start_at, end_at, application, :request = type, query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
-    log_stream(start_at, end_at, application, type)
+    log_stream(start_at, end_at, application, type, query)
     |> Stream.map(&parse_request_log/1)
     |> Stream.reject(&is_nil/1)
     |> apply_request_filters(query)
@@ -148,13 +143,14 @@ defmodule BorutaAdmin.Logs do
         }
       end
     )
+    |> aggregate_stats(start_at, end_at, application, type, query)
   end
 
   # credo:disable-for-next-line
   def read(start_at, end_at, application, :business = type, query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
-    log_stream(start_at, end_at, application, type)
+    log_stream(start_at, end_at, application, type, query)
     |> Stream.map(&parse_business_log/1)
     |> Stream.reject(&is_nil/1)
     |> apply_business_filters(query)
@@ -257,54 +253,30 @@ defmodule BorutaAdmin.Logs do
         }
       end
     )
+    |> aggregate_stats(start_at, end_at, application, type, query)
   end
 
   def read(_start_at, _end_at, _application, _type), do: %{}
 
-  defp log_stream(start_at, end_at, application, type) do
-    paths =
-      log_dates(DateTime.to_date(start_at), DateTime.to_date(end_at))
-      |> Enum.map(&LogRotate.path(application, type, &1))
-      |> Enum.filter(&File.exists?/1)
+  defp log_stream(start_at, end_at, application, type, query) do
+    {adapter, options} = adapter()
+    adapter.stream(start_at, end_at, application, type, query, options)
+  end
 
-    max_file_size = max_file_size()
+  defp adapter do
+    config = Application.get_env(:boruta_admin, __MODULE__, [])
+    adapter = Keyword.get(config, :adapter, BorutaAdmin.Logs.Adapters.File)
+    {adapter, Keyword.merge(config, Keyword.get(config, :adapter_options, []))}
+  end
 
-    if total_file_size(paths) > max_file_size do
-      raise BorutaAdmin.Logs.FileTooLargeError,
-            "Requested for more than #{max_file_size} bytes of logs, could not perform the request."
+  defp aggregate_stats(stats, start_at, end_at, application, type, query) do
+    {adapter, options} = adapter()
+
+    if function_exported?(adapter, :aggregate, 7) do
+      adapter.aggregate(start_at, end_at, application, type, query, stats, options)
+    else
+      stats
     end
-
-    paths
-    |> Enum.map(&File.stream!/1)
-    |> Stream.concat()
-    |> Stream.drop_while(fn log ->
-      case DateTime.from_iso8601(String.split(log, " ") |> List.first()) do
-        {:ok, log_time, _offset} ->
-          DateTime.compare(log_time, start_at) == :lt
-
-        _ ->
-          true
-      end
-    end)
-    |> Stream.take_while(fn log ->
-      case DateTime.from_iso8601(String.split(log, " ") |> List.first()) do
-        {:ok, log_time, _offset} ->
-          DateTime.compare(log_time, end_at) == :lt
-
-        _ ->
-          true
-      end
-    end)
-  end
-
-  defp total_file_size(paths) do
-    Enum.reduce(paths, 0, fn path, acc -> acc + File.stat!(path).size end)
-  end
-
-  defp max_file_size do
-    :boruta_admin
-    |> Application.get_env(__MODULE__, [])
-    |> Keyword.get(:max_file_size, @max_file_size)
   end
 
   defp parse_request_log(log_line) do
@@ -490,14 +462,6 @@ defmodule BorutaAdmin.Logs do
     case Integer.parse(time) do
       {time, ""} -> time
       _ -> nil
-    end
-  end
-
-  defp log_dates(start_date, end_date) do
-    if Date.compare(start_date, end_date) == :gt do
-      []
-    else
-      [start_date | log_dates(Date.add(start_date, 1), end_date)]
     end
   end
 

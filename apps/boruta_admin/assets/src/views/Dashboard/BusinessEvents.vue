@@ -20,10 +20,23 @@
           </div>
         </div>
       </div>
-      <div class="ui segment">
+      <div class="ui dashboard-content segment" :class="{ loading: pending }" :aria-busy="pending">
         <div class="ui requests form">
           <div class="ui stackable grid">
             <div class="ten wide filter-form column">
+              <div class="field">
+                <label>Text search</label>
+                <div class="ui icon input">
+                  <input
+                    type="search"
+                    v-model="businessEventFilter.text"
+                    @keyup.enter="getLogs()"
+                    placeholder="Search log messages"
+                    :disabled="pending"
+                  />
+                  <i class="search icon"></i>
+                </div>
+              </div>
               <div class="field">
                 <label>Application</label>
                 <select @change="getLogs()" v-model="businessEventFilter.application" :disabled="pending">
@@ -165,7 +178,8 @@ export default {
       businessEventFilter: {
         application: this.$route.query.application || 'boruta_web',
         domain: this.$route.query.domain || '',
-        action: this.$route.query.action || ''
+        action: this.$route.query.action || '',
+        text: this.$route.query.text || ''
       },
       counts: {},
       businessEventCounts: {
@@ -324,9 +338,9 @@ export default {
         this.populateGatewayTimes(gateway_times)
         this.businessEventFiltersData.domains = domains
         this.businessEventFiltersData.actions = actions
-        this.pending = false
         this.render()
       }).catch(error => this.error = error.message)
+        .finally(() => { this.pending = false })
     },
     render() {
       this.graphRerenders += 1
@@ -388,6 +402,7 @@ export default {
         application: to.query.application || 'boruta_web',
         domain: to.query.domain || '',
         action: to.query.action || '',
+        text: to.query.text || '',
       }
 
       this.overflow = false
@@ -419,6 +434,9 @@ function stringToColor(str) {
 <style scoped lang="scss">
 .dashboard {
   position: relative;
+  .dashboard-content.loading {
+    min-height: 12rem;
+  }
   .dates.form {
     margin-bottom: 1em;
   }

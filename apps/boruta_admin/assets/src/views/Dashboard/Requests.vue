@@ -23,10 +23,23 @@
       <div class="ui error message" v-if="fetchError">
         An error has occured when fetching logs, message: {{ fetchError }}.
       </div>
-      <div class="ui segment">
+      <div class="ui dashboard-content segment" :class="{ loading: pending }" :aria-busy="pending">
         <div class="ui requests form">
           <div class="ui stackable grid">
             <div class="ten wide filter-form column">
+              <div class="field">
+                <label>Text search</label>
+                <div class="ui icon input">
+                  <input
+                    type="search"
+                    v-model="requestsFilter.text"
+                    @keyup.enter="getLogs()"
+                    placeholder="Search log messages"
+                    :disabled="pending"
+                  />
+                  <i class="search icon"></i>
+                </div>
+              </div>
               <div class="field">
                 <label>Application</label>
                 <select @change="getLogs()" v-model="requestsFilter.application" :disabled="pending">
@@ -143,7 +156,8 @@ export default {
         application: this.$route.query.application || 'boruta_web',
         label: this.$route.query.label || '',
         statusCode: this.$route.query.statusCode || '',
-        method: this.$route.query.method || ''
+        method: this.$route.query.method || '',
+        text: this.$route.query.text || ''
       },
       statusCodes: {
         labels: [],
@@ -287,8 +301,8 @@ export default {
         this.populateRequestCounts(graphStats.requestCounts)
         this.populateStatusCodes(graphStats.statusCodes)
         this.populateRequestTimes(graphStats.requestTimes)
-        this.pending = false
       }).catch(error => this.error = error.message)
+        .finally(() => { this.pending = false })
     },
     render() {
       this.graphRerenders += 1
@@ -386,7 +400,8 @@ export default {
         application: to.query.application || 'boruta_web',
         label: to.query.label || '',
         statusCode: to.query.statusCode || '',
-        method: to.query.method || ''
+        method: to.query.method || '',
+        text: to.query.text || ''
       }
 
       this.overflow = false
@@ -493,6 +508,9 @@ function total(values) {
 <style scoped lang="scss">
 .dashboard {
   position: relative;
+  .dashboard-content.loading {
+    min-height: 12rem;
+  }
   .dates.form {
     margin-bottom: 1em;
   }

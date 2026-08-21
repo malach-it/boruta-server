@@ -40,7 +40,7 @@ LogStats.api = function () {
   return addClientErrorInterceptor(instance)
 }
 
-LogStats.all = function ({ startAt, endAt, application, label, statusCode, method }) {
+LogStats.all = function ({ startAt, endAt, application, label, statusCode, method, text }) {
   const params = new URLSearchParams()
   params.append('start_at', moment.utc(startAt).toISOString())
   params.append('end_at', moment.utc(endAt).toISOString())
@@ -48,6 +48,7 @@ LogStats.all = function ({ startAt, endAt, application, label, statusCode, metho
   label && params.append('query[label]', label)
   statusCode && params.append('query[status_code]', statusCode)
   method && params.append('query[method]', method)
+  text && params.append('query[text]', text)
   params.append('type', 'request')
 
   return this.api().get(`?${params.toString()}`).then(({ data }) => {

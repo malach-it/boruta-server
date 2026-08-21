@@ -27,7 +27,8 @@ defmodule BorutaAdminWeb.LogsController do
     "method" => :method,
     "resource_id" => :resource_id,
     "status_code" => :status_code,
-    "sub" => :sub
+    "sub" => :sub,
+    "text" => :text
   }
 
   action_fallback(BorutaAdminWeb.FallbackController)

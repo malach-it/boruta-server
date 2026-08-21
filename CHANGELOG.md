@@ -7,6 +7,7 @@
 ### Added
 
 - [admin] form save buttons show loading states and prevent duplicate submissions
+- [admin] request and business event dashboards support text search across log messages
 
 ### Changed
 
