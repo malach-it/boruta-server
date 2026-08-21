@@ -13,7 +13,8 @@ const defaults = {
   name: null,
   content: null,
   type: null,
-  errors: null
+  errors: null,
+  loading: false
 }
 
 const assign = {
@@ -36,6 +37,7 @@ class ErrorTemplate {
 
   save () {
     this.errors = null
+    this.loading = true
     // TODO trigger validate
     const { type, serialized } = this
 
@@ -54,6 +56,7 @@ class ErrorTemplate {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

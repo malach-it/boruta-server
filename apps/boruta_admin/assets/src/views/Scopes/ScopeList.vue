@@ -35,7 +35,7 @@
                 </div>
                 <div class="three wide actions column">
                   <button v-on:click.prevent="viewScope(scope)" class="ui tiny blue button">cancel</button>
-                  <button type="submit" class="ui tiny violet button">save</button>
+                  <button type="submit" class="ui tiny violet button" :class="{ loading: scope.loading }" :disabled="scope.loading">save</button>
                 </div>
               </div>
             </form>

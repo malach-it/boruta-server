@@ -14,6 +14,7 @@ const defaultUnauthorizedResponse = JSON.stringify({
 
 const defaults = {
   errors: null,
+  loading: false,
   node_name: 'global',
   uris: [],
   required_scopes: [],
@@ -82,6 +83,7 @@ class Upstream {
 
   save () {
     this.errors = null
+    this.loading = true
     // TODO trigger validate
     let response
     const { id, serialized } = this
@@ -106,6 +108,7 @@ class Upstream {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

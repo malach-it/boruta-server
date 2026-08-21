@@ -5,7 +5,8 @@ const defaults = {
   id: null,
   content: null,
   type: null,
-  errors: null
+  errors: null,
+  loading: false
 }
 
 const assign = {
@@ -27,6 +28,7 @@ class Template {
 
   save () {
     this.errors = null
+    this.loading = true
     // TODO trigger validate
     const { type, identity_provider_id: identityProviderId, serialized } = this
 
@@ -45,6 +47,7 @@ class Template {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

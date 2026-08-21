@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- [admin] form save buttons show loading states and prevent duplicate submissions
+
 ### Changed
 
 - [admin] current node upstream panel items link to their edit pages

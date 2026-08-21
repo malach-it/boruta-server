@@ -5,7 +5,8 @@ import Backend from './backend.model'
 import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
-  errors: null
+  errors: null,
+  loading: false
 }
 
 const assign = {
@@ -30,6 +31,7 @@ class Organization {
 
   async save () {
     this.errors = null
+    this.loading = true
 
     const { id, serialized } = this
     let response
@@ -53,6 +55,7 @@ class Organization {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

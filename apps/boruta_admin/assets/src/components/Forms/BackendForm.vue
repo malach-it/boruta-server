@@ -362,7 +362,7 @@
         </div>
       </div>
       <div class="actions" v-if="activeTab !== 'activity'">
-        <button class="ui right floated violet button" type="submit">{{ action }}</button>
+        <button class="ui right floated violet button" :class="{ loading: backend.loading }" :disabled="backend.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>

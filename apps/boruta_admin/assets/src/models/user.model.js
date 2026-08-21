@@ -7,6 +7,7 @@ import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
   errors: null,
+  loading: false,
   authorize_scopes: false,
   authorized_scopes: [],
   roles: [],
@@ -90,7 +91,13 @@ class User {
 
   async save () {
     this.errors = null
-    await this.validate()
+    this.loading = true
+    try {
+      await this.validate()
+    } catch (error) {
+      this.loading = false
+      throw error
+    }
 
     const { id, backend_id, serialized } = this
     let response
@@ -114,6 +121,7 @@ class User {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

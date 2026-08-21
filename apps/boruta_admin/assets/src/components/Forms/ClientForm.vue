@@ -301,7 +301,7 @@
         <slot v-if="activeTab === 'activity'" name="activity" />
       </div>
       <div class="actions" v-if="activeTab !== 'activity'">
-        <button class="ui violet button" type="submit">{{ action }}</button>
+        <button class="ui violet button" :class="{ loading: client.loading }" :disabled="client.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>

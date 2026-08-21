@@ -8,7 +8,7 @@
       <TextEditor :content="content" @codeUpdate="setContent" />
     </div>
     <div class="ui segment">
-      <button v-on:click="update()" class="ui violet right floated button">Save</button>
+      <button v-on:click="update()" class="ui violet right floated button" :class="{ loading: template.loading }" :disabled="template.loading">Save</button>
       <button v-if="template.id" v-on:click="destroy()" class="ui red right floated button">Reset</button>
       <router-link :to="{ name: 'error-template-list' }" class="ui blue button">Back</router-link>
     </div>

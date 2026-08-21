@@ -6,7 +6,8 @@ const defaults = {
   txt_content: null,
   html_content: null,
   type: null,
-  errors: null
+  errors: null,
+  loading: false
 }
 
 const assign = {
@@ -29,6 +30,7 @@ class EmailTemplate {
 
   save () {
     this.errors = null
+    this.loading = true
     // TODO trigger validate
     const { type, backend_id: backendId, serialized } = this
 
@@ -47,6 +49,7 @@ class EmailTemplate {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

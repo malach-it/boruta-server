@@ -7,6 +7,7 @@ const defaults = {
   roles: [],
   type: "Elixir.BorutaIdentity.Accounts.Internal",
   errors: null,
+  loading: false,
   password_hashing_alg: "argon2",
   password_hashing_opts: {},
   features: [],
@@ -138,6 +139,7 @@ class Backend {
 
   save() {
     this.errors = null;
+    this.loading = true;
     // TODO trigger validate
     let response;
     const { id, serialized } = this;
@@ -163,7 +165,8 @@ class Backend {
         const { errors } = error.response.data;
         this.errors = errors;
         throw errors;
-      });
+      })
+      .finally(() => { this.loading = false });
   }
 
   destroy() {

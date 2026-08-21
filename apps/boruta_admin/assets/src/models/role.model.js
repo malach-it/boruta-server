@@ -3,7 +3,8 @@ import Scope from './scope.model'
 import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
-  scopes: []
+  scopes: [],
+  loading: false
 }
 
 const assign = {
@@ -24,6 +25,7 @@ class Role {
 
   save () {
     this.errors = null
+    this.loading = true
     // TODO trigger validate
     let response
     const { id, serialized } = this
@@ -48,6 +50,7 @@ class Role {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {
