@@ -123,8 +123,6 @@ defmodule BorutaGateway.Certificate do
   end
 
   def load_trusted_certificates!(certificates) do
-    system_cacerts()
-
     certificates =
       certificates
       |> Enum.flat_map(&decode_certificates/1)
@@ -143,12 +141,14 @@ defmodule BorutaGateway.Certificate do
 
     File.write!(trusted_certificates_path, trusted_certificates)
 
-    :ok = :public_key.cacerts_load(trusted_certificates_path)
+    :boruta_gateway
+    |> Application.get_env(__MODULE__, [])
+    |> Keyword.put(:cacerts, certificates)
+    |> then(&Application.put_env(:boruta_gateway, __MODULE__, &1))
   end
 
   def cacerts do
-    :public_key.cacerts_get()
-    |> Enum.flat_map(&normalize_cacert/1)
+    Application.get_env(:boruta_gateway, __MODULE__, [])[:cacerts] || []
   end
 
   def gateway_cacerts do
@@ -373,7 +373,8 @@ defmodule BorutaGateway.Certificate do
     case Application.get_env(:boruta_gateway, __MODULE__, [])[:system_cacerts] do
       nil ->
         cacerts =
-          cacerts()
+          :public_key.cacerts_get()
+          |> Enum.flat_map(&normalize_cacert/1)
 
         :boruta_gateway
         |> Application.get_env(__MODULE__, [])

@@ -12,10 +12,12 @@
 ### Changed
 
 - [admin] current node upstream panel items link to their edit pages
+- [gateway] service registry CAs remain separate from the VM-wide system CA trust store
 
 ### Fixed
 
 - [admin] upstream node listing ignores failed cluster RPC responses
+- [ssi] fix outbound did requests TLS
 
 ## [0.11.5] - 2026-08-17
 

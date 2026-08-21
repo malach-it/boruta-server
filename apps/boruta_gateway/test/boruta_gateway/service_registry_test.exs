@@ -253,8 +253,9 @@ defmodule BorutaGateway.ServiceRegistryTest do
     assert File.read!(paths.root_ca_private_key) == root_ca.private_key
   end
 
-  test "gateway cacerts include system CAs while proxy cacerts stay root-only" do
+  test "loaded cacerts remain separate from the VM-wide system CAs" do
     previous_certificate_config = Application.get_env(:boruta_gateway, Certificate)
+    public_key_cacerts = :public_key.cacerts_get()
     system_ca = :crypto.strong_rand_bytes(16)
 
     :boruta_gateway
@@ -276,6 +277,7 @@ defmodule BorutaGateway.ServiceRegistryTest do
 
     assert Certificate.cacerts() == [root_certificate]
     assert Certificate.gateway_cacerts() == [system_ca, root_certificate]
+    assert :public_key.cacerts_get() == public_key_cacerts
   end
 
   test "service registry process marks the current record offline on shutdown" do
