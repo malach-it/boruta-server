@@ -18,6 +18,7 @@
 
 - [admin] upstream node listing ignores failed cluster RPC responses
 - [ssi] fix outbound did requests TLS
+- [ssi] fix id token redirection scope forwarding
 
 ## [0.11.5] - 2026-08-17
 

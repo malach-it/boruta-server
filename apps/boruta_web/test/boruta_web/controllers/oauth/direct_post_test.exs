@@ -44,6 +44,7 @@ defmodule BorutaWeb.Integration.DirectPostTest do
 
     signer =
       Joken.Signer.create("RS256", %{"pem" => private_key_fixture()}, %{
+        "jwk" => public_jwk_fixture(),
         "kid" =>
           "did:jwk:eyJlIjoiQVFBQiIsImt0eSI6IlJTQSIsIm4iOiIxUGFQX2diWGl4NWl0alJDYWVndklfQjNhRk9lb3hsd1BQTHZmTEhHQTRRZkRtVk9mOGNVOE91WkZBWXpMQXJXM1BubndXV3kzOW5WSk94NDJRUlZHQ0dkVUNtVjdzaERIUnNyODYtMkRsTDdwd1VhOVF5SHNUajg0ZkFKbjJGdjloOW1xckl2VXpBdEVZUmxHRnZqVlRHQ3d6RXVsbHBzQjBHSmFmb3BVVEZieThXZFNxM2RHTEpCQjFyLVE4UXRabkF4eHZvbGh3T21Za0Jra2lkZWZtbTQ4WDdoRlhMMmNTSm0yRzd3UXlpbk9leV9VOHhEWjY4bWdUYWtpcVMyUnRqbkZEMGRucEJsNUNZVGU0czZvWktFeUZpRk5pVzRLa1IxR1Zqc0t3WTlvQzJ0cHlRMEFFVU12azlUOVZkSWx0U0lpQXZPS2x3RnpMNDljZ3daRHcifQ",
         "typ" => "openid4vci-proof+jwt"
@@ -92,11 +93,45 @@ defmodule BorutaWeb.Integration.DirectPostTest do
      client: client,
      id_token: id_token,
      vp_token: vp_token,
+     wallet_did: wallet_did,
      code: code,
      conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded")}
   end
 
   describe "SIOPV2 direct post" do
+    test "forwards the granted scope when redirecting an id token response", %{
+      client: client,
+      conn: conn,
+      id_token: id_token,
+      wallet_did: wallet_did
+    } do
+      code =
+        Boruta.Factory.insert(:token,
+          type: "code",
+          client: client,
+          redirect_uri: "http://redirect.uri",
+          response_type: "id_token code",
+          state: "state",
+          public_client_id: wallet_did,
+          requested_scope: "openid profile",
+          scope: "openid"
+        )
+
+      conn =
+        post(
+          conn,
+          "/openid/direct_post/#{code.id}",
+          "id_token=#{id_token}"
+        )
+
+      redirect_uri = conn |> redirected_to() |> URI.parse()
+
+      assert redirect_uri.path == "/oauth/authorize"
+
+      assert %{"response_type" => "code", "scope" => "openid"} =
+               redirect_uri.query |> URI.decode_query()
+    end
+
     test "unauthorized with a bad id_token", %{conn: conn} do
       conn =
         post(

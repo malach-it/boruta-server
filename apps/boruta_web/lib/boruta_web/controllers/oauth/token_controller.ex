@@ -209,7 +209,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           "client_id" => kid,
           "response_type" => Enum.join(response_types, " "),
           "client_metadata" => "{}",
-          "scope" => response.code.requested_scope,
+          "scope" => response.code.scope,
           "state" => response.code.state,
           "code" => response.code.value,
           "redirect_uri" => response.redirect_uri
