@@ -76,6 +76,18 @@ export default {
         this.$refs.currentNodeUpstreams.getUpstreams()
       }).catch()
     }
+  },
+  watch: {
+    '$route.params.upstreamId': {
+      handler () {
+        const { upstreamId } = this.$route.params
+        Upstream.get(upstreamId).then((upstream) => {
+          this.upstream = upstream
+        }).catch((error) => {
+          this.error = error.response?.data?.message || error.message
+        })
+      }
+    }
   }
 }
 </script>

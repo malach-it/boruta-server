@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- [admin] fix sidebar upstream navigation
+
 ## [0.11.6] - 2026-08-25
 
 ### Added
