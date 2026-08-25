@@ -13,6 +13,7 @@
 
 - [admin] current node upstream panel items link to their edit pages
 - [gateway] service registry CAs remain separate from the VM-wide system CA trust store
+- [admin] user identifiers exact match search
 
 ### Fixed
 

@@ -78,7 +78,7 @@ defmodule BorutaIdentity.AdminTest do
              }
     end
 
-    test "returns user search" do
+    test "returns user search with fulltext search (username)" do
       _other = insert(:user) |> Repo.preload(:authorized_scopes)
 
       user =
@@ -86,6 +86,30 @@ defmodule BorutaIdentity.AdminTest do
         |> Repo.preload([:authorized_scopes, :roles, :organizations])
 
       assert Admin.search_users("match") == %Scrivener.Page{
+               entries: [user],
+               page_number: 1,
+               page_size: 12,
+               total_entries: 1,
+               total_pages: 1
+             }
+    end
+
+    test "returns user search with an identifier (id, uuid)" do
+      _other = insert(:user) |> Repo.preload(:authorized_scopes)
+
+      user =
+        insert(:user, username: "match", uid: SecureRandom.uuid())
+        |> Repo.preload([:authorized_scopes, :roles, :organizations])
+
+      assert Admin.search_users(user.id) == %Scrivener.Page{
+               entries: [user],
+               page_number: 1,
+               page_size: 12,
+               total_entries: 1,
+               total_pages: 1
+             }
+
+      assert Admin.search_users(user.uid) == %Scrivener.Page{
                entries: [user],
                page_number: 1,
                page_size: 12,
