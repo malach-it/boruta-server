@@ -3,7 +3,7 @@ defmodule Boruta.Umbrella.MixProject do
 
   def project do
     [
-      version: "0.11.5",
+      version: "0.11.6",
       elixir: "~> 1.15",
       apps_path: "apps",
       start_permanent: Mix.env() == :prod,

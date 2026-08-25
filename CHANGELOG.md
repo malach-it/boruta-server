@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.11.6] - 2026-08-25
+
 ### Added
 
 - [admin] form save buttons show loading states and prevent duplicate submissions
