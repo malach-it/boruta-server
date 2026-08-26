@@ -27,11 +27,8 @@ defmodule BorutaAdmin.LogsTest do
       assert stats.log_count == 1
       assert stats.aggregated
 
-      assert_received {:stream, ~U[2099-01-03 00:00:00Z], ~U[2099-01-04 00:00:00Z], :boruta_web,
+      assert_received {:read, ~U[2099-01-03 00:00:00Z], ~U[2099-01-04 00:00:00Z], :boruta_web,
                        :request, %{}}
-
-      assert_received {:aggregate, ~U[2099-01-03 00:00:00Z], ~U[2099-01-04 00:00:00Z],
-                       :boruta_web, :request, %{}}
 
       assert Logs.earliest_at(:boruta_web, :request) == ~U[2098-01-01 00:00:00Z]
       assert_received {:earliest_at, :boruta_web, :request}
@@ -276,24 +273,12 @@ defmodule BorutaAdmin.LogsTest.Adapter do
   end
 
   @impl true
-  def stream(start_at, end_at, application, type, query, options) do
+  def read(start_at, end_at, application, type, query, options) do
     send(
       Keyword.fetch!(options, :test_pid),
-      {:stream, start_at, end_at, application, type, query}
+      {:read, start_at, end_at, application, type, query}
     )
 
-    [
-      "2099-01-03T12:00:00.000Z request_id=request-id [info] boruta_web GET /oauth/authorize - sent 200 from 127.0.0.1 in 1ms"
-    ]
-  end
-
-  @impl true
-  def aggregate(start_at, end_at, application, type, query, stats, options) do
-    send(
-      Keyword.fetch!(options, :test_pid),
-      {:aggregate, start_at, end_at, application, type, query}
-    )
-
-    Map.put(stats, :aggregated, true)
+    %{log_count: 1, aggregated: true}
   end
 end
