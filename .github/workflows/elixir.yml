@@ -24,6 +24,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.91.1
+
       - name: Retrieve Cached Dependencies
         uses: actions/cache@v3
         id: mix-cache
@@ -39,7 +42,7 @@ jobs:
       - name: Elixir prerequisites
         run: |
           apt-get update
-          apt-get install --yes --no-install-recommends build-essential cargo
+          apt-get install --yes --no-install-recommends build-essential
           mix local.rebar --force
           mix local.hex --force
           mix deps.get
@@ -82,6 +85,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.91.1
+
       - name: Retrieve Cached Dependencies
         uses: actions/cache@v3
         id: mix-cache
@@ -94,7 +100,7 @@ jobs:
       - name: Elixir prerequisites
         run: |
           apt-get update
-          apt-get install --yes --no-install-recommends build-essential cargo
+          apt-get install --yes --no-install-recommends build-essential
           mix local.rebar --force
           mix local.hex --force
           mix deps.get
