@@ -269,7 +269,7 @@ defmodule BorutaGateway.HttpGateway do
                 response
             )
 
-            log_noise_cancellation(request_id, upstream, method, path, prediction)
+            log_noise_cancellation(start, request_id, upstream, method, path, prediction)
 
             {:noreply, close_downstream(socket, state)}
 
@@ -752,16 +752,17 @@ defmodule BorutaGateway.HttpGateway do
       },
       %{
         request_id: request_id,
+        path: log_path(path),
         upstream: upstream,
         upstream_tls: upstream_tls(upstream)
       }
     )
   end
 
-  defp log_noise_cancellation(request_id, upstream, method, path, prediction) do
+  defp log_noise_cancellation(start, request_id, upstream, method, path, prediction) do
     :telemetry.execute(
       [:boruta_gateway, :noise_cancelling, :cancelled],
-      %{},
+      %{response_time: :os.system_time(:microsecond) - start},
       %{
         request_id: request_id,
         upstream: upstream,

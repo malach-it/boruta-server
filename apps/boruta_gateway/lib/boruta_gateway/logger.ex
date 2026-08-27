@@ -34,7 +34,7 @@ defmodule BorutaGateway.Logger do
 
   def noise_cancelling_handler(
         _event,
-        _measurements,
+        %{response_time: response_time},
         %{
           request_id: request_id,
           upstream: upstream,
@@ -49,6 +49,7 @@ defmodule BorutaGateway.Logger do
       upstream: upstream,
       method: method,
       path: path,
+      response_time: response_time,
       openapi_match: Map.get(prediction, :openapi_match),
       score: Map.get(prediction, :score),
       noise_score: Map.get(prediction, :noise_score)
@@ -93,6 +94,7 @@ defmodule BorutaGateway.Logger do
     business(%{
       request_id: request_id,
       status: event |> List.last() |> Atom.to_string(),
+      path: Map.get(metadata, :path),
       upstream: upstream,
       request_time: request_time,
       gateway_time: gateway_time,
@@ -137,6 +139,7 @@ defmodule BorutaGateway.Logger do
   defp business(%{
          request_id: request_id,
          status: status,
+         path: path,
          upstream: upstream,
          request_time: request_time,
          gateway_time: gateway_time,
@@ -154,6 +157,7 @@ defmodule BorutaGateway.Logger do
           "proxy",
           " - ",
           status,
+          log_attribute("path", path),
           log_attribute("upstream_id", upstream && upstream.id),
           log_attribute("upstream_host", upstream && upstream.host),
           log_attribute("upstream_port", upstream && upstream.port),
@@ -174,6 +178,7 @@ defmodule BorutaGateway.Logger do
          upstream: upstream,
          method: method,
          path: path,
+         response_time: response_time,
          openapi_match: openapi_match,
          score: score,
          noise_score: noise_score
@@ -187,6 +192,7 @@ defmodule BorutaGateway.Logger do
           log_attribute("upstream_host", upstream.host),
           log_attribute("method", method),
           log_attribute("path", path),
+          log_attribute("response_time", response_time),
           log_attribute("openapi_match", openapi_match),
           log_attribute("score", score),
           log_attribute("noise_score", noise_score)

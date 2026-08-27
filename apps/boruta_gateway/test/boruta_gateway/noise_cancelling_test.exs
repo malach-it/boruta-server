@@ -48,6 +48,7 @@ defmodule BorutaGateway.NoiseCancellingTest do
       noise_cancelling_model: PhiNoise.export(model)
     }
 
+    assert :ok = NoiseCancelling.check(upstream, "GET", "/api", "root-client")
     assert :ok = NoiseCancelling.check(upstream, "GET", "/api/widgets/123", "client")
   end
 

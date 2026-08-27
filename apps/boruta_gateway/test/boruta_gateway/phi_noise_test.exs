@@ -136,8 +136,8 @@ defmodule BorutaGateway.PhiNoiseTest do
   test "treats the root path as a valid move for every method" do
     assert {:ok, model} = PhiNoise.train(@openapi)
 
-    for method <- @any_root_methods do
-      prediction = PhiNoise.predict(model, %{method: method, path: "/"})
+    for method <- @any_root_methods, path <- ["", "/"] do
+      prediction = PhiNoise.predict(model, %{method: method, path: path})
 
       assert prediction.in_scope
       assert prediction.openapi_match
