@@ -2,7 +2,13 @@ defmodule BorutaGateway.HttpGatewaySecurityTest do
   use ExUnit.Case
 
   alias BorutaGateway.HttpGateway
+  alias BorutaGateway.PhiNoise
   alias BorutaGateway.Upstreams.Upstream
+
+  @noise_openapi Jason.encode!(%{
+                   "openapi" => "3.0.0",
+                   "paths" => %{"/allowed" => %{"get" => %{}}}
+                 })
 
   test "rejects a second request buffered behind an authorized request" do
     {:ok, upstream_listener} = listen()
@@ -146,6 +152,32 @@ defmodule BorutaGateway.HttpGatewaySecurityTest do
     :gen_tcp.close(idle_socket)
     :gen_tcp.close(next_socket)
     Supervisor.stop(gateway)
+  end
+
+  test "returns 403 Forbidden when noise cancelling rejects a request" do
+    {:ok, upstream_listener} = listen()
+    {:ok, {_address, upstream_port}} = :inet.sockname(upstream_listener)
+    {:ok, model} = PhiNoise.train(@noise_openapi)
+
+    upstream = %{
+      upstream(upstream_port)
+      | noise_cancelling_enabled: true,
+        noise_cancelling_model: PhiNoise.export(model)
+    }
+
+    {gateway, gateway_port} = start_gateway(fn _host, _path -> upstream end)
+    {:ok, socket} = connect(gateway_port)
+
+    :ok = :gen_tcp.send(socket, "GET /.env HTTP/1.1\r\nHost: gateway.test\r\n\r\n")
+
+    assert {:ok, response} = :gen_tcp.recv(socket, 0, 1_000)
+    assert response =~ "HTTP/1.1 403 Forbidden"
+    assert response =~ "Content-Type: text/plain; charset=utf-8"
+    assert response =~ "Content-Length: 43"
+    assert response =~ "\r\n\r\nthe request has been rejected by the server"
+    assert {:error, :timeout} = :gen_tcp.accept(upstream_listener, 100)
+
+    close_gateway(socket, gateway, upstream_listener)
   end
 
   defp start_gateway(match_function, opts \\ []) do

@@ -8,6 +8,9 @@ defmodule BorutaGateway.NoiseCancelling do
 
   @table __MODULE__
   @memory_limit 32
+  @valid_context_weight 1.0
+  @cancelled_context_weight 0.95
+  @forbidden_body "the request has been rejected by the server"
 
   def start_link(_options) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -22,12 +25,24 @@ defmodule BorutaGateway.NoiseCancelling do
     history = lookup(memory_key, [])
     prediction = PhiNoise.predict(model(upstream), request, history)
 
+    context_weight =
+      if prediction.noise, do: @cancelled_context_weight, else: @valid_context_weight
+
+    request = Map.put(request, :context_weight, context_weight)
     history = Enum.take(history ++ [request], -@memory_limit)
     :ets.insert(@table, {memory_key, history})
 
     if prediction.noise, do: {:noise, prediction}, else: :ok
   rescue
     _error -> :ok
+  end
+
+  @spec forbidden_response() :: binary()
+  def forbidden_response do
+    "HTTP/1.1 403 Forbidden\r\n" <>
+      "Content-Type: text/plain; charset=utf-8\r\n" <>
+      "Content-Length: #{byte_size(@forbidden_body)}\r\n\r\n" <>
+      @forbidden_body
   end
 
   @impl GenServer

@@ -287,14 +287,7 @@ defmodule BorutaGateway.HttpsGateway do
             {:noreply, close_downstream(socket, state)}
 
           {:noise, upstream, prediction} ->
-            response = "No upstream has been found corresponding to the given request."
-
-            send_downstream(
-              socket,
-              "HTTP/1.1 404 Not Found\r\n" <>
-                "Content-Length: 62\r\n\r\n" <>
-                response
-            )
+            send_downstream(socket, NoiseCancelling.forbidden_response())
 
             log_noise_cancellation(start, request_id, upstream, method, path, prediction)
 

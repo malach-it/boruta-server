@@ -11,7 +11,8 @@ defmodule BorutaGateway.PhiNoise do
   is legal-match confidence; `noise_score` is its complement, and `phi_value`
   exposes the raw additive noise value before bounding. Sparse degree-two
   terms `phi(ab)`, `phi(ac)`, and so on learn primary-request relationships.
-  Prediction accepts up to 32 recent requests as recency-decayed context.
+  Prediction accepts up to 32 recent requests as weighted, recency-decayed
+  context.
   """
 
   alias __MODULE__.{Model, Native}
@@ -28,7 +29,8 @@ defmodule BorutaGateway.PhiNoise do
 
   @type request :: %{
           required(:method) => String.t(),
-          required(:path) => String.t()
+          required(:path) => String.t(),
+          optional(:context_weight) => number()
         }
 
   @spec train(String.t(), keyword()) :: {:ok, Model.t()}
@@ -58,8 +60,16 @@ defmodule BorutaGateway.PhiNoise do
   defp normalize_request(request) do
     %{
       method: request |> fetch!(:method) |> to_string(),
-      path: request |> fetch!(:path) |> to_string()
+      path: request |> fetch!(:path) |> to_string(),
+      context_weight: context_weight(request)
     }
+  end
+
+  defp context_weight(request) do
+    case Map.get(request, :context_weight, Map.get(request, "context_weight", 1.0)) do
+      weight when is_number(weight) and weight >= 0 -> weight * 1.0
+      _weight -> 1.0
+    end
   end
 
   defp fetch!(map, key),

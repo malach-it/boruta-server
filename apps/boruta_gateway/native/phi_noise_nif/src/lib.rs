@@ -17,6 +17,7 @@ const OPENAPI_METHODS: [&str; 8] = [
 struct Request {
     method: String,
     path: String,
+    context_weight: f64,
 }
 
 #[derive(Debug, NifMap)]
@@ -413,6 +414,7 @@ fn synthetic_request(method: &str, path: &str) -> Request {
     Request {
         method: method.to_string(),
         path: path.to_string(),
+        context_weight: 1.0,
     }
 }
 
@@ -470,7 +472,8 @@ fn prediction_context_terms(
             continue;
         }
 
-        let weight = REQUEST_CONTEXT_WEIGHT * MEMORY_DECAY.powi(age as i32);
+        let weight =
+            REQUEST_CONTEXT_WEIGHT * context.context_weight * MEMORY_DECAY.powi(age as i32);
         add_request_example_terms(&mut terms, &context_id, weight);
         terms.push((format!("phi:degree2:{primary_id}*{context_id}"), weight));
     }
@@ -603,6 +606,7 @@ mod tests {
             &Request {
                 method: "GET".to_string(),
                 path: "/api/clients".to_string(),
+                context_weight: 1.0,
             },
             &routes,
             &contexts,
