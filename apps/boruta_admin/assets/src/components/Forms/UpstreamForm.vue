@@ -168,7 +168,7 @@
           <div class="field">
             <div class="ui toggle checkbox">
               <input type="checkbox" v-model="upstream.noise_cancelling_enabled">
-              <label>Enable OpenAPI noise cancelling</label>
+              <label>Enable noise cancelling</label>
             </div>
           </div>
           <div class="field" :class="{ 'error': upstream.errors?.openapi_spec }">
