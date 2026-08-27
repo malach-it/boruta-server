@@ -1,9 +1,7 @@
 defmodule BorutaWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boruta_web
 
-  plug RemoteIp,
-    headers: {BorutaAuth.RemoteIpConfig, :headers, []},
-    proxies: {BorutaAuth.RemoteIpConfig, :proxies, []}
+  plug RemoteIp
 
   plug Plug.Static,
     at: "/",
