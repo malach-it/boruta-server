@@ -26,6 +26,118 @@
         "security": []
       }
     },
+    "/assets/{filename}": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve a compiled admin frontend asset",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "description": "Logical or Phoenix-digested asset filename, such as app.umd.js or app.umd-<digest>.js.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vsn",
+            "in": "query",
+            "required": false,
+            "description": "Phoenix static asset version marker used by digested URLs.",
+            "schema": {
+              "type": "string",
+              "example": "d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminAsset"
+          }
+        },
+        "security": []
+      }
+    },
+    "/favicon.ico": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve the admin favicon",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminIcon"
+          }
+        },
+        "security": []
+      }
+    },
+    "/semantic-ui.min.css": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve the Semantic UI stylesheet",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminStylesheet"
+          }
+        },
+        "security": []
+      }
+    },
+    "/prism-dark.min.css": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve the Prism stylesheet",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminStylesheet"
+          }
+        },
+        "security": []
+      }
+    },
+    "/themes/default/assets/fonts/{filename}": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve a Semantic UI icon font",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "description": "Logical or Phoenix-digested font filename, such as icons.woff2 or icons-<digest>.woff2.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vsn",
+            "in": "query",
+            "required": false,
+            "description": "Phoenix static asset version marker used by digested URLs.",
+            "schema": {
+              "type": "string",
+              "example": "d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFont"
+          }
+        },
+        "security": []
+      }
+    },
     "/not-found": {
       "get": {
         "tags": [
@@ -8043,6 +8155,77 @@
             }
           }
         }
+      },
+      "AdminAsset": {
+        "description": "A compiled Boruta administration frontend asset.",
+        "content": {
+          "application/javascript": {
+            "schema": {
+              "type": "string"
+            }
+          },
+          "text/css": {
+            "schema": {
+              "type": "string"
+            }
+          },
+          "image/x-icon": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "AdminStylesheet": {
+        "description": "A Boruta administration stylesheet.",
+        "content": {
+          "text/css": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AdminIcon": {
+        "description": "The Boruta administration favicon.",
+        "content": {
+          "image/x-icon": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "AdminFont": {
+        "description": "A Semantic UI icon font used by the Boruta administration frontend.",
+        "content": {
+          "application/vnd.ms-fontobject": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "font/ttf": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "font/woff": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "font/woff2": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
       }
     },
     "schemas": {
@@ -9212,6 +9395,10 @@
     {
       "name": "Frontend",
       "description": "Browser routes served by the Boruta administration single-page application."
+    },
+    {
+      "name": "Assets",
+      "description": "Static assets used by the Boruta administration frontend."
     },
     {
       "name": "Clients"
