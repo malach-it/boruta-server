@@ -232,7 +232,7 @@ defmodule BorutaGateway.HttpGateway do
         path_info = path_info(path)
 
         with %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
-             :ok <- NoiseCancelling.check(upstream, method, path, state.remote_ip),
+             :ok <- check_noise_cancelling(upstream, method, path, state.remote_ip),
              :ok <- rate_limit(socket, upstream),
              {:ok, token} <- Authorization.authorize(header, method, upstream) do
           request =
@@ -259,7 +259,7 @@ defmodule BorutaGateway.HttpGateway do
 
             {:noreply, close_downstream(socket, state)}
 
-          {:noise, _prediction} ->
+          {:noise, upstream, prediction} ->
             response = "No upstream has been found corresponding to the given request."
 
             :gen_tcp.send(
@@ -268,6 +268,8 @@ defmodule BorutaGateway.HttpGateway do
                 "Content-Length: 62\r\n\r\n" <>
                 response
             )
+
+            log_noise_cancellation(request_id, upstream, method, path, prediction)
 
             {:noreply, close_downstream(socket, state)}
 
@@ -754,6 +756,27 @@ defmodule BorutaGateway.HttpGateway do
         upstream_tls: upstream_tls(upstream)
       }
     )
+  end
+
+  defp log_noise_cancellation(request_id, upstream, method, path, prediction) do
+    :telemetry.execute(
+      [:boruta_gateway, :noise_cancelling, :cancelled],
+      %{},
+      %{
+        request_id: request_id,
+        upstream: upstream,
+        method: method,
+        path: log_path(path),
+        prediction: prediction
+      }
+    )
+  end
+
+  defp check_noise_cancelling(upstream, method, path, remote_ip) do
+    case NoiseCancelling.check(upstream, method, path, remote_ip) do
+      :ok -> :ok
+      {:noise, prediction} -> {:noise, upstream, prediction}
+    end
   end
 
   defp upstream_time(%State{upstream_start: nil}, _stop), do: 0

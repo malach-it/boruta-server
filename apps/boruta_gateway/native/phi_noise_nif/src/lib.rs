@@ -435,6 +435,8 @@ fn request_context_terms(
 ) -> Vec<(String, f64)> {
     let mut terms = Vec::new();
     let request_id = request_id(routes, request);
+    let context_weight =
+        REQUEST_CONTEXT_WEIGHT / openapi_requests.len().saturating_sub(1).max(1) as f64;
     add_request_example_terms(&mut terms, &request_id, 1.0);
 
     // a, b, c are whole request examples. Phi composition is additive:
@@ -443,10 +445,10 @@ fn request_context_terms(
         .iter()
         .filter(|context| **context != request_id)
     {
-        add_request_example_terms(&mut terms, context, REQUEST_CONTEXT_WEIGHT);
+        add_request_example_terms(&mut terms, context, context_weight);
         terms.push((
             format!("phi:degree2:{request_id}*{context}"),
-            REQUEST_CONTEXT_WEIGHT,
+            context_weight,
         ));
     }
 
@@ -596,6 +598,7 @@ mod tests {
         )
         .unwrap();
         let contexts = openapi_request_contexts(&routes);
+        let context_weight = REQUEST_CONTEXT_WEIGHT / (contexts.len() - 1) as f64;
         let terms = request_context_terms(
             &Request {
                 method: "GET".to_string(),
@@ -608,15 +611,12 @@ mod tests {
         assert!(terms.contains(&("phi:request:GET /api/clients".to_string(), 1.0)));
         assert!(terms.contains(&(
             "phi:request:GET /api/clients/{}".to_string(),
-            REQUEST_CONTEXT_WEIGHT
+            context_weight
         )));
-        assert!(terms.contains(&(
-            "phi:request:POST /api/clients".to_string(),
-            REQUEST_CONTEXT_WEIGHT
-        )));
+        assert!(terms.contains(&("phi:request:POST /api/clients".to_string(), context_weight)));
         assert!(terms.contains(&(
             "phi:degree2:GET /api/clients*POST /api/clients".to_string(),
-            REQUEST_CONTEXT_WEIGHT
+            context_weight
         )));
     }
 }

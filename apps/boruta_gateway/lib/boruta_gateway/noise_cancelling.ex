@@ -20,16 +20,12 @@ defmodule BorutaGateway.NoiseCancelling do
     request = %{method: method, path: upstream_path(upstream, path)}
     memory_key = {:memory, upstream.id, client}
     history = lookup(memory_key, [])
-    memory = Enum.map(history, &elem(&1, 0))
-    prediction = PhiNoise.predict(model(upstream), request, memory)
-    illegal_context? = Enum.any?(history, fn {_request, openapi_match?} -> !openapi_match? end)
+    prediction = PhiNoise.predict(model(upstream), request, history)
 
-    history = Enum.take(history ++ [{request, prediction.openapi_match}], -@memory_limit)
+    history = Enum.take(history ++ [request], -@memory_limit)
     :ets.insert(@table, {memory_key, history})
 
-    noise? = prediction.noise && (!prediction.openapi_match || illegal_context?)
-
-    if noise?, do: {:noise, prediction}, else: :ok
+    if prediction.noise, do: {:noise, prediction}, else: :ok
   rescue
     _error -> :ok
   end
