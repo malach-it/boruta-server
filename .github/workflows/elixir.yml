@@ -38,6 +38,8 @@ jobs:
 
       - name: Elixir prerequisites
         run: |
+          apt-get update
+          apt-get install --yes --no-install-recommends build-essential cargo
           mix local.rebar --force
           mix local.hex --force
           mix deps.get
@@ -91,6 +93,8 @@ jobs:
 
       - name: Elixir prerequisites
         run: |
+          apt-get update
+          apt-get install --yes --no-install-recommends build-essential cargo
           mix local.rebar --force
           mix local.hex --force
           mix deps.get
