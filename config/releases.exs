@@ -40,13 +40,6 @@ config :boruta_identity, Boruta.Accounts, secret_key_base: System.get_env("SECRE
 
 config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.SMTP
 
-config :boruta_auth, BorutaAuth.RemoteIpConfig,
-  header: System.get_env("BORUTA_REMOTE_IP_HEADER", "x-forwarded-for"),
-  proxies:
-    System.get_env("BORUTA_REMOTE_IP_PROXIES", "10.0.0.0/8")
-    |> String.split(",", trim: true)
-    |> Enum.map(&String.trim/1)
-
 config :boruta_gateway,
   port: System.get_env("BORUTA_GATEWAY_PORT", "8083") |> String.to_integer(),
   sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT", "8084") |> String.to_integer(),

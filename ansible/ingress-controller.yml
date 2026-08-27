@@ -446,6 +446,12 @@
                       - secretRef:
                           name: "{{ boruta_name }}-secrets"
                     env:
+                      - name: POD_IP
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: status.podIP
+                      - name: RELEASE_NODE
+                        value: "{{ boruta_name }}@$(POD_IP)"
                       - name: BORUTA_GATEWAY_CONFIGURATION_PATH
                         value: "/config/ingress-config.yml"
                     readinessProbe:

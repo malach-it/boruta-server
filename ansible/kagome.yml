@@ -110,7 +110,13 @@
                           name: "{{ kagome_environment_name }}"
                       - secretRef:
                           name: "{{ kagome_secret_name }}"
-
+                    env:
+                      - name: POD_IP
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: status.podIP
+                      - name: RELEASE_NODE
+                        value: "{{ boruta_name }}@$(POD_IP)"
                     volumeMounts:
                       - name: logs
                         mountPath: "/app/log"
