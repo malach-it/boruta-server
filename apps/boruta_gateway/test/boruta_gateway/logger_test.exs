@@ -100,5 +100,33 @@ defmodule BorutaGateway.LoggerTest do
       assert log =~ "score=0.1"
       assert log =~ "noise_score=0.9"
     end
+
+    test "logs unmatched requests as noise without an upstream" do
+      log =
+        capture_log([level: :info], fn ->
+          BorutaGateway.Logger.noise_cancelling_handler(
+            [:boruta_gateway, :noise_cancelling, :cancelled],
+            %{response_time: 250},
+            %{
+              request_id: "request-id",
+              upstream: nil,
+              method: "GET",
+              path: "/scanner.php",
+              remote_ip: "203.0.113.1",
+              prediction: BorutaGateway.NoiseCancelling.unmatched_prediction()
+            },
+            :ok
+          )
+        end)
+
+      assert log =~ "boruta_gateway gateway noise_cancelling - success"
+      assert log =~ "path=/scanner.php"
+      assert log =~ "openapi_match=false"
+      assert log =~ "noise_score=1.0"
+      assert log =~ "reason=unmatched_upstream"
+      assert log =~ "remote_ip=203.0.113.1"
+      refute log =~ "upstream_id="
+      refute log =~ "upstream_host="
+    end
   end
 end

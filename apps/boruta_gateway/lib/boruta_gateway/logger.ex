@@ -41,7 +41,7 @@ defmodule BorutaGateway.Logger do
           method: method,
           path: path,
           prediction: prediction
-        },
+        } = metadata,
         _config
       ) do
     noise_cancelling(%{
@@ -52,7 +52,9 @@ defmodule BorutaGateway.Logger do
       response_time: response_time,
       openapi_match: Map.get(prediction, :openapi_match),
       score: Map.get(prediction, :score),
-      noise_score: Map.get(prediction, :noise_score)
+      noise_score: Map.get(prediction, :noise_score),
+      reason: Map.get(prediction, :reason),
+      remote_ip: Map.get(metadata, :remote_ip)
     })
   end
 
@@ -181,21 +183,25 @@ defmodule BorutaGateway.Logger do
          response_time: response_time,
          openapi_match: openapi_match,
          score: score,
-         noise_score: noise_score
+         noise_score: noise_score,
+         reason: reason,
+         remote_ip: remote_ip
        }) do
     Logger.log(
       :info,
       fn ->
         [
           "boruta_gateway gateway noise_cancelling - success",
-          log_attribute("upstream_id", upstream.id),
-          log_attribute("upstream_host", upstream.host),
+          log_attribute("upstream_id", upstream && upstream.id),
+          log_attribute("upstream_host", upstream && upstream.host),
           log_attribute("method", method),
           log_attribute("path", path),
           log_attribute("response_time", response_time),
           log_attribute("openapi_match", openapi_match),
           log_attribute("score", score),
-          log_attribute("noise_score", noise_score)
+          log_attribute("noise_score", noise_score),
+          log_attribute("reason", reason),
+          log_attribute("remote_ip", remote_ip)
         ]
       end,
       application: :boruta_gateway,

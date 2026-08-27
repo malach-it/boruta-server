@@ -273,23 +273,34 @@ defmodule BorutaGateway.HttpsGateway do
           )
         else
           nil ->
-            response = "No upstream has been found corresponding to the given request."
+            prediction = NoiseCancelling.unmatched_prediction()
 
-            send_downstream(
-              socket,
-              "HTTP/1.1 404 Not Found\r\n" <>
-                "Content-Length: 62\r\n\r\n" <>
-                response
+            send_downstream(socket, NoiseCancelling.forbidden_response())
+
+            log_noise_cancellation(
+              start,
+              request_id,
+              nil,
+              method,
+              path,
+              prediction,
+              state.remote_ip
             )
-
-            log_exchange(state, start, request_id, method, path, nil, 404, :failure)
 
             {:noreply, close_downstream(socket, state)}
 
           {:noise, upstream, prediction} ->
             send_downstream(socket, NoiseCancelling.forbidden_response())
 
-            log_noise_cancellation(start, request_id, upstream, method, path, prediction)
+            log_noise_cancellation(
+              start,
+              request_id,
+              upstream,
+              method,
+              path,
+              prediction,
+              state.remote_ip
+            )
 
             {:noreply, close_downstream(socket, state)}
 
@@ -824,7 +835,15 @@ defmodule BorutaGateway.HttpsGateway do
     )
   end
 
-  defp log_noise_cancellation(start, request_id, upstream, method, path, prediction) do
+  defp log_noise_cancellation(
+         start,
+         request_id,
+         upstream,
+         method,
+         path,
+         prediction,
+         remote_ip
+       ) do
     :telemetry.execute(
       [:boruta_gateway, :noise_cancelling, :cancelled],
       %{response_time: :os.system_time(:microsecond) - start},
@@ -833,7 +852,8 @@ defmodule BorutaGateway.HttpsGateway do
         upstream: upstream,
         method: method,
         path: log_path(path),
-        prediction: prediction
+        prediction: prediction,
+        remote_ip: remote_ip
       }
     )
   end

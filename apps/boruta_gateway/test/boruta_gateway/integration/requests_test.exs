@@ -51,7 +51,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       {:ok, access_token: access_token}
     end
 
-    test "returns a 404 when no upstream found" do
+    test "rejects a request as noise when no upstream matches" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
           Upstreams.create_upstream(%{
@@ -65,17 +65,17 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
 
-          assert {:ok, %Finch.Response{body: body, status: 404}} =
+          assert {:ok, %Finch.Response{body: body, status: 403}} =
                    Finch.request(request, HttpClient)
 
-          assert body == "No upstream has been found corresponding to the given request."
+          assert body == "the request has been rejected by the server"
         after
           Repo.delete_all(Upstream)
         end
       end)
     end
 
-    test "returns a 404 when no upstream persisted" do
+    test "logs an unmatched request only as noise" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
           parent = self()
@@ -83,6 +83,17 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           :telemetry.attach(
             handler_id,
+            [:boruta_gateway, :noise_cancelling, :cancelled],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_noise_log, metadata})
+            end,
+            :ok
+          )
+
+          request_handler_id = :gateway_unmatched_request_log_test
+
+          :telemetry.attach(
+            request_handler_id,
             [:boruta_gateway, :request, :stop],
             fn _event, _measurements, metadata, _config ->
               send(parent, {:gateway_request_log, metadata})
@@ -98,14 +109,25 @@ defmodule BorutaGateway.RequestsIntegrationTest do
               ""
             )
 
-          assert {:ok, %Finch.Response{body: body, status: 404}} =
+          assert {:ok, %Finch.Response{body: body, status: 403}} =
                    Finch.request(request, HttpClient)
 
-          assert body == "No upstream has been found corresponding to the given request."
+          assert body == "the request has been rejected by the server"
 
-          assert_receive {:gateway_request_log, %{remote_ip: "203.0.113.1"}}
+          assert_receive {:gateway_noise_log,
+                          %{
+                            upstream: nil,
+                            prediction: %{
+                              noise: true,
+                              reason: :unmatched_upstream
+                            },
+                            remote_ip: "203.0.113.1"
+                          }}
+
+          refute_receive {:gateway_request_log, _metadata}
         after
           :telemetry.detach(:gateway_real_ip_test)
+          :telemetry.detach(:gateway_unmatched_request_log_test)
           Repo.delete_all(Upstream)
         end
       end)
@@ -114,6 +136,16 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     test "logs first x-forwarded-for address as remote ip" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
+          Upstreams.create_upstream(%{
+            scheme: "http",
+            host: "should.not.be.called",
+            port: 80,
+            uris: ["/logged"],
+            authorize: true
+          })
+
+          Process.sleep(100)
+
           parent = self()
           handler_id = :gateway_forwarded_for_ip_test
 
@@ -129,15 +161,13 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           request =
             Finch.build(
               :get,
-              "http://localhost:7777/no_upstream",
+              "http://localhost:7777/logged",
               [{"x-forwarded-for", "198.51.100.42, 10.0.0.1"}],
               ""
             )
 
-          assert {:ok, %Finch.Response{body: body, status: 404}} =
+          assert {:ok, %Finch.Response{status: 401}} =
                    Finch.request(request, HttpClient)
-
-          assert body == "No upstream has been found corresponding to the given request."
 
           assert_receive {:gateway_request_log, %{remote_ip: "198.51.100.42"}}
         after
@@ -150,6 +180,16 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     test "logs forwarded header for address as remote ip" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
+          Upstreams.create_upstream(%{
+            scheme: "http",
+            host: "should.not.be.called",
+            port: 80,
+            uris: ["/logged"],
+            authorize: true
+          })
+
+          Process.sleep(100)
+
           parent = self()
           handler_id = :gateway_forwarded_header_ip_test
 
@@ -165,15 +205,13 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           request =
             Finch.build(
               :get,
-              "http://localhost:7777/no_upstream",
+              "http://localhost:7777/logged",
               [{"forwarded", "for=203.0.113.44;proto=https;by=10.0.0.1"}],
               ""
             )
 
-          assert {:ok, %Finch.Response{body: body, status: 404}} =
+          assert {:ok, %Finch.Response{status: 401}} =
                    Finch.request(request, HttpClient)
-
-          assert body == "No upstream has been found corresponding to the given request."
 
           assert_receive {:gateway_request_log, %{remote_ip: "203.0.113.44"}}
         after
@@ -249,21 +287,21 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           :telemetry.attach(
             handler_id,
-            [:boruta_gateway, :request, :stop],
+            [:boruta_gateway, :noise_cancelling, :cancelled],
             fn _event, _measurements, metadata, _config ->
-              send(parent, {:gateway_request_log, metadata})
+              send(parent, {:gateway_noise_log, metadata})
             end,
             :ok
           )
 
           request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
 
-          assert {:ok, %Finch.Response{body: body, status: 404}} =
+          assert {:ok, %Finch.Response{body: body, status: 403}} =
                    Finch.request(request, HttpClient)
 
-          assert body == "No upstream has been found corresponding to the given request."
+          assert body == "the request has been rejected by the server"
 
-          assert_receive {:gateway_request_log, %{request_id: request_id}}
+          assert_receive {:gateway_noise_log, %{request_id: request_id}}
           assert request_id =~ ~r/^[0-9a-f]{8}$/
         after
           :telemetry.detach(:gateway_request_id_test)
@@ -644,9 +682,9 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           :telemetry.attach(
             handler_id,
-            [:boruta_gateway, :request, :stop],
+            [:boruta_gateway, :noise_cancelling, :cancelled],
             fn _event, _measurements, metadata, _config ->
-              send(parent, {:gateway_request_log, metadata})
+              send(parent, {:gateway_noise_log, metadata})
             end,
             :ok
           )
@@ -666,8 +704,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             )
 
           assert {:ok, response} = :gen_tcp.recv(socket, 0, 1_000)
-          assert response =~ "HTTP/1.1 404 Not Found"
-          assert_receive {:gateway_request_log, %{path: "/fragmented"}}
+          assert response =~ "HTTP/1.1 403 Forbidden"
+          assert_receive {:gateway_noise_log, %{path: "/fragmented"}}
 
           :gen_tcp.close(socket)
         after
@@ -1069,7 +1107,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       {:ok, access_token: access_token}
     end
 
-    test "returns a 404 when no upstream found" do
+    test "rejects noise when no configured upstream matches" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
           configuration_file_path =
@@ -1082,10 +1120,10 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           request = Finch.build(:get, "http://localhost:7777/no_upstream", [], "")
 
-          assert {:ok, %Finch.Response{body: body, status: 404}} =
+          assert {:ok, %Finch.Response{body: body, status: 403}} =
                    Finch.request(request, HttpClient)
 
-          assert body == "No upstream has been found corresponding to the given request."
+          assert body == "the request has been rejected by the server"
         after
           Repo.delete_all(Upstream)
         end
@@ -1252,7 +1290,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       {:ok, access_token: access_token}
     end
 
-    test "returns a 404 when no upstream found" do
+    test "rejects sidecar noise when no upstream matches" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
           Upstreams.create_upstream(%{
@@ -1267,10 +1305,10 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
           request = Finch.build(:get, "http://localhost:7778/no_upstream", [], "")
 
-          assert {:ok, %Finch.Response{body: body, status: 404}} =
+          assert {:ok, %Finch.Response{body: body, status: 403}} =
                    Finch.request(request, HttpClient)
 
-          assert body == "No upstream has been found corresponding to the given request."
+          assert body == "the request has been rejected by the server"
         after
           Repo.delete_all(Upstream)
         end

@@ -26,6 +26,41 @@
         "security": []
       }
     },
+    "/.well-known/acme-challenge/{token}": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Retrieve an ACME HTTP-01 challenge response",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "ACME challenge token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ACME challenge key authorization",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Challenge token not found"
+          }
+        },
+        "security": []
+      }
+    },
     "/assets/{filename}": {
       "get": {
         "tags": [
