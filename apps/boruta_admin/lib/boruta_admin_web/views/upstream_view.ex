@@ -46,7 +46,9 @@ defmodule BorutaAdminWeb.UpstreamView do
       rate_limit_time_unit: upstream.rate_limit_time_unit,
       rate_limit_penality: upstream.rate_limit_penality,
       rate_limit_timeout: upstream.rate_limit_timeout,
-      rate_limit_memory_length: upstream.rate_limit_memory_length
+      rate_limit_memory_length: upstream.rate_limit_memory_length,
+      noise_cancelling_enabled: upstream.noise_cancelling_enabled,
+      noise_cancelling_configured: is_binary(upstream.noise_cancelling_model)
     }
   end
 end

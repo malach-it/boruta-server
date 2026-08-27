@@ -50,6 +50,7 @@ defmodule BorutaGateway.LoggerTest do
             },
             %{
               request_id: "request-id",
+              path: "/oauth/authorize",
               upstream: %Upstream{id: "upstream-id", host: "example.com", port: 443},
               upstream_tls: "mtls"
             },
@@ -59,6 +60,7 @@ defmodule BorutaGateway.LoggerTest do
 
       assert log =~ "request_id=request-id"
       assert log =~ "boruta_gateway gateway proxy - success"
+      assert log =~ "path=/oauth/authorize"
       assert log =~ "upstream_id=upstream-id"
       assert log =~ "upstream_host=example.com"
       assert log =~ "upstream_port=443"
@@ -66,6 +68,37 @@ defmodule BorutaGateway.LoggerTest do
       assert log =~ "request_time=1500"
       assert log =~ "gateway_time=500"
       assert log =~ "upstream_time=1000"
+    end
+  end
+
+  describe "noise_cancelling_handler/4" do
+    test "logs cancelled noise as a business event parseable by the admin dashboard" do
+      log =
+        capture_log([level: :info], fn ->
+          BorutaGateway.Logger.noise_cancelling_handler(
+            [:boruta_gateway, :noise_cancelling, :cancelled],
+            %{response_time: 1_500},
+            %{
+              request_id: "request-id",
+              upstream: %Upstream{id: "upstream-id", host: "example.com"},
+              method: "GET",
+              path: "/.env",
+              prediction: %{openapi_match: false, score: 0.1, noise_score: 0.9}
+            },
+            :ok
+          )
+        end)
+
+      assert log =~ "request_id=request-id"
+      assert log =~ "boruta_gateway gateway noise_cancelling - success"
+      assert log =~ "upstream_id=upstream-id"
+      assert log =~ "upstream_host=example.com"
+      assert log =~ "method=GET"
+      assert log =~ "path=/.env"
+      assert log =~ "response_time=1500"
+      assert log =~ "openapi_match=false"
+      assert log =~ "score=0.1"
+      assert log =~ "noise_score=0.9"
     end
   end
 end

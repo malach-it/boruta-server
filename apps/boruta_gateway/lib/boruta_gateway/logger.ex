@@ -19,12 +19,41 @@ defmodule BorutaGateway.Logger do
         :boruta_gateway_business_failure,
         [:boruta_gateway, :proxy, :failure],
         &__MODULE__.business_handler/4
+      },
+      {
+        :boruta_gateway_noise_cancelling,
+        [:boruta_gateway, :noise_cancelling, :cancelled],
+        &__MODULE__.noise_cancelling_handler/4
       }
     ]
 
     for {handler_id, event_name, fun} <- handlers do
       :telemetry.attach(handler_id, event_name, fun, :ok)
     end
+  end
+
+  def noise_cancelling_handler(
+        _event,
+        %{response_time: response_time},
+        %{
+          request_id: request_id,
+          upstream: upstream,
+          method: method,
+          path: path,
+          prediction: prediction
+        },
+        _config
+      ) do
+    noise_cancelling(%{
+      request_id: request_id,
+      upstream: upstream,
+      method: method,
+      path: path,
+      response_time: response_time,
+      openapi_match: Map.get(prediction, :openapi_match),
+      score: Map.get(prediction, :score),
+      noise_score: Map.get(prediction, :noise_score)
+    })
   end
 
   def request_handler(
@@ -65,6 +94,7 @@ defmodule BorutaGateway.Logger do
     business(%{
       request_id: request_id,
       status: event |> List.last() |> Atom.to_string(),
+      path: Map.get(metadata, :path),
       upstream: upstream,
       request_time: request_time,
       gateway_time: gateway_time,
@@ -109,6 +139,7 @@ defmodule BorutaGateway.Logger do
   defp business(%{
          request_id: request_id,
          status: status,
+         path: path,
          upstream: upstream,
          request_time: request_time,
          gateway_time: gateway_time,
@@ -126,6 +157,7 @@ defmodule BorutaGateway.Logger do
           "proxy",
           " - ",
           status,
+          log_attribute("path", path),
           log_attribute("upstream_id", upstream && upstream.id),
           log_attribute("upstream_host", upstream && upstream.host),
           log_attribute("upstream_port", upstream && upstream.port),
@@ -133,6 +165,37 @@ defmodule BorutaGateway.Logger do
           log_attribute("request_time", request_time),
           log_attribute("gateway_time", gateway_time),
           log_attribute("upstream_time", upstream_time)
+        ]
+      end,
+      application: :boruta_gateway,
+      request_id: request_id,
+      type: :business
+    )
+  end
+
+  defp noise_cancelling(%{
+         request_id: request_id,
+         upstream: upstream,
+         method: method,
+         path: path,
+         response_time: response_time,
+         openapi_match: openapi_match,
+         score: score,
+         noise_score: noise_score
+       }) do
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "boruta_gateway gateway noise_cancelling - success",
+          log_attribute("upstream_id", upstream.id),
+          log_attribute("upstream_host", upstream.host),
+          log_attribute("method", method),
+          log_attribute("path", path),
+          log_attribute("response_time", response_time),
+          log_attribute("openapi_match", openapi_match),
+          log_attribute("score", score),
+          log_attribute("noise_score", noise_score)
         ]
       end,
       application: :boruta_gateway,

@@ -9,6 +9,19 @@
 - [ssi] SD-JWT verifiable credential support
 - [ssi] wallet-initiated presentation definition management
 - [admin] example wallet-initiated verifiable presentation link
+- [gateway] upstreams can train and apply native Phi noise cancellation from transient OpenAPI uploads while storing only the trained model
+- [gateway] noise prediction evaluates the entire gateway, treats the root path as legal for every HTTP method, and uses bounded, weighted, recency-decayed request context
+- [gateway] cancelled requests emit business events with upstream, method, path, prediction scores, OpenAPI-match diagnostics, and response time
+- [gateway] gateway proxy business events include the request path alongside upstream and timing details
+- [admin] the OpenAPI specification documents frontend routes and digest-aware static assets
+- [infra] file logging can be disabled with `DISABLE_FILE_LOGGING` while retaining console logging
+- [infra] continuous integration and Docker build stages include the Rust toolchain required by the gateway native model
+
+### Changed
+
+- [gateway] noise cancellation relies exclusively on the model prediction instead of directly overriding decisions with OpenAPI matches
+- [gateway] accepted request context has full weight while cancelled request context has a reduced weight of `0.95`
+- [gateway] noise-cancelled requests return `403 Forbidden` with `the request has been rejected by the server` instead of imitating a missing upstream
 
 ### Fixed
 

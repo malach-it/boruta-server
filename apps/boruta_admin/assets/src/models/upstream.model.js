@@ -28,7 +28,10 @@ const defaults = {
   rate_limit_time_unit: 'second',
   rate_limit_penality: 500,
   rate_limit_timeout: 5000,
-  rate_limit_memory_length: 50
+  rate_limit_memory_length: 50,
+  noise_cancelling_enabled: false,
+  noise_cancelling_configured: false,
+  openapi_spec: null
 }
 
 const assign = {
@@ -50,6 +53,8 @@ const assign = {
   rate_limit_penality: function ({ rate_limit_penality }) { this.rate_limit_penality = rate_limit_penality },
   rate_limit_timeout: function ({ rate_limit_timeout }) { this.rate_limit_timeout = rate_limit_timeout },
   rate_limit_memory_length: function ({ rate_limit_memory_length }) { this.rate_limit_memory_length = rate_limit_memory_length },
+  noise_cancelling_enabled: function ({ noise_cancelling_enabled }) { this.noise_cancelling_enabled = noise_cancelling_enabled },
+  noise_cancelling_configured: function ({ noise_cancelling_configured }) { this.noise_cancelling_configured = noise_cancelling_configured },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
   },
@@ -101,6 +106,7 @@ class Upstream {
           this[key] = params[key]
           assign[key].bind(this)(params)
         })
+        this.openapi_spec = null
         return this
       })
       .catch((error) => {
@@ -146,7 +152,9 @@ class Upstream {
       rate_limit_time_unit,
       rate_limit_penality,
       rate_limit_timeout,
-      rate_limit_memory_length
+      rate_limit_memory_length,
+      noise_cancelling_enabled,
+      openapi_spec
     } = this
 
     return {
@@ -178,7 +186,9 @@ class Upstream {
       rate_limit_time_unit,
       rate_limit_penality,
       rate_limit_timeout,
-      rate_limit_memory_length
+      rate_limit_memory_length,
+      noise_cancelling_enabled,
+      openapi_spec
     }
   }
 }

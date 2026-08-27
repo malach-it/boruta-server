@@ -183,6 +183,26 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
       conn = post(conn, Routes.admin_upstream_path(conn, :create), upstream: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
+
+    @tag authorized: ["upstreams:manage:all"]
+    test "accepts an OpenAPI definition but returns only model configuration", %{conn: conn} do
+      openapi = Jason.encode!(%{"openapi" => "3.0.0", "paths" => %{}})
+
+      conn =
+        post(conn, Routes.admin_upstream_path(conn, :create),
+          upstream:
+            Map.merge(@create_attrs, %{
+              noise_cancelling_enabled: true,
+              openapi_spec: openapi
+            })
+        )
+
+      data = json_response(conn, 201)["data"]
+      assert data["noise_cancelling_enabled"]
+      assert data["noise_cancelling_configured"]
+      refute Map.has_key?(data, "openapi_spec")
+      refute Map.has_key?(data, "noise_cancelling_model")
+    end
   end
 
   describe "update upstream" do

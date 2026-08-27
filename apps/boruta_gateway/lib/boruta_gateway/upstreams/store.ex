@@ -118,40 +118,39 @@ defmodule BorutaGateway.Upstreams.Store do
         {:notification, _pid, _ref, "upstreams_changed", payload},
         %{upstreams: upstreams} = state
       ) do
-    upstreams =
+    fallback_upstreams =
       upstream_records(upstreams)
       |> update_upstreams(Jason.decode!(payload))
 
-    state = %{state | upstreams: upstreams}
+    upstreams =
+      if Repo.config()[:pool] == Ecto.Adapters.SQL.Sandbox do
+        fallback_upstreams
+      else
+        try do
+          Repo.all(Upstream) |> structure()
+        rescue
+          error ->
+            Logger.error(inspect(error))
+            fallback_upstreams
+        end
+      end
 
-    {:noreply, state}
+    {:noreply, %{state | upstreams: upstreams}}
   end
 
   defp update_upstreams(upstreams, %{"operation" => "INSERT", "record" => record}) do
-    new =
-      struct(
-        Upstream,
-        Enum.map(record, fn {key, value} -> {String.to_atom(key), value} end)
-      )
-
     upstreams
-    |> List.insert_at(0, new)
+    |> List.insert_at(0, record_to_upstream(record))
     |> structure()
   end
 
   defp update_upstreams(upstreams, %{"operation" => "UPDATE", "record" => record}) do
-    updated =
-      struct(
-        Upstream,
-        Enum.map(record, fn {key, value} -> {String.to_atom(key), value} end)
-      )
-
-    updated_id = updated.id
+    updated = record_to_upstream(record)
 
     upstreams
     |> Enum.map(fn
-      %{id: ^updated_id} ->
-        updated
+      %{id: id, noise_cancelling_model: model} when id == updated.id ->
+        %{updated | noise_cancelling_model: model}
 
       upstream ->
         upstream
@@ -161,10 +160,7 @@ defmodule BorutaGateway.Upstreams.Store do
 
   defp update_upstreams(upstreams, %{"operation" => "DELETE", "record" => %{"id" => id}}) do
     upstreams
-    |> Enum.reject(fn
-      %{id: ^id} -> true
-      _ -> false
-    end)
+    |> Enum.reject(&(&1.id == id))
     |> structure()
   end
 
@@ -173,6 +169,20 @@ defmodule BorutaGateway.Upstreams.Store do
     |> Enum.flat_map(fn {_node_name, upstreams} -> upstreams || [] end)
     |> Enum.map(fn {_uri, upstream} -> upstream end)
     |> Enum.uniq_by(& &1.id)
+  end
+
+  defp record_to_upstream(record) do
+    fields = Map.new(Upstream.__schema__(:fields), &{Atom.to_string(&1), &1})
+
+    attributes =
+      Enum.flat_map(record, fn {key, value} ->
+        case Map.fetch(fields, key) do
+          {:ok, field} -> [{field, value}]
+          :error -> []
+        end
+      end)
+
+    struct(Upstream, attributes)
   end
 
   defp structure(upstreams) do
