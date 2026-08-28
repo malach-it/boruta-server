@@ -7,6 +7,7 @@
 ### Fixed
 
 - [admin] fix sidebar upstream navigation
+- [auth] log oauth revocation requests subject
 
 ## [0.11.6] - 2026-08-25
 
