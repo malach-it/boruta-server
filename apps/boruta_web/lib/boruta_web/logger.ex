@@ -335,7 +335,7 @@ defmodule BorutaWeb.Logger do
   def authorization_revoke_success_handler(
         _,
         _measurements,
-        %{},
+        %{sub: sub},
         _
       ) do
     log_line = [
@@ -345,7 +345,8 @@ defmodule BorutaWeb.Logger do
       ?\s,
       "revoke",
       " - ",
-      "success"
+      "success",
+      log_attribute("sub", sub)
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)

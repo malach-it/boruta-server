@@ -1,19 +1,28 @@
 defmodule BorutaWeb.Oauth.RevokeTest do
   use BorutaWeb.ConnCase
 
+  import ExUnit.CaptureLog
   import Boruta.Factory
   import BorutaIdentity.AccountsFixtures
 
   alias Boruta.Ecto.Token
 
   setup %{conn: conn} do
+    previous_level = Logger.level()
+    Logger.configure(level: :info)
+
+    on_exit(fn -> Logger.configure(level: previous_level) end)
+
     {:ok, conn: conn}
   end
 
   describe "revoke" do
     setup %{conn: conn} do
       client = insert(:client)
-      client_token = insert(:token, type: "access_token", value: SecureRandom.uuid(), client: client)
+
+      client_token =
+        insert(:token, type: "access_token", value: SecureRandom.uuid(), client: client)
+
       resource_owner = user_fixture()
 
       resource_owner_token =
@@ -93,6 +102,57 @@ defmodule BorutaWeb.Oauth.RevokeTest do
       )
 
       assert BorutaAuth.Repo.get_by(Token, value: token.value).revoked_at
+    end
+
+    test "logs a successful revocation with the user id and without the token", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner,
+      resource_owner_token: token
+    } do
+      log =
+        capture_log([level: :info], fn ->
+          conn =
+            post(
+              conn,
+              "/oauth/revoke",
+              "client_id=#{client.id}&client_secret=#{client.secret}&token=#{token.value}"
+            )
+
+          assert response(conn, 200)
+        end)
+
+      assert log =~ "authorization revoke - success"
+      assert log =~ "sub=#{resource_owner.id}"
+      refute log =~ token.value
+    end
+
+    test "logs a failed revocation without the submitted token", %{
+      conn: conn,
+      client: client
+    } do
+      submitted_token = "submitted-sensitive-token"
+
+      log =
+        capture_log([level: :info], fn ->
+          conn =
+            post(
+              conn,
+              "/oauth/revoke",
+              "client_id=#{client.id}&client_secret=bad_secret&token=#{submitted_token}"
+            )
+
+          assert json_response(conn, 401) == %{
+                   "error" => "invalid_client",
+                   "error_description" => "Invalid client_id or client_secret."
+                 }
+        end)
+
+      assert log =~ "authorization revoke - failure"
+      assert log =~ "status=unauthorized"
+      assert log =~ "error=invalid_client"
+      assert log =~ ~s(error_description="Invalid client_id or client_secret.")
+      refute log =~ submitted_token
     end
   end
 end
