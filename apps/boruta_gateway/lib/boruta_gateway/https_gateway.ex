@@ -15,6 +15,7 @@ defmodule BorutaGateway.HttpsGateway do
   alias BorutaGateway.Certificate
   alias BorutaGateway.HttpRequest
   alias BorutaGateway.HttpsGateway.Authorization
+  alias BorutaGateway.NoiseCancelling
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -254,6 +255,7 @@ defmodule BorutaGateway.HttpsGateway do
         path_info = path_info(path)
 
         with %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
+             :ok <- check_noise_cancelling(upstream, method, path, state.remote_ip),
              :ok <- rate_limit(socket, upstream),
              {:ok, token} <- Authorization.authorize(header, method, upstream) do
           connect_upstream(
@@ -271,16 +273,34 @@ defmodule BorutaGateway.HttpsGateway do
           )
         else
           nil ->
-            response = "No upstream has been found corresponding to the given request."
+            prediction = NoiseCancelling.unmatched_prediction()
 
-            send_downstream(
-              socket,
-              "HTTP/1.1 404 Not Found\r\n" <>
-                "Content-Length: 62\r\n\r\n" <>
-                response
+            send_downstream(socket, NoiseCancelling.forbidden_response())
+
+            log_noise_cancellation(
+              start,
+              request_id,
+              nil,
+              method,
+              path,
+              prediction,
+              state.remote_ip
             )
 
-            log_exchange(state, start, request_id, method, path, nil, 404, :failure)
+            {:noreply, close_downstream(socket, state)}
+
+          {:noise, upstream, prediction} ->
+            send_downstream(socket, NoiseCancelling.forbidden_response())
+
+            log_noise_cancellation(
+              start,
+              request_id,
+              upstream,
+              method,
+              path,
+              prediction,
+              state.remote_ip
+            )
 
             {:noreply, close_downstream(socket, state)}
 
@@ -673,9 +693,42 @@ defmodule BorutaGateway.HttpsGateway do
   end
 
   defp request_remote_ip(payload, socket) do
+    forwarded_remote_ip(payload) || remote_ip(socket)
+  end
+
+  defp forwarded_remote_ip(payload) do
+    real_ip_header(payload) ||
+      x_forwarded_for_header(payload) ||
+      forwarded_header(payload)
+  end
+
+  defp real_ip_header(payload) do
     case Regex.run(~r{(?:^|\r\n)x-real-ip:\s*([^\r]+)}i, payload) do
-      [_, remote_ip] -> remote_ip
-      nil -> remote_ip(socket)
+      [_, remote_ip] -> String.trim(remote_ip)
+      nil -> nil
+    end
+  end
+
+  defp x_forwarded_for_header(payload) do
+    case Regex.run(~r{(?:^|\r\n)x-forwarded-for:\s*([^\r]+)}i, payload) do
+      [_, remote_ips] ->
+        remote_ips
+        |> String.split(",", parts: 2)
+        |> List.first()
+        |> String.trim()
+
+      nil ->
+        nil
+    end
+  end
+
+  defp forwarded_header(payload) do
+    case Regex.run(~r{(?:^|\r\n)forwarded:\s*[^\r]*for=\"?([^\";\r,]+)\"?}i, payload) do
+      [_, remote_ip] ->
+        remote_ip |> String.trim() |> String.trim_leading("[") |> String.trim_trailing("]")
+
+      nil ->
+        nil
     end
   end
 
@@ -775,10 +828,41 @@ defmodule BorutaGateway.HttpsGateway do
       },
       %{
         request_id: request_id,
+        path: log_path(path),
         upstream: upstream,
         upstream_tls: upstream_tls(upstream)
       }
     )
+  end
+
+  defp log_noise_cancellation(
+         start,
+         request_id,
+         upstream,
+         method,
+         path,
+         prediction,
+         remote_ip
+       ) do
+    :telemetry.execute(
+      [:boruta_gateway, :noise_cancelling, :cancelled],
+      %{response_time: :os.system_time(:microsecond) - start},
+      %{
+        request_id: request_id,
+        upstream: upstream,
+        method: method,
+        path: log_path(path),
+        prediction: prediction,
+        remote_ip: remote_ip
+      }
+    )
+  end
+
+  defp check_noise_cancelling(upstream, method, path, remote_ip) do
+    case NoiseCancelling.check(upstream, method, path, remote_ip) do
+      :ok -> :ok
+      {:noise, prediction} -> {:noise, upstream, prediction}
+    end
   end
 
   defp upstream_time(%State{upstream_start: nil}, _stop), do: 0
@@ -832,7 +916,7 @@ defmodule BorutaGateway.HttpsGateway do
 
     payload
     |> clean_request_headers(preserve_forwarded_authorization?)
-    |> put_header("Host", upstream.host)
+    |> put_header("Host", upstream_host_header(upstream))
   end
 
   defp transform_header(payload, upstream, token) do
@@ -908,6 +992,11 @@ defmodule BorutaGateway.HttpsGateway do
       _ -> request_line
     end
   end
+
+  defp upstream_host_header(%Upstream{virtual_host: virtual_host}) when is_binary(virtual_host),
+    do: virtual_host
+
+  defp upstream_host_header(%Upstream{host: host}), do: host
 
   defp clean_request_headers(payload, preserve_forwarded_authorization?) do
     rejected_headers = [

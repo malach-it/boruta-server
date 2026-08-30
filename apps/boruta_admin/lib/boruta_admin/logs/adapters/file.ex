@@ -1,3 +1,20 @@
+defmodule BorutaAdmin.Logs.FileTooLargeError do
+  @enforce_keys [:message]
+  defexception [:message, plug_status: 422]
+
+  @type t :: %__MODULE__{
+          message: String.t()
+        }
+
+  def exception(message) when is_binary(message) do
+    %__MODULE__{message: message}
+  end
+
+  def message(exception) do
+    exception.message
+  end
+end
+
 defmodule BorutaAdmin.Logs.Adapters.File do
   @moduledoc false
 
@@ -6,7 +23,11 @@ defmodule BorutaAdmin.Logs.Adapters.File do
   alias BorutaAdmin.Logs.FileTooLargeError
   alias BorutaAuth.LogRotate
 
+  @max_log_lines 10_000
   @default_max_file_size 100_000_000
+  @log_attribute_regex ~r/([^\s=]+)=(?:"([^"]*)"|([^\s]+))/
+  @request_log_regex ~r/\A(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(µs|ms)$/u
+  @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(?: ([^\=]+)=((\".+\")|([^\s]+)))*/
 
   @impl true
   def earliest_at(application, type, _options) do
@@ -29,7 +50,214 @@ defmodule BorutaAdmin.Logs.Adapters.File do
   end
 
   @impl true
-  def stream(start_at, end_at, application, type, query, options) do
+  # credo:disable-for-next-line
+  def read(start_at, end_at, application, :request = type, query, options) do
+    time_scale_unit = time_scale_unit(start_at, end_at)
+
+    log_stream(start_at, end_at, application, type, query, options)
+    |> Stream.map(&parse_request_log/1)
+    |> Stream.reject(&is_nil/1)
+    |> apply_request_filters(query)
+    |> Enum.reduce(
+      %{
+        time_scale_unit: time_scale_unit,
+        overflow: false,
+        log_lines: [],
+        log_count: 0,
+        status_codes: %{},
+        request_counts: %{},
+        request_times: %{},
+        labels: [],
+        methods: []
+      },
+      fn %{
+           label: label,
+           log_line: log_line,
+           time: time,
+           method: method,
+           status_code: status_code,
+           duration: duration,
+           duration_unit: duration_unit
+         },
+         %{
+           time_scale_unit: time_scale_unit,
+           overflow: overflow,
+           log_lines: log_lines,
+           log_count: log_count,
+           status_codes: status_codes,
+           request_counts: request_counts,
+           request_times: request_times,
+           labels: labels,
+           methods: methods
+         } ->
+        overflow = overflow || log_count >= @max_log_lines
+        truncated_time = DateTime.truncate(time, :second)
+
+        truncated_time =
+          case time_scale_unit do
+            :second -> truncated_time
+            :minute -> %{truncated_time | second: 0}
+            :hour -> %{truncated_time | second: 0, minute: 0}
+          end
+
+        normalized_duration =
+          case duration_unit do
+            "ms" -> duration
+            "µs" -> duration / 1000
+          end
+
+        %{
+          time_scale_unit: time_scale_unit,
+          overflow: overflow,
+          log_lines:
+            case overflow do
+              true -> log_lines
+              false -> log_lines ++ [log_line]
+            end,
+          log_count: log_count + 1,
+          status_codes:
+            Map.merge(status_codes, %{label => %{status_code => 1}}, fn _, a, b ->
+              Map.merge(a, b, fn _, i, j -> i + j end)
+            end),
+          request_counts:
+            Map.merge(request_counts, %{label => %{truncated_time => 1}}, fn _, a, b ->
+              Map.merge(a, b, fn _, i, j -> i + j end)
+            end),
+          request_times:
+            Map.merge(
+              request_times,
+              %{label => %{truncated_time => normalized_duration}},
+              fn _, a, b ->
+                Map.merge(a, b, fn _, i, j -> (i + j) / 2 end)
+              end
+            ),
+          labels:
+            case Enum.member?(labels, label) do
+              false -> [label | labels] |> Enum.sort()
+              true -> labels
+            end,
+          methods:
+            case Enum.member?(methods, method) do
+              false -> [method | methods] |> Enum.sort()
+              true -> methods
+            end
+        }
+      end
+    )
+  end
+
+  # credo:disable-for-next-line
+  def read(start_at, end_at, application, :business = type, query, options) do
+    time_scale_unit = time_scale_unit(start_at, end_at)
+
+    log_stream(start_at, end_at, application, type, query, options)
+    |> Stream.map(&parse_business_log/1)
+    |> Stream.reject(&is_nil/1)
+    |> apply_business_filters(query)
+    |> Enum.reduce(
+      %{
+        time_scale_unit: time_scale_unit,
+        overflow: false,
+        log_lines: [],
+        log_count: 0,
+        events: [],
+        counts: %{},
+        business_event_counts: %{},
+        gateway_times: %{},
+        domains: [],
+        actions: []
+      },
+      fn %{
+           log_line: log_line,
+           time: time,
+           request_id: request_id,
+           label: label,
+           application: application,
+           status: status,
+           domain: domain,
+           action: action,
+           event_domain: event_domain,
+           event_action: event_action,
+           attributes: attributes
+         },
+         %{
+           time_scale_unit: time_scale_unit,
+           overflow: overflow,
+           log_lines: log_lines,
+           log_count: log_count,
+           events: events,
+           counts: counts,
+           business_event_counts: business_event_counts,
+           gateway_times: gateway_times,
+           domains: domains,
+           actions: actions
+         } ->
+        overflow = overflow || log_count >= @max_log_lines
+        truncated_time = DateTime.truncate(time, :second)
+
+        truncated_time =
+          case time_scale_unit do
+            :second -> truncated_time
+            :minute -> %{truncated_time | second: 0}
+            :hour -> %{truncated_time | second: 0, minute: 0}
+          end
+
+        %{
+          time_scale_unit: time_scale_unit,
+          overflow: overflow,
+          log_lines:
+            case overflow do
+              true -> log_lines
+              false -> log_lines ++ [log_line]
+            end,
+          log_count: log_count + 1,
+          events:
+            case overflow do
+              true ->
+                events
+
+              false ->
+                [
+                  %{
+                    time: time,
+                    request_id: request_id,
+                    label: label,
+                    application: application,
+                    domain: event_domain,
+                    action: event_action,
+                    status: status,
+                    attributes: attributes
+                  }
+                  | events
+                ]
+            end,
+          business_event_counts:
+            Map.merge(business_event_counts, %{label => %{truncated_time => 1}}, fn _, a, b ->
+              Map.merge(a, b, fn _, i, j -> i + j end)
+            end),
+          gateway_times: update_gateway_times(gateway_times, attributes, truncated_time),
+          counts:
+            Map.merge(counts, %{label => %{status => 1}}, fn _, a, b ->
+              Map.merge(a, b, fn _, i, j -> i + j end)
+            end),
+          domains:
+            case Enum.member?(domains, domain) do
+              false -> [domain | domains] |> Enum.sort()
+              true -> domains
+            end,
+          actions:
+            case Enum.member?(actions, action) do
+              false -> [action | actions] |> Enum.sort()
+              true -> actions
+            end
+        }
+      end
+    )
+  end
+
+  def read(_start_at, _end_at, _application, _type, _query, _options), do: %{}
+
+  defp log_stream(start_at, end_at, application, type, query, options) do
     paths =
       log_dates(DateTime.to_date(start_at), DateTime.to_date(end_at))
       |> Enum.map(&LogRotate.path(application, type, &1))
@@ -72,6 +300,200 @@ defmodule BorutaAdmin.Logs.Adapters.File do
       []
     else
       [start_date | log_dates(Date.add(start_date, 1), end_date)]
+    end
+  end
+
+  defp parse_request_log(log_line) do
+    case Regex.run(@request_log_regex, log_line) do
+      nil ->
+        nil
+
+      [
+        log_line,
+        raw_time,
+        request_id,
+        application,
+        method,
+        path,
+        _state,
+        status_code,
+        ip_address,
+        duration,
+        duration_unit
+      ] ->
+        with {:ok, time, _offset} <- DateTime.from_iso8601(raw_time) do
+          label_path = normalize_request_label_path(path)
+
+          %{
+            log_line: log_line,
+            time: time,
+            label: String.slice("#{application} - #{method} #{label_path}", 0..70),
+            request_id: request_id,
+            application: application,
+            method: method,
+            path: path,
+            status_code: status_code,
+            ip_address: ip_address,
+            duration: String.to_integer(duration),
+            duration_unit: duration_unit
+          }
+        end
+    end
+  end
+
+  defp normalize_request_label_path("/openid/direct_post/" <> code_id) when code_id != "",
+    do: "/openid/direct_post/:code_id"
+
+  defp normalize_request_label_path(path), do: path
+
+  def apply_request_filters(request_stream, query) do
+    Enum.reduce(query, request_stream, fn
+      {_key, nil}, stream ->
+        stream
+
+      {_key, ""}, stream ->
+        stream
+
+      {key, value}, stream when key in [:label, :method, :status_code] ->
+        Stream.filter(stream, fn
+          %{^key => ^value} -> true
+          _ -> false
+        end)
+
+      _, stream ->
+        stream
+    end)
+  end
+
+  def apply_business_filters(request_stream, query) do
+    Enum.reduce(query, request_stream, fn
+      {_key, nil}, stream ->
+        stream
+
+      {_key, ""}, stream ->
+        stream
+
+      {key, value}, stream when key in [:domain, :action] ->
+        Stream.filter(stream, fn
+          %{^key => ^value} -> true
+          _ -> false
+        end)
+
+      {:sub, value}, stream ->
+        Stream.filter(stream, fn
+          %{attributes: %{"sub" => ^value}} -> true
+          _ -> false
+        end)
+
+      {:resource_id, value}, stream ->
+        Stream.filter(stream, fn
+          %{event_domain: event_domain, attributes: attributes} ->
+            Map.get(attributes, "#{event_domain}_id") == value
+
+          _ ->
+            false
+        end)
+
+      _, stream ->
+        stream
+    end)
+  end
+
+  defp parse_business_log(log_line) do
+    case Regex.run(@business_event_log_regex, log_line) do
+      nil ->
+        nil
+
+      [
+        log_line,
+        raw_time,
+        request_id,
+        application,
+        domain,
+        action,
+        status | _raw_attributes
+      ] ->
+        with {:ok, time, _offset} <- DateTime.from_iso8601(raw_time) do
+          %{
+            log_line: log_line,
+            time: time,
+            request_id: request_id,
+            label: String.slice("#{application} - #{domain} #{action}", 0..70),
+            application: application,
+            domain: String.slice("#{application} - #{domain}", 0..70),
+            action: String.slice("#{application} - #{domain} #{action}", 0..70),
+            event_domain: domain,
+            event_action: action,
+            status: status,
+            attributes: parse_log_attributes(log_line, application)
+          }
+        end
+    end
+  end
+
+  defp parse_log_attributes(log_line, application) do
+    case String.split(log_line, " - ", parts: 2) do
+      [_prefix, status_and_attributes] ->
+        @log_attribute_regex
+        |> Regex.scan(status_and_attributes)
+        |> Enum.reduce(%{}, fn [attribute, key | values], attributes ->
+          value =
+            case String.starts_with?(attribute, ~s{#{key}="}) do
+              true -> List.first(values) || ""
+              false -> List.last(values) || ""
+            end
+
+          Map.put(attributes, key, decode_log_attribute(application, value))
+        end)
+
+      _ ->
+        %{}
+    end
+  end
+
+  defp decode_log_attribute("boruta_admin", value) do
+    URI.decode_www_form(value)
+  rescue
+    ArgumentError -> value
+  end
+
+  defp decode_log_attribute(_application, value), do: value
+
+  defp update_gateway_times(gateway_times, attributes, truncated_time) do
+    [
+      {"request time", "request_time"},
+      {"gateway time", "gateway_time"},
+      {"upstream time", "upstream_time"}
+    ]
+    |> Enum.reduce(gateway_times, fn {label, attribute}, gateway_times ->
+      attributes[attribute]
+      |> parse_microsecond_time()
+      |> put_gateway_time(gateway_times, label, truncated_time)
+    end)
+  end
+
+  defp put_gateway_time(nil, gateway_times, _label, _truncated_time), do: gateway_times
+
+  defp put_gateway_time(time, gateway_times, label, truncated_time) do
+    Map.merge(gateway_times, %{label => %{truncated_time => time / 1000}}, fn _, a, b ->
+      Map.merge(a, b, fn _, i, j -> (i + j) / 2 end)
+    end)
+  end
+
+  defp parse_microsecond_time(nil), do: nil
+
+  defp parse_microsecond_time(time) do
+    case Integer.parse(time) do
+      {time, ""} -> time
+      _ -> nil
+    end
+  end
+
+  defp time_scale_unit(start_at, end_at) do
+    case DateTime.diff(end_at, start_at, :second) do
+      duration when duration < 60 * 60 -> :second
+      duration when duration < 60 * 60 * 24 -> :minute
+      _duration -> :hour
     end
   end
 end

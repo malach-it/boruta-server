@@ -6,7 +6,7 @@ defmodule BorutaGateway.Application do
   use Application
   require Logger
 
-  alias BorutaGateway.{Certificate, ConfigurationLoader, ServiceRegistry, Upstreams}
+  alias BorutaGateway.{Certificate, ConfigurationLoader, Kubernetes, ServiceRegistry, Upstreams}
 
   @impl Application
   def start(_type, _args) do
@@ -19,9 +19,14 @@ defmodule BorutaGateway.Application do
       %{
         id: Upstreams.Store,
         start: {Upstreams.Store, :start_link, []}
+      },
+      %{
+        id: BorutaGateway.NoiseCancelling,
+        start: {BorutaGateway.NoiseCancelling, :start_link, [[]]}
       }
     ]
 
+    children = children ++ enabled_kubernetes_ingress_controller_child_specs()
     children = children ++ enabled_node_service_child_specs()
 
     BorutaGateway.Logger.start()
@@ -50,6 +55,19 @@ defmodule BorutaGateway.Application do
     ]
     |> Enum.filter(fn {enabled?, _child_spec} -> enabled? end)
     |> Enum.map(fn {_enabled?, child_spec} -> child_spec end)
+  end
+
+  def enabled_kubernetes_ingress_controller_child_specs do
+    if Application.get_env(:boruta_gateway, :kubernetes_ingress_controller, false) do
+      [
+        %{
+          id: Kubernetes.IngressController,
+          start: {Kubernetes.IngressController, :start_link, []}
+        }
+      ]
+    else
+      []
+    end
   end
 
   defp gateway_server_child_spec(num_acceptors) do

@@ -61,7 +61,14 @@ config :boruta_gateway,
   https_verify_client_certificate:
     System.get_env("BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true",
   sidecar_https_verify_client_certificate:
-    System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true"
+    System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true",
+  kubernetes_ingress_controller:
+    System.get_env("BORUTA_GATEWAY_KUBERNETES_INGRESS_CONTROLLER", "false") == "true",
+  kubernetes_namespace: System.get_env("BORUTA_GATEWAY_KUBERNETES_NAMESPACE"),
+  kubernetes_ingress_class: System.get_env("BORUTA_GATEWAY_KUBERNETES_INGRESS_CLASS"),
+  kubernetes_node_name: System.get_env("BORUTA_GATEWAY_KUBERNETES_NODE_NAME", "global"),
+  kubernetes_poll_interval:
+    System.get_env("BORUTA_GATEWAY_KUBERNETES_POLL_INTERVAL", "10000") |> String.to_integer()
 
 config :boruta_web, BorutaWeb.Endpoint,
   http: [
@@ -142,7 +149,12 @@ config :boruta, Boruta.Oauth,
   }
 
 config :boruta_auth, BorutaAuth.LogRotate,
-  max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60"))
+  max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60")),
+  enabled: System.get_env("DISABLE_FILE_LOGGING", "false") != "true"
+
+if System.get_env("DISABLE_FILE_LOGGING", "false") == "true" do
+  config :logger, backends: [:console]
+end
 
 libcluster_hosts =
   "LIBCLUSTER_HOSTS"

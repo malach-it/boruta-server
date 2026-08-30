@@ -193,9 +193,13 @@ In order to authenticate to the administration interface you will be asked for c
 | `POSTGRES_HOST`                      | The database host provided in postgreSQL connections. |
 | `POOL_SIZE`                          | The postgreSQL pool size of each application, the real connection count will be twice that value. |
 | `MAX_LOG_RETENTION_DAYS`             | The number of days the logs are kept to the server. This value defaults to 60. |
+| `BORUTA_REMOTE_IP_HEADER`            | The trusted header used to determine the client IP. Defaults to `x-forwarded-for`. |
+| `BORUTA_REMOTE_IP_PROXIES`           | A comma-separated list of trusted proxy IP addresses or CIDR ranges. Defaults to `10.0.0.0/8`. |
+| `DISABLE_FILE_LOGGING`               | Set to `true` to disable file logging. Console logging remains enabled. Defaults to `false`. |
 | `LIBCLUSTER_HOSTS`                   | A comma-separated list of Erlang node names used for libcluster Docker Compose discovery, for example `boruta@boruta-1,boruta@boruta-2`. |
 | `K8S_NAMESPACE`                      | If set along with K8S_SELECTOR, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
 | `K8S_SELECTOR`                       | If set along with K8S_NAMESPACE, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
+| `BORUTA_GATEWAY_KUBERNETES_API_SERVER_NAME` | The DNS name used to verify the Kubernetes API server certificate when the ingress controller connects to the in-cluster API service. Defaults to `kubernetes.default.svc` when `KUBERNETES_SERVICE_HOST` is an IP address. |
 | `BORUTA_ADMIN_OAUTH_CLIENT_ID`       | An uuidv4 string representing the admin oauth client id. It will be part of the client seeded in the setup task. |
 | `BORUTA_ADMIN_OAUTH_CLIENT_SECRET`   | The admin oauth client secret. It will be part of the client seeded in the setup task. |
 | `BORUTA_ADMIN_OAUTH_BASE_URL`        | The URL base URL of the authorization server admin will use (linked to above client_id and secret, without trailing slash). |

@@ -29,4 +29,9 @@ config :boruta_gateway,
   https_proxy_port: 4444,
   https_port: 7443,
   sidecar_https_port: 7444,
-  num_acceptors: 8
+  num_acceptors: 8,
+  kubernetes_ingress_controller: false,
+  kubernetes_namespace: nil,
+  kubernetes_ingress_class: nil,
+  kubernetes_node_name: "global",
+  kubernetes_poll_interval: 10_000
