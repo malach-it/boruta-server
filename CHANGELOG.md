@@ -12,6 +12,7 @@
 - [gateway] Phi prediction accepts bounded recency-decayed request memory as context
 - [gateway] Phi memory can classify otherwise legal requests as contextual noise
 - [gateway] upstreams can train and apply noise cancellation from transient OpenAPI uploads while storing only the Phi binary
+- [infra] Disable file logging configuration environment variable
 
 ### Fixed
 
