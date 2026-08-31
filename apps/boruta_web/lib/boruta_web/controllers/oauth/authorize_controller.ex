@@ -378,7 +378,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       }) do
     case Enum.map(@public_response_types, &String.split(&1, " "))
          |> List.first()
-         |> Enum.member?(Enum.split(response_types, " ") |> List.first()) do
+         |> Enum.member?(String.split(response_types, " ") |> List.first()) do
       true ->
         Oauth.authorize(
           conn,
