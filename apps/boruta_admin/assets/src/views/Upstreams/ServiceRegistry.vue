@@ -92,7 +92,7 @@
                     </div>
                   </div>
                   <details v-if="record.certificate" class="certificate-details node-certificate">
-                    <summary>Node certificate</summary>
+                    <summary>{{ record.status === 'root' ? 'Root CA certificate' : 'Node certificate' }}</summary>
                     <pre class="certificate">{{ record.certificate }}</pre>
                   </details>
                 </div>
@@ -297,7 +297,6 @@ export default {
 
       return [
         { label: 'Certificate', value: paths.certificate },
-        { label: 'Root CA certificate', value: paths.root_ca_certificate },
         { label: 'Trusted certificates', value: paths.trusted_certificates }
       ].filter(({ value }) => value)
     },

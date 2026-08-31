@@ -158,10 +158,6 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
 
   test "loads a cluster CA" do
     root_ca = Certificate.generate_root_ca_pem!()
-    paths = Certificate.paths()
-
-    File.write!(paths.root_ca_certificate, "stale certificate")
-    File.write!(paths.root_ca_private_key, "stale private key")
 
     assert %{cluster_ca: []} =
              ConfigurationLoader.load_configuration(%{
@@ -181,8 +177,8 @@ defmodule BorutaAdmin.ConfigurationLoaderTest do
 
     assert certificate == root_ca.certificate
     assert private_key == root_ca.private_key
-    assert File.read!(paths.root_ca_certificate) == root_ca.certificate
-    assert File.read!(paths.root_ca_private_key) == root_ca.private_key
+    refute Map.has_key?(Certificate.paths(), :root_ca_certificate)
+    refute Map.has_key?(Certificate.paths(), :root_ca_private_key)
 
     assert %{cluster_ca: ["Invalid cluster CA certificate/private_key pair."]} =
              ConfigurationLoader.load_configuration(%{

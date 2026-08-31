@@ -49,7 +49,6 @@ defmodule BorutaAdminWeb.ServiceRegistryControllerTest do
           "certificate" => "node certificate",
           "certificate_paths" => %{
             "certificate" => "/node/gateway.crt",
-            "root_ca_certificate" => "/node/cluster_ca.crt",
             "trusted_certificates" => "/node/service_registry_cacerts.pem"
           },
           "services" => [
@@ -97,7 +96,6 @@ defmodule BorutaAdminWeb.ServiceRegistryControllerTest do
                "certificate" => "node certificate",
                "certificate_paths" => %{
                  "certificate" => "/node/gateway.crt",
-                 "root_ca_certificate" => "/node/cluster_ca.crt",
                  "trusted_certificates" => "/node/service_registry_cacerts.pem"
                },
                "services" => services

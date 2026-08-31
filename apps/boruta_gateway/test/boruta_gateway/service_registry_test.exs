@@ -34,7 +34,6 @@ defmodule BorutaGateway.ServiceRegistryTest do
              "certificate" => certificate,
              "certificate_paths" => %{
                "certificate" => _certificate_path,
-               "root_ca_certificate" => _root_ca_certificate_path,
                "trusted_certificates" => _trusted_certificates_path
              },
              "services" => [
@@ -240,17 +239,12 @@ defmodule BorutaGateway.ServiceRegistryTest do
     assert root_record.private_key =~ "BEGIN PRIVATE KEY"
   end
 
-  test "certificate generation writes the registry root CA as the local cluster CA" do
+  test "certificate generation does not expose persistent cluster CA paths" do
     root_ca = Certificate.generate_root_ca_pem!()
-    paths = Certificate.paths()
-
-    File.write!(paths.root_ca_certificate, "stale certificate")
-    File.write!(paths.root_ca_private_key, "stale private key")
-
     Certificate.ensure!(root_ca)
 
-    assert File.read!(paths.root_ca_certificate) == root_ca.certificate
-    assert File.read!(paths.root_ca_private_key) == root_ca.private_key
+    refute Map.has_key?(Certificate.paths(), :root_ca_certificate)
+    refute Map.has_key?(Certificate.paths(), :root_ca_private_key)
   end
 
   test "loaded cacerts remain separate from the VM-wide system CAs" do

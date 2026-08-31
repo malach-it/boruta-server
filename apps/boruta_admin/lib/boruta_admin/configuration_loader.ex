@@ -471,7 +471,6 @@ defmodule BorutaAdmin.ConfigurationLoader do
 
     if Certificate.root_ca_valid?(root_ca) do
       record = ServiceRegistry.upsert_root_record!(root_ca)
-      Certificate.write_root_ca!(root_ca)
       Certificate.load_trusted_certificates!([certificate])
 
       {:ok, record}
