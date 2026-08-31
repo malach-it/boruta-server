@@ -521,7 +521,7 @@ defmodule BorutaGateway.ServiceRegistry do
 
   defp certificate_paths do
     Certificate.paths()
-    |> Map.take([:certificate, :root_ca_certificate, :trusted_certificates])
+    |> Map.take([:certificate, :trusted_certificates])
     |> Map.new(fn {key, value} -> {to_string(key), value} end)
   end
 

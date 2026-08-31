@@ -103,19 +103,22 @@ defmodule BorutaGateway.Application do
   end
 
   defp https_gateway_server_child_spec(num_acceptors) do
+    options = [
+      port: Application.fetch_env!(:boruta_gateway, :https_port),
+      match_function: &Upstreams.match/2,
+      verify_client_certificate:
+        Application.get_env(:boruta_gateway, :https_verify_client_certificate, false),
+      num_acceptors: num_acceptors
+    ]
+
+    options =
+      case gateway_mounted_certificate_ssl_options() do
+        nil -> options
+        ssl_options -> Keyword.put(options, :ssl_options, ssl_options)
+      end
+
     %{
-      start:
-        {BorutaGateway.HttpsGateway.Server, :start,
-         [
-           [
-             port: Application.fetch_env!(:boruta_gateway, :https_port),
-             match_function: &Upstreams.match/2,
-             verify_client_certificate:
-               Application.get_env(:boruta_gateway, :https_verify_client_certificate, false),
-             ssl_options: gateway_mounted_certificate_ssl_options(),
-             num_acceptors: num_acceptors
-           ]
-         ]},
+      start: {BorutaGateway.HttpsGateway.Server, :start, [options]},
       id: :https_server,
       type: :supervisor
     }
@@ -128,7 +131,7 @@ defmodule BorutaGateway.Application do
     if present?(certificate_path) && present?(private_key_path) do
       Certificate.ssl_options(certificate_path, private_key_path)
     else
-      Certificate.ssl_options()
+      nil
     end
   end
 

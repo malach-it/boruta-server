@@ -5,23 +5,30 @@ defmodule BorutaGateway.Certificate do
 
   @certificate_file "gateway.crt"
   @private_key_file "gateway.key"
-  @root_ca_certificate_file "cluster_ca.crt"
-  @root_ca_private_key_file "cluster_ca.key"
   @trusted_certificates_file "service_registry_cacerts.pem"
 
-  def ensure!(root_ca \\ nil) do
+  def ensure!(root_ca \\ nil)
+
+  def ensure!(nil) do
+    raise ArgumentError, "cluster root CA is required to generate a gateway certificate"
+  end
+
+  def ensure!(%{certificate: _certificate, private_key: _private_key} = root_ca) do
     directory = directory()
     certificate_path = Path.join(directory, @certificate_file)
     private_key_path = Path.join(directory, @private_key_file)
 
     File.mkdir_p!(directory)
 
-    if existing_certificate?(certificate_path, private_key_path) do
-      maybe_write_root_ca!(root_ca)
+    if existing_certificate?(certificate_path, private_key_path, root_ca) do
       cache_ssl_options!(certificate_path, private_key_path)
     else
       generate!(certificate_path, private_key_path, root_ca)
     end
+  end
+
+  def ensure!(_root_ca) do
+    raise ArgumentError, "invalid cluster root CA"
   end
 
   def generate_root_ca_pem! do
@@ -31,19 +38,18 @@ defmodule BorutaGateway.Certificate do
     private_key_path = Path.join(directory, "cluster_ca_#{suffix}.key")
 
     File.mkdir_p!(directory)
-    generate_root_ca!(certificate_path, private_key_path)
 
-    root_ca = %{
-      certificate: File.read!(certificate_path),
-      private_key: File.read!(private_key_path)
-    }
+    try do
+      generate_root_ca!(certificate_path, private_key_path)
 
-    write_root_ca!(root_ca)
-
-    File.rm(certificate_path)
-    File.rm(private_key_path)
-
-    root_ca
+      %{
+        certificate: File.read!(certificate_path),
+        private_key: File.read!(private_key_path)
+      }
+    after
+      File.rm(certificate_path)
+      File.rm(private_key_path)
+    end
   end
 
   def root_ca_valid?(%{certificate: certificate, private_key: private_key})
@@ -54,31 +60,34 @@ defmodule BorutaGateway.Certificate do
     private_key_path = Path.join(directory, "cluster_ca_validation_#{suffix}.key")
 
     File.mkdir_p!(directory)
-    File.write!(certificate_path, certificate)
-    File.write!(private_key_path, private_key)
 
-    certificate_modulus =
-      System.cmd("openssl", ["x509", "-noout", "-modulus", "-in", certificate_path],
-        stderr_to_stdout: true
-      )
+    try do
+      File.write!(certificate_path, certificate)
+      File.write!(private_key_path, private_key)
 
-    private_key_modulus =
-      System.cmd("openssl", ["rsa", "-noout", "-modulus", "-in", private_key_path],
-        stderr_to_stdout: true
-      )
+      certificate_modulus =
+        System.cmd("openssl", ["x509", "-noout", "-modulus", "-in", certificate_path],
+          stderr_to_stdout: true
+        )
 
-    File.rm(certificate_path)
-    File.rm(private_key_path)
+      private_key_modulus =
+        System.cmd("openssl", ["rsa", "-noout", "-modulus", "-in", private_key_path],
+          stderr_to_stdout: true
+        )
 
-    case {certificate_modulus, private_key_modulus} do
-      {{certificate_output, 0}, {private_key_output, 0}} ->
-        normalize_modulus(certificate_output) == normalize_modulus(private_key_output)
+      case {certificate_modulus, private_key_modulus} do
+        {{certificate_output, 0}, {private_key_output, 0}} ->
+          normalize_modulus(certificate_output) == normalize_modulus(private_key_output)
 
-      _result ->
-        false
+        _result ->
+          false
+      end
+    rescue
+      _error -> false
+    after
+      File.rm(certificate_path)
+      File.rm(private_key_path)
     end
-  rescue
-    _error -> false
   end
 
   def root_ca_valid?(_root_ca), do: false
@@ -113,8 +122,6 @@ defmodule BorutaGateway.Certificate do
     %{
       certificate: Path.join(directory, @certificate_file),
       private_key: Path.join(directory, @private_key_file),
-      root_ca_certificate: Path.join(directory, @root_ca_certificate_file),
-      root_ca_private_key: Path.join(directory, @root_ca_private_key_file),
       trusted_certificates: Path.join(directory, @trusted_certificates_file)
     }
   end
@@ -172,10 +179,33 @@ defmodule BorutaGateway.Certificate do
     System.unique_integer([:positive, :monotonic])
   end
 
-  defp existing_certificate?(certificate_path, private_key_path) do
+  defp existing_certificate?(certificate_path, private_key_path, root_ca) do
     File.exists?(certificate_path) &&
       File.exists?(private_key_path) &&
-      loadable_certificate?(certificate_path, private_key_path)
+      loadable_certificate?(certificate_path, private_key_path) &&
+      signed_by_root_ca?(certificate_path, root_ca)
+  end
+
+  defp signed_by_root_ca?(certificate_path, %{certificate: root_ca_certificate}) do
+    root_ca_certificate_path =
+      Path.join(directory(), "cluster_ca_verify_#{unique_suffix()}.crt")
+
+    try do
+      File.write!(root_ca_certificate_path, root_ca_certificate)
+
+      match?(
+        {_output, 0},
+        System.cmd(
+          "openssl",
+          ["verify", "-CAfile", root_ca_certificate_path, certificate_path],
+          stderr_to_stdout: true
+        )
+      )
+    after
+      File.rm(root_ca_certificate_path)
+    end
+  rescue
+    _error -> false
   end
 
   defp loadable_certificate?(certificate_path, private_key_path) do
@@ -187,75 +217,16 @@ defmodule BorutaGateway.Certificate do
     _error -> false
   end
 
-  defp maybe_write_root_ca!(%{certificate: _certificate, private_key: _private_key} = root_ca) do
-    write_root_ca!(root_ca)
-  end
-
-  defp maybe_write_root_ca!(_root_ca), do: :ok
-
-  defp generate!(certificate_path, private_key_path, nil) do
-    args = [
-      "req",
-      "-x509",
-      "-newkey",
-      "rsa:2048",
-      "-sha256",
-      "-days",
-      "3650",
-      "-nodes",
-      "-subj",
-      "/CN=#{ConfigurationLoader.node_name()}",
-      "-addext",
-      "basicConstraints=critical,CA:FALSE",
-      "-addext",
-      "keyUsage=critical,digitalSignature,keyEncipherment",
-      "-addext",
-      "extendedKeyUsage=serverAuth,clientAuth",
-      "-addext",
-      "subjectAltName=#{subject_alt_names()}",
-      "-keyout",
-      private_key_path,
-      "-out",
-      certificate_path
-    ]
-
-    case System.cmd("openssl", args, stderr_to_stdout: true) do
-      {_output, 0} ->
-        File.chmod(private_key_path, 0o600)
-        cache_ssl_options!(certificate_path, private_key_path)
-        :ok
-
-      {output, status} ->
-        raise "openssl certificate generation failed with status #{status}: #{String.trim(output)}"
-    end
-  rescue
-    error in ErlangError ->
-      reraise RuntimeError,
-              [message: "openssl certificate generation failed: #{inspect(error.original)}"],
-              __STACKTRACE__
-  end
-
   defp generate!(certificate_path, private_key_path, %{
          certificate: root_ca_certificate,
          private_key: root_ca_private_key
        }) do
-    write_root_ca!(%{
-      certificate: root_ca_certificate,
-      private_key: root_ca_private_key
-    })
-
     directory = directory()
     suffix = unique_suffix()
     root_ca_certificate_path = Path.join(directory, "cluster_ca_sign_#{suffix}.crt")
     root_ca_private_key_path = Path.join(directory, "cluster_ca_sign_#{suffix}.key")
     certificate_request_path = Path.join(directory, "gateway_#{suffix}.csr")
     certificate_extensions_path = Path.join(directory, "gateway_#{suffix}.ext")
-
-    File.write!(root_ca_certificate_path, root_ca_certificate)
-    File.write!(root_ca_private_key_path, root_ca_private_key)
-    File.chmod(root_ca_private_key_path, 0o600)
-
-    File.write!(certificate_extensions_path, certificate_extensions())
 
     request_args = [
       "req",
@@ -290,25 +261,33 @@ defmodule BorutaGateway.Certificate do
       certificate_extensions_path
     ]
 
-    with {_output, 0} <- System.cmd("openssl", request_args, stderr_to_stdout: true),
-         {_output, 0} <- System.cmd("openssl", sign_args, stderr_to_stdout: true) do
-      File.chmod(private_key_path, 0o600)
+    try do
+      File.write!(root_ca_certificate_path, root_ca_certificate)
+      File.write!(root_ca_private_key_path, root_ca_private_key)
+      File.chmod(root_ca_private_key_path, 0o600)
+      File.write!(certificate_extensions_path, certificate_extensions())
+
+      with {_output, 0} <- System.cmd("openssl", request_args, stderr_to_stdout: true),
+           {_output, 0} <- System.cmd("openssl", sign_args, stderr_to_stdout: true) do
+        File.chmod(private_key_path, 0o600)
+        cache_ssl_options!(certificate_path, private_key_path)
+        :ok
+      else
+        {output, status} ->
+          raise "openssl certificate generation failed with status #{status}: #{String.trim(output)}"
+      end
+    rescue
+      error in ErlangError ->
+        reraise RuntimeError,
+                [message: "openssl certificate generation failed: #{inspect(error.original)}"],
+                __STACKTRACE__
+    after
       File.rm(root_ca_certificate_path)
       File.rm(root_ca_private_key_path)
       File.rm(certificate_request_path)
       File.rm(certificate_extensions_path)
       File.rm("#{root_ca_certificate_path}.srl")
-      cache_ssl_options!(certificate_path, private_key_path)
-      :ok
-    else
-      {output, status} ->
-        raise "openssl certificate generation failed with status #{status}: #{String.trim(output)}"
     end
-  rescue
-    error in ErlangError ->
-      reraise RuntimeError,
-              [message: "openssl certificate generation failed: #{inspect(error.original)}"],
-              __STACKTRACE__
   end
 
   defp generate_root_ca!(certificate_path, private_key_path) do
@@ -398,18 +377,6 @@ defmodule BorutaGateway.Certificate do
     end)
   rescue
     _error -> []
-  end
-
-  def write_root_ca!(%{certificate: certificate, private_key: private_key}) do
-    paths = paths()
-
-    paths.root_ca_certificate
-    |> Path.dirname()
-    |> File.mkdir_p!()
-
-    File.write!(paths.root_ca_certificate, certificate)
-    File.write!(paths.root_ca_private_key, private_key)
-    File.chmod(paths.root_ca_private_key, 0o600)
   end
 
   defp system_cacerts do
