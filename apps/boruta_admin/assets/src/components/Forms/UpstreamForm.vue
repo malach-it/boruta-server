@@ -164,6 +164,21 @@
               <input type="number" v-model="upstream.rate_limit_memory_length" min="1" placeholder="50">
             </div>
           </div>
+          <h3>Noise cancelling</h3>
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.noise_cancelling_enabled">
+              <label>Enable noise cancelling</label>
+            </div>
+          </div>
+          <div class="field" :class="{ 'error': upstream.errors?.openapi_spec }">
+            <label>OpenAPI specification (JSON or YAML)</label>
+            <input type="file" accept="application/json,application/yaml,text/yaml,.json,.yaml,.yml" @change="setOpenapiSpec">
+            <div class="ui info message">
+              The definition is used to train Phi and is not stored.
+              <span v-if="upstream.noise_cancelling_configured">A trained model is currently configured.</span>
+            </div>
+          </div>
         </div>
       </div>
       <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
@@ -230,6 +245,10 @@ export default {
         this.upstream.uris.indexOf(uri),
         1
       )
+    },
+    async setOpenapiSpec ({ target }) {
+      const [file] = target.files
+      this.upstream.openapi_spec = file ? await file.text() : null
     },
     addScope () {
       this.upstream.required_scopes.push({ model: new Scope(), method: 'GET' })

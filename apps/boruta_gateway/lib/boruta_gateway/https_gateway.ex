@@ -15,6 +15,7 @@ defmodule BorutaGateway.HttpsGateway do
   alias BorutaGateway.Certificate
   alias BorutaGateway.HttpRequest
   alias BorutaGateway.HttpsGateway.Authorization
+  alias BorutaGateway.NoiseCancelling
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
@@ -254,6 +255,7 @@ defmodule BorutaGateway.HttpsGateway do
         path_info = path_info(path)
 
         with %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
+             :ok <- check_noise_cancelling(upstream, method, path, state.remote_ip),
              :ok <- rate_limit(socket, upstream),
              {:ok, token} <- Authorization.authorize(header, method, upstream) do
           connect_upstream(
@@ -281,6 +283,13 @@ defmodule BorutaGateway.HttpsGateway do
             )
 
             log_exchange(state, start, request_id, method, path, nil, 404, :failure)
+
+            {:noreply, close_downstream(socket, state)}
+
+          {:noise, upstream, prediction} ->
+            send_downstream(socket, NoiseCancelling.forbidden_response())
+
+            log_noise_cancellation(start, request_id, upstream, method, path, prediction)
 
             {:noreply, close_downstream(socket, state)}
 
@@ -775,10 +784,32 @@ defmodule BorutaGateway.HttpsGateway do
       },
       %{
         request_id: request_id,
+        path: log_path(path),
         upstream: upstream,
         upstream_tls: upstream_tls(upstream)
       }
     )
+  end
+
+  defp log_noise_cancellation(start, request_id, upstream, method, path, prediction) do
+    :telemetry.execute(
+      [:boruta_gateway, :noise_cancelling, :cancelled],
+      %{response_time: :os.system_time(:microsecond) - start},
+      %{
+        request_id: request_id,
+        upstream: upstream,
+        method: method,
+        path: log_path(path),
+        prediction: prediction
+      }
+    )
+  end
+
+  defp check_noise_cancelling(upstream, method, path, remote_ip) do
+    case NoiseCancelling.check(upstream, method, path, remote_ip) do
+      :ok -> :ok
+      {:noise, prediction} -> {:noise, upstream, prediction}
+    end
   end
 
   defp upstream_time(%State{upstream_start: nil}, _stop), do: 0

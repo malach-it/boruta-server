@@ -16,6 +16,12 @@ defmodule BorutaGateway.UpstreamsTest do
     }
     @update_attrs %{host: "update.host"}
     @invalid_attrs %{port: nil, required_scopes: %{"BAD" => "bad_format"}}
+    @openapi """
+    openapi: 3.0.0
+    paths:
+      /widgets/{id}:
+        get: {}
+    """
 
     def upstream_fixture(attrs \\ %{}) do
       {:ok, upstream} =
@@ -101,6 +107,42 @@ defmodule BorutaGateway.UpstreamsTest do
                    rate_limit_memory_length: 10
                  })
                )
+    end
+
+    test "trains and stores a binary noise model without storing the OpenAPI definition" do
+      assert {:ok, %Upstream{id: id, noise_cancelling_model: model}} =
+               Upstreams.create_upstream(
+                 Map.merge(@valid_attrs, %{
+                   noise_cancelling_enabled: true,
+                   openapi_spec: @openapi
+                 })
+               )
+
+      assert is_binary(model)
+
+      persisted = Upstreams.get_upstream!(id)
+      assert persisted.noise_cancelling_enabled
+      assert is_binary(persisted.noise_cancelling_model)
+      assert is_nil(persisted.openapi_spec)
+    end
+
+    test "requires a valid OpenAPI upload when noise cancelling has no model" do
+      assert {:error, changeset} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :noise_cancelling_enabled, true))
+
+      assert {"must be uploaded when noise cancelling is enabled", []} =
+               changeset.errors[:openapi_spec]
+
+      assert {:error, changeset} =
+               Upstreams.create_upstream(
+                 Map.merge(@valid_attrs, %{
+                   noise_cancelling_enabled: true,
+                   openapi_spec: "not: [valid"
+                 })
+               )
+
+      assert {"must be a valid OpenAPI JSON or YAML document", []} =
+               changeset.errors[:openapi_spec]
     end
 
     test "create_upstream/1 with mTLS enabled creates an https upstream" do

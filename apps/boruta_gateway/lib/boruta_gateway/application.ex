@@ -19,6 +19,10 @@ defmodule BorutaGateway.Application do
       %{
         id: Upstreams.Store,
         start: {Upstreams.Store, :start_link, []}
+      },
+      %{
+        id: BorutaGateway.NoiseCancelling,
+        start: {BorutaGateway.NoiseCancelling, :start_link, [[]]}
       }
     ]
 

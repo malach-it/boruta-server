@@ -28,7 +28,7 @@ RUN npm run build
 
 FROM elixir:1.20-otp-29-alpine AS builder
 
-RUN apk --no-cache --update add build-base git
+RUN apk --no-cache --update add build-base cargo git
 
 ENV MIX_ENV=prod
 
