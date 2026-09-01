@@ -350,6 +350,14 @@ export default {
     margin: .125rem;
   }
 
+  .upstreams-row > td {
+    padding: 0;
+  }
+
+  .upstreams-row th, .upstreams-row td {
+    padding: .7em!important;
+  }
+
   .certificate-details {
     margin-top: .5rem;
 
