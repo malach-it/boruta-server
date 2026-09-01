@@ -6,6 +6,7 @@
 
 ### Added
 
+- [cli] `boruta` and `boruta_admin` releases include a YAML command-line interface for administration resources
 - [gateway] native Phi model trains noise detection with degree-one and sparse degree-two terms over OpenAPI request contexts
 - [gateway] Phi request matching treats the root path as legal for every HTTP method
 - [gateway] Phi noise detection evaluates unmatched paths across the entire gateway
