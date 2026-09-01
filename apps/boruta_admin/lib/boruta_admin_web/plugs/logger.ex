@@ -125,6 +125,12 @@ defmodule BorutaAdminWeb.Logger do
 
   @spec start() :: [:ok | {:error, term()}]
   def start do
+    :logger.add_handler_filter(
+      :default,
+      :boruta_admin_remote_cli,
+      {&__MODULE__.remote_cli_console_filter/2, :ok}
+    )
+
     handlers = [
       {:boruta_admin_console_authentication_success, :success},
       {:boruta_admin_console_authentication_failure, :failure}
@@ -139,6 +145,9 @@ defmodule BorutaAdminWeb.Logger do
       )
     end
   end
+
+  def remote_cli_console_filter(%{meta: %{boruta_cli_remote: true}}, _config), do: :stop
+  def remote_cli_console_filter(_event, _config), do: :ignore
 
   @spec console_authentication_handler(
           [atom()],

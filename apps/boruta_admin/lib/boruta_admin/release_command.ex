@@ -4,42 +4,120 @@ defmodule BorutaAdmin.ReleaseCommand do
   alias BorutaAdmin.Cli
   alias BorutaAdmin.Yaml
 
+  @colon_uri_schemes ~w(data did mailto tel urn)
+  @remote_error_marker "\n__BORUTA_CLI_ERROR__"
+  @usage "Usage: boruta-cli <resource> <action> [resource-id] [key[:nested-key...]:value ...] [attribute ...]"
+
   @spec main([String.t()]) :: :ok
   def main([resource, action | arguments]) do
-    {request_params, plain_arguments} = parse_arguments(arguments)
-    possible_resource_id = List.first(plain_arguments)
+    outcome =
+      safely(fn ->
+        {request_params, plain_arguments} = parse_arguments(arguments)
+        possible_resource_id = List.first(plain_arguments)
 
-    result =
-      quietly(fn ->
-        with :ok <- start_dependencies() do
-          Cli.call(resource, action, possible_resource_id, request_params)
-        end
+        result =
+          quietly(fn ->
+            with :ok <- start_dependencies() do
+              Cli.call(resource, action, possible_resource_id, request_params)
+            end
+          end)
+
+        write_result(result, plain_arguments)
       end)
 
-    with {:ok, %Plug.Conn{} = response} <- result do
-      attributes = attributes(response, plain_arguments)
-
-      response
-      |> response_body()
-      |> filter_response(attributes)
-      |> Yaml.encode()
-      |> IO.write()
-
-      if response.status >= 400, do: System.halt(1)
-    else
-      {:error, reason} ->
-        IO.puts(:stderr, "boruta-cli failed: #{inspect(reason)}")
-        System.halt(1)
+    case outcome do
+      :ok -> :ok
+      {:error, :response} -> System.halt(1)
+      {:error, reason} -> write_error(reason, 1)
     end
   end
 
   def main(_args) do
-    IO.puts(
-      :stderr,
-      "Usage: boruta-cli <resource> <action> [resource-id] [key:value ...] [attribute ...]"
-    )
+    write_error(@usage, 64)
+  end
 
-    System.halt(64)
+  @spec remote([String.t()]) :: :ok
+  def remote([resource, action | arguments]) do
+    previous_logger_metadata = Logger.metadata()
+    Logger.metadata(boruta_cli_remote: true)
+
+    try do
+      outcome =
+        safely(fn ->
+          {request_params, plain_arguments} = parse_arguments(arguments)
+          possible_resource_id = List.first(plain_arguments)
+          result = Cli.call(resource, action, possible_resource_id, request_params)
+
+          write_result(result, plain_arguments)
+        end)
+
+      case outcome do
+        :ok -> :ok
+        {:error, :response} -> IO.write(@remote_error_marker)
+        {:error, reason} -> write_remote_error(reason)
+      end
+    after
+      Logger.reset_metadata(previous_logger_metadata)
+    end
+  end
+
+  def remote(_args) do
+    write_remote_error(@usage)
+  end
+
+  defp write_result({:ok, %Plug.Conn{} = response}, plain_arguments) do
+    attributes = attributes(response, plain_arguments)
+
+    response
+    |> response_body()
+    |> filter_response(attributes)
+    |> Yaml.encode()
+    |> IO.write()
+
+    if response.status >= 400, do: {:error, :response}, else: :ok
+  end
+
+  defp write_result({:error, reason}, _plain_arguments), do: {:error, reason}
+
+  defp write_error(reason, exit_status) do
+    reason |> error_document() |> Yaml.encode() |> IO.write()
+    System.halt(exit_status)
+  end
+
+  defp write_remote_error(reason) do
+    reason |> error_document() |> Yaml.encode() |> IO.write()
+    IO.write(@remote_error_marker)
+  end
+
+  defp error_document(reason) do
+    message = error_message(reason)
+
+    %{
+      "code" => "CLI_ERROR",
+      "message" => message,
+      "errors" => %{"resource" => [message]}
+    }
+  end
+
+  defp error_message(%_{} = exception) do
+    try do
+      Exception.message(exception)
+    rescue
+      _error -> inspect(exception)
+    end
+  end
+
+  defp error_message(reason) when is_binary(reason), do: reason
+  defp error_message(reason), do: inspect(reason)
+
+  defp safely(fun) do
+    try do
+      fun.()
+    rescue
+      exception -> {:error, exception}
+    catch
+      kind, reason -> {:error, {kind, reason}}
+    end
   end
 
   defp quietly(fun) do
@@ -156,15 +234,104 @@ defmodule BorutaAdmin.ReleaseCommand do
     if resource_id?(response.path_params, possible_resource_id), do: attributes, else: arguments
   end
 
-  defp parse_arguments(arguments) do
+  @doc false
+  @spec parse_arguments([String.t()]) :: {map(), [String.t()]}
+  def parse_arguments(arguments) do
     Enum.reduce(arguments, {%{}, []}, fn argument, {request_params, attributes} ->
       case String.split(argument, ":", parts: 2) do
         [key, value] when key != "" ->
-          {Map.put(request_params, key, unquote_parameter(value)), attributes}
+          {nested_keys, value} = nested_parameter(value)
+
+          request_params =
+            put_nested_parameter(request_params, [key | nested_keys], unquote_parameter(value))
+
+          {request_params, attributes}
 
         _attribute ->
           {request_params, attributes ++ [argument]}
       end
+    end)
+  end
+
+  defp nested_parameter(value), do: nested_parameter_path(value)
+
+  defp nested_parameter_path(value) do
+    segments = split_unquoted_colons(value)
+
+    quoted_value_index =
+      if quoted_parameter?(List.last(segments)), do: length(segments) - 1
+
+    value_index =
+      quoted_value_index ||
+        segments
+        |> Enum.with_index()
+        |> Enum.find_value(fn {segment, index} ->
+          if uri_value_start?(segments, segment, index) do
+            index
+          end
+        end)
+
+    value_index = value_index || length(segments) - 1
+    nested_keys = Enum.take(segments, value_index)
+
+    if Enum.all?(nested_keys, &nested_key?/1) do
+      {nested_keys, segments |> Enum.drop(value_index) |> Enum.join(":")}
+    else
+      {[], value}
+    end
+  end
+
+  defp nested_key?(key), do: Regex.match?(~r/^[a-zA-Z_][a-zA-Z0-9_-]*$/, key)
+
+  defp split_unquoted_colons(value) do
+    case split_unquoted_colons(value, [], "", nil) do
+      {segments, nil} -> segments
+      {_segments, _unterminated_quote} -> String.split(value, ":")
+    end
+  end
+
+  defp split_unquoted_colons(<<>>, segments, segment, quote) do
+    {Enum.reverse([segment | segments]), quote}
+  end
+
+  defp split_unquoted_colons(<<quote, rest::binary>>, segments, "", nil)
+       when quote in [?", ?'] do
+    split_unquoted_colons(rest, segments, <<quote>>, quote)
+  end
+
+  defp split_unquoted_colons(<<quote, rest::binary>>, segments, segment, quote) do
+    split_unquoted_colons(rest, segments, segment <> <<quote>>, nil)
+  end
+
+  defp split_unquoted_colons(<<?:, rest::binary>>, segments, segment, nil) do
+    split_unquoted_colons(rest, [segment | segments], "", nil)
+  end
+
+  defp split_unquoted_colons(<<character::utf8, rest::binary>>, segments, segment, quote) do
+    split_unquoted_colons(rest, segments, segment <> <<character::utf8>>, quote)
+  end
+
+  defp quoted_parameter?(<<quote, rest::binary>>) when quote in [?", ?'] do
+    String.ends_with?(rest, <<quote>>)
+  end
+
+  defp quoted_parameter?(_parameter), do: false
+
+  defp uri_scheme?(segment), do: Regex.match?(~r/^[a-zA-Z][a-zA-Z0-9+.-]*$/, segment)
+
+  defp uri_value_start?(segments, segment, index) do
+    segment in @colon_uri_schemes ||
+      (uri_scheme?(segment) && match?("//" <> _rest, Enum.at(segments, index + 1)))
+  end
+
+  defp put_nested_parameter(parameters, [key], value), do: Map.put(parameters, key, value)
+
+  defp put_nested_parameter(parameters, [key | nested_keys], value) do
+    nested = put_nested_parameter(%{}, nested_keys, value)
+
+    Map.update(parameters, key, nested, fn
+      existing when is_map(existing) -> put_nested_parameter(existing, nested_keys, value)
+      _existing -> nested
     end)
   end
 
