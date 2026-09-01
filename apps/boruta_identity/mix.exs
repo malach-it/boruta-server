@@ -49,7 +49,7 @@ defmodule BorutaIdentity.MixProject do
       {:gen_smtp, "~> 1.1"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:mox, "~> 1.0"},
+      {:mox, "~> 1.0", only: :test},
       {:mustachex, git: "https://github.com/jui/mustachex.git"},
       {:nebulex, "~> 3.0"},
       {:nebulex_distributed, "~> 3.2"},
