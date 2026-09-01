@@ -132,6 +132,24 @@ The applications will be available on different ports (depending on the values p
 
 Admin credentials are the one seeded and available in environment file.
 
+### Command line interface
+
+The `boruta` and `boruta_admin` releases include `bin/boruta-cli`, which uses the following syntax:
+
+```text
+boruta-cli <resource> <action> [resource-id] [key[:nested-key...]:value ...] [attribute ...]
+```
+
+```bash
+bin/boruta-cli role index
+bin/boruta-cli client show CLIENT_ID id name
+bin/boruta-cli upstream update UPSTREAM_ID scheme:https port:443
+bin/boruta-cli client update CLIENT_ID identity_provider:id:IDENTITY_PROVIDER_ID
+bin/boruta-cli logs index events_only:true request_id status label
+```
+
+Additional colon-separated key segments create nested maps, while trailing arguments without a value select attributes from the YAML response. Explicit parameters override command defaults.
+
 ### Run a development server
 
 1. first you need to get project dependencies
