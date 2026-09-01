@@ -15,6 +15,7 @@ defmodule Boruta.Umbrella.MixProject do
       releases: [
         boruta: [
           include_executables_for: [:unix],
+          steps: [:assemble, &copy_boruta_cli/1],
           applications: [
             boruta_web: :permanent,
             boruta_admin: :permanent,
@@ -35,6 +36,7 @@ defmodule Boruta.Umbrella.MixProject do
         ],
         boruta_admin: [
           include_executables_for: [:unix],
+          steps: [:assemble, &copy_boruta_cli/1],
           applications: [
             boruta_admin: :permanent
           ]
@@ -60,6 +62,17 @@ defmodule Boruta.Umbrella.MixProject do
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
+  end
+
+  def copy_boruta_cli(release) do
+    source = Path.expand("rel/boruta-cli.eex")
+    destination = Path.join([release.path, "bin", "boruta-cli"])
+    contents = EEx.eval_file(source, assigns: [release: release])
+
+    File.write!(destination, contents)
+    File.chmod!(destination, 0o755)
+
+    release
   end
 
   defp aliases do
