@@ -35,15 +35,16 @@ defmodule BorutaAdminWeb.LogsController do
 
   plug(:authorize, ["logs:read:all"])
 
-  def index(
-        conn,
-        %{
-          "start_at" => start_at,
-          "end_at" => end_at,
-          "application" => application,
-          "type" => type
-        } = params
-      ) do
+  def index(conn, params) do
+    params = Map.merge(default_index_params(), params)
+
+    %{
+      "start_at" => start_at,
+      "end_at" => end_at,
+      "application" => application,
+      "type" => type
+    } = params
+
     with {:ok, end_at, _offset} <- DateTime.from_iso8601(end_at),
          {:ok, application} <- fetch_application(application),
          {:ok, type} <- fetch_type(type),
@@ -61,6 +62,18 @@ defmodule BorutaAdminWeb.LogsController do
       _ ->
         {:error, :bad_request}
     end
+  end
+
+  defp default_index_params do
+    now = DateTime.utc_now()
+
+    %{
+      "application" => "boruta_admin",
+      "end_at" => DateTime.to_iso8601(now),
+      "events_only" => "false",
+      "start_at" => now |> DateTime.add(-1, :hour) |> DateTime.to_iso8601(),
+      "type" => "business"
+    }
   end
 
   defp fetch_application(application), do: Map.fetch(@applications, application)

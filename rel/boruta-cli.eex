@@ -14,6 +14,49 @@ readlink_f () {
 
 SELF="$(readlink_f "$0")"
 RELEASE_ROOT="$(CDPATH='' cd "$(dirname "$SELF")/.." && pwd -P)"
+RELEASE_EXECUTABLE="$RELEASE_ROOT/bin/<%= @release.name %>"
+REMOTE_ERROR_MARKER="__BORUTA_CLI_ERROR__"
 
-exec "$RELEASE_ROOT/bin/<%= @release.name %>" eval \
+if [ -n "${RELEASE_NODE:-}" ] && [ -n "${RELEASE_COOKIE:-}" ]; then
+  if [ -z "${RELEASE_DISTRIBUTION:-}" ]; then
+    release_host="${RELEASE_NODE#*@}"
+
+    case "$release_host" in
+      *.*|*:*) RELEASE_DISTRIBUTION="name" ;;
+      *) RELEASE_DISTRIBUTION="sname" ;;
+    esac
+
+    export RELEASE_DISTRIBUTION
+  fi
+
+  if "$RELEASE_EXECUTABLE" pid > /dev/null 2>&1; then
+  encoded_arguments=""
+  separator=""
+
+  for argument in "$@"; do
+    encoded_argument="$(printf '%s' "$argument" | od -An -v -tx1 | tr -d ' \n')"
+    encoded_arguments="${encoded_arguments}${separator}\"${encoded_argument}\""
+    separator=","
+  done
+
+  rpc_expression="BorutaAdmin.ReleaseCommand.remote(Enum.map([${encoded_arguments}], &Base.decode16!(&1, case: :mixed)))"
+
+  if rpc_output="$("$RELEASE_EXECUTABLE" rpc "$rpc_expression" 2>&1)"; then
+    case "$rpc_output" in
+      *"$REMOTE_ERROR_MARKER")
+        printf '%s' "${rpc_output%"$REMOTE_ERROR_MARKER"}"
+        exit 1
+        ;;
+      *)
+        if [ -n "$rpc_output" ]; then
+          printf '%s\n' "$rpc_output"
+        fi
+        exit 0
+        ;;
+    esac
+  fi
+  fi
+fi
+
+exec "$RELEASE_EXECUTABLE" eval \
   'BorutaAdmin.ReleaseCommand.main(System.argv())' "$@"
