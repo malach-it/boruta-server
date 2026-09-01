@@ -244,6 +244,8 @@ This product community follows the code of conduct available [here](CODE_OF_COND
 ## License
 
 This code is released under the [Apache 2.0](LICENSE.md) license.
+Third-party components and administration color palettes are documented in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## General Terms and Conditions
 
