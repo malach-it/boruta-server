@@ -1,27 +1,15 @@
 ---
 configuration:
   gateway:
-    - authorize: false
-      error_content_type: "text/plain"
-      forbidden_response: "forbidden"
-      unauthorized_response: "unauthorized"
-      forwarded_token_secret: "this is a secret"
-      forwarded_token_signature_alg: "HS512"
-      keepalive: false
-      scheme: "https"
-      host: "httpbin.boruta.patatoid.fr"
-      port: 443
-      uris: ["/httpbin"]
+    - scheme: "https"
+      mtls_enabled: true
+      port: 8044
+      host: "kagome-1"
+      uris: ["/kagome-1"]
       strip_uri: true
-    - authorize: false
-      error_content_type: "text/plain"
-      forbidden_response: "forbidden"
-      unauthorized_response: "unauthorized"
-      forwarded_token_secret: "this is a secret"
-      forwarded_token_signature_alg: "HS512"
-      keepalive: false
-      scheme: "https"
-      host: "protected-httpbin.boruta.patatoid.fr"
-      port: 443
-      uris: ["/protected-httpbin"]
+    - scheme: "https"
+      mtls_enabled: true
+      port: 8044
+      host: "kagome-2"
+      uris: ["/kagome-2"]
       strip_uri: true

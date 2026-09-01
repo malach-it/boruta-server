@@ -1,7 +1,7 @@
 volumes:
   boruta-logs:
 
-x-boruta-cluster-hosts: &boruta-cluster-hosts "boruta@boruta-1,boruta@boruta-2,boruta@kagome-1,boruta@kagome-2"
+x-boruta-cluster-hosts: &boruta-cluster-hosts "boruta@boruta,boruta@kagome-1,boruta@kagome-2"
 
 services:
   postgres:
@@ -14,13 +14,12 @@ services:
       timeout: 5s
       retries: 5
 
-  boruta_1:
+  boruta:
     build:
       context: .
       dockerfile: Dockerfile.full
       args:
         BORUTA_OAUTH_BASE_URL: "http://localhost:8080"
-    hostname: boruta-1
     ports:
       - "8080:8080"
       - "8081:8081"
@@ -28,63 +27,26 @@ services:
       - "8083:8083"
       - "8042:8042"
       - "8043:8043"
-      - "5555:5555"
-      - "4444:4444"
+      - "8555:5555"
+      - "8444:4444"
     volumes:
       - "boruta-logs:/app/log"
-    env_file: "./.env.example"
-    environment:
-      MIX_ENV: "prod"
-      POSTGRES_HOST: "postgres"
-      RELEASE_DISTRIBUTION: "sname"
-      RELEASE_NODE: "boruta@boruta-1"
-      RELEASE_COOKIE: "boruta-docker-compose"
-      LIBCLUSTER_HOSTS: *boruta-cluster-hosts
-    networks:
-      default:
-        aliases:
-          - boruta-1
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  boruta_2:
-    build:
-      context: .
-      dockerfile: Dockerfile.full
-      args:
-        BORUTA_OAUTH_BASE_URL: "http://localhost:8080"
-    hostname: boruta-2
-    ports:
-      - "9080:8080"
-      - "9081:8081"
-      - "9082:8082"
-      - "9083:8083"
-      - "9042:8042"
-      - "9043:8043"
-      - "9555:5555"
-      - "9444:4444"
-    volumes:
-      - "boruta-logs:/app/log"
+      - "./static_config/example-gateway-configuration.yml:/app/config/example-gateway-configuration.yml"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
       POSTGRES_HOST: "postgres"
       BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE: "true"
       RELEASE_DISTRIBUTION: "sname"
-      RELEASE_NODE: "boruta@boruta-2"
+      RELEASE_NODE: "boruta@boruta"
       RELEASE_COOKIE: "boruta-docker-compose"
       LIBCLUSTER_HOSTS: *boruta-cluster-hosts
-    networks:
-      default:
-        aliases:
-          - boruta-2
     depends_on:
       postgres:
         condition: service_healthy
 
   kagome_1:
-    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.9"
+    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.11"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
@@ -93,18 +55,15 @@ services:
       RELEASE_NODE: "boruta@kagome-1"
       RELEASE_COOKIE: "boruta-docker-compose"
       LIBCLUSTER_HOSTS: *boruta-cluster-hosts
-      BORUTA_GATEWAY_ALIASES: |
-        ["kagome-1", "kagome.1.docker"]
-      BORUTA_GATEWAY_VISTUAL_HOST: kagome-1
+      BORUTA_GATEWAY_ALIASES: "[\"kagome-1\",\"kagome.1.docker\"]"
+      BORUTA_GATEWAY_VIRTUAL_HOST: kagome-1
     networks:
       default:
         aliases:
           - kagome-1
-    volumes:
-      - "./docker/config/kagome-1.yml:/app/config/kagome-1.yml"
 
   kagome_2:
-    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.9"
+    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.11"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
@@ -113,12 +72,9 @@ services:
       RELEASE_NODE: "boruta@kagome-2"
       RELEASE_COOKIE: "boruta-docker-compose"
       LIBCLUSTER_HOSTS: *boruta-cluster-hosts
-      BORUTA_GATEWAY_ALIASES: |
-        ["kagome-2", "kagome.1.docker"]
-      BORUTA_GATEWAY_VISTUAL_HOST: kagome-2
+      BORUTA_GATEWAY_ALIASES: "[\"kagome-2\",\"kagome.2.docker\"]"
+      BORUTA_GATEWAY_VIRTUAL_HOST: kagome-2
     networks:
       default:
         aliases:
           - kagome-2
-    volumes:
-      - "./docker/config/kagome-2.yml:/app/config/kagome-2.yml"
