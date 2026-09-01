@@ -22,12 +22,9 @@
               version: "1.0"
               configuration:
                 aliases:
-                  - "kagome-web.{{ kagome_namespace }}.svc.cluster.local"
-                  - "kagome.boruta.patatoid.fr"
                 microgateway:
                   - scheme: "http"
                     port: 4000
-                    virtual_host: kagome.boruta.patatoid.fr
                     host: "localhost"
                     uris: ["/"]
                     strip_uri: false
@@ -47,10 +44,8 @@
             POSTGRES_HOST: "{{ boruta_postgres_name }}.{{ boruta_namespace }}.svc.cluster.local"
             K8S_NAMESPACE: "{{ boruta_libcluster_namespace }}"
             K8S_SELECTOR: "{{ boruta_libcluster_selector }}"
-            BORUTA_GATEWAY_CONFIGURATION_PATH: "/config/kagome-config.yml"
-            BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER: "true"
-            BORUTA_GATEWAY_SIDECAR_HTTPS_PORT: "8044"
-            BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE: "{{ kagome_mtls_enabled }}"
+            BORUTA_GATEWAY_ALIASES: "[\"kagome-web.{{ kagome_namespace }}.svc.cluster.local\", \"kagome.boruta.patatoid.fr\"]"
+            BORUTA_GATEWAY_VIRTUAL_HOST: "kagome.boruta.patatoid.fr"
 
     - name: Create kagome secrets
       no_log: true
