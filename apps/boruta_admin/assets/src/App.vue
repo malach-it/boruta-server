@@ -3,8 +3,13 @@
 </template>
 
 <script>
+import { getTheme, setTheme } from './services/theme.service'
+
 export default {
-  name: 'App'
+  name: 'App',
+  created () {
+    setTheme(getTheme(), false)
+  }
 }
 </script>
 

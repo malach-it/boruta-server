@@ -1,0 +1,590 @@
+/* Theme layer for the administration interface. The selectors intentionally
+ * sit after the legacy component rules so each theme remains consistent.
+ * Upstream palette attributions: /THIRD_PARTY_NOTICES.md */
+
+html[data-admin-theme="base16-default-light"] {
+  color-scheme: light;
+  --theme-accent: #7cafc2;
+  --theme-accent-hover: #86c1b9;
+  --theme-accent-text: #181818;
+  --theme-accent-soft: #e8e8e8;
+  --theme-secondary: #a1b56c;
+  --theme-canvas: #f8f8f8;
+  --theme-surface: #e8e8e8;
+  --theme-surface-soft: #f8f8f8;
+  --theme-text: #383838;
+  --theme-muted: #585858;
+  --theme-border: #b8b8b8;
+  --theme-sidebar: #282828;
+  --theme-sidebar-hover: #383838;
+  --theme-sidebar-text: #e8e8e8;
+  --theme-danger: #ab4642;
+  --theme-info: #7cafc2;
+  --theme-success: #a1b56c;
+  --theme-warning: #f7ca88;
+  --theme-focus: rgba(124, 175, 194, .26);
+  --theme-shadow: 0 10px 24px rgba(56, 56, 56, .13);
+  --theme-radius: 4px;
+}
+
+html[data-admin-theme="base16-default-dark"] {
+  color-scheme: dark;
+  --theme-accent: #7cafc2;
+  --theme-accent-hover: #86c1b9;
+  --theme-accent-soft: #383838;
+  --theme-secondary: #a1b56c;
+  --theme-canvas: #181818;
+  --theme-surface: #282828;
+  --theme-surface-soft: #383838;
+  --theme-text: #d8d8d8;
+  --theme-muted: #b8b8b8;
+  --theme-border: #585858;
+  --theme-sidebar: #181818;
+  --theme-sidebar-hover: #383838;
+  --theme-sidebar-text: #d8d8d8;
+  --theme-danger: #ab4642;
+  --theme-info: #7cafc2;
+  --theme-success: #a1b56c;
+  --theme-warning: #f7ca88;
+  --theme-focus: rgba(124, 175, 194, .24);
+  --theme-shadow: 0 12px 30px rgba(0, 0, 0, .28);
+  --theme-radius: 4px;
+}
+
+html[data-admin-theme="solarized-dark"] {
+  color-scheme: dark;
+  --theme-accent: #268bd2;
+  --theme-accent-hover: #2aa198;
+  --theme-accent-soft: #073642;
+  --theme-secondary: #2aa198;
+  --theme-canvas: #002b36;
+  --theme-surface: #073642;
+  --theme-surface-soft: #0b3b47;
+  --theme-text: #93a1a1;
+  --theme-muted: #839496;
+  --theme-border: #586e75;
+  --theme-sidebar: #002b36;
+  --theme-sidebar-hover: #073642;
+  --theme-sidebar-text: #93a1a1;
+  --theme-danger: #dc322f;
+  --theme-info: #268bd2;
+  --theme-success: #859900;
+  --theme-warning: #b58900;
+  --theme-focus: rgba(38, 139, 210, .24);
+  --theme-shadow: 0 12px 30px rgba(0, 24, 30, .3);
+  --theme-radius: 3px;
+}
+
+html[data-admin-theme="gruvbox-dark-medium"] {
+  color-scheme: dark;
+  --theme-accent: #83a598;
+  --theme-accent-hover: #8ec07c;
+  --theme-accent-soft: #3c3836;
+  --theme-secondary: #b8bb26;
+  --theme-canvas: #282828;
+  --theme-surface: #3c3836;
+  --theme-surface-soft: #504945;
+  --theme-text: #ebdbb2;
+  --theme-muted: #bdae93;
+  --theme-border: #665c54;
+  --theme-sidebar: #282828;
+  --theme-sidebar-hover: #504945;
+  --theme-sidebar-text: #ebdbb2;
+  --theme-danger: #fb4934;
+  --theme-info: #83a598;
+  --theme-success: #b8bb26;
+  --theme-warning: #fabd2f;
+  --theme-focus: rgba(131, 165, 152, .24);
+  --theme-shadow: 0 12px 28px rgba(29, 27, 26, .32);
+  --theme-radius: 2px;
+}
+
+html[data-admin-theme="gruvbox-light-medium"] {
+  color-scheme: light;
+  --theme-accent: #076678;
+  --theme-accent-hover: #427b58;
+  --theme-accent-soft: #ebdbb2;
+  --theme-secondary: #79740e;
+  --theme-canvas: #fbf1c7;
+  --theme-surface: #ebdbb2;
+  --theme-surface-soft: #fbf1c7;
+  --theme-text: #504945;
+  --theme-muted: #665c54;
+  --theme-border: #bdae93;
+  --theme-sidebar: #3c3836;
+  --theme-sidebar-hover: #504945;
+  --theme-sidebar-text: #ebdbb2;
+  --theme-danger: #9d0006;
+  --theme-info: #076678;
+  --theme-success: #79740e;
+  --theme-warning: #b57614;
+  --theme-focus: rgba(7, 102, 120, .22);
+  --theme-shadow: 0 10px 24px rgba(80, 73, 69, .15);
+  --theme-radius: 2px;
+}
+
+html[data-admin-theme="nord"] {
+  color-scheme: dark;
+  --theme-accent: #81a1c1;
+  --theme-accent-hover: #88c0d0;
+  --theme-accent-soft: #3b4252;
+  --theme-secondary: #a3be8c;
+  --theme-canvas: #2e3440;
+  --theme-surface: #3b4252;
+  --theme-surface-soft: #434c5e;
+  --theme-text: #e5e9f0;
+  --theme-muted: #d8dee9;
+  --theme-border: #4c566a;
+  --theme-sidebar: #2e3440;
+  --theme-sidebar-hover: #434c5e;
+  --theme-sidebar-text: #e5e9f0;
+  --theme-danger: #bf616a;
+  --theme-info: #81a1c1;
+  --theme-success: #a3be8c;
+  --theme-warning: #ebcb8b;
+  --theme-focus: rgba(129, 161, 193, .25);
+  --theme-shadow: 0 12px 30px rgba(22, 26, 33, .3);
+  --theme-radius: 6px;
+}
+
+html[data-admin-theme="solarized-light"] {
+  color-scheme: light;
+  --theme-accent: #268bd2;
+  --theme-accent-hover: #2aa198;
+  --theme-accent-soft: #eee8d5;
+  --theme-secondary: #859900;
+  --theme-canvas: #fdf6e3;
+  --theme-surface: #eee8d5;
+  --theme-surface-soft: #fdf6e3;
+  --theme-text: #586e75;
+  --theme-muted: #657b83;
+  --theme-border: #93a1a1;
+  --theme-sidebar: #073642;
+  --theme-sidebar-hover: #586e75;
+  --theme-sidebar-text: #eee8d5;
+  --theme-danger: #dc322f;
+  --theme-info: #268bd2;
+  --theme-success: #859900;
+  --theme-warning: #b58900;
+  --theme-focus: rgba(38, 139, 210, .2);
+  --theme-shadow: 0 10px 25px rgba(88, 110, 117, .14);
+  --theme-radius: 3px;
+}
+
+html[data-admin-theme] {
+  --theme-white: #fff;
+}
+
+html[data-admin-theme] body {
+  color: var(--theme-text);
+  background:
+    radial-gradient(circle at 90% 0, var(--theme-accent-soft), transparent 32rem),
+    var(--theme-canvas);
+  transition: color .2s ease, background-color .2s ease;
+}
+
+html[data-admin-theme] #app,
+html[data-admin-theme] #app.dark {
+  color: var(--theme-text);
+  background: transparent;
+}
+
+html[data-admin-theme] #app > .header,
+html[data-admin-theme] #app > .header.dark {
+  background: var(--theme-surface);
+}
+
+html[data-admin-theme] #app > .header .main.menu,
+html[data-admin-theme] #app > .header.dark .main.menu {
+  background: transparent;
+  border-color: var(--theme-border);
+}
+
+html[data-admin-theme] #app > .header .item,
+html[data-admin-theme] #app > .header .email.item {
+  color: var(--theme-text);
+}
+
+html[data-admin-theme] #app > .header .item.logo,
+html[data-admin-theme] #app > .header.dark .item.logo {
+  background: color-mix(
+    in srgb,
+    var(--theme-accent) 7%,
+    var(--theme-surface)
+  ) !important;
+}
+
+html[data-admin-theme] #app > .header .email.item {
+  color: var(--theme-muted);
+  background: var(--theme-surface-soft);
+}
+
+html[data-admin-theme] #app > .header .right.menu a.item {
+  color: var(--theme-danger);
+  background: color-mix(
+    in srgb,
+    var(--theme-danger) 8%,
+    var(--theme-surface)
+  );
+}
+
+html[data-admin-theme] #app > .header .right.menu a.item:hover {
+  color: var(--theme-white);
+  background: var(--theme-danger);
+}
+
+html[data-admin-theme] #main .sidebar-menu,
+html[data-admin-theme] #app.dark #main .sidebar-menu {
+  color: var(--theme-sidebar-text);
+  background: var(--theme-sidebar);
+  border-right: 1px solid color-mix(in srgb, var(--theme-sidebar-text) 12%, transparent);
+}
+
+html[data-admin-theme] #main .sidebar-menu .menu,
+html[data-admin-theme] #main .sidebar-menu .menu .item,
+html[data-admin-theme] #app.dark #main .sidebar-menu .menu,
+html[data-admin-theme] #app.dark #main .sidebar-menu .menu .item {
+  background: transparent;
+  border: 0;
+}
+
+html[data-admin-theme] #main .sidebar-menu .menu > .item > a,
+html[data-admin-theme] #main .sidebar-menu .menu .item a,
+html[data-admin-theme] #app.dark #main .sidebar-menu .menu .item a {
+  color: var(--theme-sidebar-text);
+}
+
+html[data-admin-theme] #main .sidebar-menu .menu .item.active > a {
+  color: var(--theme-text);
+}
+
+html[data-admin-theme] #main .sidebar-menu .menu > .item:hover,
+html[data-admin-theme] #main .sidebar-menu .menu > .item.active,
+html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item:hover,
+html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item.active {
+  color: var(--theme-white) !important;
+  background: var(--theme-sidebar-hover) !important;
+}
+
+html[data-admin-theme] #main .sidebar-menu .menu > .item.active {
+  box-shadow: inset 3px 0 0 var(--theme-accent);
+}
+
+html[data-admin-theme] #main .sidebar-menu .menu > .item.active > a,
+html[data-admin-theme] #main .sidebar-menu .menu > .item.active > a:hover,
+html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item.active > a,
+html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item.active > a:hover {
+  color: var(--theme-white) !important;
+  background: transparent !important;
+}
+
+html[data-admin-theme] #main .sidebar-menu .dropdown,
+html[data-admin-theme] #app.dark #main .sidebar-menu .dropdown {
+  background: color-mix(in srgb, var(--theme-sidebar) 92%, var(--theme-white));
+  border-color: color-mix(in srgb, var(--theme-sidebar-text) 12%, transparent);
+}
+
+html[data-admin-theme] #main .sidebar-menu .dropdown .subitem a:hover,
+html[data-admin-theme] #main .sidebar-menu .dropdown .subitem a.router-link-exact-active,
+html[data-admin-theme] #main .sidebar-menu .dropdown .subitem a.active,
+html[data-admin-theme] #app.dark #main .sidebar-menu .dropdown .subitem a:hover,
+html[data-admin-theme] #app.dark #main .sidebar-menu .dropdown .subitem a.router-link-exact-active,
+html[data-admin-theme] #app.dark #main .sidebar-menu .dropdown .subitem a.active {
+  color: var(--theme-white);
+  background: var(--theme-sidebar-hover) !important;
+}
+
+html[data-admin-theme] #main .content-wrapper {
+  background: transparent;
+}
+
+html[data-admin-theme] #app footer,
+html[data-admin-theme] #app.dark footer {
+  color: var(--theme-muted);
+  background: var(--theme-surface);
+  border-top: 1px solid var(--theme-border);
+}
+
+html[data-admin-theme] #app .ui.segment,
+html[data-admin-theme] #app.dark .ui.segment,
+html[data-admin-theme] #app .ui.segments,
+html[data-admin-theme] #app.dark .ui.segments {
+  color: var(--theme-text);
+  background: var(--theme-surface);
+  border-color: var(--theme-border) !important;
+  border-radius: var(--theme-radius);
+  box-shadow: var(--theme-shadow);
+}
+
+html[data-admin-theme] #app .ui.segments .segment,
+html[data-admin-theme] #app.dark .ui.segments .segment {
+  border-color: var(--theme-border) !important;
+  box-shadow: none;
+}
+
+html[data-admin-theme] #app .ui.highlightable.segment:hover,
+html[data-admin-theme] #app.dark .ui.highlightable.segment:hover {
+  background: var(--theme-surface-soft);
+  border-color: var(--theme-accent) !important;
+}
+
+html[data-admin-theme] #app .ui.header,
+html[data-admin-theme] #app.dark .ui.header,
+html[data-admin-theme] #app .ui.list > .item .header,
+html[data-admin-theme] #app.dark .ui.list > .item .header {
+  color: var(--theme-text);
+}
+
+html[data-admin-theme] #app .attribute.list .item .header {
+  color: var(--theme-muted);
+}
+
+html[data-admin-theme] #app .ui.form label,
+html[data-admin-theme] #app.dark .ui.form label {
+  color: var(--theme-text) !important;
+}
+
+html[data-admin-theme] #app .ui.form input,
+html[data-admin-theme] #app .ui.form select,
+html[data-admin-theme] #app .ui.form textarea,
+html[data-admin-theme] #app.dark .ui.form input,
+html[data-admin-theme] #app.dark .ui.form select,
+html[data-admin-theme] #app.dark .ui.form textarea {
+  color: var(--theme-text);
+  background: var(--theme-surface-soft);
+  border-color: var(--theme-border);
+  border-radius: calc(var(--theme-radius) * .55);
+}
+
+html[data-admin-theme] #app .ui.form input:focus,
+html[data-admin-theme] #app .ui.form select:focus,
+html[data-admin-theme] #app .ui.form textarea:focus,
+html[data-admin-theme] #app.dark .ui.form input:focus,
+html[data-admin-theme] #app.dark .ui.form select:focus,
+html[data-admin-theme] #app.dark .ui.form textarea:focus {
+  border-color: var(--theme-accent) !important;
+  box-shadow: 0 0 0 3px var(--theme-focus);
+}
+
+html[data-admin-theme] #app .ui.table,
+html[data-admin-theme] #app.dark .ui.table {
+  color: var(--theme-text);
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+}
+
+html[data-admin-theme] #app .ui.table thead th,
+html[data-admin-theme] #app.dark .ui.table thead th {
+  color: var(--theme-text);
+  background: var(--theme-surface-soft);
+}
+
+html[data-admin-theme] #app .ui.table td,
+html[data-admin-theme] #app .ui.table th,
+html[data-admin-theme] #app.dark .ui.table td,
+html[data-admin-theme] #app.dark .ui.table th {
+  border-color: var(--theme-border);
+}
+
+html[data-admin-theme] #app .ui.tabular.menu .item,
+html[data-admin-theme] #app.dark .ui.tabular.menu .item {
+  color: var(--theme-muted);
+}
+
+html[data-admin-theme] #app .ui.tabular.menu .item.active,
+html[data-admin-theme] #app.dark .ui.tabular.menu .item.active {
+  color: var(--theme-accent);
+  background: var(--theme-surface-soft);
+  box-shadow: inset 0 -3px 0 var(--theme-accent);
+}
+
+html[data-admin-theme] #app .ui.breadcrumb a.section,
+html[data-admin-theme] #app.dark .ui.breadcrumb a.section,
+html[data-admin-theme] #app .ui.breadcrumb .divider,
+html[data-admin-theme] #app.dark .ui.breadcrumb .divider {
+  color: var(--theme-muted) !important;
+}
+
+html[data-admin-theme] #app .ui.breadcrumb a.section:hover {
+  color: var(--theme-accent) !important;
+}
+
+html[data-admin-theme] #app .ui.blue.button,
+html[data-admin-theme] #app .ui.violet.button,
+html[data-admin-theme] #app .ui.primary.button,
+html[data-admin-theme] #app.dark .ui.blue.button,
+html[data-admin-theme] #app.dark .ui.violet.button,
+html[data-admin-theme] #app.dark .ui.primary.button {
+  color: var(--theme-accent-text, var(--theme-white)) !important;
+  background: var(--theme-accent) !important;
+  border-radius: calc(var(--theme-radius) * .55);
+  box-shadow: 0 4px 12px var(--theme-focus);
+}
+
+html[data-admin-theme] #app .ui.blue.button:hover,
+html[data-admin-theme] #app .ui.violet.button:hover,
+html[data-admin-theme] #app .ui.primary.button:hover,
+html[data-admin-theme] #app.dark .ui.blue.button:hover,
+html[data-admin-theme] #app.dark .ui.violet.button:hover,
+html[data-admin-theme] #app.dark .ui.primary.button:hover {
+  background: var(--theme-accent-hover) !important;
+}
+
+html[data-admin-theme] #app .ui.teal.label,
+html[data-admin-theme] #app.dark .ui.teal.label {
+  color: var(--theme-white);
+  background: var(--theme-secondary) !important;
+}
+
+html[data-admin-theme] #app .ui.message,
+html[data-admin-theme] #app.dark .ui.message {
+  --theme-message-color: var(--theme-muted);
+  color: var(--theme-text);
+  background: color-mix(
+    in srgb,
+    var(--theme-message-color) 11%,
+    var(--theme-surface)
+  );
+  border: 1px solid color-mix(
+    in srgb,
+    var(--theme-message-color) 42%,
+    var(--theme-border)
+  );
+  border-left: 4px solid var(--theme-message-color);
+  border-radius: calc(var(--theme-radius) * .7);
+  box-shadow: none;
+}
+
+html[data-admin-theme] #app .ui.info.message,
+html[data-admin-theme] #app.dark .ui.info.message {
+  --theme-message-color: var(--theme-info);
+}
+
+html[data-admin-theme] #app .ui.success.message,
+html[data-admin-theme] #app .ui.positive.message,
+html[data-admin-theme] #app.dark .ui.success.message,
+html[data-admin-theme] #app.dark .ui.positive.message {
+  --theme-message-color: var(--theme-success);
+}
+
+html[data-admin-theme] #app .ui.warning.message,
+html[data-admin-theme] #app .ui.yellow.message,
+html[data-admin-theme] #app.dark .ui.warning.message,
+html[data-admin-theme] #app.dark .ui.yellow.message {
+  --theme-message-color: var(--theme-warning);
+}
+
+html[data-admin-theme] #app .ui.error.message,
+html[data-admin-theme] #app .ui.negative.message,
+html[data-admin-theme] #app.dark .ui.error.message,
+html[data-admin-theme] #app.dark .ui.negative.message {
+  --theme-message-color: var(--theme-danger);
+}
+
+html[data-admin-theme] #app .ui.message > .icon,
+html[data-admin-theme] #app.dark .ui.message > .icon {
+  color: var(--theme-message-color);
+}
+
+html[data-admin-theme] #app .ui.message > .header,
+html[data-admin-theme] #app .ui.message > .content > .header,
+html[data-admin-theme] #app.dark .ui.message > .header,
+html[data-admin-theme] #app.dark .ui.message > .content > .header {
+  color: var(--theme-text);
+}
+
+html[data-admin-theme] #app .ui.message a,
+html[data-admin-theme] #app.dark .ui.message a {
+  color: var(--theme-text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: .15em;
+}
+
+html[data-admin-theme] #app .ui.pagination.menu,
+html[data-admin-theme] #app.dark .ui.pagination.menu {
+  color: var(--theme-text);
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+}
+
+html[data-admin-theme] #app .ui.pagination.menu .item,
+html[data-admin-theme] #app.dark .ui.pagination.menu .item {
+  color: var(--theme-text);
+}
+
+html[data-admin-theme] #app .ui.pagination.menu .active.item,
+html[data-admin-theme] #app.dark .ui.pagination.menu .active.item {
+  color: var(--theme-accent-text, var(--theme-white));
+  background: var(--theme-accent);
+}
+
+/* Bottom-left theme controls */
+html[data-admin-theme] #app footer .theme-controls {
+  float: left;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+html[data-admin-theme] #app footer .theme-select {
+  position: relative;
+  display: flex;
+  margin: -.4rem 0;
+  align-items: center;
+  color: var(--theme-muted);
+}
+
+html[data-admin-theme] #app footer .theme-select > .icon {
+  position: absolute;
+  z-index: 1;
+  left: .75rem;
+  margin: 0;
+  pointer-events: none;
+}
+
+html[data-admin-theme] #app footer .theme-select select {
+  height: 2.35rem;
+  padding: 0 2rem 0 2.25rem;
+  color: var(--theme-text);
+  background-color: var(--theme-surface-soft);
+  border: 1px solid var(--theme-border);
+  border-radius: calc(var(--theme-radius) * .6);
+  outline: none;
+  cursor: pointer;
+}
+
+html[data-admin-theme] #app footer .theme-select select:focus {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 0 3px var(--theme-focus);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media screen and (max-width: 600px) {
+  html[data-admin-theme] #app footer {
+    min-height: 6.5rem;
+  }
+
+  html[data-admin-theme] #app footer .theme-controls {
+    float: none;
+    justify-content: flex-start;
+    margin-bottom: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-admin-theme] body,
+  html[data-admin-theme] #app * {
+    transition-duration: .01ms !important;
+  }
+}

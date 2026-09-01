@@ -84,15 +84,40 @@ export default {
   }
 
   .item.edited-upstream {
-    background: #f4fbf8;
-    border-left: 3px solid #21ba45;
+    position: relative;
     margin-left: -.75rem;
-    padding-left: .75rem;
-  }
-}
-#app.dark {
-  .item.edited-upstream {
-    background: rgb(244, 251, 248, 0.84);
+    padding: .75rem;
+    background: color-mix(
+      in srgb,
+      var(--theme-accent, #2185d0) 16%,
+      var(--theme-surface, #fff)
+    );
+    border-left: 3px solid var(--theme-accent, #2185d0);
+    border-radius: calc(var(--theme-radius, 8px) * .5);
+    box-shadow: inset 0 0 0 1px color-mix(
+      in srgb,
+      var(--theme-accent, #2185d0) 34%,
+      transparent
+    );
+    color: var(--theme-text, inherit);
+    transition: background .18s ease, box-shadow .18s ease;
+
+    .header, .meta {
+      color: var(--theme-text, inherit)!important;
+    }
+
+    .header {
+      font-weight: 800;
+    }
+
+    &:hover {
+      background: color-mix(
+        in srgb,
+        var(--theme-accent, #2185d0) 24%,
+        var(--theme-surface, #fff)
+      );
+      box-shadow: inset 0 0 0 1px var(--theme-accent, #2185d0);
+    }
   }
 }
 </style>
