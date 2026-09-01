@@ -100,24 +100,20 @@ defmodule BorutaAdmin.ReleaseCommand do
   end
 
   defp error_message(%_{} = exception) do
-    try do
-      Exception.message(exception)
-    rescue
-      _error -> inspect(exception)
-    end
+    Exception.message(exception)
+  rescue
+    _error -> inspect(exception)
   end
 
   defp error_message(reason) when is_binary(reason), do: reason
   defp error_message(reason), do: inspect(reason)
 
   defp safely(fun) do
-    try do
-      fun.()
-    rescue
-      exception -> {:error, exception}
-    catch
-      kind, reason -> {:error, {kind, reason}}
-    end
+    fun.()
+  rescue
+    exception -> {:error, exception}
+  catch
+    kind, reason -> {:error, {kind, reason}}
   end
 
   defp quietly(fun) do
