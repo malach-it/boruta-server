@@ -177,9 +177,7 @@ html[data-admin-theme] {
 
 html[data-admin-theme] body {
   color: var(--theme-text);
-  background:
-    radial-gradient(circle at 90% 0, var(--theme-accent-soft), transparent 32rem),
-    var(--theme-canvas);
+  background: var(--theme-canvas);
   transition: color .2s ease, background-color .2s ease;
 }
 
@@ -418,7 +416,7 @@ html[data-admin-theme] #app.dark .ui.primary.button {
   color: var(--theme-accent-text, var(--theme-white)) !important;
   background: var(--theme-accent) !important;
   border-radius: calc(var(--theme-radius) * .55);
-  box-shadow: 0 4px 12px var(--theme-focus);
+  box-shadow: none;
 }
 
 html[data-admin-theme] #app .ui.blue.button:hover,
