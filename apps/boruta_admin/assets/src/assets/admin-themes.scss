@@ -320,6 +320,23 @@ html[data-admin-theme] #app.dark .ui.segments .segment {
   box-shadow: none;
 }
 
+/* Semantic UI hard-codes dashboard loading masks to translucent white and
+ * their spinners to grey. Keep both parts legible on every admin theme. */
+html[data-admin-theme] #app .dashboard-content.ui.loading.segment::before,
+html[data-admin-theme] #app.dark .dashboard-content.ui.loading.segment::before {
+  background: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+  border-radius: var(--theme-radius);
+}
+
+html[data-admin-theme] #app .dashboard-content.ui.loading.segment::after,
+html[data-admin-theme] #app.dark .dashboard-content.ui.loading.segment::after {
+  border-color: var(--theme-accent)
+    color-mix(in srgb, var(--theme-muted) 28%, transparent)
+    color-mix(in srgb, var(--theme-muted) 28%, transparent)
+    color-mix(in srgb, var(--theme-muted) 28%, transparent);
+  box-shadow: none;
+}
+
 html[data-admin-theme] #app .ui.highlightable.segment:hover,
 html[data-admin-theme] #app.dark .ui.highlightable.segment:hover {
   background: var(--theme-surface-soft);
@@ -407,6 +424,11 @@ html[data-admin-theme] #app .ui.breadcrumb a.section:hover {
   color: var(--theme-accent) !important;
 }
 
+html[data-admin-theme] #app .ui.button,
+html[data-admin-theme] #app.dark .ui.button {
+  box-shadow: none !important;
+}
+
 html[data-admin-theme] #app .ui.blue.button,
 html[data-admin-theme] #app .ui.violet.button,
 html[data-admin-theme] #app .ui.primary.button,
@@ -416,7 +438,6 @@ html[data-admin-theme] #app.dark .ui.primary.button {
   color: var(--theme-accent-text, var(--theme-white)) !important;
   background: var(--theme-accent) !important;
   border-radius: calc(var(--theme-radius) * .55);
-  box-shadow: none;
 }
 
 html[data-admin-theme] #app .ui.blue.button:hover,
