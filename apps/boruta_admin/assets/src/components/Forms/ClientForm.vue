@@ -141,7 +141,7 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
+          <button type="button" class="ui fluid secondary button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
         </div>
         <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Internal.Signatures'">
           <h4>Key type</h4>
@@ -179,9 +179,9 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
+          <button type="button" class="ui fluid secondary button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
           <hr />
-          <a class="ui fluid orange button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
+          <a class="ui fluid secondary button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
         </div>
         <h3>Token signatures</h3>
         <div class="ui segment">
