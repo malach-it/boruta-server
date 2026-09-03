@@ -9,6 +9,7 @@ html[data-admin-theme="base16-default-light"] {
   --theme-accent-text: #181818;
   --theme-accent-soft: #e8e8e8;
   --theme-secondary: #a1b56c;
+  --theme-secondary-text: #181818;
   --theme-canvas: #f8f8f8;
   --theme-surface: #e8e8e8;
   --theme-surface-soft: #f8f8f8;
@@ -33,6 +34,7 @@ html[data-admin-theme="base16-default-dark"] {
   --theme-accent-hover: #86c1b9;
   --theme-accent-soft: #383838;
   --theme-secondary: #a1b56c;
+  --theme-secondary-text: #181818;
   --theme-canvas: #181818;
   --theme-surface: #282828;
   --theme-surface-soft: #383838;
@@ -57,6 +59,7 @@ html[data-admin-theme="solarized-dark"] {
   --theme-accent-hover: #2aa198;
   --theme-accent-soft: #073642;
   --theme-secondary: #2aa198;
+  --theme-secondary-text: #002b36;
   --theme-canvas: #002b36;
   --theme-surface: #073642;
   --theme-surface-soft: #0b3b47;
@@ -81,6 +84,7 @@ html[data-admin-theme="gruvbox-dark-medium"] {
   --theme-accent-hover: #8ec07c;
   --theme-accent-soft: #3c3836;
   --theme-secondary: #b8bb26;
+  --theme-secondary-text: #282828;
   --theme-canvas: #282828;
   --theme-surface: #3c3836;
   --theme-surface-soft: #504945;
@@ -105,6 +109,7 @@ html[data-admin-theme="gruvbox-light-medium"] {
   --theme-accent-hover: #427b58;
   --theme-accent-soft: #ebdbb2;
   --theme-secondary: #79740e;
+  --theme-secondary-text: #fbf1c7;
   --theme-canvas: #fbf1c7;
   --theme-surface: #ebdbb2;
   --theme-surface-soft: #fbf1c7;
@@ -129,6 +134,7 @@ html[data-admin-theme="nord"] {
   --theme-accent-hover: #88c0d0;
   --theme-accent-soft: #3b4252;
   --theme-secondary: #a3be8c;
+  --theme-secondary-text: #2e3440;
   --theme-canvas: #2e3440;
   --theme-surface: #3b4252;
   --theme-surface-soft: #434c5e;
@@ -153,6 +159,7 @@ html[data-admin-theme="solarized-light"] {
   --theme-accent-hover: #2aa198;
   --theme-accent-soft: #eee8d5;
   --theme-secondary: #859900;
+  --theme-secondary-text: #002b36;
   --theme-canvas: #fdf6e3;
   --theme-surface: #eee8d5;
   --theme-surface-soft: #fdf6e3;
@@ -453,6 +460,35 @@ html[data-admin-theme] #app.dark .ui.blue.button:hover,
 html[data-admin-theme] #app.dark .ui.violet.button:hover,
 html[data-admin-theme] #app.dark .ui.primary.button:hover {
   background: var(--theme-accent-hover) !important;
+}
+
+html[data-admin-theme] #app .ui.yellow.button:not(.basic),
+html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button:not(.basic) {
+  color: var(--theme-secondary-text) !important;
+  background: var(--theme-secondary) !important;
+  border-radius: calc(var(--theme-radius) * .55);
+}
+
+html[data-admin-theme] #app .ui.yellow.button:not(.basic):hover,
+html[data-admin-theme] #app .ui.yellow.button:not(.basic):focus,
+html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button:not(.basic):hover,
+html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button:not(.basic):focus {
+  background: color-mix(
+    in srgb,
+    var(--theme-secondary) 86%,
+    var(--theme-secondary-text)
+  ) !important;
+}
+
+html[data-admin-theme] #app .ui.yellow.button:not(.basic):active,
+html[data-admin-theme] #app .ui.yellow.button.active:not(.basic),
+html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button:not(.basic):active,
+html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button.active:not(.basic) {
+  background: color-mix(
+    in srgb,
+    var(--theme-secondary) 74%,
+    var(--theme-secondary-text)
+  ) !important;
 }
 
 html[data-admin-theme] #app .ui.teal.label,
