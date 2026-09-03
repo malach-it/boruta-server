@@ -371,6 +371,12 @@ html[data-admin-theme] #app.dark .ui.form textarea {
   border-radius: calc(var(--theme-radius) * .55);
 }
 
+html[data-admin-theme="boruta-default-light"] #app .ui.form input::placeholder,
+html[data-admin-theme="boruta-default-light"] #app .ui.form textarea::placeholder {
+  color: var(--theme-muted);
+  opacity: 1;
+}
+
 html[data-admin-theme] #app .ui.form input:focus,
 html[data-admin-theme] #app .ui.form select:focus,
 html[data-admin-theme] #app .ui.form textarea:focus,
