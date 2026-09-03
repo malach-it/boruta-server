@@ -1,12 +1,22 @@
 export const themes = [
   {
+    id: 'boruta-default-light',
+    name: 'Boruta Default Light',
+    dark: false
+  },
+  {
+    id: 'boruta-default-dark',
+    name: 'Boruta Default Dark',
+    dark: true
+  },
+  {
     id: 'base16-default-light',
-    name: 'Default Light',
+    name: 'Base16 Light',
     dark: false
   },
   {
     id: 'base16-default-dark',
-    name: 'Default Dark',
+    name: 'Base16 Dark',
     dark: true
   },
   {
@@ -37,7 +47,7 @@ export const themes = [
 ]
 
 const themeIds = themes.map(({ id }) => id)
-const defaultTheme = 'base16-default-light'
+const defaultTheme = 'boruta-default-light'
 const legacyThemes = {
   aurora: 'base16-default-dark',
   midnight: 'solarized-dark',

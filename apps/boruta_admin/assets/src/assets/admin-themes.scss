@@ -2,6 +2,60 @@
  * sit after the legacy component rules so each theme remains consistent.
  * Upstream palette attributions: /THIRD_PARTY_NOTICES.md */
 
+/* Boruta Default uses #f5ba00 as its only exact anchor. Phi controls RGB
+ * channel sums, ANSI roles distribute those sums, and variants add brightness. */
+html[data-admin-theme="boruta-default-light"] {
+  color-scheme: light;
+  --theme-accent: #6f5400;
+  --theme-accent-hover: #594300;
+  --theme-accent-text: #e3e4e4;
+  --theme-accent-soft: #ffdb6b;
+  --theme-secondary: #0d4544;
+  --theme-secondary-text: #e3e4e4;
+  --theme-canvas: #e3e4e4;
+  --theme-surface: #e3e4e4;
+  --theme-surface-soft: #d3d4d4;
+  --theme-text: #323232;
+  --theme-muted: #646464;
+  --theme-border: #b1b2b2;
+  --theme-sidebar: #323232;
+  --theme-sidebar-hover: #646464;
+  --theme-sidebar-text: #e3e4e4;
+  --theme-danger: #881616;
+  --theme-info: #2464bd;
+  --theme-success: #24be24;
+  --theme-warning: #a67e00;
+  --theme-focus: rgba(140, 106, 0, .24);
+  --theme-shadow: 0 10px 24px rgba(50, 50, 50, .14);
+  --theme-radius: 4px;
+}
+
+html[data-admin-theme="boruta-default-dark"] {
+  color-scheme: dark;
+  --theme-accent: #f5ba00;
+  --theme-accent-hover: #ffd553;
+  --theme-accent-text: #1e1e1e;
+  --theme-accent-soft: #464646;
+  --theme-secondary: #0d6362;
+  --theme-secondary-text: #e1e1e1;
+  --theme-canvas: #1e1e1e;
+  --theme-surface: #292929;
+  --theme-surface-soft: #464646;
+  --theme-text: #e1e1e1;
+  --theme-muted: #b9b9b9;
+  --theme-border: #464646;
+  --theme-sidebar: #1e1e1e;
+  --theme-sidebar-hover: #464646;
+  --theme-sidebar-text: #e1e1e1;
+  --theme-danger: #cb1616;
+  --theme-info: #3e84e5;
+  --theme-success: #3be43b;
+  --theme-warning: #f5ba00;
+  --theme-focus: rgba(245, 186, 0, .28);
+  --theme-shadow: 0 12px 28px rgba(0, 0, 0, .34);
+  --theme-radius: 4px;
+}
+
 html[data-admin-theme="base16-default-light"] {
   color-scheme: light;
   --theme-accent: #7cafc2;
