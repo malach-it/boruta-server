@@ -6,12 +6,16 @@
  * channel sums, ANSI roles distribute those sums, and variants add brightness. */
 html[data-admin-theme="boruta-default-light"] {
   color-scheme: light;
-  --theme-accent: #6f5400;
-  --theme-accent-hover: #594300;
-  --theme-accent-text: #e3e4e4;
-  --theme-accent-soft: #ffdb6b;
+  --theme-primary: #6f5400;
+  --theme-primary-hover: #594300;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #ffdb6b;
   --theme-secondary: #0d4544;
-  --theme-secondary-text: #e3e4e4;
+  --theme-secondary-hover: #2b5b5a;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #a523a4;
+  --theme-tertiary-hover: #ae3ead;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #e3e4e4;
   --theme-surface: #e3e4e4;
   --theme-surface-soft: #d3d4d4;
@@ -34,12 +38,16 @@ html[data-admin-theme="boruta-default-light"] {
 
 html[data-admin-theme="boruta-default-dark"] {
   color-scheme: dark;
-  --theme-accent: #f5ba00;
-  --theme-accent-hover: #ffd553;
-  --theme-accent-text: #1e1e1e;
-  --theme-accent-soft: #464646;
+  --theme-primary: #f5ba00;
+  --theme-primary-hover: #ffd553;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #464646;
   --theme-secondary: #0d6362;
-  --theme-secondary-text: #e1e1e1;
+  --theme-secondary-hover: #2b7574;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #db21da;
+  --theme-tertiary-hover: #c121c0;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #1e1e1e;
   --theme-surface: #292929;
   --theme-surface-soft: #464646;
@@ -62,12 +70,16 @@ html[data-admin-theme="boruta-default-dark"] {
 
 html[data-admin-theme="base16-default-light"] {
   color-scheme: light;
-  --theme-accent: #7cafc2;
-  --theme-accent-hover: #86c1b9;
-  --theme-accent-text: #181818;
-  --theme-accent-soft: #e8e8e8;
+  --theme-primary: #7cafc2;
+  --theme-primary-hover: #86c1b9;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #e8e8e8;
   --theme-secondary: #a1b56c;
-  --theme-secondary-text: #181818;
+  --theme-secondary-hover: #8e9f60;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #ba8baf;
+  --theme-tertiary-hover: #a37b9a;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #f8f8f8;
   --theme-surface: #e8e8e8;
   --theme-surface-soft: #f8f8f8;
@@ -88,11 +100,16 @@ html[data-admin-theme="base16-default-light"] {
 
 html[data-admin-theme="base16-default-dark"] {
   color-scheme: dark;
-  --theme-accent: #7cafc2;
-  --theme-accent-hover: #86c1b9;
-  --theme-accent-soft: #383838;
+  --theme-primary: #7cafc2;
+  --theme-primary-hover: #86c1b9;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #383838;
   --theme-secondary: #a1b56c;
-  --theme-secondary-text: #181818;
+  --theme-secondary-hover: #8e9f60;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #ba8baf;
+  --theme-tertiary-hover: #a37b9a;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #181818;
   --theme-surface: #282828;
   --theme-surface-soft: #383838;
@@ -113,11 +130,16 @@ html[data-admin-theme="base16-default-dark"] {
 
 html[data-admin-theme="solarized-dark"] {
   color-scheme: dark;
-  --theme-accent: #268bd2;
-  --theme-accent-hover: #2aa198;
-  --theme-accent-soft: #073642;
+  --theme-primary: #268bd2;
+  --theme-primary-hover: #2aa198;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #073642;
   --theme-secondary: #2aa198;
-  --theme-secondary-text: #002b36;
+  --theme-secondary-hover: #24908a;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #6c71c4;
+  --theme-tertiary-hover: #7e82c6;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #002b36;
   --theme-surface: #073642;
   --theme-surface-soft: #0b3b47;
@@ -138,11 +160,16 @@ html[data-admin-theme="solarized-dark"] {
 
 html[data-admin-theme="gruvbox-dark-medium"] {
   color-scheme: dark;
-  --theme-accent: #83a598;
-  --theme-accent-hover: #8ec07c;
-  --theme-accent-soft: #3c3836;
+  --theme-primary: #83a598;
+  --theme-primary-hover: #8ec07c;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #3c3836;
   --theme-secondary: #b8bb26;
-  --theme-secondary-text: #282828;
+  --theme-secondary-hover: #a4a626;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #d3869b;
+  --theme-tertiary-hover: #bb798b;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #282828;
   --theme-surface: #3c3836;
   --theme-surface-soft: #504945;
@@ -163,11 +190,16 @@ html[data-admin-theme="gruvbox-dark-medium"] {
 
 html[data-admin-theme="gruvbox-light-medium"] {
   color-scheme: light;
-  --theme-accent: #076678;
-  --theme-accent-hover: #427b58;
-  --theme-accent-soft: #ebdbb2;
+  --theme-primary: #076678;
+  --theme-primary-hover: #427b58;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #ebdbb2;
   --theme-secondary: #79740e;
-  --theme-secondary-text: #fbf1c7;
+  --theme-secondary-hover: #8b8628;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #8f3f71;
+  --theme-tertiary-hover: #9e587d;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #fbf1c7;
   --theme-surface: #ebdbb2;
   --theme-surface-soft: #fbf1c7;
@@ -188,11 +220,16 @@ html[data-admin-theme="gruvbox-light-medium"] {
 
 html[data-admin-theme="nord"] {
   color-scheme: dark;
-  --theme-accent: #81a1c1;
-  --theme-accent-hover: #88c0d0;
-  --theme-accent-soft: #3b4252;
+  --theme-primary: #81a1c1;
+  --theme-primary-hover: #88c0d0;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #3b4252;
   --theme-secondary: #a3be8c;
-  --theme-secondary-text: #2e3440;
+  --theme-secondary-hover: #93ab81;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #b48ead;
+  --theme-tertiary-hover: #a1819e;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #2e3440;
   --theme-surface: #3b4252;
   --theme-surface-soft: #434c5e;
@@ -213,11 +250,16 @@ html[data-admin-theme="nord"] {
 
 html[data-admin-theme="solarized-light"] {
   color-scheme: light;
-  --theme-accent: #268bd2;
-  --theme-accent-hover: #2aa198;
-  --theme-accent-soft: #eee8d5;
+  --theme-primary: #268bd2;
+  --theme-primary-hover: #2aa198;
+  --theme-primary-text: #fff;
+  --theme-primary-soft: #eee8d5;
   --theme-secondary: #859900;
-  --theme-secondary-text: #002b36;
+  --theme-secondary-hover: #728a08;
+  --theme-secondary-text: #fff;
+  --theme-tertiary: #6c71c4;
+  --theme-tertiary-hover: #5d67b0;
+  --theme-tertiary-text: #fff;
   --theme-canvas: #fdf6e3;
   --theme-surface: #eee8d5;
   --theme-surface-soft: #fdf6e3;
@@ -272,7 +314,7 @@ html[data-admin-theme] #app > .header .item.logo,
 html[data-admin-theme] #app > .header.dark .item.logo {
   background: color-mix(
     in srgb,
-    var(--theme-accent) 7%,
+    var(--theme-primary) 7%,
     var(--theme-surface)
   ) !important;
 }
@@ -330,7 +372,7 @@ html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item.active {
 }
 
 html[data-admin-theme] #main .sidebar-menu .menu > .item.active {
-  box-shadow: inset 3px 0 0 var(--theme-accent);
+  box-shadow: inset 3px 0 0 var(--theme-primary);
 }
 
 html[data-admin-theme] #main .sidebar-menu .menu > .item.active > a,
@@ -395,7 +437,7 @@ html[data-admin-theme] #app.dark .dashboard-content.ui.loading.segment::before {
 
 html[data-admin-theme] #app .dashboard-content.ui.loading.segment::after,
 html[data-admin-theme] #app.dark .dashboard-content.ui.loading.segment::after {
-  border-color: var(--theme-accent)
+  border-color: var(--theme-primary)
     color-mix(in srgb, var(--theme-muted) 28%, transparent)
     color-mix(in srgb, var(--theme-muted) 28%, transparent)
     color-mix(in srgb, var(--theme-muted) 28%, transparent);
@@ -405,7 +447,7 @@ html[data-admin-theme] #app.dark .dashboard-content.ui.loading.segment::after {
 html[data-admin-theme] #app .ui.highlightable.segment:hover,
 html[data-admin-theme] #app.dark .ui.highlightable.segment:hover {
   background: var(--theme-surface-soft);
-  border-color: var(--theme-accent) !important;
+  border-color: var(--theme-primary) !important;
 }
 
 html[data-admin-theme] #app .ui.header,
@@ -448,7 +490,7 @@ html[data-admin-theme] #app .ui.form textarea:focus,
 html[data-admin-theme] #app.dark .ui.form input:focus,
 html[data-admin-theme] #app.dark .ui.form select:focus,
 html[data-admin-theme] #app.dark .ui.form textarea:focus {
-  border-color: var(--theme-accent) !important;
+  border-color: var(--theme-primary) !important;
   box-shadow: 0 0 0 3px var(--theme-focus);
 }
 
@@ -479,9 +521,9 @@ html[data-admin-theme] #app.dark .ui.tabular.menu .item {
 
 html[data-admin-theme] #app .ui.tabular.menu .item.active,
 html[data-admin-theme] #app.dark .ui.tabular.menu .item.active {
-  color: var(--theme-accent);
+  color: var(--theme-primary);
   background: var(--theme-surface-soft);
-  box-shadow: inset 0 -3px 0 var(--theme-accent);
+  box-shadow: inset 0 -3px 0 var(--theme-primary);
 }
 
 html[data-admin-theme] #app .ui.breadcrumb a.section,
@@ -492,7 +534,7 @@ html[data-admin-theme] #app.dark .ui.breadcrumb .divider {
 }
 
 html[data-admin-theme] #app .ui.breadcrumb a.section:hover {
-  color: var(--theme-accent) !important;
+  color: var(--theme-primary) !important;
 }
 
 html[data-admin-theme] #app .ui.button,
@@ -500,52 +542,65 @@ html[data-admin-theme] #app.dark .ui.button {
   box-shadow: none !important;
 }
 
-html[data-admin-theme] #app .ui.blue.button,
-html[data-admin-theme] #app .ui.violet.button,
 html[data-admin-theme] #app .ui.primary.button,
-html[data-admin-theme] #app.dark .ui.blue.button,
-html[data-admin-theme] #app.dark .ui.violet.button,
 html[data-admin-theme] #app.dark .ui.primary.button {
-  color: var(--theme-accent-text, var(--theme-white)) !important;
-  background: var(--theme-accent) !important;
+  color: var(--theme-primary-text, var(--theme-white)) !important;
+  background: var(--theme-primary) !important;
   border-radius: calc(var(--theme-radius) * .55);
 }
 
-html[data-admin-theme] #app .ui.blue.button:hover,
-html[data-admin-theme] #app .ui.violet.button:hover,
 html[data-admin-theme] #app .ui.primary.button:hover,
-html[data-admin-theme] #app.dark .ui.blue.button:hover,
-html[data-admin-theme] #app.dark .ui.violet.button:hover,
 html[data-admin-theme] #app.dark .ui.primary.button:hover {
-  background: var(--theme-accent-hover) !important;
+  background: var(--theme-primary-hover) !important;
 }
 
-html[data-admin-theme] #app .ui.yellow.button:not(.basic),
-html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button:not(.basic) {
+html[data-admin-theme] #app .ui.secondary.button:not(.basic),
+html[data-admin-theme] #app .ui.secondary.buttons:not(.basic) .button:not(.basic) {
   color: var(--theme-secondary-text) !important;
   background: var(--theme-secondary) !important;
   border-radius: calc(var(--theme-radius) * .55);
 }
 
-html[data-admin-theme] #app .ui.yellow.button:not(.basic):hover,
-html[data-admin-theme] #app .ui.yellow.button:not(.basic):focus,
-html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button:not(.basic):hover,
-html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button:not(.basic):focus {
-  background: color-mix(
-    in srgb,
-    var(--theme-secondary) 86%,
-    var(--theme-secondary-text)
-  ) !important;
+html[data-admin-theme] #app .ui.secondary.button:not(.basic):hover,
+html[data-admin-theme] #app .ui.secondary.button:not(.basic):focus,
+html[data-admin-theme] #app .ui.secondary.buttons:not(.basic) .button:not(.basic):hover,
+html[data-admin-theme] #app .ui.secondary.buttons:not(.basic) .button:not(.basic):focus {
+  background: var(--theme-secondary-hover) !important;
 }
 
-html[data-admin-theme] #app .ui.yellow.button:not(.basic):active,
-html[data-admin-theme] #app .ui.yellow.button.active:not(.basic),
-html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button:not(.basic):active,
-html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button.active:not(.basic) {
+html[data-admin-theme] #app .ui.secondary.button:not(.basic):active,
+html[data-admin-theme] #app .ui.secondary.button.active:not(.basic),
+html[data-admin-theme] #app .ui.secondary.buttons:not(.basic) .button:not(.basic):active,
+html[data-admin-theme] #app .ui.secondary.buttons:not(.basic) .button.active:not(.basic) {
   background: color-mix(
     in srgb,
     var(--theme-secondary) 74%,
     var(--theme-secondary-text)
+  ) !important;
+}
+
+html[data-admin-theme] #app .ui.tertiary.button,
+html[data-admin-theme] #app.dark .ui.tertiary.button {
+  color: var(--theme-tertiary-text) !important;
+  background: var(--theme-tertiary) !important;
+  border-radius: calc(var(--theme-radius) * .55);
+}
+
+html[data-admin-theme] #app .ui.tertiary.button:hover,
+html[data-admin-theme] #app .ui.tertiary.button:focus,
+html[data-admin-theme] #app.dark .ui.tertiary.button:hover,
+html[data-admin-theme] #app.dark .ui.tertiary.button:focus {
+  background: var(--theme-tertiary-hover) !important;
+}
+
+html[data-admin-theme] #app .ui.tertiary.button:active,
+html[data-admin-theme] #app .ui.tertiary.button.active,
+html[data-admin-theme] #app.dark .ui.tertiary.button:active,
+html[data-admin-theme] #app.dark .ui.tertiary.button.active {
+  background: color-mix(
+    in srgb,
+    var(--theme-tertiary) 74%,
+    var(--theme-tertiary-text)
   ) !important;
 }
 
@@ -617,11 +672,11 @@ html[data-admin-theme] #app.dark .ui.teal.label {
   border: 1px solid var(--theme-secondary);
 }
 
-html[data-admin-theme] #app .ui.blue.label,
-html[data-admin-theme] #app.dark .ui.blue.label {
-  color: var(--theme-info-text, var(--theme-white)) !important;
-  background: var(--theme-info) !important;
-  border: 1px solid var(--theme-info);
+html[data-admin-theme] #app .ui.tertiary.label,
+html[data-admin-theme] #app.dark .ui.tertiary.label {
+  color: var(--theme-tertiary-text) !important;
+  background: var(--theme-tertiary) !important;
+  border: 1px solid var(--theme-tertiary);
 }
 
 html[data-admin-theme] #app .ui.green.label,
@@ -663,9 +718,9 @@ html[data-admin-theme] #app.dark .ui.positive.message {
 }
 
 html[data-admin-theme] #app .ui.warning.message,
-html[data-admin-theme] #app .ui.yellow.message,
+html[data-admin-theme] #app .ui.secondary.message,
 html[data-admin-theme] #app.dark .ui.warning.message,
-html[data-admin-theme] #app.dark .ui.yellow.message {
+html[data-admin-theme] #app.dark .ui.secondary.message {
   --theme-message-color: var(--theme-warning);
 }
 
@@ -710,8 +765,8 @@ html[data-admin-theme] #app.dark .ui.pagination.menu .item {
 
 html[data-admin-theme] #app .ui.pagination.menu .active.item,
 html[data-admin-theme] #app.dark .ui.pagination.menu .active.item {
-  color: var(--theme-accent-text, var(--theme-white));
-  background: var(--theme-accent);
+  color: var(--theme-primary-text, var(--theme-white));
+  background: var(--theme-primary);
 }
 
 /* Bottom-left theme controls */
@@ -750,7 +805,7 @@ html[data-admin-theme] #app footer .theme-select select {
 }
 
 html[data-admin-theme] #app footer .theme-select select:focus {
-  border-color: var(--theme-accent);
+  border-color: var(--theme-primary);
   box-shadow: 0 0 0 3px var(--theme-focus);
 }
 

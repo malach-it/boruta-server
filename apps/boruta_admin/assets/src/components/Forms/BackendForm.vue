@@ -141,17 +141,17 @@
           <div v-if="backend.isPersisted" class="ui segment">
             <router-link
               :to="{ name: 'edit-confirmation-instructions-email-template', params: { backendId: backend.id } }"
-              class="ui fluid blue button">Edit confirmation template</router-link>
+              class="ui fluid secondary button">Edit confirmation template</router-link>
           </div>
           <div v-if="backend.isPersisted" class="ui segment">
             <router-link
               :to="{ name: 'edit-reset-password-instructions-email-template', params: { backendId: backend.id } }"
-              class="ui fluid blue button">Edit reset password template</router-link>
+              class="ui fluid secondary button">Edit reset password template</router-link>
           </div>
           <div v-if="backend.isPersisted" class="ui segment">
             <router-link
               :to="{ name: 'edit-tx-code-email-template', params: { backendId: backend.id } }"
-              class="ui fluid blue button">Edit transaction code template</router-link>
+              class="ui fluid secondary button">Edit transaction code template</router-link>
           </div>
         </div>
         <div ref="identity-federation" data-tab="identity-federation" class="ui bottom attached tab segment">
@@ -199,7 +199,7 @@
               </div>
             </div>
             <div class="field">
-              <a class="ui blue fluid button" @click="addMetadataEndpoint(federatedServer)">Add a federated metadata endpoint</a>
+              <a class="ui tertiary fluid button" @click="addMetadataEndpoint(federatedServer)">Add a federated metadata endpoint</a>
             </div>
             <h4>Federated server endpoints</h4>
             <div class="field">
@@ -230,7 +230,7 @@
             </div>
           </div>
           <div class="field">
-            <a class="ui blue fluid button" @click="addFederatedServer()">Add a federated server</a>
+            <a class="ui tertiary fluid button" @click="addFederatedServer()">Add a federated server</a>
           </div>
         </div>
         <div ref="verifiable-credentials" data-tab="verifiable-credentials" class="ui bottom attached tab segment">
@@ -280,7 +280,7 @@
               <VerifiableCredentialClaim :format="credential.format" :credential="credential" :claim="claim" :errors="backend.errors"></VerifiableCredentialClaim>
             </div>
             <div class="field">
-              <a class="ui blue fluid button" @click="addVerifiableCredentialClaim(credential)">Add a claim</a>
+              <a class="ui tertiary fluid button" @click="addVerifiableCredentialClaim(credential)">Add a claim</a>
             </div>
             <h4>Display</h4>
             <div class="field" :class="{ 'error': backend.errors?.verifiable_credentials }">
@@ -309,7 +309,7 @@
             </div>
           </div>
           <div class="field">
-            <a class="ui blue fluid button" @click="addVerifiableCredential()">Add a verifiable credential</a>
+            <a class="ui tertiary fluid button" @click="addVerifiableCredential()">Add a verifiable credential</a>
           </div>
           <h2>Verifiable presentations</h2>
           <div v-for="presentation in backend.verifiable_presentations" class="ui presentation-field segment">
@@ -326,7 +326,7 @@
             </div>
           </div>
           <div class="field">
-            <a class="ui blue fluid button" @click="addVerifiablePresentation()">Add a verifiable presentation</a>
+            <a class="ui tertiary fluid button" @click="addVerifiablePresentation()">Add a verifiable presentation</a>
           </div>
         </div>
         <div ref="user-metadata" data-tab="user-metadata" class="ui bottom attached tab segment">
@@ -354,7 +354,7 @@
             </div>
           </div>
           <div class="field">
-            <a class="ui blue fluid button" @click="addMetadataField()">Add a metadata field</a>
+            <a class="ui tertiary fluid button" @click="addMetadataField()">Add a metadata field</a>
           </div>
         </div>
         <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
@@ -362,7 +362,7 @@
         </div>
       </div>
       <div class="actions" v-if="activeTab !== 'activity'">
-        <button class="ui right floated violet button" :class="{ loading: backend.loading }" :disabled="backend.loading" type="submit">{{ action }}</button>
+        <button class="ui right floated primary button" :class="{ loading: backend.loading }" :disabled="backend.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>

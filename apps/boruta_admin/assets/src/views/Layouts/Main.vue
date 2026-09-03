@@ -822,13 +822,13 @@ export default {
       background: rgba(61, 61, 61, 0.7)!important;
     }
   }
-  .violet {
+  .primary {
     background: rgba(131, 52, 113, 1.0)!important;
     &.button:hover, &.label:hover {
       background: rgba(131, 52, 113, 0.7)!important;
     }
   }
-  .blue {
+  .tertiary {
     background: rgba(34, 112, 147,1.0)!important;
     &.button:hover, &.label:hover {
       background: rgba(34, 112, 147,0.7)!important;

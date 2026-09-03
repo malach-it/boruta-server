@@ -2,7 +2,7 @@
   <div class="client-list">
     <Toaster :active="deleted" message="Client has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
-    <router-link :to="{ name: 'new-client' }" class="ui violet main create button">Add a client</router-link>
+    <router-link :to="{ name: 'new-client' }" class="ui primary main create button">Add a client</router-link>
     <div class="container">
       <div class="ui error message" v-if="error">
         {{ error }}
@@ -22,7 +22,7 @@
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-client', params: { clientId: client.id } }"
-                class="ui tiny blue button">edit</router-link>
+                class="ui tiny secondary button">edit</router-link>
               <a v-on:click="deleteClient(client)" class="ui tiny red button">delete</a>
             </div>
             <div class="ui attribute list">

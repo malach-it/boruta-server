@@ -45,7 +45,7 @@
           <VerifiableCredentialClaim :format="format" :credential="claim" :claim="childClaim" :errors="errors"></VerifiableCredentialClaim>
         </div>
         <div class="field">
-          <a class="ui blue fluid button" @click="addChildClaim(claim)">Add a claim</a>
+          <a class="ui tertiary fluid button" @click="addChildClaim(claim)">Add a claim</a>
         </div>
       </div>
     </div>
@@ -60,7 +60,7 @@
           <VerifiableCredentialClaim :format="format" :credential="claim" :claim="childItem" :errors="errors"></VerifiableCredentialClaim>
         </div>
         <div class="field">
-          <a class="ui blue fluid button" @click="addChildItem(claim)">Add a claim</a>
+          <a class="ui tertiary fluid button" @click="addChildItem(claim)">Add a claim</a>
         </div>
       </div>
     </div>

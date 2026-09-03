@@ -89,14 +89,14 @@ export default {
     padding: .75rem;
     background: color-mix(
       in srgb,
-      var(--theme-accent, #2185d0) 16%,
+      var(--theme-primary, #2185d0) 16%,
       var(--theme-surface, #fff)
     );
-    border-left: 3px solid var(--theme-accent, #2185d0);
+    border-left: 3px solid var(--theme-primary, #2185d0);
     border-radius: calc(var(--theme-radius, 8px) * .5);
     box-shadow: inset 0 0 0 1px color-mix(
       in srgb,
-      var(--theme-accent, #2185d0) 34%,
+      var(--theme-primary, #2185d0) 34%,
       transparent
     );
     color: var(--theme-text, inherit);
@@ -113,10 +113,10 @@ export default {
     &:hover {
       background: color-mix(
         in srgb,
-        var(--theme-accent, #2185d0) 24%,
+        var(--theme-primary, #2185d0) 24%,
         var(--theme-surface, #fff)
       );
-      box-shadow: inset 0 0 0 1px var(--theme-accent, #2185d0);
+      box-shadow: inset 0 0 0 1px var(--theme-primary, #2185d0);
     }
   }
 }

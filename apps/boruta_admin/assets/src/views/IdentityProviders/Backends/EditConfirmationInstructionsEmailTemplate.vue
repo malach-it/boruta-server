@@ -13,9 +13,9 @@
       <TextEditor :content="htmlContent" @codeUpdate="setHtmlContent" />
     </div>
     <div class="ui segment">
-      <button v-on:click="update()" class="ui violet right floated button" :class="{ loading: template.loading }" :disabled="template.loading">Save</button>
+      <button v-on:click="update()" class="ui primary right floated button" :class="{ loading: template.loading }" :disabled="template.loading">Save</button>
       <button v-if="template.id" v-on:click="destroy()" class="ui red right floated button">Reset</button>
-      <router-link :to="{ name: 'edit-backend', params: { backendId: backend.id } }" class="ui blue button">Back</router-link>
+      <router-link :to="{ name: 'edit-backend', params: { backendId: backend.id } }" class="ui tertiary button">Back</router-link>
     </div>
   </div>
 </template>

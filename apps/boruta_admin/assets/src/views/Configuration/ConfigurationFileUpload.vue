@@ -21,7 +21,7 @@
                 </div>
               </div>
               <div class="ui segment">
-                <button type="submit" :to="{ name: 'new-backend' }" class="ui violet fluid create button">Upload <span v-if="edited">edited </span>configuration</button>
+                <button type="submit" :to="{ name: 'new-backend' }" class="ui primary fluid create button">Upload <span v-if="edited">edited </span>configuration</button>
               </div>
             </form>
             <div class="ui results segment">

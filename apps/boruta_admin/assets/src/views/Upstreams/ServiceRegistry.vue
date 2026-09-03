@@ -45,7 +45,7 @@
                 <router-link
                   v-if="canCreateUpstream(record)"
                   :to="newUpstreamRoute(record)"
-                  class="ui mini violet button">Create upstream</router-link>
+                  class="ui mini primary button">Create upstream</router-link>
               </td>
             </tr>
             <tr v-if="isExpanded(record)" class="upstreams-row">
@@ -123,7 +123,7 @@
                       <td class="collapsing">
                         <router-link
                           :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"
-                          class="ui tiny blue button">edit</router-link>
+                          class="ui tiny secondary button">edit</router-link>
                       </td>
                       <td class="collapsing">
                         <button
@@ -255,7 +255,7 @@ export default {
       })
     },
     statusClass (status) {
-      if (status === 'global') return 'blue'
+      if (status === 'global') return 'tertiary'
 
       return status === 'online' ? 'green' : 'grey'
     },

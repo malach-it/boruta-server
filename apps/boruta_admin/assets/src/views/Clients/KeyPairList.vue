@@ -4,7 +4,7 @@
     <Toaster :active="rotated" message="Key pair has been rotated" type="success" />
     <Toaster :active="error" :message="error" type="error" />
     <Toaster :active="deleted" message="Key pair has been deleted" type="warning" />
-    <a class="ui violet main create button" v-on:click="createKeyPair()">Add a key pair</a>
+    <a class="ui primary main create button" v-on:click="createKeyPair()">Add a key pair</a>
     <div class="container">
       <div class="ui error message" v-if="fetchError">
         {{ fetchError }}
@@ -14,7 +14,7 @@
         <div class="ui column" v-for="keyPair in keyPairs">
           <div class="ui key-pair segment">
             <div class="actions">
-              <a v-on:click="setDefault(keyPair)" class="ui tiny blue button">default</a>
+              <a v-on:click="setDefault(keyPair)" class="ui tiny tertiary button">default</a>
               <a v-on:click="rotate(keyPair)" class="ui tiny orange button">rotate</a>
               <a v-on:click="deleteKeyPair(keyPair)" class="ui tiny red button">delete</a>
             </div>
