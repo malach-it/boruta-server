@@ -59,7 +59,7 @@
                       v-for="service in recordServices(record)"
                       class="service-configuration column"
                       :key="service.name">
-                      <div class="ui service message card" :class="{ 'success': service.enabled, 'warning': !service.enabled }">
+                      <div class="ui service message card" :class="{ 'success': service.enabled }">
                         <div class="content">
                           <div class="header">
                             {{ service.name }}
@@ -81,7 +81,7 @@
                         </div>
                         <div class="extra-content">
                           <label v-if="service.enabled" class="ui green fluid label">Active</label>
-                          <label v-if="!service.enabled" class="ui brown fluid label">Disabled</label>
+                          <label v-if="!service.enabled" class="ui fluid label">Disabled</label>
                         </div>
                       </div>
                     </div>

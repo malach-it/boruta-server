@@ -596,22 +596,39 @@ html[data-admin-theme] #app .ui.basic.red.buttons .button:focus {
   ) !important;
 }
 
+html[data-admin-theme] #app .ui.label,
+html[data-admin-theme] #app.dark .ui.label {
+  color: var(--theme-text);
+  background: var(--theme-surface) !important;
+  border: 1px solid var(--theme-border);
+}
+
+html[data-admin-theme] #app .ui.grey.label,
+html[data-admin-theme] #app.dark .ui.grey.label {
+  color: var(--theme-surface) !important;
+  background: var(--theme-text) !important;
+  border: 1px solid var(--theme-text);
+}
+
 html[data-admin-theme] #app .ui.teal.label,
 html[data-admin-theme] #app.dark .ui.teal.label {
-  color: var(--theme-white);
+  color: var(--theme-white) !important;
   background: var(--theme-secondary) !important;
+  border: 1px solid var(--theme-secondary);
 }
 
 html[data-admin-theme] #app .ui.blue.label,
 html[data-admin-theme] #app.dark .ui.blue.label {
-  color: var(--theme-info-text, var(--theme-white));
+  color: var(--theme-info-text, var(--theme-white)) !important;
   background: var(--theme-info) !important;
+  border: 1px solid var(--theme-info);
 }
 
 html[data-admin-theme] #app .ui.green.label,
 html[data-admin-theme] #app.dark .ui.green.label {
-  color: var(--theme-success-text, var(--theme-white));
+  color: var(--theme-success-text, var(--theme-white)) !important;
   background: var(--theme-success) !important;
+  border: 1px solid var(--theme-success);
 }
 
 html[data-admin-theme] #app .ui.message,
