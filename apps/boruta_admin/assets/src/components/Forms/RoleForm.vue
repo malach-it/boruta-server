@@ -9,7 +9,7 @@
         </div>
         <hr />
         <ScopesField :currentScopes="role.scopes" @addScope="addScope" @deleteScope="deleteScope" />
-        <button class="ui right floated violet button" :class="{ loading: role.loading }" :disabled="role.loading" type="submit">{{ action }}</button>
+        <button class="ui right floated primary button" :class="{ loading: role.loading }" :disabled="role.loading" type="submit">{{ action }}</button>
         <a class="ui button" v-on:click="back()">Back</a>
       </form>
     </div>

@@ -57,7 +57,7 @@
               <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
             </div>
           </div>
-          <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
+          <a v-on:click.prevent="addRedirectUri()" class="ui tertiary fluid button">Add a redirect uri</a>
         </div>
         <div class="field" :class="{ 'error': client.errors?.response_mode }">
           <label>Response mode</label>
@@ -252,7 +252,7 @@
                 <i @click="deleteTrustedHost(trustedHost)" class="close icon"></i>
               </div>
             </div>
-            <a @click.prevent="addTrustedHost()" class="ui blue fluid button">Add a trusted host</a>
+            <a @click.prevent="addTrustedHost()" class="ui tertiary fluid button">Add a trusted host</a>
           </div>
         </div>
         <div class="ui authorization segment">
@@ -301,7 +301,7 @@
         <slot v-if="activeTab === 'activity'" name="activity" />
       </div>
       <div class="actions" v-if="activeTab !== 'activity'">
-        <button class="ui violet button" :class="{ loading: client.loading }" :disabled="client.loading" type="submit">{{ action }}</button>
+        <button class="ui primary button" :class="{ loading: client.loading }" :disabled="client.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>

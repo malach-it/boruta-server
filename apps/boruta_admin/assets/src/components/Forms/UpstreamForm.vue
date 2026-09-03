@@ -48,7 +48,7 @@
                 <i v-on:click="deleteUpstreamUri(upstreamUri)" class="close icon"></i>
               </div>
             </div>
-            <a v-on:click.prevent="addUpstreamUri()" class="ui blue fluid button">Add an upstream uri</a>
+            <a v-on:click.prevent="addUpstreamUri()" class="ui tertiary fluid button">Add an upstream uri</a>
           </div>
           <div class="field">
             <div class="ui toggle checkbox">
@@ -185,7 +185,7 @@
         <slot v-if="activeTab === 'activity'" name="activity" />
       </div>
       <div class="actions" v-if="activeTab !== 'activity'">
-        <button class="ui right floated violet button" :class="{ loading: upstream.loading }" :disabled="upstream.loading" type="submit">{{ action }}</button>
+        <button class="ui right floated primary button" :class="{ loading: upstream.loading }" :disabled="upstream.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>
