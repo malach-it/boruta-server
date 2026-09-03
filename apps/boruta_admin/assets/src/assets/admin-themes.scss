@@ -23,7 +23,9 @@ html[data-admin-theme="boruta-default-light"] {
   --theme-sidebar-text: #e3e4e4;
   --theme-danger: #881616;
   --theme-info: #2464bd;
+  --theme-info-text: #e3e4e4;
   --theme-success: #24be24;
+  --theme-success-text: #323232;
   --theme-warning: #a67e00;
   --theme-focus: rgba(140, 106, 0, .24);
   --theme-shadow: 0 10px 24px rgba(50, 50, 50, .14);
@@ -49,7 +51,9 @@ html[data-admin-theme="boruta-default-dark"] {
   --theme-sidebar-text: #e1e1e1;
   --theme-danger: #cb1616;
   --theme-info: #3e84e5;
+  --theme-info-text: #1e1e1e;
   --theme-success: #3be43b;
+  --theme-success-text: #1e1e1e;
   --theme-warning: #f5ba00;
   --theme-focus: rgba(245, 186, 0, .28);
   --theme-shadow: 0 12px 28px rgba(0, 0, 0, .34);
@@ -545,10 +549,69 @@ html[data-admin-theme] #app .ui.yellow.buttons:not(.basic) .button.active:not(.b
   ) !important;
 }
 
+html[data-admin-theme] #app .ui.red.button:not(.basic),
+html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button:not(.basic) {
+  color: var(--theme-white) !important;
+  background: var(--theme-danger) !important;
+  border-radius: calc(var(--theme-radius) * .55);
+}
+
+html[data-admin-theme] #app .ui.red.button:not(.basic):hover,
+html[data-admin-theme] #app .ui.red.button:not(.basic):focus,
+html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button:not(.basic):hover,
+html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button:not(.basic):focus {
+  background: color-mix(
+    in srgb,
+    var(--theme-danger) 86%,
+    var(--theme-text)
+  ) !important;
+}
+
+html[data-admin-theme] #app .ui.red.button:not(.basic):active,
+html[data-admin-theme] #app .ui.red.button.active:not(.basic),
+html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button:not(.basic):active,
+html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button.active:not(.basic) {
+  background: color-mix(
+    in srgb,
+    var(--theme-danger) 74%,
+    var(--theme-text)
+  ) !important;
+}
+
+html[data-admin-theme] #app .ui.basic.red.button,
+html[data-admin-theme] #app .ui.basic.red.buttons .button {
+  color: var(--theme-danger) !important;
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1px var(--theme-danger) !important;
+}
+
+html[data-admin-theme] #app .ui.basic.red.button:hover,
+html[data-admin-theme] #app .ui.basic.red.button:focus,
+html[data-admin-theme] #app .ui.basic.red.buttons .button:hover,
+html[data-admin-theme] #app .ui.basic.red.buttons .button:focus {
+  background: color-mix(
+    in srgb,
+    var(--theme-danger) 10%,
+    transparent
+  ) !important;
+}
+
 html[data-admin-theme] #app .ui.teal.label,
 html[data-admin-theme] #app.dark .ui.teal.label {
   color: var(--theme-white);
   background: var(--theme-secondary) !important;
+}
+
+html[data-admin-theme] #app .ui.blue.label,
+html[data-admin-theme] #app.dark .ui.blue.label {
+  color: var(--theme-info-text, var(--theme-white));
+  background: var(--theme-info) !important;
+}
+
+html[data-admin-theme] #app .ui.green.label,
+html[data-admin-theme] #app.dark .ui.green.label {
+  color: var(--theme-success-text, var(--theme-white));
+  background: var(--theme-success) !important;
 }
 
 html[data-admin-theme] #app .ui.message,
