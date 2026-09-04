@@ -6,7 +6,7 @@ defmodule BorutaAdmin.ReleaseCommand do
 
   @colon_uri_schemes ~w(data did mailto tel urn)
   @remote_error_marker "\n__BORUTA_CLI_ERROR__"
-  @usage "Usage: boruta-cli <resource> <action> [resource-id] [key[:nested-key...]:value ...] [attribute ...]"
+  @usage "Usage: boruta-cli <resource> <action> [resource-id] [attribute-or-selector ...] [-- key[:nested-key...]:value ...]"
 
   @spec main([String.t()]) :: :ok
   def main([resource, action | arguments]) do
@@ -238,6 +238,17 @@ defmodule BorutaAdmin.ReleaseCommand do
   @doc false
   @spec parse_arguments([String.t()]) :: {map(), [String.t()]}
   def parse_arguments(arguments) do
+    case Enum.split_while(arguments, &(&1 != "--")) do
+      {legacy_arguments, []} ->
+        parse_request_arguments(legacy_arguments)
+
+      {attributes, ["--" | filter_arguments]} ->
+        {request_params, trailing_attributes} = parse_request_arguments(filter_arguments)
+        {request_params, attributes ++ trailing_attributes}
+    end
+  end
+
+  defp parse_request_arguments(arguments) do
     Enum.reduce(arguments, {%{}, []}, fn argument, {request_params, attributes} ->
       case String.split(argument, ":", parts: 2) do
         [key, value] when key != "" ->
@@ -276,13 +287,19 @@ defmodule BorutaAdmin.ReleaseCommand do
     nested_keys = Enum.take(segments, value_index)
 
     if Enum.all?(nested_keys, &nested_key?/1) do
-      {nested_keys, segments |> Enum.drop(value_index) |> Enum.join(":")}
+      {Enum.map(nested_keys, &normalize_nested_key/1),
+       segments |> Enum.drop(value_index) |> Enum.join(":")}
     else
       {[], value}
     end
   end
 
-  defp nested_key?(key), do: Regex.match?(~r/^[a-zA-Z_][a-zA-Z0-9_-]*$/, key)
+  defp nested_key?(key),
+    do: Regex.match?(~r/^(?:[a-zA-Z_][a-zA-Z0-9_-]*|0|[1-9][0-9]*)$/, key)
+
+  defp normalize_nested_key(key) do
+    if Regex.match?(~r/^(?:0|[1-9][0-9]*)$/, key), do: String.to_integer(key), else: key
+  end
 
   defp split_unquoted_colons(value) do
     case split_unquoted_colons(value, [], "", nil) do
@@ -325,15 +342,47 @@ defmodule BorutaAdmin.ReleaseCommand do
       (uri_scheme?(segment) && match?("//" <> _rest, Enum.at(segments, index + 1)))
   end
 
-  defp put_nested_parameter(parameters, [key], value), do: Map.put(parameters, key, value)
+  defp put_nested_parameter(parameters, [key], value) when is_map(parameters) and is_binary(key),
+    do: Map.put(parameters, key, value)
+
+  defp put_nested_parameter(parameters, [index], value)
+       when is_list(parameters) and is_integer(index),
+       do: put_list_index(parameters, index, value)
 
   defp put_nested_parameter(parameters, [key | nested_keys], value) do
-    nested = put_nested_parameter(%{}, nested_keys, value)
+    next_key = List.first(nested_keys)
+    existing = nested_value(parameters, key)
 
-    Map.update(parameters, key, nested, fn
-      existing when is_map(existing) -> put_nested_parameter(existing, nested_keys, value)
-      _existing -> nested
-    end)
+    nested =
+      existing
+      |> nested_container(next_key)
+      |> put_nested_parameter(nested_keys, value)
+
+    put_nested_value(parameters, key, nested)
+  end
+
+  defp nested_value(parameters, key) when is_map(parameters) and is_binary(key),
+    do: Map.get(parameters, key)
+
+  defp nested_value(parameters, index) when is_list(parameters) and is_integer(index),
+    do: Enum.at(parameters, index)
+
+  defp nested_container(value, next_key) when is_integer(next_key) and is_list(value), do: value
+  defp nested_container(value, next_key) when is_binary(next_key) and is_map(value), do: value
+  defp nested_container(_value, next_key) when is_integer(next_key), do: []
+  defp nested_container(_value, next_key) when is_binary(next_key), do: %{}
+
+  defp put_nested_value(parameters, key, value) when is_map(parameters) and is_binary(key),
+    do: Map.put(parameters, key, value)
+
+  defp put_nested_value(parameters, index, value)
+       when is_list(parameters) and is_integer(index),
+       do: put_list_index(parameters, index, value)
+
+  defp put_list_index(list, index, value) do
+    list
+    |> Kernel.++(List.duplicate(nil, max(index - length(list) + 1, 0)))
+    |> List.replace_at(index, value)
   end
 
   defp unquote_parameter(<<quote, rest::binary>> = value) when quote in [?", ?'] do
@@ -346,14 +395,127 @@ defmodule BorutaAdmin.ReleaseCommand do
 
   defp unquote_parameter(value), do: value
 
-  defp filter_response(body, []), do: body
+  @doc false
+  @spec filter_response(term(), [String.t()]) :: term()
+  def filter_response(body, []), do: body
 
-  defp filter_response(body, attributes) do
-    case select_attributes(body, MapSet.new(attributes)) do
+  def filter_response(body, attributes) do
+    {path_selectors, attributes} = Enum.split_with(attributes, &String.contains?(&1, ":"))
+
+    selected_attributes =
+      if attributes == [], do: :not_found, else: select_attributes(body, MapSet.new(attributes))
+
+    selected =
+      Enum.reduce(path_selectors, selected_attributes, fn selector, selected ->
+        selector
+        |> selector_path()
+        |> then(&select_path_anywhere(body, &1))
+        |> merge_selection(selected)
+      end)
+
+    case selected do
       :not_found -> %{}
-      filtered -> filtered
+      filtered -> compact_selection(filtered)
     end
   end
+
+  defp selector_path(selector) do
+    selector
+    |> String.split(":")
+    |> Enum.map(&normalize_nested_key/1)
+  end
+
+  defp select_path_anywhere(value, path) do
+    case select_path(value, path) do
+      :not_found -> select_path_in_children(value, path)
+      selected -> selected
+    end
+  end
+
+  defp select_path_in_children(value, path) when is_map(value) do
+    value
+    |> Enum.reduce(%{}, fn {key, child}, selected_children ->
+      case select_path_anywhere(child, path) do
+        :not_found -> selected_children
+        selected -> Map.put(selected_children, key, selected)
+      end
+    end)
+    |> case do
+      empty when map_size(empty) == 0 -> :not_found
+      selected_children -> selected_children
+    end
+  end
+
+  defp select_path_in_children(value, path) when is_list(value) do
+    value
+    |> Enum.map(&select_path_anywhere(&1, path))
+    |> Enum.reject(&(&1 == :not_found))
+    |> case do
+      [] -> :not_found
+      selected -> selected
+    end
+  end
+
+  defp select_path_in_children(_value, _path), do: :not_found
+
+  defp select_path(value, []), do: value
+
+  defp select_path(value, [key | path]) when is_map(value) and is_binary(key) do
+    with {:ok, child} <- Map.fetch(value, key),
+         selected when selected != :not_found <- select_path(child, path) do
+      Map.put(%{}, key, selected)
+    else
+      _error -> :not_found
+    end
+  end
+
+  defp select_path(value, [index | path]) when is_list(value) and is_integer(index) do
+    with {:ok, child} <- Enum.fetch(value, index),
+         selected when selected != :not_found <- select_path(child, path) do
+      List.duplicate(nil, index) ++ [selected]
+    else
+      _error -> :not_found
+    end
+  end
+
+  defp select_path(_value, _path), do: :not_found
+
+  defp merge_selection(:not_found, selected), do: selected
+  defp merge_selection(selection, :not_found), do: selection
+
+  defp merge_selection(selection, selected) when is_map(selection) and is_map(selected) do
+    Map.merge(selected, selection, fn _key, selected_value, selection_value ->
+      merge_selection(selection_value, selected_value)
+    end)
+  end
+
+  defp merge_selection(selection, selected) when is_list(selection) and is_list(selected) do
+    case max(length(selection), length(selected)) do
+      0 ->
+        []
+
+      length ->
+        Enum.map(0..(length - 1), fn index ->
+          merge_selection(Enum.at(selection, index), Enum.at(selected, index))
+        end)
+    end
+  end
+
+  defp merge_selection(nil, selected), do: selected
+  defp merge_selection(selection, nil), do: selection
+  defp merge_selection(selection, _selected), do: selection
+
+  defp compact_selection(value) when is_map(value) do
+    Map.new(value, fn {key, child} -> {key, compact_selection(child)} end)
+  end
+
+  defp compact_selection(value) when is_list(value) do
+    value
+    |> Enum.reject(&is_nil/1)
+    |> Enum.map(&compact_selection/1)
+  end
+
+  defp compact_selection(value), do: value
 
   defp resource_id?(path_params, possible_resource_id) do
     Enum.any?(path_params, fn {name, value} ->

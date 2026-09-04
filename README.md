@@ -140,18 +140,18 @@ CLI commands authenticate the admin OAuth client using
 `BORUTA_ADMIN_OAUTH_CLIENT_ID` and `BORUTA_ADMIN_OAUTH_CLIENT_SECRET`.
 
 ```text
-boruta-cli <resource> <action> [resource-id] [key[:nested-key...]:value ...] [attribute ...]
+boruta-cli <resource> <action> [resource-id] [attribute-or-selector ...] [-- key[:nested-key...]:value ...]
 ```
 
 ```bash
 bin/boruta-cli role index
 bin/boruta-cli client show CLIENT_ID id name
-bin/boruta-cli upstream update UPSTREAM_ID scheme:https port:443
-bin/boruta-cli client update CLIENT_ID identity_provider:id:IDENTITY_PROVIDER_ID
-bin/boruta-cli logs index events_only:true request_id status label
+bin/boruta-cli upstream update UPSTREAM_ID -- scheme:https port:443
+bin/boruta-cli client update CLIENT_ID -- identity_provider:id:IDENTITY_PROVIDER_ID
+bin/boruta-cli logs index request_id status label -- events_only:true
 ```
 
-Additional colon-separated key segments create nested maps, while trailing arguments without a value select attributes from the YAML response. Explicit parameters override command defaults.
+When `--` is present, arguments before it select attributes from the YAML response and arguments after it provide request filters or update values. Colon-separated key segments create nested maps, and numeric segments address zero-based array indices. For example, `backend update BACKEND_ID -- verifiable_credentials:0:claims:0:label:"test"` updates the first claim label, while `backend show BACKEND_ID verifiable_credentials:0:claims:0:label --` selects that label from the response. Commands without `--` retain the legacy parameter and attribute parsing behavior. Explicit parameters override command defaults.
 
 ### Run a development server
 

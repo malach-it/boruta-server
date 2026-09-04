@@ -799,6 +799,130 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert backend.name == "some updated name"
     end
 
+    test "update_backend/2 merges verifiable credential and claim maps by array index" do
+      verifiable_credential = %{
+        "version" => "13",
+        "credential_identifier" => "TestCredential",
+        "format" => "jwt_vc",
+        "types" => "VerifiableCredential TestCredential",
+        "claims" => [
+          %{
+            "type" => "attribute",
+            "name" => "given_name",
+            "label" => "Existing label",
+            "pointer" => "given_name"
+          }
+        ],
+        "display" => %{
+          "name" => "Test credential",
+          "locale" => "en",
+          "logo" => %{
+            "url" => "https://example.com/logo.png",
+            "alt_text" => "Existing alternative text"
+          }
+        }
+      }
+
+      backend = backend_fixture(%{verifiable_credentials: [verifiable_credential]})
+
+      assert {:ok, %Backend{} = backend} =
+               IdentityProviders.update_backend(backend, %{
+                 "verifiable_credentials" => [
+                   %{
+                     "claims" => [%{"label" => "Updated label"}],
+                     "display" => %{"logo" => %{"alt_text" => "Updated alternative text"}}
+                   }
+                 ]
+               })
+
+      assert [updated_credential] = backend.verifiable_credentials
+      assert updated_credential["credential_identifier"] == "TestCredential"
+      assert updated_credential["display"]["name"] == "Test credential"
+      assert updated_credential["display"]["logo"]["url"] == "https://example.com/logo.png"
+      assert updated_credential["display"]["logo"]["alt_text"] == "Updated alternative text"
+
+      assert [updated_claim] = updated_credential["claims"]
+      assert updated_claim["name"] == "given_name"
+      assert updated_claim["pointer"] == "given_name"
+      assert updated_claim["label"] == "Updated label"
+    end
+
+    test "update_backend/2 deep merges other map attributes" do
+      backend =
+        insert(:backend,
+          password_hashing_opts: %{
+            "salt_len" => 16,
+            "t_cost" => 2,
+            "m_cost" => 16,
+            "parallelism" => 2,
+            "format" => "encoded",
+            "hashlen" => 32,
+            "argon2_type" => 2
+          },
+          metadata_fields: [
+            %{"attribute_name" => "email", "user_editable" => false, "scopes" => ["openid"]}
+          ],
+          federated_servers: [
+            %{
+              "name" => "federated",
+              "client_id" => "client-id",
+              "client_secret" => "client-secret",
+              "base_url" => "https://identity.example.com",
+              "metadata_endpoints" => [
+                %{"endpoint" => "https://identity.example.com/metadata", "claims" => "email"}
+              ]
+            }
+          ],
+          verifiable_presentations: [
+            %{
+              "presentation_identifier" => "presentation",
+              "presentation_definition" => ~s({"name":"existing"})
+            }
+          ]
+        )
+
+      assert {:ok, %Backend{} = backend} =
+               IdentityProviders.update_backend(backend, %{
+                 password_hashing_opts: %{"t_cost" => 3},
+                 metadata_fields: [%{"user_editable" => true}],
+                 federated_servers: [
+                   %{"metadata_endpoints" => [%{"claims" => "email email_verified"}]}
+                 ],
+                 verifiable_presentations: [
+                   %{"presentation_definition" => ~s({"name":"updated"})}
+                 ]
+               })
+
+      assert backend.password_hashing_opts["salt_len"] == 16
+      assert backend.password_hashing_opts["t_cost"] == 3
+
+      assert [metadata_field] = backend.metadata_fields
+      assert metadata_field["attribute_name"] == "email"
+      assert metadata_field["scopes"] == ["openid"]
+      assert metadata_field["user_editable"]
+
+      assert [federated_server] = backend.federated_servers
+      assert federated_server["client_id"] == "client-id"
+      assert federated_server["client_secret"] == "client-secret"
+      assert [metadata_endpoint] = federated_server["metadata_endpoints"]
+      assert metadata_endpoint["endpoint"] == "https://identity.example.com/metadata"
+      assert metadata_endpoint["claims"] == "email email_verified"
+
+      assert [verifiable_presentation] = backend.verifiable_presentations
+      assert verifiable_presentation["presentation_identifier"] == "presentation"
+      assert verifiable_presentation["presentation_definition"] == ~s({"name":"updated"})
+    end
+
+    test "update_backend/2 can still clear verifiable credentials" do
+      backend =
+        insert(:backend,
+          verifiable_credentials: [%{"credential_identifier" => "TestCredential"}]
+        )
+
+      assert {:ok, %Backend{verifiable_credentials: []}} =
+               IdentityProviders.update_backend(backend, %{verifiable_credentials: []})
+    end
+
     test "update_backend/2 stop associated ldap connection pool" do
       backend = insert(:ldap_backend)
       update_attrs = %{ldap_pool_size: 3}

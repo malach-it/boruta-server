@@ -253,6 +253,14 @@ defmodule BorutaIdentity.IdentityProviders do
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.IdentityProviders.Backend
 
+  @backend_map_attributes [
+    :password_hashing_opts,
+    :metadata_fields,
+    :federated_servers,
+    :verifiable_credentials,
+    :verifiable_presentations
+  ]
+
   def list_backends do
     Repo.all(Backend)
   end
@@ -300,6 +308,7 @@ defmodule BorutaIdentity.IdentityProviders do
     end
 
     ldap_pool_name = Ldap.pool_name(backend)
+    attrs = merge_backend_map_attributes(backend, attrs)
 
     with {:ok, backend} <-
            backend
@@ -312,6 +321,41 @@ defmodule BorutaIdentity.IdentityProviders do
       {:ok, backend}
     end
   end
+
+  defp merge_backend_map_attributes(%Backend{} = backend, attrs) do
+    Enum.reduce(@backend_map_attributes, attrs, fn attribute, attrs ->
+      string_attribute = Atom.to_string(attribute)
+      existing = Map.fetch!(backend, attribute)
+
+      cond do
+        Map.has_key?(attrs, string_attribute) ->
+          Map.update!(attrs, string_attribute, &merge_json(existing, &1))
+
+        Map.has_key?(attrs, attribute) ->
+          Map.update!(attrs, attribute, &merge_json(existing, &1))
+
+        true ->
+          attrs
+      end
+    end)
+  end
+
+  defp merge_json(existing, updates) when is_map(existing) and is_map(updates) do
+    Map.merge(existing, updates, fn _key, existing_value, update_value ->
+      merge_json(existing_value, update_value)
+    end)
+  end
+
+  defp merge_json(existing, updates) when is_list(existing) and is_list(updates) do
+    updates
+    |> Enum.with_index()
+    |> Enum.map(fn
+      {nil, index} -> Enum.at(existing, index)
+      {update, index} -> merge_json(Enum.at(existing, index), update)
+    end)
+  end
+
+  defp merge_json(_existing, update), do: update
 
   @spec update_backend_roles(backend :: %Backend{}, roles :: list(map())) ::
           {:ok, %Backend{}} | {:error, Ecto.Changeset.t()}
