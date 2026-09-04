@@ -96,7 +96,7 @@
                     <pre class="certificate">{{ record.certificate }}</pre>
                   </details>
                 </div>
-                <table class="ui very basic compact upstream table" v-if="upstreamsFor(record).length">
+                <table class="ui basic compact upstream table" v-if="upstreamsFor(record).length">
                   <thead>
                     <tr>
                       <th>Host</th>

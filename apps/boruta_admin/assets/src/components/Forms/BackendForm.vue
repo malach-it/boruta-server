@@ -540,9 +540,6 @@ export default {
 
 <style scoped lang="scss">
 .metadata-field.segment, .federated-server-field.segment, .credential-field.segment, .presentation-field.segment {
-  .field {
-    margin-bottom: 1em!important;
-  }
   .close.icon {
     position: absolute;
     cursor: pointer;

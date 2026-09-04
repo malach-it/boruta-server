@@ -2,54 +2,59 @@
  * sit after the legacy component rules so each theme remains consistent.
  * Upstream palette attributions: /THIRD_PARTY_NOTICES.md */
 
-/* Boruta Default uses #f5ba00 as its only exact anchor. Phi controls RGB
- * channel sums, ANSI roles distribute those sums, and variants add brightness. */
+/* Boruta Default uses #f5ba00 as its shared anchor. Phi controls RGB channel
+ * sums, ANSI roles distribute those sums, and variants add brightness. The
+ * dark variant shifts green toward red and anchors bright cyan at #53b29f. */
 html[data-admin-theme="boruta-default-light"] {
   color-scheme: light;
-  --theme-primary: #6f5400;
-  --theme-primary-hover: #594300;
-  --theme-primary-text: #fff;
+  --theme-white: #e3e4e4;
+  --theme-primary: #f5ba00;
+  --theme-primary-hover: #ffdb6b;
+  --theme-primary-text: #474747;
   --theme-primary-soft: #ffdb6b;
-  --theme-secondary: #0d4544;
-  --theme-secondary-hover: #2b5b5a;
-  --theme-secondary-text: #fff;
-  --theme-tertiary: #2464bd;
-  --theme-tertiary-hover: #437ac6;
-  --theme-tertiary-text: #fff;
+  --theme-secondary: #e3e4e4;
+  --theme-secondary-hover: #d7d8d8;
+  --theme-secondary-text: #474747;
+  --theme-secondary-border: #474747;
+  --theme-tertiary: #0d4544;
+  --theme-tertiary-hover: #138d8c;
+  --theme-tertiary-text: #e3e4e4;
   --theme-canvas: #e3e4e4;
-  --theme-surface: #e3e4e4;
-  --theme-surface-soft: #d3d4d4;
-  --theme-text: #323232;
+  --theme-surface: #d7d8d8;
+  --theme-surface-soft: #e3e4e4;
+  --theme-text: #474747;
   --theme-muted: #646464;
-  --theme-border: #b1b2b2;
-  --theme-sidebar: #323232;
+  --theme-border: #474747;
+  --theme-sidebar: #474747;
   --theme-sidebar-hover: #646464;
   --theme-sidebar-text: #e3e4e4;
   --theme-danger: #881616;
+  --theme-danger-hover: #e83131;
   --theme-info: #2464bd;
   --theme-info-text: #e3e4e4;
   --theme-success: #24be24;
-  --theme-success-text: #323232;
-  --theme-warning: #a67e00;
-  --theme-focus: rgba(140, 106, 0, .24);
-  --theme-shadow: 0 10px 24px rgba(50, 50, 50, .14);
+  --theme-success-text: #474747;
+  --theme-warning: #f5ba00;
+  --theme-focus: #ffdb6b;
+  --theme-shadow: none;
   --theme-radius: 4px;
 }
 
 html[data-admin-theme="boruta-default-dark"] {
   color-scheme: dark;
+  --theme-white: #e1e1e1;
   --theme-primary: #f5ba00;
   --theme-primary-hover: #ffd553;
-  --theme-primary-text: #fff;
+  --theme-primary-text: #1e1e1e;
   --theme-primary-soft: #464646;
-  --theme-secondary: #0d6362;
-  --theme-secondary-hover: #2b7574;
-  --theme-secondary-text: #fff;
-  --theme-tertiary: #3e84e5;
-  --theme-tertiary-hover: #5995e9;
-  --theme-tertiary-text: #fff;
+  --theme-secondary: #3a8072;
+  --theme-secondary-hover: #53b29f;
+  --theme-secondary-text: #e1e1e1;
+  --theme-tertiary: #e1e1e1;
+  --theme-tertiary-hover: #b9b9b9;
+  --theme-tertiary-text: #1e1e1e;
   --theme-canvas: #1e1e1e;
-  --theme-surface: #292929;
+  --theme-surface: #1e1e1e;
   --theme-surface-soft: #464646;
   --theme-text: #e1e1e1;
   --theme-muted: #b9b9b9;
@@ -58,28 +63,30 @@ html[data-admin-theme="boruta-default-dark"] {
   --theme-sidebar-hover: #464646;
   --theme-sidebar-text: #e1e1e1;
   --theme-danger: #cb1616;
+  --theme-danger-hover: #5f1010;
   --theme-info: #3e84e5;
   --theme-info-text: #1e1e1e;
-  --theme-success: #3be43b;
+  --theme-success: #73cb1c;
   --theme-success-text: #1e1e1e;
   --theme-warning: #f5ba00;
-  --theme-focus: rgba(245, 186, 0, .28);
-  --theme-shadow: 0 12px 28px rgba(0, 0, 0, .34);
+  --theme-focus: #ffd553;
+  --theme-shadow: none;
   --theme-radius: 4px;
 }
 
 html[data-admin-theme="base16-default-light"] {
   color-scheme: light;
+  --theme-white: #f8f8f8;
   --theme-primary: #7cafc2;
   --theme-primary-hover: #86c1b9;
-  --theme-primary-text: #fff;
+  --theme-primary-text: #f8f8f8;
   --theme-primary-soft: #e8e8e8;
   --theme-secondary: #a1b56c;
-  --theme-secondary-hover: #8e9f60;
-  --theme-secondary-text: #fff;
+  --theme-secondary-hover: #a1b56c;
+  --theme-secondary-text: #f8f8f8;
   --theme-tertiary: #7cafc2;
-  --theme-tertiary-hover: #8ebacb;
-  --theme-tertiary-text: #fff;
+  --theme-tertiary-hover: #86c1b9;
+  --theme-tertiary-text: #f8f8f8;
   --theme-canvas: #f8f8f8;
   --theme-surface: #e8e8e8;
   --theme-surface-soft: #f8f8f8;
@@ -90,26 +97,28 @@ html[data-admin-theme="base16-default-light"] {
   --theme-sidebar-hover: #383838;
   --theme-sidebar-text: #e8e8e8;
   --theme-danger: #ab4642;
+  --theme-danger-hover: #ab4642;
   --theme-info: #7cafc2;
   --theme-success: #a1b56c;
   --theme-warning: #f7ca88;
-  --theme-focus: rgba(124, 175, 194, .26);
-  --theme-shadow: 0 10px 24px rgba(56, 56, 56, .13);
+  --theme-focus: #86c1b9;
+  --theme-shadow: none;
   --theme-radius: 4px;
 }
 
 html[data-admin-theme="base16-default-dark"] {
   color-scheme: dark;
+  --theme-white: #f8f8f8;
   --theme-primary: #7cafc2;
   --theme-primary-hover: #86c1b9;
-  --theme-primary-text: #fff;
+  --theme-primary-text: #f8f8f8;
   --theme-primary-soft: #383838;
   --theme-secondary: #a1b56c;
-  --theme-secondary-hover: #8e9f60;
-  --theme-secondary-text: #fff;
+  --theme-secondary-hover: #a1b56c;
+  --theme-secondary-text: #f8f8f8;
   --theme-tertiary: #7cafc2;
-  --theme-tertiary-hover: #8ebacb;
-  --theme-tertiary-text: #fff;
+  --theme-tertiary-hover: #86c1b9;
+  --theme-tertiary-text: #f8f8f8;
   --theme-canvas: #181818;
   --theme-surface: #282828;
   --theme-surface-soft: #383838;
@@ -120,29 +129,31 @@ html[data-admin-theme="base16-default-dark"] {
   --theme-sidebar-hover: #383838;
   --theme-sidebar-text: #d8d8d8;
   --theme-danger: #ab4642;
+  --theme-danger-hover: #ab4642;
   --theme-info: #7cafc2;
   --theme-success: #a1b56c;
   --theme-warning: #f7ca88;
-  --theme-focus: rgba(124, 175, 194, .24);
-  --theme-shadow: 0 12px 30px rgba(0, 0, 0, .28);
+  --theme-focus: #86c1b9;
+  --theme-shadow: none;
   --theme-radius: 4px;
 }
 
 html[data-admin-theme="solarized-dark"] {
   color-scheme: dark;
+  --theme-white: #fdf6e3;
   --theme-primary: #268bd2;
   --theme-primary-hover: #2aa198;
-  --theme-primary-text: #fff;
+  --theme-primary-text: #fdf6e3;
   --theme-primary-soft: #073642;
   --theme-secondary: #2aa198;
-  --theme-secondary-hover: #24908a;
-  --theme-secondary-text: #fff;
+  --theme-secondary-hover: #2aa198;
+  --theme-secondary-text: #fdf6e3;
   --theme-tertiary: #268bd2;
-  --theme-tertiary-hover: #449bd8;
-  --theme-tertiary-text: #fff;
+  --theme-tertiary-hover: #2aa198;
+  --theme-tertiary-text: #fdf6e3;
   --theme-canvas: #002b36;
   --theme-surface: #073642;
-  --theme-surface-soft: #0b3b47;
+  --theme-surface-soft: #073642;
   --theme-text: #93a1a1;
   --theme-muted: #839496;
   --theme-border: #586e75;
@@ -150,26 +161,28 @@ html[data-admin-theme="solarized-dark"] {
   --theme-sidebar-hover: #073642;
   --theme-sidebar-text: #93a1a1;
   --theme-danger: #dc322f;
+  --theme-danger-hover: #dc322f;
   --theme-info: #268bd2;
   --theme-success: #859900;
   --theme-warning: #b58900;
-  --theme-focus: rgba(38, 139, 210, .24);
-  --theme-shadow: 0 12px 30px rgba(0, 24, 30, .3);
+  --theme-focus: #2aa198;
+  --theme-shadow: none;
   --theme-radius: 3px;
 }
 
 html[data-admin-theme="gruvbox-dark-medium"] {
   color-scheme: dark;
+  --theme-white: #ebdbb2;
   --theme-primary: #83a598;
   --theme-primary-hover: #8ec07c;
-  --theme-primary-text: #fff;
+  --theme-primary-text: #ebdbb2;
   --theme-primary-soft: #3c3836;
   --theme-secondary: #b8bb26;
-  --theme-secondary-hover: #a4a626;
-  --theme-secondary-text: #fff;
+  --theme-secondary-hover: #98971a;
+  --theme-secondary-text: #ebdbb2;
   --theme-tertiary: #83a598;
-  --theme-tertiary-hover: #94b2a6;
-  --theme-tertiary-text: #fff;
+  --theme-tertiary-hover: #458588;
+  --theme-tertiary-text: #ebdbb2;
   --theme-canvas: #282828;
   --theme-surface: #3c3836;
   --theme-surface-soft: #504945;
@@ -180,26 +193,28 @@ html[data-admin-theme="gruvbox-dark-medium"] {
   --theme-sidebar-hover: #504945;
   --theme-sidebar-text: #ebdbb2;
   --theme-danger: #fb4934;
+  --theme-danger-hover: #cc241d;
   --theme-info: #83a598;
   --theme-success: #b8bb26;
   --theme-warning: #fabd2f;
-  --theme-focus: rgba(131, 165, 152, .24);
-  --theme-shadow: 0 12px 28px rgba(29, 27, 26, .32);
+  --theme-focus: #8ec07c;
+  --theme-shadow: none;
   --theme-radius: 2px;
 }
 
 html[data-admin-theme="gruvbox-light-medium"] {
   color-scheme: light;
+  --theme-white: #fbf1c7;
   --theme-primary: #076678;
   --theme-primary-hover: #427b58;
-  --theme-primary-text: #fff;
+  --theme-primary-text: #fbf1c7;
   --theme-primary-soft: #ebdbb2;
   --theme-secondary: #79740e;
-  --theme-secondary-hover: #8b8628;
-  --theme-secondary-text: #fff;
+  --theme-secondary-hover: #98971a;
+  --theme-secondary-text: #fbf1c7;
   --theme-tertiary: #076678;
-  --theme-tertiary-hover: #2a7b8b;
-  --theme-tertiary-text: #fff;
+  --theme-tertiary-hover: #458588;
+  --theme-tertiary-text: #fbf1c7;
   --theme-canvas: #fbf1c7;
   --theme-surface: #ebdbb2;
   --theme-surface-soft: #fbf1c7;
@@ -210,26 +225,28 @@ html[data-admin-theme="gruvbox-light-medium"] {
   --theme-sidebar-hover: #504945;
   --theme-sidebar-text: #ebdbb2;
   --theme-danger: #9d0006;
+  --theme-danger-hover: #cc241d;
   --theme-info: #076678;
   --theme-success: #79740e;
   --theme-warning: #b57614;
-  --theme-focus: rgba(7, 102, 120, .22);
-  --theme-shadow: 0 10px 24px rgba(80, 73, 69, .15);
+  --theme-focus: #427b58;
+  --theme-shadow: none;
   --theme-radius: 2px;
 }
 
 html[data-admin-theme="nord"] {
   color-scheme: dark;
+  --theme-white: #e5e9f0;
   --theme-primary: #81a1c1;
   --theme-primary-hover: #88c0d0;
-  --theme-primary-text: #fff;
+  --theme-primary-text: #e5e9f0;
   --theme-primary-soft: #3b4252;
   --theme-secondary: #a3be8c;
-  --theme-secondary-hover: #93ab81;
-  --theme-secondary-text: #fff;
+  --theme-secondary-hover: #a3be8c;
+  --theme-secondary-text: #e5e9f0;
   --theme-tertiary: #81a1c1;
-  --theme-tertiary-hover: #93aeca;
-  --theme-tertiary-text: #fff;
+  --theme-tertiary-hover: #88c0d0;
+  --theme-tertiary-text: #e5e9f0;
   --theme-canvas: #2e3440;
   --theme-surface: #3b4252;
   --theme-surface-soft: #434c5e;
@@ -240,26 +257,28 @@ html[data-admin-theme="nord"] {
   --theme-sidebar-hover: #434c5e;
   --theme-sidebar-text: #e5e9f0;
   --theme-danger: #bf616a;
+  --theme-danger-hover: #bf616a;
   --theme-info: #81a1c1;
   --theme-success: #a3be8c;
   --theme-warning: #ebcb8b;
-  --theme-focus: rgba(129, 161, 193, .25);
-  --theme-shadow: 0 12px 30px rgba(22, 26, 33, .3);
+  --theme-focus: #88c0d0;
+  --theme-shadow: none;
   --theme-radius: 6px;
 }
 
 html[data-admin-theme="solarized-light"] {
   color-scheme: light;
+  --theme-white: #fdf6e3;
   --theme-primary: #268bd2;
   --theme-primary-hover: #2aa198;
-  --theme-primary-text: #fff;
+  --theme-primary-text: #fdf6e3;
   --theme-primary-soft: #eee8d5;
   --theme-secondary: #859900;
-  --theme-secondary-hover: #728a08;
-  --theme-secondary-text: #fff;
+  --theme-secondary-hover: #859900;
+  --theme-secondary-text: #fdf6e3;
   --theme-tertiary: #268bd2;
-  --theme-tertiary-hover: #449bd8;
-  --theme-tertiary-text: #fff;
+  --theme-tertiary-hover: #2aa198;
+  --theme-tertiary-text: #fdf6e3;
   --theme-canvas: #fdf6e3;
   --theme-surface: #eee8d5;
   --theme-surface-soft: #fdf6e3;
@@ -270,16 +289,13 @@ html[data-admin-theme="solarized-light"] {
   --theme-sidebar-hover: #586e75;
   --theme-sidebar-text: #eee8d5;
   --theme-danger: #dc322f;
+  --theme-danger-hover: #dc322f;
   --theme-info: #268bd2;
   --theme-success: #859900;
   --theme-warning: #b58900;
-  --theme-focus: rgba(38, 139, 210, .2);
-  --theme-shadow: 0 10px 25px rgba(88, 110, 117, .14);
+  --theme-focus: #2aa198;
+  --theme-shadow: none;
   --theme-radius: 3px;
-}
-
-html[data-admin-theme] {
-  --theme-white: #fff;
 }
 
 html[data-admin-theme] body {
@@ -302,7 +318,8 @@ html[data-admin-theme] #app > .header.dark {
 html[data-admin-theme] #app > .header .main.menu,
 html[data-admin-theme] #app > .header.dark .main.menu {
   background: transparent;
-  border-color: var(--theme-border);
+  border: none;
+  border-bottom: 1px solid var(--theme-surface);
 }
 
 html[data-admin-theme] #app > .header .item,
@@ -312,11 +329,7 @@ html[data-admin-theme] #app > .header .email.item {
 
 html[data-admin-theme] #app > .header .item.logo,
 html[data-admin-theme] #app > .header.dark .item.logo {
-  background: color-mix(
-    in srgb,
-    var(--theme-primary) 7%,
-    var(--theme-surface)
-  ) !important;
+  background: var(--theme-surface) !important;
 }
 
 html[data-admin-theme] #app > .header .email.item {
@@ -326,11 +339,7 @@ html[data-admin-theme] #app > .header .email.item {
 
 html[data-admin-theme] #app > .header .right.menu a.item {
   color: var(--theme-danger);
-  background: color-mix(
-    in srgb,
-    var(--theme-danger) 8%,
-    var(--theme-surface)
-  );
+  background: var(--theme-surface-soft);
 }
 
 html[data-admin-theme] #app > .header .right.menu a.item:hover {
@@ -342,7 +351,7 @@ html[data-admin-theme] #main .sidebar-menu,
 html[data-admin-theme] #app.dark #main .sidebar-menu {
   color: var(--theme-sidebar-text);
   background: var(--theme-sidebar);
-  border-right: 1px solid color-mix(in srgb, var(--theme-sidebar-text) 12%, transparent);
+  border-right: 1px solid var(--theme-border);
 }
 
 html[data-admin-theme] #main .sidebar-menu .menu,
@@ -385,8 +394,8 @@ html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item.active > a:ho
 
 html[data-admin-theme] #main .sidebar-menu .dropdown,
 html[data-admin-theme] #app.dark #main .sidebar-menu .dropdown {
-  background: color-mix(in srgb, var(--theme-sidebar) 92%, var(--theme-white));
-  border-color: color-mix(in srgb, var(--theme-sidebar-text) 12%, transparent);
+  background: var(--theme-sidebar-hover);
+  border-color: var(--theme-border);
 }
 
 html[data-admin-theme] #main .sidebar-menu .dropdown .subitem a:hover,
@@ -431,16 +440,16 @@ html[data-admin-theme] #app.dark .ui.segments .segment {
  * their spinners to grey. Keep both parts legible on every admin theme. */
 html[data-admin-theme] #app .dashboard-content.ui.loading.segment::before,
 html[data-admin-theme] #app.dark .dashboard-content.ui.loading.segment::before {
-  background: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+  background: var(--theme-surface);
   border-radius: var(--theme-radius);
 }
 
 html[data-admin-theme] #app .dashboard-content.ui.loading.segment::after,
 html[data-admin-theme] #app.dark .dashboard-content.ui.loading.segment::after {
   border-color: var(--theme-primary)
-    color-mix(in srgb, var(--theme-muted) 28%, transparent)
-    color-mix(in srgb, var(--theme-muted) 28%, transparent)
-    color-mix(in srgb, var(--theme-muted) 28%, transparent);
+    var(--theme-muted)
+    var(--theme-muted)
+    var(--theme-muted);
   box-shadow: none;
 }
 
@@ -514,9 +523,17 @@ html[data-admin-theme] #app.dark .ui.table th {
   border-color: var(--theme-border);
 }
 
+html[data-admin-theme] #app .ui.tabular.menu {
+  border-bottom: 1px solid var(--theme-border);
+}
+
 html[data-admin-theme] #app .ui.tabular.menu .item,
 html[data-admin-theme] #app.dark .ui.tabular.menu .item {
   color: var(--theme-muted);
+}
+
+html[data-admin-theme] #app .ui.tab {
+  border-radius: 0;
 }
 
 html[data-admin-theme] #app .ui.tabular.menu .item.active,
@@ -558,6 +575,7 @@ html[data-admin-theme] #app .ui.secondary.button:not(.basic),
 html[data-admin-theme] #app .ui.secondary.buttons:not(.basic) .button:not(.basic) {
   color: var(--theme-secondary-text) !important;
   background: var(--theme-secondary) !important;
+  border: 1px solid var(--theme-secondary-border, var(--theme-secondary));
   border-radius: calc(var(--theme-radius) * .55);
 }
 
@@ -572,11 +590,7 @@ html[data-admin-theme] #app .ui.secondary.button:not(.basic):active,
 html[data-admin-theme] #app .ui.secondary.button.active:not(.basic),
 html[data-admin-theme] #app .ui.secondary.buttons:not(.basic) .button:not(.basic):active,
 html[data-admin-theme] #app .ui.secondary.buttons:not(.basic) .button.active:not(.basic) {
-  background: color-mix(
-    in srgb,
-    var(--theme-secondary) 74%,
-    var(--theme-secondary-text)
-  ) !important;
+  background: var(--theme-secondary-hover) !important;
 }
 
 html[data-admin-theme] #app .ui.tertiary.button,
@@ -597,11 +611,7 @@ html[data-admin-theme] #app .ui.tertiary.button:active,
 html[data-admin-theme] #app .ui.tertiary.button.active,
 html[data-admin-theme] #app.dark .ui.tertiary.button:active,
 html[data-admin-theme] #app.dark .ui.tertiary.button.active {
-  background: color-mix(
-    in srgb,
-    var(--theme-tertiary) 74%,
-    var(--theme-tertiary-text)
-  ) !important;
+  background: var(--theme-tertiary-hover) !important;
 }
 
 html[data-admin-theme] #app .ui.red.button:not(.basic),
@@ -615,22 +625,14 @@ html[data-admin-theme] #app .ui.red.button:not(.basic):hover,
 html[data-admin-theme] #app .ui.red.button:not(.basic):focus,
 html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button:not(.basic):hover,
 html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button:not(.basic):focus {
-  background: color-mix(
-    in srgb,
-    var(--theme-danger) 86%,
-    var(--theme-text)
-  ) !important;
+  background: var(--theme-danger-hover) !important;
 }
 
 html[data-admin-theme] #app .ui.red.button:not(.basic):active,
 html[data-admin-theme] #app .ui.red.button.active:not(.basic),
 html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button:not(.basic):active,
 html[data-admin-theme] #app .ui.red.buttons:not(.basic) .button.active:not(.basic) {
-  background: color-mix(
-    in srgb,
-    var(--theme-danger) 74%,
-    var(--theme-text)
-  ) !important;
+  background: var(--theme-danger-hover) !important;
 }
 
 html[data-admin-theme] #app .ui.basic.red.button,
@@ -644,11 +646,7 @@ html[data-admin-theme] #app .ui.basic.red.button:hover,
 html[data-admin-theme] #app .ui.basic.red.button:focus,
 html[data-admin-theme] #app .ui.basic.red.buttons .button:hover,
 html[data-admin-theme] #app .ui.basic.red.buttons .button:focus {
-  background: color-mix(
-    in srgb,
-    var(--theme-danger) 10%,
-    transparent
-  ) !important;
+  background: transparent !important;
 }
 
 html[data-admin-theme] #app .ui.label,
@@ -666,10 +664,12 @@ html[data-admin-theme] #app.dark .ui.grey.label {
 }
 
 html[data-admin-theme] #app .ui.teal.label,
-html[data-admin-theme] #app.dark .ui.teal.label {
-  color: var(--theme-white) !important;
+html[data-admin-theme] #app.dark .ui.teal.label,
+html[data-admin-theme] #app .ui.secondary.label,
+html[data-admin-theme] #app.dark .ui.secondary.label {
+  color: var(--theme-secondary-text) !important;
   background: var(--theme-secondary) !important;
-  border: 1px solid var(--theme-secondary);
+  border: 1px solid var(--theme-secondary-border, var(--theme-secondary));
 }
 
 html[data-admin-theme] #app .ui.tertiary.label,
@@ -689,10 +689,15 @@ html[data-admin-theme] #app.dark .ui.green.label {
 html[data-admin-theme] #app .ui.message,
 html[data-admin-theme] #app.dark .ui.message {
   --theme-message-color: var(--theme-muted);
-  color: var(--theme-text);
+  --theme-message-text: color-mix(
+    in srgb,
+    var(--theme-message-color) 30%,
+    var(--theme-text)
+  );
+  color: var(--theme-message-text);
   background: color-mix(
     in srgb,
-    var(--theme-message-color) 11%,
+    var(--theme-message-color) 27%,
     var(--theme-surface)
   );
   border: 1px solid color-mix(
@@ -740,12 +745,12 @@ html[data-admin-theme] #app .ui.message > .header,
 html[data-admin-theme] #app .ui.message > .content > .header,
 html[data-admin-theme] #app.dark .ui.message > .header,
 html[data-admin-theme] #app.dark .ui.message > .content > .header {
-  color: var(--theme-text);
+  color: var(--theme-message-text);
 }
 
 html[data-admin-theme] #app .ui.message a,
 html[data-admin-theme] #app.dark .ui.message a {
-  color: var(--theme-text);
+  color: var(--theme-message-text);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: .15em;
