@@ -16,13 +16,16 @@ defmodule BorutaAdmin.CliTest do
   test "persists console authentication and resource action business events" do
     client = insert(:client)
     previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")
+    previous_client_secret = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET")
     previous_sub = System.get_env("BORUTA_COMMAND_SUB")
 
     System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client.id)
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", client.secret)
     System.put_env("BORUTA_COMMAND_SUB", "console-user@console-host")
 
     on_exit(fn ->
       restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id)
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", previous_client_secret)
       restore_env("BORUTA_COMMAND_SUB", previous_sub)
     end)
 
@@ -45,9 +48,14 @@ defmodule BorutaAdmin.CliTest do
   test "adds safe call parameters to the resource business event" do
     client = insert(:client)
     previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")
+    previous_client_secret = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET")
     System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client.id)
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", client.secret)
 
-    on_exit(fn -> restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id) end)
+    on_exit(fn ->
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id)
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", previous_client_secret)
+    end)
 
     log =
       capture_log([level: :info], fn ->
@@ -78,9 +86,14 @@ defmodule BorutaAdmin.CliTest do
   test "returns a JSON bad request for invalid log parameters" do
     client = insert(:client)
     previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")
+    previous_client_secret = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET")
     System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client.id)
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", client.secret)
 
-    on_exit(fn -> restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id) end)
+    on_exit(fn ->
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id)
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", previous_client_secret)
+    end)
 
     assert {:ok, %Plug.Conn{status: 400, resp_body: body}} =
              Cli.call("logs", "index", nil, %{"application" => "boruat_web"})
@@ -89,6 +102,53 @@ defmodule BorutaAdmin.CliTest do
              "code" => "BAD_REQUEST",
              "message" => "The requested with given parameters cannot be processed."
            } = Jason.decode!(body)
+  end
+
+  test "rejects an invalid client secret and logs the authentication failure" do
+    client = insert(:client)
+    previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")
+    previous_client_secret = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET")
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client.id)
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", "invalid-secret")
+
+    on_exit(fn ->
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id)
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", previous_client_secret)
+    end)
+
+    log =
+      capture_log([level: :info], fn ->
+        assert {:error,
+                {:client_authentication,
+                 %Boruta.Oauth.Error{
+                   status: :unauthorized,
+                   error: :invalid_client,
+                   error_description: "Invalid client_id or client_secret."
+                 }}} = Cli.call("role", "index")
+      end)
+
+    assert log =~ "boruta_admin console authenticate - failure client_id=#{client.id}"
+  end
+
+  test "rejects a missing client secret" do
+    client = insert(:client)
+    previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")
+    previous_client_secret = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET")
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client.id)
+    System.delete_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET")
+
+    on_exit(fn ->
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id)
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", previous_client_secret)
+    end)
+
+    assert {:error,
+            {:client_authentication,
+             %Boruta.Oauth.Error{
+               status: :unauthorized,
+               error: :invalid_client,
+               error_description: "Invalid client_id or client_secret."
+             }}} = Cli.call("role", "index")
   end
 
   defp restore_env(name, nil), do: System.delete_env(name)

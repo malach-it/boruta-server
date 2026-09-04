@@ -136,6 +136,9 @@ Admin credentials are the one seeded and available in environment file.
 
 The `boruta` and `boruta_admin` releases include `bin/boruta-cli`, which uses the following syntax:
 
+CLI commands authenticate the admin OAuth client using
+`BORUTA_ADMIN_OAUTH_CLIENT_ID` and `BORUTA_ADMIN_OAUTH_CLIENT_SECRET`.
+
 ```text
 boruta-cli <resource> <action> [resource-id] [key[:nested-key...]:value ...] [attribute ...]
 ```

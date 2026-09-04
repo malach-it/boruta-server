@@ -16,8 +16,9 @@ defmodule BorutaAdmin.Cli do
   """
 
   alias Boruta.AccessTokensAdapter
-  alias Boruta.ClientsAdapter
+  alias Boruta.Oauth.Authorization.Client, as: ClientAuthorization
   alias Boruta.Oauth.Client
+  alias Boruta.Oauth.Error
   alias Boruta.Oauth.Token
   alias BorutaAdminWeb.Authorization
   alias BorutaAdminWeb.Endpoint
@@ -45,7 +46,7 @@ defmodule BorutaAdmin.Cli do
   @type error_reason ::
           :unauthorized
           | {:access_token, term()}
-          | {:client_not_found, String.t()}
+          | {:client_authentication, term()}
           | {:invalid_controller_response, term()}
           | {:unknown_resource_action, String.t(), String.t()}
 
@@ -100,9 +101,9 @@ defmodule BorutaAdmin.Cli do
     action = to_string(action)
 
     with {:ok, route, required_scope} <- resolve_route(resource, action),
-         %Client{} = client <- admin_client(),
+         {:ok, %Client{} = client, sub} <- authenticate_admin_client(request_id),
          {:ok, %Token{} = token, sub} <-
-           create_access_token(client, required_scope, request_id) do
+           create_access_token(client, required_scope, sub) do
       try do
         route
         |> authenticated_conn(token, required_scope, resource_id, request_params, sub)
@@ -119,8 +120,8 @@ defmodule BorutaAdmin.Cli do
         AccessTokensAdapter.revoke(token)
       end
     else
-      nil -> {:error, {:client_not_found, admin_client_id()}}
       {:error, {:unknown_resource_action, _, _} = reason} -> {:error, reason}
+      {:error, {:client_authentication, _error} = reason} -> {:error, reason}
       {:error, reason} -> {:error, {:access_token, reason}}
     end
   end
@@ -145,40 +146,50 @@ defmodule BorutaAdmin.Cli do
     end
   end
 
-  defp admin_client do
-    admin_client_id()
-    |> ClientsAdapter.get_client()
-    |> case do
-      %Client{} = client -> %{client | access_token_ttl: @token_ttl}
-      nil -> nil
-    end
-  end
-
   defp admin_client_id do
     System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", @admin_client_id)
   end
 
-  defp create_access_token(client, scope, request_id) do
+  defp authenticate_admin_client(request_id) do
     sub = console_subject()
 
-    result =
-      AccessTokensAdapter.create(
-        %{
-          client: client,
-          scope: scope
-        },
-        []
-      )
+    result = authenticate_admin_client()
 
-    authentication_result = if match?({:ok, %Token{}}, result), do: :success, else: :failure
+    authentication_result = if match?({:ok, %Client{}}, result), do: :success, else: :failure
 
     :telemetry.execute(
       [:boruta_admin, :console, :authentication, authentication_result],
       %{},
-      %{client_id: client.id, sub: sub, request_id: request_id}
+      %{client_id: admin_client_id(), sub: sub, request_id: request_id}
     )
 
     case result do
+      {:ok, %Client{} = client} -> {:ok, %{client | access_token_ttl: @token_ttl}, sub}
+      {:error, error} -> {:error, {:client_authentication, error}}
+    end
+  end
+
+  defp authenticate_admin_client do
+    case System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET") do
+      secret when is_binary(secret) and secret != "" ->
+        ClientAuthorization.authorize(
+          id: admin_client_id(),
+          source: %{type: "post", value: secret},
+          grant_type: "client_credentials"
+        )
+
+      _missing_secret ->
+        {:error,
+         %Error{
+           status: :unauthorized,
+           error: :invalid_client,
+           error_description: "Invalid client_id or client_secret."
+         }}
+    end
+  end
+
+  defp create_access_token(client, scope, sub) do
+    case AccessTokensAdapter.create(%{client: client, scope: scope}, []) do
       {:ok, %Token{} = token} -> {:ok, token, sub}
       error -> error
     end

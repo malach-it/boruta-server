@@ -105,6 +105,11 @@ defmodule BorutaAdmin.ReleaseCommand do
     _error -> inspect(exception)
   end
 
+  defp error_message(
+         {:client_authentication, %Boruta.Oauth.Error{error_description: error_description}}
+       ),
+       do: error_description
+
   defp error_message(reason) when is_binary(reason), do: reason
   defp error_message(reason), do: inspect(reason)
 
