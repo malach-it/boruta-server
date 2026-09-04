@@ -169,6 +169,26 @@ defmodule BorutaAdminWeb.ClientControllerTest do
     end
 
     @tag authorized: ["clients:manage:all"]
+    test "merges partial key configuration with the stored client", %{
+      conn: conn,
+      client: %Client{id: id} = client
+    } do
+      conn =
+        put(conn, Routes.admin_client_path(conn, :update, client),
+          client: %{"key_pair_type" => %{"exponent_size" => "65537"}}
+        )
+
+      assert %{
+               "id" => ^id,
+               "key_pair_type" => %{
+                 "type" => "rsa",
+                 "modulus_size" => "2048",
+                 "exponent_size" => "65537"
+               }
+             } = json_response(conn, 200)["data"]
+    end
+
+    @tag authorized: ["clients:manage:all"]
     test "sets trusted authorities to an empty string", %{conn: conn} do
       client = insert(:client, trusted_authorities: "did:example:issuer")
 
