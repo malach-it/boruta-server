@@ -5,14 +5,15 @@ defmodule BorutaAdmin.ReleaseCommand do
   alias BorutaAdmin.Yaml
 
   @colon_uri_schemes ~w(data did mailto tel urn)
+  @read_actions ~w(configuration email_template error_template example_configuration_file index node_list show template)
   @remote_error_marker "\n__BORUTA_CLI_ERROR__"
-  @usage "Usage: boruta-cli <resource> <action> [resource-id] [attribute-or-selector ...] [-- key[:nested-key...]:value ...]"
+  @usage "Usage: boruta-cli <resource> <action> [resource-id] [response-filter ...] [-- action-parameter ...]"
 
   @spec main([String.t()]) :: :ok
   def main([resource, action | arguments]) do
     outcome =
       safely(fn ->
-        {request_params, plain_arguments} = parse_arguments(arguments)
+        {request_params, plain_arguments} = parse_arguments(arguments, action)
         possible_resource_id = List.first(plain_arguments)
 
         result =
@@ -44,7 +45,7 @@ defmodule BorutaAdmin.ReleaseCommand do
     try do
       outcome =
         safely(fn ->
-          {request_params, plain_arguments} = parse_arguments(arguments)
+          {request_params, plain_arguments} = parse_arguments(arguments, action)
           possible_resource_id = List.first(plain_arguments)
           result = Cli.call(resource, action, possible_resource_id, request_params)
 
@@ -237,33 +238,60 @@ defmodule BorutaAdmin.ReleaseCommand do
 
   @doc false
   @spec parse_arguments([String.t()]) :: {map(), [String.t()]}
-  def parse_arguments(arguments) do
+  def parse_arguments(arguments), do: parse_arguments(arguments, nil)
+
+  @doc false
+  @spec parse_arguments([String.t()], String.t() | atom() | nil) :: {map(), [String.t()]}
+  def parse_arguments(arguments, action) do
     case Enum.split_while(arguments, &(&1 != "--")) do
       {legacy_arguments, []} ->
-        parse_request_arguments(legacy_arguments)
+        parse_request_arguments(legacy_arguments, action)
 
-      {attributes, ["--" | filter_arguments]} ->
-        {request_params, trailing_attributes} = parse_request_arguments(filter_arguments)
-        {request_params, attributes ++ trailing_attributes}
+      {filters, ["--" | parameter_arguments]} ->
+        {request_params, invalid_parameters} = parse_request_arguments(parameter_arguments, nil)
+
+        if invalid_parameters == [] do
+          {request_params, filters}
+        else
+          raise ArgumentError,
+                "action parameters after -- must use key:value syntax: #{Enum.join(invalid_parameters, ", ")}"
+        end
     end
   end
 
-  defp parse_request_arguments(arguments) do
-    Enum.reduce(arguments, {%{}, []}, fn argument, {request_params, attributes} ->
-      case String.split(argument, ":", parts: 2) do
-        [key, value] when key != "" ->
-          {nested_keys, value} = nested_parameter(value)
+  defp parse_request_arguments(arguments, action) do
+    Enum.reduce(arguments, {%{}, []}, fn argument, {request_params, filters} ->
+      if indexed_response_filter?(argument, action) do
+        {request_params, filters ++ [argument]}
+      else
+        case String.split(argument, ":", parts: 2) do
+          [key, value] when key != "" ->
+            {nested_keys, value} = nested_parameter(value)
 
-          request_params =
-            put_nested_parameter(request_params, [key | nested_keys], unquote_parameter(value))
+            request_params =
+              put_nested_parameter(request_params, [key | nested_keys], unquote_parameter(value))
 
-          {request_params, attributes}
+            {request_params, filters}
 
-        _attribute ->
-          {request_params, attributes ++ [argument]}
+          _filter ->
+            {request_params, filters ++ [argument]}
+        end
       end
     end)
   end
+
+  defp indexed_response_filter?(argument, action) when is_atom(action),
+    do: indexed_response_filter?(argument, Atom.to_string(action))
+
+  defp indexed_response_filter?(argument, action) when action in @read_actions do
+    segments = String.split(argument, ":")
+
+    length(segments) > 1 and
+      Enum.all?(segments, &nested_key?/1) and
+      Enum.any?(segments, &Regex.match?(~r/^(?:0|[1-9][0-9]*)$/, &1))
+  end
+
+  defp indexed_response_filter?(_argument, _action), do: false
 
   defp nested_parameter(value), do: nested_parameter_path(value)
 

@@ -157,7 +157,7 @@ defmodule BorutaAdmin.ReleaseCommandTest do
              ])
   end
 
-  test "treats arguments before the separator as selectors and arguments after it as filters" do
+  test "treats arguments before the separator as response filters and arguments after it as action parameters" do
     assert {
              %{"query" => %{"label" => "test"}},
              ["backend-id", "verifiable_credentials:0:claims:0:label"]
@@ -168,6 +168,20 @@ defmodule BorutaAdmin.ReleaseCommandTest do
                "--",
                "query:label:test"
              ])
+  end
+
+  test "treats indexed paths as response filters on read actions without a separator" do
+    assert {%{}, ["backend-id", "verifiable_credentials:0:claims:0"]} =
+             BorutaAdmin.ReleaseCommand.parse_arguments(
+               ["backend-id", "verifiable_credentials:0:claims:0"],
+               "show"
+             )
+  end
+
+  test "rejects action parameters without key:value syntax after the separator" do
+    assert_raise ArgumentError, ~r/action parameters after -- must use key:value syntax/, fn ->
+      BorutaAdmin.ReleaseCommand.parse_arguments(["backend-id", "--", "events_only"])
+    end
   end
 
   test "filters response data with nested map keys and array indices" do
