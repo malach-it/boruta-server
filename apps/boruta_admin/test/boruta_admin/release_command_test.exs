@@ -140,6 +140,90 @@ defmodule BorutaAdmin.ReleaseCommandTest do
              ])
   end
 
+  test "parses numeric nested keys as array indices and merges common paths" do
+    assert {
+             %{
+               "verifiable_credentials" => [
+                 %{"claims" => [%{"label" => "first", "name" => "given_name"}]},
+                 %{"claims" => [%{"label" => "second"}]}
+               ]
+             },
+             []
+           } =
+             BorutaAdmin.ReleaseCommand.parse_arguments([
+               ~s(verifiable_credentials:1:claims:0:label:"second"),
+               ~s(verifiable_credentials:0:claims:0:label:"first"),
+               "verifiable_credentials:0:claims:0:name:given_name"
+             ])
+  end
+
+  test "treats arguments before the separator as selectors and arguments after it as filters" do
+    assert {
+             %{"query" => %{"label" => "test"}},
+             ["backend-id", "verifiable_credentials:0:claims:0:label"]
+           } =
+             BorutaAdmin.ReleaseCommand.parse_arguments([
+               "backend-id",
+               "verifiable_credentials:0:claims:0:label",
+               "--",
+               "query:label:test"
+             ])
+  end
+
+  test "filters response data with nested map keys and array indices" do
+    response = %{
+      "data" => %{
+        "name" => "backend",
+        "verifiable_credentials" => [
+          %{
+            "credential_identifier" => "first",
+            "claims" => [%{"name" => "given_name", "label" => "First label"}]
+          },
+          %{
+            "credential_identifier" => "second",
+            "claims" => [%{"name" => "family_name", "label" => "Second label"}]
+          }
+        ]
+      }
+    }
+
+    assert %{
+             "data" => %{
+               "verifiable_credentials" => [
+                 %{"claims" => [%{"label" => "Second label", "name" => "family_name"}]}
+               ]
+             }
+           } =
+             BorutaAdmin.ReleaseCommand.filter_response(response, [
+               "verifiable_credentials:1:claims:0:name",
+               "verifiable_credentials:1:claims:0:label"
+             ])
+  end
+
+  test "filters an indexed array item below a response data wrapper" do
+    first_credential = %{"credential_identifier" => "first"}
+
+    response = %{
+      "data" => %{
+        "verifiable_credentials" => [
+          first_credential,
+          %{"credential_identifier" => "second"}
+        ]
+      }
+    }
+
+    assert %{"data" => %{"verifiable_credentials" => [^first_credential]}} =
+             BorutaAdmin.ReleaseCommand.filter_response(response, ["verifiable_credentials:0"])
+  end
+
+  test "returns an empty map when an indexed response path does not exist" do
+    assert %{} =
+             BorutaAdmin.ReleaseCommand.filter_response(
+               %{"verifiable_credentials" => []},
+               ["verifiable_credentials:0:claims:0:label"]
+             )
+  end
+
   test "keeps URL parameter values scalar at any nesting level" do
     assert {
              %{
