@@ -64,6 +64,7 @@ config :boruta_gateway,
     System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true"
 
 config :boruta_web, BorutaWeb.Endpoint,
+  server: System.get_env("BORUTA_OAUTH_SERVER", "true") == "true",
   http: [
     port: System.get_env("BORUTA_OAUTH_PORT", "8080") |> String.to_integer(),
     ip:
@@ -99,6 +100,7 @@ config :boruta_identity, BorutaIdentityWeb.Authenticable,
     System.get_env("BORUTA_REMEMBER_ME_COOKIE", "_boruta_identity_web_user_remember_me")
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
+  server: System.get_env("BORUTA_ADMIN_SERVER", "true") == "true",
   http: [
     port: System.get_env("BORUTA_ADMIN_PORT", "8081") |> String.to_integer(),
     ip:

@@ -39,11 +39,11 @@ config :boruta_gateway,
   sidecar_server: System.get_env("BORUTA_GATEWAY_SIDECAR", "true") == "true"
 
 config :boruta_web, BorutaWeb.Endpoint,
-  server: true,
+  server: System.get_env("BORUTA_OAUTH_SERVER", "true") == "true",
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 config :boruta_admin, BorutaAdminWeb.Endpoint,
-  server: true,
+  server: System.get_env("BORUTA_ADMIN_SERVER", "true") == "true",
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 config :boruta_identity, BorutaIdentity.Endpoint,
