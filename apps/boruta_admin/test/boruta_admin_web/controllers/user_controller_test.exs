@@ -7,6 +7,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
   alias Boruta.Ecto.Admin
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Repo
 
   setup %{conn: conn} do
@@ -447,9 +448,17 @@ defmodule BorutaAdminWeb.UserControllerTest do
     @tag authorized: ["users:manage:all"]
     test "updates user with group", %{
       conn: conn,
-      user: %User{id: id} = user
+      user: %User{id: id} = user,
+      existing_scope: scope
     } do
       group = "group1 group2"
+      metadata = %{"existing" => %{"value" => "preserved"}}
+
+      user
+      |> Ecto.Changeset.change(metadata: metadata)
+      |> Repo.update!()
+
+      Repo.insert!(%UserAuthorizedScope{user_id: id, scope_id: scope.id})
 
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
@@ -458,8 +467,16 @@ defmodule BorutaAdminWeb.UserControllerTest do
           }
         )
 
-      assert %{"id" => ^id, "group" => ^group} = json_response(conn, 200)["data"]
-      assert %User{group: ^group} = Repo.get!(User, id)
+      scope_id = scope.id
+
+      assert %{
+               "id" => ^id,
+               "group" => ^group,
+               "metadata" => ^metadata,
+               "authorized_scopes" => [%{"id" => ^scope_id}]
+             } = json_response(conn, 200)["data"]
+
+      assert %User{group: ^group, metadata: ^metadata} = Repo.get!(User, id)
     end
 
     @tag authorized: ["users:manage:all"]

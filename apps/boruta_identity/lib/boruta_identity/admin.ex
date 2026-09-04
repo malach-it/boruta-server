@@ -328,18 +328,29 @@ defmodule BorutaIdentity.Admin do
            |> User.changeset(user_params)
            |> Repo.update(),
          {:ok, user} <-
-           update_user_authorized_scopes(
-             user,
-             user_params[:authorized_scopes] || user.authorized_scopes
-           ),
+           maybe_update_user_authorized_scopes(user, user_params),
          {:ok, user} <-
-           update_user_organizations(
-             user,
-             user_params[:organizations] || user.organizations
-           ) do
-      update_user_roles(user, user_params[:roles] || user.roles)
+           maybe_update_user_organizations(user, user_params) do
+      maybe_update_user_roles(user, user_params)
     end
   end
+
+  defp maybe_update_user_authorized_scopes(user, %{authorized_scopes: scopes})
+       when is_list(scopes),
+       do: update_user_authorized_scopes(user, scopes)
+
+  defp maybe_update_user_authorized_scopes(user, _user_params), do: {:ok, user}
+
+  defp maybe_update_user_organizations(user, %{organizations: organizations})
+       when is_list(organizations),
+       do: update_user_organizations(user, organizations)
+
+  defp maybe_update_user_organizations(user, _user_params), do: {:ok, user}
+
+  defp maybe_update_user_roles(user, %{roles: roles}) when is_list(roles),
+    do: update_user_roles(user, roles)
+
+  defp maybe_update_user_roles(user, _user_params), do: {:ok, user}
 
   @spec delete_user(user_id :: Ecto.UUID.t()) ::
           {:ok, user :: User.t()}
