@@ -14,8 +14,8 @@
         <div class="ui column" v-for="keyPair in keyPairs">
           <div class="ui key-pair segment">
             <div class="actions">
-              <a v-on:click="setDefault(keyPair)" class="ui tiny tertiary button">default</a>
               <a v-on:click="rotate(keyPair)" class="ui tiny secondary button">rotate</a>
+              <a v-on:click="setDefault(keyPair)" class="ui tiny tertiary button">default</a>
               <a v-on:click="deleteKeyPair(keyPair)" class="ui tiny red button">delete</a>
             </div>
             <label><strong>Key pair ID</strong> {{ keyPair.id }}</label>
