@@ -9,6 +9,7 @@ defmodule BorutaAdminWeb.Logger do
   @parameter_allowlist %{
     "backend" => [
       {[:create], ~w(backend id), "backend_id"},
+      {[:create, :update], ~w(backend name), "name"},
       {[:create, :update], ~w(backend type), "type"},
       {[:create, :update], ~w(backend is_default), "is_default"},
       {[:create, :update], ~w(backend create_default_organization),
@@ -21,6 +22,7 @@ defmodule BorutaAdminWeb.Logger do
     ],
     "client" => [
       {[:create], ~w(client id), "client_id"},
+      {[:create, :update], ~w(client name), "name"},
       {[:create, :update], ~w(client public_client_id), "public_client_id"},
       {[:create, :update], ~w(client confidential), "confidential"},
       {[:create, :update], ~w(client check_public_client_id), "check_public_client_id"},
@@ -75,6 +77,8 @@ defmodule BorutaAdminWeb.Logger do
     ],
     "scope" => [
       {[:create], ~w(scope id), "scope_id"},
+      {[:create, :update], ~w(scope name), "name"},
+      {[:create, :update], ~w(scope label), "label"},
       {[:create, :update], ~w(scope public), "public"}
     ],
     "upstream" => [
@@ -116,6 +120,65 @@ defmodule BorutaAdminWeb.Logger do
 
         conn
       end
+    )
+  end
+
+  @spec start() :: [:ok | {:error, term()}]
+  def start do
+    :logger.add_handler_filter(
+      :default,
+      :boruta_admin_remote_cli,
+      {&__MODULE__.remote_cli_console_filter/2, :ok}
+    )
+
+    handlers = [
+      {:boruta_admin_console_authentication_success, :success},
+      {:boruta_admin_console_authentication_failure, :failure}
+    ]
+
+    for {handler_id, result} <- handlers do
+      :telemetry.attach(
+        handler_id,
+        [:boruta_admin, :console, :authentication, result],
+        &__MODULE__.console_authentication_handler/4,
+        :ok
+      )
+    end
+  end
+
+  def remote_cli_console_filter(%{meta: %{boruta_cli_remote: true}}, _config), do: :stop
+  def remote_cli_console_filter(_event, _config), do: :ignore
+
+  @spec console_authentication_handler(
+          [atom()],
+          map(),
+          %{
+            required(:client_id) => String.t(),
+            required(:sub) => String.t(),
+            required(:request_id) => String.t()
+          },
+          term()
+        ) :: :ok
+  def console_authentication_handler(
+        [:boruta_admin, :console, :authentication, result],
+        _measurements,
+        %{client_id: client_id, sub: sub, request_id: request_id},
+        _config
+      )
+      when result in [:success, :failure] do
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "boruta_admin console authenticate - ",
+          Atom.to_string(result),
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub)
+        ]
+      end,
+      application: :boruta_admin,
+      type: :business,
+      request_id: request_id
     )
   end
 
