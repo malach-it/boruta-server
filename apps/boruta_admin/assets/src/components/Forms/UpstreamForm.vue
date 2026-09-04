@@ -130,7 +130,7 @@
           <div class="field" :class="{ 'error': upstream.errors?.mtls_enabled }">
             <div class="ui toggle checkbox">
               <input type="checkbox" v-model="upstream.mtls_enabled">
-              <label>Enable mutual TLS to upstream</label>
+              <label>Enable mutual TLS toward upstream</label>
             </div>
           </div>
           <h3>Rate limiting</h3>
