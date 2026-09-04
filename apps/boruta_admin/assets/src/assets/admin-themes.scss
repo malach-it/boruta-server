@@ -697,7 +697,7 @@ html[data-admin-theme] #app.dark .ui.message {
   color: var(--theme-message-text);
   background: color-mix(
     in srgb,
-    var(--theme-message-color) 27%,
+    var(--theme-message-color) 6%,
     var(--theme-surface)
   );
   border: 1px solid color-mix(
