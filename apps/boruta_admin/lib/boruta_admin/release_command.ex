@@ -71,7 +71,7 @@ defmodule BorutaAdmin.ReleaseCommand do
 
     response
     |> response_body()
-    |> filter_response(attributes)
+    |> filter_response(attributes, response.status)
     |> Yaml.encode()
     |> IO.write()
 
@@ -446,6 +446,11 @@ defmodule BorutaAdmin.ReleaseCommand do
       filtered -> compact_selection(filtered)
     end
   end
+
+  @doc false
+  @spec filter_response(term(), [String.t()], non_neg_integer()) :: term()
+  def filter_response(body, _attributes, status) when status >= 400, do: body
+  def filter_response(body, attributes, _status), do: filter_response(body, attributes)
 
   defp selector_path(selector) do
     selector

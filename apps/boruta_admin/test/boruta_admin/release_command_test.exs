@@ -238,6 +238,21 @@ defmodule BorutaAdmin.ReleaseCommandTest do
              )
   end
 
+  test "does not filter error responses" do
+    response = %{
+      "code" => "BAD_REQUEST",
+      "message" => "invalid backend configuration",
+      "errors" => %{"verifiable_credentials" => ["is invalid"]}
+    }
+
+    assert ^response =
+             BorutaAdmin.ReleaseCommand.filter_response(
+               response,
+               ["verifiable_credentials:0:claims:0:label"],
+               422
+             )
+  end
+
   test "keeps URL parameter values scalar at any nesting level" do
     assert {
              %{
