@@ -255,7 +255,7 @@ export default {
       })
     },
     statusClass (status) {
-      if (status === 'global') return 'tertiary'
+      if (status === 'global') return 'grey'
 
       return status === 'online' ? 'green' : 'grey'
     },
