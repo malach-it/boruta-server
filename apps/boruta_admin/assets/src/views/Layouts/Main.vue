@@ -595,6 +595,12 @@ export default {
       }
     }
   }
+  @media (max-width: 768px) {
+    .ui.segment {
+      padding-right: 0.5rem !important;
+      padding-left: 0.5rem !important;
+    }
+  }
 }
 #app.dark {
   background: #1b1c1d;

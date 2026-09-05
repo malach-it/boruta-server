@@ -396,5 +396,11 @@ export default {
       margin: auto;
     }
   }
+
+  @media (max-width: 768px) {
+    .service.card {
+      width: auto;
+    }
+  }
 }
 </style>

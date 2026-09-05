@@ -66,6 +66,9 @@ export default {
   position: absolute;
   right: 9em;
   top: .5em;
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 .feedback.overlay {
   position: fixed;

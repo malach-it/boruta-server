@@ -178,6 +178,9 @@ export default {
         color: #9f3a38;
       }
     }
+    @media (max-width: 768px) {
+      padding: 0.5rem!important;
+    }
   }
   .add.button {
     margin-bottom: 1rem;

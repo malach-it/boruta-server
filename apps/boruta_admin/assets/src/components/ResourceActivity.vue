@@ -189,5 +189,9 @@ export default {
       margin-left: auto;
     }
   }
+
+  .event {
+    font-size: 0.8em !important;
+  }
 }
 </style>
