@@ -310,6 +310,12 @@ html[data-admin-theme] #app.dark {
   background: transparent;
 }
 
+html[data-admin-theme] #app hr,
+html[data-admin-theme] #app.dark hr {
+  border: 0;
+  border-bottom: 1px solid var(--theme-border);
+}
+
 html[data-admin-theme] #app > .header,
 html[data-admin-theme] #app > .header.dark {
   background: var(--theme-surface);
