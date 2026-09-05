@@ -20,7 +20,7 @@
      </div>
     </div>
     <div class="ui info message" v-if="currentScopes.length"><i>You can use "*" as method wildcard</i></div>
-    <button v-on:click.prevent="addScope()" class="ui blue fluid button">Add a scope</button>
+    <button v-on:click.prevent="addScope()" class="ui tertiary fluid button">Add a scope</button>
   </div>
 </template>
 

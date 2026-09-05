@@ -34,8 +34,8 @@
                   </div>
                 </div>
                 <div class="three wide actions column">
-                  <button v-on:click.prevent="viewScope(scope)" class="ui tiny blue button">cancel</button>
-                  <button type="submit" class="ui tiny violet button" :class="{ loading: scope.loading }" :disabled="scope.loading">save</button>
+                  <button v-on:click.prevent="viewScope(scope)" class="ui tiny tertiary button">cancel</button>
+                  <button type="submit" class="ui tiny primary button" :class="{ loading: scope.loading }" :disabled="scope.loading">save</button>
                 </div>
               </div>
             </form>
@@ -55,7 +55,7 @@
                 </div>
               </div>
               <div class="three wide actions column">
-                <button v-on:click="editScope(scope)" class="ui tiny blue button">edit</button>
+                <button v-on:click="editScope(scope)" class="ui tiny secondary button">edit</button>
                 <button v-on:click="deleteScope(scope)" class="ui tiny red button">delete</button>
               </div>
             </div>
@@ -63,7 +63,7 @@
         </div>
       </div>
       <hr />
-      <button @click="addScope()" class="ui violet add button">Add a scope</button>
+      <button @click="addScope()" class="ui primary add button">Add a scope</button>
     </div>
   </div>
 </template>

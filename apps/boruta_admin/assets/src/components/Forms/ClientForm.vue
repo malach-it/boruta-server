@@ -57,7 +57,7 @@
               <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
             </div>
           </div>
-          <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
+          <a v-on:click.prevent="addRedirectUri()" class="ui tertiary fluid button">Add a redirect uri</a>
         </div>
         <div class="field" :class="{ 'error': client.errors?.response_mode }">
           <label>Response mode</label>
@@ -141,7 +141,7 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
+          <button type="button" class="ui fluid secondary button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
         </div>
         <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Internal.Signatures'">
           <h4>Key type</h4>
@@ -179,9 +179,9 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
+          <button type="button" class="ui fluid secondary button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
           <hr />
-          <a class="ui fluid orange button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
+          <a class="ui fluid secondary button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
         </div>
         <h3>Token signatures</h3>
         <div class="ui segment">
@@ -252,7 +252,7 @@
                 <i @click="deleteTrustedHost(trustedHost)" class="close icon"></i>
               </div>
             </div>
-            <a @click.prevent="addTrustedHost()" class="ui blue fluid button">Add a trusted host</a>
+            <a @click.prevent="addTrustedHost()" class="ui tertiary fluid button">Add a trusted host</a>
           </div>
         </div>
         <div class="ui authorization segment">
@@ -301,7 +301,7 @@
         <slot v-if="activeTab === 'activity'" name="activity" />
       </div>
       <div class="actions" v-if="activeTab !== 'activity'">
-        <button class="ui violet button" :class="{ loading: client.loading }" :disabled="client.loading" type="submit">{{ action }}</button>
+        <button class="ui primary button" :class="{ loading: client.loading }" :disabled="client.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>
