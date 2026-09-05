@@ -269,7 +269,11 @@ defmodule BorutaAdmin.ReleaseCommand do
             {nested_keys, value} = nested_parameter(value)
 
             request_params =
-              put_nested_parameter(request_params, [key | nested_keys], unquote_parameter(value))
+              put_nested_parameter(
+                request_params,
+                [key | nested_keys],
+                parse_parameter_value(value)
+              )
 
             {request_params, filters}
 
@@ -413,7 +417,9 @@ defmodule BorutaAdmin.ReleaseCommand do
     |> List.replace_at(index, value)
   end
 
-  defp unquote_parameter(<<quote, rest::binary>> = value) when quote in [?", ?'] do
+  defp parse_parameter_value("[]"), do: []
+
+  defp parse_parameter_value(<<quote, rest::binary>> = value) when quote in [?", ?'] do
     if String.ends_with?(rest, <<quote>>) do
       binary_part(rest, 0, byte_size(rest) - 1)
     else
@@ -421,7 +427,7 @@ defmodule BorutaAdmin.ReleaseCommand do
     end
   end
 
-  defp unquote_parameter(value), do: value
+  defp parse_parameter_value(value), do: value
 
   @doc false
   @spec filter_response(term(), [String.t()]) :: term()
