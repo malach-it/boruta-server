@@ -157,6 +157,22 @@ defmodule BorutaAdmin.ReleaseCommandTest do
              ])
   end
 
+  test "parses empty arrays in top-level and nested action parameters" do
+    assert {
+             %{
+               "redirect_uris" => [],
+               "verifiable_credentials" => [%{"claims" => []}]
+             },
+             ["backend-id"]
+           } =
+             BorutaAdmin.ReleaseCommand.parse_arguments([
+               "backend-id",
+               "--",
+               "redirect_uris:[]",
+               "verifiable_credentials:0:claims:[]"
+             ])
+  end
+
   test "treats arguments before the separator as response filters and arguments after it as action parameters" do
     assert {
              %{"query" => %{"label" => "test"}},
@@ -274,12 +290,14 @@ defmodule BorutaAdmin.ReleaseCommandTest do
   test "does not interpret quoted string parameters" do
     assert {
              %{
+               "literal_array" => "[]",
                "schedule" => %{"time" => "12:30:00"},
                "time" => "12:30:00"
              },
              []
            } =
              BorutaAdmin.ReleaseCommand.parse_arguments([
+               ~s(literal_array:"[]"),
                ~s(schedule:time:"12:30:00"),
                ~s(time:"12:30:00")
              ])
