@@ -8,9 +8,9 @@
 html[data-admin-theme="boruta-default-light"] {
   color-scheme: light;
   --theme-white: #e3e4e4;
-  --theme-primary: #0d4544;
-  --theme-primary-hover: #138d8c;
-  --theme-primary-text: #e3e4e4;
+  --theme-primary: #3a8072;
+  --theme-primary-hover: #53b29f;
+  --theme-primary-text: #e1e1e1;
   --theme-primary-soft: #d7d8d8;
   --theme-secondary: #e3e4e4;
   --theme-secondary-hover: #d7d8d8;
@@ -35,7 +35,7 @@ html[data-admin-theme="boruta-default-light"] {
   --theme-success: #24be24;
   --theme-success-text: #474747;
   --theme-warning: #f5ba00;
-  --theme-focus: #ffdb6b;
+  --theme-focus: #53b29f;
   --theme-shadow: none;
   --theme-radius: 4px;
 }
@@ -69,7 +69,7 @@ html[data-admin-theme="boruta-default-dark"] {
   --theme-success: #73cb1c;
   --theme-success-text: #1e1e1e;
   --theme-warning: #f5ba00;
-  --theme-focus: #ffd553;
+  --theme-focus: #53b29f;
   --theme-shadow: none;
   --theme-radius: 4px;
 }
