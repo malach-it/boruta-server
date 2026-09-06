@@ -19,7 +19,7 @@
     "lodash": "^4.18.1",
     "minisearch": "^7.2.0",
     "moment": "^2.29.4",
-    "phoenix": "^1.5.7",
+    "phoenix": "^1.6.17",
     "phoenix-socket": "^1.2.3",
     "prismjs": "^1.26.0",
     "semantic-ui-css": "^2.4.1",
