@@ -16,6 +16,7 @@
 
 ### Fixed
 
+- [admin] resource activity refreshes when navigating between routes
 - [admin] fix sidebar upstream navigation
 - [auth] log oauth revocation requests subject
 

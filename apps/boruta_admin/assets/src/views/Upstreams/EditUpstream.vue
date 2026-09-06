@@ -26,7 +26,7 @@
         <div class="twelve wide column">
           <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update">
             <template #activity>
-              <ResourceActivity :resource-id="upstream.id" />
+              <ResourceActivity :key="$route.fullPath" :resource-id="upstream.id" />
             </template>
           </UpstreamForm>
         </div>

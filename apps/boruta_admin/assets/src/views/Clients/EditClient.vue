@@ -27,7 +27,7 @@
         <div class="twelve wide column">
           <ClientForm :client="client" @submit="updateClient()" @back="back()" action="Update">
             <template #activity>
-              <ResourceActivity :resource-id="client.id" />
+              <ResourceActivity :key="$route.fullPath" :resource-id="client.id" />
             </template>
           </ClientForm>
         </div>

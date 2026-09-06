@@ -30,7 +30,7 @@
         <div class="twelve wide column">
           <IdentityProviderForm :identityProvider="identityProvider" @submit="updateIdentityProvider()" @back="back()" action="Update">
             <template #activity>
-              <ResourceActivity :resource-id="identityProvider.id" />
+              <ResourceActivity :key="$route.fullPath" :resource-id="identityProvider.id" />
             </template>
           </IdentityProviderForm>
         </div>

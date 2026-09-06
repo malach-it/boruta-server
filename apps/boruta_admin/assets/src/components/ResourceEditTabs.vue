@@ -14,7 +14,11 @@
     </div>
     <div class="ui bottom attached active tab segment">
       <slot v-if="activeTab === 'configuration'" />
-      <ResourceActivity v-else-if="resourceId" :resource-id="resourceId" />
+      <ResourceActivity
+        v-else-if="resourceId"
+        :key="$route.fullPath"
+        :resource-id="resourceId"
+      />
       <div class="ui active centered inline loader" v-else></div>
     </div>
   </div>

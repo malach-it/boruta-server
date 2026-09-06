@@ -30,7 +30,7 @@
         <div class="twelve wide column">
           <BackendForm :backend="backend" @submit="updateBackend()" @back="back()" action="Update">
             <template #activity>
-              <ResourceActivity :resource-id="backend.id" />
+              <ResourceActivity :key="$route.fullPath" :resource-id="backend.id" />
             </template>
           </BackendForm>
         </div>
