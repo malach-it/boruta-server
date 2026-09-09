@@ -28,6 +28,12 @@
 - [auth] log oauth revocation requests subject
 - [infra] include the database migration that defaults OAuth clients to confidential
 
+### Security
+
+- validate DID public clients against the issuer, registered redirect URIs, and supported grant types
+- require secret authentication for client and agent credentials grants and introspection, including public clients
+- allow decentralized non-confidential public-client grants without a secret only when issuer-bound
+
 ## [0.11.6] - 2026-08-25
 
 ### Added
