@@ -31,6 +31,7 @@ const signaturesAdapters = [
 const defaults = {
   errors: null,
   loading: false,
+  confidential: true,
   key_pair_id: null,
   key_pair_type: { type: 'rsa', modulus_size: '2048', exponent_size: '65537' },
   signatures_adapter: 'Elixir.Boruta.Internal.Signatures',
