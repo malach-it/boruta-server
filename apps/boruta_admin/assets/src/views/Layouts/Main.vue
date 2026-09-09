@@ -529,6 +529,9 @@ export default {
         color: #9f3a38!important;
       }
     }
+    .fields {
+      flex-wrap: wrap;
+    }
   }
   .ui.segments {
     margin: 0;
