@@ -222,7 +222,7 @@
               <div>
                 <router-link
                   :to="{ name: 'edit-cross-device-presentation-template', params: { identityProviderId: identityProvider.id } }"
-                  class="ui fluid blue button">Edit cross device presentation template</router-link>
+                  class="ui fluid blue button">Edit credential presentation template</router-link>
               </div>
             </div>
           </div>
