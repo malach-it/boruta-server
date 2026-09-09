@@ -61,6 +61,9 @@ services:
       default:
         aliases:
           - kagome-1
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   kagome_2:
     image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.11"
@@ -78,3 +81,6 @@ services:
       default:
         aliases:
           - kagome-2
+    depends_on:
+      postgres:
+        condition: service_healthy
