@@ -14,11 +14,18 @@
 - [gateway] upstreams can train and apply noise cancellation from transient OpenAPI uploads while storing only the Phi binary
 - [infra] Disable file logging configuration environment variable
 
+### Changed
+
+- [admin] new OAuth clients default to confidential
+- [admin] credential presentation template actions use clearer wording
+
 ### Fixed
 
 - [admin] resource activity refreshes when navigating between routes
 - [admin] fix sidebar upstream navigation
+- [admin] form fields wrap correctly on mobile viewports
 - [auth] log oauth revocation requests subject
+- [infra] include the database migration that defaults OAuth clients to confidential
 
 ## [0.11.6] - 2026-08-25
 
