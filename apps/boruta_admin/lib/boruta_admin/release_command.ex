@@ -563,22 +563,20 @@ defmodule BorutaAdmin.ReleaseCommand do
   end
 
   defp select_attributes(value, attributes) when is_map(value) do
-    selected = Map.take(value, MapSet.to_list(attributes))
-
-    if map_size(selected) > 0 do
-      selected
-    else
-      value
-      |> Enum.reduce(%{}, fn {key, child}, selected_children ->
+    value
+    |> Enum.reduce(%{}, fn {key, child}, selection ->
+      if MapSet.member?(attributes, key) do
+        Map.put(selection, key, child)
+      else
         case select_attributes(child, attributes) do
-          :not_found -> selected_children
-          result -> Map.put(selected_children, key, result)
+          :not_found -> selection
+          result -> Map.put(selection, key, result)
         end
-      end)
-      |> case do
-        empty when map_size(empty) == 0 -> :not_found
-        selected_children -> selected_children
       end
+    end)
+    |> case do
+      empty when map_size(empty) == 0 -> :not_found
+      selection -> selection
     end
   end
 

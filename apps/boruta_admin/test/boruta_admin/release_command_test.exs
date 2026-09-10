@@ -246,6 +246,33 @@ defmodule BorutaAdmin.ReleaseCommandTest do
              BorutaAdmin.ReleaseCommand.filter_response(response, ["verifiable_credentials:0"])
   end
 
+  test "filters attributes from paginated list entries and pagination metadata" do
+    response = %{
+      "data" => [
+        %{"id_token" => "first-token", "sub" => "first-subject", "type" => "id_token"},
+        %{"sub" => "second-subject", "type" => "access_token"}
+      ],
+      "page_number" => 1,
+      "page_size" => 12,
+      "total_pages" => 4
+    }
+
+    assert %{
+             "data" => [
+               %{"id_token" => "first-token", "sub" => "first-subject"},
+               %{"sub" => "second-subject"}
+             ],
+             "page_number" => 1,
+             "total_pages" => 4
+           } =
+             BorutaAdmin.ReleaseCommand.filter_response(response, [
+               "id_token",
+               "sub",
+               "page_number",
+               "total_pages"
+             ])
+  end
+
   test "returns an empty map when an indexed response path does not exist" do
     assert %{} =
              BorutaAdmin.ReleaseCommand.filter_response(

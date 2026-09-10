@@ -83,6 +83,7 @@ import EditInternalServerErrorTemplate from "./views/Configuration/EditInternalS
 import Dashboard from "./views/Dashboard.vue";
 import Requests from "./views/Dashboard/Requests.vue";
 import BusinessEvents from "./views/Dashboard/BusinessEvents.vue";
+import Tokens from "./views/Dashboard/Tokens.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -129,6 +130,11 @@ const router = createRouter({
               path: "business-events",
               name: "business-event-logs",
               component: BusinessEvents,
+            },
+            {
+              path: "tokens",
+              name: "token-list",
+              component: Tokens,
             },
           ],
         },

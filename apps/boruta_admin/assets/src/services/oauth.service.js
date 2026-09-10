@@ -1,7 +1,7 @@
 import decode from 'jwt-decode'
 import { BorutaOauth } from 'boruta-client'
 
-const ADMIN_SCOPE = 'roles:manage:all scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all'
+const ADMIN_SCOPE = 'roles:manage:all scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all tokens:read:all'
 
 class Oauth {
   constructor () {
@@ -51,6 +51,26 @@ class Oauth {
     }))
   }
 
+  get authorizedScopes () {
+    return (this.authorizedScope || '').split(/\s+/).filter(Boolean)
+  }
+
+  authorizedScopeFrom ({ id_token, scope }) {
+    let authorizedScope = scope
+
+    if (!authorizedScope) {
+      try {
+        authorizedScope = decode(id_token).scope
+      } catch {
+        authorizedScope = null
+      }
+    }
+
+    return Array.isArray(authorizedScope)
+      ? authorizedScope.join(' ')
+      : (authorizedScope || this.requestedScope)
+  }
+
   setRequestedScope (scopes) {
     this.requestedScope = scopes.join(' ')
 
@@ -79,10 +99,11 @@ class Oauth {
 
     const { access_token, id_token, expires_in } = response
     const expires_at = new Date().getTime() + expires_in * 1000
+    const authorizedScope = this.authorizedScopeFrom(response)
 
-    this.authorizedScope = this.requestedScope
+    this.authorizedScope = authorizedScope
 
-    localStorage.setItem('authorized_scope', this.requestedScope)
+    localStorage.setItem('authorized_scope', authorizedScope)
     localStorage.setItem('access_token', access_token)
     localStorage.setItem('id_token', id_token)
     localStorage.setItem('token_expires_at', expires_at)

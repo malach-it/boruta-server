@@ -104,6 +104,31 @@ defmodule BorutaAdmin.CliTest do
            } = Jason.decode!(body)
   end
 
+  test "runs token index and revoke actions" do
+    client = insert(:client)
+    token = insert(:token, type: "access_token", expires_at: :os.system_time(:seconds) + 60)
+    previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")
+    previous_client_secret = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET")
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client.id)
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", client.secret)
+
+    on_exit(fn ->
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id)
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", previous_client_secret)
+    end)
+
+    assert {:ok, %Plug.Conn{status: 200, resp_body: index_body}} = Cli.call("token", "index")
+
+    assert Enum.any?(Jason.decode!(index_body)["data"], &(&1["id"] == token.id))
+
+    assert {:ok, %Plug.Conn{status: 200, resp_body: revoke_body}} =
+             Cli.call("token", "revoke", token.id)
+
+    assert %{"id" => token_id, "revoked_at" => revoked_at} = Jason.decode!(revoke_body)["data"]
+    assert token_id == token.id
+    assert is_binary(revoked_at)
+  end
+
   test "rejects an invalid client secret and logs the authentication failure" do
     client = insert(:client)
     previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")

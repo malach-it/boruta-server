@@ -39,6 +39,7 @@ defmodule BorutaAdmin.Cli do
     BorutaAdminWeb.RoleController => "scopes:manage:all",
     BorutaAdminWeb.ScopeController => "scopes:manage:all",
     BorutaAdminWeb.ServiceRegistryController => "upstreams:manage:all",
+    BorutaAdminWeb.TokenController => "tokens:read:all",
     BorutaAdminWeb.UpstreamController => "upstreams:manage:all",
     BorutaAdminWeb.UserController => "users:manage:all"
   }
