@@ -52,17 +52,11 @@ defmodule BorutaAdminWeb.TokenView do
       id: token.id,
       type: token.type,
       response_type: token.response_type,
-      value: token.value,
-      id_token: token.id_token,
       id_token_claims: verified_claims(token.id_token),
-      refresh_token: token.refresh_token,
-      previous_code: token.previous_code,
       previous_codes:
         Enum.map(Map.get(assigns, :previous_codes, []), fn previous_code ->
           render(TokenView, "token.json", token: previous_code, previous_codes: [])
         end),
-      previous_token: token.previous_token,
-      agent_token: token.agent_token,
       scope: Oauth.Scope.split(token.scope),
       requested_scope: Oauth.Scope.split(token.requested_scope),
       redirect_uri: token.redirect_uri,

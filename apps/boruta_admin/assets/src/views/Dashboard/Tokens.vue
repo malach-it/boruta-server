@@ -137,7 +137,7 @@
                       <div class="token-title-main">
                         <i class="dropdown icon"></i>
                         <span class="ui tiny basic label">{{ token.type }}</span>
-                        <span class="token-id monospace">{{ token.value }}</span>
+                        <span class="token-id monospace">{{ token.id }}</span>
                       </div>
                       <div class="token-title-status">
                         <span class="ui tiny red label" v-if="token.revoked_at">revoked</span>
@@ -163,7 +163,7 @@
                             <div class="ui attribute list">
                               <div class="item">
                                 <span class="header">Identifier</span>
-                                <span class="token-value description monospace" :title="token.value">{{ token.id }}</span>
+                                <span class="token-value description monospace" :title="token.id">{{ token.id }}</span>
                               </div>
                               <div class="item">
                                 <span class="header">Client</span>
@@ -181,10 +181,6 @@
                                 <span class="header">Expires at</span>
                                 <span class="description">{{ formatUnixDate(token.expires_at) }}</span>
                               </div>
-                              <div class="item" v-if="token.previous_code">
-                                <span class="header">Previous code</span>
-                                <span class="token-value description monospace" :title="token.previous_code">{{ token.previous_code }}</span>
-                              </div>
                             </div>
                           </div>
                           <div class="column">
@@ -192,14 +188,6 @@
                               <div class="item">
                                 <span class="header">Subject</span>
                                 <span class="description monospace">{{ token.sub || '-' }}</span>
-                              </div>
-                              <div class="item">
-                                <span class="header">Refresh token</span>
-                                <span class="token-value description monospace" :title="token.refresh_token">{{ token.refresh_token || '-' }}</span>
-                              </div>
-                              <div class="item" v-if="token.previous_token">
-                                <span class="header">Previous token</span>
-                                <span class="token-value description monospace" :title="token.previous_token">{{ token.previous_token }}</span>
                               </div>
                               <div class="item">
                                 <span class="header">Inserted at</span>
@@ -264,9 +252,6 @@
                             :aria-expanded="isPresentationTokenExpanded(token, presentationToken)">
                             <i class="dropdown icon"></i>
                             {{ presentationToken.label }}
-                            <span class="token-detail-summary monospace" :title="presentationToken.value">
-                              {{ presentationToken.value }}
-                            </span>
                             <span class="token-detail-status">
                               <span class="ui tiny green label" v-if="presentationToken.result?.verified">verified</span>
                               <span class="ui tiny red label" v-else>not verified</span>
@@ -482,7 +467,7 @@ export default {
         const previousCodes = token.previous_codes || []
 
         return {
-          key: token.value,
+          key: token.id,
           tokens: previousCodes.concat(token)
         }
       })
@@ -667,11 +652,10 @@ export default {
       return [
         {
           name: 'id_token',
-          label: 'id_token',
-          value: token.id_token,
+          label: 'id_token claims',
           result: token.id_token_claims
         }
-      ].filter((presentationToken) => presentationToken.value)
+      ].filter((presentationToken) => presentationToken.result)
     },
     tokenClaimAttributes (claims) {
       return Object.keys(claims).sort().map((name) => {

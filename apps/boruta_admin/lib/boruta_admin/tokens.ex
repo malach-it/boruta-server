@@ -213,7 +213,9 @@ defmodule BorutaAdmin.Tokens do
       on: fragment("?::text = ?", u.id, t.sub),
       where:
         fragment(
-          "greatest(word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?)) >= ?",
+          "greatest(word_similarity(coalesce(?::text, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?)) >= ?",
+          t.id,
+          ^query,
           t.sub,
           ^query,
           t.refresh_token,
@@ -238,7 +240,9 @@ defmodule BorutaAdmin.Tokens do
       order_by: [
         desc:
           fragment(
-            "greatest(word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?))",
+            "greatest(word_similarity(coalesce(?::text, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?))",
+            t.id,
+            ^query,
             t.sub,
             ^query,
             t.refresh_token,

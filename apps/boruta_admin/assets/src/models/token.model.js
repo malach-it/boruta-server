@@ -12,17 +12,11 @@ const assign = {
   id: function ({ id }) { this.id = id },
   type: function ({ type }) { this.type = type },
   response_type: function ({ response_type }) { this.response_type = response_type },
-  value: function ({ value }) { this.value = value },
-  id_token: function ({ id_token }) { this.id_token = id_token },
   id_token_claims: function ({ id_token_claims }) { this.id_token_claims = id_token_claims },
-  refresh_token: function ({ refresh_token }) { this.refresh_token = refresh_token },
-  previous_code: function ({ previous_code }) { this.previous_code = previous_code },
   previous_codes: function ({ previous_codes }) {
     this.previous_codes = (previous_codes || [])
       .map((previousCode) => new Token(previousCode))
   },
-  previous_token: function ({ previous_token }) { this.previous_token = previous_token },
-  agent_token: function ({ agent_token }) { this.agent_token = agent_token },
   scope: function ({ scope }) { this.scope = scope },
   requested_scope: function ({ requested_scope }) { this.requested_scope = requested_scope },
   redirect_uri: function ({ redirect_uri }) { this.redirect_uri = redirect_uri },
