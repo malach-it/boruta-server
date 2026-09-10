@@ -7,25 +7,26 @@
         <i class="ui large burger close icon" @click="toggleMenu()"></i>
         <div class="ui vertical fluid tabular menu" :class="{ 'inverted': currentMode }">
           <router-link
+            v-if="canAccessDashboard"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
-            :to="{ name: 'dashboard' }">
+            :to="dashboardRoute">
             <div class="dashboard item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="chart area icon"></i>
                 <span>Dashboard</span>
               </a>
               <div class="dropdown">
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('logs:read:all')">
                   <router-link :to="{ name: 'request-logs' }">
                     <span>Requests</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('logs:read:all')">
                   <router-link :to="{ name: 'business-event-logs' }">
                     <span>Business events</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('tokens:read:all')">
                   <router-link :to="{ name: 'token-list' }">
                     <span>Tokens</span>
                   </router-link>
@@ -34,6 +35,7 @@
             </div>
           </router-link>
           <router-link
+            v-if="hasAuthorizedScope('upstreams:manage:all')"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'upstreams' }">
             <div class="upstreams item" :class="{'active': isActive }">
@@ -51,6 +53,7 @@
             </div>
           </router-link>
           <router-link
+            v-if="hasAuthorizedScope('clients:manage:all')"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'clients' }">
             <div class="clients item" :class="{'active': isActive }">
@@ -73,30 +76,31 @@
             </div>
           </router-link>
           <router-link
+            v-if="canAccessIdentityManagement"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
-            :to="{ name: 'identity-providers' }">
+            :to="identityManagementRoute">
             <div class="identity-providers item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="users icon"></i>
                 <span>Identity providers</span>
               </a>
               <div class="dropdown">
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('identity-providers:manage:all')">
                   <router-link :to="{ name: 'identity-provider-list' }">
                     <span>identity provider list</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('identity-providers:manage:all')">
                   <router-link :to="{ name: 'backend-list' }">
                     <span>backend list</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('users:manage:all')">
                   <router-link :to="{ name: 'user-list' }">
                     <span>user list</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('users:manage:all')">
                   <router-link :to="{ name: 'organization-list' }">
                     <span>organization list</span>
                   </router-link>
@@ -105,6 +109,7 @@
             </div>
           </router-link>
           <router-link
+            v-if="hasAuthorizedScope('scopes:manage:all')"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'scopes' }">
             <div class="scopes item" :class="{'active': isActive }">
@@ -127,6 +132,7 @@
             </div>
           </router-link>
           <router-link
+            v-if="hasAuthorizedScope('configuration:manage:all')"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'configuration' }">
             <div class="configuration item" :class="{'active': isActive }">
@@ -169,6 +175,7 @@
 import Header from '../../components/Header.vue'
 import Feedback from '../../components/Feedback.vue'
 import Breadcrumb from '../../components/Breadcrumb.vue'
+import oauth from '../../services/oauth.service'
 
 export default {
   name: 'Main',
@@ -179,10 +186,32 @@ export default {
   },
   data () {
     return {
-      currentMode: JSON.parse(localStorage.getItem('dark_mode'))
+      currentMode: JSON.parse(localStorage.getItem('dark_mode')),
+      authorizedScopes: oauth.authorizedScopes
+    }
+  },
+  computed: {
+    canAccessDashboard () {
+      return this.hasAuthorizedScope('logs:read:all') || this.hasAuthorizedScope('tokens:read:all')
+    },
+    dashboardRoute () {
+      return this.hasAuthorizedScope('logs:read:all')
+        ? { name: 'request-logs' }
+        : { name: 'token-list' }
+    },
+    canAccessIdentityManagement () {
+      return this.hasAuthorizedScope('identity-providers:manage:all') ||
+        this.hasAuthorizedScope('users:manage:all')
+    },
+    identityManagementRoute () {
+      return this.hasAuthorizedScope('identity-providers:manage:all')
+        ? { name: 'identity-provider-list' }
+        : { name: 'user-list' }
     }
   },
   mounted () {
+    window.addEventListener('logged_in', this.syncAuthorizedScopes)
+
     const sidebarOffset = this.$refs.header.$el.offsetHeight
 
     document.addEventListener('scroll', () => {
@@ -196,6 +225,12 @@ export default {
     })
   },
   methods: {
+    hasAuthorizedScope (scope) {
+      return this.authorizedScopes.includes(scope)
+    },
+    syncAuthorizedScopes () {
+      this.authorizedScopes = oauth.authorizedScopes
+    },
     toggleMenu () {
       this.$refs.menu.classList.toggle('opened')
     },
@@ -206,6 +241,9 @@ export default {
   },
   beforeRouteUpdate () {
     this.$refs.menu.classList.remove('opened')
+  },
+  beforeUnmount () {
+    window.removeEventListener('logged_in', this.syncAuthorizedScopes)
   }
 }
 </script>
