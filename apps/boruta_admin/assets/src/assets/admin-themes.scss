@@ -597,8 +597,8 @@ html[data-admin-theme] #app .ui.basic.red.buttons .button:focus {
 
 html[data-admin-theme] #app .ui.label,
 html[data-admin-theme] #app.dark .ui.label {
-  color: var(--theme-text);
-  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  background: var(--theme-surface-soft) !important;
   border: 1px solid var(--theme-border);
 }
 
@@ -609,13 +609,47 @@ html[data-admin-theme] #app.dark .ui.grey.label {
   border: 1px solid var(--theme-text);
 }
 
-html[data-admin-theme] #app .ui.teal.label,
-html[data-admin-theme] #app.dark .ui.teal.label,
 html[data-admin-theme] #app .ui.secondary.label,
 html[data-admin-theme] #app.dark .ui.secondary.label {
   color: var(--theme-secondary-text) !important;
   background: var(--theme-secondary) !important;
   border: 1px solid var(--theme-secondary-border, var(--theme-secondary));
+}
+
+html[data-admin-theme] #app .ui.red.label:not(.basic),
+html[data-admin-theme] #app .ui.red.labels .label:not(.basic),
+html[data-admin-theme] #app.dark .ui.red.label:not(.basic),
+html[data-admin-theme] #app.dark .ui.red.labels .label:not(.basic) {
+  color: var(--theme-white) !important;
+  background: var(--theme-danger) !important;
+  border: 1px solid var(--theme-danger);
+}
+
+html[data-admin-theme] #app .ui.basic.red.label,
+html[data-admin-theme] #app .ui.basic.red.labels .label,
+html[data-admin-theme] #app.dark .ui.basic.red.label,
+html[data-admin-theme] #app.dark .ui.basic.red.labels .label {
+  color: var(--theme-danger) !important;
+  background: transparent !important;
+  border: 1px solid var(--theme-danger);
+}
+
+html[data-admin-theme] #app .ui.teal.label:not(.basic),
+html[data-admin-theme] #app .ui.teal.labels .label:not(.basic),
+html[data-admin-theme] #app.dark .ui.teal.label:not(.basic),
+html[data-admin-theme] #app.dark .ui.teal.labels .label:not(.basic) {
+  color: var(--theme-primary-text, var(--theme-white)) !important;
+  background: var(--theme-primary) !important;
+  border: 1px solid var(--theme-primary);
+}
+
+html[data-admin-theme] #app .ui.basic.teal.label,
+html[data-admin-theme] #app .ui.basic.teal.labels .label,
+html[data-admin-theme] #app.dark .ui.basic.teal.label,
+html[data-admin-theme] #app.dark .ui.basic.teal.labels .label {
+  color: var(--theme-primary) !important;
+  background: transparent !important;
+  border: 1px solid var(--theme-primary);
 }
 
 html[data-admin-theme] #app .ui.tertiary.label,
@@ -630,6 +664,13 @@ html[data-admin-theme] #app.dark .ui.green.label {
   color: var(--theme-success-text, var(--theme-white)) !important;
   background: var(--theme-success) !important;
   border: 1px solid var(--theme-success);
+}
+
+html[data-admin-theme] #app .ui.violet.label,
+html[data-admin-theme] #app.dark .ui.violet.label {
+  color: var(--theme-tertiary-text, var(--theme-white)) !important;
+  background: var(--theme-tertiary) !important;
+  border: 1px solid var(--theme-tertiary);
 }
 
 html[data-admin-theme] #app .ui.message,
