@@ -22,7 +22,7 @@
           <button class="ui button" @click="selectAllScopes">Select all</button>
           <button class="ui button" @click="selectNoScopes">None</button>
         </div>
-        <button class="ui fluid yellow button login-button" @click="login">Login</button>
+        <button class="ui fluid secondary button login-button" @click="login">Login</button>
       </div>
       <div class="ui center aligned segment">
         <h2>Welcome to boruta administration</h2>
@@ -79,7 +79,7 @@
       </div>
       <div class="ui center aligned segment">
         <div class="ui segment">
-          <router-link class="ui fluid blue button" :to="{ name: 'configuration-file-upload', params: { type: 'example-configuration-file' } }">Load example configuration</router-link>
+          <router-link class="ui fluid primary button" :to="{ name: 'configuration-file-upload', params: { type: 'example-configuration-file' } }">Load example configuration</router-link>
         </div>
         <div class="ui info message">
           <h2>Example decentralized identity flow</h2>
@@ -95,9 +95,9 @@
                 <option value="openid-credential-offer://">Mobile wallet</option>
               </select>
             </div>
-            <a class="ui fluid blue button" target="_blank" :href="preauthorizeUrl">Trigger example pre-authorized code flow with associated boruta wallet (load example data first)</a>
+            <a class="ui fluid primary button" target="_blank" :href="preauthorizeUrl">Trigger example pre-authorized code flow with associated boruta wallet (load example data first)</a>
             <hr />
-            <a class="ui fluid blue button" target="_blank" :href="presentationPreauthorizeUrl">Trigger example pre-authorized code with presentation flow with associated boruta wallet (load example data first)</a>
+            <a class="ui fluid primary button" target="_blank" :href="presentationPreauthorizeUrl">Trigger example pre-authorized code with presentation flow with associated boruta wallet (load example data first)</a>
           </div>
           <div class="ui form segment">
             <h3>Verifiable credential presentation</h3>
@@ -108,7 +108,7 @@
                 <option value="openid4vp://">Mobile wallet</option>
               </select>
             </div>
-            <a class="ui fluid blue button" target="_blank" :href="presentationUrl">Trigger example presentation with associated boruta wallet (issue example credential first)</a>
+            <a class="ui fluid primary button" target="_blank" :href="presentationUrl">Trigger example presentation with associated boruta wallet (issue example credential first)</a>
           </div>
         </div>
       </div>

@@ -45,7 +45,7 @@
                 <router-link
                   v-if="canCreateUpstream(record)"
                   :to="newUpstreamRoute(record)"
-                  class="ui mini violet button">Create upstream</router-link>
+                  class="ui mini primary button">Create upstream</router-link>
               </td>
             </tr>
             <tr v-if="isExpanded(record)" class="upstreams-row">
@@ -59,7 +59,7 @@
                       v-for="service in recordServices(record)"
                       class="service-configuration column"
                       :key="service.name">
-                      <div class="ui service message card" :class="{ 'success': service.enabled, 'warning': !service.enabled }">
+                      <div class="ui service message card" :class="{ 'success': service.enabled }">
                         <div class="content">
                           <div class="header">
                             {{ service.name }}
@@ -81,7 +81,7 @@
                         </div>
                         <div class="extra-content">
                           <label v-if="service.enabled" class="ui green fluid label">Active</label>
-                          <label v-if="!service.enabled" class="ui brown fluid label">Disabled</label>
+                          <label v-if="!service.enabled" class="ui fluid label">Disabled</label>
                         </div>
                       </div>
                     </div>
@@ -96,7 +96,7 @@
                     <pre class="certificate">{{ record.certificate }}</pre>
                   </details>
                 </div>
-                <table class="ui very basic compact upstream table" v-if="upstreamsFor(record).length">
+                <table class="ui basic compact upstream table" v-if="upstreamsFor(record).length">
                   <thead>
                     <tr>
                       <th>Host</th>
@@ -123,7 +123,7 @@
                       <td class="collapsing">
                         <router-link
                           :to="{ name: 'edit-upstream', params: { upstreamId: upstream.id } }"
-                          class="ui tiny blue button">edit</router-link>
+                          class="ui tiny secondary button">edit</router-link>
                       </td>
                       <td class="collapsing">
                         <button
@@ -255,7 +255,7 @@ export default {
       })
     },
     statusClass (status) {
-      if (status === 'global') return 'blue'
+      if (status === 'global') return 'grey'
 
       return status === 'online' ? 'green' : 'grey'
     },
@@ -348,6 +348,14 @@ export default {
 
   .label {
     margin: .125rem;
+  }
+
+  .upstreams-row > td {
+    padding: 0;
+  }
+
+  .upstreams-row th, .upstreams-row td {
+    padding: .7em!important;
   }
 
   .certificate-details {

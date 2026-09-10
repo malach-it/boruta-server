@@ -162,9 +162,15 @@
       </div>
     </div>
     <footer>
-      <a @click="toggleDarkMode()" class="dark-mode">
-        <i class="ui sun icon"></i>
-      </a>
+      <div class="theme-controls">
+        <label class="theme-select">
+          <i class="paint brush icon" aria-hidden="true"></i>
+          <span class="visually-hidden">Administration theme</span>
+          <select v-model="currentTheme" @change="changeTheme(currentTheme)" aria-label="Administration theme">
+            <option v-for="theme in themes" :key="theme.id" :value="theme.id">{{ theme.name }}</option>
+          </select>
+        </label>
+      </div>
       <Feedback />
       &copy; 2026 malachit
     </footer>
@@ -176,6 +182,7 @@ import Header from '../../components/Header.vue'
 import Feedback from '../../components/Feedback.vue'
 import Breadcrumb from '../../components/Breadcrumb.vue'
 import oauth from '../../services/oauth.service'
+import { getTheme, setTheme, themes } from '../../services/theme.service'
 
 export default {
   name: 'Main',
@@ -186,11 +193,15 @@ export default {
   },
   data () {
     return {
-      currentMode: JSON.parse(localStorage.getItem('dark_mode')),
+      currentTheme: getTheme(),
+      themes,
       authorizedScopes: oauth.authorizedScopes
     }
   },
   computed: {
+    currentMode () {
+      return this.themes.find(({ id }) => id === this.currentTheme)?.dark ?? true
+    },
     canAccessDashboard () {
       return this.hasAuthorizedScope('logs:read:all') || this.hasAuthorizedScope('tokens:read:all')
     },
@@ -211,7 +222,7 @@ export default {
   },
   mounted () {
     window.addEventListener('logged_in', this.syncAuthorizedScopes)
-
+    window.addEventListener('admin-theme-change', this.themeChanged)
     const sidebarOffset = this.$refs.header.$el.offsetHeight
 
     document.addEventListener('scroll', () => {
@@ -234,9 +245,11 @@ export default {
     toggleMenu () {
       this.$refs.menu.classList.toggle('opened')
     },
-    toggleDarkMode () {
-      this.currentMode = !this.currentMode
-      localStorage.setItem('dark_mode', this.currentMode)
+    themeChanged ({ detail }) {
+      this.currentTheme = detail
+    },
+    changeTheme (theme) {
+      this.currentTheme = setTheme(theme)
     }
   },
   beforeRouteUpdate () {
@@ -244,6 +257,7 @@ export default {
   },
   beforeUnmount () {
     window.removeEventListener('logged_in', this.syncAuthorizedScopes)
+    window.removeEventListener('admin-theme-change', this.themeChanged)
   }
 }
 </script>
@@ -849,13 +863,13 @@ export default {
       background: rgba(61, 61, 61, 0.7)!important;
     }
   }
-  .violet {
+  .primary {
     background: rgba(131, 52, 113, 1.0)!important;
     &.button:hover, &.label:hover {
       background: rgba(131, 52, 113, 0.7)!important;
     }
   }
-  .blue {
+  .tertiary {
     background: rgba(34, 112, 147,1.0)!important;
     &.button:hover, &.label:hover {
       background: rgba(34, 112, 147,0.7)!important;
@@ -884,4 +898,6 @@ export default {
     }
   }
 }
+
+@import '../../assets/admin-themes.scss';
 </style>

@@ -16,7 +16,7 @@
             <input type="datetime-local" v-model="dateFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
+            <button class="ui fluid tertiary button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
         </div>
       </div>
