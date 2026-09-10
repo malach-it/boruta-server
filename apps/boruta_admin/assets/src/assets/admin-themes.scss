@@ -256,6 +256,7 @@ html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item:hover,
 html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item.active {
   color: var(--theme-white) !important;
   background: var(--theme-sidebar-hover) !important;
+  font-weight: bold;
 }
 
 html[data-admin-theme] #main .sidebar-menu .menu > .item.active {
