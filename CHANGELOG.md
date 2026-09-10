@@ -6,6 +6,8 @@
 
 ### Added
 
+- [admin] token dashboard provides issuance charts, filtering, full-text search, token-chain details, claim inspection, and revocation controls
+- [admin] administration interface supports selectable Boruta, Gruvbox, and Nord themes
 - [cli] `boruta` and `boruta_admin` releases include a YAML command-line interface for administration resources
 - [gateway] native Phi model trains noise detection with degree-one and sparse degree-two terms over OpenAPI request contexts
 - [gateway] Phi request matching treats the root path as legal for every HTTP method
@@ -17,6 +19,9 @@
 
 ### Changed
 
+- [admin] token dashboard and API default to tokens issued since the beginning of the current hour
+- [admin] sidebar sections reflect authorized scopes and remain expanded across nested dashboard routes
+- [admin] remove the redundant `roles:manage:all` scope from new installations and administration scope requests
 - [admin] new OAuth clients default to confidential
 - [admin] credential presentation template actions use clearer wording
 
@@ -30,6 +35,7 @@
 
 ### Security
 
+- [admin] token administration responses omit token values and other reusable secrets
 - validate DID public clients against the issuer, registered redirect URIs, and supported grant types
 - require secret authentication for client and agent credentials grants and introspection, including public clients
 - allow decentralized non-confidential public-client grants without a secret only when issuer-bound
