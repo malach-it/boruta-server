@@ -314,6 +314,72 @@ html[data-admin-theme] #app.dark .ui.segments .segment {
   box-shadow: none;
 }
 
+html[data-admin-theme] #app .ui.styled.accordion,
+html[data-admin-theme] #app .ui.styled.accordion .accordion,
+html[data-admin-theme] #app.dark .ui.styled.accordion,
+html[data-admin-theme] #app.dark .ui.styled.accordion .accordion {
+  color: var(--theme-text);
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-radius);
+  box-shadow: var(--theme-shadow);
+}
+
+html[data-admin-theme] #app .ui.styled.accordion .title,
+html[data-admin-theme] #app .ui.styled.accordion .accordion .title,
+html[data-admin-theme] #app.dark .ui.styled.accordion .title,
+html[data-admin-theme] #app.dark .ui.styled.accordion .accordion .title {
+  color: var(--theme-muted);
+  background: transparent;
+  border-color: var(--theme-border);
+}
+
+html[data-admin-theme] #app .ui.styled.accordion .title:hover,
+html[data-admin-theme] #app .ui.styled.accordion .title.active,
+html[data-admin-theme] #app .ui.styled.accordion .accordion .title:hover,
+html[data-admin-theme] #app .ui.styled.accordion .accordion .title.active,
+html[data-admin-theme] #app.dark .ui.styled.accordion .title:hover,
+html[data-admin-theme] #app.dark .ui.styled.accordion .title.active {
+  color: var(--theme-text);
+  background: var(--theme-surface-soft);
+}
+
+html[data-admin-theme] #app .ui.styled.accordion .title:focus-visible,
+html[data-admin-theme] #app.dark .ui.styled.accordion .title:focus-visible {
+  outline: 2px solid var(--theme-focus);
+  outline-offset: -2px;
+}
+
+html[data-admin-theme] #app .ui.styled.accordion .content,
+html[data-admin-theme] #app .ui.styled.accordion .accordion .content,
+html[data-admin-theme] #app.dark .ui.styled.accordion .content,
+html[data-admin-theme] #app.dark .ui.styled.accordion .accordion .content {
+  color: var(--theme-text);
+  background: var(--theme-surface);
+}
+
+html[data-admin-theme] #app .ui.styled.accordion .token-accordion,
+html[data-admin-theme] #app .ui.styled.accordion .chain-accordion.single-token:not(:first-child) .token-accordion {
+  border-color: var(--theme-border);
+}
+
+html[data-admin-theme] #app .ui.styled.accordion .chain-id,
+html[data-admin-theme] #app .ui.styled.accordion .token-id,
+html[data-admin-theme] #app .ui.styled.accordion .token-detail-summary {
+  color: var(--theme-muted);
+}
+
+html[data-admin-theme] #app .ui.styled.accordion .token-claims {
+  color: var(--theme-text);
+  background: var(--theme-surface-soft);
+  border: 1px solid var(--theme-border);
+  border-radius: calc(var(--theme-radius) * .7);
+}
+
+html[data-admin-theme] #app .ui.styled.accordion .token-claims-error {
+  color: var(--theme-danger);
+}
+
 /* Semantic UI hard-codes dashboard loading masks to translucent white and
  * their spinners to grey. Keep both parts legible on every admin theme. */
 html[data-admin-theme] #app .dashboard-content.ui.loading.segment::before,
