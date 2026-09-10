@@ -680,7 +680,7 @@ export default {
         this.scope = scope || ''
         this.type = type || ''
         this.dateFilter = {
-          startAt: startAt || moment().utc().subtract(1, 'month').format("yyyy-MM-DDTHH:mm"),
+          startAt: startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
           endAt: endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
         }
         this.getTokens(page, q, client_id, scope, type, this.dateFilter.startAt, this.dateFilter.endAt)

@@ -63,6 +63,28 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     end
 
     @tag authorized: ["tokens:read:all"]
+    test "defaults to tokens issued since the beginning of the current hour", %{conn: conn} do
+      current_token = insert(:token)
+      two_hours_ago = DateTime.add(DateTime.utc_now(), -2 * 60 * 60, :second)
+
+      previous_token =
+        insert(:token,
+          inserted_at: two_hours_ago,
+          updated_at: two_hours_ago
+        )
+
+      token_ids =
+        conn
+        |> get(Routes.admin_token_path(conn, :index))
+        |> json_response(200)
+        |> Map.fetch!("data")
+        |> Enum.map(& &1["id"])
+
+      assert current_token.id in token_ids
+      refute previous_token.id in token_ids
+    end
+
+    @tag authorized: ["tokens:read:all"]
     test "searches tokens by id, sub, refresh token, value, and username", %{conn: conn} do
       id_token = insert(:token)
       sub_token = insert(:token, sub: "subjectalpha")
@@ -118,7 +140,11 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       )
 
       assert conn
-             |> get(Routes.admin_token_path(conn, :index), %{"q" => "targetword"})
+             |> get(Routes.admin_token_path(conn, :index), %{
+               "q" => "targetword",
+               "start_at" => "2026-01-01T00:00:00Z",
+               "end_at" => "2026-01-03T00:00:00Z"
+             })
              |> json_response(200)
              |> Map.get("data")
              |> Enum.map(& &1["id"]) == [exact_token.id]

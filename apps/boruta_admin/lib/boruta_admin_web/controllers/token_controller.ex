@@ -13,6 +13,8 @@ defmodule BorutaAdminWeb.TokenController do
   action_fallback(BorutaAdminWeb.FallbackController)
 
   def index(conn, params) do
+    params = Map.put_new_lazy(params, "start_at", &current_hour_start/0)
+
     tokens = Tokens.list_tokens(params)
     scopes = Tokens.list_scopes(params)
     types = Tokens.list_types(params)
@@ -42,5 +44,12 @@ defmodule BorutaAdminWeb.TokenController do
 
       render(conn, "show.json", token: token, previous_codes: previous_codes)
     end
+  end
+
+  defp current_hour_start do
+    now = DateTime.utc_now()
+
+    %{now | minute: 0, second: 0, microsecond: {0, 0}}
+    |> DateTime.to_iso8601()
   end
 end
