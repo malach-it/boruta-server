@@ -1,7 +1,7 @@
 import decode from 'jwt-decode'
 import { BorutaOauth } from 'boruta-client'
 
-const ADMIN_SCOPE = 'roles:manage:all scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all tokens:read:all'
+const ADMIN_SCOPES = 'scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all tokens:read:all'.split(' ')
 
 class Oauth {
   constructor () {
@@ -12,7 +12,10 @@ class Oauth {
       revokePath: '/oauth/revoke'
     })
 
-    this.requestedScope = localStorage.getItem('requested_scope') ?? ADMIN_SCOPE
+    this.requestedScope = (localStorage.getItem('requested_scope') ?? ADMIN_SCOPES.join(' '))
+      .split(/\s+/)
+      .filter((scope) => ADMIN_SCOPES.includes(scope))
+      .join(' ')
     this.authorizedScope = localStorage.getItem('authorized_scope')
 
     this.revokeClient = new this.oauth.Revoke({
@@ -45,7 +48,7 @@ class Oauth {
   }
 
   get adminScopes () {
-    return ADMIN_SCOPE.split(' ').map((name) => ({
+    return ADMIN_SCOPES.map((name) => ({
       name,
       label: this.scopeLabel(name)
     }))
