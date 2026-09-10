@@ -9,7 +9,7 @@
           <router-link
             v-if="canAccessDashboard"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
-            :to="dashboardRoute">
+            :to="{ name: 'dashboard' }">
             <div class="dashboard item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="chart area icon"></i>
@@ -204,11 +204,6 @@ export default {
     },
     canAccessDashboard () {
       return this.hasAuthorizedScope('logs:read:all') || this.hasAuthorizedScope('tokens:read:all')
-    },
-    dashboardRoute () {
-      return this.hasAuthorizedScope('logs:read:all')
-        ? { name: 'request-logs' }
-        : { name: 'token-list' }
     },
     canAccessIdentityManagement () {
       return this.hasAuthorizedScope('identity-providers:manage:all') ||

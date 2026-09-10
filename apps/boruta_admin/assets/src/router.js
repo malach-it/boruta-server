@@ -119,7 +119,11 @@ const router = createRouter({
           path: "/dashboard",
           name: "dashboard",
           component: Dashboard,
-          redirect: "/dashboard/requests",
+          redirect: () => ({
+            name: oauth.authorizedScopes.includes("logs:read:all")
+              ? "request-logs"
+              : "token-list",
+          }),
           children: [
             {
               path: "requests",
