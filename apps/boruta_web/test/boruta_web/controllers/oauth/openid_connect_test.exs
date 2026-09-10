@@ -13,15 +13,19 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
   describe "OpenID Connect flows" do
     setup %{conn: conn} do
+      redirect_uri = "http://redirect.uri"
       public_client = Admin.get_client!(ClientsAdapter.public!().id)
 
       {:ok, _client} =
-        Admin.update_client(public_client, %{supported_grant_types: Oauth.Client.grant_types()})
+        Admin.update_client(public_client, %{
+          confidential: false,
+          redirect_uris: [redirect_uri],
+          supported_grant_types: Oauth.Client.grant_types()
+        })
 
       ClientStore.invalidate_public()
 
       resource_owner = user_fixture()
-      redirect_uri = "http://redirect.uri"
       client = insert(:client, redirect_uris: [redirect_uri])
       scope = insert(:scope, public: true)
 
