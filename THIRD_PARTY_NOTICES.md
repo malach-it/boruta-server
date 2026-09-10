@@ -8,19 +8,6 @@ Apache-2.0 license.
 
 ## Administration color themes
 
-### Base16 Default Light and Default Dark
-
-- Project: [Base16 / Tinted Theming](https://github.com/tinted-theming/schemes)
-- Original Base16 work: Copyright (c) 2012 Chris Kempson
-- Tinted scheme collection: Copyright (c) 2022 Tinted Theming
-- License: MIT
-
-### Solarized Dark and Solarized Light
-
-- Project: [Solarized](https://github.com/altercation/solarized)
-- Copyright (c) 2011 Ethan Schoonover
-- License: MIT
-
 ### Gruvbox Dark Medium and Gruvbox Light Medium
 
 - Project: [Gruvbox](https://github.com/morhetz/gruvbox)

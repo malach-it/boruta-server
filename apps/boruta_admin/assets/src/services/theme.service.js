@@ -10,26 +10,6 @@ export const themes = [
     dark: true
   },
   {
-    id: 'base16-default-light',
-    name: 'Base16 Light',
-    dark: false
-  },
-  {
-    id: 'base16-default-dark',
-    name: 'Base16 Dark',
-    dark: true
-  },
-  {
-    id: 'solarized-dark',
-    name: 'Solarized Dark',
-    dark: true
-  },
-  {
-    id: 'solarized-light',
-    name: 'Solarized Light',
-    dark: false
-  },
-  {
     id: 'gruvbox-dark-medium',
     name: 'Gruvbox Dark',
     dark: true
@@ -49,11 +29,11 @@ export const themes = [
 const themeIds = themes.map(({ id }) => id)
 const defaultTheme = 'boruta-default-light'
 const legacyThemes = {
-  aurora: 'base16-default-dark',
-  midnight: 'solarized-dark',
+  aurora: 'boruta-default-dark',
+  midnight: 'boruta-default-dark',
   sandstone: 'gruvbox-dark-medium',
   verdant: 'nord',
-  glacier: 'solarized-light'
+  glacier: 'boruta-default-light'
 }
 
 export function getTheme () {
@@ -62,9 +42,7 @@ export function getTheme () {
   if (themeIds.includes(savedTheme)) return savedTheme
   if (legacyThemes[savedTheme]) return legacyThemes[savedTheme]
 
-  return JSON.parse(localStorage.getItem('dark_mode') || 'false')
-    ? 'base16-default-dark'
-    : defaultTheme
+  return defaultTheme
 }
 
 export function setTheme (theme, notify = true) {
@@ -72,7 +50,6 @@ export function setTheme (theme, notify = true) {
 
   document.documentElement.dataset.adminTheme = nextTheme
   localStorage.setItem('admin_theme', nextTheme)
-  localStorage.removeItem('dark_mode')
 
   if (notify) {
     window.dispatchEvent(new CustomEvent('admin-theme-change', {
