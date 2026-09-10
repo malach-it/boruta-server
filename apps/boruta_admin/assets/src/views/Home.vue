@@ -1,8 +1,8 @@
 <template>
   <div class="home">
     <div class="ui container">
-      <div class="ui form segment">
-        <div class="ui four column stackable grid">
+      <div class="ui segment">
+        <div class="ui four column stackable grid form">
           <div class="column" v-for="scope in adminScopes" :key="scope.name">
             <div class="ui scope checkbox" :class="{ 'authorized': authorizedScopes.includes(scope.name) }">
               <input
@@ -21,6 +21,12 @@
         <div class="ui two buttons scope-actions">
           <button class="ui button" @click="selectAllScopes">Select all</button>
           <button class="ui button" @click="selectNoScopes">None</button>
+        </div>
+        <div class="ui warning message">
+          <div class="header">Browser token security</div>
+          <p>
+            This administration interface receives access tokens through the OAuth front channel and stores them in browser local storage. Tokens may be exposed to browser history or to scripts running on this origin. Use this interface only over HTTPS on a trusted device and origin, and sign out when you are finished.
+          </p>
         </div>
         <button class="ui fluid secondary button login-button" @click="login">Login</button>
       </div>
