@@ -132,6 +132,29 @@ The applications will be available on different ports (depending on the values p
 
 Admin credentials are the one seeded and available in environment file.
 
+### Command line interface
+
+The `boruta` and `boruta_admin` releases include `bin/boruta-cli`, which uses the following syntax:
+
+CLI commands authenticate the admin OAuth client using
+`BORUTA_ADMIN_OAUTH_CLIENT_ID` and `BORUTA_ADMIN_OAUTH_CLIENT_SECRET`.
+
+```text
+boruta-cli <resource> <action> [resource-id] [response-filter ...] [-- action-parameter ...]
+```
+
+```bash
+bin/boruta-cli role index
+bin/boruta-cli client show CLIENT_ID id name
+bin/boruta-cli upstream update UPSTREAM_ID -- scheme:https port:443
+bin/boruta-cli client update CLIENT_ID -- identity_provider:id:IDENTITY_PROVIDER_ID
+bin/boruta-cli logs index request_id status label -- events_only:true
+```
+
+Arguments before `--` filter the YAML response, while action parameters after `--` are sent to the controller and must use `key:value` syntax. Colon-separated parameter segments create nested maps, and numeric segments address zero-based array indices. For example, `backend show BACKEND_ID verifiable_credentials:0:claims:0` filters the response to the first claim, while `backend update BACKEND_ID -- verifiable_credentials:0:claims:0:label:"test"` updates its label. Commands without `--` retain legacy parameter parsing, except that indexed paths on read actions are recognized as response filters. Explicit parameters override command defaults.
+
+Use an unquoted `[]` value to send an empty array, for example `client update CLIENT_ID -- redirect_uris:[]` or `backend update BACKEND_ID -- verifiable_credentials:0:claims:[]`. Quote the value as `"[]"` when the literal string is required instead.
+
 ### Run a development server
 
 1. first you need to get project dependencies

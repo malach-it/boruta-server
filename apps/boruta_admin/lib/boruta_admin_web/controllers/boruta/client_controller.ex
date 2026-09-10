@@ -38,6 +38,7 @@ defmodule BorutaAdminWeb.ClientController do
 
   def update(conn, %{"id" => client_id, "client" => client_params}) do
     client = get_client(client_id)
+    client_params = merge_key_configuration(client, client_params)
 
     with :ok <- ensure_open_for_edition(client_id),
          {:ok, %Client{} = client} <- update_client(client, client_params),
@@ -45,6 +46,16 @@ defmodule BorutaAdminWeb.ClientController do
       render(conn, "show.json", client: client)
     end
   end
+
+  defp merge_key_configuration(
+         %Client{key_pair_type: existing_key_pair_type},
+         %{"key_pair_type" => key_pair_type} = client_params
+       )
+       when is_map(existing_key_pair_type) and is_map(key_pair_type) do
+    Map.put(client_params, "key_pair_type", Map.merge(existing_key_pair_type, key_pair_type))
+  end
+
+  defp merge_key_configuration(_client, client_params), do: client_params
 
   defp update_client(
          client,

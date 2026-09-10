@@ -228,6 +228,45 @@ defmodule BorutaAdminWeb.LoggerTest do
     assert log =~ "boruta_admin role update - success sub=user-sub role_id=role-id"
   end
 
+  test "logs successful console authentication without credentials" do
+    log =
+      capture_log([level: :info], fn ->
+        :telemetry.execute(
+          [:boruta_admin, :console, :authentication, :success],
+          %{},
+          %{
+            client_id: "client-id",
+            sub: "console-user@console-host",
+            request_id: "console-request-id"
+          }
+        )
+      end)
+
+    assert log =~
+             "boruta_admin console authenticate - success client_id=client-id sub=console-user%40console-host"
+
+    refute log =~ "client_secret"
+    refute log =~ "access_token"
+  end
+
+  test "logs failed console authentication" do
+    log =
+      capture_log([level: :info], fn ->
+        :telemetry.execute(
+          [:boruta_admin, :console, :authentication, :failure],
+          %{},
+          %{
+            client_id: "client-id",
+            sub: "console-user@console-host",
+            request_id: "console-request-id"
+          }
+        )
+      end)
+
+    assert log =~
+             "boruta_admin console authenticate - failure client_id=client-id sub=console-user%40console-host"
+  end
+
   test "omits the subject when authentication did not establish a principal" do
     log =
       capture_log([level: :info], fn ->

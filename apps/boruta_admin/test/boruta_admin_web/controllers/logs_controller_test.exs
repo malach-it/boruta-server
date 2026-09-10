@@ -392,6 +392,36 @@ defmodule BorutaAdminWeb.LogsControllerTest do
     end
   end
 
+  describe "index with default parameters" do
+    @tag authorized: ["logs:read:all"]
+    test "returns administration business events from the last hour", %{conn: conn} do
+      File.mkdir("./log")
+      log_path = LogRotate.path(:boruta_admin, :business, Date.utc_today())
+      File.rm(log_path)
+
+      log_time = DateTime.utc_now() |> DateTime.add(-1, :second) |> DateTime.truncate(:second)
+
+      File.write!(
+        log_path,
+        "#{DateTime.to_iso8601(log_time)} request_id=default-request [info] boruta_admin client update - success client_id=default-client\n"
+      )
+
+      on_exit(fn -> File.rm(log_path) end)
+
+      assert %{
+               "log_count" => 1,
+               "log_lines" => [log_line]
+             } =
+               response =
+               conn
+               |> get(Routes.admin_logs_path(conn, :index))
+               |> json_response(200)
+
+      assert log_line =~ "request_id=default-request"
+      refute Map.has_key?(response, "events")
+    end
+  end
+
   describe "index requesting business events logs" do
     @tag authorized: ["logs:read:all"]
     test "return today's logs", %{conn: conn} do
