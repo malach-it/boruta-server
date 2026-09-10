@@ -269,6 +269,7 @@ html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item.active > a,
 html[data-admin-theme] #app.dark #main .sidebar-menu .menu > .item.active > a:hover {
   color: var(--theme-white) !important;
   background: transparent !important;
+  font-weight: bold;
 }
 
 html[data-admin-theme] #main .sidebar-menu .dropdown,
