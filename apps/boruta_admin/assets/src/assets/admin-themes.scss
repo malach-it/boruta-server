@@ -598,21 +598,28 @@ html[data-admin-theme] #app .ui.basic.red.buttons .button:focus {
 html[data-admin-theme] #app .ui.label,
 html[data-admin-theme] #app.dark .ui.label {
   color: var(--theme-text) !important;
-  background: var(--theme-surface-soft) !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-border);
 }
 
 html[data-admin-theme] #app .ui.grey.label,
 html[data-admin-theme] #app.dark .ui.grey.label {
-  color: var(--theme-surface) !important;
-  background: var(--theme-text) !important;
-  border: 1px solid var(--theme-text);
+  color: var(--theme-muted) !important;
+  background: var(--theme-surface) !important;
+  border: 1px solid var(--theme-muted);
+}
+
+html[data-admin-theme] #app .ui.primary.label,
+html[data-admin-theme] #app.dark .ui.primary.label {
+  color: var(--theme-primary) !important;
+  background: var(--theme-surface) !important;
+  border: 1px solid var(--theme-primary);
 }
 
 html[data-admin-theme] #app .ui.secondary.label,
 html[data-admin-theme] #app.dark .ui.secondary.label {
-  color: var(--theme-secondary-text) !important;
-  background: var(--theme-secondary) !important;
+  color: var(--theme-secondary-border, var(--theme-secondary)) !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-secondary-border, var(--theme-secondary));
 }
 
@@ -620,8 +627,8 @@ html[data-admin-theme] #app .ui.red.label:not(.basic),
 html[data-admin-theme] #app .ui.red.labels .label:not(.basic),
 html[data-admin-theme] #app.dark .ui.red.label:not(.basic),
 html[data-admin-theme] #app.dark .ui.red.labels .label:not(.basic) {
-  color: var(--theme-white) !important;
-  background: var(--theme-danger) !important;
+  color: var(--theme-danger) !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-danger);
 }
 
@@ -630,7 +637,7 @@ html[data-admin-theme] #app .ui.basic.red.labels .label,
 html[data-admin-theme] #app.dark .ui.basic.red.label,
 html[data-admin-theme] #app.dark .ui.basic.red.labels .label {
   color: var(--theme-danger) !important;
-  background: transparent !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-danger);
 }
 
@@ -638,8 +645,8 @@ html[data-admin-theme] #app .ui.teal.label:not(.basic),
 html[data-admin-theme] #app .ui.teal.labels .label:not(.basic),
 html[data-admin-theme] #app.dark .ui.teal.label:not(.basic),
 html[data-admin-theme] #app.dark .ui.teal.labels .label:not(.basic) {
-  color: var(--theme-primary-text, var(--theme-white)) !important;
-  background: var(--theme-primary) !important;
+  color: var(--theme-primary) !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-primary);
 }
 
@@ -648,28 +655,28 @@ html[data-admin-theme] #app .ui.basic.teal.labels .label,
 html[data-admin-theme] #app.dark .ui.basic.teal.label,
 html[data-admin-theme] #app.dark .ui.basic.teal.labels .label {
   color: var(--theme-primary) !important;
-  background: transparent !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-primary);
 }
 
 html[data-admin-theme] #app .ui.tertiary.label,
 html[data-admin-theme] #app.dark .ui.tertiary.label {
-  color: var(--theme-tertiary-text) !important;
-  background: var(--theme-tertiary) !important;
+  color: var(--theme-tertiary) !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-tertiary);
 }
 
 html[data-admin-theme] #app .ui.green.label,
 html[data-admin-theme] #app.dark .ui.green.label {
-  color: var(--theme-success-text, var(--theme-white)) !important;
-  background: var(--theme-success) !important;
+  color: var(--theme-success) !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-success);
 }
 
 html[data-admin-theme] #app .ui.violet.label,
 html[data-admin-theme] #app.dark .ui.violet.label {
-  color: var(--theme-tertiary-text, var(--theme-white)) !important;
-  background: var(--theme-tertiary) !important;
+  color: var(--theme-tertiary) !important;
+  background: var(--theme-surface) !important;
   border: 1px solid var(--theme-tertiary);
 }
 
