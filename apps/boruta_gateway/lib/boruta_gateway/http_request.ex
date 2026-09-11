@@ -57,6 +57,29 @@ defmodule BorutaGateway.HttpRequest do
 
   def consume_body(_payload, _remaining), do: {:error, :body_too_large}
 
+  @spec put_header(binary(), binary(), binary()) :: binary()
+  def put_header(payload, name, value) do
+    case String.split(payload, @header_separator, parts: 2) do
+      [header, body] ->
+        normalized_name = String.downcase(name)
+
+        header =
+          header
+          |> String.split("\r\n")
+          |> Enum.with_index()
+          |> Enum.reject(fn
+            {_line, 0} -> false
+            {line, _index} -> header_name(line) == normalized_name
+          end)
+          |> Enum.map_join("\r\n", fn {line, _index} -> line end)
+
+        header <> "\r\n" <> name <> ": " <> value <> @header_separator <> body
+
+      [_partial_header] ->
+        payload
+    end
+  end
+
   defp parse_headers(header) do
     header
     |> String.split("\r\n")
@@ -87,6 +110,13 @@ defmodule BorutaGateway.HttpRequest do
     value
     |> :binary.bin_to_list()
     |> Enum.all?(fn byte -> byte == 9 || (byte >= 32 && byte != 127) end)
+  end
+
+  defp header_name(header_line) do
+    header_line
+    |> String.split(":", parts: 2)
+    |> List.first()
+    |> String.downcase()
   end
 
   defp validate_transfer_encoding(%{"transfer-encoding" => _values}),

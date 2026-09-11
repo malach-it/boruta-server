@@ -9,6 +9,7 @@
 - [ssi] SD-JWT verifiable credential support
 - [ssi] wallet-initiated presentation definition management
 - [admin] example wallet-initiated verifiable presentation link
+- [gateway] forwarded requests include an `X-Request-ID` header matching gateway telemetry
 
 ### Fixed
 

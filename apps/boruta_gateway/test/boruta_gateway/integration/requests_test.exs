@@ -310,6 +310,80 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "forwards the request id used for gateway telemetry" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_forwarded_request_id_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          with_upstream_server(&echo_headers_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/request-id"]
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/request-id", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert %{"headers" => %{"X-Request-ID" => request_id}} = Jason.decode!(body)
+            assert request_id =~ ~r/^[0-9a-f]{8}$/
+            assert_receive {:gateway_request_log, %{request_id: ^request_id}}
+          end)
+        after
+          :telemetry.detach(:gateway_forwarded_request_id_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "preserves a client-provided request id when forwarding" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&echo_headers_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/request-id"]
+            })
+
+            Process.sleep(100)
+
+            request =
+              Finch.build(
+                :get,
+                "http://localhost:7777/request-id",
+                [{"x-request-id", "client-request-id"}],
+                ""
+              )
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert %{"headers" => %{"X-Request-ID" => "client-request-id"}} =
+                     Jason.decode!(body)
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns a 401 when unauthorized" do
       Sandbox.unboxed_run(Repo, fn ->
         try do

@@ -366,7 +366,9 @@ defmodule BorutaGateway.HttpsGateway do
             :ok =
               :gen_tcp.send(
                 client_socket,
-                transform_header(payload, upstream, token) <> request.body
+                transform_header(payload, upstream, token)
+                |> HttpRequest.put_header("X-Request-ID", request.request_id)
+                |> Kernel.<>(request.body)
               )
 
             upstream_start = :os.system_time(:microsecond)
@@ -418,7 +420,9 @@ defmodule BorutaGateway.HttpsGateway do
             :ok =
               :ssl.send(
                 client_socket,
-                transform_header(payload, upstream, token) <> request.body
+                transform_header(payload, upstream, token)
+                |> HttpRequest.put_header("X-Request-ID", request.request_id)
+                |> Kernel.<>(request.body)
               )
 
             upstream_start = :os.system_time(:microsecond)
