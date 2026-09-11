@@ -2,6 +2,12 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [Unreleased]
+
+### Fixed
+
+- [admin] client forms display the JWT authentication public key field for EC signing algorithms
+
 ## [0.12.0] - 2026-09-11
 
 ### Added
