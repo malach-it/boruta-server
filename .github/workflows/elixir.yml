@@ -57,11 +57,15 @@ jobs:
           #   run: mix dialyzer
 
   unit_tests:
-    name: Unit Tests
+    name: Unit Tests (${{ matrix.elixir_image }})
     runs-on: ubuntu-22.04
-    container: elixir:1.15.8-otp-26
+    container: ${{ matrix.elixir_image }}
     strategy:
       fail-fast: false
+      matrix:
+        elixir_image:
+          - elixir:1.15.8-otp-26
+          - elixir:1.20-otp-29
 
     services:
       postgres:
@@ -95,7 +99,7 @@ jobs:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          key: ${{ runner.os }}-${{ matrix.elixir_image }}-${{ hashFiles('mix.lock') }}
 
       - name: Elixir prerequisites
         run: |
