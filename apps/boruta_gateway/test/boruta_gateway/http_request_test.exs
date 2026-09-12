@@ -50,4 +50,22 @@ defmodule BorutaGateway.HttpRequestTest do
     assert {:ok, "ab", 2} = HttpRequest.consume_body("ab", 4)
     assert {:error, :body_too_large} = HttpRequest.consume_body("abcde", 4)
   end
+
+  test "puts a request header without changing the body" do
+    assert HttpRequest.put_header(
+             "POST / HTTP/1.1\r\nHost: example.test\r\nContent-Length: 4\r\n\r\nbody",
+             "X-Request-ID",
+             "generated-id"
+           ) ==
+             "POST / HTTP/1.1\r\nHost: example.test\r\nContent-Length: 4\r\n" <>
+               "X-Request-ID: generated-id\r\n\r\nbody"
+  end
+
+  test "replaces existing request headers case-insensitively" do
+    assert HttpRequest.put_header(
+             "GET / HTTP/1.1\r\nx-request-id: first\r\nX-Request-Id: second\r\n\r\n",
+             "X-Request-ID",
+             "client-id"
+           ) == "GET / HTTP/1.1\r\nX-Request-ID: client-id\r\n\r\n"
+  end
 end

@@ -12,6 +12,15 @@ defmodule BorutaGateway.NoiseCancelling do
   @cancelled_context_weight 0.95
   @forbidden_body "the request has been rejected by the server"
 
+  @unmatched_prediction %{
+    in_scope: false,
+    openapi_match: false,
+    noise: true,
+    score: 0.0,
+    noise_score: 1.0,
+    reason: :unmatched_upstream
+  }
+
   def start_link(_options) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -44,6 +53,9 @@ defmodule BorutaGateway.NoiseCancelling do
       "Content-Length: #{byte_size(@forbidden_body)}\r\n\r\n" <>
       @forbidden_body
   end
+
+  @spec unmatched_prediction() :: map()
+  def unmatched_prediction, do: @unmatched_prediction
 
   @impl GenServer
   def init(_options) do

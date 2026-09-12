@@ -2,31 +2,19 @@ defmodule BorutaAdmin.Logs.Adapter do
   @moduledoc """
   Backend contract used by `BorutaAdmin.Logs`.
 
-  An adapter returns the raw, formatted log lines. Parsing, filtering and
-  aggregation remain the responsibility of `BorutaAdmin.Logs`.
+  A backend owns log retrieval, parsing, filtering, and aggregation. The
+  configured backend is called through `BorutaAdmin.Logs`.
   """
 
   @callback earliest_at(application :: atom(), type :: atom(), options :: keyword()) ::
               DateTime.t()
 
-  @callback stream(
+  @callback read(
               start_at :: DateTime.t(),
               end_at :: DateTime.t(),
               application :: atom(),
               type :: atom(),
-              query :: map(),
-              options :: keyword()
-            ) :: Enumerable.t()
-
-  @callback aggregate(
-              start_at :: DateTime.t(),
-              end_at :: DateTime.t(),
-              application :: atom(),
-              type :: atom(),
-              query :: map(),
-              parsed_stats :: map(),
+              query :: BorutaAdmin.Logs.query(),
               options :: keyword()
             ) :: map()
-
-  @optional_callbacks aggregate: 7
 end
