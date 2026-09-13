@@ -12,7 +12,7 @@ jobs:
   static_code_analysis:
     name: Static Code Analysis
     runs-on: ubuntu-22.04
-    container: elixir:1.15.8-otp-26
+    container: elixir:1.20-otp-29
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.11.0

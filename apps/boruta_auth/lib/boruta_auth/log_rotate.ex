@@ -26,7 +26,11 @@ defmodule BorutaAuth.LogRotate do
           |> Enum.filter(&File.exists?/1)
           |> Enum.map(&File.rm/1)
 
-        Logger.configure_backend({LoggerFileBackend, :"#{application}_#{type}_logger"},
+        backend = {LoggerFileBackend, :"#{application}_#{type}_logger"}
+
+        {:ok, _pid} = LoggerBackends.add(backend)
+
+        LoggerBackends.configure(backend,
           path: path(application, type, Date.utc_today())
         )
       end)

@@ -60,9 +60,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       {:preauthorize, conn} ->
         conn
 
-      {:authorize, conn} ->
-        conn
-
       {:redirected, conn} ->
         conn
     end

@@ -6,4 +6,4 @@ Ecto.Adapters.SQL.Sandbox.mode(BorutaAuth.Repo, :manual)
 
 Application.ensure_all_started(:bypass)
 
-Logger.remove_backend(:console)
+:logger.remove_handler(:default)
