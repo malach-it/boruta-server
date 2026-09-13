@@ -1,7 +1,7 @@
 defmodule BorutaWeb.Oauth.PushedAuthorizationRequestControllerTest do
   use BorutaWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaWeb.Factory
 
   setup %{conn: conn} do
     {:ok, conn: conn}

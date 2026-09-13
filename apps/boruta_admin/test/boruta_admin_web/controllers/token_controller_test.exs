@@ -1,12 +1,12 @@
 defmodule BorutaAdminWeb.TokenControllerTest do
   use BorutaAdminWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaAdmin.Factory
 
   alias Boruta.Ecto.Token
   alias Boruta.Openid.VerifiablePresentations
+  alias BorutaAdmin.IdentityFactory
   alias BorutaAuth.Repo
-  alias BorutaIdentity.Factory, as: IdentityFactory
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}

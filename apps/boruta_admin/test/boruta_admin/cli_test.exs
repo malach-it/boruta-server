@@ -1,7 +1,7 @@
 defmodule BorutaAdmin.CliTest do
   use BorutaAdminWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaAdmin.Factory
   import ExUnit.CaptureLog
 
   alias BorutaAdmin.Cli

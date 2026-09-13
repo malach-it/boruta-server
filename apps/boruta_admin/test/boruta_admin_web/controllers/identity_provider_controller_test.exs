@@ -1,7 +1,7 @@
 defmodule BorutaAdminWeb.IdentityProviderControllerTest do
   use BorutaAdminWeb.ConnCase
 
-  import BorutaIdentity.Factory
+  import BorutaAdmin.IdentityFactory
 
   alias BorutaIdentity.IdentityProviders.IdentityProvider
 

@@ -1,7 +1,7 @@
 defmodule BorutaWeb.Oauth.AuthenticableRequestParamTest do
   use BorutaWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaWeb.Factory
 
   alias BorutaIdentityWeb.Authenticable
   alias BorutaIdentityWeb.Token

@@ -4,7 +4,7 @@ defmodule BorutaWeb.Integration.DirectPostTest do
   alias Boruta.Internal.Signatures
 
   setup %{conn: conn} do
-    client = Boruta.Factory.insert(:client, id_token_signature_alg: "RS512")
+    client = BorutaWeb.Factory.insert(:client, id_token_signature_alg: "RS512")
 
     wallet_did =
       "did:jwk:eyJlIjoiQVFBQiIsImt0eSI6IlJTQSIsIm4iOiIxUGFQX2diWGl4NWl0alJDYWVndklfQjNhRk9lb3hsd1BQTHZmTEhHQTRRZkRtVk9mOGNVOE91WkZBWXpMQXJXM1BubndXV3kzOW5WSk94NDJRUlZHQ0dkVUNtVjdzaERIUnNyODYtMkRsTDdwd1VhOVF5SHNUajg0ZkFKbjJGdjloOW1xckl2VXpBdEVZUmxHRnZqVlRHQ3d6RXVsbHBzQjBHSmFmb3BVVEZieThXZFNxM2RHTEpCQjFyLVE4UXRabkF4eHZvbGh3T21Za0Jra2lkZWZtbTQ4WDdoRlhMMmNTSm0yRzd3UXlpbk9leV9VOHhEWjY4bWdUYWtpcVMyUnRqbkZEMGRucEJsNUNZVGU0czZvWktFeUZpRk5pVzRLa1IxR1Zqc0t3WTlvQzJ0cHlRMEFFVU12azlUOVZkSWx0U0lpQXZPS2x3RnpMNDljZ3daRHcifQ"
@@ -32,7 +32,7 @@ defmodule BorutaWeb.Integration.DirectPostTest do
     }
 
     code =
-      Boruta.Factory.insert(:token,
+      BorutaWeb.Factory.insert(:token,
         type: "code",
         redirect_uri: "http://redirect.uri",
         response_type: "vp_token",
@@ -106,7 +106,7 @@ defmodule BorutaWeb.Integration.DirectPostTest do
       wallet_did: wallet_did
     } do
       code =
-        Boruta.Factory.insert(:token,
+        BorutaWeb.Factory.insert(:token,
           type: "code",
           client: client,
           redirect_uri: "http://redirect.uri",

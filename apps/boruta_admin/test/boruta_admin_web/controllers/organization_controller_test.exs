@@ -1,7 +1,7 @@
 defmodule BorutaAdminWeb.OrganizationControllerTest do
   use BorutaAdminWeb.ConnCase
 
-  import BorutaIdentity.Factory
+  import BorutaAdmin.IdentityFactory
 
   alias BorutaIdentity.Organizations.Organization
   alias BorutaIdentity.Repo

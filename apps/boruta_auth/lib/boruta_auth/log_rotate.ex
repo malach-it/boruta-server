@@ -28,7 +28,10 @@ defmodule BorutaAuth.LogRotate do
 
         backend = {LoggerFileBackend, :"#{application}_#{type}_logger"}
 
-        {:ok, _pid} = LoggerBackends.add(backend)
+        case LoggerBackends.add(backend) do
+          {:ok, _pid} -> :ok
+          {:error, :already_present} -> :ok
+        end
 
         LoggerBackends.configure(backend,
           path: path(application, type, Date.utc_today())

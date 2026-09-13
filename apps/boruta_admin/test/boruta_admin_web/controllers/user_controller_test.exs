@@ -2,7 +2,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
   use BorutaAdminWeb.ConnCase
 
   import BorutaIdentity.AccountsFixtures
-  import BorutaIdentity.Factory
+  import BorutaAdmin.IdentityFactory
 
   alias Boruta.Ecto.Admin
   alias BorutaIdentity.Accounts.Internal

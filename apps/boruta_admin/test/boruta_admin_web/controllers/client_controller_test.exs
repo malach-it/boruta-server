@@ -1,5 +1,5 @@
 defmodule BorutaAdminWeb.ClientControllerTest do
-  import Boruta.Factory
+  import BorutaAdmin.Factory
 
   use BorutaAdminWeb.ConnCase
 
@@ -47,7 +47,7 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
   describe "create client" do
     setup %{conn: conn} do
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      identity_provider = BorutaAdmin.IdentityFactory.insert(:identity_provider)
 
       {:ok, conn: conn, identity_provider: identity_provider}
     end
@@ -102,9 +102,9 @@ defmodule BorutaAdminWeb.ClientControllerTest do
   describe "update client" do
     setup %{conn: conn} do
       client = insert(:client)
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      identity_provider = BorutaAdmin.IdentityFactory.insert(:identity_provider)
 
-      BorutaIdentity.Factory.insert(:client_identity_provider,
+      BorutaAdmin.IdentityFactory.insert(:client_identity_provider,
         client_id: client.id,
         identity_provider: identity_provider
       )
@@ -142,7 +142,7 @@ defmodule BorutaAdminWeb.ClientControllerTest do
       conn: conn,
       client: %Client{id: id} = client
     } do
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      identity_provider = BorutaAdmin.IdentityFactory.insert(:identity_provider)
       update_attrs = Map.put(@update_attrs, "identity_provider", %{"id" => identity_provider.id})
 
       conn = put(conn, Routes.admin_client_path(conn, :update, client), client: update_attrs)
@@ -207,9 +207,9 @@ defmodule BorutaAdminWeb.ClientControllerTest do
   describe "regenerate client key pair" do
     setup %{conn: conn} do
       client = insert(:client)
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      identity_provider = BorutaAdmin.IdentityFactory.insert(:identity_provider)
 
-      BorutaIdentity.Factory.insert(:client_identity_provider,
+      BorutaAdmin.IdentityFactory.insert(:client_identity_provider,
         client_id: client.id,
         identity_provider: identity_provider
       )
@@ -270,7 +270,7 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
     @tag authorized: ["clients:manage:all"]
     test "deletes client identity provider association", %{conn: conn, client: client} do
-      BorutaIdentity.Factory.insert(:client_identity_provider, client_id: client.id)
+      BorutaAdmin.IdentityFactory.insert(:client_identity_provider, client_id: client.id)
 
       conn = delete(conn, Routes.admin_client_path(conn, :delete, client))
       assert response(conn, 204)
