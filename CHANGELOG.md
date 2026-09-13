@@ -7,6 +7,7 @@
 ### Fixed
 
 - [admin] client forms display the JWT authentication public key field for EC signing algorithms
+- [wallet] imported credentials are encrypted in local storage
 
 ## [0.12.0] - 2026-09-11
 
