@@ -15,6 +15,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
 
     steps:
       - name: Checkout repository
@@ -39,6 +42,7 @@ jobs:
           length: 8
 
       - name: Build and push server Docker image
+        id: push
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           file: Dockerfile.full
@@ -51,11 +55,21 @@ jobs:
             ${{ env.REGISTRY }}/malach-it/boruta-server:${{ github.head_ref || github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Attest server Docker image
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/malach-it/boruta-server
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
   build-and-push-gateway-image:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
 
     steps:
       - name: Checkout repository
@@ -80,6 +94,7 @@ jobs:
           length: 8
 
       - name: Build and push gateway Docker image
+        id: push
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           file: Dockerfile.gateway
@@ -90,11 +105,21 @@ jobs:
             ${{ env.REGISTRY }}/malach-it/boruta-gateway:${{ github.head_ref || github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Attest gateway Docker image
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/malach-it/boruta-gateway
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
   build-and-push-auth-image:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
 
     steps:
       - name: Checkout repository
@@ -119,6 +144,7 @@ jobs:
           length: 8
 
       - name: Build and push auth Docker image
+        id: push
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           file: Dockerfile.auth
@@ -129,11 +155,21 @@ jobs:
             ${{ env.REGISTRY }}/malach-it/boruta-auth:${{ github.head_ref || github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Attest auth Docker image
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/malach-it/boruta-auth
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
   build-and-push-admin-image:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
 
     steps:
       - name: Checkout repository
@@ -158,6 +194,7 @@ jobs:
           length: 8
 
       - name: Build and push admin Docker image
+        id: push
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           file: Dockerfile.admin
@@ -167,3 +204,10 @@ jobs:
             ${{ env.REGISTRY }}/malach-it/boruta-admin:${{ steps.short-sha.outputs.sha }},
             ${{ env.REGISTRY }}/malach-it/boruta-admin:${{ github.head_ref || github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Attest admin Docker image
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/malach-it/boruta-admin
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
