@@ -35,6 +35,7 @@
 
 ### Fixed
 
+- [admin] coalesce concurrent logout token revocations
 - [admin] resource activity refreshes when navigating between routes
 - [admin] fix sidebar upstream navigation
 - [admin] form fields wrap correctly on mobile viewports

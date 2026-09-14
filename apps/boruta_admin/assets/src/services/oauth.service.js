@@ -21,6 +21,7 @@ class Oauth {
     this.revokeClient = new this.oauth.Revoke({
       clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID
     })
+    this.logoutPromise = null
   }
 
   get implicitClient () {
@@ -148,13 +149,24 @@ class Oauth {
   }
 
   logout () {
-    return this.revokeClient.revoke(this.accessToken).then(() => {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('id_token')
-      localStorage.removeItem('token_expires_at')
-      localStorage.removeItem('authorized_scope')
-      this.authorizedScope = null
-    })
+    if (this.logoutPromise) return this.logoutPromise
+
+    const accessToken = this.accessToken
+    if (!accessToken) return Promise.resolve()
+
+    this.logoutPromise = this.revokeClient.revoke(accessToken)
+      .then(() => {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('id_token')
+        localStorage.removeItem('token_expires_at')
+        localStorage.removeItem('authorized_scope')
+        this.authorizedScope = null
+      })
+      .finally(() => {
+        this.logoutPromise = null
+      })
+
+    return this.logoutPromise
   }
 
   storeLocationName ({ name, params, query }) {
