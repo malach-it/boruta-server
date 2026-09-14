@@ -116,9 +116,11 @@ Chart.register(...registerables)
 const MAX_LOG_LINES = 10000 // from backend limit
 
 function defaultDateFilter() {
+  const currentHour = moment().utc()
+
   return {
-    startAt: moment().utc().subtract(1, 'hour').format("yyyy-MM-DDTHH:mm"),
-    endAt: moment().utc().format("yyyy-MM-DDTHH:mm")
+    startAt: currentHour.clone().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+    endAt: currentHour.clone().endOf('hour').format("yyyy-MM-DDTHH:mm")
   }
 }
 

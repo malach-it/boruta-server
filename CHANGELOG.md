@@ -27,6 +27,7 @@
 ### Changed
 
 - [admin] token dashboard and API default to tokens issued since the beginning of the current hour
+- [admin] request and business event dashboards and log API default to the current UTC hour
 - [admin] sidebar sections reflect authorized scopes and remain expanded across nested dashboard routes
 - [admin] remove the redundant `roles:manage:all` scope from new installations and administration scope requests
 - [admin] new OAuth clients default to confidential
