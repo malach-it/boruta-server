@@ -4,7 +4,7 @@ boruta is a standalone authorization server that aims to implement OAuth 2.0 and
 
 ## Status
 
-boruta is currently in an __open beta phase__, if you are interested in the project and the tools it provides, you are encourage to test the product within your context. Production readyness will depend on your feedback, helping to fix the possible bugs and improve the solution usability. While being mostly stable and security asessed for some of its parts, boruta is a work in progress, please read the [General Terms and Conditions](GENERAL_TERMS_AND_CONDITIONS.md).
+boruta is currently in an __open beta phase__, if you are interested in the project and the tools it provides, you are encourage to test the software within your context. Production readyness will depend on your feedback, helping to fix the possible bugs and improve the solution usability. While being mostly stable and security asessed for some of its parts, boruta is a work in progress, please read the [General Terms and Conditions](GENERAL_TERMS_AND_CONDITIONS.md).
 
 ## Implemented specifications and certification
 
