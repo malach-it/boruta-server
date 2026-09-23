@@ -257,6 +257,20 @@
         "security": []
       }
     },
+    "/dashboard/tokens": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
     "/identity-providers": {
       "get": {
         "tags": [
