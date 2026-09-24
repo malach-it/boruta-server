@@ -22,24 +22,24 @@ defmodule BorutaGateway.HttpProxyTest do
       end)
 
     {:ok, proxy_port} = free_port()
-    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+    {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
 
-    {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+    {:ok, socket} = proxy_connect(proxy_port)
 
     :ok =
-      :gen_tcp.send(
+      :ssl.send(
         socket,
         "CONNECT localhost:#{upstream_port} HTTP/1.1\r\nHost: localhost:#{upstream_port}\r\n\r\n"
       )
 
-    assert {:ok, response} = :gen_tcp.recv(socket, 0, 5_000)
+    assert {:ok, response} = :ssl.recv(socket, 0, 5_000)
     assert response == "HTTP/1.1 200 Connection Established\r\n\r\n"
 
-    :ok = :gen_tcp.send(socket, "payload")
+    :ok = :ssl.send(socket, "payload")
 
-    assert {:ok, "echo:payload"} = :gen_tcp.recv(socket, 0, 5_000)
+    assert {:ok, "echo:payload"} = :ssl.recv(socket, 0, 5_000)
 
-    :gen_tcp.close(socket)
+    :ssl.close(socket)
     GenServer.stop(proxy)
     assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
   end
@@ -70,32 +70,32 @@ defmodule BorutaGateway.HttpProxyTest do
     )
 
     {:ok, proxy_port} = free_port()
-    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+    {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
 
     try do
-      {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+      {:ok, socket} = proxy_connect(proxy_port)
 
       :ok =
-        :gen_tcp.send(
+        :ssl.send(
           socket,
           "CONNECT localhost:#{upstream_port} HTTP/1.1\r\nHost: localhost:#{upstream_port}\r\n\r\n"
         )
 
       assert {:ok, "HTTP/1.1 200 Connection Established\r\n\r\n"} =
-               :gen_tcp.recv(socket, 0, 5_000)
+               :ssl.recv(socket, 0, 5_000)
 
       assert_receive {:proxy_request_log, %{duration: duration},
                       %{
                         method: "CONNECT",
                         path: "localhost:" <> _,
                         status: 200,
-                        tls: "http"
+                        tls: "tls"
                       }},
                      1_000
 
       assert duration > 0
 
-      :gen_tcp.close(socket)
+      :ssl.close(socket)
     after
       :telemetry.detach(handler_id)
       GenServer.stop(proxy)
@@ -123,26 +123,26 @@ defmodule BorutaGateway.HttpProxyTest do
       end)
 
     {:ok, proxy_port} = free_port()
-    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+    {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
 
-    {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+    {:ok, socket} = proxy_connect(proxy_port)
 
     :ok =
-      :gen_tcp.send(
+      :ssl.send(
         socket,
         "GET http://localhost:#{upstream_port}/forwarded?x=1 HTTP/1.1\r\n" <>
           "Host: ignored.example\r\nProxy-Authorization: basic stale\r\n\r\n"
       )
 
     assert {:ok, "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n"} =
-             :gen_tcp.recv(socket, 0, 5_000)
+             :ssl.recv(socket, 0, 5_000)
 
     assert_receive {:upstream_request, upstream_request}, 1_000
     assert upstream_request =~ "GET /forwarded?x=1 HTTP/1.1\r\n"
     assert upstream_request =~ "Host: localhost:#{upstream_port}\r\n"
     refute upstream_request =~ "Proxy-Authorization"
 
-    :gen_tcp.close(socket)
+    :ssl.close(socket)
     GenServer.stop(proxy)
     assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
   end
@@ -175,29 +175,29 @@ defmodule BorutaGateway.HttpProxyTest do
     )
 
     {:ok, proxy_port} = free_port()
-    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+    {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
 
     try do
-      {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+      {:ok, socket} = proxy_connect(proxy_port)
 
       :ok =
-        :gen_tcp.send(
+        :ssl.send(
           socket,
           "GET http://localhost:#{upstream_port}/forwarded?x=1 HTTP/1.1\r\n" <>
             "Host: ignored.example\r\n\r\n"
         )
 
       assert {:ok, "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n"} =
-               :gen_tcp.recv(socket, 0, 5_000)
+               :ssl.recv(socket, 0, 5_000)
 
-      :gen_tcp.close(socket)
+      :ssl.close(socket)
 
       assert_receive {:proxy_request_log, %{duration: duration},
                       %{
                         method: "GET",
                         path: "/forwarded?x=1",
                         status: 204,
-                        tls: "http"
+                        tls: "tls"
                       }},
                      1_000
 
@@ -288,24 +288,24 @@ defmodule BorutaGateway.HttpProxyTest do
       end)
 
     {:ok, proxy_port} = free_port()
-    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+    {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
 
-    {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+    {:ok, socket} = proxy_connect(proxy_port)
 
     :ok =
-      :gen_tcp.send(
+      :ssl.send(
         socket,
         "GET http://service.local/origin HTTP/1.1\r\nHost: service.local\r\n\r\n"
       )
 
     assert {:ok, "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n"} =
-             :gen_tcp.recv(socket, 0, 5_000)
+             :ssl.recv(socket, 0, 5_000)
 
     assert_receive {:upstream_request, upstream_request}, 1_000
     assert upstream_request =~ "GET /origin HTTP/1.1\r\n"
     assert upstream_request =~ "Host: service.local\r\n"
 
-    :gen_tcp.close(socket)
+    :ssl.close(socket)
     GenServer.stop(proxy)
     assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
   end
@@ -341,24 +341,24 @@ defmodule BorutaGateway.HttpProxyTest do
       end)
 
     {:ok, proxy_port} = free_port()
-    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+    {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
 
-    {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+    {:ok, socket} = proxy_connect(proxy_port)
 
     :ok =
-      :gen_tcp.send(
+      :ssl.send(
         socket,
         "CONNECT service.local:443 HTTP/1.1\r\nHost: service.local:443\r\n\r\n"
       )
 
-    assert {:ok, response} = :gen_tcp.recv(socket, 0, 5_000)
+    assert {:ok, response} = :ssl.recv(socket, 0, 5_000)
     assert response == "HTTP/1.1 200 Connection Established\r\n\r\n"
 
-    :ok = :gen_tcp.send(socket, "payload")
+    :ok = :ssl.send(socket, "payload")
 
-    assert {:ok, "echo:payload"} = :gen_tcp.recv(socket, 0, 5_000)
+    assert {:ok, "echo:payload"} = :ssl.recv(socket, 0, 5_000)
 
-    :gen_tcp.close(socket)
+    :ssl.close(socket)
     GenServer.stop(proxy)
     assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
   end
@@ -412,24 +412,24 @@ defmodule BorutaGateway.HttpProxyTest do
       end)
 
     {:ok, proxy_port} = free_port()
-    {:ok, proxy} = HttpProxy.Server.start(port: proxy_port, num_acceptors: 1)
+    {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
 
-    {:ok, socket} = :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false])
+    {:ok, socket} = proxy_connect(proxy_port)
 
     :ok =
-      :gen_tcp.send(
+      :ssl.send(
         socket,
         "GET https://localhost/secure HTTP/1.1\r\nHost: localhost\r\n\r\n"
       )
 
     assert {:ok, "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n"} =
-             :gen_tcp.recv(socket, 0, 5_000)
+             :ssl.recv(socket, 0, 5_000)
 
     assert_receive {:upstream_request, upstream_request}, 1_000
     assert upstream_request =~ "GET /secure HTTP/1.1\r\n"
     assert upstream_request =~ "Host: localhost\r\n"
 
-    :gen_tcp.close(socket)
+    :ssl.close(socket)
     GenServer.stop(proxy)
     assert_receive {:DOWN, ^upstream_ref, :process, ^upstream, :normal}, 1_000
   end
@@ -452,6 +452,10 @@ defmodule BorutaGateway.HttpProxyTest do
     :gen_tcp.close(socket)
 
     {:ok, port}
+  end
+
+  defp proxy_connect(port) do
+    :ssl.connect(~c"localhost", port, [:binary, active: false, verify: :verify_none])
   end
 
   defp start_service_registry(records) do
