@@ -9,7 +9,7 @@ defmodule BorutaGateway.UpstreamConnectionTest do
   alias BorutaGateway.UpstreamConnection
   alias BorutaGateway.Upstreams.Upstream
 
-  test "connects to an advertised cluster proxy and forwards to the upstream host" do
+  test "connects to an advertised cluster proxy through any registered alias" do
     {:ok, upstream_listener} = listen()
     {:ok, {_address, upstream_port}} = :inet.sockname(upstream_listener)
     {:ok, proxy_port} = free_port()
@@ -24,18 +24,18 @@ defmodule BorutaGateway.UpstreamConnectionTest do
         :gen_tcp.close(socket)
       end)
 
-    proxy_url = "https://127.0.0.1:#{proxy_port}"
+    proxy_url = "https://localhost:#{proxy_port}"
 
     record = %Record{
       id: Ecto.UUID.generate(),
       node_name: ConfigurationLoader.node_name(),
       ip_address: "127.0.0.1",
-      aliases: [],
+      aliases: ["unused.proxy.internal", "localhost"],
       status: "online",
       configuration: %{
         "services" => [
           %{
-            "type" => "proxy",
+            "name" => "HTTPS proxy",
             "scheme" => "https",
             "enabled" => true,
             "port" => proxy_port
