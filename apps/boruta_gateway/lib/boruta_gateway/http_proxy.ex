@@ -29,7 +29,7 @@ defmodule BorutaGateway.HttpProxy do
 
     @impl Supervisor
     def init(args) do
-      transport = Keyword.get(args, :transport, :tcp)
+      transport = Keyword.fetch!(args, :transport)
 
       {:ok, listen_socket} =
         listen(transport, args[:port])
@@ -65,15 +65,6 @@ defmodule BorutaGateway.HttpProxy do
           {:cacerts, Certificate.cacerts()}
         ] ++ Certificate.ssl_options()
       )
-    end
-
-    defp listen(:tcp, port) do
-      :gen_tcp.listen(port, [
-        {:packet, :raw},
-        :binary,
-        {:active, false},
-        {:reuseaddr, true}
-      ])
     end
   end
 
