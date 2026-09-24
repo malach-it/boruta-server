@@ -21,8 +21,8 @@ defmodule BorutaGateway.UpstreamConnection do
 
   def connect(%Upstream{} = upstream) do
     case find_proxy(upstream.proxy_url) do
-      {:ok, record, service} ->
-        connect_through_proxy(record.ip_address, service["port"], record.node_name)
+      {:ok, record, service, verification_host} ->
+        connect_through_proxy(record.ip_address, service["port"], verification_host)
 
       {:error, :proxy_not_found} ->
         connect_external_proxy(upstream.proxy_url)
@@ -71,8 +71,14 @@ defmodule BorutaGateway.UpstreamConnection do
     |> Enum.find_value(fn record ->
       if record.status == "online" do
         case https_proxy_service(record) do
-          nil -> nil
-          service -> if proxy_url(record, service) == proxy_url, do: {record, service}
+          nil ->
+            nil
+
+          service ->
+            case proxy_verification_host(record, service, proxy_url) do
+              nil -> nil
+              verification_host -> {record, service, verification_host}
+            end
         end
       end
     end)
@@ -80,8 +86,8 @@ defmodule BorutaGateway.UpstreamConnection do
       nil ->
         {:error, :proxy_not_found}
 
-      {%Record{} = record, service} ->
-        {:ok, record, service}
+      {%Record{} = record, service, verification_host} ->
+        {:ok, record, service, verification_host}
     end
   end
 
@@ -89,7 +95,9 @@ defmodule BorutaGateway.UpstreamConnection do
     configuration
     |> Map.get("services", [])
     |> Enum.find(fn service ->
-      service["type"] == "proxy" && service["scheme"] == "https" && service["enabled"] == true &&
+      https_proxy_service = service["type"] == "proxy" || service["name"] == "HTTPS proxy"
+
+      https_proxy_service && service["scheme"] == "https" && service["enabled"] == true &&
         is_integer(service["port"])
     end)
   end
@@ -116,8 +124,13 @@ defmodule BorutaGateway.UpstreamConnection do
     end
   end
 
-  defp proxy_url(%Record{} = record, service) do
-    "https://#{authority(record.ip_address, service["port"])}"
+  defp proxy_verification_host(%Record{} = record, service, proxy_url) do
+    Enum.find(record.aliases || [], fn alias -> proxy_url(alias, service) == proxy_url end) ||
+      if proxy_url(record.ip_address, service) == proxy_url, do: record.node_name
+  end
+
+  defp proxy_url(host, service) do
+    "https://#{authority(host, service["port"])}"
   end
 
   defp socket_options do
