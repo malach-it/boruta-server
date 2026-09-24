@@ -28,6 +28,7 @@ defmodule BorutaAdminWeb.UpstreamView do
       scheme: upstream.scheme,
       host: upstream.host,
       port: upstream.port,
+      proxy_url: upstream.proxy_url,
       uris: upstream.uris,
       strip_uri: upstream.strip_uri,
       authorize: upstream.authorize,
