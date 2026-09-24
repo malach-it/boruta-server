@@ -61,7 +61,7 @@ defmodule BorutaGateway.HttpProxy do
           {:active, false},
           {:reuseaddr, true},
           {:verify, :verify_peer},
-          {:fail_if_no_peer_cert, false},
+          {:fail_if_no_peer_cert, true},
           {:cacerts, Certificate.cacerts()}
         ] ++ Certificate.ssl_options()
       )

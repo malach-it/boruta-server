@@ -43,7 +43,8 @@ defmodule BorutaGateway.ServiceRegistryTest do
                  "port" => 4444,
                  "acceptors" => 8,
                  "enabled" => false,
-                 "certificate" => https_proxy_certificate
+                 "certificate" => https_proxy_certificate,
+                 "verify_client_certificate" => true
                },
                %{"name" => "HTTP gateway", "scheme" => "http", "port" => 7777},
                %{"name" => "HTTPS gateway", "scheme" => "https", "port" => 7443},
