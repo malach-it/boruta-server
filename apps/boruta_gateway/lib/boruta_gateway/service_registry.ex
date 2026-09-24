@@ -462,7 +462,7 @@ defmodule BorutaGateway.ServiceRegistry do
           "port" => gateway_env!(:https_proxy_port),
           "acceptors" => gateway_env(:num_acceptors, 8),
           "certificate" => Certificate.pem(),
-          "verify_client_certificate" => false
+          "verify_client_certificate" => true
         },
         %{
           "name" => "HTTP gateway",
