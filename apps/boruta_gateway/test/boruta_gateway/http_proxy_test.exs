@@ -6,6 +6,24 @@ defmodule BorutaGateway.HttpProxyTest do
   alias BorutaGateway.ServiceRegistry
   alias BorutaGateway.ServiceRegistry.Record
 
+  test "requires a trusted client certificate" do
+    start_service_registry(%{})
+
+    {:ok, proxy_port} = free_port()
+    {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
+
+    case :ssl.connect(~c"localhost", proxy_port, [:binary, active: false, verify: :verify_none]) do
+      {:error, reason} ->
+        assert false, "expected TLS handshake to complete, got: #{inspect(reason)}"
+
+      {:ok, socket} ->
+        assert {:error, _reason} = :ssl.recv(socket, 0, 1_000)
+        :ssl.close(socket)
+    end
+
+    GenServer.stop(proxy)
+  end
+
   test "CONNECT establishes a TCP tunnel" do
     start_service_registry(%{})
 
@@ -215,6 +233,7 @@ defmodule BorutaGateway.HttpProxyTest do
 
     root_ca = Certificate.generate_root_ca_pem!()
     Certificate.ensure!(root_ca)
+    Certificate.load_trusted_certificates!([root_ca.certificate])
 
     {:ok, upstream_listener} = listen()
     {:ok, {_address, upstream_port}} = :inet.sockname(upstream_listener)
@@ -234,8 +253,7 @@ defmodule BorutaGateway.HttpProxyTest do
     {:ok, proxy_port} = free_port()
     {:ok, proxy} = HttpProxy.HttpsServer.start(port: proxy_port, num_acceptors: 1)
 
-    {:ok, socket} =
-      :ssl.connect(~c"localhost", proxy_port, [:binary, active: false, verify: :verify_none])
+    {:ok, socket} = proxy_connect(proxy_port)
 
     :ok =
       :ssl.send(
@@ -455,7 +473,11 @@ defmodule BorutaGateway.HttpProxyTest do
   end
 
   defp proxy_connect(port) do
-    :ssl.connect(~c"localhost", port, [:binary, active: false, verify: :verify_none])
+    :ssl.connect(
+      ~c"localhost",
+      port,
+      [:binary, active: false, verify: :verify_none] ++ Certificate.ssl_options()
+    )
   end
 
   defp start_service_registry(records) do
