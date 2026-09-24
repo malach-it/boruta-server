@@ -42,8 +42,8 @@
             <label>Forward proxy</label>
             <select v-model="proxySelection">
               <option value="">Direct connection</option>
-              <option v-for="proxy in availableProxies" :value="proxy.url" :key="proxy.url">
-                {{ proxy.node_name }} ({{ proxy.aliases }}) — port {{ proxy.port }}
+              <option v-for="proxy in availableProxies" :value="proxy.url" :key="`${proxy.node_name}-${proxy.url}`">
+                {{ proxy.alias }} ({{ proxy.node_name }}) — port {{ proxy.port }}
               </option>
               <option value="other">Other</option>
             </select>
@@ -253,12 +253,22 @@ export default {
         if (record.status !== 'online') return []
 
         const service = record.configuration?.services?.find(service => {
-          return service.type === 'proxy' && service.scheme === 'https' && service.enabled
+          const httpsProxy = service.type === 'proxy' || service.name === 'HTTPS proxy'
+          return httpsProxy && service.scheme === 'https' && service.enabled
         })
 
-        const host = record.ip_address.includes(':') ? `[${record.ip_address}]` : record.ip_address
-        const aliases = record.aliases?.length ? record.aliases.join(', ') : record.node_name
-        return service ? [{ node_name: record.node_name, aliases, port: service.port, url: `https://${host}:${service.port}` }] : []
+        if (!service) return []
+
+        return (record.aliases || []).map(alias => {
+          const host = alias.includes(':') ? `[${alias}]` : alias
+
+          return {
+            node_name: record.node_name,
+            alias,
+            port: service.port,
+            url: `https://${host}:${service.port}`
+          }
+        })
       })
     },
     proxySelection: {
