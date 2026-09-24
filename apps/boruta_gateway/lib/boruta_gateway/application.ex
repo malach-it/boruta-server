@@ -39,8 +39,6 @@ defmodule BorutaGateway.Application do
     acceptors_count = Application.get_env(:boruta_gateway, :num_acceptors, 8)
 
     [
-      {Application.get_env(:boruta_gateway, :proxy_server, true),
-       proxy_server_child_spec(acceptors_count)},
       {Application.get_env(:boruta_gateway, :https_proxy_server, true),
        https_proxy_server_child_spec(acceptors_count)},
       {Application.get_env(:boruta_gateway, :server, false),
@@ -141,21 +139,6 @@ defmodule BorutaGateway.Application do
            ]
          ]},
       id: :sidecar_https_server,
-      type: :supervisor
-    }
-  end
-
-  defp proxy_server_child_spec(num_acceptors) do
-    %{
-      start:
-        {BorutaGateway.HttpProxy.Server, :start,
-         [
-           [
-             port: Application.fetch_env!(:boruta_gateway, :proxy_port),
-             num_acceptors: num_acceptors
-           ]
-         ]},
-      id: :proxy_server,
       type: :supervisor
     }
   end
