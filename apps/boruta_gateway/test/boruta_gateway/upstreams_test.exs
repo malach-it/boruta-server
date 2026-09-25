@@ -161,6 +161,42 @@ defmodule BorutaGateway.UpstreamsTest do
       assert changeset.errors[:mtls_enabled] == {"requires https scheme", []}
     end
 
+    test "create_upstream/1 stores an HTTPS cluster proxy URL" do
+      proxy_url = "https://10.0.0.5:8443"
+
+      assert {:ok, %Upstream{proxy_url: ^proxy_url}} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :proxy_url, proxy_url))
+    end
+
+    test "create_upstream/1 rejects invalid proxy URLs" do
+      assert {:error, changeset} =
+               Upstreams.create_upstream(
+                 Map.put(@valid_attrs, :proxy_url, "http://10.0.0.5:8080")
+               )
+
+      assert changeset.errors[:proxy_url] ==
+               {"must be an HTTPS URL with an explicit port", []}
+
+      assert {:error, changeset} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :proxy_url, "https://10.0.0.5"))
+
+      assert changeset.errors[:proxy_url] ==
+               {"must be an HTTPS URL with an explicit port", []}
+    end
+
+    test "create_upstream/1 rejects target mTLS through a cluster proxy" do
+      assert {:error, changeset} =
+               Upstreams.create_upstream(
+                 Map.merge(@valid_attrs, %{
+                   proxy_url: "https://10.0.0.5:8443",
+                   mtls_enabled: true
+                 })
+               )
+
+      assert changeset.errors[:mtls_enabled] ==
+               {"cannot be used with a forward proxy", []}
+    end
+
     test "create_upstream/1 generates a secret with HS* algorithms" do
       assert {:ok, %Upstream{forwarded_token_secret: forwarded_token_secret}} =
                Upstreams.create_upstream(

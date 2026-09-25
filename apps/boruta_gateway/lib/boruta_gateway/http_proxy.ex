@@ -29,7 +29,7 @@ defmodule BorutaGateway.HttpProxy do
 
     @impl Supervisor
     def init(args) do
-      transport = Keyword.get(args, :transport, :tcp)
+      transport = Keyword.fetch!(args, :transport)
 
       {:ok, listen_socket} =
         listen(transport, args[:port])
@@ -61,19 +61,10 @@ defmodule BorutaGateway.HttpProxy do
           {:active, false},
           {:reuseaddr, true},
           {:verify, :verify_peer},
-          {:fail_if_no_peer_cert, false},
+          {:fail_if_no_peer_cert, true},
           {:cacerts, Certificate.cacerts()}
         ] ++ Certificate.ssl_options()
       )
-    end
-
-    defp listen(:tcp, port) do
-      :gen_tcp.listen(port, [
-        {:packet, :raw},
-        :binary,
-        {:active, false},
-        {:reuseaddr, true}
-      ])
     end
   end
 
@@ -302,7 +293,7 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   defp connect_tunnel_direct(%State{socket: socket} = state, host, port, resolved_upstream) do
-    {_origin, connect_host, connect_port} = resolved_upstream
+    {_origin, connect_host, connect_port, _send_client_certificate} = resolved_upstream
 
     case :gen_tcp.connect(
            String.to_charlist(connect_host),
@@ -368,7 +359,7 @@ defmodule BorutaGateway.HttpProxy do
          payload,
          resolved_upstream
        ) do
-    {_origin, connect_host, connect_port} = resolved_upstream
+    {_origin, connect_host, connect_port, _send_client_certificate} = resolved_upstream
 
     case :gen_tcp.connect(
            String.to_charlist(connect_host),
@@ -411,12 +402,12 @@ defmodule BorutaGateway.HttpProxy do
          payload,
          resolved_upstream
        ) do
-    {origin, connect_host, connect_port} = resolved_upstream
+    {origin, connect_host, connect_port, send_client_certificate} = resolved_upstream
 
     case :ssl.connect(
            String.to_charlist(connect_host),
            connect_port,
-           ssl_options(origin, host),
+           ssl_options(origin, host, send_client_certificate),
            @connect_timeout
          ) do
       {:ok, upstream_socket} ->
@@ -628,14 +619,37 @@ defmodule BorutaGateway.HttpProxy do
 
   defp resolve_direct_upstream(scheme, host, port) do
     case ServiceRegistry.all()[host] do
-      %{ip_address: ip_address, status: "online"}
+      %{ip_address: ip_address, status: "online"} = record
       when is_binary(ip_address) ->
-        {:service_registry, ip_address, sidecar_port(scheme)}
+        {sidecar_port, verify_client_certificate} = sidecar_connection(record, scheme)
+
+        {:service_registry, ip_address, sidecar_port, verify_client_certificate}
 
       _record ->
-        {:external, host, port}
+        {:external, host, port, false}
     end
   end
+
+  defp sidecar_connection(%{configuration: %{"services" => services}}, scheme)
+       when is_list(services) do
+    Enum.find_value(services, {sidecar_port(scheme), false}, fn service ->
+      if service["type"] == "gateway" && service["scheme"] == scheme &&
+           service["enabled"] == true && is_integer(service["port"]) &&
+           sidecar_service?(service["name"]) do
+        {service["port"], service["verify_client_certificate"] == true}
+      end
+    end)
+  end
+
+  defp sidecar_connection(_record, scheme), do: {sidecar_port(scheme), false}
+
+  defp sidecar_service?(name) when is_binary(name) do
+    name
+    |> String.downcase()
+    |> String.contains?("sidecar")
+  end
+
+  defp sidecar_service?(_name), do: false
 
   defp sidecar_port("http") do
     Application.fetch_env!(:boruta_gateway, :sidecar_port)
@@ -690,17 +704,20 @@ defmodule BorutaGateway.HttpProxy do
     :gen_tcp.send(socket, payload)
   end
 
-  defp ssl_options(:service_registry, host) do
-    socket_options() ++
-      [
-        {:verify, :verify_peer},
-        {:server_name_indication, String.to_charlist(host)},
-        {:customize_hostname_check, [fqdn: String.to_charlist(host)]},
-        {:cacerts, Certificate.cacerts()}
-      ]
+  defp ssl_options(:service_registry, host, send_client_certificate) do
+    options =
+      socket_options() ++
+        [
+          {:verify, :verify_peer},
+          {:server_name_indication, String.to_charlist(host)},
+          {:customize_hostname_check, [fqdn: String.to_charlist(host)]},
+          {:cacerts, Certificate.cacerts()}
+        ]
+
+    if send_client_certificate, do: options ++ Certificate.ssl_options(), else: options
   end
 
-  defp ssl_options(:external, host) do
+  defp ssl_options(:external, host, _send_client_certificate) do
     socket_options() ++
       [
         {:verify, :verify_peer},

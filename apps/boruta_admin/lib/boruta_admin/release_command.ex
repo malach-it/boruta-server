@@ -205,7 +205,6 @@ defmodule BorutaAdmin.ReleaseCommand do
     [
       :server,
       :sidecar_server,
-      :proxy_server,
       :https_proxy_server,
       :https_server,
       :sidecar_https_server

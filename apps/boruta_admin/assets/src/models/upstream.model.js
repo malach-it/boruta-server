@@ -16,6 +16,7 @@ const defaults = {
   errors: null,
   loading: false,
   node_name: 'global',
+  proxy_url: null,
   uris: [],
   required_scopes: [],
   authorization_type: 'oauth_bearer',
@@ -41,6 +42,7 @@ const assign = {
   scheme: function ({ scheme }) { this.scheme = scheme },
   host: function ({ host }) { this.host = host },
   port: function ({ port }) { this.port = port },
+  proxy_url: function ({ proxy_url }) { this.proxy_url = proxy_url },
   strip_uri: function ({ strip_uri }) { this.strip_uri = strip_uri },
   forwarded_token_signature_alg: function ({ forwarded_token_signature_alg }) { this.forwarded_token_signature_alg = forwarded_token_signature_alg },
   forwarded_token_secret: function ({ forwarded_token_secret }) { this.forwarded_token_secret = forwarded_token_secret },
@@ -134,6 +136,7 @@ class Upstream {
       scheme,
       host,
       port,
+      proxy_url,
       uris,
       strip_uri,
       authorize,
@@ -164,6 +167,7 @@ class Upstream {
       scheme,
       host,
       port,
+      proxy_url,
       uris: uris.map(({ uri }) => uri),
       required_scopes: required_scopes.reduce((acc, { model: { name }, method }) => {
         acc[method] = acc[method] || []

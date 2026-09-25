@@ -54,7 +54,7 @@
                   <span class="updated-at">Last update: {{ formatDate(record.updated_at) }}</span>
                 </div>
                 <div class="ui static-configuration segment" v-if="record.node_name !== 'global'">
-                  <div class="ui six column stackable service-configurations grid">
+                  <div class="ui five column stackable service-configurations grid">
                     <div
                       v-for="service in recordServices(record)"
                       class="service-configuration column"
@@ -290,7 +290,12 @@ export default {
       return configuredRecord?.configuration || { services: [], certificate_paths: {} }
     },
     recordServices (record) {
-      return record.configuration?.services || []
+      return (record.configuration?.services || []).filter((service) => {
+        const legacyHttpProxy = service.name === 'HTTP proxy'
+        const httpProxy = service.type === 'proxy' && service.scheme === 'http'
+
+        return !legacyHttpProxy && !httpProxy
+      })
     },
     certificatePaths (record) {
       const paths = record.configuration?.certificate_paths || {}
