@@ -68,20 +68,7 @@ defmodule BorutaGateway.UpstreamConnection do
 
   defp find_proxy(proxy_url) do
     ServiceRegistry.list_records()
-    |> Enum.find_value(fn record ->
-      if record.status == "online" do
-        case https_proxy_service(record) do
-          nil ->
-            nil
-
-          service ->
-            case proxy_verification_host(record, service, proxy_url) do
-              nil -> nil
-              verification_host -> {record, service, verification_host}
-            end
-        end
-      end
-    end)
+    |> Enum.find_value(&proxy_configuration(&1, proxy_url))
     |> case do
       nil ->
         {:error, :proxy_not_found}
@@ -90,6 +77,18 @@ defmodule BorutaGateway.UpstreamConnection do
         {:ok, record, service, verification_host}
     end
   end
+
+  defp proxy_configuration(%Record{status: "online"} = record, proxy_url) do
+    with service when not is_nil(service) <- https_proxy_service(record),
+         verification_host when not is_nil(verification_host) <-
+           proxy_verification_host(record, service, proxy_url) do
+      {record, service, verification_host}
+    else
+      _error -> nil
+    end
+  end
+
+  defp proxy_configuration(%Record{}, _proxy_url), do: nil
 
   defp https_proxy_service(%Record{configuration: configuration}) do
     configuration
