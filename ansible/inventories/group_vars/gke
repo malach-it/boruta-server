@@ -19,6 +19,12 @@ boruta_ingress_http_node_port: >-
 boruta_ingress_https_node_port: >-
   {{ lookup('env', 'BORUTA_INGRESS_HTTPS_NODE_PORT')
     | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_HTTPS_NODE_PORT type=properties file=' ~ boruta_env_file ~ ' default=30443'), true) }}
+boruta_ingress_https_proxy_port: >-
+  {{ lookup('env', 'BORUTA_INGRESS_HTTPS_PROXY_PORT')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_HTTPS_PROXY_PORT type=properties file=' ~ boruta_env_file ~ ' default=4444'), true) }}
+boruta_ingress_https_proxy_node_port: >-
+  {{ lookup('env', 'BORUTA_INGRESS_HTTPS_PROXY_NODE_PORT')
+    | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_HTTPS_PROXY_NODE_PORT type=properties file=' ~ boruta_env_file ~ ' default=30444'), true) }}
 boruta_ingress_load_balancer_ip: >-
   {{ lookup('env', 'BORUTA_INGRESS_LOAD_BALANCER_IP')
     | default(lookup('ansible.builtin.ini', 'BORUTA_INGRESS_LOAD_BALANCER_IP type=properties file=' ~ boruta_env_file ~ ' default=35.204.103.196'), true) }}

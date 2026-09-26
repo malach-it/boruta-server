@@ -227,6 +227,8 @@
             BORUTA_GATEWAY_PORT: "{{ boruta_gateway_http_port | string }}"
             BORUTA_GATEWAY_HTTPS_SERVER: "{{ boruta_gateway_https_enabled | bool | ternary('true', 'false') }}"
             BORUTA_GATEWAY_HTTPS_PORT: "{{ boruta_gateway_https_port | string }}"
+            BORUTA_GATEWAY_HTTPS_PROXY_SERVER: "{{ boruta_gateway_https_proxy_enabled | bool | ternary('true', 'false') }}"
+            BORUTA_GATEWAY_HTTPS_PROXY_PORT: "{{ boruta_gateway_https_proxy_port | string }}"
             BORUTA_GATEWAY_MOUNTED_CERTIFICATE_PATH: "{{ boruta_gateway_mounted_certificate_path }}"
             BORUTA_GATEWAY_MOUNTED_PRIVATE_KEY_PATH: "{{ boruta_gateway_mounted_private_key_path }}"
             BORUTA_GATEWAY_KUBERNETES_INGRESS_CONTROLLER: "true"
@@ -440,6 +442,8 @@
                         containerPort: "{{ boruta_gateway_http_port | int }}"
                       - name: https
                         containerPort: "{{ boruta_gateway_https_port | int }}"
+                      - name: https-proxy
+                        containerPort: "{{ boruta_gateway_https_proxy_port | int }}"
                     envFrom:
                       - configMapRef:
                           name: "{{ boruta_name }}-env"
@@ -500,3 +504,8 @@
                 port: 443
                 targetPort: https
                 nodePort: "{{ boruta_ingress_https_node_port | int }}"
+              - name: https-proxy
+                protocol: TCP
+                port: "{{ boruta_ingress_https_proxy_port | int }}"
+                targetPort: https-proxy
+                nodePort: "{{ boruta_ingress_https_proxy_node_port | int }}"

@@ -387,7 +387,7 @@
 
     - name: Create protected boruta auth ingress
       kubernetes.core.k8s:
-        state: present
+        state: absent
         definition:
           apiVersion: networking.k8s.io/v1
           kind: Ingress
@@ -443,35 +443,7 @@
               - host: "{{ boruta_oauth_host }}"
                 http:
                   paths:
-                    - path: /.well-known
-                      pathType: Prefix
-                      backend:
-                        service:
-                          name: "{{ boruta_auth_name }}"
-                          port:
-                            number: "{{ boruta_oauth_port | int }}"
-                    - path: /accounts
-                      pathType: Prefix
-                      backend:
-                        service:
-                          name: "{{ boruta_auth_name }}"
-                          port:
-                            number: "{{ boruta_oauth_port | int }}"
-                    - path: /oauth
-                      pathType: Prefix
-                      backend:
-                        service:
-                          name: "{{ boruta_auth_name }}"
-                          port:
-                            number: "{{ boruta_oauth_port | int }}"
-                    - path: /openid
-                      pathType: Prefix
-                      backend:
-                        service:
-                          name: "{{ boruta_auth_name }}"
-                          port:
-                            number: "{{ boruta_oauth_port | int }}"
-                    - path: /did
+                    - path: /
                       pathType: Prefix
                       backend:
                         service:

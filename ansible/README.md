@@ -90,6 +90,10 @@ ansible-playbook -i ansible/hosts ansible/kagome.yml \
 | `kagome_mtls_enabled` | `true` | Enables mTLS verification for the Kagome ingress/backend example. |
 | `boruta_ingress_http_node_port` | `30080` | NodePort for HTTP traffic. |
 | `boruta_ingress_https_node_port` | `30443` | NodePort for HTTPS traffic. |
+| `boruta_ingress_https_proxy_port` | `4444` | External LoadBalancer port for the Boruta HTTPS forward proxy. |
+| `boruta_ingress_https_proxy_node_port` | `30444` | NodePort for the Boruta HTTPS forward proxy. |
+| `boruta_gateway_https_proxy_enabled` | `true` | Enables the Boruta HTTPS forward proxy listener. |
+| `boruta_gateway_https_proxy_port` | `4444` | Container and service port for the Boruta HTTPS forward proxy. |
 | `boruta_configuration_path` | `/app/config/static-configuration.yml` | Path where the static config is mounted in the loader job. |
 
 Variables common to the split playbooks live in `group_vars/all`. Run with
