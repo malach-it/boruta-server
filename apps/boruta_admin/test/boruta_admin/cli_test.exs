@@ -129,6 +129,36 @@ defmodule BorutaAdmin.CliTest do
     assert is_binary(revoked_at)
   end
 
+  test "uploads a configuration file from a CLI file path" do
+    client = insert(:client)
+    previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")
+    previous_client_secret = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET")
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", client.id)
+    System.put_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", client.secret)
+
+    configuration_path =
+      Path.join(
+        System.tmp_dir!(),
+        "boruta-cli-configuration-#{System.unique_integer([:positive])}.yml"
+      )
+
+    configuration = "---\nversion: \"1.0\"\nconfiguration: {}\n"
+    File.write!(configuration_path, configuration)
+
+    on_exit(fn ->
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", previous_client_id)
+      restore_env("BORUTA_ADMIN_OAUTH_CLIENT_SECRET", previous_client_secret)
+      File.rm(configuration_path)
+    end)
+
+    assert {:ok, %Plug.Conn{status: 200, resp_body: body}} =
+             Cli.call("configuration", "upload_configuration_file", nil, %{
+               "file" => configuration_path
+             })
+
+    assert %{"errors" => %{}, "file_content" => ^configuration} = Jason.decode!(body)
+  end
+
   test "rejects an invalid client secret and logs the authentication failure" do
     client = insert(:client)
     previous_client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID")

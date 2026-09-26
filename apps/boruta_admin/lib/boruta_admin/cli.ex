@@ -257,6 +257,17 @@ defmodule BorutaAdmin.Cli do
     request_params
   end
 
+  defp format_request_params(
+         %{
+           plug: BorutaAdminWeb.ConfigurationController,
+           plug_opts: :upload_configuration_file
+         },
+         %{"file" => path} = request_params
+       )
+       when is_binary(path) do
+    Map.put(request_params, "file", %Plug.Upload{path: path, filename: Path.basename(path)})
+  end
+
   defp format_request_params(route, request_params) do
     %{resource_name(route.plug) => request_params}
   end
