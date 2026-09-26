@@ -4,9 +4,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- [infra] published container images include provenance attestations
+
 ### Fixed
 
 - [admin] client forms display the JWT authentication public key field for EC signing algorithms
+- [gateway] invalid TLS handshakes no longer stop HTTPS gateway acceptors
+- [ssi] credential status token resolution verifies tokens against client DIDs
 - [wallet] imported credentials are encrypted in local storage
 
 ## [0.12.0] - 2026-09-11
