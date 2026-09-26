@@ -1,8 +1,6 @@
 defmodule BorutaIdentity.Accounts.UserNotifier do
   @moduledoc false
 
-  require Logger
-
   import Swoosh.Email
 
   alias BorutaIdentity.Accounts.EmailTemplate

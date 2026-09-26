@@ -10,7 +10,7 @@ defmodule BorutaIdentity.ConfigurationTest do
   describe "get_error_template!/1" do
     test "returns nil with unexisting template" do
       assert_raise Ecto.NoResultsError, fn ->
-        Configuration.get_error_template!(:unexisting) == nil
+        Configuration.get_error_template!(:unexisting)
       end
     end
 
@@ -34,7 +34,8 @@ defmodule BorutaIdentity.ConfigurationTest do
     test "inserts with a default template" do
       template = Configuration.get_error_template!(400)
 
-      assert {:ok, template} = Configuration.upsert_error_template(template, %{content: "new content"})
+      assert {:ok, template} =
+               Configuration.upsert_error_template(template, %{content: "new content"})
 
       assert Repo.reload(template)
     end
@@ -42,7 +43,8 @@ defmodule BorutaIdentity.ConfigurationTest do
     test "updates with an existing template" do
       template = insert(:error_template)
 
-      assert {:ok, template} = Configuration.upsert_error_template(template, %{content: "new content"})
+      assert {:ok, template} =
+               Configuration.upsert_error_template(template, %{content: "new content"})
 
       assert Repo.reload(template)
     end

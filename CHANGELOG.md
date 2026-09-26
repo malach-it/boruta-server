@@ -14,6 +14,7 @@
 ### Fixed
 
 - [admin] client forms display the JWT authentication public key field for EC signing algorithms
+- [wallet] imported credentials are encrypted in local storage
 
 ## [0.12.0] - 2026-09-11
 
@@ -33,6 +34,7 @@
 ### Changed
 
 - [admin] token dashboard and API default to tokens issued since the beginning of the current hour
+- [admin] request and business event dashboards and log API default to the current UTC hour
 - [admin] sidebar sections reflect authorized scopes and remain expanded across nested dashboard routes
 - [admin] remove the redundant `roles:manage:all` scope from new installations and administration scope requests
 - [admin] new OAuth clients default to confidential
@@ -40,6 +42,7 @@
 
 ### Fixed
 
+- [admin] coalesce concurrent logout token revocations
 - [admin] resource activity refreshes when navigating between routes
 - [admin] fix sidebar upstream navigation
 - [admin] form fields wrap correctly on mobile viewports

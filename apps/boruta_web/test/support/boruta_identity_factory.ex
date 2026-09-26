@@ -1,4 +1,4 @@
-defmodule BorutaIdentity.Factory do
+defmodule BorutaWeb.IdentityFactory do
   @moduledoc false
 
   use ExMachina.Ecto, repo: BorutaIdentity.Repo

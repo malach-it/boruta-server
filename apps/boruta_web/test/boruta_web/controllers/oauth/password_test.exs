@@ -1,7 +1,7 @@
 defmodule BorutaWeb.Oauth.PasswordTest do
   use BorutaWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
   alias BorutaIdentity.IdentityProviders.Backend

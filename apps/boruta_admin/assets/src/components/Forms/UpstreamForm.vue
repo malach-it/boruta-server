@@ -38,6 +38,22 @@
             <label>Port</label>
             <input type="text" v-model="upstream.port" placeholder="443">
           </div>
+          <div class="field" :class="{ 'error': upstream.errors?.proxy_url }">
+            <label>Forward proxy</label>
+            <select v-model="proxySelection">
+              <option value="">Direct connection</option>
+              <option v-for="proxy in availableProxies" :value="proxy.url" :key="`${proxy.node_name}-${proxy.url}`">
+                {{ proxy.alias }} ({{ proxy.node_name }}) — port {{ proxy.port }}
+              </option>
+              <option value="other">Other</option>
+            </select>
+            <input
+              v-if="proxySelection === 'other'"
+              type="url"
+              v-model="upstream.proxy_url"
+              placeholder="https://proxy.example.com:8443"
+            >
+          </div>
         </div>
         <div ref="uris" data-tab="uris" class="ui bottom attached tab segment">
           <h2>URIs</h2>
@@ -194,6 +210,7 @@
 <script>
 import Scope from '../../models/scope.model'
 import Upstream from '../../models/upstream.model'
+import ServiceRegistryRecord from '../../models/service-registry-record.model'
 import GatewayScopesField from '../../components/Forms/GatewayScopesField.vue'
 import FormErrors from '../../components/Forms/FormErrors.vue'
 import TextEditor from '../../components/Forms/TextEditor.vue'
@@ -211,17 +228,61 @@ export default {
     return {
       activeTab: 'general-configuration',
       nodeNames: [],
+      serviceRegistryRecords: [],
+      customProxySelected: false,
       forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms,
       rateLimitTimeUnits: Upstream.rateLimitTimeUnits
     }
   },
   mounted () {
+    this.customProxySelected = Boolean(this.upstream.proxy_url)
     Upstream.nodeList().then(nodes => this.nodeNames = nodes)
+    ServiceRegistryRecord.all().then(records => {
+      this.serviceRegistryRecords = records
+      this.customProxySelected = Boolean(this.upstream.proxy_url) &&
+        !this.availableProxies.some(proxy => proxy.url === this.upstream.proxy_url)
+    })
   },
   computed: {
     availableNodeNames () {
       return Array.from(new Set([this.upstream.node_name, ...this.nodeNames]))
         .filter((name) => name && name !== 'global')
+    },
+    availableProxies () {
+      return this.serviceRegistryRecords.flatMap(record => {
+        if (record.status !== 'online') return []
+
+        const service = record.configuration?.services?.find(service => {
+          const httpsProxy = service.type === 'proxy' || service.name === 'HTTPS proxy'
+          return httpsProxy && service.scheme === 'https' && service.enabled
+        })
+
+        if (!service) return []
+
+        return (record.aliases || []).map(alias => {
+          const host = alias.includes(':') ? `[${alias}]` : alias
+
+          return {
+            node_name: record.node_name,
+            alias,
+            port: service.port,
+            url: `https://${host}:${service.port}`
+          }
+        })
+      })
+    },
+    proxySelection: {
+      get () {
+        if (this.customProxySelected) return 'other'
+        if (!this.upstream.proxy_url) return ''
+        return this.availableProxies.some(proxy => proxy.url === this.upstream.proxy_url)
+          ? this.upstream.proxy_url
+          : 'other'
+      },
+      set (selection) {
+        this.customProxySelected = selection === 'other'
+        this.upstream.proxy_url = selection === 'other' ? '' : (selection || null)
+      }
     },
     isHsAlgorithm () {
       return this.upstream.forwarded_token_signature_alg?.match(/HS/)

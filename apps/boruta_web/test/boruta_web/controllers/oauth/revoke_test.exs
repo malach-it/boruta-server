@@ -2,7 +2,7 @@ defmodule BorutaWeb.Oauth.RevokeTest do
   use BorutaWeb.ConnCase
 
   import ExUnit.CaptureLog
-  import Boruta.Factory
+  import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
   alias Boruta.Ecto.Token

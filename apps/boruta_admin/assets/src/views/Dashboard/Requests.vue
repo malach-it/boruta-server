@@ -117,9 +117,11 @@ const MAX_GRAPH_REQUEST_LABELS = 50
 const OTHER_REQUEST_LABEL = 'other'
 
 function defaultDateFilter() {
+  const currentHour = moment().utc()
+
   return {
-    startAt: moment().utc().subtract(1, 'hour').format("yyyy-MM-DDTHH:mm"),
-    endAt: moment().utc().format("yyyy-MM-DDTHH:mm")
+    startAt: currentHour.clone().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+    endAt: currentHour.clone().endOf('hour').format("yyyy-MM-DDTHH:mm")
   }
 }
 

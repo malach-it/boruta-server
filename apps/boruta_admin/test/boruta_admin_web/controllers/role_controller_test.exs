@@ -1,5 +1,5 @@
 defmodule BorutaAdminWeb.RoleControllerTest do
-  import BorutaIdentity.Factory
+  import BorutaAdmin.IdentityFactory
 
   use BorutaAdminWeb.ConnCase
 

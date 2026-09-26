@@ -1,7 +1,7 @@
 defmodule BorutaWeb.Integration.OpenidConnectTest do
   use BorutaWeb.ConnCase, async: false
 
-  import Boruta.Factory
+  import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
   alias Boruta.ClientsAdapter
@@ -491,7 +491,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
   describe "discovery 1.0" do
     test "returns required keys", %{conn: conn} do
-      BorutaIdentity.Factory.insert(:backend,
+      BorutaWeb.IdentityFactory.insert(:backend,
         verifiable_credentials: [
           %{
             "display" => %{
@@ -511,7 +511,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         ]
       )
 
-      Boruta.Factory.insert(:scope, name: "well_known")
+      BorutaWeb.Factory.insert(:scope, name: "well_known")
 
       conn = get(conn, Routes.openid_path(conn, :well_known))
 

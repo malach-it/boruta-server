@@ -25,6 +25,7 @@ defmodule BorutaAuth.MixProject do
   defp deps do
     [
       {:boruta, git: "https://github.com/malach-it/boruta_auth.git"},
+      {:logger_backends, "~> 1.0"},
       {:logger_file_backend, "~> 0.0.13"},
       {:nebulex, "~> 3.0", override: true},
       {:nebulex_distributed, "~> 3.0"},
