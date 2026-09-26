@@ -1,0 +1,30 @@
+openapi: 3.0.0
+info:
+  title: Root endpoint
+  version: 1.0.0
+paths:
+  /:
+    get:
+      summary: Root endpoint
+      responses:
+        "200":
+          description: Successful response
+  /.well-known/acme-challenge/{token}:
+    get:
+      summary: Retrieve an ACME HTTP-01 challenge response
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: ACME challenge token
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ACME challenge key authorization
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: Challenge token not found

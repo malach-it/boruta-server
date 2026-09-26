@@ -161,6 +161,42 @@ defmodule BorutaGateway.UpstreamsTest do
       assert changeset.errors[:mtls_enabled] == {"requires https scheme", []}
     end
 
+    test "create_upstream/1 stores an HTTPS cluster proxy URL" do
+      proxy_url = "https://10.0.0.5:8443"
+
+      assert {:ok, %Upstream{proxy_url: ^proxy_url}} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :proxy_url, proxy_url))
+    end
+
+    test "create_upstream/1 rejects invalid proxy URLs" do
+      assert {:error, changeset} =
+               Upstreams.create_upstream(
+                 Map.put(@valid_attrs, :proxy_url, "http://10.0.0.5:8080")
+               )
+
+      assert changeset.errors[:proxy_url] ==
+               {"must be an HTTPS URL with an explicit port", []}
+
+      assert {:error, changeset} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :proxy_url, "https://10.0.0.5"))
+
+      assert changeset.errors[:proxy_url] ==
+               {"must be an HTTPS URL with an explicit port", []}
+    end
+
+    test "create_upstream/1 rejects target mTLS through a cluster proxy" do
+      assert {:error, changeset} =
+               Upstreams.create_upstream(
+                 Map.merge(@valid_attrs, %{
+                   proxy_url: "https://10.0.0.5:8443",
+                   mtls_enabled: true
+                 })
+               )
+
+      assert changeset.errors[:mtls_enabled] ==
+               {"cannot be used with a forward proxy", []}
+    end
+
     test "create_upstream/1 generates a secret with HS* algorithms" do
       assert {:ok, %Upstream{forwarded_token_secret: forwarded_token_secret}} =
                Upstreams.create_upstream(
@@ -235,6 +271,40 @@ defmodule BorutaGateway.UpstreamsTest do
       upstream = upstream_fixture()
       assert {:ok, %Upstream{}} = Upstreams.delete_upstream(upstream)
       assert_raise Ecto.NoResultsError, fn -> Upstreams.get_upstream!(upstream.id) end
+    end
+
+    test "sync_managed_upstreams/2 upserts desired managed upstreams and deletes stale ones" do
+      manual_upstream = upstream_fixture(%{uris: ["/manual"]})
+
+      {:ok, stale_upstream} =
+        Upstreams.create_upstream(%{
+          node_name: "global",
+          virtual_host: "stale.example.com",
+          scheme: "http",
+          host: "stale.default.svc.cluster.local",
+          port: 80,
+          uris: ["/stale"],
+          managed_by: "kubernetes_ingress",
+          managed_id: "stale"
+        })
+
+      assert {:ok, [managed_upstream]} =
+               Upstreams.sync_managed_upstreams("kubernetes_ingress", [
+                 %{
+                   node_name: "global",
+                   virtual_host: "api.example.com",
+                   scheme: "http",
+                   host: "api.default.svc.cluster.local",
+                   port: 80,
+                   uris: ["/api"],
+                   managed_id: "api"
+                 }
+               ])
+
+      assert managed_upstream.managed_by == "kubernetes_ingress"
+      assert managed_upstream.managed_id == "api"
+      assert Upstreams.get_upstream!(manual_upstream.id)
+      assert_raise Ecto.NoResultsError, fn -> Upstreams.get_upstream!(stale_upstream.id) end
     end
 
     test "change_upstream/1 returns a upstream changeset" do

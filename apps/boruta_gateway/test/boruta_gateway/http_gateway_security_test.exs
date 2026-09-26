@@ -147,7 +147,7 @@ defmodule BorutaGateway.HttpGatewaySecurityTest do
 
     {:ok, next_socket} = connect(gateway_port)
     :ok = :gen_tcp.send(next_socket, "GET / HTTP/1.1\r\nHost: gateway.test\r\n\r\n")
-    assert {:ok, "HTTP/1.1 404 Not Found" <> _rest} = :gen_tcp.recv(next_socket, 0, 1_000)
+    assert {:ok, "HTTP/1.1 403 Forbidden" <> _rest} = :gen_tcp.recv(next_socket, 0, 1_000)
 
     :gen_tcp.close(idle_socket)
     :gen_tcp.close(next_socket)

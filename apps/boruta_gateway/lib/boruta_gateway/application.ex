@@ -6,7 +6,7 @@ defmodule BorutaGateway.Application do
   use Application
   require Logger
 
-  alias BorutaGateway.{Certificate, ConfigurationLoader, ServiceRegistry, Upstreams}
+  alias BorutaGateway.{Certificate, ConfigurationLoader, Kubernetes, ServiceRegistry, Upstreams}
 
   @impl Application
   def start(_type, _args) do
@@ -26,6 +26,7 @@ defmodule BorutaGateway.Application do
       }
     ]
 
+    children = children ++ enabled_kubernetes_ingress_controller_child_specs()
     children = children ++ enabled_node_service_child_specs()
 
     BorutaGateway.Logger.start()
@@ -39,8 +40,6 @@ defmodule BorutaGateway.Application do
     acceptors_count = Application.get_env(:boruta_gateway, :num_acceptors, 8)
 
     [
-      {Application.get_env(:boruta_gateway, :proxy_server, true),
-       proxy_server_child_spec(acceptors_count)},
       {Application.get_env(:boruta_gateway, :https_proxy_server, true),
        https_proxy_server_child_spec(acceptors_count)},
       {Application.get_env(:boruta_gateway, :server, false),
@@ -54,6 +53,19 @@ defmodule BorutaGateway.Application do
     ]
     |> Enum.filter(fn {enabled?, _child_spec} -> enabled? end)
     |> Enum.map(fn {_enabled?, child_spec} -> child_spec end)
+  end
+
+  def enabled_kubernetes_ingress_controller_child_specs do
+    if Application.get_env(:boruta_gateway, :kubernetes_ingress_controller, false) do
+      [
+        %{
+          id: Kubernetes.IngressController,
+          start: {Kubernetes.IngressController, :start_link, []}
+        }
+      ]
+    else
+      []
+    end
   end
 
   defp gateway_server_child_spec(num_acceptors) do
@@ -141,21 +153,6 @@ defmodule BorutaGateway.Application do
            ]
          ]},
       id: :sidecar_https_server,
-      type: :supervisor
-    }
-  end
-
-  defp proxy_server_child_spec(num_acceptors) do
-    %{
-      start:
-        {BorutaGateway.HttpProxy.Server, :start,
-         [
-           [
-             port: Application.fetch_env!(:boruta_gateway, :proxy_port),
-             num_acceptors: num_acceptors
-           ]
-         ]},
-      id: :proxy_server,
       type: :supervisor
     }
   end

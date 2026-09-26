@@ -5,6 +5,18 @@ defmodule BorutaGateway.NoiseCancellingTest do
   alias BorutaGateway.PhiNoise
   alias BorutaGateway.Upstreams.Upstream
 
+  test "classifies an unmatched request as deterministic noise" do
+    assert %{
+             in_scope: false,
+             openapi_match: false,
+             noise: true,
+             reason: :unmatched_upstream
+           } = prediction = NoiseCancelling.unmatched_prediction()
+
+    assert prediction.score == 0.0
+    assert prediction.noise_score == 1.0
+  end
+
   @openapi Jason.encode!(%{
              "openapi" => "3.0.0",
              "paths" => %{

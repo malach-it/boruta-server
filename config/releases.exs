@@ -43,7 +43,6 @@ config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.SMTP
 config :boruta_gateway,
   port: System.get_env("BORUTA_GATEWAY_PORT", "8083") |> String.to_integer(),
   sidecar_port: System.get_env("BORUTA_GATEWAY_SIDECAR_PORT", "8084") |> String.to_integer(),
-  proxy_port: System.get_env("BORUTA_GATEWAY_PROXY_PORT", "5555") |> String.to_integer(),
   https_proxy_port:
     System.get_env("BORUTA_GATEWAY_HTTPS_PROXY_PORT", "4444") |> String.to_integer(),
   https_port: System.get_env("BORUTA_GATEWAY_HTTPS_PORT", "8043") |> String.to_integer(),
@@ -54,14 +53,20 @@ config :boruta_gateway,
     System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH", "config/example-configuration.yml"),
   server: System.get_env("BORUTA_GATEWAY_SERVER", "false") == "true",
   sidecar_server: System.get_env("BORUTA_GATEWAY_SIDECAR", "false") == "true",
-  proxy_server: System.get_env("BORUTA_GATEWAY_PROXY_SERVER", "false") == "true",
   https_proxy_server: System.get_env("BORUTA_GATEWAY_HTTPS_PROXY_SERVER", "false") == "true",
   https_server: System.get_env("BORUTA_GATEWAY_HTTPS_SERVER", "false") == "true",
   sidecar_https_server: System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER", "false") == "true",
   https_verify_client_certificate:
     System.get_env("BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true",
   sidecar_https_verify_client_certificate:
-    System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true"
+    System.get_env("BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE", "false") == "true",
+  kubernetes_ingress_controller:
+    System.get_env("BORUTA_GATEWAY_KUBERNETES_INGRESS_CONTROLLER", "false") == "true",
+  kubernetes_namespace: System.get_env("BORUTA_GATEWAY_KUBERNETES_NAMESPACE"),
+  kubernetes_ingress_class: System.get_env("BORUTA_GATEWAY_KUBERNETES_INGRESS_CLASS"),
+  kubernetes_node_name: System.get_env("BORUTA_GATEWAY_KUBERNETES_NODE_NAME", "global"),
+  kubernetes_poll_interval:
+    System.get_env("BORUTA_GATEWAY_KUBERNETES_POLL_INTERVAL", "10000") |> String.to_integer()
 
 config :boruta_web, BorutaWeb.Endpoint,
   server: System.get_env("BORUTA_OAUTH_SERVER", "true") == "true",
