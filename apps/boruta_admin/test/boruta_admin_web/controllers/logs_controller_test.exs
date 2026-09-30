@@ -17,7 +17,8 @@ defmodule BorutaAdminWeb.LogsControllerTest do
 
   @gateway_business_log_lines [
     "request_id=Fwh6kT_QfosEujUAAADC [info] boruta_gateway gateway proxy - success upstream_id=upstream upstream_host=example.com upstream_port=443 request_time=1200 gateway_time=200 upstream_time=1000",
-    "request_id=Fwh6kXSdqY_TBZEAAA3B [info] boruta_gateway gateway proxy - success upstream_id=upstream upstream_host=example.com upstream_port=443 request_time=2400 gateway_time=400 upstream_time=2000"
+    "request_id=Fwh6kXSdqY_TBZEAAA3B [info] boruta_gateway gateway proxy - success upstream_id=upstream upstream_host=example.com upstream_port=443 request_time=2400 gateway_time=400 upstream_time=2000",
+    "request_id=1234abcd [info] boruta_gateway proxy direct_forward_request - success proxy_time=600 host=example.com port=443"
   ]
 
   setup %{conn: conn} do
@@ -661,13 +662,15 @@ defmodule BorutaAdminWeb.LogsControllerTest do
                "gateway_times" => %{
                  "request time" => %{^timestamp => request_time},
                  "gateway time" => %{^timestamp => gateway_time},
-                 "upstream time" => %{^timestamp => upstream_time}
+                 "upstream time" => %{^timestamp => upstream_time},
+                 "proxy time" => %{^timestamp => proxy_time}
                }
              } = json_response(conn, 200)
 
       assert_in_delta request_time, 1.8, 0.001
       assert_in_delta gateway_time, 0.3, 0.001
       assert_in_delta upstream_time, 1.5, 0.001
+      assert_in_delta proxy_time, 0.6, 0.001
 
       File.rm!(LogRotate.path(:boruta_gateway, :business, Date.utc_today()))
     end
