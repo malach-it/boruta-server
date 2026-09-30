@@ -621,11 +621,10 @@ defmodule BorutaGateway.HttpProxy do
 
   defp resolve_direct_upstream(scheme, host, port) do
     case ServiceRegistry.all()[host] do
-      %{ip_address: ip_address, status: "online"} = record
-      when is_binary(ip_address) ->
+      %{status: "online"} = record ->
         {sidecar_port, verify_client_certificate} = sidecar_connection(record, scheme)
 
-        {:service_registry, ip_address, sidecar_port, verify_client_certificate}
+        {:service_registry, host, sidecar_port, verify_client_certificate}
 
       _record ->
         {:external, host, port, false}
