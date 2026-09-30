@@ -106,12 +106,14 @@ defmodule BorutaGateway.HttpProxyTest do
                       %{
                         method: "CONNECT",
                         path: "localhost:" <> _,
+                        request_id: request_id,
                         status: 200,
                         tls: "tls"
                       }},
                      1_000
 
       assert duration > 0
+      assert request_id =~ ~r/^[0-9a-f]{8}$/
 
       :ssl.close(socket)
     after
@@ -202,7 +204,7 @@ defmodule BorutaGateway.HttpProxyTest do
         :ssl.send(
           socket,
           "GET http://localhost:#{upstream_port}/forwarded?x=1 HTTP/1.1\r\n" <>
-            "Host: ignored.example\r\n\r\n"
+            "Host: ignored.example\r\nX-Request-ID: gateway-request-id\r\n\r\n"
         )
 
       assert {:ok, "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n"} =
@@ -214,6 +216,7 @@ defmodule BorutaGateway.HttpProxyTest do
                       %{
                         method: "GET",
                         path: "/forwarded?x=1",
+                        request_id: "gateway-request-id",
                         status: 204,
                         tls: "tls"
                       }},
