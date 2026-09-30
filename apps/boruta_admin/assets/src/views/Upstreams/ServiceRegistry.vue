@@ -346,6 +346,10 @@ export default {
     margin-bottom: 1rem;
   }
 
+  .table {
+    margin-bottom: 1rem;
+  }
+
   .label {
     margin: .125rem;
   }
