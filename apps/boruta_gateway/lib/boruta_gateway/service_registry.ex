@@ -455,16 +455,6 @@ defmodule BorutaGateway.ServiceRegistry do
       "certificate_paths" => certificate_paths(),
       "services" => [
         %{
-          "name" => "HTTP proxy",
-          "type" => "proxy",
-          "scheme" => "http",
-          "enabled" => gateway_env(:proxy_server, true),
-          "port" => gateway_env!(:proxy_port),
-          "acceptors" => gateway_env(:num_acceptors, 8),
-          "certificate" => nil,
-          "verify_client_certificate" => false
-        },
-        %{
           "name" => "HTTPS proxy",
           "type" => "proxy",
           "scheme" => "https",
@@ -472,7 +462,7 @@ defmodule BorutaGateway.ServiceRegistry do
           "port" => gateway_env!(:https_proxy_port),
           "acceptors" => gateway_env(:num_acceptors, 8),
           "certificate" => Certificate.pem(),
-          "verify_client_certificate" => false
+          "verify_client_certificate" => true
         },
         %{
           "name" => "HTTP gateway",

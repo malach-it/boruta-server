@@ -29,7 +29,7 @@ defmodule BorutaGateway.HttpProxy do
 
     @impl Supervisor
     def init(args) do
-      transport = Keyword.get(args, :transport, :tcp)
+      transport = Keyword.fetch!(args, :transport)
 
       {:ok, listen_socket} =
         listen(transport, args[:port])
@@ -61,19 +61,10 @@ defmodule BorutaGateway.HttpProxy do
           {:active, false},
           {:reuseaddr, true},
           {:verify, :verify_peer},
-          {:fail_if_no_peer_cert, false},
+          {:fail_if_no_peer_cert, true},
           {:cacerts, Certificate.cacerts()}
         ] ++ Certificate.ssl_options()
       )
-    end
-
-    defp listen(:tcp, port) do
-      :gen_tcp.listen(port, [
-        {:packet, :raw},
-        :binary,
-        {:active, false},
-        {:reuseaddr, true}
-      ])
     end
   end
 
@@ -98,7 +89,6 @@ defmodule BorutaGateway.HttpProxy do
       :socket,
       :upstream_socket,
       :upstream_transport,
-      :proxy_id,
       :start,
       :request_id,
       :method,
@@ -151,15 +141,17 @@ defmodule BorutaGateway.HttpProxy do
           state
           | socket: socket,
             upstream_socket: nil,
-            upstream_transport: nil,
-            proxy_id: proxy_id()
+            upstream_transport: nil
         }
-
-        log_proxy(:info, state, "accepted", downstream_transport: state.downstream_transport)
 
         {:noreply, arm_idle_timeout(state)}
 
-      {:error, error} ->
+      {:error, {:handshake, reason}} ->
+        Logger.debug("Rejected TLS handshake: #{inspect(reason)}")
+        send(self(), :accept)
+        {:noreply, state}
+
+      {:error, {:accept, error}} ->
         log_accept_error(state, error)
         {:stop, :shutdown, state}
     end
@@ -274,35 +266,35 @@ defmodule BorutaGateway.HttpProxy do
         {:noreply, arm_idle_timeout(%{state | request: request})}
 
       {:error, _reason} ->
-        log_proxy(:warning, state, "bad_request")
+        state = track_bad_request(state)
+        log_proxy(:warning, state, "forward_request", "failure", error: "bad_request")
         send_downstream(state, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
-        {:noreply, close_downstream(log_bad_request(state))}
+        {:noreply, close_downstream(log_completed_request(state, 400))}
     end
   end
 
   defp handle_downstream_payload(%State{} = state, payload) do
     case parse_request(payload) do
       {:connect, host, port, request} ->
-        connect_tunnel(%{track_request(state, request) | mode: :tunnel}, host, port)
+        connect_tunnel(%{accept_request(state, request) | mode: :tunnel}, host, port)
 
       {:request, scheme, host, port, payload, request} ->
-        forward_request(track_request(state, request), scheme, host, port, payload)
+        forward_request(accept_request(state, request), scheme, host, port, payload)
 
       :error ->
-        log_proxy(:warning, state, "bad_request")
+        state = track_bad_request(state)
+        log_proxy(:warning, state, "forward_request", "failure", error: "bad_request")
         send_downstream(state, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
-        {:noreply, close_downstream(log_bad_request(state))}
+        {:noreply, close_downstream(log_completed_request(state, 400))}
     end
   end
 
   defp connect_tunnel(%State{} = state, host, port) do
-    log_proxy(:info, state, "connect_tunnel", host: host, port: port)
-
     connect_tunnel_direct(state, host, port, resolve_upstream("https", host, port))
   end
 
   defp connect_tunnel_direct(%State{socket: socket} = state, host, port, resolved_upstream) do
-    {_origin, connect_host, connect_port} = resolved_upstream
+    {_origin, connect_host, connect_port, _send_client_certificate} = resolved_upstream
 
     case :gen_tcp.connect(
            String.to_charlist(connect_host),
@@ -311,14 +303,18 @@ defmodule BorutaGateway.HttpProxy do
            @connect_timeout
          ) do
       {:ok, upstream_socket} ->
-        log_proxy(:info, state, "direct_connect_tunnel",
+        log_proxy(:info, state, "direct_connect_tunnel", "success",
           host: host,
           port: port,
           connect_host: connect_host,
           connect_port: connect_port
         )
 
-        send_downstream(state, "HTTP/1.1 200 Connection Established\r\n\r\n")
+        send_downstream(
+          state,
+          "HTTP/1.1 200 Connection Established\r\nX-Request-ID: #{state.request_id}\r\n\r\n"
+        )
+
         log_completed_request(state, 200)
         activate_downstream(socket, state.downstream_transport)
         :inet.setopts(upstream_socket, active: :once)
@@ -327,7 +323,7 @@ defmodule BorutaGateway.HttpProxy do
          %{state | upstream_socket: upstream_socket, upstream_transport: :tcp, start: nil}}
 
       {:error, error} ->
-        log_proxy(:warning, state, "direct_connect_tunnel_failed",
+        log_proxy(:warning, state, "direct_connect_tunnel", "failure",
           host: host,
           port: port,
           connect_host: connect_host,
@@ -335,15 +331,17 @@ defmodule BorutaGateway.HttpProxy do
           reason: inspect(error)
         )
 
-        send_downstream(state, "HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n")
+        send_downstream(
+          state,
+          "HTTP/1.1 502 Bad Gateway\r\nX-Request-ID: #{state.request_id}\r\nContent-Length: 0\r\n\r\n"
+        )
+
         {:noreply, close_downstream(log_completed_request(state, 502))}
     end
   end
 
   defp forward_request(%State{} = state, scheme, host, port, payload)
        when scheme in ["http", "https"] do
-    log_proxy(:info, state, "forward_request", scheme: scheme, host: host, port: port)
-
     forward_request_direct(
       state,
       scheme,
@@ -355,7 +353,7 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   defp forward_request(%State{} = state, _scheme, _host, _port, _payload) do
-    log_proxy(:warning, state, "unsupported_request")
+    log_proxy(:warning, state, "unsupported_request", "failure")
     send_downstream(state, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
     {:noreply, close_downstream(log_completed_request(state, 400))}
   end
@@ -368,7 +366,7 @@ defmodule BorutaGateway.HttpProxy do
          payload,
          resolved_upstream
        ) do
-    {_origin, connect_host, connect_port} = resolved_upstream
+    {_origin, connect_host, connect_port, _send_client_certificate} = resolved_upstream
 
     case :gen_tcp.connect(
            String.to_charlist(connect_host),
@@ -377,7 +375,7 @@ defmodule BorutaGateway.HttpProxy do
            @connect_timeout
          ) do
       {:ok, upstream_socket} ->
-        log_proxy(:info, state, "direct_forward_request",
+        log_proxy(:info, state, "direct_forward_request", "success",
           scheme: "http",
           host: connect_host,
           port: connect_port
@@ -391,7 +389,7 @@ defmodule BorutaGateway.HttpProxy do
          %{state | upstream_socket: upstream_socket, upstream_transport: :tcp, mode: :request}}
 
       {:error, error} ->
-        log_proxy(:warning, state, "direct_forward_request_failed",
+        log_proxy(:warning, state, "direct_forward_request", "failure",
           scheme: "http",
           host: connect_host,
           port: connect_port,
@@ -411,16 +409,16 @@ defmodule BorutaGateway.HttpProxy do
          payload,
          resolved_upstream
        ) do
-    {origin, connect_host, connect_port} = resolved_upstream
+    {origin, connect_host, connect_port, send_client_certificate} = resolved_upstream
 
     case :ssl.connect(
            String.to_charlist(connect_host),
            connect_port,
-           ssl_options(origin, host),
+           ssl_options(origin, host, send_client_certificate),
            @connect_timeout
          ) do
       {:ok, upstream_socket} ->
-        log_proxy(:info, state, "direct_forward_request",
+        log_proxy(:info, state, "direct_forward_request", "success",
           scheme: "https",
           host: connect_host,
           port: connect_port,
@@ -435,7 +433,7 @@ defmodule BorutaGateway.HttpProxy do
          %{state | upstream_socket: upstream_socket, upstream_transport: :ssl, mode: :request}}
 
       {:error, error} ->
-        log_proxy(:warning, state, "direct_forward_request_failed",
+        log_proxy(:warning, state, "direct_forward_request", "failure",
           scheme: "https",
           host: connect_host,
           port: connect_port,
@@ -456,7 +454,7 @@ defmodule BorutaGateway.HttpProxy do
          _payload,
          _resolved_upstream
        ) do
-    log_proxy(:warning, state, "unsupported_direct_request")
+    log_proxy(:warning, state, "unsupported_direct_request", "failure")
     send_downstream(state, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
     {:noreply, close_downstream(log_completed_request(state, 400))}
   end
@@ -478,17 +476,21 @@ defmodule BorutaGateway.HttpProxy do
     end
   end
 
-  defp parse_request("CONNECT", target, _version, _header, _body) do
+  defp parse_request("CONNECT", target, _version, header, _body) do
     case parse_authority(target, @default_https_port) do
-      {:ok, host, port} -> {:connect, host, port, %{method: "CONNECT", path: target}}
-      :error -> :error
+      {:ok, host, port} ->
+        {:connect, host, port, %{method: "CONNECT", path: target, request_id: request_id(header)}}
+
+      :error ->
+        :error
     end
   end
 
   defp parse_request(method, target, version, header, body) do
     with {:ok, scheme, host, port, path} <- parse_request_target(target, header),
          payload <- build_origin_form_payload(method, path, version, header, body, host, port) do
-      {:request, scheme, host, port, payload, %{method: method, path: path}}
+      {:request, scheme, host, port, payload,
+       %{method: method, path: path, request_id: request_id(header)}}
     else
       _ -> :error
     end
@@ -628,14 +630,36 @@ defmodule BorutaGateway.HttpProxy do
 
   defp resolve_direct_upstream(scheme, host, port) do
     case ServiceRegistry.all()[host] do
-      %{ip_address: ip_address, status: "online"}
-      when is_binary(ip_address) ->
-        {:service_registry, ip_address, sidecar_port(scheme)}
+      %{status: "online"} = record ->
+        {sidecar_port, verify_client_certificate} = sidecar_connection(record, scheme)
+
+        {:service_registry, host, sidecar_port, verify_client_certificate}
 
       _record ->
-        {:external, host, port}
+        {:external, host, port, false}
     end
   end
+
+  defp sidecar_connection(%{configuration: %{"services" => services}}, scheme)
+       when is_list(services) do
+    Enum.find_value(services, {sidecar_port(scheme), false}, fn service ->
+      if service["type"] == "gateway" && service["scheme"] == scheme &&
+           service["enabled"] == true && is_integer(service["port"]) &&
+           sidecar_service?(service["name"]) do
+        {service["port"], service["verify_client_certificate"] == true}
+      end
+    end)
+  end
+
+  defp sidecar_connection(_record, scheme), do: {sidecar_port(scheme), false}
+
+  defp sidecar_service?(name) when is_binary(name) do
+    name
+    |> String.downcase()
+    |> String.contains?("sidecar")
+  end
+
+  defp sidecar_service?(_name), do: false
 
   defp sidecar_port("http") do
     Application.fetch_env!(:boruta_gateway, :sidecar_port)
@@ -650,10 +674,20 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   defp accept_downstream(listen_socket, :ssl, handshake_timeout) do
-    with {:ok, socket} <- :ssl.transport_accept(listen_socket),
-         {:ok, socket} <- :ssl.handshake(socket, handshake_timeout) do
-      activate_downstream(socket, :ssl)
-      {:ok, socket}
+    case :ssl.transport_accept(listen_socket) do
+      {:ok, socket} ->
+        case :ssl.handshake(socket, handshake_timeout) do
+          {:ok, socket} ->
+            activate_downstream(socket, :ssl)
+            {:ok, socket}
+
+          {:error, reason} ->
+            :ssl.close(socket)
+            {:error, {:handshake, reason}}
+        end
+
+      {:error, reason} ->
+        {:error, {:accept, reason}}
     end
   end
 
@@ -661,6 +695,8 @@ defmodule BorutaGateway.HttpProxy do
     with {:ok, socket} <- :gen_tcp.accept(listen_socket) do
       activate_downstream(socket, :tcp)
       {:ok, socket}
+    else
+      {:error, reason} -> {:error, {:accept, reason}}
     end
   end
 
@@ -690,17 +726,20 @@ defmodule BorutaGateway.HttpProxy do
     :gen_tcp.send(socket, payload)
   end
 
-  defp ssl_options(:service_registry, host) do
-    socket_options() ++
-      [
-        {:verify, :verify_peer},
-        {:server_name_indication, String.to_charlist(host)},
-        {:customize_hostname_check, [fqdn: String.to_charlist(host)]},
-        {:cacerts, Certificate.cacerts()}
-      ]
+  defp ssl_options(:service_registry, host, send_client_certificate) do
+    options =
+      socket_options() ++
+        [
+          {:verify, :verify_peer},
+          {:server_name_indication, String.to_charlist(host)},
+          {:customize_hostname_check, [fqdn: String.to_charlist(host)]},
+          {:cacerts, Certificate.cacerts()}
+        ]
+
+    if send_client_certificate, do: options ++ Certificate.ssl_options(), else: options
   end
 
-  defp ssl_options(:external, host) do
+  defp ssl_options(:external, host, _send_client_certificate) do
     socket_options() ++
       [
         {:verify, :verify_peer},
@@ -750,27 +789,38 @@ defmodule BorutaGateway.HttpProxy do
     }
   end
 
-  defp track_request(%State{} = state, %{method: method, path: path}) do
+  defp track_request(%State{} = state, %{
+         method: method,
+         path: path,
+         request_id: request_id
+       }) do
     %{
       state
       | start: :os.system_time(:microsecond),
-        request_id: proxy_request_id(),
+        request_id: request_id,
         method: method,
         path: path,
         remote_ip: remote_ip(state.socket, state.downstream_transport)
     }
   end
 
-  defp log_bad_request(%State{} = state) do
+  defp accept_request(%State{} = state, %{request_id: request_id} = request) do
+    state = %{state | request_id: request_id}
+
+    log_proxy(:info, state, "accept", "success", downstream_transport: state.downstream_transport)
+
+    track_request(state, request)
+  end
+
+  defp track_bad_request(%State{} = state) do
     %{
       state
       | start: :os.system_time(:microsecond),
-        request_id: proxy_request_id(),
+        request_id: request_id(),
         method: "UNKNOWN",
         path: "/",
         remote_ip: remote_ip(state.socket, state.downstream_transport)
     }
-    |> log_completed_request(400)
   end
 
   defp log_completed_request(%State{start: nil} = state), do: state
@@ -836,38 +886,40 @@ defmodule BorutaGateway.HttpProxy do
   defp downstream_tls(:ssl), do: "tls"
   defp downstream_tls(_transport), do: "http"
 
-  defp proxy_request_id do
-    SecureRandom.hex(4)
-  end
+  defp request_id(header), do: header_value(header, "x-request-id") || request_id()
+  defp request_id, do: SecureRandom.hex(4)
 
-  defp proxy_id do
-    System.unique_integer([:positive, :monotonic])
-    |> Integer.to_string(16)
-  end
+  defp log_proxy(level, %State{} = state, event, status, attrs \\ []) do
+    request_id = state.request_id || request_id()
 
-  defp log_proxy(level, %State{} = state, event, attrs \\ []) do
     Logger.log(
       level,
       fn ->
         [
           "boruta_gateway proxy ",
-          event
+          event,
+          " - ",
+          status,
+          log_attribute(:proxy_time, proxy_time(state))
           | Enum.map(attrs, fn {key, value} -> log_attribute(key, value) end)
         ]
       end,
       application: :boruta_gateway,
-      proxy_id: state.proxy_id,
-      type: :proxy
+      request_id: request_id,
+      type: :business
     )
   end
 
   defp log_accept_error(state, error) when error in [:closed, :einval] do
-    log_proxy(:debug, state, "accept_closed", reason: inspect(error))
+    log_proxy(:debug, state, "accept_closed", "failure", reason: inspect(error))
   end
 
   defp log_accept_error(state, error) do
-    log_proxy(:warning, state, "accept_failed", reason: inspect(error))
+    log_proxy(:warning, state, "accept_failed", "failure", reason: inspect(error))
   end
+
+  defp proxy_time(%State{start: nil}), do: nil
+  defp proxy_time(%State{start: start}), do: :os.system_time(:microsecond) - start
 
   defp log_attribute(_key, nil), do: ""
   defp log_attribute(key, value), do: [" ", Atom.to_string(key), "=", to_string(value)]

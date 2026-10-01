@@ -300,9 +300,7 @@ html[data-admin-theme] #app.dark footer {
 }
 
 html[data-admin-theme] #app .ui.segment,
-html[data-admin-theme] #app.dark .ui.segment,
-html[data-admin-theme] #app .ui.segments,
-html[data-admin-theme] #app.dark .ui.segments {
+html[data-admin-theme] #app.dark .ui.segment {
   color: var(--theme-text);
   background: var(--theme-surface);
   border-color: var(--theme-border) !important;
