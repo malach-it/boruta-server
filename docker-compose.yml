@@ -56,6 +56,8 @@ services:
       LIBCLUSTER_HOSTS: *boruta-cluster-hosts
       BORUTA_GATEWAY_ALIASES: "[\"kagome-1\",\"kagome.1.docker\"]"
       BORUTA_GATEWAY_VIRTUAL_HOST: kagome-1
+    volumes:
+      - "boruta-logs:/log"
     networks:
       default:
         aliases:
@@ -76,6 +78,8 @@ services:
       LIBCLUSTER_HOSTS: *boruta-cluster-hosts
       BORUTA_GATEWAY_ALIASES: "[\"kagome-2\",\"kagome.2.docker\"]"
       BORUTA_GATEWAY_VIRTUAL_HOST: kagome-2
+    volumes:
+      - "boruta-logs:/log"
     networks:
       default:
         aliases:
