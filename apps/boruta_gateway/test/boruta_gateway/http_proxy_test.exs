@@ -51,7 +51,8 @@ defmodule BorutaGateway.HttpProxyTest do
       )
 
     assert {:ok, response} = :ssl.recv(socket, 0, 5_000)
-    assert response == "HTTP/1.1 200 Connection Established\r\n\r\n"
+    assert response =~ "HTTP/1.1 200 Connection Established\r\n"
+    assert response =~ ~r/\r\nX-Request-ID: [0-9a-f]{8}\r\n/
 
     :ok = :ssl.send(socket, "payload")
 
@@ -96,24 +97,24 @@ defmodule BorutaGateway.HttpProxyTest do
       :ok =
         :ssl.send(
           socket,
-          "CONNECT localhost:#{upstream_port} HTTP/1.1\r\nHost: localhost:#{upstream_port}\r\n\r\n"
+          "CONNECT localhost:#{upstream_port} HTTP/1.1\r\n" <>
+            "Host: localhost:#{upstream_port}\r\nX-Request-ID: connect-request-id\r\n\r\n"
         )
 
-      assert {:ok, "HTTP/1.1 200 Connection Established\r\n\r\n"} =
-               :ssl.recv(socket, 0, 5_000)
+      assert {:ok, response} = :ssl.recv(socket, 0, 5_000)
+      assert response =~ "X-Request-ID: connect-request-id\r\n"
 
       assert_receive {:proxy_request_log, %{duration: duration},
                       %{
                         method: "CONNECT",
                         path: "localhost:" <> _,
-                        request_id: request_id,
+                        request_id: "connect-request-id",
                         status: 200,
                         tls: "tls"
                       }},
                      1_000
 
       assert duration > 0
-      assert request_id =~ ~r/^[0-9a-f]{8}$/
 
       :ssl.close(socket)
     after
@@ -363,7 +364,8 @@ defmodule BorutaGateway.HttpProxyTest do
       )
 
     assert {:ok, response} = :ssl.recv(socket, 0, 5_000)
-    assert response == "HTTP/1.1 200 Connection Established\r\n\r\n"
+    assert response =~ "HTTP/1.1 200 Connection Established\r\n"
+    assert response =~ ~r/\r\nX-Request-ID: [0-9a-f]{8}\r\n/
 
     :ok = :ssl.send(socket, "payload")
 
