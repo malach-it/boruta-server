@@ -13,7 +13,7 @@
 - [auth][ssi] universal keys can be created for oauth client id token and verifiable credentials signing
 - [admin] client forms display the JWT authentication public key field for EC signing algorithms
 - [cli] configuration file uploads accept release-local file paths
-- [gateway] invalid TLS handshakes no longer stop HTTPS gateway acceptors
+- [gateway] invalid TLS handshakes close connections without stopping gateway or proxy acceptors
 - [ssi] credential status token resolution verifies tokens against client DIDs
 - [wallet] imported credentials are encrypted in local storage
 
