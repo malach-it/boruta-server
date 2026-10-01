@@ -352,7 +352,7 @@ defmodule BorutaGateway.HttpsGateway do
         payload =
           payload
           |> transform_header(upstream, token)
-          |> UpstreamConnection.prepare_request(upstream, route)
+          |> UpstreamConnection.prepare_request(upstream, route, request.request_id)
 
         :ok = send_upstream(client_socket, payload <> request.body, transport)
         upstream_start = :os.system_time(:microsecond)

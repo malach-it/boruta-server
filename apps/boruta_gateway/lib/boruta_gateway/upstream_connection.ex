@@ -29,17 +29,21 @@ defmodule BorutaGateway.UpstreamConnection do
     end
   end
 
-  @spec prepare_request(binary(), Upstream.t(), route()) :: binary()
-  def prepare_request(payload, %Upstream{}, :direct), do: payload
+  @spec prepare_request(binary(), Upstream.t(), route(), String.t()) :: binary()
+  def prepare_request(payload, %Upstream{}, :direct, _request_id), do: payload
 
-  def prepare_request(payload, %Upstream{} = upstream, :proxy) do
-    Regex.replace(
-      ~r/^([A-Z]+) ([^\s]+) (HTTP\/\d\.\d)/,
-      payload,
-      fn _request_line, method, target, version ->
-        "#{method} #{absolute_target(upstream, target)} #{version}"
-      end
+  def prepare_request(payload, %Upstream{} = upstream, :proxy, request_id) do
+    payload
+    |> then(
+      &Regex.replace(
+        ~r/^([A-Z]+) ([^\s]+) (HTTP\/\d\.\d)/,
+        &1,
+        fn _request_line, method, target, version ->
+          "#{method} #{absolute_target(upstream, target)} #{version}"
+        end
+      )
     )
+    |> put_request_id_header(request_id)
   end
 
   defp connect_direct(%Upstream{scheme: "http"} = upstream) do
@@ -175,6 +179,19 @@ defmodule BorutaGateway.UpstreamConnection do
       %URI{} = uri ->
         path = uri.path || "/"
         if uri.query, do: "#{path}?#{uri.query}", else: path
+    end
+  end
+
+  defp put_request_id_header(payload, request_id) do
+    if Regex.match?(~r/\r\nx-request-id\s*:/i, payload) do
+      payload
+    else
+      String.replace(
+        payload,
+        "\r\n\r\n",
+        "\r\nX-Request-ID: #{request_id}\r\n\r\n",
+        global: false
+      )
     end
   end
 
