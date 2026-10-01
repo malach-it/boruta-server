@@ -23,7 +23,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "scheme" => %{"type" => "string", "pattern" => "^(http|https)$"},
         "host" => %{"type" => "string"},
         "port" => %{"type" => "number"},
-        "proxy_url" => %{"type" => "string", "pattern" => "^https://"},
+        "proxy_url" => %{"type" => "string"},
         "uris" => %{
           "type" => "array",
           "items" => %{
@@ -81,7 +81,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "scheme" => %{"type" => "string", "pattern" => "^(http|https)$"},
         "host" => %{"type" => "string"},
         "port" => %{"type" => "number"},
-        "proxy_url" => %{"type" => "string", "pattern" => "^https://"},
+        "proxy_url" => %{"type" => "string", "pattern" => ""},
         "uris" => %{
           "type" => "array",
           "items" => %{
