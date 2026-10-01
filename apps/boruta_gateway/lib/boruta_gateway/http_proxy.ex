@@ -144,10 +144,6 @@ defmodule BorutaGateway.HttpProxy do
             upstream_transport: nil
         }
 
-        log_proxy(:info, state, "accept", "success",
-          downstream_transport: state.downstream_transport
-        )
-
         {:noreply, arm_idle_timeout(state)}
 
       {:error, error} ->
@@ -275,10 +271,10 @@ defmodule BorutaGateway.HttpProxy do
   defp handle_downstream_payload(%State{} = state, payload) do
     case parse_request(payload) do
       {:connect, host, port, request} ->
-        connect_tunnel(%{track_request(state, request) | mode: :tunnel}, host, port)
+        connect_tunnel(%{accept_request(state, request) | mode: :tunnel}, host, port)
 
       {:request, scheme, host, port, payload, request} ->
-        forward_request(track_request(state, request), scheme, host, port, payload)
+        forward_request(accept_request(state, request), scheme, host, port, payload)
 
       :error ->
         state = track_bad_request(state)
@@ -309,7 +305,11 @@ defmodule BorutaGateway.HttpProxy do
           connect_port: connect_port
         )
 
-        send_downstream(state, "HTTP/1.1 200 Connection Established\r\n\r\n")
+        send_downstream(
+          state,
+          "HTTP/1.1 200 Connection Established\r\nX-Request-ID: #{state.request_id}\r\n\r\n"
+        )
+
         log_completed_request(state, 200)
         activate_downstream(socket, state.downstream_transport)
         :inet.setopts(upstream_socket, active: :once)
@@ -326,7 +326,11 @@ defmodule BorutaGateway.HttpProxy do
           reason: inspect(error)
         )
 
-        send_downstream(state, "HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n")
+        send_downstream(
+          state,
+          "HTTP/1.1 502 Bad Gateway\r\nX-Request-ID: #{state.request_id}\r\nContent-Length: 0\r\n\r\n"
+        )
+
         {:noreply, close_downstream(log_completed_request(state, 502))}
     end
   end
@@ -781,6 +785,14 @@ defmodule BorutaGateway.HttpProxy do
         path: path,
         remote_ip: remote_ip(state.socket, state.downstream_transport)
     }
+  end
+
+  defp accept_request(%State{} = state, %{request_id: request_id} = request) do
+    state = %{state | request_id: request_id}
+
+    log_proxy(:info, state, "accept", "success", downstream_transport: state.downstream_transport)
+
+    track_request(state, request)
   end
 
   defp track_bad_request(%State{} = state) do

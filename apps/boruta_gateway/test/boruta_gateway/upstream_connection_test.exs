@@ -75,6 +75,7 @@ defmodule BorutaGateway.UpstreamConnectionTest do
 
     assert_receive {:upstream_payload, upstream_payload}, 1_000
     assert upstream_payload =~ "GET /proxied HTTP/1.1\r\n"
+    assert upstream_payload =~ ~r/\r\nX-Request-ID: [0-9a-f]{8}\r\n/
 
     :gen_tcp.close(socket)
     Supervisor.stop(gateway)
@@ -87,9 +88,21 @@ defmodule BorutaGateway.UpstreamConnectionTest do
     upstream = %Upstream{scheme: "https", host: "upstream.example", port: 9443}
     payload = "GET /widgets?limit=10 HTTP/1.1\r\nHost: upstream.example\r\n\r\n"
 
-    assert UpstreamConnection.prepare_request(payload, upstream, :proxy) ==
+    assert UpstreamConnection.prepare_request(payload, upstream, :proxy, "request-id") ==
              "GET https://upstream.example:9443/widgets?limit=10 HTTP/1.1\r\n" <>
-               "Host: upstream.example\r\n\r\n"
+               "Host: upstream.example\r\nX-Request-ID: request-id\r\n\r\n"
+  end
+
+  test "preserves an existing request ID when routing through a proxy" do
+    upstream = %Upstream{scheme: "http", host: "upstream.example", port: 8080}
+
+    payload =
+      "GET /widgets HTTP/1.1\r\nHost: upstream.example\r\nx-request-id: incoming-id\r\n\r\n"
+
+    prepared = UpstreamConnection.prepare_request(payload, upstream, :proxy, "incoming-id")
+
+    assert prepared =~ "x-request-id: incoming-id\r\n"
+    assert length(Regex.scan(~r/x-request-id:/i, prepared)) == 1
   end
 
   test "connects to an external proxy URL when it is not advertised by the cluster" do
@@ -128,7 +141,7 @@ defmodule BorutaGateway.UpstreamConnectionTest do
     upstream = %Upstream{scheme: "http", host: "upstream.example", port: 8080}
     payload = "POST /widgets HTTP/1.1\r\nHost: upstream.example\r\n\r\n"
 
-    assert UpstreamConnection.prepare_request(payload, upstream, :direct) == payload
+    assert UpstreamConnection.prepare_request(payload, upstream, :direct, "request-id") == payload
   end
 
   defp listen do
