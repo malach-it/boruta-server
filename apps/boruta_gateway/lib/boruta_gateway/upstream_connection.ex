@@ -189,7 +189,7 @@ defmodule BorutaGateway.UpstreamConnection do
       String.replace(
         payload,
         "\r\n\r\n",
-        "\r\nX-Request-ID: #{request_id}\r\n\r\n",
+        "\r\nX-Request-Id: #{request_id}\r\n\r\n",
         global: false
       )
     end
