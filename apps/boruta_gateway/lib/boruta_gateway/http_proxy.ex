@@ -146,7 +146,12 @@ defmodule BorutaGateway.HttpProxy do
 
         {:noreply, arm_idle_timeout(state)}
 
-      {:error, error} ->
+      {:error, {:handshake, reason}} ->
+        Logger.debug("Rejected TLS handshake: #{inspect(reason)}")
+        send(self(), :accept)
+        {:noreply, state}
+
+      {:error, {:accept, error}} ->
         log_accept_error(state, error)
         {:stop, :shutdown, state}
     end
@@ -669,10 +674,20 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   defp accept_downstream(listen_socket, :ssl, handshake_timeout) do
-    with {:ok, socket} <- :ssl.transport_accept(listen_socket),
-         {:ok, socket} <- :ssl.handshake(socket, handshake_timeout) do
-      activate_downstream(socket, :ssl)
-      {:ok, socket}
+    case :ssl.transport_accept(listen_socket) do
+      {:ok, socket} ->
+        case :ssl.handshake(socket, handshake_timeout) do
+          {:ok, socket} ->
+            activate_downstream(socket, :ssl)
+            {:ok, socket}
+
+          {:error, reason} ->
+            :ssl.close(socket)
+            {:error, {:handshake, reason}}
+        end
+
+      {:error, reason} ->
+        {:error, {:accept, reason}}
     end
   end
 
@@ -680,6 +695,8 @@ defmodule BorutaGateway.HttpProxy do
     with {:ok, socket} <- :gen_tcp.accept(listen_socket) do
       activate_downstream(socket, :tcp)
       {:ok, socket}
+    else
+      {:error, reason} -> {:error, {:accept, reason}}
     end
   end
 
