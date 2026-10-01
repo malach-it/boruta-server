@@ -75,7 +75,7 @@ defmodule BorutaGateway.UpstreamConnectionTest do
 
     assert_receive {:upstream_payload, upstream_payload}, 1_000
     assert upstream_payload =~ "GET /proxied HTTP/1.1\r\n"
-    assert upstream_payload =~ ~r/\r\nX-Request-ID: [0-9a-f]{8}\r\n/
+    assert upstream_payload =~ ~r/\r\nX-Request-Id: [0-9a-f]{8}\r\n/
 
     :gen_tcp.close(socket)
     Supervisor.stop(gateway)
@@ -90,7 +90,7 @@ defmodule BorutaGateway.UpstreamConnectionTest do
 
     assert UpstreamConnection.prepare_request(payload, upstream, :proxy, "request-id") ==
              "GET https://upstream.example:9443/widgets?limit=10 HTTP/1.1\r\n" <>
-               "Host: upstream.example\r\nX-Request-ID: request-id\r\n\r\n"
+               "Host: upstream.example\r\nX-Request-Id: request-id\r\n\r\n"
   end
 
   test "preserves an existing request ID when routing through a proxy" do

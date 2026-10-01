@@ -66,7 +66,8 @@ defmodule BorutaGateway.HttpsGateway do
                match_function: args[:match_function],
                idle_timeout: args[:idle_timeout],
                handshake_timeout: args[:handshake_timeout],
-               max_request_header_bytes: args[:max_request_header_bytes]
+               max_request_header_bytes: args[:max_request_header_bytes],
+               send_upstream_function: args[:send_upstream_function]
              ]},
             id: :"https_proxy_server_acceptor_#{i}"
           )
@@ -114,6 +115,7 @@ defmodule BorutaGateway.HttpsGateway do
       :request_id,
       :method,
       :path,
+      :host,
       :remote_ip,
       :upstream,
       :request,
@@ -124,7 +126,8 @@ defmodule BorutaGateway.HttpsGateway do
       :idle_timeout,
       :handshake_timeout,
       :timeout_token,
-      :max_request_header_bytes
+      :max_request_header_bytes,
+      :send_upstream_function
     ]
   end
 
@@ -145,7 +148,8 @@ defmodule BorutaGateway.HttpsGateway do
        idle_timeout: args[:idle_timeout] || @default_idle_timeout,
        handshake_timeout: args[:handshake_timeout] || @default_idle_timeout,
        max_request_header_bytes:
-         args[:max_request_header_bytes] || @default_max_request_header_bytes
+         args[:max_request_header_bytes] || @default_max_request_header_bytes,
+       send_upstream_function: args[:send_upstream_function] || (&send_upstream/3)
      }}
   end
 
@@ -252,7 +256,13 @@ defmodule BorutaGateway.HttpsGateway do
     header = request.header
     start = :os.system_time(:microsecond)
     request_id = request_id(header)
-    state = %{state | remote_ip: request_remote_ip(header, socket), request: nil}
+
+    state = %{
+      state
+      | host: request_host(header),
+        remote_ip: request_remote_ip(header, socket),
+        request: nil
+    }
 
     case parse_request_line(header) do
       {:ok, method, path} ->
@@ -354,43 +364,56 @@ defmodule BorutaGateway.HttpsGateway do
           |> transform_header(upstream, token)
           |> UpstreamConnection.prepare_request(upstream, route, request.request_id)
 
-        :ok = send_upstream(client_socket, payload <> request.body, transport)
-        upstream_start = :os.system_time(:microsecond)
+        case state.send_upstream_function.(client_socket, payload <> request.body, transport) do
+          :ok ->
+            upstream_start = :os.system_time(:microsecond)
 
-        activate_request_body(socket, request.body_remaining)
-        activate_upstream_socket(client_socket, transport)
+            activate_request_body(socket, request.body_remaining)
+            activate_upstream_socket(client_socket, transport)
 
-        {:noreply,
-         %{
-           state
-           | client_socket: client_socket,
-             client_transport: transport,
-             start: request.start,
-             upstream_start: upstream_start,
-             request_id: request.request_id,
-             method: request.method,
-             path: request.path,
-             remote_ip: state.remote_ip,
-             upstream: upstream,
-             request_body_remaining: request.body_remaining
-         }}
+            {:noreply,
+             %{
+               state
+               | client_socket: client_socket,
+                 client_transport: transport,
+                 start: request.start,
+                 upstream_start: upstream_start,
+                 request_id: request.request_id,
+                 method: request.method,
+                 path: request.path,
+                 remote_ip: state.remote_ip,
+                 upstream: upstream,
+                 request_body_remaining: request.body_remaining
+             }}
+
+          {:error, _error} ->
+            close_upstream(client_socket, transport)
+            upstream_unavailable(socket, state, upstream, request)
+        end
 
       {:error, _error} ->
-        send_downstream(socket, "HTTP/1.1 503 Service Unavailable\r\n\r\n")
-
-        log_exchange(
-          state,
-          request.start,
-          request.request_id,
-          request.method,
-          request.path,
-          upstream,
-          503,
-          :failure
-        )
-
-        {:noreply, close_downstream(socket, state)}
+        upstream_unavailable(socket, state, upstream, request)
     end
+  end
+
+  defp upstream_unavailable(socket, state, upstream, request) do
+    send_downstream(
+      socket,
+      "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\n\r\n"
+    )
+
+    log_exchange(
+      state,
+      request.start,
+      request.request_id,
+      request.method,
+      request.path,
+      upstream,
+      503,
+      :failure
+    )
+
+    {:noreply, close_downstream(socket, state)}
   end
 
   defp forward_response_payload(
@@ -489,6 +512,13 @@ defmodule BorutaGateway.HttpsGateway do
   defp send_upstream(socket, payload, :ssl), do: :ssl.send(socket, payload)
   defp send_upstream(socket, payload, :tcp), do: :gen_tcp.send(socket, payload)
 
+  defp close_upstream(socket, _transport)
+       when is_tuple(socket) and tuple_size(socket) > 0 and elem(socket, 0) == :sslsocket,
+       do: :ssl.close(socket)
+
+  defp close_upstream(socket, :ssl), do: :ssl.close(socket)
+  defp close_upstream(socket, :tcp), do: :gen_tcp.close(socket)
+
   defp arm_idle_timeout(%State{socket: nil} = state), do: state
 
   defp arm_idle_timeout(%State{} = state) do
@@ -525,6 +555,7 @@ defmodule BorutaGateway.HttpsGateway do
         request_id: nil,
         method: nil,
         path: nil,
+        host: nil,
         remote_ip: nil,
         upstream: nil,
         request: nil,
@@ -538,7 +569,7 @@ defmodule BorutaGateway.HttpsGateway do
   defp close_exchange(state, upstream_socket, :tcp) do
     log_completed_exchange(state)
     close_downstream_socket(state.socket)
-    :gen_tcp.close(upstream_socket)
+    close_upstream(upstream_socket, :tcp)
     send(self(), :accept)
 
     %{
@@ -551,6 +582,7 @@ defmodule BorutaGateway.HttpsGateway do
         request_id: nil,
         method: nil,
         path: nil,
+        host: nil,
         remote_ip: nil,
         upstream: nil,
         request: nil,
@@ -564,7 +596,7 @@ defmodule BorutaGateway.HttpsGateway do
   defp close_exchange(state, upstream_socket, :ssl) do
     log_completed_exchange(state)
     close_downstream_socket(state.socket)
-    :ssl.close(upstream_socket)
+    close_upstream(upstream_socket, :ssl)
     send(self(), :accept)
 
     %{
@@ -577,6 +609,7 @@ defmodule BorutaGateway.HttpsGateway do
         request_id: nil,
         method: nil,
         path: nil,
+        host: nil,
         remote_ip: nil,
         upstream: nil,
         request: nil,
@@ -724,6 +757,7 @@ defmodule BorutaGateway.HttpsGateway do
       },
       %{
         request_id: request_id,
+        host: state.host,
         path: log_path(path),
         upstream: upstream,
         upstream_tls: upstream_tls(upstream)
