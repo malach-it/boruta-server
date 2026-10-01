@@ -6,6 +6,43 @@ defmodule BorutaGateway.HttpProxyTest do
   alias BorutaGateway.ServiceRegistry
   alias BorutaGateway.ServiceRegistry.Record
 
+  test "closes malformed TLS connections and continues accepting" do
+    {:ok, proxy_port} = free_port()
+
+    {:ok, proxy} =
+      HttpProxy.HttpsServer.start(
+        port: proxy_port,
+        num_acceptors: 1,
+        handshake_timeout: 1_000
+      )
+
+    Process.unlink(proxy)
+    proxy_ref = Process.monitor(proxy)
+
+    on_exit(fn ->
+      if Process.alive?(proxy), do: Process.exit(proxy, :kill)
+    end)
+
+    {:ok, malformed_socket} =
+      :gen_tcp.connect(~c"localhost", proxy_port, [:binary, active: false], 1_000)
+
+    :ok = :gen_tcp.send(malformed_socket, "not a TLS handshake")
+    assert_tcp_closed(malformed_socket)
+
+    assert {:ok, socket} =
+             :ssl.connect(
+               ~c"localhost",
+               proxy_port,
+               [:binary, active: false, verify: :verify_none],
+               2_000
+             )
+
+    assert {:error, _reason} = :ssl.recv(socket, 0, 1_000)
+    :ssl.close(socket)
+    assert Process.alive?(proxy)
+    refute_received {:DOWN, ^proxy_ref, :process, ^proxy, _reason}
+  end
+
   test "requires a trusted client certificate" do
     start_service_registry(%{})
 
@@ -483,6 +520,13 @@ defmodule BorutaGateway.HttpProxyTest do
     :gen_tcp.close(socket)
 
     {:ok, port}
+  end
+
+  defp assert_tcp_closed(socket) do
+    case :gen_tcp.recv(socket, 0, 1_000) do
+      {:ok, _tls_alert} -> assert {:error, :closed} = :gen_tcp.recv(socket, 0, 1_000)
+      {:error, :closed} -> :ok
+    end
   end
 
   defp proxy_connect(port) do
