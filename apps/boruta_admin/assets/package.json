@@ -12,7 +12,7 @@
     "axios": "^1.20.0",
     "boruta-client": "github:malach-it/boruta-client",
     "chartjs-adapter-moment": "^1.0.0",
-    "codejar": "^3.5.0",
+    "codejar": "^3.7.0",
     "core-js": "^2.6.5",
     "google-palette": "^1.1.0",
     "jwt-decode": "^3.1.2",
