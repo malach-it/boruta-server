@@ -4,9 +4,12 @@ defmodule BorutaGateway.Release do
 
   def migrate do
     for repo <- repos() do
-      repo.__adapter__().storage_up(repo.config())
-
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      if repo == BorutaGateway.Repo and repo.backend() == "mnesia" do
+        BorutaGateway.MnesiaSetup.setup()
+      else
+        repo.__adapter__().storage_up(repo.config())
+        {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      end
     end
   end
 
@@ -19,6 +22,10 @@ defmodule BorutaGateway.Release do
   end
 
   def rollback(repo, version) do
+    if repo == BorutaGateway.Repo and repo.backend() == "mnesia" do
+      raise "Mnesia tables use schema-based setup and cannot be rolled back by SQL migration version"
+    end
+
     repo.__adapter__().storage_up(repo.config())
 
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))

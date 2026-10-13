@@ -138,6 +138,10 @@ defmodule BorutaGateway.Upstreams.Store do
     {:noreply, %{state | upstreams: upstreams}}
   end
 
+  def handle_info({:mnesia_changed, _ref, "upstreams_changed"}, state) do
+    {:noreply, %{state | upstreams: Repo.all(Upstream) |> structure()}}
+  end
+
   defp update_upstreams(upstreams, %{"operation" => "INSERT", "record" => record}) do
     upstreams
     |> List.insert_at(0, record_to_upstream(record))

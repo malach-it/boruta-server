@@ -23,6 +23,11 @@ config :boruta_identity, BorutaIdentity.Repo,
   after_connect: {BorutaIdentity.Repo, :set_limit, []}
 
 config :boruta_gateway, BorutaGateway.Repo,
+  path:
+    System.get_env(
+      "BORUTA_GATEWAY_MNESIA_DIR",
+      Path.expand("../tmp/boruta_gateway_mnesia", __DIR__)
+    ),
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway",

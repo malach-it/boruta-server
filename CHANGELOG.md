@@ -6,6 +6,7 @@
 
 ### Added
 
+- [gateway] support an opt-in `ecto3_mnesia` repository backend with Mnesia table setup and cache updates; PostgreSQL remains the default, and existing gateway data requires a separate migration
 - [infra] published container images include provenance attestations
 
 ### Changed
