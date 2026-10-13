@@ -93,7 +93,7 @@ defmodule BorutaAdminWeb.ConfigurationController do
   def upload_configuration_file(conn, %{"file" => %Plug.Upload{path: path}}) do
     file_content = File.read!(path)
 
-    with %{"configuration" => %{} = configuration, "version" => "1.0"} <-
+    with {:ok, %{"configuration" => %{} = configuration, "version" => "1.0"}} <-
            YamlElixir.read_from_file(path),
          configuration <- filter_configuration(configuration, conn.assigns[:authorization]),
          result <- ConfigurationLoader.load_configuration(configuration) do
