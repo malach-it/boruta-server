@@ -8,6 +8,10 @@
 
 - [infra] published container images include provenance attestations
 
+### Changed
+
+- [admin] request, business event, and token dashboard date filters use HTML forms
+
 ### Fixed
 
 - [auth][ssi] universal keys can be created for oauth client id token and verifiable credentials signing
