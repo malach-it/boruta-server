@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- [admin] invalid YAML configuration file uploads return a bad request response
 - [auth][ssi] universal keys can be created for oauth client id token and verifiable credentials signing
 - [admin] client forms display the JWT authentication public key field for EC signing algorithms
 - [cli] configuration file uploads accept release-local file paths

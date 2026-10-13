@@ -94,7 +94,7 @@ defmodule BorutaAdminWeb.ConfigurationController do
     file_content = File.read!(path)
 
     with %{"configuration" => %{} = configuration, "version" => "1.0"} <-
-           YamlElixir.read_from_file!(path),
+           YamlElixir.read_from_file(path),
          configuration <- filter_configuration(configuration, conn.assigns[:authorization]),
          result <- ConfigurationLoader.load_configuration(configuration) do
       # TODO perform a transaction
