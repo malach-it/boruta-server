@@ -5,7 +5,7 @@
         {{ error }}
       </div>
       <div class="ui dates form">
-        <div class="ui stackable grid">
+        <form class="ui stackable grid">
           <div class="four wide request-times column">
             <h1>Business events</h1>
           </div>
@@ -18,7 +18,7 @@
           <div class="two wide request-times column">
             <button class="ui fluid tertiary button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
-        </div>
+        </form>
       </div>
       <div class="ui dashboard-content segment" :class="{ loading: pending }" :aria-busy="pending">
         <div class="ui requests form">

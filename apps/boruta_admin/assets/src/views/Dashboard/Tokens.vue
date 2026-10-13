@@ -5,7 +5,7 @@
         {{ errorMessage }}
       </div>
 
-      <div class="ui dates form">
+      <form class="ui dates form">
         <div class="ui stackable grid">
           <div class="four wide token-times column">
             <h1>Tokens</h1>
@@ -20,7 +20,7 @@
             <button class="ui fluid blue button" @click="search()" :disabled="pending">Filter</button>
           </div>
         </div>
-      </div>
+      </form>
 
       <div class="ui stackable equal height grid token-summary-row">
         <div class="thirteen wide column">

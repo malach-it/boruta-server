@@ -4,7 +4,7 @@
       <div class="ui error message" v-if="error">
         {{ error }}
       </div>
-      <div class="ui dates form">
+      <form class="ui dates form">
         <div class="ui stackable grid">
           <div class="four wide request-times column">
             <h1>Requests</h1>
@@ -19,7 +19,7 @@
             <button class="ui fluid tertiary button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
         </div>
-      </div>
+      </form>
       <div class="ui error message" v-if="fetchError">
         An error has occured when fetching logs, message: {{ fetchError }}.
       </div>
