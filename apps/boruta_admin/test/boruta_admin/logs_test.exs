@@ -69,6 +69,42 @@ defmodule BorutaAdmin.LogsTest do
              } = event
     end
 
+    test "parses proxy failure events logged above info level" do
+      date = ~D[2099-01-01]
+      path = LogRotate.path(:boruta_gateway, :business, date)
+
+      File.mkdir_p!("./log")
+
+      File.write!(
+        path,
+        "2099-01-01T00:00:01Z request_id=request-id [warning] boruta_gateway proxy direct_forward_request - failure proxy_time=750 reason=econnrefused\n"
+      )
+
+      on_exit(fn -> File.rm(path) end)
+
+      stats =
+        Logs.read(
+          ~U[2099-01-01 00:00:00Z],
+          ~U[2099-01-02 00:00:00Z],
+          :boruta_gateway,
+          :business,
+          %{}
+        )
+
+      assert [event] = stats.events
+
+      assert %{
+               application: "boruta_gateway",
+               domain: "proxy",
+               action: "direct_forward_request",
+               status: "failure",
+               attributes: %{
+                 "proxy_time" => "750",
+                 "reason" => "econnrefused"
+               }
+             } = event
+    end
+
     test "decodes form-encoded admin business event attributes" do
       date = ~D[2099-01-01]
       path = LogRotate.path(:boruta_admin, :business, date)

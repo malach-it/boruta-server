@@ -38,20 +38,13 @@ defmodule BorutaGateway.ServiceRegistryTest do
              },
              "services" => [
                %{
-                 "name" => "HTTP proxy",
-                 "scheme" => "http",
-                 "port" => 5555,
-                 "acceptors" => 8,
-                 "enabled" => false,
-                 "certificate" => nil
-               },
-               %{
                  "name" => "HTTPS proxy",
                  "scheme" => "https",
                  "port" => 4444,
                  "acceptors" => 8,
                  "enabled" => false,
-                 "certificate" => https_proxy_certificate
+                 "certificate" => https_proxy_certificate,
+                 "verify_client_certificate" => true
                },
                %{"name" => "HTTP gateway", "scheme" => "http", "port" => 7777},
                %{"name" => "HTTPS gateway", "scheme" => "https", "port" => 7443},

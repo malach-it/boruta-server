@@ -33,7 +33,7 @@ defmodule BorutaAdmin.Logs do
   @max_log_lines 10_000
   @log_attribute_regex ~r/([^\s=]+)=(?:"([^"]*)"|([^\s]+))/
   @request_log_regex ~r/\A(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(µs|ms)$/u
-  @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(?: ([^\=]+)=((\".+\")|([^\s]+)))*/
+  @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[(?:debug|info|notice|warning|error|critical|alert|emergency)\] ([^\s]+) (\w+) (\w+) - (\w+)(?: ([^\=]+)=((\".+\")|([^\s]+)))*/
 
   @spec read(
           start_at :: DateTime.t(),
@@ -441,7 +441,8 @@ defmodule BorutaAdmin.Logs do
     [
       {"request time", "request_time"},
       {"gateway time", "gateway_time"},
-      {"upstream time", "upstream_time"}
+      {"upstream time", "upstream_time"},
+      {"proxy time", "proxy_time"}
     ]
     |> Enum.reduce(gateway_times, fn {label, attribute}, gateway_times ->
       attributes[attribute]
