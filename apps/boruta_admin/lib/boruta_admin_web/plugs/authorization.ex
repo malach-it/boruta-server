@@ -12,13 +12,16 @@ defmodule BorutaAdminWeb.Authorization do
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Openid.UserinfoResponse
   alias BorutaAdminWeb.ErrorView
+  alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.ResourceOwners
 
   def require_authenticated(conn, _opts \\ []) do
     with [authorization_header] <- get_req_header(conn, "authorization"),
          [_authorization_header, access_token] <-
            Regex.run(~r/Bearer (.+)/, authorization_header),
-         {:ok, token} <- Boruta.Oauth.Authorization.AccessToken.authorize(value: access_token) do
+         {:ok, token} <- Boruta.Oauth.Authorization.AccessToken.authorize(value: access_token),
+         :ok <- ensure_local_user_active(token.sub) do
       userinfo = ResourceOwners.claims(%ResourceOwner{sub: token.sub}, "profile")
 
       case maybe_validate_user(userinfo) do
@@ -33,6 +36,9 @@ defmodule BorutaAdminWeb.Authorization do
           respond_unauthorized(conn, error)
       end
     else
+      {:error, :inactive_user} ->
+        respond_unauthorized(conn, :inactive_user)
+
       {:error, _error} ->
         with [authorization_header] <- get_req_header(conn, "authorization"),
              [_authorization_header, access_token] <-
@@ -47,6 +53,21 @@ defmodule BorutaAdminWeb.Authorization do
 
       e ->
         respond_unauthorized(conn, e)
+    end
+  end
+
+  defp ensure_local_user_active(nil), do: :ok
+
+  defp ensure_local_user_active(sub) do
+    case Ecto.UUID.cast(sub) do
+      {:ok, user_id} ->
+        case Accounts.get_user(user_id) do
+          %User{blocked: false} -> :ok
+          _ -> {:error, :inactive_user}
+        end
+
+      :error ->
+        :ok
     end
   end
 

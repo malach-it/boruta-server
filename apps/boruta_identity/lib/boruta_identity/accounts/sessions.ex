@@ -105,6 +105,7 @@ defmodule BorutaIdentity.Accounts.Sessions do
   defwithclientidp create_session(context, client_id, authentication_params, module) do
     with {:ok, user} <- get_user(authentication_params, client_idp),
          {:ok, user} <- maybe_check_password(user, authentication_params, client_idp),
+         :ok <- ensure_user_active(user),
          :ok <- ensure_user_confirmed(user, client_idp),
          {:ok, user, session_token} <- create_user_session(user) do
       module.user_authenticated(context, user, session_token)
@@ -126,11 +127,14 @@ defmodule BorutaIdentity.Accounts.Sessions do
   def get_user(%{email: email}, %IdentityProvider{check_password: false} = client_idp) do
     client_impl = IdentityProvider.implementation(client_idp)
 
-    apply(client_impl, :register, [client_idp.backend, %{
-      email: email,
-      password: SecureRandom.hex(),
-      metadata: %{"check_password" => %{"value" => false, "display" => [], "status" => "valid"}}
-    }])
+    apply(client_impl, :register, [
+      client_idp.backend,
+      %{
+        email: email,
+        password: SecureRandom.hex(),
+        metadata: %{"check_password" => %{"value" => false, "display" => [], "status" => "valid"}}
+      }
+    ])
   end
 
   def get_user(authentication_params, %IdentityProvider{check_password: true} = client_idp) do
@@ -139,16 +143,22 @@ defmodule BorutaIdentity.Accounts.Sessions do
     apply(client_impl, :get_user, [client_idp.backend, authentication_params])
   end
 
-  def maybe_check_password(user, _authentication_params, %IdentityProvider{check_password: false}), do: {:ok, user}
+  def maybe_check_password(user, _authentication_params, %IdentityProvider{check_password: false}),
+      do: {:ok, user}
 
-  def maybe_check_password(user, authentication_params, %IdentityProvider{backend: backend, check_password: true} = client_idp) do
+  def maybe_check_password(
+        user,
+        authentication_params,
+        %IdentityProvider{backend: backend, check_password: true} = client_idp
+      ) do
     client_impl = IdentityProvider.implementation(client_idp)
 
-    with {:ok, user} <- apply(client_impl, :check_user_against, [
-      backend,
-      user,
-      authentication_params
-    ]) do
+    with {:ok, user} <-
+           apply(client_impl, :check_user_against, [
+             backend,
+             user,
+             authentication_params
+           ]) do
       {:ok, apply(client_impl, :domain_user!, [user, client_idp.backend])}
     end
   end
@@ -174,12 +184,16 @@ defmodule BorutaIdentity.Accounts.Sessions do
           {:ok, user :: User.t(), session_token :: String.t()}
           | {:error, changeset :: Ecto.Changeset.t()}
   def create_user_session(%User{} = user) do
-    with {_token, user_token} <- UserToken.build_session_token(user),
+    with :ok <- ensure_user_active(user),
+         {_token, user_token} <- UserToken.build_session_token(user),
          {:ok, session_token} <- Repo.insert(user_token),
          {:ok, user} <- User.login_changeset(user) |> Repo.update() do
       {:ok, user, session_token.token}
     end
   end
+
+  defp ensure_user_active(%User{blocked: true}), do: {:error, "User is blocked."}
+  defp ensure_user_active(%User{}), do: :ok
 
   defp ensure_user_confirmed(_user, %IdentityProvider{confirmable: false}), do: :ok
 

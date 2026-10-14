@@ -57,6 +57,18 @@ defmodule BorutaAdminWeb.UserControllerTest do
            }
   end
 
+  @tag user_authorized: ["users:manage:all"]
+  test "rejects an existing bearer token after its user is blocked", %{conn: conn} do
+    ["Bearer " <> value] = get_req_header(conn, "authorization")
+    token = Boruta.AccessTokensAdapter.get_by(value: value)
+    user = Repo.get!(User, token.sub)
+    user |> User.changeset(%{blocked: true}) |> Repo.update!()
+
+    assert conn
+           |> get(Routes.admin_user_path(conn, :index))
+           |> json_response(401)
+  end
+
   describe "with bad scope" do
     @tag authorized: ["bad:scope"]
     test "returns a 403", %{conn: conn} do
@@ -518,6 +530,9 @@ defmodule BorutaAdminWeb.UserControllerTest do
       conn: conn,
       user: %User{id: id} = user
     } do
+      access = BorutaAdmin.Factory.insert(:token, sub: id, type: "access_token")
+      assert {:ok, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
+
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
           user: %{
@@ -527,6 +542,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
       assert %{"id" => ^id, "blocked" => true} = json_response(conn, 200)["data"]
       assert %User{blocked: true} = Repo.get!(User, id)
+      assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
     end
 
     @tag authorized: ["users:manage:all"]

@@ -23,6 +23,10 @@
 - [ssi] credential status token resolution verifies tokens against client DIDs
 - [wallet] imported credentials are encrypted in local storage
 
+### Security
+
+- [identity] blocking or deleting a user invalidates browser sessions, authorization codes, and access tokens; the admin API rejects bearer tokens belonging to blocked or deleted users
+
 ## [0.12.0] - 2026-09-11
 
 ### Added
