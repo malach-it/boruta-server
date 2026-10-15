@@ -30,6 +30,18 @@ defmodule BorutaIdentity.Accounts.Consent do
   def changeset(consent, attrs) do
     consent
     |> cast(attrs, [:client_id, :scopes])
-    |> validate_required([:client_id])
+    |> validate_required([:client_id, :scopes])
+    |> validate_present([:scopes])
+  end
+
+  defp validate_present(changeset, keys) do
+    Enum.reduce(keys, changeset, fn key, changeset ->
+      case get_change(changeset, key) do
+        nil -> add_error(changeset, key, "must not be blank")
+        [] -> add_error(changeset, key, "must not be blank")
+        "" -> add_error(changeset, key, "must not be blank")
+        _ -> changeset
+      end
+    end)
   end
 end
