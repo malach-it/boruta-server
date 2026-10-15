@@ -7,6 +7,7 @@ import { addClientErrorInterceptor } from './utils'
 
 const defaults = {
   errors: null,
+  loading: false,
   authorize_scopes: false,
   authorized_scopes: [],
   roles: [],
@@ -14,6 +15,7 @@ const defaults = {
   uid: '',
   backend_id: '',
   backend: new Backend(),
+  last_login_at: null,
   metadata: {},
   federated_metadata: {},
   blocked: false
@@ -24,6 +26,7 @@ const assign = {
   uid: function ({ uid }) { this.uid = uid },
   backend: function ({ backend }) { this.backend = backend },
   username: function ({ username }) { this.username = username },
+  last_login_at: function ({ last_login_at }) { this.last_login_at = last_login_at },
   totp_registered_at: function ({ totp_registered_at }) { this.totp_registered_at = totp_registered_at },
   federated_metadata: function ({ federated_metadata }) { this.federated_metadata = federated_metadata },
   blocked: function ({ blocked }) { this.blocked = blocked },
@@ -91,7 +94,13 @@ class User {
 
   async save () {
     this.errors = null
-    await this.validate()
+    this.loading = true
+    try {
+      await this.validate()
+    } catch (error) {
+      this.loading = false
+      throw error
+    }
 
     const { id, backend_id, serialized } = this
     let response
@@ -115,6 +124,7 @@ class User {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

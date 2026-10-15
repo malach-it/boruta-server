@@ -4,7 +4,8 @@ import { addClientErrorInterceptor } from './utils'
 const defaults = {
   name: '',
   edit: false,
-  errors: null
+  errors: null,
+  loading: false
 }
 
 const assign = {
@@ -40,6 +41,7 @@ class Scope {
     let response
 
     this.errors = null
+    this.loading = true
 
     if (id) {
       response = this.constructor.api().patch(`/${id}`, { scope: serialized })
@@ -48,11 +50,13 @@ class Scope {
       response = this.constructor.api().post('/', { scope: serialized })
         .then(({ data }) => Object.assign(this, data.data))
     }
-    return response.catch((error) => {
-      const { code, message, errors } = error.response.data
-      this.errors = errors
-      throw { code, message, errors }
-    })
+    return response
+      .catch((error) => {
+        const { code, message, errors } = error.response.data
+        this.errors = errors
+        throw { code, message, errors }
+      })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

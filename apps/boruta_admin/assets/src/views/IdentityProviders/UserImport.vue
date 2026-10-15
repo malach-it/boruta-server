@@ -35,7 +35,7 @@
               </div>
               <hr />
             </div>
-            <a class="ui blue fluid button" @click="addMetadataHeader()">Add metadataHeader</a>
+            <a class="ui tertiary fluid button" @click="addMetadataHeader()">Add metadataHeader</a>
           </div>
           <div class="field">
             <label>Backend</label>
@@ -48,7 +48,7 @@
             <input type="file" @change="setFile" accept=".csv" :key="fileUpdates" />
           </div>
           <hr />
-          <button class="ui right floated violet button" type="submit">upload</button>
+          <button class="ui right floated primary button" type="submit">upload</button>
           <router-link :to="{ name: 'user-list' }" class="ui button">Back</router-link>
         </form>
       </div>

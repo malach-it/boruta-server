@@ -41,6 +41,11 @@ defmodule BorutaWeb.Logger do
         &__MODULE__.authorization_direct_post_failure_handler/4
       },
       {
+        :credential_issue_success,
+        [:credential, :issue, :success],
+        &__MODULE__.credential_issue_success_handler/4
+      },
+      {
         :authorization_introspect_success,
         [:authorization, :introspect, :success],
         &__MODULE__.authorization_introspect_success_handler/4
@@ -106,13 +111,11 @@ defmodule BorutaWeb.Logger do
         _,
         _measurements,
         %{
-          access_token: access_token,
-          code: code,
           type: type,
           response_mode: response_mode,
           expires_in: expires_in,
           client_id: client_id,
-          current_user: current_user
+          sub: sub
         },
         _
       ) do
@@ -125,11 +128,9 @@ defmodule BorutaWeb.Logger do
       " - ",
       "success",
       log_attribute("client_id", client_id),
-      log_attribute("sub", current_user && current_user.uid),
+      log_attribute("sub", sub),
       log_attribute("type", type),
       log_attribute("response_mode", response_mode),
-      log_attribute("access_token", access_token),
-      log_attribute("code", code),
       log_attribute("expires_in", expires_in)
     ]
 
@@ -157,7 +158,7 @@ defmodule BorutaWeb.Logger do
       " - ",
       "failure",
       log_attribute("client_id", client_id),
-      log_attribute("sub", current_user && current_user.uid),
+      log_attribute("sub", current_user && current_user.id),
       log_attribute("status", status),
       log_attribute("error", error),
       log_attribute("error_description", ~s{"#{error_description}"})
@@ -172,12 +173,8 @@ defmodule BorutaWeb.Logger do
         %{
           client_id: client_id,
           sub: sub,
-          access_token: access_token,
-          agent_token: agent_token,
-          authorization_code: authorization_code,
           token_type: token_type,
-          expires_in: expires_in,
-          refresh_token: refresh_token
+          expires_in: expires_in
         },
         _
       ) do
@@ -191,12 +188,8 @@ defmodule BorutaWeb.Logger do
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
-      log_attribute("access_token", access_token),
-      log_attribute("agent_token", agent_token),
-      log_attribute("authorization_code", authorization_code),
       log_attribute("token_type", token_type),
-      log_attribute("expires_in", expires_in),
-      log_attribute("refresh_token", refresh_token)
+      log_attribute("expires_in", expires_in)
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -239,12 +232,9 @@ defmodule BorutaWeb.Logger do
       "success",
       log_attribute("client_id", metadata[:client_id]),
       log_attribute("sub", metadata[:sub]),
-      log_attribute("code", metadata[:code]),
       log_attribute("code_id", metadata[:code_id]),
       quoted_log_attribute("response_type", metadata[:response_type]),
-      quoted_log_attribute("requested_scope", metadata[:requested_scope]),
-      log_attribute("id_token", metadata[:id_token]),
-      log_attribute("vp_token", metadata[:vp_token])
+      quoted_log_attribute("requested_scope", metadata[:requested_scope])
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -261,11 +251,32 @@ defmodule BorutaWeb.Logger do
       "failure",
       log_attribute("client_id", metadata[:client_id]),
       log_attribute("sub", metadata[:sub]),
-      log_attribute("code", metadata[:code]),
       log_attribute("code_id", metadata[:code_id]),
       log_attribute("status", metadata[:status]),
       log_attribute("error", metadata[:error]),
       quoted_log_attribute("error_description", metadata[:error_description])
+    ]
+
+    Logger.log(:info, fn -> log_line end, type: :business)
+  end
+
+  def credential_issue_success_handler(
+        _,
+        _measurements,
+        %{client_id: client_id, sub: sub, format: format},
+        _
+      ) do
+    log_line = [
+      "boruta_web",
+      ?\s,
+      "credential",
+      ?\s,
+      "issue",
+      " - ",
+      "success",
+      log_attribute("client_id", client_id),
+      log_attribute("sub", sub),
+      log_attribute("format", format)
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -277,8 +288,7 @@ defmodule BorutaWeb.Logger do
         %{
           active: active,
           client_id: client_id,
-          sub: sub,
-          token: token
+          sub: sub
         },
         _
       ) do
@@ -292,7 +302,6 @@ defmodule BorutaWeb.Logger do
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
-      log_attribute("access_token", token),
       log_attribute("active", active)
     ]
 
@@ -305,8 +314,7 @@ defmodule BorutaWeb.Logger do
         %{
           status: status,
           error: error,
-          error_description: error_description,
-          token: token
+          error_description: error_description
         },
         _
       ) do
@@ -318,7 +326,6 @@ defmodule BorutaWeb.Logger do
       "introspect",
       " - ",
       "failure",
-      log_attribute("access_token", token),
       log_attribute("status", status),
       log_attribute("error", error),
       log_attribute("error_description", ~s{"#{error_description}"})
@@ -330,9 +337,7 @@ defmodule BorutaWeb.Logger do
   def authorization_revoke_success_handler(
         _,
         _measurements,
-        %{
-          token: token
-        },
+        %{sub: sub},
         _
       ) do
     log_line = [
@@ -343,7 +348,7 @@ defmodule BorutaWeb.Logger do
       "revoke",
       " - ",
       "success",
-      log_attribute("access_token", token)
+      log_attribute("sub", sub)
     ]
 
     Logger.log(:info, fn -> log_line end, type: :business)
@@ -355,8 +360,7 @@ defmodule BorutaWeb.Logger do
         %{
           status: status,
           error: error,
-          error_description: error_description,
-          token: token
+          error_description: error_description
         },
         _
       ) do
@@ -368,7 +372,6 @@ defmodule BorutaWeb.Logger do
       "revoke",
       " - ",
       "failure",
-      log_attribute("access_token", token),
       log_attribute("status", status),
       log_attribute("error", error),
       log_attribute("error_description", ~s{"#{error_description}"})

@@ -8,6 +8,25 @@
         @abort="abortKeyConsent"
         @consent="generateKeyConsent"
       />
+    <div class="credential-password" v-if="credentialPasswordEventKey">
+      <div class="ui center aligned segment">
+        <h2>Unlock credentials</h2>
+        <div class="ui error message" v-if="credentialPasswordError">{{ credentialPasswordError }}</div>
+        <div class="ui form">
+          <input
+            type="password"
+            v-model="credentialPassword"
+            placeholder="Credentials password"
+            autocomplete="current-password"
+            @keyup.enter="approveCredentialPassword"
+          />
+        </div>
+        <div class="ui fluid two buttons">
+          <button class="ui orange button" @click="abortCredentialPassword">Abort</button>
+          <button :disabled="!credentialPassword" class="ui green button" @click="approveCredentialPassword">Unlock</button>
+        </div>
+      </div>
+    </div>
     <div class="ui segment" v-if="error">
       <div class="ui placeholder segment">
         <div class="ui header">
@@ -65,7 +84,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { BorutaOauth, KeyStore, CustomEventHandler } from 'boruta-client'
+import { BorutaOauth, CustomEventHandler } from 'boruta-client'
 import { storage } from '../store'
 import VerifiableCredentialsIssuanceView from './VerifiableCredentialsIssuanceView.vue'
 
@@ -81,6 +100,7 @@ const oauth = new BorutaOauth({
   eventHandler
 })
 
+const CREDENTIALS_KEY = 'boruta-client_credentials'
 
 export default defineComponent({
   name: 'Oid4vcCallbackView',
@@ -103,7 +123,12 @@ export default defineComponent({
       presentation_submission: null,
       keyConsentEventKey: null,
       generateKeyConsentEventKey: null,
-      keyIdentifier: null
+      keyIdentifier: null,
+      selectedKeyPassword: null,
+      credentialPasswordEventKey: null,
+      credentialPassword: '',
+      credentialPasswordError: null,
+      credentialPasswordRequestPending: false
     }
   },
   async mounted () {
@@ -141,26 +166,19 @@ export default defineComponent({
           eventHandler.listen('generate_key-request', '', () => {
             this.generateKeyConsentEventKey = this.presentation.id
           })
+          eventHandler.listen('access_credential-request', CREDENTIALS_KEY, () => {
+            this.credentialPasswordEventKey = CREDENTIALS_KEY
+            this.credentialPassword = ''
+            this.credentialPasswordError = null
+            this.credentialPasswordRequestPending = true
+          })
 
           this.presentation_definition = presentation.presentation_definition
 
           return presentation
         }).then(this.client.generatePresentation.bind(this.client))
-          .then(({ credentials, redirect_uri, vp_token, presentation_submission }) => {
-            const keySelection = localStorage.getItem('keySelection')
-            localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
-            this.redirect_uri = redirect_uri
-            this.host = new URL(redirect_uri).host
-            this.vp_token = vp_token
-            this.presentation_submission = presentation_submission
-            this.credentials = credentials
-        }).catch(response => {
-          if (response.error) {
-            this.error = response.error_description
-          } else {
-            this.success = response
-          }
-        })
+          .then(this.applyPresentationResult)
+          .catch(this.handlePresentationError)
       }
 
       if (this.$route.query.response_type == 'id_token') {
@@ -174,7 +192,7 @@ export default defineComponent({
 
         const client = new oauth.Siopv2({ clientId: '', redirectUri: '' })
         client.parseSiopv2Response(window.location).then(({ id_token, redirect_uri }) => {
-          const keySelection = localStorage.getItem('keySelection')
+          const keySelection = localStorage.getItem('keySelection') || ''
           localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
           this.id_token = id_token
           this.redirect_uri = redirect_uri
@@ -191,10 +209,70 @@ export default defineComponent({
         this.$router.push({ name: 'home' })
       }
     },
-    async selectKey (identifier, did) {
+    async selectKey (identifier, did, password) {
       this.selectedKey = identifier
-      eventHandler.dispatch('extract_key-approval', this.keyConsentEventKey, identifier)
+      this.selectedKeyPassword = password
+      eventHandler.dispatch('extract_key-approval', this.keyConsentEventKey, { identifier, password })
       this.keyConsentEventKey = null
+    },
+    async approveCredentialPassword () {
+      if (!this.credentialPassword || !this.credentialPasswordEventKey) return
+
+      const password = this.credentialPassword
+
+      if (this.credentialPasswordRequestPending) {
+        eventHandler.dispatch('access_credential-approval', this.credentialPasswordEventKey, password)
+      } else {
+        try {
+          const credentials = await this.client.credentialsStore.credentials(password)
+          const result = await this.client.generatePresentation(this.presentation, credentials)
+          this.applyPresentationResult(result)
+        } catch (error) {
+          this.credentialPassword = ''
+          this.credentialPasswordError = 'Unable to unlock credentials.'
+          return
+        }
+      }
+
+      this.credentialPasswordEventKey = null
+      this.credentialPassword = ''
+      this.credentialPasswordError = null
+      this.credentialPasswordRequestPending = false
+    },
+    abortCredentialPassword () {
+      if (this.credentialPasswordEventKey && this.credentialPasswordRequestPending) {
+        eventHandler.dispatch('access_credential-approval', this.credentialPasswordEventKey, null)
+      }
+
+      this.credentialPasswordEventKey = null
+      this.credentialPassword = ''
+      this.credentialPasswordError = null
+      this.credentialPasswordRequestPending = false
+    },
+    applyPresentationResult ({ credentials, redirect_uri, vp_token, presentation_submission }) {
+      const keySelection = localStorage.getItem('keySelection') || ''
+      localStorage.setItem('keySelection', keySelection + '|' + Date.now() + '~' + this.selectedKey)
+      this.redirect_uri = redirect_uri
+      this.host = new URL(redirect_uri).host
+      this.vp_token = vp_token
+      this.presentation_submission = presentation_submission
+      this.credentials = credentials
+    },
+    handlePresentationError (response) {
+      if (response?.error) {
+        this.error = response.error_description
+        return
+      }
+
+      if (this.mode == 'oid4vp') {
+        this.credentialPasswordEventKey = CREDENTIALS_KEY
+        this.credentialPassword = ''
+        this.credentialPasswordError = 'Unable to unlock credentials.'
+        this.credentialPasswordRequestPending = false
+        return
+      }
+
+      this.success = response
     },
     deleteCredential (credential) {
       const credentials = this.credentials.map(e => e)
@@ -216,11 +294,12 @@ export default defineComponent({
         })
     },
     generateKeyConsent (eventKey) {
-      eventHandler.dispatch('generate_key-approval', '')
+      eventHandler.dispatch('generate_key-approval', '', { password: this.selectedKeyPassword })
       this.generateKeyConsentEventKey = null
     },
     abortKeyConsent () {
       this.generateKeyConsentEventKey = null
+      this.selectedKeyPassword = null
     },
   },
   watch: {
@@ -244,4 +323,3 @@ export default defineComponent({
   }
 }
 </style>
-

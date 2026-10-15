@@ -2,29 +2,59 @@ defmodule BorutaAuth.LogRotate do
   @moduledoc false
 
   def rotate do
+    if enabled?(), do: rotate_logs(), else: :ok
+  end
+
+  defp rotate_logs do
     today = Date.utc_today()
-    max_retention_days = Application.get_env(:boruta_auth, BorutaAuth.LogRotate)[:max_retention_days]
-    log_dates = log_dates(
-      %{today|month: 1, day: 1},
-      Date.add(today, -1 * max_retention_days)
-    )
+
+    max_retention_days =
+      Application.get_env(:boruta_auth, BorutaAuth.LogRotate)[:max_retention_days]
+
+    File.mkdir_p!(log_directory())
+
+    log_dates =
+      log_dates(
+        %{today | month: 1, day: 1},
+        Date.add(today, -1 * max_retention_days)
+      )
 
     Enum.map([:request, :business], fn type ->
       Enum.map([:boruta_web, :boruta_identity, :boruta_admin, :boruta_gateway], fn application ->
-        _files_deleted? = Enum.map(log_dates, &path(application, type, &1))
-        |> Enum.filter(&File.exists?/1)
-        |> Enum.map(&File.rm/1)
+        _files_deleted? =
+          Enum.map(log_dates, &path(application, type, &1))
+          |> Enum.filter(&File.exists?/1)
+          |> Enum.map(&File.rm/1)
 
-        Logger.configure_backend({LoggerFileBackend, :"#{application}_#{type}_logger"},
+        backend = {LoggerFileBackend, :"#{application}_#{type}_logger"}
+
+        case LoggerBackends.add(backend) do
+          {:ok, _pid} -> :ok
+          {:error, :already_present} -> :ok
+        end
+
+        LoggerBackends.configure(backend,
           path: path(application, type, Date.utc_today())
         )
       end)
     end)
   end
 
+  defp enabled? do
+    :boruta_auth
+    |> Application.get_env(BorutaAuth.LogRotate, [])
+    |> Keyword.get(:enabled, true)
+  end
+
   @spec path(application :: atom(), type :: atom(), date :: Date.t()) :: path :: String.t()
   def path(application, type, date) do
-    "./log/#{Date.to_string(date)}_#{application}_#{type}.log"
+    Path.join(log_directory(), "#{Date.to_string(date)}_#{application}_#{type}.log")
+  end
+
+  defp log_directory do
+    :boruta_auth
+    |> Application.get_env(BorutaAuth.LogRotate, [])
+    |> Keyword.get(:log_directory, "./log")
   end
 
   defp log_dates(start_date, end_date) do

@@ -12,15 +12,12 @@ defmodule BorutaWeb.Oauth.RevokeController do
   end
 
   @impl Boruta.Oauth.RevokeApplication
-  def revoke_success(%Plug.Conn{body_params: body_params} = conn) do
-    # TODO get client_id and token from response
-    token = body_params["token"]
-
+  def revoke_success(%Plug.Conn{} = conn, token) do
     :telemetry.execute(
       [:authorization, :revoke, :success],
       %{},
       %{
-        token: token
+        sub: token && token.sub
       }
     )
 
@@ -28,22 +25,18 @@ defmodule BorutaWeb.Oauth.RevokeController do
   end
 
   @impl Boruta.Oauth.RevokeApplication
-  def revoke_error(%Plug.Conn{body_params: body_params} = conn, %Error{
+  def revoke_error(%Plug.Conn{} = conn, %Error{
         status: status,
         error: error,
         error_description: error_description
       }) do
-    # TODO get client_id and token from error
-    token = body_params["token"]
-
     :telemetry.execute(
       [:authorization, :revoke, :failure],
       %{},
       %{
         status: status,
         error: error,
-        error_description: error_description,
-        token: token
+        error_description: error_description
       }
     )
 

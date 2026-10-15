@@ -4,20 +4,47 @@ defmodule BorutaWeb.Integration.DirectPostTest do
   alias Boruta.Internal.Signatures
 
   setup %{conn: conn} do
-    client = Boruta.Factory.insert(:client, id_token_signature_alg: "RS512")
+    client = BorutaWeb.Factory.insert(:client, id_token_signature_alg: "RS512")
+
+    wallet_did =
+      "did:jwk:eyJlIjoiQVFBQiIsImt0eSI6IlJTQSIsIm4iOiIxUGFQX2diWGl4NWl0alJDYWVndklfQjNhRk9lb3hsd1BQTHZmTEhHQTRRZkRtVk9mOGNVOE91WkZBWXpMQXJXM1BubndXV3kzOW5WSk94NDJRUlZHQ0dkVUNtVjdzaERIUnNyODYtMkRsTDdwd1VhOVF5SHNUajg0ZkFKbjJGdjloOW1xckl2VXpBdEVZUmxHRnZqVlRHQ3d6RXVsbHBzQjBHSmFmb3BVVEZieThXZFNxM2RHTEpCQjFyLVE4UXRabkF4eHZvbGh3T21Za0Jra2lkZWZtbTQ4WDdoRlhMMmNTSm0yRzd3UXlpbk9leV9VOHhEWjY4bWdUYWtpcVMyUnRqbkZEMGRucEJsNUNZVGU0czZvWktFeUZpRk5pVzRLa1IxR1Zqc0t3WTlvQzJ0cHlRMEFFVU12azlUOVZkSWx0U0lpQXZPS2x3RnpMNDljZ3daRHcifQ"
+
+    presentation_definition = %{
+      "id" => "test",
+      "format" => %{"jwt_vc" => %{"alg" => ["ES256'"]}, "jwt_vp" => %{"alg" => ["ES256"]}},
+      "input_descriptors" => [
+        %{
+          "id" => "test",
+          "format" => %{"jwt_vc" => %{"alg" => ["ES256"]}},
+          "constraints" => %{
+            "fields" => [
+              %{
+                "path" => ["$.vc.type"],
+                "filter" => %{
+                  "type" => "array",
+                  "contains" => %{"const" => "VerifiableAttestation"}
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
 
     code =
-      Boruta.Factory.insert(:token,
+      BorutaWeb.Factory.insert(:token,
         type: "code",
         redirect_uri: "http://redirect.uri",
-        response_type: "id_token",
+        response_type: "vp_token",
         state: "state",
-        sub:
-          "did:jwk:eyJlIjoiQVFBQiIsImt0eSI6IlJTQSIsIm4iOiIxUGFQX2diWGl4NWl0alJDYWVndklfQjNhRk9lb3hsd1BQTHZmTEhHQTRRZkRtVk9mOGNVOE91WkZBWXpMQXJXM1BubndXV3kzOW5WSk94NDJRUlZHQ0dkVUNtVjdzaERIUnNyODYtMkRsTDdwd1VhOVF5SHNUajg0ZkFKbjJGdjloOW1xckl2VXpBdEVZUmxHRnZqVlRHQ3d6RXVsbHBzQjBHSmFmb3BVVEZieThXZFNxM2RHTEpCQjFyLVE4UXRabkF4eHZvbGh3T21Za0Jra2lkZWZtbTQ4WDdoRlhMMmNTSm0yRzd3UXlpbk9leV9VOHhEWjY4bWdUYWtpcVMyUnRqbkZEMGRucEJsNUNZVGU0czZvWktFeUZpRk5pVzRLa1IxR1Zqc0t3WTlvQzJ0cHlRMEFFVU12azlUOVZkSWx0U0lpQXZPS2x3RnpMNDljZ3daRHcifQ"
+        sub: wallet_did,
+        public_client_id: wallet_did,
+        presentation_definition: presentation_definition
       )
 
     signer =
       Joken.Signer.create("RS256", %{"pem" => private_key_fixture()}, %{
+        "jwk" => public_jwk_fixture(),
         "kid" =>
           "did:jwk:eyJlIjoiQVFBQiIsImt0eSI6IlJTQSIsIm4iOiIxUGFQX2diWGl4NWl0alJDYWVndklfQjNhRk9lb3hsd1BQTHZmTEhHQTRRZkRtVk9mOGNVOE91WkZBWXpMQXJXM1BubndXV3kzOW5WSk94NDJRUlZHQ0dkVUNtVjdzaERIUnNyODYtMkRsTDdwd1VhOVF5SHNUajg0ZkFKbjJGdjloOW1xckl2VXpBdEVZUmxHRnZqVlRHQ3d6RXVsbHBzQjBHSmFmb3BVVEZieThXZFNxM2RHTEpCQjFyLVE4UXRabkF4eHZvbGh3T21Za0Jra2lkZWZtbTQ4WDdoRlhMMmNTSm0yRzd3UXlpbk9leV9VOHhEWjY4bWdUYWtpcVMyUnRqbkZEMGRucEJsNUNZVGU0czZvWktFeUZpRk5pVzRLa1IxR1Zqc0t3WTlvQzJ0cHlRMEFFVU12azlUOVZkSWx0U0lpQXZPS2x3RnpMNDljZ3daRHcifQ",
         "typ" => "openid4vci-proof+jwt"
@@ -32,14 +59,79 @@ defmodule BorutaWeb.Integration.DirectPostTest do
         signer
       )
 
+    vp_signer =
+      Joken.Signer.create("RS256", %{"pem" => private_key_fixture()}, %{
+        "jwk" => public_jwk_fixture(),
+        "kid" => wallet_did,
+        "typ" => "openid4vci-proof+jwt"
+      })
+
+    {:ok, credential, _claims} =
+      Boruta.Openid.VerifiablePresentations.Token.generate_and_sign(
+        %{
+          "exp" => :os.system_time(:second) + 10,
+          "vc" => %{
+            "validFrom" => DateTime.utc_now() |> DateTime.add(-10) |> DateTime.to_iso8601(),
+            "type" => ["VerifiableAttestation"]
+          }
+        },
+        vp_signer
+      )
+
+    {:ok, vp_token, _claims} =
+      Boruta.Openid.VerifiablePresentations.Token.generate_and_sign(
+        %{
+          "iss" => wallet_did,
+          "vp" => %{
+            "verifiableCredential" => [credential]
+          }
+        },
+        vp_signer
+      )
+
     {:ok,
      client: client,
      id_token: id_token,
+     vp_token: vp_token,
+     wallet_did: wallet_did,
      code: code,
      conn: put_req_header(conn, "content-type", "application/x-www-form-urlencoded")}
   end
 
   describe "SIOPV2 direct post" do
+    test "forwards the granted scope when redirecting an id token response", %{
+      client: client,
+      conn: conn,
+      id_token: id_token,
+      wallet_did: wallet_did
+    } do
+      code =
+        BorutaWeb.Factory.insert(:token,
+          type: "code",
+          client: client,
+          redirect_uri: "http://redirect.uri",
+          response_type: "id_token code",
+          state: "state",
+          public_client_id: wallet_did,
+          requested_scope: "openid profile",
+          scope: "openid"
+        )
+
+      conn =
+        post(
+          conn,
+          "/openid/direct_post/#{code.id}",
+          "id_token=#{id_token}"
+        )
+
+      redirect_uri = conn |> redirected_to() |> URI.parse()
+
+      assert redirect_uri.path == "/oauth/authorize"
+
+      assert %{"response_type" => "code", "scope" => "openid"} =
+               redirect_uri.query |> URI.decode_query()
+    end
+
     test "unauthorized with a bad id_token", %{conn: conn} do
       conn =
         post(
@@ -50,9 +142,116 @@ defmodule BorutaWeb.Integration.DirectPostTest do
 
       assert json_response(conn, 401) == %{
                "error" => "unauthorized",
-               "error_description" =>
-                 "{:error, :token_malformed}"
+               "error_description" => "{:error, :token_malformed}"
              }
+    end
+
+    test "oid4vp unauthorized with a bad vp_token", %{conn: conn} do
+      test_pid = self()
+      handler_id = {__MODULE__, test_pid}
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:authorization, :direct_post, :failure],
+          fn event, measurements, metadata, _config ->
+            send(test_pid, {event, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      conn =
+        post(
+          conn,
+          "/openid/direct_post/bad_code",
+          "vp_token=bad_vp_token"
+        )
+
+      assert json_response(conn, 401) == %{
+               "error" => "unauthorized",
+               "error_description" => "{:error, :token_malformed}"
+             }
+
+      assert_received {
+        [:authorization, :direct_post, :failure],
+        %{},
+        %{
+          code_id: "bad_code",
+          status: :unauthorized,
+          error: :unauthorized,
+          error_description: "{:error, :token_malformed}"
+        }
+      }
+    end
+
+    test "oid4vp authenticates with a valid vp_token", %{
+      conn: conn,
+      code: code,
+      vp_token: vp_token
+    } do
+      test_pid = self()
+      handler_id = {__MODULE__, test_pid}
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:authorization, :direct_post, :success],
+          fn event, measurements, metadata, _config ->
+            send(test_pid, {event, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      presentation_submission =
+        Jason.encode!(%{
+          "id" => "test",
+          "definition_id" => "test",
+          "descriptor_map" => [
+            %{
+              "id" => "test",
+              "format" => "jwt_vp",
+              "path" => "$",
+              "path_nested" => %{
+                "id" => "test",
+                "format" => "jwt_vc",
+                "path" => "$.vp.verifiableCredential[0]"
+              }
+            }
+          ]
+        })
+
+      conn =
+        post(
+          conn,
+          "/openid/direct_post/#{code.id}",
+          URI.encode_query(%{
+            "vp_token" => vp_token,
+            "presentation_submission" => presentation_submission
+          })
+        )
+
+      assert redirected_to(conn) =~ ~r/#{code.redirect_uri}/
+      assert redirected_to(conn) =~ ~r/code=#{code.value}/
+      assert redirected_to(conn) =~ ~r/state=#{code.state}/
+
+      assert_received {
+        [:authorization, :direct_post, :success],
+        %{},
+        %{
+          client_id: client_id,
+          sub: sub,
+          code_id: code_id,
+          response_type: "vp_token"
+        }
+      }
+
+      assert client_id == code.client.id
+      assert sub == code.sub
+      assert code_id == code.id
     end
 
     @tag :skip
@@ -84,6 +283,11 @@ defmodule BorutaWeb.Integration.DirectPostTest do
 
   def public_key_fixture do
     "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA1PaP/gbXix5itjRCaegvI/B3aFOeoxlwPPLvfLHGA4QfDmVOf8cU\n8OuZFAYzLArW3PnnwWWy39nVJOx42QRVGCGdUCmV7shDHRsr86+2DlL7pwUa9QyH\nsTj84fAJn2Fv9h9mqrIvUzAtEYRlGFvjVTGCwzEullpsB0GJafopUTFby8WdSq3d\nGLJBB1r+Q8QtZnAxxvolhwOmYkBkkidefmm48X7hFXL2cSJm2G7wQyinOey/U8xD\nZ68mgTakiqS2RtjnFD0dnpBl5CYTe4s6oZKEyFiFNiW4KkR1GVjsKwY9oC2tpyQ0\nAEUMvk9T9VdIltSIiAvOKlwFzL49cgwZDwIDAQAB\n-----END RSA PUBLIC KEY-----\n\n"
+  end
+
+  def public_jwk_fixture do
+    {_, jwk} = public_key_fixture() |> JOSE.JWK.from_pem() |> JOSE.JWK.to_map()
+    jwk
   end
 
   def private_key_fixture do

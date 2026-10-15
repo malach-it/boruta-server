@@ -1,0 +1,1441 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Boruta Administration Frontend",
+    "description": "Browser routes and static assets served by the Boruta administration frontend.",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8081",
+      "variables": {}
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/.well-known/acme-challenge/{token}": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Retrieve an ACME HTTP-01 challenge response",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "ACME challenge token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ACME challenge key authorization",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Challenge token not found"
+          }
+        },
+        "security": []
+      }
+    },
+    "/assets/{filename}": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve a compiled admin frontend asset",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "description": "Logical or Phoenix-digested asset filename, such as app.umd.js or app.umd-<digest>.js.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vsn",
+            "in": "query",
+            "required": false,
+            "description": "Phoenix static asset version marker used by digested URLs.",
+            "schema": {
+              "type": "string",
+              "example": "d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminAsset"
+          }
+        },
+        "security": []
+      }
+    },
+    "/favicon.ico": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve the admin favicon",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminIcon"
+          }
+        },
+        "security": []
+      }
+    },
+    "/semantic-ui.min.css": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve the Semantic UI stylesheet",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminStylesheet"
+          }
+        },
+        "security": []
+      }
+    },
+    "/prism-dark.min.css": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve the Prism stylesheet",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminStylesheet"
+          }
+        },
+        "security": []
+      }
+    },
+    "/themes/default/assets/fonts/{filename}": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Serve a Semantic UI icon font",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "description": "Logical or Phoenix-digested font filename, such as icons.woff2 or icons-<digest>.woff2.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vsn",
+            "in": "query",
+            "required": false,
+            "description": "Phoenix static asset version marker used by digested URLs.",
+            "schema": {
+              "type": "string",
+              "example": "d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFont"
+          }
+        },
+        "security": []
+      }
+    },
+    "/not-found": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/bad-request": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/oauth-callback": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/dashboard/requests": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/dashboard/business-events": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/new": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/choose-session-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/layout-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/session-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/totp-registration-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/totp-authentication-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/webauthn-registration-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/webauthn-authentication-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/registration-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/edit-user-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/send-reset-password-instructions-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/reset-password-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/consent-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/send-confirmation-instructions-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/credential-offer-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/{identityProviderId}/edit/cross-device-presentation-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "identityProviderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/backends": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/backends/new": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/backends/{backendId}": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "backendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/backends/{backendId}/edit": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "backendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/backends/{backendId}/edit/confirmation-instructions-email-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "backendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/backends/{backendId}/edit/reset-password-instructions-email-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "backendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/backends/{backendId}/edit/tx-code-email-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "backendId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/users": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/users/import": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/users/new": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/users/{userId}/edit": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/identity-providers/organizations": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/organizations/new": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/organizations/{organizationId}/edit": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/clients": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/clients/key-pairs": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/clients/new": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/clients/{clientId}": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/clients/{clientId}/edit": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/upstreams": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/upstreams/service-registry": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/upstreams/new": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/upstreams/{upstreamId}": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "upstreamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/upstreams/{upstreamId}/edit": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "upstreamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/scopes": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/roles": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/roles/new": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/roles/{roleId}": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/roles/{roleId}/edit": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "parameters": [
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/configuration": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/configuration/configuration-file-upload": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/configuration/configuration-file-upload/example-configuration-file": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/configuration/error-template-list": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/configuration/edit-bad-request-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/configuration/edit-forbidden-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/configuration/edit-not-found-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    },
+    "/configuration/edit-internal-server-error-template": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Serve the admin frontend",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AdminFrontend"
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "AdminFrontend": {
+        "description": "The Boruta administration single-page application.",
+        "content": {
+          "text/html": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AdminAsset": {
+        "description": "A compiled Boruta administration frontend asset.",
+        "content": {
+          "application/javascript": {
+            "schema": {
+              "type": "string"
+            }
+          },
+          "text/css": {
+            "schema": {
+              "type": "string"
+            }
+          },
+          "image/x-icon": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "AdminIcon": {
+        "description": "The Boruta administration favicon.",
+        "content": {
+          "image/x-icon": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "AdminStylesheet": {
+        "description": "A Boruta administration stylesheet.",
+        "content": {
+          "text/css": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AdminFont": {
+        "description": "A Semantic UI icon font used by the Boruta administration frontend.",
+        "content": {
+          "application/vnd.ms-fontobject": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "font/ttf": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "font/woff": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "font/woff2": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "Frontend",
+      "description": "Browser routes served by the Boruta administration single-page application."
+    },
+    {
+      "name": "Assets",
+      "description": "Static assets used by the Boruta administration frontend."
+    }
+  ]
+}

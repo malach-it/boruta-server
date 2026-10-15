@@ -1,7 +1,6 @@
 defmodule BorutaIdentity.FederatedAccountsTest do
   use BorutaIdentity.DataCase
 
-  alias BorutaIdentity.Accounts.IdentityProviderError
   alias BorutaIdentity.Accounts.SessionError
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.FederatedAccounts
@@ -40,7 +39,10 @@ defmodule BorutaIdentity.FederatedAccountsTest do
        bypass: bypass, client_id: client_identity_provider.client_id, backend: federated_backend}
     end
 
-    test "returns an error if federated server is unknown", %{client_id: client_id, backend: backend} do
+    test "returns an error if federated server is unknown", %{
+      client_id: client_id,
+      backend: backend
+    } do
       context = :context
       access_token = "access_token"
 
@@ -70,8 +72,7 @@ defmodule BorutaIdentity.FederatedAccountsTest do
         Plug.Conn.resp(conn, 400, Jason.encode!(%{error: error}))
       end)
 
-      assert {:authentication_failure, ^context,
-              %SessionError{message: message}} =
+      assert {:authentication_failure, ^context, %SessionError{message: message}} =
                FederatedAccounts.create_federated_session(
                  context,
                  client_id,
@@ -80,9 +81,11 @@ defmodule BorutaIdentity.FederatedAccountsTest do
                  code,
                  DummyFederatedSessions
                )
+
       assert message =~ ~r/#{error}/
     end
 
+    @tag capture_log: true
     test "returns an error if userinfo fails", %{
       client_id: client_id,
       backend: backend,

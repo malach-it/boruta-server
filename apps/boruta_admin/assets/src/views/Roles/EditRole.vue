@@ -1,19 +1,29 @@
 <template>
   <div class="edit-role">
     <Toaster :active="success" message="Role has been updated" type="success" />
-    <div class="ui container">
+    <div class="container">
       <div class="ui error message" v-if="error">
         {{ error }}
       </div>
-      <div class="ui segment">
-        <div class="ui attribute list">
-          <div class="item">
-            <span class="header">Role ID</span>
-            <span class="description">{{ role.id }}</span>
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <div class="ui segment">
+              <div class="ui attribute list">
+                <div class="item">
+                  <span class="header">Role ID</span>
+                  <span class="description">{{ role.id }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+        <div class="twelve wide column">
+          <ResourceEditTabs :resource-id="role.id">
+            <RoleForm :role="role" @submit="updateRole()" @back="back()" action="Update" />
+          </ResourceEditTabs>
+        </div>
       </div>
-      <RoleForm :role="role" @submit="updateRole()" @back="back()" action="Update" />
     </div>
   </div>
 </template>
@@ -21,12 +31,14 @@
 <script>
 import Role from '../../models/role.model'
 import RoleForm from '../../components/Forms/RoleForm.vue'
+import ResourceEditTabs from '../../components/ResourceEditTabs.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'roles',
   components: {
     RoleForm,
+    ResourceEditTabs,
     Toaster
   },
   mounted () {

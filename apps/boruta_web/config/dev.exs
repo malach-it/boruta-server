@@ -1,5 +1,8 @@
 import Config
 
+config :boruta_auth, BorutaAuth.LogRotate,
+  log_directory: System.get_env("BORUTA_LOG_DIR", Path.expand("../../../log", __DIR__))
+
 config :boruta_web, BorutaWeb.Endpoint,
   http: [port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer()],
   debug_errors: true,

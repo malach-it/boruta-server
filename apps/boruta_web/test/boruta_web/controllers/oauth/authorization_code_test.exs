@@ -1,10 +1,15 @@
 defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
   use BorutaWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias Boruta.Oauth.Client
+  alias Boruta.Oauth.ResourceOwner
+  alias Boruta.Oauth.Token
+  alias Boruta.Openid.CredentialOfferResponse
   alias BorutaIdentityWeb.Authenticable
+  alias BorutaWeb.Oauth.AuthorizeController
 
   describe "#authorize" do
     setup %{conn: conn} do
@@ -45,9 +50,9 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
     setup %{conn: conn} do
       resource_owner = user_fixture()
       client = insert(:client)
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider, consentable: true)
+      identity_provider = BorutaWeb.IdentityFactory.insert(:identity_provider, consentable: true)
 
-      BorutaIdentity.Factory.insert(:client_identity_provider,
+      BorutaWeb.IdentityFactory.insert(:client_identity_provider,
         client_id: client.id,
         identity_provider: identity_provider
       )
@@ -96,6 +101,66 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         )
 
       assert redirected_to(conn) == IdentityRoutes.user_consent_path(conn, :index, request: request_param)
+    end
+
+    test "logs a pre-authorized code offer with the user id", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner
+    } do
+      test_pid = self()
+      handler_id = {__MODULE__, test_pid, make_ref()}
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:authorization, :authorize, :success],
+          fn event, measurements, metadata, _config ->
+            send(test_pid, {event, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      code = %Token{
+        type: "preauthorized_code",
+        value: "preauthorized-code",
+        expires_at: System.system_time(:second) + 60,
+        client: %Client{id: client.id, enforce_tx_code: false},
+        sub: resource_owner.id,
+        resource_owner: %ResourceOwner{sub: resource_owner.id}
+      }
+
+      response = %CredentialOfferResponse{
+        credential_issuer: Boruta.Config.issuer(),
+        client_id: client.id,
+        redirect_uri: "openid-credential-offer://",
+        code: code
+      }
+
+      conn =
+        conn
+        |> init_test_session(%{})
+        |> fetch_flash()
+        |> Map.put(:query_params, %{"client_id" => client.id})
+
+      conn = AuthorizeController.authorize_success(conn, response)
+
+      assert html_response(conn, 200)
+
+      assert_received {
+        [:authorization, :authorize, :success],
+        %{},
+        %{
+          client_id: client_id,
+          sub: sub,
+          type: "preauthorized_code"
+        }
+      }
+
+      assert client_id == client.id
+      assert sub == resource_owner.id
     end
 
     test "redirects to redirect_uri with errors in query if redirect_uri is invalid", %{
@@ -242,7 +307,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         |> log_in(resource_owner)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
-      BorutaIdentity.Factory.insert(:consent,
+      BorutaWeb.IdentityFactory.insert(:consent,
         user_id: resource_owner.id,
         client_id: client.id,
         scopes: [scope.name]

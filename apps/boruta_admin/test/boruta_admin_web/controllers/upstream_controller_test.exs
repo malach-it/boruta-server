@@ -1,13 +1,17 @@
 defmodule BorutaAdminWeb.UpstreamControllerTest do
   use BorutaAdminWeb.ConnCase, async: false
 
+  alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
 
   @create_attrs %{
+    virtual_host: "virtual.host.test",
     scheme: "https",
     host: "host.test",
     port: 7777,
+    authorization_type: "http_basic",
+    mtls_enabled: true,
     rate_limit_enabled: true,
     rate_limit_count: 20,
     rate_limit_time_unit: "minute",
@@ -135,6 +139,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
         |> Path.join("/test/configuration_files/full_configuration.yml")
 
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
+      Application.delete_env(ConfigurationLoader, :node_name)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
       assert json_response(conn, 200)["data"] == ["full-configuration"]
@@ -147,6 +152,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
         |> Path.join("/test/configuration_files/full_configuration.yml")
 
       Application.put_env(:boruta_gateway, :configuration_path, configuration_file_path)
+      Application.delete_env(ConfigurationLoader, :node_name)
 
       conn = get(conn, Routes.admin_upstream_path(conn, :node_list))
       assert json_response(conn, 200)["data"] == ["full-configuration"]
@@ -160,6 +166,9 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
 
       assert %{
                "id" => _id,
+               "virtual_host" => "virtual.host.test",
+               "authorization_type" => "http_basic",
+               "mtls_enabled" => true,
                "rate_limit_enabled" => true,
                "rate_limit_count" => 20,
                "rate_limit_time_unit" => "minute",
@@ -173,6 +182,26 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post(conn, Routes.admin_upstream_path(conn, :create), upstream: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
+    end
+
+    @tag authorized: ["upstreams:manage:all"]
+    test "accepts an OpenAPI definition but returns only model configuration", %{conn: conn} do
+      openapi = Jason.encode!(%{"openapi" => "3.0.0", "paths" => %{}})
+
+      conn =
+        post(conn, Routes.admin_upstream_path(conn, :create),
+          upstream:
+            Map.merge(@create_attrs, %{
+              noise_cancelling_enabled: true,
+              openapi_spec: openapi
+            })
+        )
+
+      data = json_response(conn, 201)["data"]
+      assert data["noise_cancelling_enabled"]
+      assert data["noise_cancelling_configured"]
+      refute Map.has_key?(data, "openapi_spec")
+      refute Map.has_key?(data, "noise_cancelling_model")
     end
   end
 

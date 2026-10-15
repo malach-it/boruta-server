@@ -13,8 +13,16 @@ defmodule BorutaGateway.Upstreams do
     Store.match(path)
   end
 
+  def match(host, path) do
+    Store.match(host, path)
+  end
+
   def sidecar_match(path) do
     Store.sidecar_match(path)
+  end
+
+  def sidecar_match(host, path) do
+    Store.sidecar_match(host, path)
   end
 
   @doc """
@@ -61,9 +69,13 @@ defmodule BorutaGateway.Upstreams do
 
   """
   def create_upstream(attrs \\ %{}) do
-    %Upstream{}
-    |> Upstream.changeset(attrs)
-    |> Repo.insert()
+    changeset = Upstream.changeset(%Upstream{}, attrs)
+
+    if Repo.backend() == "mnesia" do
+      persist_mnesia(changeset, :insert)
+    else
+      Repo.insert(changeset)
+    end
   end
 
   @doc """
@@ -79,9 +91,13 @@ defmodule BorutaGateway.Upstreams do
 
   """
   def update_upstream(%Upstream{} = upstream, attrs) do
-    upstream
-    |> Upstream.changeset(attrs)
-    |> Repo.update()
+    changeset = Upstream.changeset(upstream, attrs)
+
+    if Repo.backend() == "mnesia" do
+      persist_mnesia(changeset, :update)
+    else
+      Repo.update(changeset)
+    end
   end
 
   @doc """
@@ -111,5 +127,39 @@ defmodule BorutaGateway.Upstreams do
   """
   def change_upstream(%Upstream{} = upstream) do
     Upstream.changeset(upstream, %{})
+  end
+
+  defp persist_mnesia(changeset, action) do
+    if changeset.valid? do
+      {:ok, result} =
+        Repo.transaction(fn ->
+          :mnesia.write_lock_table(:upstreams)
+          candidate = Ecto.Changeset.apply_changes(changeset)
+
+          duplicate? =
+            Repo.all(Upstream)
+            |> Enum.any?(fn upstream ->
+              upstream.id != candidate.id and
+                {upstream.node_name, upstream.virtual_host, upstream.host, upstream.port,
+                 upstream.uris} ==
+                  {candidate.node_name, candidate.virtual_host, candidate.host, candidate.port,
+                   candidate.uris}
+            end)
+
+          if duplicate? do
+            {:error,
+             Ecto.Changeset.add_error(changeset, :uris, "has already been taken",
+               constraint: :unique,
+               constraint_name: "upstreams_node_name_host_port_uris_index"
+             )}
+          else
+            apply(Repo, action, [changeset])
+          end
+        end)
+
+      result
+    else
+      {:error, changeset}
+    end
   end
 end

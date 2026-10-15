@@ -9,7 +9,7 @@ defmodule BorutaAdmin.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.7",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -73,8 +73,8 @@ defmodule BorutaAdmin.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: [
         "ecto.create --quiet",
-        "ecto.migrate --quiet -r BorutaIdentity.Repo",
         "ecto.migrate --quiet -r BorutaAuth.Repo",
+        "ecto.migrate --quiet -r BorutaIdentity.Repo",
         "ecto.migrate --quiet",
         "test"
       ]

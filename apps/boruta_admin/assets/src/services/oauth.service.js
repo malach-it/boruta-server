@@ -1,7 +1,7 @@
 import decode from 'jwt-decode'
 import { BorutaOauth } from 'boruta-client'
 
-const ADMIN_SCOPE = 'roles:manage:all scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all tokens:read:all'
+const ADMIN_SCOPES = 'roles:manage:all scopes:manage:all clients:manage:all users:manage:all upstreams:manage:all identity-providers:manage:all configuration:manage:all logs:read:all tokens:read:all'.split(' ')
 
 class Oauth {
   constructor () {
@@ -12,12 +12,16 @@ class Oauth {
       revokePath: '/oauth/revoke'
     })
 
-    this.requestedScope = localStorage.getItem('requested_scope') ?? ADMIN_SCOPE
+    this.requestedScope = (localStorage.getItem('requested_scope') ?? ADMIN_SCOPES.join(' '))
+      .split(/\s+/)
+      .filter((scope) => ADMIN_SCOPES.includes(scope))
+      .join(' ')
     this.authorizedScope = localStorage.getItem('authorized_scope')
 
     this.revokeClient = new this.oauth.Revoke({
       clientId: window.env.BORUTA_ADMIN_OAUTH_CLIENT_ID
     })
+    this.logoutPromise = null
   }
 
   get implicitClient () {
@@ -45,10 +49,30 @@ class Oauth {
   }
 
   get adminScopes () {
-    return ADMIN_SCOPE.split(' ').map((name) => ({
+    return ADMIN_SCOPES.map((name) => ({
       name,
       label: this.scopeLabel(name)
     }))
+  }
+
+  get authorizedScopes () {
+    return (this.authorizedScope || '').split(/\s+/).filter(Boolean)
+  }
+
+  authorizedScopeFrom ({ id_token, scope }) {
+    let authorizedScope = scope
+
+    if (!authorizedScope) {
+      try {
+        authorizedScope = decode(id_token).scope
+      } catch {
+        authorizedScope = null
+      }
+    }
+
+    return Array.isArray(authorizedScope)
+      ? authorizedScope.join(' ')
+      : (authorizedScope || this.requestedScope)
   }
 
   setRequestedScope (scopes) {
@@ -79,10 +103,11 @@ class Oauth {
 
     const { access_token, id_token, expires_in } = response
     const expires_at = new Date().getTime() + expires_in * 1000
+    const authorizedScope = this.authorizedScopeFrom(response)
 
-    this.authorizedScope = this.requestedScope
+    this.authorizedScope = authorizedScope
 
-    localStorage.setItem('authorized_scope', this.requestedScope)
+    localStorage.setItem('authorized_scope', authorizedScope)
     localStorage.setItem('access_token', access_token)
     localStorage.setItem('id_token', id_token)
     localStorage.setItem('token_expires_at', expires_at)
@@ -124,13 +149,24 @@ class Oauth {
   }
 
   logout () {
-    return this.revokeClient.revoke(this.accessToken).then(() => {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('id_token')
-      localStorage.removeItem('token_expires_at')
-      localStorage.removeItem('authorized_scope')
-      this.authorizedScope = null
-    })
+    if (this.logoutPromise) return this.logoutPromise
+
+    const accessToken = this.accessToken
+    if (!accessToken) return Promise.resolve()
+
+    this.logoutPromise = this.revokeClient.revoke(accessToken)
+      .then(() => {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('id_token')
+        localStorage.removeItem('token_expires_at')
+        localStorage.removeItem('authorized_scope')
+        this.authorizedScope = null
+      })
+      .finally(() => {
+        this.logoutPromise = null
+      })
+
+    return this.logoutPromise
   }
 
   storeLocationName ({ name, params, query }) {

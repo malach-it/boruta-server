@@ -7,6 +7,7 @@ defmodule BorutaAuth.Application do
     children = [
       BorutaAuth.Repo,
       BorutaAuth.Scheduler,
+      BorutaAuth.EpmdClusterConnector,
       BorutaAuth.Plugs.RateLimit.Counter
     ]
 

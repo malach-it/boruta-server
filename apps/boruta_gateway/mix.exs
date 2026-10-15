@@ -9,7 +9,7 @@ defmodule BorutaGateway.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.5",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -23,7 +23,7 @@ defmodule BorutaGateway.MixProject do
   def application do
     [
       mod: {BorutaGateway.Application, []},
-      extra_applications: [:logger, :runtime_tools, :syntax_tools]
+      extra_applications: [:inets, :logger, :runtime_tools, :syntax_tools, :ssl]
     ]
   end
 
@@ -37,11 +37,14 @@ defmodule BorutaGateway.MixProject do
   defp deps do
     [
       {:boruta_auth, in_umbrella: true},
+      {:boruta_identity, in_umbrella: true},
       {:ecto_sql, "~> 3.0"},
+      {:ecto3_mnesia, "== 0.3.0"},
       {:ex_json_schema, "~> 0.9"},
       {:finch, "~> 0.10"},
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
+      {:rustler, "~> 0.38.0", runtime: false},
       {:secure_random, "~> 0.5"},
       {:telemetry, "~> 1.0"},
       {:yaml_elixir, "~> 2.9"}

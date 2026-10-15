@@ -1,6 +1,6 @@
 <template>
   <div class="feedback">
-    <div @click="toggle()" class="ui yellow feedback button">Feedback</div>
+    <div @click="toggle()" class="ui secondary feedback button">Feedback</div>
     <div class="feedback overlay" v-if="show">
       <div class="ui feedback wrapper massive center aligned segment">
         <i class="ui white close icon" @click="toggle()"></i>
@@ -22,7 +22,7 @@
               <label>I have read the <a href="https://io.malach.it/privacy-policy.html" target="_blank"> Privacy policy</a></label>
             </div>
           </div>
-          <button :disabled="!privacy" class="ui fluid violet button" type="submit">Submit</button>
+          <button :disabled="!privacy" class="ui fluid primary button" type="submit">Submit</button>
         </form>
       </div>
     </div>
@@ -66,6 +66,9 @@ export default {
   position: absolute;
   right: 9em;
   top: .5em;
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 .feedback.overlay {
   position: fixed;

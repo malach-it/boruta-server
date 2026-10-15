@@ -1,5 +1,5 @@
 defmodule BorutaAdminWeb.ClientControllerTest do
-  import Boruta.Factory
+  import BorutaAdmin.Factory
 
   use BorutaAdminWeb.ConnCase
 
@@ -47,7 +47,7 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
   describe "create client" do
     setup %{conn: conn} do
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      identity_provider = BorutaAdmin.IdentityFactory.insert(:identity_provider)
 
       {:ok, conn: conn, identity_provider: identity_provider}
     end
@@ -80,19 +80,31 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
     @tag authorized: ["clients:manage:all"]
     test "renders client when data is valid", %{conn: conn, identity_provider: identity_provider} do
-      create_attrs = %{@create_attrs | identity_provider: %{id: identity_provider.id}}
+      trusted_authorities = "did:example:issuer"
+      trusted_hosts = ["issuer.example.com"]
+
+      create_attrs =
+        @create_attrs
+        |> Map.put(:identity_provider, %{id: identity_provider.id})
+        |> Map.put(:trusted_authorities, trusted_authorities)
+        |> Map.put(:trusted_hosts, trusted_hosts)
 
       create = post(conn, Routes.admin_client_path(conn, :create), client: create_attrs)
-      assert %{"id" => _id} = json_response(create, 201)["data"]
+
+      assert %{
+               "id" => _id,
+               "trusted_authorities" => ^trusted_authorities,
+               "trusted_hosts" => ^trusted_hosts
+             } = json_response(create, 201)["data"]
     end
   end
 
   describe "update client" do
     setup %{conn: conn} do
       client = insert(:client)
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      identity_provider = BorutaAdmin.IdentityFactory.insert(:identity_provider)
 
-      BorutaIdentity.Factory.insert(:client_identity_provider,
+      BorutaAdmin.IdentityFactory.insert(:client_identity_provider,
         client_id: client.id,
         identity_provider: identity_provider
       )
@@ -130,7 +142,7 @@ defmodule BorutaAdminWeb.ClientControllerTest do
       conn: conn,
       client: %Client{id: id} = client
     } do
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      identity_provider = BorutaAdmin.IdentityFactory.insert(:identity_provider)
       update_attrs = Map.put(@update_attrs, "identity_provider", %{"id" => identity_provider.id})
 
       conn = put(conn, Routes.admin_client_path(conn, :update, client), client: update_attrs)
@@ -144,12 +156,48 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
     @tag authorized: ["clients:manage:all"]
     test "renders client when data is valid", %{conn: conn, client: %Client{id: id} = client} do
-      conn = put(conn, Routes.admin_client_path(conn, :update, client), client: @update_attrs)
+      trusted_hosts = ["status.example.com"]
+      update_attrs = Map.put(@update_attrs, :trusted_hosts, trusted_hosts)
+      conn = put(conn, Routes.admin_client_path(conn, :update, client), client: update_attrs)
 
       assert %{
                "id" => ^id,
-               "redirect_uris" => ["http://updated.redirect.uri"]
+               "redirect_uris" => ["http://updated.redirect.uri"],
+               "trusted_authorities" => "",
+               "trusted_hosts" => ^trusted_hosts
              } = json_response(conn, 200)["data"]
+    end
+
+    @tag authorized: ["clients:manage:all"]
+    test "merges partial key configuration with the stored client", %{
+      conn: conn,
+      client: %Client{id: id} = client
+    } do
+      conn =
+        put(conn, Routes.admin_client_path(conn, :update, client),
+          client: %{"key_pair_type" => %{"exponent_size" => "65537"}}
+        )
+
+      assert %{
+               "id" => ^id,
+               "key_pair_type" => %{
+                 "type" => "rsa",
+                 "modulus_size" => "2048",
+                 "exponent_size" => "65537"
+               }
+             } = json_response(conn, 200)["data"]
+    end
+
+    @tag authorized: ["clients:manage:all"]
+    test "sets trusted authorities to an empty string", %{conn: conn} do
+      client = insert(:client, trusted_authorities: "did:example:issuer")
+
+      conn =
+        put(conn, Routes.admin_client_path(conn, :update, client),
+          client: Map.put(@update_attrs, :trusted_authorities, "")
+        )
+
+      assert %{"trusted_authorities" => ""} = json_response(conn, 200)["data"]
     end
 
     @tag :skip
@@ -159,9 +207,9 @@ defmodule BorutaAdminWeb.ClientControllerTest do
   describe "regenerate client key pair" do
     setup %{conn: conn} do
       client = insert(:client)
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider)
+      identity_provider = BorutaAdmin.IdentityFactory.insert(:identity_provider)
 
-      BorutaIdentity.Factory.insert(:client_identity_provider,
+      BorutaAdmin.IdentityFactory.insert(:client_identity_provider,
         client_id: client.id,
         identity_provider: identity_provider
       )
@@ -174,9 +222,12 @@ defmodule BorutaAdminWeb.ClientControllerTest do
       public_key = client.public_key
 
       conn = post(conn, Routes.admin_client_path(conn, :regenerate_key_pair, client))
-      assert %{"data" => %{
-        "public_key" => new_public_key
-      }} = json_response(conn, 200)
+
+      assert %{
+               "data" => %{
+                 "public_key" => new_public_key
+               }
+             } = json_response(conn, 200)
 
       assert new_public_key != public_key
     end
@@ -219,7 +270,7 @@ defmodule BorutaAdminWeb.ClientControllerTest do
 
     @tag authorized: ["clients:manage:all"]
     test "deletes client identity provider association", %{conn: conn, client: client} do
-      BorutaIdentity.Factory.insert(:client_identity_provider, client_id: client.id)
+      BorutaAdmin.IdentityFactory.insert(:client_identity_provider, client_id: client.id)
 
       conn = delete(conn, Routes.admin_client_path(conn, :delete, client))
       assert response(conn, 204)

@@ -16,11 +16,19 @@
                 </div>
               </div>
             </div>
-            <router-link :to="{ name: 'upstream-list' }" class="ui right floated button">Back</router-link>
+            <CurrentNodeUpstreams
+              ref="currentNodeUpstreams"
+              :node-name="upstream.node_name"
+              :edited-upstream-id="upstream.id" />
+            <router-link :to="{ name: 'service-registry' }" class="ui right floated button">Back</router-link>
           </div>
         </div>
         <div class="twelve wide column">
-          <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update" />
+          <UpstreamForm :upstream="upstream" @submit="updateUpstream()" @back="back()" action="Update">
+            <template #activity>
+              <ResourceActivity :key="$route.fullPath" :resource-id="upstream.id" />
+            </template>
+          </UpstreamForm>
         </div>
       </div>
     </div>
@@ -29,13 +37,17 @@
 
 <script>
 import Upstream from '../../models/upstream.model'
+import CurrentNodeUpstreams from '../../components/CurrentNodeUpstreams.vue'
 import UpstreamForm from '../../components/Forms/UpstreamForm.vue'
+import ResourceActivity from '../../components/ResourceActivity.vue'
 import Toaster from '../../components/Toaster.vue'
 
 export default {
   name: 'upstreams',
   components: {
+    CurrentNodeUpstreams,
     UpstreamForm,
+    ResourceActivity,
     Toaster
   },
   mounted () {
@@ -55,13 +67,26 @@ export default {
   },
   methods: {
     back () {
-      this.$router.push({ name: 'upstream-list' })
+      this.$router.push({ name: 'service-registry' })
     },
     updateUpstream () {
       this.success = false
       return this.upstream.save().then(() => {
         this.success = true
+        this.$refs.currentNodeUpstreams.getUpstreams()
       }).catch()
+    }
+  },
+  watch: {
+    '$route.params.upstreamId': {
+      handler () {
+        const { upstreamId } = this.$route.params
+        Upstream.get(upstreamId).then((upstream) => {
+          this.upstream = upstream
+        }).catch((error) => {
+          this.error = error.response?.data?.message || error.message
+        })
+      }
     }
   }
 }

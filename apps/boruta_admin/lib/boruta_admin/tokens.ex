@@ -11,9 +11,9 @@ defmodule BorutaAdmin.Tokens do
   alias Boruta.CodesAdapter
   alias Boruta.Ecto.Token
   alias Boruta.Oauth
-  alias BorutaAuth.TokenUserData
   alias BorutaAuth.Repo
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Repo, as: IdentityRepo
 
   @default_page_size 12
   @search_word_similarity_threshold 0.6
@@ -123,13 +123,6 @@ defmodule BorutaAdmin.Tokens do
     |> Enum.into(%{})
   end
 
-  def get_token(id) do
-    case Repo.get(Token, id) |> Repo.preload(:client) do
-      %Token{} = token -> {:ok, token}
-      nil -> {:error, :not_found}
-    end
-  end
-
   def revoke_access_token(id) do
     with %Token{} = token <- Repo.get(Token, id),
          :ok <- ensure_revocable_token(token),
@@ -141,10 +134,6 @@ defmodule BorutaAdmin.Tokens do
       error -> error
     end
   end
-
-  def store_user_data(id, vp_token), do: TokenUserData.store(id, vp_token)
-
-  def user_data(%Token{} = token), do: TokenUserData.get(token)
 
   defp filter_by_client(queryable, %{"client_id" => client_id})
        when is_binary(client_id) and client_id != "" do
@@ -219,23 +208,34 @@ defmodule BorutaAdmin.Tokens do
   defp filter_by_inserted_at_end(queryable, _params), do: queryable
 
   defp search(queryable, %{"q" => query}) when is_binary(query) and query != "" do
+    matching_user_ids =
+      from(u in User,
+        where:
+          fragment(
+            "word_similarity(coalesce(?, ''), ?) >= ?",
+            u.username,
+            ^query,
+            ^@search_word_similarity_threshold
+          ),
+        select: u.id
+      )
+      |> IdentityRepo.all()
+      |> Enum.map(&to_string/1)
+
     from(t in queryable,
-      left_join: u in User,
-      as: :user,
-      on: fragment("?::text = ?", u.id, t.sub),
       where:
         fragment(
-          "greatest(word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?)) >= ?",
+          "greatest(word_similarity(coalesce(?::text, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?)) >= ?",
+          t.id,
+          ^query,
           t.sub,
           ^query,
           t.refresh_token,
           ^query,
           t.value,
           ^query,
-          u.username,
-          ^query,
           ^@search_word_similarity_threshold
-        )
+        ) or t.sub in ^matching_user_ids
     )
   end
 
@@ -246,18 +246,18 @@ defmodule BorutaAdmin.Tokens do
   defp search(queryable, _params), do: queryable
 
   defp order(queryable, %{"q" => query}) when is_binary(query) and query != "" do
-    from([t, user: u] in queryable,
+    from(t in queryable,
       order_by: [
         desc:
           fragment(
-            "greatest(word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?))",
+            "greatest(word_similarity(coalesce(?::text, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?), word_similarity(coalesce(?, ''), ?))",
+            t.id,
+            ^query,
             t.sub,
             ^query,
             t.refresh_token,
             ^query,
             t.value,
-            ^query,
-            u.username,
             ^query
           ),
         desc: t.inserted_at
@@ -349,7 +349,7 @@ defmodule BorutaAdmin.Tokens do
 
   defp do_previous_codes(%Token{previous_code: previous_code}, acc)
        when is_binary(previous_code) and previous_code != "" do
-    case Repo.get_by(Token, value: previous_code) |> Repo.preload(:client) do
+    case Repo.get_by(Token, value: previous_code) do
       %Token{} = previous_token -> do_previous_codes(previous_token, acc ++ [previous_token])
       _ -> acc
     end

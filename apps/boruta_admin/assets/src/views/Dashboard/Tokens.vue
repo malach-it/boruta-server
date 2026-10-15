@@ -5,7 +5,7 @@
         {{ errorMessage }}
       </div>
 
-      <div class="ui dates form">
+      <form class="ui dates form">
         <div class="ui stackable grid">
           <div class="four wide token-times column">
             <h1>Tokens</h1>
@@ -20,7 +20,7 @@
             <button class="ui fluid blue button" @click="search()" :disabled="pending">Filter</button>
           </div>
         </div>
-      </div>
+      </form>
 
       <div class="ui stackable equal height grid token-summary-row">
         <div class="thirteen wide column">
@@ -137,7 +137,7 @@
                       <div class="token-title-main">
                         <i class="dropdown icon"></i>
                         <span class="ui tiny basic label">{{ token.type }}</span>
-                        <span class="token-id monospace">{{ token.value }}</span>
+                        <span class="token-id monospace">{{ token.id }}</span>
                       </div>
                       <div class="token-title-status">
                         <span class="ui tiny red label" v-if="token.revoked_at">revoked</span>
@@ -148,21 +148,11 @@
 
                     <div class="content" :class="{ active: isTokenExpanded(token) }">
                       <div class="ui segment">
-                        <div class="token-actions">
+                        <div class="token-actions" v-if="canRevoke(token)">
                           <button
-                            class="ui tiny basic button"
-                            :class="{ loading: token.isRefreshing }"
-                            :disabled="token.isRefreshing"
-                            type="button"
-                            @click="refreshToken(token)">
-                            <i class="sync alternate icon"></i>
-                            Refresh
-                          </button>
-                          <button
-                            v-if="canRevoke(token)"
                             class="ui tiny red button"
-                            :class="{ loading: token.isRevoking }"
-                            :disabled="token.isRevoking"
+                            :class="{ loading: isRevoking(token) }"
+                            :disabled="isRevoking(token)"
                             type="button"
                             @click="revokeToken(token)">
                             Revoke {{ token.type }}
@@ -173,7 +163,7 @@
                             <div class="ui attribute list">
                               <div class="item">
                                 <span class="header">Identifier</span>
-                                <span class="token-value description monospace" :title="token.value">{{ token.id }}</span>
+                                <span class="token-value description monospace" :title="token.id">{{ token.id }}</span>
                               </div>
                               <div class="item">
                                 <span class="header">Client</span>
@@ -191,10 +181,6 @@
                                 <span class="header">Expires at</span>
                                 <span class="description">{{ formatUnixDate(token.expires_at) }}</span>
                               </div>
-                              <div class="item" v-if="token.previous_code">
-                                <span class="header">Previous code</span>
-                                <span class="token-value description monospace" :title="token.previous_code">{{ token.previous_code }}</span>
-                              </div>
                             </div>
                           </div>
                           <div class="column">
@@ -202,14 +188,6 @@
                               <div class="item">
                                 <span class="header">Subject</span>
                                 <span class="description monospace">{{ token.sub || '-' }}</span>
-                              </div>
-                              <div class="item">
-                                <span class="header">Refresh token</span>
-                                <span class="token-value description monospace" :title="token.refresh_token">{{ token.refresh_token || '-' }}</span>
-                              </div>
-                              <div class="item" v-if="token.previous_token">
-                                <span class="header">Previous token</span>
-                                <span class="token-value description monospace" :title="token.previous_token">{{ token.previous_token }}</span>
                               </div>
                               <div class="item">
                                 <span class="header">Inserted at</span>
@@ -274,29 +252,14 @@
                             :aria-expanded="isPresentationTokenExpanded(token, presentationToken)">
                             <i class="dropdown icon"></i>
                             {{ presentationToken.label }}
-                            <span class="token-detail-summary monospace" :title="presentationToken.value">
-                              {{ presentationToken.value }}
-                            </span>
                             <span class="token-detail-status">
                               <span class="ui tiny green label" v-if="presentationToken.result?.verified">verified</span>
                               <span class="ui tiny red label" v-else>not verified</span>
                             </span>
                           </div>
-
                           <div class="content" :class="{ active: isPresentationTokenExpanded(token, presentationToken) }">
                             <div class="ui segment">
                               <div class="ui attribute list token-claims-list" v-if="presentationToken.result?.claims">
-                                <div class="item" v-if="presentationToken.result.verifiable_presentation_url">
-                                  <span class="header">verifiable_presentation_url</span>
-                                  <a
-                                    class="description monospace token-presentation-url"
-                                    :href="presentationToken.result.verifiable_presentation_url"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    :title="presentationToken.result.verifiable_presentation_url">
-                                    {{ presentationToken.result.verifiable_presentation_url }}
-                                  </a>
-                                </div>
                                 <div class="item" v-for="claim in tokenClaimAttributes(presentationToken.result.claims)" :key="claim.name">
                                   <span class="header">{{ claim.name }}</span>
                                   <span class="description monospace">{{ claim.value }}</span>
@@ -304,25 +267,6 @@
                               </div>
                               <pre class="token-claims token-claims-error" v-else>{{ presentationToken.result?.error || 'No claims available.' }}</pre>
                             </div>
-                          </div>
-                        </div>
-
-                        <div class="ui styled fluid accordion token-detail-accordion" v-if="token.user_data">
-                          <div
-                            class="title"
-                            :class="{ active: isUserDataExpanded(token) }"
-                            @click.stop="toggleUserData(token)"
-                            @keyup.enter.stop="toggleUserData(token)"
-                            @keyup.space.stop.prevent="toggleUserData(token)"
-                            role="button"
-                            tabindex="0"
-                            :aria-expanded="isUserDataExpanded(token)">
-                            <i class="dropdown icon"></i>
-                            user_data
-                            <span class="token-detail-summary">{{ userDataSummary(token.user_data) }}</span>
-                          </div>
-                          <div class="content" :class="{ active: isUserDataExpanded(token) }">
-                            <pre class="token-claims">{{ formatClaimValue(token.user_data) }}</pre>
                           </div>
                         </div>
                       </div>
@@ -414,8 +358,8 @@ export default {
       expandedChainIds: [],
       expandedTokenIds: [],
       expandedUserTokenIds: [],
-      expandedUserDataTokenIds: [],
       expandedPresentationTokenIds: [],
+      revokingTokenIds: [],
       tokenTypeChartOptions: {
         animation: false,
         cutout: '30%',
@@ -531,7 +475,7 @@ export default {
         const previousCodes = token.previous_codes || []
 
         return {
-          key: token.value,
+          key: token.id,
           tokens: previousCodes.concat(token)
         }
       })
@@ -604,16 +548,6 @@ export default {
 
       this.$router.push({ name: 'token-list', query })
     },
-    refreshToken (token) {
-      token.isRefreshing = true
-      this.errorMessage = false
-
-      token.refresh().catch((error) => {
-        this.errorMessage = error.response?.data?.message || 'An error has occured when refreshing token.'
-      }).finally(() => {
-        token.isRefreshing = false
-      })
-    },
     formatUnixDate (timestamp) {
       if (!timestamp) return '-'
 
@@ -643,10 +577,13 @@ export default {
         !token.revoked_at &&
         this.isActive(token)
     },
+    isRevoking (token) {
+      return this.revokingTokenIds.includes(token.id)
+    },
     revokeToken (token) {
       if (!window.confirm(`Revoke this ${token.type}?`)) return
 
-      token.isRevoking = true
+      this.revokingTokenIds = [...this.revokingTokenIds, token.id]
       this.errorMessage = false
 
       Token.revoke(token).then((revokedToken) => {
@@ -656,7 +593,7 @@ export default {
       }).catch((error) => {
         this.errorMessage = error.response?.data?.message || 'An error has occured when revoking token.'
       }).finally(() => {
-        token.isRevoking = false
+        this.revokingTokenIds = this.revokingTokenIds.filter((tokenId) => tokenId !== token.id)
       })
     },
     isCodeChain (group) {
@@ -704,24 +641,6 @@ export default {
     tokenUserLabel (user) {
       return user.username || user.uid || user.id
     },
-    isUserDataExpanded (token) {
-      return this.expandedUserDataTokenIds.includes(token.id)
-    },
-    toggleUserData (token) {
-      if (this.isUserDataExpanded(token)) {
-        this.expandedUserDataTokenIds = this.expandedUserDataTokenIds.filter((tokenId) => tokenId !== token.id)
-      } else {
-        this.expandedUserDataTokenIds = [...this.expandedUserDataTokenIds, token.id]
-      }
-    },
-    userDataSummary (userData) {
-      if (!userData || typeof userData !== 'object') return this.formatClaimValue(userData)
-
-      const keys = Object.keys(userData).sort()
-      if (!keys.length) return 'empty object'
-
-      return keys.slice(0, 4).join(', ') + (keys.length > 4 ? `, +${keys.length - 4}` : '')
-    },
     presentationTokenKey (token, presentationToken) {
       return `${token.id}:${presentationToken.name}`
     },
@@ -741,11 +660,10 @@ export default {
       return [
         {
           name: 'id_token',
-          label: 'id_token',
-          value: token.id_token,
+          label: 'id_token claims',
           result: token.id_token_claims
         }
-      ].filter((presentationToken) => presentationToken.value)
+      ].filter((presentationToken) => presentationToken.result)
     },
     tokenClaimAttributes (claims) {
       return Object.keys(claims).sort().map((name) => {

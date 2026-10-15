@@ -8,8 +8,10 @@ export function addClientErrorInterceptor(instance) {
     }, function (error) {
       if (error.response?.status === 401) {
         return new Promise((resolve, reject) => {
-          oauth.silentRefresh()
+          let refreshTimeout
+
           function retry() {
+            clearTimeout(refreshTimeout)
             window.removeEventListener('logged_in', retry)
             const accessToken = localStorage.getItem('access_token')
 
@@ -23,10 +25,12 @@ export function addClientErrorInterceptor(instance) {
           }
 
           window.addEventListener('logged_in', retry)
-          setTimeout(() => {
+          refreshTimeout = setTimeout(() => {
+            window.removeEventListener('logged_in', retry)
             oauth.logout()
             reject()
           }, 2000)
+          oauth.silentRefresh()
         })
       }
 

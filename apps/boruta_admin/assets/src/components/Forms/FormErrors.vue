@@ -27,11 +27,13 @@ const labels = {
   'id_token_ttl': 'ID token TTL',
   'identity_provider_id': 'identity provider',
   'is_default': 'Default',
+  'mtls_enabled': 'Mutual TLS',
   'name': 'Name',
   'password_hashing_opts': 'Password hashing options',
   'redirect_uris': 'Redirect URIs',
   'refresh_token_ttl': 'Refresh token TTL',
-  'resource': 'Resource'
+  'resource': 'Resource',
+  'trusted_hosts': 'Trusted hosts'
 }
 
 export default {

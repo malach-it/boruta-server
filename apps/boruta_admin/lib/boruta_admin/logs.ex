@@ -16,14 +16,24 @@ defmodule BorutaAdmin.Logs.FileTooLargeError do
 end
 
 defmodule BorutaAdmin.Logs do
-  @moduledoc false
+  @moduledoc """
+  Reads and aggregates Boruta request and business-event logs.
 
-  alias BorutaAuth.LogRotate
+  The filesystem backend is used by default. A different backend can be set
+  with application configuration:
 
-  @max_file_size 100_000_000
+      config :boruta_admin, BorutaAdmin.Logs,
+        adapter: MyApp.LogsAdapter,
+        adapter_options: [custom_option: "value"]
+
+  Adapters implement `BorutaAdmin.Logs.Adapter` and return raw formatted log
+  lines. Parsing, filtering, and aggregation remain centralized in this module.
+  """
+
   @max_log_lines 10_000
-  @request_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(\w+)/
-  @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(( ([^\=]+)\=((\".+\")|([^\s]+)))+)/
+  @log_attribute_regex ~r/([^\s=]+)=(?:"([^"]*)"|([^\s]+))/
+  @request_log_regex ~r/\A(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(µs|ms)$/u
+  @business_event_log_regex ~r/(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) (\w+) - (\w+)(?: ([^\=]+)=((\".+\")|([^\s]+)))*/
 
   @spec read(
           start_at :: DateTime.t(),
@@ -32,11 +42,18 @@ defmodule BorutaAdmin.Logs do
           type :: atom(),
           query :: map()
         ) :: Enumerable.t()
+
+  @spec earliest_at(application :: atom(), type :: atom()) :: DateTime.t()
+  def earliest_at(application, type) do
+    {adapter, options} = adapter()
+    adapter.earliest_at(application, type, options)
+  end
+
   # credo:disable-for-next-line
   def read(start_at, end_at, application, :request = type, query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
-    log_stream(start_at, end_at, application, type)
+    log_stream(start_at, end_at, application, type, query)
     |> Stream.map(&parse_request_log/1)
     |> Stream.reject(&is_nil/1)
     |> apply_request_filters(query)
@@ -49,12 +66,14 @@ defmodule BorutaAdmin.Logs do
         status_codes: %{},
         request_counts: %{},
         request_times: %{},
-        labels: []
+        labels: [],
+        methods: []
       },
       fn %{
            label: label,
            log_line: log_line,
            time: time,
+           method: method,
            status_code: status_code,
            duration: duration,
            duration_unit: duration_unit
@@ -67,7 +86,8 @@ defmodule BorutaAdmin.Logs do
            status_codes: status_codes,
            request_counts: request_counts,
            request_times: request_times,
-           labels: labels
+           labels: labels,
+           methods: methods
          } ->
         overflow = overflow || log_count >= @max_log_lines
         truncated_time = DateTime.truncate(time, :second)
@@ -115,17 +135,23 @@ defmodule BorutaAdmin.Logs do
             case Enum.member?(labels, label) do
               false -> [label | labels] |> Enum.sort()
               true -> labels
+            end,
+          methods:
+            case Enum.member?(methods, method) do
+              false -> [method | methods] |> Enum.sort()
+              true -> methods
             end
         }
       end
     )
+    |> aggregate_stats(start_at, end_at, application, type, query)
   end
 
   # credo:disable-for-next-line
   def read(start_at, end_at, application, :business = type, query) do
     time_scale_unit = time_scale_unit(start_at, end_at)
 
-    log_stream(start_at, end_at, application, type)
+    log_stream(start_at, end_at, application, type, query)
     |> Stream.map(&parse_business_log/1)
     |> Stream.reject(&is_nil/1)
     |> apply_business_filters(query)
@@ -135,6 +161,7 @@ defmodule BorutaAdmin.Logs do
         overflow: false,
         log_lines: [],
         log_count: 0,
+        events: [],
         counts: %{},
         business_event_counts: %{},
         gateway_times: %{},
@@ -144,10 +171,14 @@ defmodule BorutaAdmin.Logs do
       fn %{
            log_line: log_line,
            time: time,
+           request_id: request_id,
            label: label,
+           application: application,
            status: status,
            domain: domain,
            action: action,
+           event_domain: event_domain,
+           event_action: event_action,
            attributes: attributes
          },
          %{
@@ -155,6 +186,7 @@ defmodule BorutaAdmin.Logs do
            overflow: overflow,
            log_lines: log_lines,
            log_count: log_count,
+           events: events,
            counts: counts,
            business_event_counts: business_event_counts,
            gateway_times: gateway_times,
@@ -181,6 +213,26 @@ defmodule BorutaAdmin.Logs do
               false -> log_lines ++ [log_line]
             end,
           log_count: log_count + 1,
+          events:
+            case overflow do
+              true ->
+                events
+
+              false ->
+                [
+                  %{
+                    time: time,
+                    request_id: request_id,
+                    label: label,
+                    application: application,
+                    domain: event_domain,
+                    action: event_action,
+                    status: status,
+                    attributes: attributes
+                  }
+                  | events
+                ]
+            end,
           business_event_counts:
             Map.merge(business_event_counts, %{label => %{truncated_time => 1}}, fn _, a, b ->
               Map.merge(a, b, fn _, i, j -> i + j end)
@@ -203,42 +255,30 @@ defmodule BorutaAdmin.Logs do
         }
       end
     )
+    |> aggregate_stats(start_at, end_at, application, type, query)
   end
 
   def read(_start_at, _end_at, _application, _type), do: %{}
 
-  defp log_stream(start_at, end_at, application, type) do
-    paths =
-      log_dates(DateTime.to_date(start_at), DateTime.to_date(end_at))
-      |> Enum.map(&LogRotate.path(application, type, &1))
-      |> Enum.filter(&File.exists?/1)
+  defp log_stream(start_at, end_at, application, type, query) do
+    {adapter, options} = adapter()
+    adapter.stream(start_at, end_at, application, type, query, options)
+  end
 
-    if Enum.reduce(paths, 0, fn path, _acc -> File.stat!(path).size end) > @max_file_size do
-      raise BorutaAdmin.Logs.FileTooLargeError,
-            "Requested for more than #{@max_file_size} bytes of logs, could not perform the request."
+  defp adapter do
+    config = Application.get_env(:boruta_admin, __MODULE__, [])
+    adapter = Keyword.get(config, :adapter, BorutaAdmin.Logs.Adapters.File)
+    {adapter, Keyword.merge(config, Keyword.get(config, :adapter_options, []))}
+  end
+
+  defp aggregate_stats(stats, start_at, end_at, application, type, query) do
+    {adapter, options} = adapter()
+
+    if function_exported?(adapter, :aggregate, 7) do
+      adapter.aggregate(start_at, end_at, application, type, query, stats, options)
+    else
+      stats
     end
-
-    paths
-    |> Enum.map(&File.stream!/1)
-    |> Stream.concat()
-    |> Stream.drop_while(fn log ->
-      case DateTime.from_iso8601(String.split(log, " ") |> List.first()) do
-        {:ok, log_time, _offset} ->
-          DateTime.compare(log_time, start_at) == :lt
-
-        _ ->
-          true
-      end
-    end)
-    |> Stream.take_while(fn log ->
-      case DateTime.from_iso8601(String.split(log, " ") |> List.first()) do
-        {:ok, log_time, _offset} ->
-          DateTime.compare(log_time, end_at) == :lt
-
-        _ ->
-          true
-      end
-    end)
   end
 
   defp parse_request_log(log_line) do
@@ -292,7 +332,7 @@ defmodule BorutaAdmin.Logs do
       {_key, ""}, stream ->
         stream
 
-      {key, value}, stream when key in [:label] ->
+      {key, value}, stream when key in [:label, :method, :status_code] ->
         Stream.filter(stream, fn
           %{^key => ^value} -> true
           _ -> false
@@ -315,6 +355,21 @@ defmodule BorutaAdmin.Logs do
         Stream.filter(stream, fn
           %{^key => ^value} -> true
           _ -> false
+        end)
+
+      {:sub, value}, stream ->
+        Stream.filter(stream, fn
+          %{attributes: %{"sub" => ^value}} -> true
+          _ -> false
+        end)
+
+      {:resource_id, value}, stream ->
+        Stream.filter(stream, fn
+          %{event_domain: event_domain, attributes: attributes} ->
+            Map.get(attributes, "#{event_domain}_id") == value
+
+          _ ->
+            false
         end)
 
       _, stream ->
@@ -345,30 +400,42 @@ defmodule BorutaAdmin.Logs do
             application: application,
             domain: String.slice("#{application} - #{domain}", 0..70),
             action: String.slice("#{application} - #{domain} #{action}", 0..70),
+            event_domain: domain,
+            event_action: action,
             status: status,
-            attributes: parse_log_attributes(log_line)
+            attributes: parse_log_attributes(log_line, application)
           }
         end
     end
   end
 
-  defp parse_log_attributes(log_line) do
+  defp parse_log_attributes(log_line, application) do
     case String.split(log_line, " - ", parts: 2) do
       [_prefix, status_and_attributes] ->
-        status_and_attributes
-        |> String.split(" ")
-        |> Enum.drop(1)
-        |> Enum.reduce(%{}, fn attribute, attributes ->
-          case String.split(attribute, "=", parts: 2) do
-            [key, value] -> Map.put(attributes, key, value)
-            _ -> attributes
-          end
+        @log_attribute_regex
+        |> Regex.scan(status_and_attributes)
+        |> Enum.reduce(%{}, fn [attribute, key | values], attributes ->
+          value =
+            case String.starts_with?(attribute, ~s{#{key}="}) do
+              true -> List.first(values) || ""
+              false -> List.last(values) || ""
+            end
+
+          Map.put(attributes, key, decode_log_attribute(application, value))
         end)
 
       _ ->
         %{}
     end
   end
+
+  defp decode_log_attribute("boruta_admin", value) do
+    URI.decode_www_form(value)
+  rescue
+    ArgumentError -> value
+  end
+
+  defp decode_log_attribute(_application, value), do: value
 
   defp update_gateway_times(gateway_times, attributes, truncated_time) do
     [
@@ -397,14 +464,6 @@ defmodule BorutaAdmin.Logs do
     case Integer.parse(time) do
       {time, ""} -> time
       _ -> nil
-    end
-  end
-
-  defp log_dates(start_date, end_date) do
-    if Date.compare(start_date, end_date) == :gt do
-      []
-    else
-      [start_date | log_dates(Date.add(start_date, 1), end_date)]
     end
   end
 

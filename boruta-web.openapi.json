@@ -1,0 +1,1220 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Boruta Authorization and Identity",
+    "description": "OAuth 2.0, OpenID Connect, verifiable credential, DID status, and user identity endpoints exposed by BorutaWeb. BorutaIdentity routes are mounted below /accounts.",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Default release endpoint"
+    },
+    {
+      "url": "http://localhost:4000",
+      "description": "Development endpoint"
+    }
+  ],
+  "paths": {
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "Get OAuth authorization server metadata",
+        "responses": {
+          "200": {"$ref": "#/components/responses/AuthorizationServerMetadata"}
+        },
+        "security": []
+      }
+    },
+    "/.well-known/openid-configuration": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "Get OpenID Provider metadata",
+        "responses": {
+          "200": {"$ref": "#/components/responses/AuthorizationServerMetadata"}
+        },
+        "security": []
+      }
+    },
+    "/.well-known/openid-credential-issuer": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "Get OpenID credential issuer metadata",
+        "responses": {
+          "200": {"$ref": "#/components/responses/CredentialIssuerMetadata"}
+        },
+        "security": []
+      }
+    },
+    "/.well-known/acme-challenge/{token}": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Retrieve an ACME HTTP-01 challenge response",
+        "parameters": [
+          {"$ref": "#/components/parameters/AcmeToken"}
+        ],
+        "responses": {
+          "200": {
+            "description": "ACME challenge key authorization",
+            "content": {
+              "text/plain": {"schema": {"type": "string"}}
+            }
+          },
+          "404": {"description": "Challenge token not found"}
+        },
+        "security": []
+      }
+    },
+    "/favicon.ico": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve the Boruta favicon",
+        "responses": {"200": {"$ref": "#/components/responses/IconAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/robots.txt": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve robots.txt",
+        "responses": {"200": {"$ref": "#/components/responses/TextAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/css/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve an authorization-server stylesheet",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/StylesheetAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/fonts/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve an authorization-server font",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/FontAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/images/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve an authorization-server image",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/ImageAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/js/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve an authorization-server JavaScript asset",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/JavaScriptAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/admin/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve an authorization-server admin asset",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/StaticAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/accounts/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve a top-level identity asset",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/StaticAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/accounts/css/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve an identity stylesheet",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/StylesheetAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/accounts/js/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve an identity JavaScript asset",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/JavaScriptAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/accounts/images/{filename}": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve an identity image",
+        "parameters": [{"$ref": "#/components/parameters/AssetFilename"}],
+        "responses": {"200": {"$ref": "#/components/responses/ImageAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/accounts/manifest.json": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve the identity web app manifest",
+        "responses": {"200": {"$ref": "#/components/responses/ManifestAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/accounts/favicon.ico": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve the identity favicon",
+        "responses": {"200": {"$ref": "#/components/responses/IconAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/accounts/robots.txt": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve the identity robots.txt",
+        "responses": {"200": {"$ref": "#/components/responses/TextAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/accounts/semantic-ui.min.css": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "Serve the identity Semantic UI stylesheet",
+        "responses": {"200": {"$ref": "#/components/responses/StylesheetAsset"}, "404": {"description": "Asset not found"}},
+        "security": []
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Check service health",
+        "responses": {
+          "204": {"description": "Service is healthy"}
+        },
+        "security": []
+      }
+    },
+    "/oauth/authorize": {
+      "get": {
+        "tags": ["OAuth 2.0"],
+        "summary": "Start an authorization request",
+        "parameters": [
+          {"name": "client_id", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "redirect_uri", "in": "query", "required": false, "schema": {"type": "string", "format": "uri"}},
+          {"name": "response_type", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "scope", "in": "query", "required": false, "schema": {"type": "string"}},
+          {"name": "state", "in": "query", "required": false, "schema": {"type": "string"}},
+          {"name": "nonce", "in": "query", "required": false, "schema": {"type": "string"}},
+          {"name": "code_challenge", "in": "query", "required": false, "schema": {"type": "string"}},
+          {"name": "code_challenge_method", "in": "query", "required": false, "schema": {"type": "string", "enum": ["plain", "S256"]}},
+          {"name": "prompt", "in": "query", "required": false, "schema": {"type": "string"}},
+          {"name": "max_age", "in": "query", "required": false, "schema": {"type": "integer", "minimum": 0}},
+          {"name": "request", "in": "query", "required": false, "description": "JWT-secured authorization request", "schema": {"type": "string"}},
+          {"name": "request_uri", "in": "query", "required": false, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"$ref": "#/components/responses/HtmlPage"},
+          "302": {"$ref": "#/components/responses/Redirect"},
+          "400": {"$ref": "#/components/responses/OAuthError"}
+        },
+        "security": []
+      }
+    },
+    "/oauth/token": {
+      "post": {
+        "tags": ["OAuth 2.0"],
+        "summary": "Issue or refresh tokens",
+        "requestBody": {"$ref": "#/components/requestBodies/TokenRequest"},
+        "responses": {
+          "200": {"$ref": "#/components/responses/TokenResponse"},
+          "400": {"$ref": "#/components/responses/OAuthError"},
+          "401": {"$ref": "#/components/responses/OAuthError"}
+        },
+        "security": [{"clientBasic": []}, {}]
+      },
+      "options": {
+        "tags": ["CORS"],
+        "summary": "CORS preflight",
+        "responses": {"204": {"description": "Preflight accepted"}},
+        "security": []
+      }
+    },
+    "/oauth/introspect": {
+      "post": {
+        "tags": ["OAuth 2.0"],
+        "summary": "Introspect a token",
+        "requestBody": {"$ref": "#/components/requestBodies/IntrospectionRequest"},
+        "responses": {
+          "200": {"$ref": "#/components/responses/IntrospectionResponse"},
+          "400": {"$ref": "#/components/responses/OAuthError"},
+          "401": {"$ref": "#/components/responses/OAuthError"}
+        },
+        "security": [{"clientBasic": []}, {}]
+      },
+      "options": {
+        "tags": ["CORS"],
+        "summary": "CORS preflight",
+        "responses": {"204": {"description": "Preflight accepted"}},
+        "security": []
+      }
+    },
+    "/oauth/pushed_authorization_request": {
+      "post": {
+        "tags": ["OAuth 2.0"],
+        "summary": "Create a pushed authorization request",
+        "requestBody": {"$ref": "#/components/requestBodies/PushedAuthorizationRequest"},
+        "responses": {
+          "201": {"$ref": "#/components/responses/PushedAuthorizationResponse"},
+          "400": {"$ref": "#/components/responses/OAuthError"},
+          "401": {"$ref": "#/components/responses/OAuthError"}
+        },
+        "security": [{"clientBasic": []}, {}]
+      }
+    },
+    "/oauth/revoke": {
+      "post": {
+        "tags": ["OAuth 2.0"],
+        "summary": "Revoke a token",
+        "requestBody": {"$ref": "#/components/requestBodies/RevocationRequest"},
+        "responses": {
+          "200": {"description": "Token revoked or already invalid"},
+          "400": {"$ref": "#/components/responses/OAuthError"},
+          "401": {"$ref": "#/components/responses/OAuthError"}
+        },
+        "security": [{"clientBasic": []}, {}]
+      },
+      "options": {
+        "tags": ["CORS"],
+        "summary": "CORS preflight",
+        "responses": {"204": {"description": "Preflight accepted"}},
+        "security": []
+      }
+    },
+    "/oauth/userinfo": {
+      "get": {
+        "tags": ["OpenID Connect"],
+        "summary": "Get claims for the authenticated subject",
+        "responses": {
+          "200": {"$ref": "#/components/responses/UserInfoResponse"},
+          "401": {"description": "Missing or invalid access token"}
+        },
+        "security": [{"bearer": []}]
+      },
+      "post": {
+        "tags": ["OpenID Connect"],
+        "summary": "Get claims for the authenticated subject",
+        "responses": {
+          "200": {"$ref": "#/components/responses/UserInfoResponse"},
+          "401": {"description": "Missing or invalid access token"}
+        },
+        "security": [{"bearer": []}]
+      }
+    },
+    "/openid/credential": {
+      "post": {
+        "tags": ["OpenID for Verifiable Credentials"],
+        "summary": "Issue a credential",
+        "requestBody": {"$ref": "#/components/requestBodies/CredentialRequest"},
+        "responses": {
+          "200": {"$ref": "#/components/responses/CredentialResponse"},
+          "400": {"$ref": "#/components/responses/OAuthError"},
+          "401": {"$ref": "#/components/responses/OAuthError"}
+        },
+        "security": [{"bearer": []}]
+      },
+      "options": {
+        "tags": ["CORS"],
+        "summary": "CORS preflight",
+        "responses": {"204": {"description": "Preflight accepted"}},
+        "security": []
+      }
+    },
+    "/openid/defered-credential": {
+      "post": {
+        "tags": ["OpenID for Verifiable Credentials"],
+        "summary": "Retrieve a deferred credential",
+        "description": "The route uses the spelling implemented by the service: defered-credential.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {"acceptance_token": {"type": "string"}},
+                "required": ["acceptance_token"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"$ref": "#/components/responses/CredentialResponse"},
+          "400": {"$ref": "#/components/responses/OAuthError"},
+          "401": {"$ref": "#/components/responses/OAuthError"}
+        },
+        "security": [{"bearer": []}]
+      }
+    },
+    "/openid/jwks": {
+      "get": {
+        "tags": ["OpenID Connect"],
+        "summary": "List JSON Web Keys",
+        "responses": {
+          "200": {"$ref": "#/components/responses/JwksResponse"}
+        },
+        "security": []
+      }
+    },
+    "/openid/jwks/{client_id}": {
+      "get": {
+        "tags": ["OpenID Connect"],
+        "summary": "Get JSON Web Keys for a client",
+        "parameters": [{"$ref": "#/components/parameters/ClientId"}],
+        "responses": {
+          "200": {"$ref": "#/components/responses/JwksResponse"},
+          "404": {"description": "Client not found"}
+        },
+        "security": []
+      }
+    },
+    "/openid/direct_post/{code_id}": {
+      "post": {
+        "tags": ["OpenID for Verifiable Presentations"],
+        "summary": "Submit a direct-post authorization response",
+        "parameters": [{"$ref": "#/components/parameters/CodeId"}],
+        "requestBody": {"$ref": "#/components/requestBodies/DirectPostRequest"},
+        "responses": {
+          "302": {"$ref": "#/components/responses/Redirect"},
+          "400": {"$ref": "#/components/responses/OAuthError"},
+          "404": {"description": "Authorization code not found"}
+        },
+        "security": []
+      }
+    },
+    "/openid/presentation_sse": {
+      "get": {
+        "tags": ["OpenID for Verifiable Presentations"],
+        "summary": "Stream presentation authentication status",
+        "parameters": [
+          {"name": "code", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent authentication events",
+            "content": {"text/event-stream": {"schema": {"type": "string"}}}
+          }
+        },
+        "security": []
+      },
+      "options": {
+        "tags": ["CORS"],
+        "summary": "CORS preflight",
+        "responses": {"204": {"description": "Preflight accepted"}},
+        "security": []
+      }
+    },
+    "/did/resolve_status/{status}": {
+      "get": {
+        "tags": ["DID and Verifiable Credentials"],
+        "summary": "Resolve a verifiable credential status",
+        "parameters": [
+          {"name": "status", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Resolved status",
+            "content": {"text/plain": {"schema": {"type": "string"}}}
+          }
+        },
+        "security": []
+      }
+    },
+    "/accounts/users/register": {
+      "get": {
+        "tags": ["Identity registration"],
+        "summary": "Display the registration form",
+        "parameters": [{"$ref": "#/components/parameters/RequestContext"}],
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": []
+      },
+      "post": {
+        "tags": ["Identity registration"],
+        "summary": "Register a user",
+        "parameters": [{"$ref": "#/components/parameters/RequestContext"}],
+        "requestBody": {"$ref": "#/components/requestBodies/UserRegistration"},
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}, "422": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": []
+      }
+    },
+    "/accounts/users/log_in": {
+      "get": {
+        "tags": ["Identity sessions"],
+        "summary": "Display the login form",
+        "parameters": [{"$ref": "#/components/parameters/RequestContext"}],
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": []
+      },
+      "post": {
+        "tags": ["Identity sessions"],
+        "summary": "Authenticate a user",
+        "parameters": [{"$ref": "#/components/parameters/RequestContext"}],
+        "requestBody": {"$ref": "#/components/requestBodies/UserLogin"},
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}, "401": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": []
+      }
+    },
+    "/accounts/users/log_out": {
+      "get": {
+        "tags": ["Identity sessions"],
+        "summary": "Log out the current user",
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/reset_password": {
+      "get": {
+        "tags": ["Identity password recovery"],
+        "summary": "Display the password reset request form",
+        "parameters": [{"$ref": "#/components/parameters/RequestContext"}],
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": []
+      },
+      "post": {
+        "tags": ["Identity password recovery"],
+        "summary": "Request password reset instructions",
+        "parameters": [{"$ref": "#/components/parameters/RequestContext"}],
+        "requestBody": {"$ref": "#/components/requestBodies/EmailForm"},
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}},
+        "security": []
+      }
+    },
+    "/accounts/users/reset_password/{token}": {
+      "get": {
+        "tags": ["Identity password recovery"],
+        "summary": "Display the password reset form",
+        "parameters": [{"$ref": "#/components/parameters/IdentityToken"}, {"$ref": "#/components/parameters/RequestContext"}],
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": []
+      },
+      "put": {
+        "tags": ["Identity password recovery"],
+        "summary": "Reset a password",
+        "parameters": [{"$ref": "#/components/parameters/IdentityToken"}, {"$ref": "#/components/parameters/RequestContext"}],
+        "requestBody": {"$ref": "#/components/requestBodies/PasswordReset"},
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}, "422": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": []
+      }
+    },
+    "/accounts/users/confirm": {
+      "get": {
+        "tags": ["Identity confirmation"],
+        "summary": "Display the confirmation instructions form",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": []
+      },
+      "post": {
+        "tags": ["Identity confirmation"],
+        "summary": "Resend account confirmation instructions",
+        "requestBody": {"$ref": "#/components/requestBodies/EmailForm"},
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}},
+        "security": []
+      }
+    },
+    "/accounts/users/confirm/{token}": {
+      "get": {
+        "tags": ["Identity confirmation"],
+        "summary": "Confirm an account",
+        "parameters": [{"$ref": "#/components/parameters/IdentityToken"}, {"$ref": "#/components/parameters/RequestContext"}],
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}},
+        "security": []
+      }
+    },
+    "/accounts/users/totp_registration": {
+      "get": {
+        "tags": ["Identity MFA"],
+        "summary": "Display TOTP registration",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": [{"sessionCookie": []}]
+      },
+      "post": {
+        "tags": ["Identity MFA"],
+        "summary": "Register a TOTP authenticator",
+        "requestBody": {"$ref": "#/components/requestBodies/TotpForm"},
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}, "422": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/webauthn_registration": {
+      "get": {
+        "tags": ["Identity MFA"],
+        "summary": "Display WebAuthn registration",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/register_webauthn": {
+      "post": {
+        "tags": ["Identity MFA"],
+        "summary": "Register a WebAuthn credential",
+        "requestBody": {"$ref": "#/components/requestBodies/WebAuthnForm"},
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}, "422": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/totp": {
+      "get": {
+        "tags": ["Identity MFA"],
+        "summary": "Display TOTP authentication",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/totp_authenticate": {
+      "post": {
+        "tags": ["Identity MFA"],
+        "summary": "Authenticate with TOTP",
+        "requestBody": {"$ref": "#/components/requestBodies/TotpForm"},
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}, "401": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/webauthn": {
+      "get": {
+        "tags": ["Identity MFA"],
+        "summary": "Display WebAuthn authentication",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/webauthn_authenticate": {
+      "post": {
+        "tags": ["Identity MFA"],
+        "summary": "Authenticate with WebAuthn",
+        "requestBody": {"$ref": "#/components/requestBodies/WebAuthnForm"},
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}, "401": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/choose_session": {
+      "get": {
+        "tags": ["Identity sessions"],
+        "summary": "Choose an active user session",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/consent": {
+      "get": {
+        "tags": ["Identity consent"],
+        "summary": "Display the consent page",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}},
+        "security": [{"sessionCookie": []}]
+      },
+      "post": {
+        "tags": ["Identity consent"],
+        "summary": "Record user consent",
+        "requestBody": {"$ref": "#/components/requestBodies/ConsentForm"},
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}, "422": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/settings": {
+      "get": {
+        "tags": ["Identity settings"],
+        "summary": "Display account settings",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": [{"sessionCookie": []}]
+      },
+      "put": {
+        "tags": ["Identity settings"],
+        "summary": "Update account settings",
+        "requestBody": {"$ref": "#/components/requestBodies/UserSettings"},
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}, "302": {"$ref": "#/components/responses/Redirect"}, "422": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/users/destroy": {
+      "post": {
+        "tags": ["Identity settings"],
+        "summary": "Delete the current account",
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}, "422": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": [{"sessionCookie": []}]
+      }
+    },
+    "/accounts/backends/{id}/{federated_server_name}/authorize": {
+      "get": {
+        "tags": ["Federated identity"],
+        "summary": "Start federated authentication",
+        "parameters": [{"$ref": "#/components/parameters/BackendId"}, {"$ref": "#/components/parameters/FederatedServerName"}, {"$ref": "#/components/parameters/RequestContext"}],
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}},
+        "security": []
+      }
+    },
+    "/accounts/backends/{id}/{federated_server_name}/callback": {
+      "get": {
+        "tags": ["Federated identity"],
+        "summary": "Complete federated authentication",
+        "parameters": [
+          {"$ref": "#/components/parameters/BackendId"},
+          {"$ref": "#/components/parameters/FederatedServerName"},
+          {"name": "code", "in": "query", "required": false, "schema": {"type": "string"}},
+          {"name": "state", "in": "query", "required": false, "schema": {"type": "string"}},
+          {"name": "error", "in": "query", "required": false, "schema": {"type": "string"}}
+        ],
+        "responses": {"302": {"$ref": "#/components/responses/Redirect"}, "401": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": []
+      }
+    },
+    "/accounts/wallet": {
+      "get": {
+        "tags": ["Identity wallet"],
+        "summary": "Serve the wallet application",
+        "responses": {"200": {"$ref": "#/components/responses/HtmlPage"}},
+        "security": []
+      }
+    },
+    "/accounts/wallet/{path}": {
+      "get": {
+        "tags": ["Identity wallet", "Assets"],
+        "summary": "Serve a wallet asset or client-side route",
+        "parameters": [
+          {"name": "path", "in": "path", "required": true, "description": "Wallet asset filename or client-side route segment", "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"$ref": "#/components/responses/WalletResource"}, "404": {"description": "Resource not found"}},
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "AcmeToken": {
+        "name": "token",
+        "in": "path",
+        "required": true,
+        "description": "ACME challenge token",
+        "schema": {"type": "string"}
+      },
+      "ClientId": {
+        "name": "client_id",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "string"}
+      },
+      "CodeId": {
+        "name": "code_id",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "string"}
+      },
+      "IdentityToken": {
+        "name": "token",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "string"}
+      },
+      "BackendId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "string", "format": "uuid"}
+      },
+      "FederatedServerName": {
+        "name": "federated_server_name",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "string"}
+      },
+      "RequestContext": {
+        "name": "request",
+        "in": "query",
+        "required": false,
+        "description": "Encoded authorization request retained across the identity flow",
+        "schema": {"type": "string"}
+      },
+      "AssetFilename": {
+        "name": "filename",
+        "in": "path",
+        "required": true,
+        "description": "Static asset filename, optionally including a Phoenix digest",
+        "schema": {"type": "string"}
+      }
+    },
+    "requestBodies": {
+      "TokenRequest": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {"$ref": "#/components/schemas/TokenRequest"}
+          }
+        }
+      },
+      "IntrospectionRequest": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {"type": "string"},
+                "token_type_hint": {"type": "string", "enum": ["access_token", "refresh_token"]},
+                "client_id": {"type": "string"},
+                "client_secret": {"type": "string", "format": "password"}
+              },
+              "required": ["token"]
+            }
+          }
+        }
+      },
+      "RevocationRequest": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {"type": "string"},
+                "token_type_hint": {"type": "string", "enum": ["access_token", "refresh_token"]},
+                "client_id": {"type": "string"},
+                "client_secret": {"type": "string", "format": "password"}
+              },
+              "required": ["token"]
+            }
+          }
+        }
+      },
+      "PushedAuthorizationRequest": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "client_id": {"type": "string"},
+                "client_secret": {"type": "string", "format": "password"},
+                "redirect_uri": {"type": "string", "format": "uri"},
+                "response_type": {"type": "string"},
+                "scope": {"type": "string"},
+                "state": {"type": "string"},
+                "nonce": {"type": "string"},
+                "code_challenge": {"type": "string"},
+                "code_challenge_method": {"type": "string", "enum": ["plain", "S256"]},
+                "request": {"type": "string"}
+              },
+              "required": ["client_id", "response_type"]
+            }
+          }
+        }
+      },
+      "CredentialRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/CredentialRequest"}
+          }
+        }
+      },
+      "DirectPostRequest": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id_token": {"type": "string"},
+                "vp_token": {"type": "string"},
+                "presentation_submission": {"type": "string", "description": "JSON-encoded presentation submission"},
+                "state": {"type": "string"},
+                "error": {"type": "string"},
+                "error_description": {"type": "string"}
+              }
+            }
+          },
+          "application/json": {
+            "schema": {"type": "object", "additionalProperties": true}
+          }
+        }
+      },
+      "UserRegistration": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user[email]": {"type": "string", "format": "email"},
+                "user[password]": {"type": "string", "format": "password"},
+                "user[metadata]": {"type": "string"}
+              },
+              "required": ["user[email]", "user[password]"]
+            }
+          }
+        }
+      },
+      "UserLogin": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user[email]": {"type": "string", "format": "email"},
+                "user[password]": {"type": "string", "format": "password"},
+                "user[remember_me]": {"type": "boolean"}
+              },
+              "required": ["user[email]", "user[password]"]
+            }
+          }
+        }
+      },
+      "EmailForm": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {"user[email]": {"type": "string", "format": "email"}},
+              "required": ["user[email]"]
+            }
+          }
+        }
+      },
+      "PasswordReset": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user[password]": {"type": "string", "format": "password"},
+                "user[password_confirmation]": {"type": "string", "format": "password"}
+              },
+              "required": ["user[password]", "user[password_confirmation]"]
+            }
+          }
+        }
+      },
+      "TotpForm": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {"totp[code]": {"type": "string"}},
+              "required": ["totp[code]"]
+            }
+          }
+        }
+      },
+      "WebAuthnForm": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {"type": "object", "additionalProperties": {"type": "string"}}
+          },
+          "application/json": {
+            "schema": {"type": "object", "additionalProperties": true}
+          }
+        }
+      },
+      "ConsentForm": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "scopes[]": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      },
+      "UserSettings": {
+        "required": true,
+        "content": {
+          "application/x-www-form-urlencoded": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user[email]": {"type": "string", "format": "email"},
+                "user[password]": {"type": "string", "format": "password"},
+                "user[password_confirmation]": {"type": "string", "format": "password"},
+                "user[current_password]": {"type": "string", "format": "password"},
+                "user[metadata]": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "AuthorizationServerMetadata": {
+        "description": "Authorization server metadata",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthorizationServerMetadata"}}}
+      },
+      "CredentialIssuerMetadata": {
+        "description": "Credential issuer metadata",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CredentialIssuerMetadata"}}}
+      },
+      "TokenResponse": {
+        "description": "Token response",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/TokenResponse"}}}
+      },
+      "IntrospectionResponse": {
+        "description": "Token introspection result",
+        "content": {
+          "application/json": {"schema": {"$ref": "#/components/schemas/IntrospectionResponse"}},
+          "application/jwt": {"schema": {"type": "string"}}
+        }
+      },
+      "PushedAuthorizationResponse": {
+        "description": "Pushed authorization request created",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PushedAuthorizationResponse"}}}
+      },
+      "OAuthError": {
+        "description": "OAuth protocol error",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/OAuthError"}}}
+      },
+      "UserInfoResponse": {
+        "description": "Claims for the authenticated subject",
+        "content": {
+          "application/json": {"schema": {"type": "object", "additionalProperties": true}},
+          "application/jwt": {"schema": {"type": "string"}}
+        }
+      },
+      "CredentialResponse": {
+        "description": "Credential or deferred credential response",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CredentialResponse"}}}
+      },
+      "JwksResponse": {
+        "description": "JSON Web Key Set",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/JsonWebKeySet"}}}
+      },
+      "HtmlPage": {
+        "description": "HTML page",
+        "content": {"text/html": {"schema": {"type": "string"}}}
+      },
+      "Redirect": {
+        "description": "Browser redirect",
+        "headers": {"Location": {"schema": {"type": "string", "format": "uri"}}}
+      },
+      "StaticAsset": {
+        "description": "Static asset",
+        "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}
+      },
+      "StylesheetAsset": {
+        "description": "CSS stylesheet",
+        "content": {"text/css": {"schema": {"type": "string"}}}
+      },
+      "JavaScriptAsset": {
+        "description": "JavaScript asset",
+        "content": {"application/javascript": {"schema": {"type": "string"}}}
+      },
+      "ImageAsset": {
+        "description": "Image asset",
+        "content": {
+          "image/png": {"schema": {"type": "string", "format": "binary"}},
+          "image/svg+xml": {"schema": {"type": "string"}},
+          "image/jpeg": {"schema": {"type": "string", "format": "binary"}}
+        }
+      },
+      "FontAsset": {
+        "description": "Font asset",
+        "content": {
+          "font/woff": {"schema": {"type": "string", "format": "binary"}},
+          "font/woff2": {"schema": {"type": "string", "format": "binary"}},
+          "font/ttf": {"schema": {"type": "string", "format": "binary"}}
+        }
+      },
+      "IconAsset": {
+        "description": "Icon asset",
+        "content": {"image/x-icon": {"schema": {"type": "string", "format": "binary"}}}
+      },
+      "TextAsset": {
+        "description": "Text asset",
+        "content": {"text/plain": {"schema": {"type": "string"}}}
+      },
+      "ManifestAsset": {
+        "description": "Web app manifest",
+        "content": {"application/manifest+json": {"schema": {"type": "object", "additionalProperties": true}}}
+      },
+      "WalletResource": {
+        "description": "Wallet application page or static asset",
+        "content": {
+          "text/html": {"schema": {"type": "string"}},
+          "text/css": {"schema": {"type": "string"}},
+          "application/javascript": {"schema": {"type": "string"}},
+          "application/manifest+json": {"schema": {"type": "object", "additionalProperties": true}},
+          "image/png": {"schema": {"type": "string", "format": "binary"}}
+        }
+      }
+    },
+    "schemas": {
+      "AuthorizationServerMetadata": {
+        "type": "object",
+        "required": ["issuer", "authorization_endpoint", "token_endpoint", "jwks_uri"],
+        "properties": {
+          "issuer": {"type": "string", "format": "uri"},
+          "authorization_endpoint": {"type": "string", "format": "uri"},
+          "token_endpoint": {"type": "string", "format": "uri"},
+          "userinfo_endpoint": {"type": "string", "format": "uri"},
+          "jwks_uri": {"type": "string", "format": "uri"},
+          "pushed_authorization_request_endpoint": {"type": "string", "format": "uri"},
+          "credential_issuer": {"type": "string", "format": "uri"},
+          "credential_endpoint": {"type": "string", "format": "uri"},
+          "defered_credential_endpoint": {"type": "string", "format": "uri"},
+          "grant_types_supported": {"type": "array", "items": {"type": "string"}},
+          "response_types_supported": {"type": "array", "items": {"type": "string"}},
+          "response_modes_supported": {"type": "array", "items": {"type": "string"}},
+          "scopes_supported": {"type": "array", "items": {"type": "string"}},
+          "subject_types_supported": {"type": "array", "items": {"type": "string"}},
+          "token_endpoint_auth_methods_supported": {"type": "array", "items": {"type": "string"}},
+          "request_object_signing_alg_values_supported": {"type": "array", "items": {"type": "string"}},
+          "id_token_signing_alg_values_supported": {"type": "array", "items": {"type": "string"}},
+          "userinfo_signing_alg_values_supported": {"type": "array", "items": {"type": "string"}},
+          "credential_configurations_supported": {"type": "object", "additionalProperties": true},
+          "credentials_supported": {"type": "array", "items": {"type": "object", "additionalProperties": true}}
+        }
+      },
+      "CredentialIssuerMetadata": {
+        "type": "object",
+        "required": ["issuer", "credential_issuer", "token_endpoint", "credential_endpoint"],
+        "properties": {
+          "issuer": {"type": "string", "format": "uri"},
+          "credential_issuer": {"type": "string", "format": "uri"},
+          "token_endpoint": {"type": "string", "format": "uri"},
+          "credential_endpoint": {"type": "string", "format": "uri"},
+          "credential_configurations_supported": {"type": "object", "additionalProperties": true},
+          "credentials_supported": {"type": "array", "items": {"type": "object", "additionalProperties": true}}
+        }
+      },
+      "TokenRequest": {
+        "type": "object",
+        "required": ["grant_type"],
+        "properties": {
+          "grant_type": {"type": "string", "enum": ["authorization_code", "client_credentials", "password", "refresh_token"]},
+          "code": {"type": "string"},
+          "redirect_uri": {"type": "string", "format": "uri"},
+          "code_verifier": {"type": "string"},
+          "refresh_token": {"type": "string"},
+          "username": {"type": "string"},
+          "password": {"type": "string", "format": "password"},
+          "scope": {"type": "string"},
+          "client_id": {"type": "string"},
+          "client_secret": {"type": "string", "format": "password"},
+          "client_assertion_type": {"type": "string"},
+          "client_assertion": {"type": "string"}
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "required": ["token_type", "expires_in"],
+        "properties": {
+          "token_type": {"type": "string", "example": "Bearer"},
+          "access_token": {"type": "string"},
+          "agent_token": {"type": "string"},
+          "id_token": {"type": "string"},
+          "refresh_token": {"type": "string"},
+          "expires_in": {"type": "integer"},
+          "c_nonce": {"type": "string", "nullable": true},
+          "c_nonce_expires_in": {"type": "integer"},
+          "authorization_details": {"type": "array", "items": {"type": "object", "additionalProperties": true}}
+        }
+      },
+      "IntrospectionResponse": {
+        "type": "object",
+        "required": ["active"],
+        "properties": {
+          "active": {"type": "boolean"},
+          "client_id": {"type": "string"},
+          "username": {"type": "string"},
+          "scope": {"type": "string"},
+          "sub": {"type": "string"},
+          "iss": {"type": "string", "format": "uri"},
+          "exp": {"type": "integer", "format": "int64"},
+          "iat": {"type": "integer", "format": "int64"}
+        }
+      },
+      "PushedAuthorizationResponse": {
+        "type": "object",
+        "required": ["request_uri", "expires_in"],
+        "properties": {
+          "request_uri": {"type": "string"},
+          "expires_in": {"type": "integer"}
+        }
+      },
+      "OAuthError": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {"type": "string"},
+          "error_description": {"type": "string"}
+        }
+      },
+      "CredentialRequest": {
+        "type": "object",
+        "properties": {
+          "format": {"type": "string"},
+          "credential_definition": {"type": "object", "additionalProperties": true},
+          "types": {"type": "array", "items": {"type": "string"}},
+          "proof": {"type": "object", "additionalProperties": true}
+        }
+      },
+      "CredentialResponse": {
+        "type": "object",
+        "properties": {
+          "format": {"type": "string"},
+          "credential": {},
+          "acceptance_token": {"type": "string"},
+          "c_nonce": {"type": "string"},
+          "c_nonce_expires_in": {"type": "integer"}
+        }
+      },
+      "JsonWebKeySet": {
+        "type": "object",
+        "required": ["keys"],
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {"type": "object", "additionalProperties": true}
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer": {"type": "http", "scheme": "bearer"},
+      "clientBasic": {"type": "http", "scheme": "basic"},
+      "sessionCookie": {"type": "apiKey", "in": "cookie", "name": "_boruta_web_key"}
+    }
+  },
+  "security": [],
+  "tags": [
+    {"name": "Discovery"},
+    {"name": "Infrastructure"},
+    {"name": "Assets"},
+    {"name": "CORS"},
+    {"name": "OAuth 2.0"},
+    {"name": "OpenID Connect"},
+    {"name": "OpenID for Verifiable Credentials"},
+    {"name": "OpenID for Verifiable Presentations"},
+    {"name": "DID and Verifiable Credentials"},
+    {"name": "Identity registration"},
+    {"name": "Identity sessions"},
+    {"name": "Identity password recovery"},
+    {"name": "Identity confirmation"},
+    {"name": "Identity MFA"},
+    {"name": "Identity consent"},
+    {"name": "Identity settings"},
+    {"name": "Federated identity"},
+    {"name": "Identity wallet"}
+  ]
+}

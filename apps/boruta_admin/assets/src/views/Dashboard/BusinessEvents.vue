@@ -5,7 +5,7 @@
         {{ error }}
       </div>
       <div class="ui dates form">
-        <div class="ui stackable grid">
+        <form class="ui stackable grid">
           <div class="four wide request-times column">
             <h1>Business events</h1>
           </div>
@@ -16,14 +16,27 @@
             <input type="datetime-local" v-model="dateFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
+            <button class="ui fluid tertiary button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
-        </div>
+        </form>
       </div>
-      <div class="ui segment">
+      <div class="ui dashboard-content segment" :class="{ loading: pending }" :aria-busy="pending">
         <div class="ui requests form">
           <div class="ui stackable grid">
             <div class="ten wide filter-form column">
+              <div class="field">
+                <label>Text search</label>
+                <div class="ui icon input">
+                  <input
+                    type="search"
+                    v-model="businessEventFilter.text"
+                    @keyup.enter="getLogs()"
+                    placeholder="Search log messages"
+                    :disabled="pending"
+                  />
+                  <i class="search icon"></i>
+                </div>
+              </div>
               <div class="field">
                 <label>Application</label>
                 <select @change="getLogs()" v-model="businessEventFilter.application" :disabled="pending">
@@ -102,6 +115,23 @@ Chart.register(...registerables)
 
 const MAX_LOG_LINES = 10000 // from backend limit
 
+function defaultDateFilter() {
+  const currentHour = moment().utc()
+
+  return {
+    startAt: currentHour.clone().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+    endAt: currentHour.clone().endOf('hour').format("yyyy-MM-DDTHH:mm")
+  }
+}
+
+function dateFilterFromQuery(query) {
+  return {
+    ...defaultDateFilter(),
+    ...(query.startAt ? { startAt: query.startAt } : {}),
+    ...(query.endAt ? { endAt: query.endAt } : {})
+  }
+}
+
 export default {
   name: 'business-events',
   components: {
@@ -141,23 +171,21 @@ export default {
       pending: false,
       error: false,
       maxLogLines: MAX_LOG_LINES,
-      timeScaleUnit: '',
+      timeScaleUnit: 'minute',
       businessEventLogs: [],
       logCount: 0,
       graphRerenders: 0,
       businessEventFiltersData: {
-        applications: ['boruta_web', 'boruta_identity', 'boruta_gateway'],
+        applications: ['boruta_web', 'boruta_identity', 'boruta_admin', 'boruta_gateway'],
         domains: [],
         actions: []
       },
-      dateFilter: {
-        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
-      },
+      dateFilter: dateFilterFromQuery(this.$route.query),
       businessEventFilter: {
         application: this.$route.query.application || 'boruta_web',
         domain: this.$route.query.domain || '',
-        action: this.$route.query.action || ''
+        action: this.$route.query.action || '',
+        text: this.$route.query.text || ''
       },
       counts: {},
       businessEventCounts: {
@@ -188,8 +216,8 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: this.timeScaleUnit || 'hour',
-              round: this.timeScaleUnit || 'hour'
+              unit: this.timeScaleUnit || 'minute',
+              round: this.timeScaleUnit || 'minute'
             }
           }
         }
@@ -212,8 +240,8 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: this.timeScaleUnit || 'hour',
-              round: this.timeScaleUnit || 'hour'
+              unit: this.timeScaleUnit || 'minute',
+              round: this.timeScaleUnit || 'minute'
             }
           }
         }
@@ -316,9 +344,9 @@ export default {
         this.populateGatewayTimes(gateway_times)
         this.businessEventFiltersData.domains = domains
         this.businessEventFiltersData.actions = actions
-        this.pending = false
         this.render()
       }).catch(error => this.error = error.message)
+        .finally(() => { this.pending = false })
     },
     render() {
       this.graphRerenders += 1
@@ -374,15 +402,13 @@ export default {
     $route(to, from) {
       if (to.name !== 'business-event-logs') return
 
-      this.dateFilter = {
-        startAt: to.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
-      }
+      this.dateFilter = dateFilterFromQuery(to.query)
 
       this.businessEventFilter = {
         application: to.query.application || 'boruta_web',
         domain: to.query.domain || '',
         action: to.query.action || '',
+        text: to.query.text || '',
       }
 
       this.overflow = false
@@ -414,6 +440,9 @@ function stringToColor(str) {
 <style scoped lang="scss">
 .dashboard {
   position: relative;
+  .dashboard-content.loading {
+    min-height: 12rem;
+  }
   .dates.form {
     margin-bottom: 1em;
   }

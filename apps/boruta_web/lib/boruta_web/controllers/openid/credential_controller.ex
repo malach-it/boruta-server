@@ -25,6 +25,16 @@ defmodule BorutaWeb.Openid.CredentialController do
 
   @impl Boruta.Openid.CredentialApplication
   def credential_created(conn, %CredentialResponse{} = response) do
+    :telemetry.execute(
+      [:credential, :issue, :success],
+      %{},
+      %{
+        client_id: response.token.client.id,
+        sub: response.token.sub,
+        format: response.format
+      }
+    )
+
     PresentationServer.message(response.token.previous_code, "Credential issued")
 
     conn

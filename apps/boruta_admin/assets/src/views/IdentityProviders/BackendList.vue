@@ -2,7 +2,7 @@
   <div class="backend-list">
     <Toaster :active="deleted" message="backend has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
-    <router-link :to="{ name: 'new-backend' }" class="ui violet main create button">Add a backend</router-link>
+    <router-link :to="{ name: 'new-backend' }" class="ui primary main create button">Add a backend</router-link>
     <div class="container">
       <div class="ui error message" v-if="error">
         {{ error }}
@@ -17,7 +17,7 @@
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-backend', params: { backendId: backend.id } }"
-                class="ui tiny blue button">edit</router-link>
+                class="ui tiny secondary button">edit</router-link>
               <a v-on:click="deleteBackend(backend)" class="ui tiny red button">delete</a>
             </div>
             <div class="ui attribute list">

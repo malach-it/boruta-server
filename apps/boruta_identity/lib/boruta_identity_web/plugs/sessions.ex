@@ -39,6 +39,7 @@ defmodule BorutaIdentityWeb.Sessions do
   def redirect_if_user_is_authenticated(conn, _opts) do
     if conn.assigns[:current_user] do
       conn
+      |> put_session(:session_chosen, true)
       |> redirect(to: after_sign_in_path(conn))
       |> halt()
     else

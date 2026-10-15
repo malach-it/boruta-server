@@ -7,6 +7,7 @@
         <i class="ui large burger close icon" @click="toggleMenu()"></i>
         <div class="ui vertical fluid tabular menu" :class="{ 'inverted': currentMode }">
           <router-link
+            v-if="canAccessDashboard"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'dashboard' }">
             <div class="dashboard item" :class="{'active': isActive }">
@@ -15,17 +16,17 @@
                 <span>Dashboard</span>
               </a>
               <div class="dropdown">
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('logs:read:all')">
                   <router-link :to="{ name: 'request-logs' }">
                     <span>Requests</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('logs:read:all')">
                   <router-link :to="{ name: 'business-event-logs' }">
                     <span>Business events</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('tokens:read:all')">
                   <router-link :to="{ name: 'token-list' }">
                     <span>Tokens</span>
                   </router-link>
@@ -34,6 +35,7 @@
             </div>
           </router-link>
           <router-link
+            v-if="hasAuthorizedScope('upstreams:manage:all')"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'upstreams' }">
             <div class="upstreams item" :class="{'active': isActive }">
@@ -41,9 +43,17 @@
                 <i class="server icon"></i>
                 <span>Upstreams</span>
               </a>
+              <div class="dropdown">
+                <div class="subitem">
+                  <router-link :to="{ name: 'service-registry' }">
+                    <span>service registry</span>
+                  </router-link>
+                </div>
+              </div>
             </div>
           </router-link>
           <router-link
+            v-if="hasAuthorizedScope('clients:manage:all')"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'clients' }">
             <div class="clients item" :class="{'active': isActive }">
@@ -66,30 +76,31 @@
             </div>
           </router-link>
           <router-link
+            v-if="canAccessIdentityManagement"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
-            :to="{ name: 'identity-providers' }">
+            :to="identityManagementRoute">
             <div class="identity-providers item" :class="{'active': isActive }">
               <a :href="href" @click="navigate">
                 <i class="users icon"></i>
                 <span>Identity providers</span>
               </a>
               <div class="dropdown">
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('identity-providers:manage:all')">
                   <router-link :to="{ name: 'identity-provider-list' }">
                     <span>identity provider list</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('identity-providers:manage:all')">
                   <router-link :to="{ name: 'backend-list' }">
                     <span>backend list</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('users:manage:all')">
                   <router-link :to="{ name: 'user-list' }">
                     <span>user list</span>
                   </router-link>
                 </div>
-                <div class="subitem">
+                <div class="subitem" v-if="hasAuthorizedScope('users:manage:all')">
                   <router-link :to="{ name: 'organization-list' }">
                     <span>organization list</span>
                   </router-link>
@@ -98,6 +109,7 @@
             </div>
           </router-link>
           <router-link
+            v-if="hasAuthorizedScope('scopes:manage:all')"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'scopes' }">
             <div class="scopes item" :class="{'active': isActive }">
@@ -120,6 +132,7 @@
             </div>
           </router-link>
           <router-link
+            v-if="hasAuthorizedScope('configuration:manage:all')"
             v-slot="{ href, route, navigate, isActive, isExactActive }"
             :to="{ name: 'configuration' }">
             <div class="configuration item" :class="{'active': isActive }">
@@ -149,11 +162,17 @@
       </div>
     </div>
     <footer>
-      <a @click="toggleDarkMode()" class="dark-mode">
-        <i class="ui sun icon"></i>
-      </a>
+      <div class="theme-controls">
+        <label class="theme-select">
+          <i class="paint brush icon" aria-hidden="true"></i>
+          <span class="visually-hidden">Administration theme</span>
+          <select v-model="currentTheme" @change="changeTheme(currentTheme)" aria-label="Administration theme">
+            <option v-for="theme in themes" :key="theme.id" :value="theme.id">{{ theme.name }}</option>
+          </select>
+        </label>
+      </div>
       <Feedback />
-      &copy; 2025 malachit
+      &copy; 2026 malachit
     </footer>
   </div>
 </template>
@@ -162,6 +181,8 @@
 import Header from '../../components/Header.vue'
 import Feedback from '../../components/Feedback.vue'
 import Breadcrumb from '../../components/Breadcrumb.vue'
+import oauth from '../../services/oauth.service'
+import { getTheme, setTheme, themes } from '../../services/theme.service'
 
 export default {
   name: 'Main',
@@ -172,10 +193,31 @@ export default {
   },
   data () {
     return {
-      currentMode: JSON.parse(localStorage.getItem('dark_mode'))
+      currentTheme: getTheme(),
+      themes,
+      authorizedScopes: oauth.authorizedScopes
+    }
+  },
+  computed: {
+    currentMode () {
+      return this.themes.find(({ id }) => id === this.currentTheme)?.dark ?? true
+    },
+    canAccessDashboard () {
+      return this.hasAuthorizedScope('logs:read:all') || this.hasAuthorizedScope('tokens:read:all')
+    },
+    canAccessIdentityManagement () {
+      return this.hasAuthorizedScope('identity-providers:manage:all') ||
+        this.hasAuthorizedScope('users:manage:all')
+    },
+    identityManagementRoute () {
+      return this.hasAuthorizedScope('identity-providers:manage:all')
+        ? { name: 'identity-provider-list' }
+        : { name: 'user-list' }
     }
   },
   mounted () {
+    window.addEventListener('logged_in', this.syncAuthorizedScopes)
+    window.addEventListener('admin-theme-change', this.themeChanged)
     const sidebarOffset = this.$refs.header.$el.offsetHeight
 
     document.addEventListener('scroll', () => {
@@ -189,16 +231,28 @@ export default {
     })
   },
   methods: {
+    hasAuthorizedScope (scope) {
+      return this.authorizedScopes.includes(scope)
+    },
+    syncAuthorizedScopes () {
+      this.authorizedScopes = oauth.authorizedScopes
+    },
     toggleMenu () {
       this.$refs.menu.classList.toggle('opened')
     },
-    toggleDarkMode () {
-      this.currentMode = !this.currentMode
-      localStorage.setItem('dark_mode', this.currentMode)
+    themeChanged ({ detail }) {
+      this.currentTheme = detail
+    },
+    changeTheme (theme) {
+      this.currentTheme = setTheme(theme)
     }
   },
   beforeRouteUpdate () {
     this.$refs.menu.classList.remove('opened')
+  },
+  beforeUnmount () {
+    window.removeEventListener('logged_in', this.syncAuthorizedScopes)
+    window.removeEventListener('admin-theme-change', this.themeChanged)
   }
 }
 </script>
@@ -296,6 +350,11 @@ export default {
   }
   h3, h4, h5 {
     margin: .5em 0;
+  }
+  h2 {
+    @media (max-width: 768px) {
+      margin-left: 1rem;
+    }
   }
   .actions {
     float: right;
@@ -518,9 +577,13 @@ export default {
     }
     .field {
       padding-bottom: 1em;
+      margin: 0;
       &.error label {
         color: #9f3a38!important;
       }
+    }
+    .fields {
+      flex-wrap: wrap;
     }
   }
   .ui.segments {
@@ -586,6 +649,12 @@ export default {
           background: rgba(255,255,255,.05);
         }
       }
+    }
+  }
+  @media (max-width: 768px) {
+    .ui.segment {
+      padding-right: 0.5rem !important;
+      padding-left: 0.5rem !important;
     }
   }
 }
@@ -664,6 +733,18 @@ export default {
         color: #e09494;
         background: #493939;
       }
+    }
+  }
+  .ui.table {
+    color: white;
+    background: #1b1c1d;
+    border-color: rgba(255, 255, 255, .08);
+    thead th {
+      background: rgba(255, 255, 255, .05);
+      color: white;
+    }
+    td, th {
+      border-color: rgba(255, 255, 255, .08)
     }
   }
   .ui.form {
@@ -750,6 +831,25 @@ export default {
   .ui.header {
     color: white;
   }
+  .ui.button, .ui.label {
+    opacity: 0.84;
+  }
+  .ui.message {
+    background: #393939;
+    color: white;
+    &.warning {
+      background: rgb(255, 250, 243, 0.84);
+      color: #573a08;
+    }
+    &.success {
+      background: rgb(252, 255, 245, 0.84);
+      color: #2c662d;
+    }
+    &.info {
+      background: rgb(248, 255, 255, 0.84);
+      color: #276f86;
+    }
+  }
   .ui.list {
     &>.item .header {
       color: white;
@@ -788,13 +888,13 @@ export default {
       background: rgba(61, 61, 61, 0.7)!important;
     }
   }
-  .violet {
+  .primary {
     background: rgba(131, 52, 113, 1.0)!important;
     &.button:hover, &.label:hover {
       background: rgba(131, 52, 113, 0.7)!important;
     }
   }
-  .blue {
+  .tertiary {
     background: rgba(34, 112, 147,1.0)!important;
     &.button:hover, &.label:hover {
       background: rgba(34, 112, 147,0.7)!important;
@@ -823,4 +923,6 @@ export default {
     }
   }
 }
+
+@import '../../assets/admin-themes.scss';
 </style>

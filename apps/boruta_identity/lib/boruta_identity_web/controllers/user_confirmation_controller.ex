@@ -49,7 +49,7 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
       %{},
       %{
         client_id: client_id,
-        sub: user.uid,
+        sub: user.id,
         backend: user.backend,
         token: query_params["token"]
       }
@@ -61,7 +61,9 @@ defmodule BorutaIdentityWeb.UserConfirmationController do
   end
 
   @impl BorutaIdentity.Accounts.ConfirmationApplication
-  def user_confirmation_failure(%Plug.Conn{query_params: query_params} = conn, %ConfirmationError{message: message}) do
+  def user_confirmation_failure(%Plug.Conn{query_params: query_params} = conn, %ConfirmationError{
+        message: message
+      }) do
     client_id = client_id_from_request(conn)
 
     :telemetry.execute(

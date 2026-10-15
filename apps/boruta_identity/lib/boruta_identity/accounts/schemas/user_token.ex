@@ -52,6 +52,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
         join: b in assoc(u, :backend),
         where: t.token == ^token,
         where: t.context == "session",
+        where: u.blocked == false,
         where: t.inserted_at > ago(@session_validity_in_days, "day"),
         preload: [backend: b]
 
@@ -116,6 +117,7 @@ defmodule BorutaIdentity.Accounts.UserToken do
         hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
 
         {:ok, token_and_context_query(hashed_token, context)}
+
       _error ->
         {:error, "Could not revoke given token."}
     end

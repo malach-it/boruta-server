@@ -1,5 +1,5 @@
 defmodule BorutaAdminWeb.ScopeControllerTest do
-  import Boruta.Factory
+  import BorutaAdmin.Factory
 
   use BorutaAdminWeb.ConnCase
 

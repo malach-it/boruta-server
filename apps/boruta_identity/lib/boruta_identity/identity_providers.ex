@@ -47,7 +47,7 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def update_identity_provider(%IdentityProvider{} = identity_provider, attrs) do
-    clear_identity_provider_by_client_id_cache()
+    clear_identity_provider_by_client_id_cache(identity_provider)
     clear_identity_provider_templates_cache(identity_provider, attrs)
 
     identity_provider
@@ -56,7 +56,7 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def delete_identity_provider(%IdentityProvider{} = identity_provider) do
-    clear_identity_provider_by_client_id_cache()
+    clear_identity_provider_by_client_id_cache(identity_provider)
 
     identity_provider
     |> IdentityProvider.delete_changeset()
@@ -68,31 +68,37 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def upsert_client_identity_provider(client_id, identity_provider_id) do
-    clear_identity_provider_by_client_id_cache()
+    result =
+      %ClientIdentityProvider{}
+      |> ClientIdentityProvider.changeset(%{
+        client_id: client_id,
+        identity_provider_id: identity_provider_id
+      })
+      |> Repo.insert(
+        on_conflict: [set: [identity_provider_id: identity_provider_id]],
+        conflict_target: :client_id
+      )
 
-    %ClientIdentityProvider{}
-    |> ClientIdentityProvider.changeset(%{
-      client_id: client_id,
-      identity_provider_id: identity_provider_id
-    })
-    |> Repo.insert(
-      on_conflict: [set: [identity_provider_id: identity_provider_id]],
-      conflict_target: :client_id
-    )
+    with {:ok, _client_identity_provider} <- result do
+      clear_identity_provider_by_client_id_cache(client_id)
+    end
+
+    result
   end
 
-  defp clear_identity_provider_by_client_id_cache do
-    {:ok, _count} =
-      BorutaIdentity.Cache.delete_all(
-        query: [
-          {
-            {:entry, {BorutaIdentity.IdentityProviders, :identity_provider_by_client_id, :"$1"},
-             :"$2", :"$3", :"$4"},
-            [],
-            [true]
-          }
-        ]
-      )
+  defp clear_identity_provider_by_client_id_cache(client_id) when is_binary(client_id) do
+    :ok = BorutaIdentity.Cache.delete({__MODULE__, :identity_provider_by_client_id, client_id})
+  end
+
+  defp clear_identity_provider_by_client_id_cache(%IdentityProvider{id: identity_provider_id}) do
+    ClientIdentityProvider
+    |> where(
+      [client_identity_provider],
+      client_identity_provider.identity_provider_id == ^identity_provider_id
+    )
+    |> select([client_identity_provider], client_identity_provider.client_id)
+    |> Repo.all()
+    |> Enum.each(&clear_identity_provider_by_client_id_cache/1)
 
     :ok
   end
@@ -106,6 +112,8 @@ defmodule BorutaIdentity.IdentityProviders do
 
     case Repo.delete_all(query) do
       {1, [client_identity_provider]} ->
+        clear_identity_provider_by_client_id_cache(client_id)
+
         {:ok, client_identity_provider}
 
       {0, []} ->
@@ -245,6 +253,14 @@ defmodule BorutaIdentity.IdentityProviders do
   alias BorutaIdentity.Accounts.Ldap
   alias BorutaIdentity.IdentityProviders.Backend
 
+  @backend_map_attributes [
+    :password_hashing_opts,
+    :metadata_fields,
+    :federated_servers,
+    :verifiable_credentials,
+    :verifiable_presentations
+  ]
+
   def list_backends do
     Repo.all(Backend)
   end
@@ -292,6 +308,7 @@ defmodule BorutaIdentity.IdentityProviders do
     end
 
     ldap_pool_name = Ldap.pool_name(backend)
+    attrs = merge_backend_map_attributes(backend, attrs)
 
     with {:ok, backend} <-
            backend
@@ -304,6 +321,41 @@ defmodule BorutaIdentity.IdentityProviders do
       {:ok, backend}
     end
   end
+
+  defp merge_backend_map_attributes(%Backend{} = backend, attrs) do
+    Enum.reduce(@backend_map_attributes, attrs, fn attribute, attrs ->
+      string_attribute = Atom.to_string(attribute)
+      existing = Map.fetch!(backend, attribute)
+
+      cond do
+        Map.has_key?(attrs, string_attribute) ->
+          Map.update!(attrs, string_attribute, &merge_json(existing, &1))
+
+        Map.has_key?(attrs, attribute) ->
+          Map.update!(attrs, attribute, &merge_json(existing, &1))
+
+        true ->
+          attrs
+      end
+    end)
+  end
+
+  defp merge_json(existing, updates) when is_map(existing) and is_map(updates) do
+    Map.merge(existing, updates, fn _key, existing_value, update_value ->
+      merge_json(existing_value, update_value)
+    end)
+  end
+
+  defp merge_json(existing, updates) when is_list(existing) and is_list(updates) do
+    updates
+    |> Enum.with_index()
+    |> Enum.map(fn
+      {nil, index} -> Enum.at(existing, index)
+      {update, index} -> merge_json(Enum.at(existing, index), update)
+    end)
+  end
+
+  defp merge_json(_existing, update), do: update
 
   @spec update_backend_roles(backend :: %Backend{}, roles :: list(map())) ::
           {:ok, %Backend{}} | {:error, Ecto.Changeset.t()}

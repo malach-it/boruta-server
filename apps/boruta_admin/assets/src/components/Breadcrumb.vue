@@ -58,6 +58,7 @@ const labels = {
   'new-client': 'Create',
   'client': ({ params }) => params.clientId,
   'upstreams': 'Upstreams',
+  'service-registry': 'Service registry',
   'new-upstream': 'Create',
   'upstream': ({ params }) => params.upstreamId,
   'scopes': 'Scopes',

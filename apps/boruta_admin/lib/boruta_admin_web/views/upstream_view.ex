@@ -13,7 +13,7 @@ defmodule BorutaAdminWeb.UpstreamView do
   end
 
   def render("node_list.json", %{nodes: nodes}) do
-    %{data: nodes}
+    %{data: Enum.filter(nodes, &is_binary/1)}
   end
 
   def render("show.json", %{upstream: upstream}) do
@@ -24,12 +24,14 @@ defmodule BorutaAdminWeb.UpstreamView do
     %{
       id: upstream.id,
       node_name: upstream.node_name,
+      virtual_host: upstream.virtual_host,
       scheme: upstream.scheme,
       host: upstream.host,
       port: upstream.port,
       uris: upstream.uris,
       strip_uri: upstream.strip_uri,
       authorize: upstream.authorize,
+      authorization_type: upstream.authorization_type,
       required_scopes: upstream.required_scopes,
       error_content_type: upstream.error_content_type,
       forbidden_response: upstream.forbidden_response,
@@ -38,12 +40,15 @@ defmodule BorutaAdminWeb.UpstreamView do
       forwarded_token_secret: upstream.forwarded_token_secret,
       forwarded_token_private_key: upstream.forwarded_token_private_key,
       forwarded_token_public_key: upstream.forwarded_token_public_key,
+      mtls_enabled: upstream.mtls_enabled,
       rate_limit_enabled: upstream.rate_limit_enabled,
       rate_limit_count: upstream.rate_limit_count,
       rate_limit_time_unit: upstream.rate_limit_time_unit,
       rate_limit_penality: upstream.rate_limit_penality,
       rate_limit_timeout: upstream.rate_limit_timeout,
-      rate_limit_memory_length: upstream.rate_limit_memory_length
+      rate_limit_memory_length: upstream.rate_limit_memory_length,
+      noise_cancelling_enabled: upstream.noise_cancelling_enabled,
+      noise_cancelling_configured: is_binary(upstream.noise_cancelling_model)
     }
   end
 end

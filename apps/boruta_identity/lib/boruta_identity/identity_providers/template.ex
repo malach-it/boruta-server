@@ -129,6 +129,16 @@ defmodule BorutaIdentity.IdentityProviders.Template do
 
   def template_types, do: @template_types
 
+  def fetch_template_type(type) when is_binary(type) do
+    case Enum.find(@template_types, &(Atom.to_string(&1) == type)) do
+      nil -> :error
+      type -> {:ok, type}
+    end
+  end
+
+  def fetch_template_type(type) when type in @template_types, do: {:ok, type}
+  def fetch_template_type(_type), do: :error
+
   @spec default_content(type :: template_type()) :: template_content :: String.t()
   def default_content(type) when type in @template_types, do: @default_templates[type]
 
@@ -168,10 +178,10 @@ defmodule BorutaIdentity.IdentityProviders.Template do
         changeset
 
       _ ->
-        change(
-          changeset,
-          content: default_template(changeset |> fetch_field!(:type) |> String.to_atom()).content
-        )
+        case changeset |> fetch_field!(:type) |> fetch_template_type() do
+          {:ok, type} -> change(changeset, content: default_template(type).content)
+          :error -> changeset
+        end
     end
   end
 end

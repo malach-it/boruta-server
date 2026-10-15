@@ -7,6 +7,7 @@
         <a id="uris" @click="openTab" class="item">URIs</a>
         <a id="authorization" @click="openTab" class="item">Authorization</a>
         <a id="security" @click="openTab" class="item">Security</a>
+        <a v-if="$slots.activity" id="activity" @click="openTab" class="item">Activity</a>
       </div>
       <div ref="form">
         <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
@@ -15,8 +16,12 @@
             <label>Node</label>
             <select v-model="upstream.node_name" placeholder="global">
               <option value="global">global</option>
-              <option v-for="name in nodeNames" :value="name">{{ name }}</option>
+              <option v-for="name in availableNodeNames" :value="name" :key="name">{{ name }}</option>
             </select>
+          </div>
+          <div class="field" :class="{ 'error': upstream.errors?.virtual_host }">
+            <label>Virtual host <i>(leave blank to match any)</i></label>
+            <input type="text" v-model="upstream.virtual_host" placeholder="api.example.com">
           </div>
           <div class="field" :class="{ 'error': upstream.errors?.scheme }">
             <label>Scheme</label>
@@ -43,7 +48,7 @@
                 <i v-on:click="deleteUpstreamUri(upstreamUri)" class="close icon"></i>
               </div>
             </div>
-            <a v-on:click.prevent="addUpstreamUri()" class="ui blue fluid button">Add an upstream uri</a>
+            <a v-on:click.prevent="addUpstreamUri()" class="ui tertiary fluid button">Add an upstream uri</a>
           </div>
           <div class="field">
             <div class="ui toggle checkbox">
@@ -58,6 +63,16 @@
             <div class="ui toggle checkbox">
               <input type="checkbox" v-model="upstream.authorize">
               <label>Authorize</label>
+            </div>
+          </div>
+          <div class="field" v-if="upstream.authorize" :class="{ 'error': upstream.errors?.authorization_type }">
+            <label>Authorization type</label>
+            <select v-model="upstream.authorization_type">
+              <option value="oauth_bearer">OAuth bearer token</option>
+              <option value="http_basic">HTTP Basic credentials</option>
+            </select>
+            <div class="ui info message" v-if="upstream.authorization_type === 'http_basic'">
+              Credentials are verified against users from the default backend and are not forwarded upstream.
             </div>
           </div>
           <div class="field" v-if="upstream.authorize" :class="{ 'error': upstream.errors?.required_scopes }">
@@ -110,7 +125,14 @@
             </div>
           </div>
         </div>
-        <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+      <div ref="security" data-tab="security" class="ui bottom attached tab segment">
+          <h3>Mutual TLS</h3>
+          <div class="field" :class="{ 'error': upstream.errors?.mtls_enabled }">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.mtls_enabled">
+              <label>Enable mutual TLS toward upstream</label>
+            </div>
+          </div>
           <h3>Rate limiting</h3>
           <div class="field">
             <div class="ui toggle checkbox">
@@ -142,10 +164,28 @@
               <input type="number" v-model="upstream.rate_limit_memory_length" min="1" placeholder="50">
             </div>
           </div>
+          <h3>Noise cancelling</h3>
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.noise_cancelling_enabled">
+              <label>Enable noise cancelling</label>
+            </div>
+          </div>
+          <div class="field" :class="{ 'error': upstream.errors?.openapi_spec }">
+            <label>OpenAPI specification (JSON or YAML)</label>
+            <input type="file" accept="application/json,application/yaml,text/yaml,.json,.yaml,.yml" @change="setOpenapiSpec">
+            <div class="ui info message">
+              The definition is used to train Phi and is not stored.
+              <span v-if="upstream.noise_cancelling_configured">A trained model is currently configured.</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="actions">
-        <button class="ui right floated violet button" type="submit">{{ action }}</button>
+      <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
+        <slot v-if="activeTab === 'activity'" name="activity" />
+      </div>
+      <div class="actions" v-if="activeTab !== 'activity'">
+        <button class="ui right floated primary button" :class="{ loading: upstream.loading }" :disabled="upstream.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>
@@ -161,6 +201,7 @@ import TextEditor from '../../components/Forms/TextEditor.vue'
 export default {
   name: 'upstream-form',
   props: ['upstream', 'action'],
+  emits: ['submit', 'back'],
   components: {
     FormErrors,
     GatewayScopesField,
@@ -168,6 +209,7 @@ export default {
   },
   data () {
     return {
+      activeTab: 'general-configuration',
       nodeNames: [],
       forwardedTokenSignatureAlgorithms: Upstream.forwardedTokenSignatureAlgorithms,
       rateLimitTimeUnits: Upstream.rateLimitTimeUnits
@@ -177,6 +219,10 @@ export default {
     Upstream.nodeList().then(nodes => this.nodeNames = nodes)
   },
   computed: {
+    availableNodeNames () {
+      return Array.from(new Set([this.upstream.node_name, ...this.nodeNames]))
+        .filter((name) => name && name !== 'global')
+    },
     isHsAlgorithm () {
       return this.upstream.forwarded_token_signature_alg?.match(/HS/)
     },
@@ -185,6 +231,9 @@ export default {
     }
   },
   methods: {
+    submit () {
+      this.$emit('submit')
+    },
     back () {
       this.$emit('back')
     },
@@ -196,6 +245,10 @@ export default {
         this.upstream.uris.indexOf(uri),
         1
       )
+    },
+    async setOpenapiSpec ({ target }) {
+      const [file] = target.files
+      this.upstream.openapi_spec = file ? await file.text() : null
     },
     addScope () {
       this.upstream.required_scopes.push({ model: new Scope(), method: 'GET' })
@@ -214,6 +267,7 @@ export default {
     },
     openTab (e) {
       const tab = e.target.id
+      this.activeTab = tab
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
         if (e.id == tab) {
           e.classList.add('active')

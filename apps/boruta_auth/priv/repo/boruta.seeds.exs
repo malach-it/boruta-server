@@ -92,6 +92,14 @@ codex_scopes =
 
 codex_scope_names = Enum.map(codex_scope_definitions, fn {name, _label} -> name end)
 
+BorutaAuth.Repo.insert(
+  %Boruta.Ecto.Scope{
+    name: "tokens:read:all",
+    label: "Read all tokens"
+  },
+  on_conflict: :nothing
+)
+
 client_id = System.get_env("BORUTA_ADMIN_OAUTH_CLIENT_ID", "6a2f41a3-c54c-fce8-32d2-0324e1c32e20")
 
 client =
@@ -102,6 +110,7 @@ client =
          redirect_uris: [
            "#{System.get_env("BORUTA_ADMIN_BASE_URL", "http://localhost:4001")}/oauth-callback"
          ],
+         supported_grant_types: ["client_credentials", "implicit", "revoke"],
          access_token_ttl: 3600,
          authorization_code_ttl: 60,
          public_revoke: true

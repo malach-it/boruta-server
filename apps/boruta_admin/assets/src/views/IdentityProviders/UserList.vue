@@ -3,8 +3,8 @@
     <Toaster :active="deleted" message="User has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <div class="main buttons">
-      <router-link :to="{ name: 'user-import' }" class="ui violet main create button">Import users</router-link>
-      <router-link :to="{ name: 'new-user' }" class="ui violet main create button">Add a user</router-link>
+      <router-link :to="{ name: 'user-import' }" class="ui primary main create button">Import users</router-link>
+      <router-link :to="{ name: 'new-user' }" class="ui primary main create button">Add a user</router-link>
     </div>
     <div class="container">
       <div class="ui error message" v-if="error">
@@ -25,24 +25,24 @@
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-user', params: { userId: user.id } }"
-                class="ui tiny blue button">edit</router-link>
+                class="ui tiny secondary button">edit</router-link>
               <a v-on:click="deleteUser(user)" class="ui tiny red button">delete</a>
             </div>
             <div class="ui attribute list">
               <div class="item">
                 <span class="header">ID</span>
                 <span class="description">{{ user.id }}</span>
-                <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
+                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item">
                 <span class="header">UID</span>
                 <span class="description">{{ user.uid }}</span>
-                <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
+                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item">
                 <span class="header">Username</span>
                 <span class="description">{{ user.username }}</span>
-                <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
+                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item" v-if="user.roles.length">
                 <span class="header">Roles</span>
@@ -71,7 +71,7 @@
           <button
             :disabled="disableFirstPage"
             class="item"
-            @click="goToPage(1)">
+            @click="goToPage(currentPage - 1)">
             &lt;
           </button>
           <button
@@ -85,7 +85,7 @@
           <button
             :disabled="disableLastPage"
             class="item"
-            @click="goToPage(this.totalPages)">
+            @click="goToPage(currentPage + 1)">
             &gt;
           </button>
         </div>
@@ -109,8 +109,8 @@ export default {
       users: [],
       deleted: false,
       errorMessage: false,
-      currentPage: this.$route.query.page,
-      userQuery: this.$route.query.q,
+      currentPage: Number(this.$route.query.page) || 1,
+      userQuery: this.$route.query.q || '',
       totalPages: 1,
       totalEntries: 0,
       total_entries: 0,
@@ -137,10 +137,10 @@ export default {
       return meanPages
     },
     disableFirstPage () {
-      return this.meanPages[0] == 1
+      return this.currentPage <= 1
     },
     disableLastPage () {
-      return this.meanPages.slice(-1) == this.totalPages
+      return this.currentPage >= this.totalPages
     }
   },
   methods: {
@@ -155,7 +155,8 @@ export default {
       })
     },
     goToPage (pageNumber) {
-      const query = { page: pageNumber }
+      const page = Math.min(Math.max(Number(pageNumber) || 1, 1), this.totalPages)
+      const query = { page }
       if (this.userQuery) query.q = this.userQuery
 
       this.$router.push({ name: 'user-list', query })
@@ -179,6 +180,7 @@ export default {
   watch: {
     '$route.query': {
       handler ({ page, q }) {
+        this.userQuery = q || ''
         this.getUsers(page, q)
       },
       deep: true,

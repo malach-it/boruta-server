@@ -13,6 +13,8 @@ defmodule BorutaAdminWeb.TokenController do
   action_fallback(BorutaAdminWeb.FallbackController)
 
   def index(conn, params) do
+    params = Map.put_new_lazy(params, "start_at", &current_hour_start/0)
+
     tokens = Tokens.list_tokens(params)
     scopes = Tokens.list_scopes(params)
     types = Tokens.list_types(params)
@@ -22,7 +24,6 @@ defmodule BorutaAdminWeb.TokenController do
     previous_codes = Tokens.previous_codes(tokens.entries)
 
     render(conn, "index.json",
-      conn: conn,
       tokens: tokens.entries,
       scopes: scopes,
       types: types,
@@ -37,19 +38,18 @@ defmodule BorutaAdminWeb.TokenController do
     )
   end
 
-  def show(conn, %{"id" => id}) do
-    with {:ok, token} <- Tokens.get_token(id) do
-      previous_codes = Tokens.previous_codes([token])
-
-      render(conn, "show.json", conn: conn, token: token, previous_codes: previous_codes)
-    end
-  end
-
   def revoke(conn, %{"id" => id}) do
     with {:ok, token} <- Tokens.revoke_access_token(id) do
       previous_codes = Tokens.previous_codes([token])
 
-      render(conn, "show.json", conn: conn, token: token, previous_codes: previous_codes)
+      render(conn, "show.json", token: token, previous_codes: previous_codes)
     end
+  end
+
+  defp current_hour_start do
+    now = DateTime.utc_now()
+
+    %{now | minute: 0, second: 0, microsecond: {0, 0}}
+    |> DateTime.to_iso8601()
   end
 end

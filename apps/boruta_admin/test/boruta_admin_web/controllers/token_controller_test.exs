@@ -1,13 +1,12 @@
 defmodule BorutaAdminWeb.TokenControllerTest do
   use BorutaAdminWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaAdmin.Factory
 
   alias Boruta.Ecto.Token
-  alias Boruta.Oauth.Client
   alias Boruta.Openid.VerifiablePresentations
+  alias BorutaAdmin.IdentityFactory
   alias BorutaAuth.Repo
-  alias BorutaIdentity.Factory, as: IdentityFactory
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -23,37 +22,6 @@ defmodule BorutaAdminWeb.TokenControllerTest do
                "resource" => ["you are unauthorized to access this resource."]
              }
            }
-  end
-
-  describe "show" do
-    @tag authorized: ["tokens:read:all"]
-    test "returns a token", %{conn: conn} do
-      token = insert(:token)
-
-      response =
-        conn
-        |> get(Routes.admin_token_path(conn, :show, token.id))
-        |> json_response(200)
-        |> Map.get("data")
-
-      assert response["id"] == token.id
-      assert response["value"] == token.value
-    end
-
-    @tag authorized: ["tokens:read:all"]
-    test "keeps previous codes in response", %{conn: conn} do
-      code = insert(:token, type: "code", value: "authorization-code")
-      token = insert(:token, previous_code: code.value)
-
-      response =
-        conn
-        |> get(Routes.admin_token_path(conn, :show, token.id))
-        |> json_response(200)
-        |> Map.get("data")
-
-      assert response["id"] == token.id
-      assert response["previous_codes"] |> Enum.map(& &1["value"]) == ["authorization-code"]
-    end
   end
 
   describe "with bad scope" do
@@ -89,18 +57,47 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       assert [token] = response["data"]
       assert token["id"] in [first_token.id, second_token.id]
       assert token["type"] == "access_token"
-      assert token["value"]
+      refute_token_values(token)
       assert token["scope"] in [["first"], ["second"], []]
       assert token["client"]["id"]
     end
 
     @tag authorized: ["tokens:read:all"]
-    test "searches tokens by sub, refresh token, value, and username", %{conn: conn} do
+    test "defaults to tokens issued since the beginning of the current hour", %{conn: conn} do
+      current_token = insert(:token)
+      two_hours_ago = DateTime.add(DateTime.utc_now(), -2 * 60 * 60, :second)
+
+      previous_token =
+        insert(:token,
+          inserted_at: two_hours_ago,
+          updated_at: two_hours_ago
+        )
+
+      token_ids =
+        conn
+        |> get(Routes.admin_token_path(conn, :index))
+        |> json_response(200)
+        |> Map.fetch!("data")
+        |> Enum.map(& &1["id"])
+
+      assert current_token.id in token_ids
+      refute previous_token.id in token_ids
+    end
+
+    @tag authorized: ["tokens:read:all"]
+    test "searches tokens by id, sub, refresh token, value, and username", %{conn: conn} do
+      id_token = insert(:token)
       sub_token = insert(:token, sub: "subjectalpha")
       refresh_token = insert(:token, refresh_token: "refreshbravo")
       value_token = insert(:token, value: "valuecharlie")
       user = insert_token_search_user(username: "userdelta")
       user_token = insert(:token, sub: user.id)
+
+      assert conn
+             |> get(Routes.admin_token_path(conn, :index), %{"q" => id_token.id})
+             |> json_response(200)
+             |> Map.get("data")
+             |> Enum.map(& &1["id"]) == [id_token.id]
 
       assert conn
              |> get(Routes.admin_token_path(conn, :index), %{"q" => "subjectalpha"})
@@ -143,7 +140,11 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       )
 
       assert conn
-             |> get(Routes.admin_token_path(conn, :index), %{"q" => "targetword"})
+             |> get(Routes.admin_token_path(conn, :index), %{
+               "q" => "targetword",
+               "start_at" => "2026-01-01T00:00:00Z",
+               "end_at" => "2026-01-03T00:00:00Z"
+             })
              |> json_response(200)
              |> Map.get("data")
              |> Enum.map(& &1["id"]) == [exact_token.id]
@@ -320,7 +321,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
 
       response =
         conn
-        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.value})
+        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.id})
         |> json_response(200)
 
       assert %{
@@ -332,7 +333,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     end
 
     @tag authorized: ["tokens:read:all"]
-    test "exposes code chain fields", %{conn: conn} do
+    test "does not expose code chain values", %{conn: conn} do
       token =
         insert(:token,
           response_type: "code",
@@ -343,19 +344,17 @@ defmodule BorutaAdminWeb.TokenControllerTest do
 
       response =
         conn
-        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.value})
+        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.id})
         |> json_response(200)
         |> Map.get("data")
         |> Enum.find(&(&1["id"] == token.id))
 
       assert response["response_type"] == "code"
-      assert response["previous_code"] == "previous-code"
-      assert response["previous_token"] == "previous-token"
-      assert response["agent_token"] == "agent-token"
+      refute_token_values(response)
     end
 
     @tag authorized: ["tokens:read:all"]
-    test "exposes id token and verified claims", %{conn: conn} do
+    test "exposes verified id token claims without the id token", %{conn: conn} do
       client = insert(:client)
       {_, jwk} = JOSE.JWK.from_pem(client.public_key) |> JOSE.JWK.to_map()
 
@@ -364,73 +363,21 @@ defmodule BorutaAdminWeb.TokenControllerTest do
           "jwk" => jwk
         })
 
-      presentation_definition = %{
-        "id" => "codex_hook_input",
-        "input_descriptors" => [
-          %{
-            "id" => "codex_hook_input",
-            "constraints" => %{
-              "fields" => [
-                %{
-                  "path" => ["$.credential_type"],
-                  "filter" => %{"type" => "string", "const" => "codex_hook_input"}
-                }
-              ]
-            }
-          }
-        ]
-      }
-
       {:ok, id_token, _claims} =
-        VerifiablePresentations.Token.generate_and_sign(
-          %{
-            "sub" => "did:example:id",
-            "agent_wallet_url" => "http://127.0.0.1:8766/accounts/wallet",
-            "hook_presentation_definition" => presentation_definition
-          },
-          signer
-        )
+        VerifiablePresentations.Token.generate_and_sign(%{"sub" => "did:example:id"}, signer)
 
-      token = insert(:token, id_token: id_token, client: client)
+      token = insert(:token, id_token: id_token)
 
       response =
         conn
-        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.value})
+        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.id})
         |> json_response(200)
         |> Map.get("data")
         |> List.first()
 
-      assert response["id_token"] == id_token
+      refute_token_values(response)
       assert response["id_token_claims"]["verified"] == true
       assert response["id_token_claims"]["claims"]["sub"] == "did:example:id"
-
-      verifiable_presentation_url = response["id_token_claims"]["verifiable_presentation_url"]
-      assert verifiable_presentation_url =~ "http://127.0.0.1:8766/accounts/wallet?"
-
-      query = URI.decode_query(URI.parse(verifiable_presentation_url).query)
-      assert query["response_type"] == "vp_token"
-      assert query["response_mode"] == "direct_post"
-      assert query["client_id"] == client.id
-      assert query["scope"] == "openid"
-      assert query["redirect_uri"] =~ "/oauth/tokens/#{token.id}/user-data"
-      assert is_binary(query["request"])
-      refute Map.has_key?(query, "presentation_definition")
-
-      {_, public_jwk} = JOSE.JWK.from_pem(client.public_key) |> JOSE.JWK.to_map()
-
-      assert {:ok, request_claims} =
-               Client.Crypto.verify_id_token_signature(query["request"], public_jwk)
-
-      assert request_claims["response_type"] == "vp_token"
-      assert request_claims["response_mode"] == "direct_post"
-      assert request_claims["client_id"] == Boruta.Config.issuer()
-      assert request_claims["aud"] == client.id
-      assert request_claims["scope"] == "openid"
-      assert request_claims["redirect_uri"] == query["redirect_uri"]
-      assert request_claims["presentation_definition"] == presentation_definition
-      assert is_binary(request_claims["nonce"])
-      assert request_claims["nonce"] != ""
-
       refute Map.has_key?(response, "vp_token")
       refute Map.has_key?(response, "vp_token_claims")
     end
@@ -446,14 +393,14 @@ defmodule BorutaAdminWeb.TokenControllerTest do
 
       response =
         conn
-        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.value})
+        |> get(Routes.admin_token_path(conn, :index), %{"q" => token.id})
         |> json_response(200)
         |> Map.get("data")
         |> List.first()
 
       assert response["id"] == token.id
-      assert response["previous_code"] == "middle-code"
-      assert response["previous_codes"] |> Enum.map(& &1["value"]) == ["root-code", "middle-code"]
+      refute_token_values(response)
+      assert response["previous_codes"] |> Enum.map(& &1["id"]) == [root_code.id, middle_code.id]
       assert response["previous_codes"] |> Enum.map(& &1["type"]) == ["code", "code"]
     end
   end
@@ -493,7 +440,8 @@ defmodule BorutaAdminWeb.TokenControllerTest do
 
       assert response["id"] == token.id
       assert response["revoked_at"]
-      assert response["previous_codes"] |> Enum.map(& &1["value"]) == ["authorization-code"]
+      refute_token_values(response)
+      assert response["previous_codes"] |> Enum.map(& &1["id"]) == [code.id]
     end
 
     @tag authorized: ["tokens:read:all"]
@@ -569,5 +517,14 @@ defmodule BorutaAdminWeb.TokenControllerTest do
 
       refute Repo.get(Token, token.id).revoked_at
     end
+  end
+
+  defp refute_token_values(token) do
+    Enum.each(
+      ~w(value id_token refresh_token previous_code previous_token agent_token),
+      &refute(Map.has_key?(token, &1))
+    )
+
+    Enum.each(Map.get(token, "previous_codes", []), &refute_token_values/1)
   end
 end

@@ -4,79 +4,220 @@ defmodule BorutaGateway.Application do
   @moduledoc false
 
   use Application
+  require Logger
 
-  alias BorutaGateway.Upstreams
+  alias BorutaGateway.{Certificate, ConfigurationLoader, ServiceRegistry, Upstreams}
 
   @impl Application
   def start(_type, _args) do
     children = [
       BorutaGateway.Repo,
       %{
+        id: ServiceRegistry,
+        start: {ServiceRegistry, :start_link, []}
+      },
+      %{
         id: Upstreams.Store,
         start: {Upstreams.Store, :start_link, []}
+      },
+      %{
+        id: BorutaGateway.NoiseCancelling,
+        start: {BorutaGateway.NoiseCancelling, :start_link, [[]]}
       }
     ]
 
-    children =
-      case Application.get_env(:boruta_gateway, :server) do
-        true ->
-          [
-            %{
-              start:
-                {BorutaGateway.Gateway.Server, :start,
-                 [
-                   [
-                     port: Application.fetch_env!(:boruta_gateway, :port),
-                     match_function: &Upstreams.match/1,
-                     num_acceptors: Application.get_env(:boruta_gateway, :num_acceptors, 8)
-                   ]
-                 ]},
-              id: :server
-            }
-            | children
-          ]
-
-        _ ->
-          children
-      end
-
-    children =
-      case Application.get_env(:boruta_gateway, :sidecar_server) do
-        true ->
-          [
-            %{
-              start:
-                {BorutaGateway.Gateway.Server, :start,
-                 [
-                   [
-                     port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
-                     match_function: &Upstreams.sidecar_match/1,
-                     num_acceptors: Application.get_env(:boruta_gateway, :num_acceptors, 8)
-                   ]
-                 ]},
-              id: :sidecar_server
-            }
-            | children
-          ]
-
-        _ ->
-          children
-      end
+    children = children ++ enabled_node_service_child_specs()
 
     BorutaGateway.Logger.start()
+    BorutaAuth.LogRotate.rotate()
     setup_database()
+    load_configuration()
     Supervisor.start_link(children, strategy: :one_for_one, name: BorutaGateway.Supervisor)
   end
 
-  def setup_database do
-    Enum.each([BorutaGateway.Repo], fn repo ->
-      repo.__adapter__().storage_up(repo.config())
-    end)
+  def enabled_node_service_child_specs do
+    acceptors_count = Application.get_env(:boruta_gateway, :num_acceptors, 8)
 
-    Enum.each([BorutaGateway.Repo], fn repo ->
+    [
+      {Application.get_env(:boruta_gateway, :proxy_server, true),
+       proxy_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :https_proxy_server, true),
+       https_proxy_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :server, false),
+       gateway_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :sidecar_server, false),
+       sidecar_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :https_server, false),
+       https_gateway_server_child_spec(acceptors_count)},
+      {Application.get_env(:boruta_gateway, :sidecar_https_server, false),
+       sidecar_https_server_child_spec(acceptors_count)}
+    ]
+    |> Enum.filter(fn {enabled?, _child_spec} -> enabled? end)
+    |> Enum.map(fn {_enabled?, child_spec} -> child_spec end)
+  end
+
+  defp gateway_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpGateway.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :port),
+             match_function: &Upstreams.match/2,
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :server,
+      type: :supervisor
+    }
+  end
+
+  defp sidecar_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpGateway.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :sidecar_port),
+             match_function: &Upstreams.sidecar_match/2,
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :sidecar_server,
+      type: :supervisor
+    }
+  end
+
+  defp https_gateway_server_child_spec(num_acceptors) do
+    options = [
+      port: Application.fetch_env!(:boruta_gateway, :https_port),
+      match_function: &Upstreams.match/2,
+      verify_client_certificate:
+        Application.get_env(:boruta_gateway, :https_verify_client_certificate, false),
+      num_acceptors: num_acceptors
+    ]
+
+    options =
+      case gateway_mounted_certificate_ssl_options() do
+        nil -> options
+        ssl_options -> Keyword.put(options, :ssl_options, ssl_options)
+      end
+
+    %{
+      start: {BorutaGateway.HttpsGateway.Server, :start, [options]},
+      id: :https_server,
+      type: :supervisor
+    }
+  end
+
+  defp gateway_mounted_certificate_ssl_options do
+    certificate_path = System.get_env("BORUTA_GATEWAY_MOUNTED_CERTIFICATE_PATH")
+    private_key_path = System.get_env("BORUTA_GATEWAY_MOUNTED_PRIVATE_KEY_PATH")
+
+    if present?(certificate_path) && present?(private_key_path) do
+      Certificate.ssl_options(certificate_path, private_key_path)
+    else
+      nil
+    end
+  end
+
+  defp present?(value), do: value not in [nil, ""]
+
+  defp sidecar_https_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpsGateway.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :sidecar_https_port),
+             match_function: &Upstreams.sidecar_match/2,
+             verify_client_certificate:
+               Application.get_env(
+                 :boruta_gateway,
+                 :sidecar_https_verify_client_certificate,
+                 false
+               ),
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :sidecar_https_server,
+      type: :supervisor
+    }
+  end
+
+  defp proxy_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpProxy.Server, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :proxy_port),
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :proxy_server,
+      type: :supervisor
+    }
+  end
+
+  defp https_proxy_server_child_spec(num_acceptors) do
+    %{
+      start:
+        {BorutaGateway.HttpProxy.HttpsServer, :start,
+         [
+           [
+             port: Application.fetch_env!(:boruta_gateway, :https_proxy_port),
+             num_acceptors: num_acceptors
+           ]
+         ]},
+      id: :https_proxy_server,
+      type: :supervisor
+    }
+  end
+
+  def setup_database do
+    if BorutaGateway.Repo.backend() == "mnesia" do
+      BorutaGateway.MnesiaSetup.setup()
+    else
+      repo = BorutaGateway.Repo
+      repo.__adapter__().storage_up(repo.config())
       Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
-    end)
+    end
 
     :ok
+  end
+
+  defp load_configuration do
+    with {:ok, configuration_path} <- configuration_path() do
+      Logger.info("Loading gateway static configuration from #{configuration_path}")
+
+      with_repo =
+        if BorutaGateway.Repo.backend() == "mnesia",
+          do: &BorutaGateway.MnesiaSetup.with_repo/1,
+          else: &Ecto.Migrator.with_repo(BorutaGateway.Repo, &1)
+
+      {:ok, _, _} = with_repo.(fn _repo -> ConfigurationLoader.from_file!(configuration_path) end)
+    end
+
+    :ok
+  end
+
+  defp configuration_path do
+    configuration_path = Application.get_env(:boruta_gateway, :configuration_path)
+    explicit_configuration_path = System.get_env("BORUTA_GATEWAY_CONFIGURATION_PATH")
+
+    cond do
+      is_nil(configuration_path) ->
+        :ignore
+
+      File.regular?(configuration_path) ->
+        {:ok, configuration_path}
+
+      explicit_configuration_path in [nil, ""] ->
+        :ignore
+
+      true ->
+        raise "gateway static configuration file does not exist: #{configuration_path}"
+    end
   end
 end

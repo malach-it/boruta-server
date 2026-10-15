@@ -10,8 +10,32 @@ defmodule BorutaWeb.LoggerTest do
     on_exit(fn -> Logger.configure(level: previous_level) end)
   end
 
+  describe "authorization_authorize_success_handler/4" do
+    test "logs the correlated user id" do
+      log =
+        capture_log([level: :info], fn ->
+          BorutaWeb.Logger.authorization_authorize_success_handler(
+            nil,
+            %{},
+            %{
+              client_id: "client-id",
+              sub: "user-id",
+              type: "preauthorized_code",
+              response_mode: nil,
+              expires_in: 60
+            },
+            nil
+          )
+        end)
+
+      assert log =~ "authorization authorize - success"
+      assert log =~ "sub=user-id"
+      assert log =~ "type=preauthorized_code"
+    end
+  end
+
   describe "authorization_token_success_handler/4" do
-    test "logs the authorization code" do
+    test "does not log bearer credentials" do
       log =
         capture_log([level: :info], fn ->
           BorutaWeb.Logger.authorization_token_success_handler(
@@ -21,18 +45,21 @@ defmodule BorutaWeb.LoggerTest do
               client_id: "client-id",
               sub: "user-id",
               access_token: "access-token",
-              agent_token: nil,
+              agent_token: "agent-token",
               authorization_code: "authorization-code",
               token_type: "bearer",
               expires_in: 60,
-              refresh_token: nil
+              refresh_token: "refresh-token"
             },
             nil
           )
         end)
 
       assert log =~ "authorization token - success"
-      assert log =~ "authorization_code=authorization-code"
+      refute log =~ "access-token"
+      refute log =~ "agent-token"
+      refute log =~ "refresh-token"
+      refute log =~ "authorization-code"
     end
   end
 
@@ -46,12 +73,11 @@ defmodule BorutaWeb.LoggerTest do
             %{
               client_id: "client-id",
               sub: "user-id",
-              code: "code-value",
               code_id: "code-id",
               response_type: "id_token",
               requested_scope: "openid",
-              id_token: true,
-              vp_token: false
+              id_token: "id-token",
+              vp_token: "vp-token"
             },
             nil
           )
@@ -59,9 +85,9 @@ defmodule BorutaWeb.LoggerTest do
 
       assert log =~ "authorization direct_post - success"
       assert log =~ "client_id=client-id"
-      assert log =~ "code=code-value"
       assert log =~ ~s(response_type="id_token")
-      assert log =~ "id_token=true"
+      refute log =~ "id-token"
+      refute log =~ "vp-token"
     end
   end
 
@@ -87,6 +113,77 @@ defmodule BorutaWeb.LoggerTest do
       assert log =~ "status=unauthorized"
       assert log =~ "error=invalid_request"
       assert log =~ ~s(error_description="Invalid direct post request.")
+    end
+  end
+
+  describe "credential_issue_success_handler/4" do
+    test "logs credential issuance without the credential" do
+      log =
+        capture_log([level: :info], fn ->
+          BorutaWeb.Logger.credential_issue_success_handler(
+            nil,
+            %{},
+            %{
+              client_id: "client-id",
+              sub: "user-id",
+              format: "jwt_vc",
+              credential: "credential"
+            },
+            nil
+          )
+        end)
+
+      assert log =~ "credential issue - success"
+      assert log =~ "client_id=client-id"
+      assert log =~ "sub=user-id"
+      assert log =~ "format=jwt_vc"
+      refute log =~ "credential\n"
+    end
+  end
+
+  describe "authorization_revoke_success_handler/4" do
+    test "logs the correlated user id without the revoked token" do
+      log =
+        capture_log([level: :info], fn ->
+          BorutaWeb.Logger.authorization_revoke_success_handler(
+            nil,
+            %{},
+            %{
+              sub: "user-id",
+              token: "revoked-token"
+            },
+            nil
+          )
+        end)
+
+      assert log =~ "authorization revoke - success"
+      assert log =~ "sub=user-id"
+      refute log =~ "revoked-token"
+    end
+  end
+
+  describe "authorization_revoke_failure_handler/4" do
+    test "logs the failure without the submitted token" do
+      log =
+        capture_log([level: :info], fn ->
+          BorutaWeb.Logger.authorization_revoke_failure_handler(
+            nil,
+            %{},
+            %{
+              status: :unauthorized,
+              error: :invalid_client,
+              error_description: "Invalid client_id or client_secret.",
+              token: "submitted-token"
+            },
+            nil
+          )
+        end)
+
+      assert log =~ "authorization revoke - failure"
+      assert log =~ "status=unauthorized"
+      assert log =~ "error=invalid_client"
+      assert log =~ ~s(error_description="Invalid client_id or client_secret.")
+      refute log =~ "submitted-token"
     end
   end
 end

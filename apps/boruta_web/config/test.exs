@@ -42,7 +42,7 @@ config :boruta_auth, BorutaAuth.Repo,
 config :boruta_identity, Boruta.Accounts,
   secret_key_base: System.get_env("SECRET_KEY_BASE", "secret")
 
-config :logger, level: :warn
+config :logger, level: :warning
 
 config :libcluster,
   topologies: [

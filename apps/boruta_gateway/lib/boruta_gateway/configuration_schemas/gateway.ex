@@ -8,6 +8,10 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
       "type" => "object",
       "properties" => %{
         "authorize" => %{"type" => "boolean"},
+        "authorization_type" => %{
+          "type" => "string",
+          "pattern" => "^(oauth_bearer|http_basic)$"
+        },
         "error_content_type" => %{"type" => "string"},
         "forbidden_response" => %{"type" => "string"},
         "unauthorized_response" => %{"type" => "string"},
@@ -15,6 +19,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "forwarded_token_public_key" => %{"type" => "string"},
         "forwarded_token_secret" => %{"type" => "string"},
         "forwarded_token_signature_alg" => %{"type" => "string"},
+        "mtls_enabled" => %{"type" => "boolean"},
         "scheme" => %{"type" => "string", "pattern" => "^(http|https)$"},
         "host" => %{"type" => "string"},
         "port" => %{"type" => "number"},
@@ -60,6 +65,10 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
       "properties" => %{
         "node_name" => %{"type" => "string"},
         "authorize" => %{"type" => "boolean"},
+        "authorization_type" => %{
+          "type" => "string",
+          "pattern" => "^(oauth_bearer|http_basic)$"
+        },
         "error_content_type" => %{"type" => "string"},
         "forbidden_response" => %{"type" => "string"},
         "unauthorized_response" => %{"type" => "string"},
@@ -67,6 +76,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "forwarded_token_public_key" => %{"type" => "string"},
         "forwarded_token_secret" => %{"type" => "string"},
         "forwarded_token_signature_alg" => %{"type" => "string"},
+        "mtls_enabled" => %{"type" => "boolean"},
         "scheme" => %{"type" => "string", "pattern" => "^(http|https)$"},
         "host" => %{"type" => "string"},
         "port" => %{"type" => "number"},

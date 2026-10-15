@@ -6,6 +6,7 @@ const defaults = {
   name: null,
   type: 'internal',
   errors: null,
+  loading: false,
   backend: new Backend()
 }
 
@@ -43,6 +44,7 @@ class IdentityProvider {
 
   save () {
     this.errors = null
+    this.loading = true
     // TODO trigger validate
     let response
     const { id, serialized } = this
@@ -67,6 +69,7 @@ class IdentityProvider {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {

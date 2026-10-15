@@ -1,7 +1,7 @@
 <template>
   <div class="role-list">
     <Toaster :active="deleted" message="Role has been deleted" type="warning" />
-    <router-link :to="{ name: 'new-role' }" class="ui violet main create button">Add a role</router-link>
+    <router-link :to="{ name: 'new-role' }" class="ui primary main create button">Add a role</router-link>
     <div class="container">
       <div class="ui error message" v-if="error">
         {{ error }}
@@ -15,7 +15,7 @@
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-role', params: { roleId: role.id } }"
-                class="ui tiny blue button">edit</router-link>
+                class="ui tiny secondary button">edit</router-link>
               <a v-on:click="deleteRole(role)" class="ui tiny red button">delete</a>
             </div>
             <div class="ui attribute list">

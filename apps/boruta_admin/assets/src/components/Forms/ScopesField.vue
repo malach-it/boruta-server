@@ -8,7 +8,7 @@
         <i v-on:click="deleteScope(authorizedScope)" class="close icon"></i>
       </div>
     </div>
-    <a v-on:click.prevent="addScope()" class="ui blue fluid button">Add a scope</a>
+    <a v-on:click.prevent="addScope()" class="ui tertiary fluid button">Add a scope</a>
   </div>
 </template>
 

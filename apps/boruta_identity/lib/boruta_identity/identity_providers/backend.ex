@@ -315,7 +315,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   def implementation(%__MODULE__{type: type}, account_type \\ nil) do
     case account_type do
       nil ->
-        String.to_atom(type)
+        backend_type(type)
 
       account_type ->
         account_implementations()[account_type]
@@ -364,7 +364,11 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
 
   @spec federated_login_url(backend :: t(), federated_server_name :: String.t()) ::
           login_url :: String.t()
-  @spec federated_login_url(backend :: t(), federated_server_name :: String.t(), state :: String.t()) ::
+  @spec federated_login_url(
+          backend :: t(),
+          federated_server_name :: String.t(),
+          state :: String.t()
+        ) ::
           login_url :: String.t()
   def federated_login_url(%__MODULE__{} = backend, federated_server_name, state \\ "") do
     case federated_oauth_client(backend, federated_server_name) do
@@ -398,40 +402,26 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
       federated_server ->
         base_url = URI.parse(federated_server["base_url"])
 
-        endpoints =
-          case federated_server["discovery_path"] do
-            nil ->
-              %{
-                authorize_url:
-                  URI.to_string(%{
-                    base_url
-                    | path: federated_server["authorize_path"]
-                  }),
-                token_url:
-                  URI.to_string(%{
-                    base_url
-                    | path: federated_server["token_path"]
-                  })
-              }
+        case federated_server_urls(backend, federated_server) do
+          {:ok, endpoints} ->
+            client =
+              OAuth2.Client.new(
+                strategy: AuthCodeStrategy,
+                token_method: :post,
+                client_id: federated_server["client_id"],
+                client_secret: federated_server["client_secret"],
+                site: base_url,
+                request_opts: [state: "boruta"],
+                authorize_url: endpoints.authorize_url,
+                token_url: endpoints.token_url,
+                redirect_uri: federated_redirect_url(backend, federated_server_name)
+              )
 
-            discovery_path ->
-              discover_federated_server_urls(backend, federated_server, discovery_path)
-          end
+            OAuth2.Client.put_serializer(client, "application/json", Jason)
 
-        client =
-          OAuth2.Client.new(
-            strategy: AuthCodeStrategy,
-            token_method: :post,
-            client_id: federated_server["client_id"],
-            client_secret: federated_server["client_secret"],
-            site: base_url,
-            request_opts: [state: "boruta"],
-            authorize_url: endpoints[:authorize_url] || "",
-            token_url: endpoints[:token_url] || "",
-            redirect_uri: federated_redirect_url(backend, federated_server_name)
-          )
-
-        OAuth2.Client.put_serializer(client, "application/json", Jason)
+          _error ->
+            nil
+        end
     end
   end
 
@@ -452,6 +442,21 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
     end
   end
 
+  defp federated_server_urls(backend, %{"discovery_path" => discovery_path} = federated_server)
+       when is_binary(discovery_path) and discovery_path != "" do
+    discover_federated_server_urls(backend, federated_server, discovery_path)
+  end
+
+  defp federated_server_urls(_backend, federated_server) do
+    base_url = URI.parse(federated_server["base_url"])
+
+    {:ok,
+     %{
+       authorize_url: URI.to_string(%{base_url | path: federated_server["authorize_path"]}),
+       token_url: URI.to_string(%{base_url | path: federated_server["token_path"]})
+     }}
+  end
+
   defp discover_federated_server_urls(
          %__MODULE__{federated_servers: federated_servers} = backend,
          federated_server,
@@ -466,39 +471,41 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
          )
          |> Finch.request(BorutaIdentity.Finch) do
       {:ok, %Finch.Response{status: 200, body: body}} ->
-        discovery = Jason.decode!(body)
+        with {:ok, discovery} <- Jason.decode(body),
+             %{
+               "authorization_endpoint" => authorize_url,
+               "token_endpoint" => token_url,
+               "userinfo_endpoint" => userinfo_url
+             } <- discovery do
+          change(backend, %{
+            federated_servers:
+              Enum.map(federated_servers, fn %{"name" => name} = current_federated_server ->
+                case name == federated_server["name"] do
+                  true ->
+                    current_federated_server
+                    |> Map.put("authorize_path", authorize_url)
+                    |> Map.put("token_path", token_url)
+                    |> Map.put("userinfo_path", userinfo_url)
 
-        authorize_url = discovery["authorization_endpoint"]
+                  false ->
+                    current_federated_server
+                end
+              end)
+          })
+          |> Repo.update()
 
-        token_url = discovery["token_endpoint"]
-
-        userinfo_url = discovery["userinfo_endpoint"]
-
-        change(backend, %{
-          federated_servers:
-            Enum.map(federated_servers, fn %{"name" => name} = current_federated_server ->
-              case name == federated_server["name"] do
-                true ->
-                  current_federated_server
-                  |> Map.put("authorize_path", authorize_url)
-                  |> Map.put("token_path", token_url)
-                  |> Map.put("userinfo_path", userinfo_url)
-
-                false ->
-                  current_federated_server
-              end
-            end)
-        })
-        |> Repo.update()
-
-        %{
-          authorize_url: discovery["authorization_endpoint"],
-          token_url: discovery["token_endpoint"],
-          userinfo_url: discovery["userinfo_endpoint"]
-        }
+          {:ok,
+           %{
+             authorize_url: authorize_url,
+             token_url: token_url,
+             userinfo_url: userinfo_url
+           }}
+        else
+          _error -> :error
+        end
 
       _error ->
-        %{}
+        :error
     end
   end
 
@@ -702,10 +709,18 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
   defp set_default(changeset), do: changeset
 
   defp validate_backend_by_type(changeset) do
-    type = get_field(changeset, :type)
-
-    validate_backend(changeset, String.to_atom(type))
+    case get_field(changeset, :type) |> backend_type() do
+      nil -> changeset
+      type -> validate_backend(changeset, type)
+    end
   end
+
+  defp backend_type(type) when is_binary(type) do
+    Enum.find(@backend_types, &(Atom.to_string(&1) == type))
+  end
+
+  defp backend_type(type) when type in @backend_types, do: type
+  defp backend_type(_type), do: nil
 
   defp validate_backend(changeset, Internal) do
     changeset

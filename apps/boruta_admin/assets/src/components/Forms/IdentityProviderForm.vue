@@ -5,6 +5,7 @@
       <div ref="tabularMenu" class="ui top attached stackable tabular menu">
         <a id="general-configuration" @click="openTab" class="active item">General configuration</a>
         <a id="features" @click="openTab" class="item">Features</a>
+        <a v-if="$slots.activity" id="activity" @click="openTab" class="item">Activity</a>
       </div>
       <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
         <div class="field" :class="{ 'error': identityProvider.errors?.name }">
@@ -20,7 +21,7 @@
         <div v-if="identityProvider.isPersisted" class="ui segment">
           <router-link
             :to="{ name: 'edit-layout-template', params: { identityProviderId: identityProvider.id } }"
-            class="ui fluid blue button">Edit layout template</router-link>
+            class="ui fluid secondary button">Edit layout template</router-link>
         </div>
         <section v-if="identityProvider.isPersisted">
           <h3>Sessions</h3>
@@ -32,18 +33,18 @@
             <hr />
             <router-link
               :to="{ name: 'edit-session-template', params: { identityProviderId: identityProvider.id } }"
-              class="ui fluid blue button">Edit login template</router-link>
+              class="ui fluid secondary button">Edit login template</router-link>
           </div>
           <div v-show="displayResetPassword">
             <div class="ui segment">
               <router-link
                 :to="{ name: 'edit-new-reset-password-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit send reset password instructions template</router-link>
+                class="ui fluid secondary button">Edit send reset password instructions template</router-link>
             </div>
             <div class="ui segment">
               <router-link
                 :to="{ name: 'edit-edit-reset-password-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit reset password template</router-link>
+                class="ui fluid secondary button">Edit reset password template</router-link>
             </div>
           </div>
         </section>
@@ -62,7 +63,7 @@
             <div v-if="identityProvider.choose_session">
               <router-link
                 :to="{ name: 'edit-choose-session-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit choose session template</router-link>
+                class="ui fluid secondary button">Edit choose session template</router-link>
             </div>
           </div>
         </section>
@@ -88,11 +89,11 @@
             <div v-if="identityProvider.webauthnable">
               <router-link
                 :to="{ name: 'edit-webauthn-registration-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit Webauthn registration template</router-link>
+                class="ui fluid secondary button">Edit Webauthn registration template</router-link>
               <hr />
               <router-link
                 :to="{ name: 'edit-webauthn-authentication-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit Webauthn authentication template</router-link>
+                class="ui fluid secondary button">Edit Webauthn authentication template</router-link>
             </div>
           </div>
         </section>
@@ -118,11 +119,11 @@
             <div v-if="identityProvider.totpable">
               <router-link
                 :to="{ name: 'edit-totp-registration-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit TOTP registration template</router-link>
+                class="ui fluid secondary button">Edit TOTP registration template</router-link>
               <hr />
               <router-link
                 :to="{ name: 'edit-totp-authentication-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit TOTP authentication template</router-link>
+                class="ui fluid secondary button">Edit TOTP authentication template</router-link>
             </div>
           </div>
         </section>
@@ -139,7 +140,7 @@
             <div v-if="identityProvider.registrable">
               <router-link
                 :to="{ name: 'edit-registration-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit registration template</router-link>
+                class="ui fluid secondary button">Edit registration template</router-link>
             </div>
           </div>
         </section>
@@ -156,7 +157,7 @@
             <div v-if="identityProvider.user_editable">
               <router-link
                 :to="{ name: 'edit-edit-user-template', params: { identityProviderId: identityProvider.id } }"
-                class="ui fluid blue button">Edit user edition template</router-link>
+                class="ui fluid secondary button">Edit user edition template</router-link>
             </div>
           </div>
         </section>
@@ -174,7 +175,7 @@
               <div v-if="identityProvider.confirmable">
                 <router-link
                   :to="{ name: 'edit-new-confirmation-template', params: { identityProviderId: identityProvider.id } }"
-                  class="ui fluid blue button">Edit send confirmation template</router-link>
+                  class="ui fluid secondary button">Edit send confirmation template</router-link>
               </div>
             </div>
           </div>
@@ -193,7 +194,7 @@
               <div v-if="identityProvider.consentable">
                 <router-link
                   :to="{ name: 'edit-new-consent-template', params: { identityProviderId: identityProvider.id } }"
-                  class="ui fluid blue button">Edit consent template</router-link>
+                  class="ui fluid secondary button">Edit consent template</router-link>
               </div>
             </div>
           </div>
@@ -208,7 +209,7 @@
               <div>
                 <router-link
                   :to="{ name: 'edit-credential-offer-template', params: { identityProviderId: identityProvider.id } }"
-                  class="ui fluid blue button">Edit credential offer template</router-link>
+                  class="ui fluid secondary button">Edit credential offer template</router-link>
               </div>
             </div>
           </div>
@@ -221,14 +222,17 @@
               <div>
                 <router-link
                   :to="{ name: 'edit-cross-device-presentation-template', params: { identityProviderId: identityProvider.id } }"
-                  class="ui fluid blue button">Edit cross device presentation template</router-link>
+                  class="ui fluid secondary button">Edit credential presentation template</router-link>
               </div>
             </div>
           </div>
         </section>
       </div>
-      <div class="actions">
-        <button class="ui violet button" type="submit">{{ action }}</button>
+      <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
+        <slot v-if="activeTab === 'activity'" name="activity" />
+      </div>
+      <div class="actions" v-if="activeTab !== 'activity'">
+        <button class="ui primary button" :class="{ loading: identityProvider.loading }" :disabled="identityProvider.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>
@@ -241,11 +245,13 @@ import FormErrors from './FormErrors.vue'
 export default {
   name: 'identity-provider-form',
   props: ['identityProvider', 'action'],
+  emits: ['submit', 'back'],
   components: {
     FormErrors
   },
   data() {
     return {
+      activeTab: 'general-configuration',
       backends: []
     }
   },
@@ -276,8 +282,12 @@ export default {
     Backend.all().then(backends => this.backends = backends)
   },
   methods: {
+    submit () {
+      this.$emit('submit')
+    },
     openTab (e) {
       const tab = e.target.id
+      this.activeTab = tab
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
         if (e.id == tab) {
           e.classList.add('active')

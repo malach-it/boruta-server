@@ -12,7 +12,7 @@
         <input type="text" v-model="organization.label" placeholder="Wonder organization" />
       </div>
       <div class="actions">
-        <button class="ui violet button" type="submit">{{ action }}</button>
+        <button class="ui primary button" :class="{ loading: organization.loading }" :disabled="organization.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>
@@ -24,8 +24,14 @@ import FormErrors from './FormErrors.vue'
 export default {
   name: 'organization-form',
   props: ['organization', 'action'],
+  emits: ['submit', 'back'],
   components: {
     FormErrors
+  },
+  methods: {
+    submit () {
+      this.$emit('submit')
+    }
   }
 }
 </script>

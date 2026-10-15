@@ -20,6 +20,8 @@ defmodule BorutaAdmin.Application do
       :ok
     )
 
+    BorutaAdminWeb.Logger.start()
+
     setup_database()
     opts = [strategy: :one_for_one, name: BorutaAdmin.Supervisor]
     Supervisor.start_link(children, opts)

@@ -7,6 +7,7 @@
         <a id="authentication" @click="openTab" class="item">Authentication</a>
         <a id="security" @click="openTab" class="item">Security</a>
         <a id="grant-types" @click="openTab" class="item">Grant types</a>
+        <a v-if="$slots.activity" id="activity" @click="openTab" class="item">Activity</a>
       </div>
       <div ref="general-configuration" data-tab="general-configuration" class="ui bottom attached active tab segment">
         <div class="field" :class="{ 'error': client.errors?.name }">
@@ -56,7 +57,7 @@
               <i v-on:click="deleteRedirectUri(redirectUri)" class="close icon"></i>
             </div>
           </div>
-          <a v-on:click.prevent="addRedirectUri()" class="ui blue fluid button">Add a redirect uri</a>
+          <a v-on:click.prevent="addRedirectUri()" class="ui tertiary fluid button">Add a redirect uri</a>
         </div>
         <div class="field" :class="{ 'error': client.errors?.response_mode }">
           <label>Response mode</label>
@@ -90,7 +91,7 @@
             </div>
           </div>
         </div>
-        <div class="field" v-if="client.token_endpoint_jwt_auth_alg.match(/RS/)">
+        <div class="field" v-if="client.token_endpoint_jwt_auth_alg.match(/(ES|RS)/)">
           <label>Client JWT authentication public key (pem)</label>
           <textarea v-model="client.jwt_public_key" placeholder="Your public key here"></textarea>
         </div>
@@ -112,7 +113,6 @@
             <option v-for="adapter in signaturesAdapters" :value="adapter">{{ adapter }}</option>
           </select>
         </div>
-
         <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Universal.Signatures'">
           <div class="ui info message">
             The usage of the Universal adapter requires an account, please contact Godiddy services <a href="https://godiddy.com/contact" target="_blank">https://godiddy.com/contact</a> and set the API key as an environment variable.
@@ -141,7 +141,7 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
+          <button type="button" class="ui fluid secondary button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
         </div>
         <div class="ui segment" v-if="client.signatures_adapter == 'Elixir.Boruta.Internal.Signatures'">
           <h4>Key type</h4>
@@ -179,9 +179,9 @@
             <label>Client public key</label>
             <pre>{{ clientPublicKey }}</pre>
           </div>
-          <button type="button" class="ui fluid orange button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
+          <button type="button" class="ui fluid secondary button" :disabled="keyPairTypeChanged" @click="regenerateKeyPair()" v-if="client.isPersisted">Regenerate client key pair</button>
           <hr />
-          <a class="ui fluid orange button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
+          <a class="ui fluid secondary button" @click="regenerateDid()" v-if="client.isPersisted">Regenerate client did</a>
         </div>
         <h3>Token signatures</h3>
         <div class="ui segment">
@@ -207,32 +207,66 @@
           </div>
         </div>
         <h3>Authorization</h3>
-        <div class="field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="client.enforce_dpop">
-            <label>Enforce Demonstration Proof-of-Possession (DPoP)</label>
+        <div class="ui authorization segment">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="client.enforce_dpop">
+              <label>Enforce Demonstration Proof-of-Possession (DPoP)</label>
+            </div>
           </div>
         </div>
-        <div class="field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="client.enforce_tx_code">
-            <label>Enforce pre-authorized code transaction code</label>
+        <div class="ui authorization segment">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="client.enforce_tx_code">
+              <label>Enforce pre-authorized code transaction code</label>
+            </div>
           </div>
         </div>
-        <div class="field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="client.authorize_scope">
-            <label>Authorize scopes</label>
+        <div class="ui authorization segment">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="client.authorize_scope">
+              <label>Authorize scopes</label>
+            </div>
+          </div>
+          <div class="field" :class="{ 'error': client.errors?.authorized_scopes }" v-if="client.authorize_scope">
+            <hr />
+            <ScopesField :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
           </div>
         </div>
-        <div class="field">
-          <div class="ui toggle checkbox">
-            <input type="checkbox" v-model="client.check_public_client_id">
-            <label>Check public client id</label>
+        <div class="ui authorization segment">
+          <div class="field">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="client.check_public_client_id">
+              <label>Check public client id</label>
+            </div>
           </div>
         </div>
-        <div class="field" :class="{ 'error': client.errors?.authorized_scopes }">
-          <ScopesField v-if="client.authorize_scope" :currentScopes="client.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+        <div class="ui authorization segment">
+          <div class="field" :class="{ 'error': client.errors?.trusted_hosts }">
+            <label>Trusted hosts</label>
+            <div v-for="(trustedHost, index) in client.trusted_hosts" class="field" :key="index">
+              <div class="ui right icon input">
+                <input type="text" v-model="trustedHost.host" placeholder="issuer.example.com" />
+                <i @click="deleteTrustedHost(trustedHost)" class="close icon"></i>
+              </div>
+            </div>
+            <a @click.prevent="addTrustedHost()" class="ui tertiary fluid button">Add a trusted host</a>
+          </div>
+        </div>
+        <div class="ui authorization segment">
+          <div class="field" :class="{ 'error': client.errors?.trusted_authorities }">
+            <label>Trusted authorities</label>
+            <div class="ui segment">
+              <div class="editor field">
+                <TextEditor
+                  :content="client.trusted_authorities || ''"
+                  @codeUpdate="setTrustedAuthorities"
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <h3>PKCE configuration</h3>
         <div class="ui segment">
@@ -263,8 +297,11 @@
           </div>
         </div>
       </div>
-      <div class="actions">
-        <button class="ui violet button" type="submit">{{ action }}</button>
+      <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
+        <slot v-if="activeTab === 'activity'" name="activity" />
+      </div>
+      <div class="actions" v-if="activeTab !== 'activity'">
+        <button class="ui primary button" :class="{ loading: client.loading }" :disabled="client.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>
@@ -277,17 +314,21 @@ import Client from '../../models/client.model'
 import ScopesField from './ScopesField.vue'
 import IdentityProviderField from './IdentityProviderField.vue'
 import FormErrors from './FormErrors.vue'
+import TextEditor from './TextEditor.vue'
 
 export default {
   name: 'client-form',
   props: ['client', 'action'],
+  emits: ['submit', 'back'],
   components: {
     ScopesField,
     IdentityProviderField,
-    FormErrors
+    FormErrors,
+    TextEditor
   },
   data() {
     return {
+      activeTab: 'general-configuration',
       keyPairTypes: Client.keyPairTypes,
       signaturesAdapters: Client.signaturesAdapters,
       keyPairs: [],
@@ -328,8 +369,20 @@ export default {
         1
       )
     },
+    addTrustedHost () {
+      this.client.trusted_hosts.push({})
+    },
+    deleteTrustedHost (trustedHost) {
+      this.client.trusted_hosts.splice(
+        this.client.trusted_hosts.indexOf(trustedHost),
+        1
+      )
+    },
     setIdentityProvider (identityProvider) {
       this.client.identity_provider = { model: identityProvider }
+    },
+    setTrustedAuthorities (trustedAuthorities) {
+      this.client.trusted_authorities = trustedAuthorities
     },
     addScope () {
       this.client.authorized_scopes.push({ model: new Scope() })
@@ -345,6 +398,7 @@ export default {
     },
     openTab (e) {
       const tab = e.target.id
+      this.activeTab = tab
       Array.from(this.$refs.tabularMenu.getElementsByClassName('item')).forEach(e => {
         if (e.id == tab) {
           e.classList.add('active')
@@ -417,6 +471,17 @@ export default {
     pre {
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+  }
+  .authorization.segment>.field {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .authorization .editor.field {
+    height: 180px;
+
+    .editor {
+      overflow: auto;
     }
   }
 }

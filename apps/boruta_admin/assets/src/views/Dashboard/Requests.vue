@@ -4,7 +4,7 @@
       <div class="ui error message" v-if="error">
         {{ error }}
       </div>
-      <div class="ui dates form">
+      <form class="ui dates form">
         <div class="ui stackable grid">
           <div class="four wide request-times column">
             <h1>Requests</h1>
@@ -16,29 +16,58 @@
             <input type="datetime-local" v-model="dateFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
+            <button class="ui fluid tertiary button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
         </div>
-      </div>
+      </form>
       <div class="ui error message" v-if="fetchError">
         An error has occured when fetching logs, message: {{ fetchError }}.
       </div>
-      <div class="ui segment">
+      <div class="ui dashboard-content segment" :class="{ loading: pending }" :aria-busy="pending">
         <div class="ui requests form">
           <div class="ui stackable grid">
             <div class="ten wide filter-form column">
+              <div class="field">
+                <label>Text search</label>
+                <div class="ui icon input">
+                  <input
+                    type="search"
+                    v-model="requestsFilter.text"
+                    @keyup.enter="getLogs()"
+                    placeholder="Search log messages"
+                    :disabled="pending"
+                  />
+                  <i class="search icon"></i>
+                </div>
+              </div>
               <div class="field">
                 <label>Application</label>
                 <select @change="getLogs()" v-model="requestsFilter.application" :disabled="pending">
                   <option :value="application" v-for="application in requestsFiltersData.applications">{{ application }}</option>
                 </select>
               </div>
-              <div class="field">
-                <label>Request label</label>
-                <select @change="getLogs()" v-model="requestsFilter.label" :disabled="pending">
-                  <option value="">All request labels</option>
-                  <option :value="label" v-for="label in requestsFiltersData.labels">{{ label }}</option>
-                </select>
+              <div class="three fields">
+                <div class="field">
+                  <label>Request label</label>
+                  <select @change="getLogs()" v-model="requestsFilter.label" :disabled="pending">
+                    <option value="">All request labels</option>
+                    <option :value="label" v-for="label in requestsFiltersData.labels">{{ label }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>HTTP status</label>
+                  <select @change="getLogs()" v-model="requestsFilter.statusCode" :disabled="pending">
+                    <option value="">All HTTP statuses</option>
+                    <option :value="statusCode" v-for="statusCode in requestsFiltersData.statusCodes">{{ statusCode }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Request method</label>
+                  <select @change="getLogs()" v-model="requestsFilter.method" :disabled="pending">
+                    <option value="">All request methods</option>
+                    <option :value="method" v-for="method in requestsFiltersData.methods">{{ method }}</option>
+                  </select>
+                </div>
               </div>
             </div>
             <div class="six wide log-count column">
@@ -84,6 +113,25 @@ import RequestLogStats from '../../models/request-log-stats.model'
 Chart.register(...registerables)
 
 const MAX_LOG_LINES = 10000 // from backend limit
+const MAX_GRAPH_REQUEST_LABELS = 50
+const OTHER_REQUEST_LABEL = 'other'
+
+function defaultDateFilter() {
+  const currentHour = moment().utc()
+
+  return {
+    startAt: currentHour.clone().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+    endAt: currentHour.clone().endOf('hour').format("yyyy-MM-DDTHH:mm")
+  }
+}
+
+function dateFilterFromQuery(query) {
+  return {
+    ...defaultDateFilter(),
+    ...(query.startAt ? { startAt: query.startAt } : {}),
+    ...(query.endAt ? { endAt: query.endAt } : {})
+  }
+}
 
 export default {
   name: 'requests',
@@ -97,21 +145,23 @@ export default {
       pending: false,
       error: false,
       maxLogLines: MAX_LOG_LINES,
-      timeScaleUnit: '',
+      timeScaleUnit: 'minute',
       requestLogs: [],
       logCount: 0,
       graphRerenders: 0,
       requestsFiltersData: {
         applications: ['boruta_web', 'boruta_identity', 'boruta_gateway', 'boruta_admin'],
-        labels: []
+        labels: [],
+        statusCodes: [],
+        methods: []
       },
-      dateFilter: {
-        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
-      },
+      dateFilter: dateFilterFromQuery(this.$route.query),
       requestsFilter: {
         application: this.$route.query.application || 'boruta_web',
-        label: this.$route.query.label || ''
+        label: this.$route.query.label || '',
+        statusCode: this.$route.query.statusCode || '',
+        method: this.$route.query.method || '',
+        text: this.$route.query.text || ''
       },
       statusCodes: {
         labels: [],
@@ -215,6 +265,8 @@ export default {
     },
     resetFilters() {
       this.requestsFiltersData.labels = []
+      this.requestsFiltersData.statusCodes = []
+      this.requestsFiltersData.methods = []
       if (!this.requestsFilter.label.match(this.requestsFilter.application)) {
         this.requestsFilter.label = ''
       }
@@ -233,18 +285,28 @@ export default {
         request_counts,
         status_codes,
         request_times,
-        labels
+        labels,
+        methods
       }) => {
         this.timeScaleUnit = time_scale_unit
         this.overflow = overflow
         this.requestLogs = log_lines
         this.logCount = log_count
         this.requestsFiltersData.labels = labels
-        this.populateRequestCounts(request_counts)
-        this.populateStatusCodes(status_codes)
-        this.populateRequestTimes(request_times)
-        this.pending = false
+
+        const graphStats = limitGraphRequestLabels({
+          requestCounts: request_counts,
+          statusCodes: status_codes,
+          requestTimes: request_times
+        })
+
+        this.requestsFiltersData.statusCodes = uniq(Object.values(status_codes).flatMap(Object.keys)).sort()
+        this.requestsFiltersData.methods = methods
+        this.populateRequestCounts(graphStats.requestCounts)
+        this.populateStatusCodes(graphStats.statusCodes)
+        this.populateRequestTimes(graphStats.requestTimes)
       }).catch(error => this.error = error.message)
+        .finally(() => { this.pending = false })
     },
     render() {
       this.graphRerenders += 1
@@ -336,14 +398,14 @@ export default {
     $route(to, from) {
       if (to.name !== 'request-logs') return
 
-      this.dateFilter = {
-        startAt: to.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: to.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
-      }
+      this.dateFilter = dateFilterFromQuery(to.query)
 
       this.requestsFilter = {
         application: to.query.application || 'boruta_web',
-        label: to.query.label || ''
+        label: to.query.label || '',
+        statusCode: to.query.statusCode || '',
+        method: to.query.method || '',
+        text: to.query.text || ''
       }
 
       this.overflow = false
@@ -370,11 +432,89 @@ function stringToColor(str) {
   }
   return colour
 }
+
+function limitGraphRequestLabels({ requestCounts, statusCodes, requestTimes }) {
+  const requestLabels = Object.keys(requestCounts)
+
+  if (requestLabels.length <= MAX_GRAPH_REQUEST_LABELS) {
+    return { requestCounts, statusCodes, requestTimes }
+  }
+
+  const displayedLabels = requestLabels
+    .sort((firstLabel, secondLabel) => {
+      const countDifference = total(requestCounts[secondLabel]) - total(requestCounts[firstLabel])
+      return countDifference || firstLabel.localeCompare(secondLabel)
+    })
+    .slice(0, MAX_GRAPH_REQUEST_LABELS - 1)
+
+  return {
+    requestCounts: groupSummedStats(requestCounts, displayedLabels),
+    statusCodes: groupSummedStats(statusCodes, displayedLabels),
+    requestTimes: groupRequestTimes(requestTimes, requestCounts, displayedLabels)
+  }
+}
+
+function groupSummedStats(stats, displayedLabels) {
+  const displayedLabelSet = new Set(displayedLabels)
+
+  return Object.entries(stats).reduce((groupedStats, [requestLabel, values]) => {
+    const graphLabel = displayedLabelSet.has(requestLabel) ? requestLabel : OTHER_REQUEST_LABEL
+    groupedStats[graphLabel] = groupedStats[graphLabel] || {}
+
+    Object.entries(values).forEach(([key, value]) => {
+      groupedStats[graphLabel][key] = (groupedStats[graphLabel][key] || 0) + value
+    })
+
+    return groupedStats
+  }, {})
+}
+
+function groupRequestTimes(requestTimes, requestCounts, displayedLabels) {
+  const displayedLabelSet = new Set(displayedLabels)
+
+  const groupedTimes = Object.entries(requestTimes).reduce(
+    (groupedStats, [requestLabel, values]) => {
+      const graphLabel = displayedLabelSet.has(requestLabel) ? requestLabel : OTHER_REQUEST_LABEL
+      groupedStats[graphLabel] = groupedStats[graphLabel] || {}
+
+      Object.entries(values).forEach(([timestamp, requestTime]) => {
+        const requestCount = requestCounts[requestLabel]?.[timestamp] || 1
+        const current = groupedStats[graphLabel][timestamp] || { total: 0, count: 0 }
+
+        groupedStats[graphLabel][timestamp] = {
+          total: current.total + requestTime * requestCount,
+          count: current.count + requestCount
+        }
+      })
+
+      return groupedStats
+    },
+    {}
+  )
+
+  return Object.entries(groupedTimes).reduce((averages, [requestLabel, values]) => {
+    averages[requestLabel] = Object.entries(values).reduce(
+      (requestLabelAverages, [timestamp, { total, count }]) => {
+        requestLabelAverages[timestamp] = total / count
+        return requestLabelAverages
+      },
+      {}
+    )
+    return averages
+  }, {})
+}
+
+function total(values) {
+  return Object.values(values).reduce((sum, value) => sum + value, 0)
+}
 </script>
 
 <style scoped lang="scss">
 .dashboard {
   position: relative;
+  .dashboard-content.loading {
+    min-height: 12rem;
+  }
   .dates.form {
     margin-bottom: 1em;
   }

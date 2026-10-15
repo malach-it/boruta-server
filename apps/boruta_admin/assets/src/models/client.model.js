@@ -31,15 +31,19 @@ const signaturesAdapters = [
 
 const defaults = {
   errors: null,
+  loading: false,
+  confidential: true,
   key_pair_id: null,
   key_pair_type: { type: 'rsa', modulus_size: '2048', exponent_size: '65537' },
   signatures_adapter: 'Elixir.Boruta.Internal.Signatures',
   authorize_scopes: false,
   authorized_scopes: [],
   redirect_uris: [],
+  trusted_hosts: [],
   id_token_signature_alg: 'RS512',
   token_endpoint_jwt_auth_alg: 'HS256',
   token_endpoint_auth_methods: ["client_secret_basic", "client_secret_post"],
+  trusted_authorities: '',
   identity_provider: { model: new IdentityProvider() },
   grantTypes: allGrantTypes.map((label) => {
     return {
@@ -53,6 +57,12 @@ const assign = {
   id: function ({ id }) { this.id = id },
   public_client_id: function ({ public_client_id }) { this.public_client_id = public_client_id },
   check_public_client_id: function ({ check_public_client_id }) { this.check_public_client_id = check_public_client_id },
+  trusted_authorities: function ({ trusted_authorities }) {
+    this.trusted_authorities = trusted_authorities || ''
+  },
+  trusted_hosts: function ({ trusted_hosts }) {
+    this.trusted_hosts = (trusted_hosts || []).map((host) => ({ host }))
+  },
   name: function ({ name }) { this.name = name },
   confidential: function ({ confidential }) { this.confidential = confidential },
   pkce: function ({ pkce }) { this.pkce = pkce },
@@ -130,8 +140,14 @@ class Client {
 
   async save () {
     this.errors = null
+    this.loading = true
 
-    await this.validate()
+    try {
+      await this.validate()
+    } catch (error) {
+      this.loading = false
+      throw error
+    }
 
     // TODO trigger validate
     let response
@@ -157,6 +173,7 @@ class Client {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   async regenerateDid () {
@@ -239,6 +256,8 @@ class Client {
       token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods,
       jwt_public_key,
+      trusted_authorities,
+      trusted_hosts,
       key_pair_id,
       key_pair_type,
       signatures_adapter,
@@ -274,6 +293,8 @@ class Client {
       token_endpoint_jwt_auth_alg,
       token_endpoint_auth_methods,
       jwt_public_key,
+      trusted_authorities,
+      trusted_hosts: trusted_hosts.map(({ host }) => host),
       key_pair_id,
       key_pair_type,
       signatures_adapter,

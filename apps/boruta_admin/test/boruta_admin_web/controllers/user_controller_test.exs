@@ -2,11 +2,12 @@ defmodule BorutaAdminWeb.UserControllerTest do
   use BorutaAdminWeb.ConnCase
 
   import BorutaIdentity.AccountsFixtures
-  import BorutaIdentity.Factory
+  import BorutaAdmin.IdentityFactory
 
   alias Boruta.Ecto.Admin
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Repo
 
   setup %{conn: conn} do
@@ -54,6 +55,18 @@ defmodule BorutaAdminWeb.UserControllerTest do
                "resource" => ["you are unauthorized to access this resource."]
              }
            }
+  end
+
+  @tag user_authorized: ["users:manage:all"]
+  test "rejects an existing bearer token after its user is blocked", %{conn: conn} do
+    ["Bearer " <> value] = get_req_header(conn, "authorization")
+    token = Boruta.AccessTokensAdapter.get_by(value: value)
+    user = Repo.get!(User, token.sub)
+    user |> User.changeset(%{blocked: true}) |> Repo.update!()
+
+    assert conn
+           |> get(Routes.admin_user_path(conn, :index))
+           |> json_response(401)
   end
 
   describe "with bad scope" do
@@ -106,6 +119,20 @@ defmodule BorutaAdminWeb.UserControllerTest do
     test "lists all users", %{conn: conn} do
       conn = get(conn, Routes.admin_user_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
+    end
+  end
+
+  describe "show user" do
+    @tag authorized: ["users:manage:all"]
+    test "renders the last login timestamp", %{conn: conn} do
+      last_login_at = DateTime.utc_now() |> DateTime.truncate(:second)
+      user = insert(:user, last_login_at: last_login_at)
+
+      conn = get(conn, Routes.admin_user_path(conn, :show, user))
+
+      assert %{"last_login_at" => rendered_last_login_at} = json_response(conn, 200)["data"]
+      assert {:ok, rendered_last_login_at, 0} = DateTime.from_iso8601(rendered_last_login_at)
+      assert DateTime.compare(rendered_last_login_at, last_login_at) == :eq
     end
   end
 
@@ -467,9 +494,17 @@ defmodule BorutaAdminWeb.UserControllerTest do
     @tag authorized: ["users:manage:all"]
     test "updates user with group", %{
       conn: conn,
-      user: %User{id: id} = user
+      user: %User{id: id} = user,
+      existing_scope: scope
     } do
       group = "group1 group2"
+      metadata = %{"existing" => %{"value" => "preserved"}}
+
+      user
+      |> Ecto.Changeset.change(metadata: metadata)
+      |> Repo.update!()
+
+      Repo.insert!(%UserAuthorizedScope{user_id: id, scope_id: scope.id})
 
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
@@ -478,8 +513,36 @@ defmodule BorutaAdminWeb.UserControllerTest do
           }
         )
 
-      assert %{"id" => ^id, "group" => ^group} = json_response(conn, 200)["data"]
-      assert %User{group: ^group} = Repo.get!(User, id)
+      scope_id = scope.id
+
+      assert %{
+               "id" => ^id,
+               "group" => ^group,
+               "metadata" => ^metadata,
+               "authorized_scopes" => [%{"id" => ^scope_id}]
+             } = json_response(conn, 200)["data"]
+
+      assert %User{group: ^group, metadata: ^metadata} = Repo.get!(User, id)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "updates user with blocked", %{
+      conn: conn,
+      user: %User{id: id} = user
+    } do
+      access = BorutaAdmin.Factory.insert(:token, sub: id, type: "access_token")
+      assert {:ok, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
+
+      conn =
+        put(conn, Routes.admin_user_path(conn, :update, user),
+          user: %{
+            "blocked" => true
+          }
+        )
+
+      assert %{"id" => ^id, "blocked" => true} = json_response(conn, 200)["data"]
+      assert %User{blocked: true} = Repo.get!(User, id)
+      assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
     end
 
     @tag authorized: ["users:manage:all"]

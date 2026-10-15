@@ -1,9 +1,10 @@
 defmodule BorutaAdminWeb.UpstreamController do
   use BorutaAdminWeb, :controller
 
-  import BorutaAdminWeb.Authorization, only: [
-    authorize: 2
-  ]
+  import BorutaAdminWeb.Authorization,
+    only: [
+      authorize: 2
+    ]
 
   alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.Upstreams
@@ -19,11 +20,11 @@ defmodule BorutaAdminWeb.UpstreamController do
   end
 
   def node_list(conn, _params) do
-    nodes = [node() | Node.list()]
-            |> Enum.map(fn node ->
-              :rpc.call(node, ConfigurationLoader, :node_name, [])
-            end)
-            |> Enum.uniq()
+    nodes =
+      [node() | Node.list()]
+      |> Enum.map(fn node -> :rpc.call(node, ConfigurationLoader, :node_name, []) end)
+      |> Enum.uniq()
+
     render(conn, "node_list.json", nodes: nodes)
   end
 
@@ -33,6 +34,8 @@ defmodule BorutaAdminWeb.UpstreamController do
   end
 
   def create(conn, %{"upstream" => upstream_params}) do
+    upstream_params = normalize_openapi_upload(upstream_params)
+
     with {:ok, %Upstream{} = upstream} <- Upstreams.create_upstream(upstream_params) do
       conn
       |> put_status(:created)
@@ -43,6 +46,7 @@ defmodule BorutaAdminWeb.UpstreamController do
 
   def update(conn, %{"id" => id, "upstream" => upstream_params}) do
     upstream = Upstreams.get_upstream!(id)
+    upstream_params = normalize_openapi_upload(upstream_params)
 
     with {:ok, %Upstream{} = upstream} <- Upstreams.update_upstream(upstream, upstream_params) do
       render(conn, "show.json", upstream: upstream)
@@ -56,4 +60,16 @@ defmodule BorutaAdminWeb.UpstreamController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  defp normalize_openapi_upload(%{"openapi_spec" => %Plug.Upload{path: path}} = params) do
+    Map.put(params, "openapi_spec", File.read!(path))
+  end
+
+  defp normalize_openapi_upload(%{"openapi_spec_file" => %Plug.Upload{path: path}} = params) do
+    params
+    |> Map.delete("openapi_spec_file")
+    |> Map.put("openapi_spec", File.read!(path))
+  end
+
+  defp normalize_openapi_upload(params), do: params
 end

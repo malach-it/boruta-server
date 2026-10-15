@@ -17,10 +17,8 @@ config :boruta_identity, BorutaIdentityWeb.Endpoint,
   http: [port: 4002],
   server: false
 
-config :boruta_identity, BorutaIdentity.SMTP,
-  adapter: Swoosh.Adapters.Test
+config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.Test
 
-config :boruta_identity, BorutaIdentity.LdapRepo,
-  adapter: BorutaIdentity.LdapRepoMock
+config :boruta_identity, BorutaIdentity.LdapRepo, adapter: BorutaIdentity.LdapRepoMock
 
-config :logger, level: :warn
+config :logger, level: :warning

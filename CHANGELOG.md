@@ -2,20 +2,326 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
-## [unreleased]
+## [Unreleased]
 
 ### Added
 
-- [gateway] optional upstream rate imiting configuration
-- [gateway] recover request and business logs
+- [gateway] support an opt-in `ecto3_mnesia` repository backend with Mnesia table setup and cache updates; PostgreSQL remains the default, and existing gateway data requires a separate migration
+- [infra] published container images include provenance attestations
 
 ### Changed
 
-- [auth] configure oauth acceptor count, default to 8
+- [admin] request, business event, and token dashboard date filters use HTML forms
 
 ### Fixed
 
-- [admin] claim deletion for verifiable credential arrays
+- [admin] invalid YAML configuration file uploads return a bad request response
+- [auth][ssi] universal keys can be created for oauth client id token and verifiable credentials signing
+- [admin] client forms display the JWT authentication public key field for EC signing algorithms
+- [cli] configuration file uploads accept release-local file paths
+- [gateway] invalid TLS handshakes no longer stop HTTPS gateway acceptors
+- [ssi] credential status token resolution verifies tokens against client DIDs
+- [wallet] imported credentials are encrypted in local storage
+
+### Security
+
+- [identity] blocking or deleting a user invalidates browser sessions, authorization codes, and access tokens; the admin API rejects bearer tokens belonging to blocked or deleted users
+
+## [0.12.0] - 2026-09-11
+
+### Added
+
+- [admin] token dashboard provides issuance charts, filtering, full-text search, token-chain details, claim inspection, and revocation controls
+- [admin] administration interface supports selectable Boruta, Gruvbox, and Nord themes
+- [cli] `boruta` and `boruta_admin` releases include a YAML command-line interface for administration resources
+- [gateway] native Phi model trains noise detection with degree-one and sparse degree-two terms over OpenAPI request contexts
+- [gateway] Phi request matching treats the root path as legal for every HTTP method
+- [gateway] Phi noise detection evaluates unmatched paths across the entire gateway
+- [gateway] Phi prediction accepts bounded recency-decayed request memory as context
+- [gateway] Phi memory can classify otherwise legal requests as contextual noise
+- [gateway] upstreams can train and apply noise cancellation from transient OpenAPI uploads while storing only the Phi binary
+- [infra] Disable file logging configuration environment variable
+
+### Changed
+
+- [admin] token dashboard and API default to tokens issued since the beginning of the current hour
+- [admin] request and business event dashboards and log API default to the current UTC hour
+- [admin] sidebar sections reflect authorized scopes and remain expanded across nested dashboard routes
+- [admin] remove the redundant `roles:manage:all` scope from new installations and administration scope requests
+- [admin] new OAuth clients default to confidential
+- [admin] credential presentation template actions use clearer wording
+
+### Fixed
+
+- [admin] coalesce concurrent logout token revocations
+- [admin] resource activity refreshes when navigating between routes
+- [admin] fix sidebar upstream navigation
+- [admin] form fields wrap correctly on mobile viewports
+- [auth] log oauth revocation requests subject
+- [infra] include the database migration that defaults OAuth clients to confidential
+
+### Security
+
+- [admin] token administration responses omit token values and other reusable secrets
+- validate DID public clients against the issuer, registered redirect URIs, and supported grant types
+- require secret authentication for client and agent credentials grants and introspection, including public clients
+- allow decentralized non-confidential public-client grants without a secret only when issuer-bound
+
+## [0.11.6] - 2026-08-25
+
+### Added
+
+- [admin] form save buttons show loading states and prevent duplicate submissions
+- [admin] request and business event dashboards support text search across log messages
+
+### Changed
+
+- [admin] current node upstream panel items link to their edit pages
+- [gateway] service registry CAs remain separate from the VM-wide system CA trust store
+- [admin] user identifiers exact match search
+
+### Fixed
+
+- [admin] upstream node listing ignores failed cluster RPC responses
+- [ssi] fix outbound did requests TLS
+- [ssi] fix id token redirection scope forwarding
+- [ssi] fix vp token redirection scope forwarding
+
+## [0.11.5] - 2026-08-17
+
+### Fixed
+
+- [infra] daily log rotation reconfigures logger backends on every clustered node
+
+## [0.11.4] - 2026-08-17
+
+### Fixed
+
+- [admin] request log parsing handles microsecond durations consistently with Erlang/OTP 29
+
+## [0.11.3] - 2026-08-16
+
+### Fixed
+
+- [infra] fix startup database migrations updating jose dependency
+- [infra] example Docker Compose services use the Kagome alpha.6 image
+
+## [0.11.2] - 2026-08-16
+
+### Added
+
+- [admin] administration API actions emit privacy-preserving business events with actor, resource, allowlisted change, and failure attributes
+- [admin] resource edit pages display resource activity history alongside configuration tabs
+
+### Changed
+
+- [admin] user activity includes administration events and refreshes when the activity tab opens
+- [admin] user searches accept exact user identifiers
+
+### Fixed
+
+- [admin] resource form submissions execute once
+- [infra] administration client seed enables the implicit and revoke grant types
+
+## [0.11.1] - 2026-08-16
+
+### Added
+
+- [admin] user administration displays last login and detailed user activity history with selectable retention periods
+- [web] business event logs include direct post successes and failures and credential issuance
+
+### Changed
+
+- [admin] request dashboard graphs display the 50 most frequent labels and group the remainder as `Other`
+- [infra] development applications write to a shared, configurable log directory
+- [infra] container images use Elixir 1.20, Erlang/OTP 29, and Alpine Linux, with OTP 29-compatible X509 and SMTP dependencies
+
+### Fixed
+
+- [admin] user activity correlates authorize, token, credential, and identity events consistently by user ID
+- [web] pre-authorized code credential offers emit authorize business events
+
+### Security
+
+- [infra] target latest Elixir docker images mitigating supply chain issues
+
+## [0.11.0] - 2026-08-15
+
+### Added
+
+- [gateway] upstreams can use HTTP Basic authentication
+- [admin] clients can configure trusted hosts and trusted authorities
+- [admin] request dashboard logs can be filtered by HTTP status and request method
+
+### Changed
+
+- [infra] minimum supported Elixir version is 1.15
+- [auth] API rate limiting defaults to 10 requests per second
+- [admin] request and business event dashboards default to the last hour with minute-scale graphs
+- [admin] example verifiable credential configuration no longer restricts issuance by scope
+- [admin] organization creation and dark theme layouts are improved
+
+### Fixed
+
+- [admin] user pagination links navigate correctly
+- [admin] tables and upstream details display correctly in dark mode
+- [auth] Boruta dependency database migrations run correctly
+- [identity] identity provider updates invalidate cached client identity provider configuration
+
+### Security
+
+- [infra] update the Plug dependency to address query and multipart parsing vulnerabilities and unsafe cookie attributes (CVE-2026-54892, CVE-2026-56813, CVE-2026-56814)
+- [auth] update the Boruta dependency to reject expired JWT client assertions ([CVE-2026-53431](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-xjv8-vmh5-xhf6))
+- [auth] update the Boruta dependency to prevent dynamic registration from creating over-privileged clients ([CVE-2026-65635](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-w869-fcf2-68vp))
+- [auth] update the Boruta dependency to prevent SSRF through remote URI fetching ([CVE-2026-54885](https://github.com/malach-it/boruta_auth/security/advisories/GHSA-5q9h-vf5j-fr2g))
+- [admin] prevent request values from creating unbounded atoms
+- [gateway] omit URL query and fragment details from request logs
+- [gateway] enforce strict request framing to prevent pipelined requests and request bodies from bypassing authorization
+- [gateway] bound request headers, idle connections, and TLS handshakes to prevent gateway acceptor exhaustion
+
+## [0.10.5] - 2026-06-24
+
+### Added
+
+- [gateway] mounted certificate and private key files can configure HTTPS gateway certificates
+
+### Fixed
+
+- [gateway] forward proxy requests appear in request logs
+- [gateway] compilation warnings
+- [wallet] credentials view navigation
+- [wallet] service worker cache reloads after application updates
+
+## [0.10.4] - 2026-06-14
+
+### Fixed
+
+- [admin] example links
+
+## [0.10.3] - 2026-06-14
+
+### Fixed
+
+- [wallet] credential issuance encrypts credentials correctly
+
+## [0.10.2] - 2026-06-14
+
+### Fixed
+
+- [wallet] credential issuance inserts credential consent
+
+## [0.10.1] - 2026-06-14
+
+### Changed
+
+- [admin] upstream security settings are displayed more clearly
+- [infra] Kubernetes deployment manifests are improved
+
+### Fixed
+
+- [admin] gateway request logs are displayed
+- [admin] client identity provider associations are saved correctly
+- [ssi] credential issuance fetches resource owner configuration correctly
+
+## [0.10.0] - 2026-06-12
+
+### Added
+
+- [gateway] HTTP and HTTPS forward proxies
+- [gateway] HTTPS gateway and sidecar listeners
+- [gateway] service registry root CA and node certificate generation
+- [gateway] service registry records expose node gateway and proxy listener configuration
+- [gateway] service registry records expose certificate paths and node certificates
+- [gateway] gateway listeners can be configured with `BORUTA_GATEWAY_SERVER` and `BORUTA_GATEWAY_SIDECAR`
+- [gateway] upstreams can require mTLS
+- [gateway] static configuration supports node aliases
+- [admin] service registry node upstreams are displayed in the upstreams section
+- [admin] gateway and proxy configuration is folded in service registry records
+- [auth] EPMD cluster hosts can be configured with `LIBCLUSTER_HOSTS`
+- [infra] docker compose runs multiple Boruta nodes with static gateway configuration
+
+### Changed
+
+- [gateway] mesh proxy traffic routes through service registry records
+- [admin] upstream creation and edition use service registry records
+- [infra] release node distribution and cookie can be configured with environment variables
+
+### Fixed
+
+- [gateway] service registry database notifications remain small when records include certificates and configuration
+
+## [0.9.2] - 2026-06-11
+
+### Added
+
+- [openid] integration tests for OID4VCI credential issuance and OID4VP direct post flows
+
+### Changed
+
+- [wallet] (breaking) credentials and key selection use password-protected local storage
+- [gateway] URI strip rewriting only updates the request-line path
+
+### Fixed
+
+- [auth] prompt and request object claims are validated before public client flows
+- [auth] prompt none requires a preauthenticated user
+- [auth] max age parameters must parse completely
+- [auth] WebAuthn state is cleared after authorization errors
+- [gateway] upstream TLS hostname verification
+- [gateway] HEAD request forwarding
+- [gateway] upstream matching ignores query strings and uses the longest matching upstream URI
+- [gateway] Authorization headers match bearer token schemes case-insensitively
+- [gateway] upstream store notifications are deduplicated
+- [gateway] malformed Content-Length responses are handled safely
+- [identity] auth flow state is cleared on logout
+- [identity] auth return query parameters are parsed correctly
+- [identity] sessions are marked chosen after user selection
+
+## [0.9.1] - 2026-06-01
+
+### Added
+
+- [gateway] upstreams can rate-limit traffic
+- [gateway] request and business event history in the administration dashboard
+- [admin] administrators can see user identifiers in user lists
+- [infra] operators can benchmark OAuth grants and gateway requests
+- [infra] request count documentation for OAuth and OpenID4VC flows
+
+### Changed
+
+- [auth] OAuth acceptor count can be configured and defaults to 8
+- [gateway] gateway acceptor count can be configured
+- [gateway] authorization returns clearer OAuth error responses
+- [gateway] upstream authorization includes configured scopes
+- [gateway] keepalive tuning is removed from gateway configuration
+- [infra] deployment secrets are provided through environment variables
+- [admin] gateway configuration fields are easier to read
+- [admin] user displays prefer usernames over emails
+
+### Fixed
+
+- [admin] verifiable credential array claims can be deleted
+- [admin] feedback form
+- [admin] gateway dashboard request times graph
+- [gateway] upstream routes match paths correctly
+- [gateway] empty forwarded token headers are ignored
+- [gateway] successful requests appear in logs
+- [identity] users are redirected correctly after federated sign in
+- [identity] federation error pages render correctly
+
+### Security
+
+- [admin][identity] upgrade vulnerable npm packages
+- [auth] OAuth token state values are handled without atom exhaustion risk
+- [gateway] reduce exposure of local runtime artifacts in container builds
+- [gateway] malformed requests are handled more safely
+- [identity] user settings values are handled without atom exhaustion risk
+- [identity] development environment defaults are sanitized
+- [infra] aggregate log responses are size-limited
+- [infra] redact OAuth credentials from logs
+- [infra] remove local deployment secrets
+- [web] close presentation SSE streams when clients disconnect
+- [web] require secure cookies
 
 ## [0.9.0] - 2026-05-18
 

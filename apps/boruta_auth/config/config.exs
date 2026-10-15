@@ -8,11 +8,19 @@ config :boruta, Boruta.Oauth,
   contexts: [
     resource_owners: BorutaIdentity.ResourceOwners
   ],
-  issuer: System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000")
+  issuer: System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000"),
+  universal_did_auth: %{
+    type: "bearer",
+    token: System.get_env("DID_SERVICES_API_KEY")
+  }
 
 config :boruta_auth, BorutaAuth.Scheduler,
   jobs: [
-    {"@daily", {BorutaAuth.LogRotate, :rotate, []}}
+    [
+      schedule: "@daily",
+      task: {BorutaAuth.LogRotate, :rotate, []},
+      run_strategy: {Quantum.RunStrategy.All, :cluster}
+    ]
   ]
 
 config :boruta_auth, BorutaAuth.LogRotate,

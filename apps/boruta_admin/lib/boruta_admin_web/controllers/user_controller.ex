@@ -109,15 +109,21 @@ defmodule BorutaAdminWeb.UserController do
 
   def update(conn, %{"id" => id, "user" => user_params}) do
     update_params =
-      %{
-        username: user_params["email"],
-        group: user_params["group"],
-        metadata: user_params["metadata"] || %{},
-        authorized_scopes: user_params["authorized_scopes"],
-        organizations: user_params["organizations"],
-        roles: user_params["roles"]
-      }
-      |> maybe_put_blocked(user_params)
+      [
+        {"email", :username},
+        {"group", :group},
+        {"blocked", :blocked},
+        {"metadata", :metadata},
+        {"authorized_scopes", :authorized_scopes},
+        {"organizations", :organizations},
+        {"roles", :roles}
+      ]
+      |> Enum.reduce(%{}, fn {request_key, parameter_key}, update_params ->
+        case Map.fetch(user_params, request_key) do
+          {:ok, value} -> Map.put(update_params, parameter_key, value)
+          :error -> update_params
+        end
+      end)
 
     with :ok <- ensure_open_for_edition(id, conn),
          %User{} = user <- Admin.get_user(id),
@@ -131,12 +137,6 @@ defmodule BorutaAdminWeb.UserController do
   end
 
   def update(_conn, _params), do: {:error, :bad_request}
-
-  defp maybe_put_blocked(params, %{"blocked" => blocked}) do
-    Map.put(params, :blocked, blocked)
-  end
-
-  defp maybe_put_blocked(params, _user_params), do: params
 
   def delete(conn, %{"id" => user_id}) do
     with :ok <- ensure_open_for_edition(user_id, conn),

@@ -10,6 +10,7 @@ erl_crash.dump
 
 .env.sh
 .env
+.env.*
 
 *.swp
 *.swo

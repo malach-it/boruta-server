@@ -15,7 +15,6 @@ defmodule BorutaAdminWeb.ScopeController do
     "clients:manage:all",
     "identity-providers:manage:all",
     "scopes:manage:all",
-    "roles:manage:all",
     "upstreams:manage:all"
   ]
 
@@ -28,10 +27,10 @@ defmodule BorutaAdminWeb.ScopeController do
       "identity-providers:manage:all",
       "tokens:read:all"
     ]
-    when action in [:index]
+    when action in [:index, :show]
   )
 
-  plug(:authorize, ["scopes:manage:all"] when action not in [:index])
+  plug(:authorize, ["scopes:manage:all"] when action not in [:index, :show])
 
   action_fallback(BorutaAdminWeb.FallbackController)
 

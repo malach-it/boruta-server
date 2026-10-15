@@ -14,23 +14,30 @@ const defaultUnauthorizedResponse = JSON.stringify({
 
 const defaults = {
   errors: null,
+  loading: false,
   node_name: 'global',
   uris: [],
   required_scopes: [],
+  authorization_type: 'oauth_bearer',
   error_content_type: 'application/json',
   forbidden_response: defaultForbiddenResponse,
   unauthorized_response: defaultUnauthorizedResponse,
+  mtls_enabled: false,
   rate_limit_enabled: false,
   rate_limit_count: 10,
   rate_limit_time_unit: 'second',
   rate_limit_penality: 500,
   rate_limit_timeout: 5000,
-  rate_limit_memory_length: 50
+  rate_limit_memory_length: 50,
+  noise_cancelling_enabled: false,
+  noise_cancelling_configured: false,
+  openapi_spec: null
 }
 
 const assign = {
   id: function ({ id }) { this.id = id },
   node_name: function ({ node_name }) { this.node_name = node_name },
+  virtual_host: function ({ virtual_host }) { this.virtual_host = virtual_host },
   scheme: function ({ scheme }) { this.scheme = scheme },
   host: function ({ host }) { this.host = host },
   port: function ({ port }) { this.port = port },
@@ -39,16 +46,20 @@ const assign = {
   forwarded_token_secret: function ({ forwarded_token_secret }) { this.forwarded_token_secret = forwarded_token_secret },
   forwarded_token_public_key: function ({ forwarded_token_public_key }) { this.forwarded_token_public_key = forwarded_token_public_key },
   forwarded_token_private_key: function ({ forwarded_token_private_key }) { this.forwarded_token_private_key = forwarded_token_private_key },
+  mtls_enabled: function ({ mtls_enabled }) { this.mtls_enabled = mtls_enabled },
   rate_limit_enabled: function ({ rate_limit_enabled }) { this.rate_limit_enabled = rate_limit_enabled },
   rate_limit_count: function ({ rate_limit_count }) { this.rate_limit_count = rate_limit_count },
   rate_limit_time_unit: function ({ rate_limit_time_unit }) { this.rate_limit_time_unit = rate_limit_time_unit },
   rate_limit_penality: function ({ rate_limit_penality }) { this.rate_limit_penality = rate_limit_penality },
   rate_limit_timeout: function ({ rate_limit_timeout }) { this.rate_limit_timeout = rate_limit_timeout },
   rate_limit_memory_length: function ({ rate_limit_memory_length }) { this.rate_limit_memory_length = rate_limit_memory_length },
+  noise_cancelling_enabled: function ({ noise_cancelling_enabled }) { this.noise_cancelling_enabled = noise_cancelling_enabled },
+  noise_cancelling_configured: function ({ noise_cancelling_configured }) { this.noise_cancelling_configured = noise_cancelling_configured },
   uris: function ({ uris }) {
     this.uris = uris.map((uri) => ({ uri }))
   },
   authorize: function ({ authorize }) { this.authorize = authorize },
+  authorization_type: function ({ authorization_type }) { this.authorization_type = authorization_type },
   required_scopes: function ({ required_scopes }) {
     this.required_scopes = Object.keys(required_scopes).flatMap((method) => {
       return required_scopes[method].map(name => ({ model: new Scope({ name }), method: method }))
@@ -77,6 +88,7 @@ class Upstream {
 
   save () {
     this.errors = null
+    this.loading = true
     // TODO trigger validate
     let response
     const { id, serialized } = this
@@ -94,6 +106,7 @@ class Upstream {
           this[key] = params[key]
           assign[key].bind(this)(params)
         })
+        this.openapi_spec = null
         return this
       })
       .catch((error) => {
@@ -101,6 +114,7 @@ class Upstream {
         this.errors = errors
         throw errors
       })
+      .finally(() => { this.loading = false })
   }
 
   destroy () {
@@ -116,12 +130,14 @@ class Upstream {
     const {
       id,
       node_name,
+      virtual_host,
       scheme,
       host,
       port,
       uris,
       strip_uri,
       authorize,
+      authorization_type,
       required_scopes,
       error_content_type,
       forbidden_response,
@@ -130,17 +146,21 @@ class Upstream {
       forwarded_token_secret,
       forwarded_token_private_key,
       forwarded_token_public_key,
+      mtls_enabled,
       rate_limit_enabled,
       rate_limit_count,
       rate_limit_time_unit,
       rate_limit_penality,
       rate_limit_timeout,
-      rate_limit_memory_length
+      rate_limit_memory_length,
+      noise_cancelling_enabled,
+      openapi_spec
     } = this
 
     return {
       id,
       node_name,
+      virtual_host,
       scheme,
       host,
       port,
@@ -152,6 +172,7 @@ class Upstream {
       }, {}),
       strip_uri,
       authorize,
+      authorization_type,
       error_content_type,
       forbidden_response,
       unauthorized_response,
@@ -159,12 +180,15 @@ class Upstream {
       forwarded_token_secret,
       forwarded_token_private_key,
       forwarded_token_public_key,
+      mtls_enabled,
       rate_limit_enabled,
       rate_limit_count,
       rate_limit_time_unit,
       rate_limit_penality,
       rate_limit_timeout,
-      rate_limit_memory_length
+      rate_limit_memory_length,
+      noise_cancelling_enabled,
+      openapi_spec
     }
   }
 }

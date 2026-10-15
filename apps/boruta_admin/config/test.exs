@@ -62,4 +62,4 @@ config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.Test
 config :boruta_identity, BorutaIdentity.LdapRepo, adapter: BorutaIdentity.LdapRepoMock
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :warning

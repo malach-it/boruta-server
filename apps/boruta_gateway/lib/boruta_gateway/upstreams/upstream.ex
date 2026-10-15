@@ -26,6 +26,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
 
   @type t :: %__MODULE__{
           node_name: String.t(),
+          virtual_host: String.t() | nil,
           scheme: String.t(),
           host: String.t(),
           port: integer(),
@@ -33,15 +34,19 @@ defmodule BorutaGateway.Upstreams.Upstream do
           required_scopes: map(),
           strip_uri: boolean(),
           authorize: boolean(),
+          authorization_type: String.t(),
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
           unauthorized_response: String.t() | nil,
+          mtls_enabled: boolean(),
           rate_limit_enabled: boolean(),
           rate_limit_count: integer(),
           rate_limit_time_unit: String.t(),
           rate_limit_penality: integer(),
           rate_limit_timeout: integer(),
           rate_limit_memory_length: integer(),
+          noise_cancelling_enabled: boolean(),
+          noise_cancelling_model: binary() | nil,
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         }
@@ -50,6 +55,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
   @foreign_key_type :binary_id
   schema "upstreams" do
     field(:node_name, :string, default: "global")
+    field(:virtual_host, :string)
     field(:scheme, :string)
     field(:host, :string)
     field(:port, :integer)
@@ -57,6 +63,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:required_scopes, :map, default: %{})
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
+    field(:authorization_type, :string, default: "oauth_bearer")
     field(:error_content_type, :string, default: "application/json")
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
@@ -64,12 +71,16 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:forwarded_token_secret, :string)
     field(:forwarded_token_public_key, :string)
     field(:forwarded_token_private_key, :string)
+    field(:mtls_enabled, :boolean, default: false)
     field(:rate_limit_enabled, :boolean, default: false)
     field(:rate_limit_count, :integer, default: 10)
     field(:rate_limit_time_unit, :string, default: "second")
     field(:rate_limit_penality, :integer, default: 500)
     field(:rate_limit_timeout, :integer, default: 5_000)
     field(:rate_limit_memory_length, :integer, default: 50)
+    field(:noise_cancelling_enabled, :boolean, default: false)
+    field(:noise_cancelling_model, :binary)
+    field(:openapi_spec, :string, virtual: true)
 
     timestamps()
   end
@@ -84,37 +95,90 @@ defmodule BorutaGateway.Upstreams.Upstream do
     upstream
     |> cast(attrs, [
       :node_name,
+      :virtual_host,
       :scheme,
       :host,
       :port,
       :uris,
       :strip_uri,
       :authorize,
+      :authorization_type,
       :required_scopes,
       :error_content_type,
       :forwarded_token_signature_alg,
       :forwarded_token_secret,
+      :mtls_enabled,
       :rate_limit_enabled,
       :rate_limit_count,
       :rate_limit_time_unit,
       :rate_limit_penality,
       :rate_limit_timeout,
-      :rate_limit_memory_length
+      :rate_limit_memory_length,
+      :noise_cancelling_enabled,
+      :openapi_spec
     ])
     |> cast(attrs, [:forbidden_response, :unauthorized_response], empty_values: [])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
+    |> validate_inclusion(:authorization_type, ["oauth_bearer", "http_basic"])
+    |> validate_mtls_configuration()
     |> validate_inclusion(:rate_limit_count, 1..100_000)
     |> validate_inclusion(:rate_limit_time_unit, ["millisecond", "second", "minute"])
     |> validate_inclusion(:rate_limit_penality, 0..600_000)
     |> validate_inclusion(:rate_limit_timeout, 0..600_000)
     |> validate_inclusion(:rate_limit_memory_length, 1..10_000)
-    |> unique_constraint([:node_name, :host, :port, :uris])
+    |> configure_noise_cancelling()
+    |> unique_constraint([:node_name, :virtual_host, :host, :port, :uris],
+      name: :upstreams_node_name_host_port_uris_index
+    )
     |> maybe_put_forwarded_token_secret()
     |> maybe_generate_key_pair()
     |> validate_uris()
     |> validate_required_scopes_format()
   end
+
+  defp configure_noise_cancelling(%Ecto.Changeset{valid?: false} = changeset), do: changeset
+
+  defp configure_noise_cancelling(changeset) do
+    changeset =
+      case fetch_change(changeset, :openapi_spec) do
+        {:ok, spec} -> train_noise_cancelling_model(changeset, spec)
+        :error -> changeset
+      end
+
+    if changeset.valid? && get_field(changeset, :noise_cancelling_enabled) &&
+         is_nil(get_field(changeset, :noise_cancelling_model)) do
+      add_error(changeset, :openapi_spec, "must be uploaded when noise cancelling is enabled")
+    else
+      changeset
+    end
+  end
+
+  defp train_noise_cancelling_model(changeset, spec) do
+    with {:ok, document} <- decode_openapi(spec),
+         %{"paths" => paths} when is_map(paths) <- document,
+         {:ok, model} <- BorutaGateway.PhiNoise.train(Jason.encode!(document)) do
+      put_change(changeset, :noise_cancelling_model, BorutaGateway.PhiNoise.export(model))
+    else
+      _ -> add_error(changeset, :openapi_spec, "must be a valid OpenAPI JSON or YAML document")
+    end
+  rescue
+    error ->
+      add_error(
+        changeset,
+        :openapi_spec,
+        "could not train noise model: #{Exception.message(error)}"
+      )
+  end
+
+  defp decode_openapi(spec) when is_binary(spec) do
+    case Jason.decode(spec) do
+      {:ok, document} -> {:ok, document}
+      {:error, _error} -> YamlElixir.read_from_string(spec)
+    end
+  end
+
+  defp decode_openapi(_spec), do: {:error, :invalid_openapi}
 
   defp validate_uris(
          %Ecto.Changeset{
@@ -146,6 +210,14 @@ defmodule BorutaGateway.Upstreams.Upstream do
   end
 
   defp validate_required_scopes_format(changeset), do: changeset
+
+  defp validate_mtls_configuration(changeset) do
+    case {get_field(changeset, :mtls_enabled), get_field(changeset, :scheme)} do
+      {true, "https"} -> changeset
+      {true, _scheme} -> add_error(changeset, :mtls_enabled, "requires https scheme")
+      _ -> changeset
+    end
+  end
 
   defp maybe_put_forwarded_token_secret(%Ecto.Changeset{data: data, changes: changes} = changeset) do
     signature_algorithm = get_field(changeset, :forwarded_token_signature_alg)

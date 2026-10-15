@@ -1,15 +1,13 @@
-version: "3"
-
 volumes:
   boruta-logs:
+
+x-boruta-cluster-hosts: &boruta-cluster-hosts "boruta@boruta,boruta@kagome-1,boruta@kagome-2"
 
 services:
   postgres:
     image: postgres:14
-    environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-      POSTGRES_DATABASE: "boruta_release"
+    env_file: "./.env.example"
+    command: ["postgres", "-c", "max_connections=500"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -17,8 +15,6 @@ services:
       retries: 5
 
   boruta:
-    stdin_open: true
-    tty: true
     build:
       context: .
       dockerfile: Dockerfile.full
@@ -29,16 +25,62 @@ services:
       - "8081:8081"
       - "8082:8082"
       - "8083:8083"
+      - "8042:8042"
+      - "8043:8043"
+      - "8555:5555"
+      - "8444:4444"
     volumes:
       - "boruta-logs:/app/log"
+      - "./static_config/example-gateway-configuration.yml:/app/config/example-gateway-configuration.yml"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-      POSTGRES_DATABASE: "boruta_release"
       POSTGRES_HOST: "postgres"
+      BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE: "true"
+      RELEASE_DISTRIBUTION: "sname"
+      RELEASE_NODE: "boruta@boruta"
+      RELEASE_COOKIE: "boruta-docker-compose"
+      LIBCLUSTER_HOSTS: *boruta-cluster-hosts
     depends_on:
       postgres:
         condition: service_healthy
 
+  kagome_1:
+    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.12"
+    env_file: "./.env.example"
+    environment:
+      MIX_ENV: "prod"
+      POSTGRES_HOST: "postgres"
+      RELEASE_DISTRIBUTION: "sname"
+      RELEASE_NODE: "boruta@kagome-1"
+      RELEASE_COOKIE: "boruta-docker-compose"
+      LIBCLUSTER_HOSTS: *boruta-cluster-hosts
+      BORUTA_GATEWAY_ALIASES: "[\"kagome-1\",\"kagome.1.docker\"]"
+      BORUTA_GATEWAY_VIRTUAL_HOST: kagome-1
+    networks:
+      default:
+        aliases:
+          - kagome-1
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  kagome_2:
+    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.12"
+    env_file: "./.env.example"
+    environment:
+      MIX_ENV: "prod"
+      POSTGRES_HOST: "postgres"
+      RELEASE_DISTRIBUTION: "sname"
+      RELEASE_NODE: "boruta@kagome-2"
+      RELEASE_COOKIE: "boruta-docker-compose"
+      LIBCLUSTER_HOSTS: *boruta-cluster-hosts
+      BORUTA_GATEWAY_ALIASES: "[\"kagome-2\",\"kagome.2.docker\"]"
+      BORUTA_GATEWAY_VIRTUAL_HOST: kagome-2
+    networks:
+      default:
+        aliases:
+          - kagome-2
+    depends_on:
+      postgres:
+        condition: service_healthy

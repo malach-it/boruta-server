@@ -7,12 +7,27 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   alias Boruta.Ecto.Admin
   alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.ConfigurationLoader
-  alias BorutaGateway.Gateway
+  alias BorutaGateway.HttpGateway
   alias BorutaGateway.Repo
   alias BorutaGateway.RequestsIntegrationTest.HttpClient
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
   alias Ecto.Adapters.SQL.Sandbox
+
+  defmodule BasicResourceOwners do
+    def get_by(username: "alice") do
+      {:ok, %Boruta.Oauth.ResourceOwner{sub: "user-id", username: "alice"}}
+    end
+
+    def get_by(username: _username), do: {:error, "Invalid username or password."}
+
+    def check_password(%Boruta.Oauth.ResourceOwner{username: "alice"}, "password"), do: :ok
+
+    def check_password(_resource_owner, _password),
+      do: {:error, "Invalid username or password."}
+
+    def authorized_scopes(_resource_owner), do: []
+  end
 
   setup_all do
     Finch.start_link(name: HttpClient)
@@ -94,6 +109,64 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           Repo.delete_all(Upstream)
         end
       end)
+    end
+
+    test "returns a 400 for malformed request lines" do
+      {:ok, socket} =
+        :gen_tcp.connect(~c"localhost", 7777, [:binary, {:packet, :raw}, {:active, false}], 1_000)
+
+      :ok = :gen_tcp.send(socket, "BAD\r\n\r\n")
+
+      assert {:ok, response} = :gen_tcp.recv(socket, 0, 1_000)
+      assert response =~ "HTTP/1.1 400 Bad Request"
+
+      :gen_tcp.close(socket)
+    end
+
+    test "closes oversized upstream response buffers" do
+      previous_max_response_buffer_bytes =
+        Application.get_env(:boruta_gateway, :max_response_buffer_bytes)
+
+      Application.put_env(:boruta_gateway, :max_response_buffer_bytes, 64)
+
+      on_exit(fn ->
+        case previous_max_response_buffer_bytes do
+          nil ->
+            Application.delete_env(:boruta_gateway, :max_response_buffer_bytes)
+
+          value ->
+            Application.put_env(:boruta_gateway, :max_response_buffer_bytes, value)
+        end
+      end)
+
+      with_upstream_server(
+        fn request ->
+          assert request =~ "GET /large HTTP/1.1"
+
+          response_body(String.duplicate("a", 100), status: "200 OK", content_type: "text/plain")
+        end,
+        fn port ->
+          Sandbox.unboxed_run(Repo, fn ->
+            try do
+              Upstreams.create_upstream(%{
+                scheme: "http",
+                host: "127.0.0.1",
+                port: port,
+                uris: ["/large"],
+                authorize: false
+              })
+
+              Process.sleep(100)
+
+              request = Finch.build(:get, "http://localhost:7777/large", [], "")
+
+              assert {:ok, %Finch.Response{status: 502}} = Finch.request(request, HttpClient)
+            after
+              Repo.delete_all(Upstream)
+            end
+          end)
+        end
+      )
     end
 
     test "generates request ids with secure random entropy when none is provided" do
@@ -281,6 +354,79 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "authorizes HTTP Basic users without forwarding their credentials" do
+      with_basic_resource_owners(fn ->
+        Sandbox.unboxed_run(Repo, fn ->
+          try do
+            with_upstream_server(
+              fn request ->
+                refute request =~ ~r/(?:^|\r\n)authorization\s*:/i
+                teapot_response(request)
+              end,
+              fn port ->
+                Upstreams.create_upstream(%{
+                  scheme: "http",
+                  host: "127.0.0.1",
+                  port: port,
+                  uris: ["/basic"],
+                  strip_uri: true,
+                  authorize: true,
+                  authorization_type: "http_basic"
+                })
+
+                Process.sleep(100)
+
+                authorization = "Basic " <> Base.encode64("alice:password")
+
+                request =
+                  Finch.build(
+                    :get,
+                    "http://localhost:7777/basic/status/418",
+                    [{"authorization", authorization}],
+                    ""
+                  )
+
+                assert {:ok, %Finch.Response{body: body, status: 418}} =
+                         Finch.request(request, HttpClient)
+
+                assert body =~ ~r/teapot/
+              end
+            )
+          after
+            Repo.delete_all(Upstream)
+          end
+        end)
+      end)
+    end
+
+    test "challenges missing HTTP Basic credentials" do
+      with_basic_resource_owners(fn ->
+        Sandbox.unboxed_run(Repo, fn ->
+          try do
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "should.not.be.called",
+              port: 80,
+              uris: ["/basic"],
+              authorize: true,
+              authorization_type: "http_basic"
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/basic", [], "")
+
+            assert {:ok, %Finch.Response{headers: headers, status: 401}} =
+                     Finch.request(request, HttpClient)
+
+            assert {"www-authenticate", ~s(Basic realm="Boruta gateway", charset="UTF-8")} in headers
+          after
+            Repo.delete_all(Upstream)
+          end
+        end)
+      end)
+    end
+
     test "logs successful requests" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -323,6 +469,142 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "returns response when exact upstream uri is stripped" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&root_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: true
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/httpbin", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "root"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "matches exact upstream uri with query string" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&query_string_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: false
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/httpbin?status=200", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "query"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "logs request path without query string while forwarding the full target" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_queryless_log_path_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          with_upstream_server(&query_string_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: false
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/httpbin?status=200", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "query"
+            assert_receive {:gateway_request_log, %{path: "/httpbin"}}
+          end)
+        after
+          :telemetry.detach(:gateway_queryless_log_path_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "logs request path without fragment" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          parent = self()
+          handler_id = :gateway_fragmentless_log_path_test
+
+          :telemetry.attach(
+            handler_id,
+            [:boruta_gateway, :request, :stop],
+            fn _event, _measurements, metadata, _config ->
+              send(parent, {:gateway_request_log, metadata})
+            end,
+            :ok
+          )
+
+          {:ok, socket} =
+            :gen_tcp.connect(
+              ~c"localhost",
+              7777,
+              [:binary, {:packet, :raw}, {:active, false}],
+              1_000
+            )
+
+          :ok =
+            :gen_tcp.send(
+              socket,
+              "GET /fragmented#section HTTP/1.1\r\nHost: localhost\r\n\r\n"
+            )
+
+          assert {:ok, response} = :gen_tcp.recv(socket, 0, 1_000)
+          assert response =~ "HTTP/1.1 404 Not Found"
+          assert_receive {:gateway_request_log, %{path: "/fragmented"}}
+
+          :gen_tcp.close(socket)
+        after
+          :telemetry.detach(:gateway_fragmentless_log_path_test)
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns response root uri stripped", %{access_token: access_token} do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -358,6 +640,66 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "strips upstream uri only from request line" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&request_line_rewrite_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/httpbin"],
+              strip_uri: true
+            })
+
+            Process.sleep(100)
+
+            request =
+              Finch.build(
+                :post,
+                "http://localhost:7777/httpbin/rewrite",
+                [{"x-original-path", "/httpbin/rewrite"}],
+                "/httpbin/rewrite"
+              )
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "rewritten"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "strips longest matching upstream uri" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&overlapping_uri_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/api", "/api/v1"],
+              strip_uri: true
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:get, "http://localhost:7777/api/v1/users", [], "")
+
+            assert {:ok, %Finch.Response{body: body, status: 200}} =
+                     Finch.request(request, HttpClient)
+
+            assert body == "longest"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns authorization header with introspected token when authorized", %{
       access_token: access_token
     } do
@@ -378,16 +720,15 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
             Process.sleep(100)
 
-            request =
-              Finch.build(
-                :get,
-                "http://localhost:7777/httpbin/anything",
-                [{"authorization", "bearer #{access_token.value}"}],
-                ""
+            response =
+              raw_gateway_request(
+                "GET /httpbin/anything HTTP/1.1\r\n" <>
+                  "Host: localhost:7777\r\n" <>
+                  "AUTHORIZATION:BEARER #{access_token.value}\r\n\r\n"
               )
 
-            assert {:ok, %Finch.Response{body: body, status: 200}} =
-                     Finch.request(request, HttpClient)
+            assert response =~ "HTTP/1.1 200 OK"
+            body = raw_response_body(response)
 
             assert %{
                      "headers" => %{
@@ -397,12 +738,12 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                    } = Jason.decode!(body)
 
             assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
-            signer = Gateway.signer(upstream)
-            assert {:ok, claims} = Gateway.Token.verify(token, signer)
+            signer = HttpGateway.signer(upstream)
+            assert {:ok, claims} = HttpGateway.Token.verify(token, signer)
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 
-            assert forwarded_authorization == "bearer #{access_token.value}"
+            assert forwarded_authorization == "BEARER #{access_token.value}"
           end)
         after
           Repo.delete_all(Upstream)
@@ -434,6 +775,34 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
+    test "closes malformed content length responses without crashing" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&malformed_content_length_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/bad-content-length"]
+            })
+
+            Process.sleep(100)
+
+            response =
+              raw_gateway_request(
+                "GET /bad-content-length HTTP/1.1\r\n" <>
+                  "Host: localhost:7777\r\n\r\n"
+              )
+
+            assert response =~ "HTTP/1.1 200 OK"
+            assert raw_response_body(response) == "bad-content-length"
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
     test "returns bodyless response without content length" do
       Sandbox.unboxed_run(Repo, fn ->
         try do
@@ -450,6 +819,30 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             request = Finch.build(:get, "http://localhost:7777/no-content", [], "")
 
             assert {:ok, %Finch.Response{body: "", status: 204}} =
+                     Finch.request(request, HttpClient)
+          end)
+        after
+          Repo.delete_all(Upstream)
+        end
+      end)
+    end
+
+    test "forwards HEAD requests" do
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          with_upstream_server(&head_response/1, fn port ->
+            Upstreams.create_upstream(%{
+              scheme: "http",
+              host: "127.0.0.1",
+              port: port,
+              uris: ["/head"]
+            })
+
+            Process.sleep(100)
+
+            request = Finch.build(:head, "http://localhost:7777/head", [], "")
+
+            assert {:ok, %Finch.Response{body: "", status: 200}} =
                      Finch.request(request, HttpClient)
           end)
         after
@@ -724,8 +1117,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
             assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
 
             upstream = Repo.all(Upstream) |> List.first()
-            signer = Gateway.signer(upstream)
-            assert {:ok, claims} = Gateway.Token.verify(token, signer)
+            signer = HttpGateway.signer(upstream)
+            assert {:ok, claims} = HttpGateway.Token.verify(token, signer)
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 
@@ -940,8 +1333,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                    } = Jason.decode!(body)
 
             assert [_authorization_header, token] = Regex.run(~r/bearer (.+)/, authorization)
-            signer = Gateway.signer(upstream)
-            assert {:ok, claims} = Gateway.Token.verify(token, signer)
+            signer = HttpGateway.signer(upstream)
+            assert {:ok, claims} = HttpGateway.Token.verify(token, signer)
             assert claims["client_id"] == access_token.client.id
             assert claims["value"] == access_token.value
 
@@ -984,10 +1377,63 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     end
   end
 
+  defp raw_gateway_request(request) do
+    {:ok, socket} =
+      :gen_tcp.connect(~c"localhost", 7777, [:binary, {:packet, :raw}, {:active, false}], 1_000)
+
+    :ok = :gen_tcp.send(socket, request)
+    response = recv_all(socket, "")
+    :gen_tcp.close(socket)
+
+    response
+  end
+
+  defp recv_all(socket, response) do
+    case :gen_tcp.recv(socket, 0, 1_000) do
+      {:ok, payload} -> recv_all(socket, response <> payload)
+      {:error, :closed} -> response
+      {:error, :timeout} -> response
+    end
+  end
+
+  defp raw_response_body(response) do
+    [_headers, body] = String.split(response, "\r\n\r\n", parts: 2)
+    body
+  end
+
   defp teapot_response(request) do
     assert request =~ "GET /status/418 HTTP/1.1"
 
     response_body("I'm a teapot", status: "418 I'm a teapot", content_type: "text/plain")
+  end
+
+  defp root_response(request) do
+    assert request =~ "GET / HTTP/1.1"
+
+    response_body("root", content_type: "text/plain")
+  end
+
+  defp query_string_response(request) do
+    assert request =~ "GET /httpbin?status=200 HTTP/1.1"
+
+    response_body("query", content_type: "text/plain")
+  end
+
+  defp request_line_rewrite_response(request) do
+    assert request =~ "POST /rewrite HTTP/1.1"
+    assert request =~ ~r/x-original-path: \/httpbin\/rewrite/i
+
+    assert [_headers, body] = String.split(request, "\r\n\r\n", parts: 2)
+    assert body == "/httpbin/rewrite"
+
+    response_body("rewritten", content_type: "text/plain")
+  end
+
+  defp overlapping_uri_response(request) do
+    assert request =~ "GET /users HTTP/1.1"
+    refute request =~ "GET /v1/users HTTP/1.1"
+
+    response_body("longest", content_type: "text/plain")
   end
 
   defp echo_headers_response(request) do
@@ -1004,10 +1450,25 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       "close-delimited"
   end
 
+  defp malformed_content_length_response(request) do
+    assert request =~ "GET /bad-content-length HTTP/1.1"
+
+    "HTTP/1.1 200 OK\r\n" <>
+      "Content-Type: text/plain\r\n" <>
+      "Content-Length: nope\r\n\r\n" <>
+      "bad-content-length"
+  end
+
   defp no_content_response(request) do
     assert request =~ "GET /no-content HTTP/1.1"
 
     "HTTP/1.1 204 No Content\r\n\r\n"
+  end
+
+  defp head_response(request) do
+    assert request =~ "HEAD /head HTTP/1.1"
+
+    response_body("", content_type: "text/plain")
   end
 
   defp chunked_response(request) do
@@ -1054,6 +1515,31 @@ defmodule BorutaGateway.RequestsIntegrationTest do
         _ -> headers
       end
     end)
+  end
+
+  defp with_basic_resource_owners(fun) do
+    previous_adapter =
+      Application.get_env(:boruta_gateway, :basic_authorization_resource_owners)
+
+    Application.put_env(
+      :boruta_gateway,
+      :basic_authorization_resource_owners,
+      BasicResourceOwners
+    )
+
+    try do
+      fun.()
+    after
+      if previous_adapter do
+        Application.put_env(
+          :boruta_gateway,
+          :basic_authorization_resource_owners,
+          previous_adapter
+        )
+      else
+        Application.delete_env(:boruta_gateway, :basic_authorization_resource_owners)
+      end
+    end
   end
 
   defp authorized_configuration_file(port, options \\ []) do

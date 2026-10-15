@@ -1,5 +1,8 @@
 import Config
 
+config :boruta_auth, BorutaAuth.LogRotate,
+  log_directory: System.get_env("BORUTA_LOG_DIR", Path.expand("../../../log", __DIR__))
+
 config :boruta_identity, BorutaIdentity.Repo,
   username: "postgres",
   password: "postgres",
@@ -10,14 +13,16 @@ config :boruta_identity, BorutaIdentity.Repo,
   after_connect: {BorutaIdentity.Repo, :set_limit, []}
 
 config :boruta_identity, BorutaIdentityWeb.Endpoint,
-  http: [port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer(), path: "/accounts"],
+  http: [
+    port: System.get_env("BORUTA_OAUTH_PORT", "4000") |> String.to_integer(),
+    path: "/accounts"
+  ],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
   server: false
 
-config :boruta_identity, BorutaIdentity.SMTP,
-  adapter: Swoosh.Adapters.SMTP
+config :boruta_identity, BorutaIdentity.SMTP, adapter: Swoosh.Adapters.SMTP
 
 config :logger, :console, format: "[$level] $message\n"
 

@@ -7,6 +7,7 @@ defmodule BorutaIdentity.AdminTest do
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.LdapError
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Admin
   alias BorutaIdentity.Repo
@@ -78,7 +79,7 @@ defmodule BorutaIdentity.AdminTest do
              }
     end
 
-    test "returns user search" do
+    test "returns user search with fulltext search (username)" do
       _other = insert(:user) |> Repo.preload(:authorized_scopes)
 
       user =
@@ -86,6 +87,30 @@ defmodule BorutaIdentity.AdminTest do
         |> Repo.preload([:authorized_scopes, :roles, :organizations])
 
       assert Admin.search_users("match") == %Scrivener.Page{
+               entries: [user],
+               page_number: 1,
+               page_size: 12,
+               total_entries: 1,
+               total_pages: 1
+             }
+    end
+
+    test "returns user search with an identifier (id, uuid)" do
+      _other = insert(:user) |> Repo.preload(:authorized_scopes)
+
+      user =
+        insert(:user, username: "match", uid: SecureRandom.uuid())
+        |> Repo.preload([:authorized_scopes, :roles, :organizations])
+
+      assert Admin.search_users(user.id) == %Scrivener.Page{
+               entries: [user],
+               page_number: 1,
+               page_size: 12,
+               total_entries: 1,
+               total_pages: 1
+             }
+
+      assert Admin.search_users(user.uid) == %Scrivener.Page{
                entries: [user],
                page_number: 1,
                page_size: 12,
@@ -106,6 +131,83 @@ defmodule BorutaIdentity.AdminTest do
       refute Repo.get(User, user_id)
       refute Repo.get(Internal.User, user_uid)
     end
+
+    test "revokes sessions, codes, and access tokens on deletion" do
+      user = user_fixture(%{}, "internal")
+      {_raw, session} = UserToken.build_session_token(user)
+      session = Repo.insert!(session)
+      client = Boruta.Factory.insert(:client)
+
+      access =
+        Boruta.Factory.insert(:token,
+          client: client,
+          sub: user.id,
+          refresh_token: "delete-refresh"
+        )
+
+      code = Boruta.Factory.insert(:token, client: client, sub: user.id, type: "code")
+
+      assert %Boruta.Oauth.Token{} = Boruta.AccessTokensAdapter.get_by(value: access.value)
+      assert BorutaAuth.Repo.get(Boruta.Ecto.Token, access.id)
+      assert %Boruta.Oauth.Token{} = Boruta.CodesAdapter.get_by(value: code.value)
+      assert {:ok, _} = Admin.delete_user(user.id)
+
+      refute Repo.get(UserToken, session.id)
+
+      assert %{revoked_at: revoked_at, refresh_token_revoked_at: refresh_revoked_at} =
+               BorutaAuth.Repo.reload(access)
+
+      assert revoked_at
+      refute refresh_revoked_at
+      assert BorutaAuth.Repo.reload(code).revoked_at
+      assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
+
+      assert {:error, _} =
+               Boruta.Oauth.Authorization.AccessToken.authorize(refresh_token: "delete-refresh")
+    end
+  end
+
+  test "blocking a user revokes existing sessions and OAuth grants" do
+    user = user_fixture(%{}, "internal")
+    {_raw, session} = UserToken.build_session_token(user)
+    session = Repo.insert!(session)
+    client = Boruta.Factory.insert(:client)
+
+    access =
+      Boruta.Factory.insert(:token, client: client, sub: user.id, refresh_token: "block-refresh")
+
+    agent = Boruta.Factory.insert(:token, client: client, sub: user.id, type: "agent_token")
+    code = Boruta.Factory.insert(:token, client: client, sub: user.id, type: "code")
+
+    assert %Boruta.Oauth.Token{} = Boruta.AccessTokensAdapter.get_by(value: access.value)
+    assert %Boruta.Oauth.Token{} = Boruta.AgentTokensAdapter.get_by(value: agent.value)
+    assert BorutaAuth.Repo.get(Boruta.Ecto.Token, access.id)
+    assert %Boruta.Oauth.Token{} = Boruta.CodesAdapter.get_by(value: code.value)
+    assert {:ok, %User{blocked: true}} = Admin.update_user(user, %{blocked: true})
+
+    refute Repo.get(UserToken, session.id)
+
+    assert %{revoked_at: revoked_at, refresh_token_revoked_at: refresh_revoked_at} =
+             BorutaAuth.Repo.reload(access)
+
+    assert revoked_at
+    refute refresh_revoked_at
+    assert BorutaAuth.Repo.reload(code).revoked_at
+    assert BorutaAuth.Repo.reload(agent).revoked_at
+    assert Boruta.CodesAdapter.get_by(value: code.value).revoked_at
+    assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
+
+    assert {:error, _} =
+             Boruta.Oauth.Authorization.AccessToken.authorize(refresh_token: "block-refresh")
+  end
+
+  test "a blocked user cannot use a session token" do
+    user = user_fixture(%{}, "internal")
+    {token, session} = UserToken.build_session_token(user)
+    Repo.insert!(session)
+    user |> User.changeset(%{blocked: true}) |> Repo.update!()
+
+    refute BorutaIdentity.Accounts.get_user_by_session_token(token)
   end
 
   describe "delete_user/1 with federated backend" do
