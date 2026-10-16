@@ -176,13 +176,13 @@ defmodule BorutaGateway.Application do
   end
 
   def setup_database do
-    Enum.each([BorutaGateway.Repo], fn repo ->
+    if BorutaGateway.Repo.backend() == "mnesia" do
+      BorutaGateway.MnesiaSetup.setup()
+    else
+      repo = BorutaGateway.Repo
       repo.__adapter__().storage_up(repo.config())
-    end)
-
-    Enum.each([BorutaGateway.Repo], fn repo ->
       Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
-    end)
+    end
 
     :ok
   end
@@ -191,10 +191,12 @@ defmodule BorutaGateway.Application do
     with {:ok, configuration_path} <- configuration_path() do
       Logger.info("Loading gateway static configuration from #{configuration_path}")
 
-      {:ok, _, _} =
-        Ecto.Migrator.with_repo(BorutaGateway.Repo, fn _repo ->
-          ConfigurationLoader.from_file!(configuration_path)
-        end)
+      with_repo =
+        if BorutaGateway.Repo.backend() == "mnesia",
+          do: &BorutaGateway.MnesiaSetup.with_repo/1,
+          else: &Ecto.Migrator.with_repo(BorutaGateway.Repo, &1)
+
+      {:ok, _, _} = with_repo.(fn _repo -> ConfigurationLoader.from_file!(configuration_path) end)
     end
 
     :ok

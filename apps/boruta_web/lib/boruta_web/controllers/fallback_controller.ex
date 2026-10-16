@@ -6,11 +6,29 @@ defmodule BorutaWeb.FallbackController do
   """
   use BorutaWeb, :controller
 
+  alias Boruta.Oauth.Error
+
+  def call(
+        conn,
+        {:error, %Error{status: status, error: error, error_description: error_description}}
+      ) do
+    conn
+    |> put_status(status)
+    |> json(%{error: error, error_description: error_description})
+  end
+
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(BorutaWeb.ChangesetView)
     |> render("error.json", changeset: changeset)
+  end
+
+  def call(conn, {:error, :bad_request}) do
+    conn
+    |> put_status(:bad_request)
+    |> put_view(BorutaWeb.ErrorView)
+    |> render(:"400")
   end
 
   def call(conn, {:error, :not_found}) do

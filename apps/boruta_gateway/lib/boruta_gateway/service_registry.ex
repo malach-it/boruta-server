@@ -32,9 +32,13 @@ defmodule BorutaGateway.ServiceRegistry do
   end
 
   defp repo_list_records do
-    Record
-    |> order_by([record], asc: record.node_name, asc: record.ip_address)
-    |> Repo.all()
+    if Repo.backend() == "mnesia" do
+      Repo.all(Record) |> Enum.sort_by(&{&1.node_name, &1.ip_address})
+    else
+      Record
+      |> order_by([record], asc: record.node_name, asc: record.ip_address)
+      |> Repo.all()
+    end
   end
 
   def hydrate do
@@ -152,6 +156,11 @@ defmodule BorutaGateway.ServiceRegistry do
     {:noreply, state}
   end
 
+  def handle_info({:mnesia_changed, _ref, @changed_channel}, state) do
+    records = repo_list_records() |> load_record_certificates() |> structure_records()
+    {:noreply, %{state | records: records}}
+  end
+
   @impl GenServer
   def terminate(reason, %{ip_address: ip_address, node_name: node_name} = state) do
     if reason not in [:normal, :shutdown] do
@@ -182,30 +191,47 @@ defmodule BorutaGateway.ServiceRegistry do
       status: @online_status
     }
 
-    %Record{}
-    |> Record.changeset(attrs)
-    |> Repo.insert!(
-      on_conflict: [
-        set: [
-          ip_address: attrs.ip_address,
-          aliases: attrs.aliases,
-          erlang_node_name: attrs.erlang_node_name,
-          certificate: attrs.certificate,
-          configuration: attrs.configuration,
-          status: attrs.status,
-          updated_at: timestamp
-        ]
-      ],
-      conflict_target: [:node_name],
-      returning: true
-    )
+    if Repo.backend() == "mnesia" do
+      with_mnesia_record_lock(fn ->
+        case Repo.get_by(Record, node_name: attrs.node_name) do
+          nil -> %Record{} |> Record.changeset(attrs) |> Repo.insert!()
+          record -> record |> Record.changeset(attrs) |> Repo.update!()
+        end
+      end)
+    else
+      %Record{}
+      |> Record.changeset(attrs)
+      |> Repo.insert!(
+        on_conflict: [
+          set: [
+            ip_address: attrs.ip_address,
+            aliases: attrs.aliases,
+            erlang_node_name: attrs.erlang_node_name,
+            certificate: attrs.certificate,
+            configuration: attrs.configuration,
+            status: attrs.status,
+            updated_at: timestamp
+          ]
+        ],
+        conflict_target: [:node_name],
+        returning: true
+      )
+    end
   end
 
   @spec ensure_root_record!() :: Record.t()
   def ensure_root_record! do
-    case Repo.get_by(Record, node_name: @root_node_name, ip_address: @root_ip_address) do
-      nil -> insert_root_record!()
-      record -> ensure_valid_root_record!(record)
+    ensure_record = fn ->
+      case Repo.get_by(Record, node_name: @root_node_name, ip_address: @root_ip_address) do
+        nil -> insert_root_record!()
+        record -> ensure_valid_root_record!(record)
+      end
+    end
+
+    if Repo.backend() == "mnesia" do
+      with_mnesia_record_lock(ensure_record)
+    else
+      ensure_record.()
     end
   end
 
@@ -224,15 +250,19 @@ defmodule BorutaGateway.ServiceRegistry do
         status: @root_status
       }
 
-      record =
-        case Repo.get_by(Record, node_name: @root_node_name, ip_address: @root_ip_address) do
-          nil -> %Record{}
-          %Record{} = record -> record
-        end
+      upsert = fn ->
+        record =
+          case Repo.get_by(Record, node_name: @root_node_name, ip_address: @root_ip_address) do
+            nil -> %Record{}
+            %Record{} = record -> record
+          end
 
-      record
-      |> Record.changeset(attrs)
-      |> Repo.insert_or_update!()
+        record
+        |> Record.changeset(attrs)
+        |> Repo.insert_or_update!()
+      end
+
+      if Repo.backend() == "mnesia", do: with_mnesia_record_lock(upsert), else: upsert.()
     else
       raise ArgumentError, "invalid cluster CA certificate/private_key pair"
     end
@@ -305,15 +335,36 @@ defmodule BorutaGateway.ServiceRegistry do
     timestamp = utc_now_second()
     fields = Keyword.put(fields, :updated_at, timestamp)
 
-    {updated_count, _records} =
-      Repo.update_all(
-        from(record in Record,
-          where: record.ip_address == ^ip_address and record.node_name == ^node_name
-        ),
-        set: fields
-      )
+    if Repo.backend() == "mnesia" do
+      case Repo.get_by(Record, ip_address: ip_address, node_name: node_name) do
+        nil ->
+          0
 
-    updated_count
+        record ->
+          record |> Ecto.Changeset.change(fields) |> Repo.update!()
+          1
+      end
+    else
+      {updated_count, _records} =
+        Repo.update_all(
+          from(record in Record,
+            where: record.ip_address == ^ip_address and record.node_name == ^node_name
+          ),
+          set: fields
+        )
+
+      updated_count
+    end
+  end
+
+  defp with_mnesia_record_lock(fun) do
+    {:ok, result} =
+      Repo.transaction(fn ->
+        :mnesia.write_lock_table(:service_registry_records)
+        fun.()
+      end)
+
+    result
   end
 
   defp insert_root_record! do
@@ -330,12 +381,13 @@ defmodule BorutaGateway.ServiceRegistry do
       status: @root_status
     }
 
-    %Record{}
-    |> Record.changeset(attrs)
-    |> Repo.insert(
-      on_conflict: :nothing,
-      conflict_target: [:ip_address, :node_name]
-    )
+    if Repo.backend() == "mnesia" do
+      %Record{} |> Record.changeset(attrs) |> Repo.insert()
+    else
+      %Record{}
+      |> Record.changeset(attrs)
+      |> Repo.insert(on_conflict: :nothing, conflict_target: [:ip_address, :node_name])
+    end
 
     Repo.get_by!(Record, node_name: @root_node_name, ip_address: @root_ip_address)
   end

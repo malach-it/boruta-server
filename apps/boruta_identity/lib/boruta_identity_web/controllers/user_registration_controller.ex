@@ -72,6 +72,7 @@ defmodule BorutaIdentityWeb.UserRegistrationController do
 
   @impl BorutaIdentity.Accounts.RegistrationApplication
   def registration_failure(%Plug.Conn{} = conn, %RegistrationError{
+        user: nil,
         message: message,
         template: template
       }) do

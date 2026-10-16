@@ -1,7 +1,7 @@
 defmodule BorutaWeb.CredentialControllerTest do
   use BorutaWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
   alias Boruta.Config

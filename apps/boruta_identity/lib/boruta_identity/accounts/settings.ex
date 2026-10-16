@@ -176,13 +176,11 @@ defmodule BorutaIdentity.Accounts.Settings do
         ) ::
           callback_result :: any() | {:error, reason :: String.t()} | {:error, Ecto.Changeset.t()}
   defwithclientidp destroy_user(context, client_id, user, module) do
-    client_impl = IdentityProvider.implementation(client_idp)
-
-    with :ok <- apply(client_impl, :delete_user, [user.uid]),
-         {:ok, user} <- Repo.delete(user) do
+    with %User{id: user_id} when is_binary(user_id) <- user,
+         {:ok, user} <- BorutaIdentity.Admin.delete_user(user_id) do
       module.user_destroyed(context, user)
     else
-      {:error, _error} ->
+      _ ->
         module.user_destroy_failure(context, %SettingsError{
           template: edit_user_template(client_idp),
           message: "User could not be deleted, please contact an administrator.",

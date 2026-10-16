@@ -249,6 +249,8 @@ defmodule BorutaWeb.Logger do
       "direct_post",
       " - ",
       "failure",
+      log_attribute("client_id", metadata[:client_id]),
+      log_attribute("sub", metadata[:sub]),
       log_attribute("code_id", metadata[:code_id]),
       log_attribute("status", metadata[:status]),
       log_attribute("error", metadata[:error]),

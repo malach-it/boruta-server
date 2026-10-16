@@ -58,8 +58,15 @@ defmodule BorutaWeb.Router do
     pipe_through(:api)
 
     post("/token", TokenController, :token)
+    post("/tokens/:id/user-data", TokenController, :user_data)
     post("/introspect", IntrospectController, :introspect)
-    post("/pushed_authorization_request", PushedAuthorizationRequestController, :pushed_authorization_request)
+
+    post(
+      "/pushed_authorization_request",
+      PushedAuthorizationRequestController,
+      :pushed_authorization_request
+    )
+
     post("/revoke", RevokeController, :revoke)
     options("/token", TokenController, :options)
     options("/introspect", IntrospectController, :options)

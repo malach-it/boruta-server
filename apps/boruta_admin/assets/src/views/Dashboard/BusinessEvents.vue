@@ -5,7 +5,7 @@
         {{ error }}
       </div>
       <div class="ui dates form">
-        <div class="ui stackable grid">
+        <form class="ui stackable grid">
           <div class="four wide request-times column">
             <h1>Business events</h1>
           </div>
@@ -16,9 +16,9 @@
             <input type="datetime-local" v-model="dateFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
+            <button class="ui fluid tertiary button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
-        </div>
+        </form>
       </div>
       <div class="ui dashboard-content segment" :class="{ loading: pending }" :aria-busy="pending">
         <div class="ui requests form">
@@ -116,9 +116,11 @@ Chart.register(...registerables)
 const MAX_LOG_LINES = 10000 // from backend limit
 
 function defaultDateFilter() {
+  const currentHour = moment().utc()
+
   return {
-    startAt: moment().utc().subtract(1, 'hour').format("yyyy-MM-DDTHH:mm"),
-    endAt: moment().utc().format("yyyy-MM-DDTHH:mm")
+    startAt: currentHour.clone().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+    endAt: currentHour.clone().endOf('hour').format("yyyy-MM-DDTHH:mm")
   }
 }
 

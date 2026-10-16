@@ -3,8 +3,8 @@
     <Toaster :active="deleted" message="User has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <div class="main buttons">
-      <router-link :to="{ name: 'user-import' }" class="ui violet main create button">Import users</router-link>
-      <router-link :to="{ name: 'new-user' }" class="ui violet main create button">Add a user</router-link>
+      <router-link :to="{ name: 'user-import' }" class="ui primary main create button">Import users</router-link>
+      <router-link :to="{ name: 'new-user' }" class="ui primary main create button">Add a user</router-link>
     </div>
     <div class="container">
       <div class="ui error message" v-if="error">
@@ -25,24 +25,24 @@
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-user', params: { userId: user.id } }"
-                class="ui tiny blue button">edit</router-link>
+                class="ui tiny secondary button">edit</router-link>
               <a v-on:click="deleteUser(user)" class="ui tiny red button">delete</a>
             </div>
             <div class="ui attribute list">
               <div class="item">
                 <span class="header">ID</span>
                 <span class="description">{{ user.id }}</span>
-                <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
+                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item">
                 <span class="header">UID</span>
                 <span class="description">{{ user.uid }}</span>
-                <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
+                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item">
                 <span class="header">Username</span>
                 <span class="description">{{ user.username }}</span>
-                <span class="ui mini basic violet label" v-if="user.totp_registered_at">MFA</span>
+                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item" v-if="user.roles.length">
                 <span class="header">Roles</span>

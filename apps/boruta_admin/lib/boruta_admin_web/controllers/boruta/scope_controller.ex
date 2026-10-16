@@ -15,7 +15,6 @@ defmodule BorutaAdminWeb.ScopeController do
     "clients:manage:all",
     "identity-providers:manage:all",
     "scopes:manage:all",
-    "roles:manage:all",
     "upstreams:manage:all"
   ]
 

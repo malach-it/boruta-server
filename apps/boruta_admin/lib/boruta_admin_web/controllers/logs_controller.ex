@@ -65,13 +65,14 @@ defmodule BorutaAdminWeb.LogsController do
   end
 
   defp default_index_params do
-    now = DateTime.utc_now()
+    start_at = %{DateTime.utc_now() | minute: 0, second: 0, microsecond: {0, 0}}
+    end_at = start_at |> DateTime.add(1, :hour) |> DateTime.add(-1, :second)
 
     %{
       "application" => "boruta_admin",
-      "end_at" => DateTime.to_iso8601(now),
+      "end_at" => DateTime.to_iso8601(end_at),
       "events_only" => "false",
-      "start_at" => now |> DateTime.add(-1, :hour) |> DateTime.to_iso8601(),
+      "start_at" => DateTime.to_iso8601(start_at),
       "type" => "business"
     }
   end

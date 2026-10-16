@@ -1,6 +1,11 @@
 ![logo-yellow](images/logo-yellow.png)
 
-boruta is a standalone authorization server that aims to implement OAuth 2.0 and Openid Connect up to decentralized identity specifications. It provides administration tools and a customizable identity provider out of the box to manage authorization, but also an experimental gateway to apply access rules to incoming traffic.
+boruta is an authorization server that implements identity specifications up to
+decentralized identity and zero-trust. Composed of an authorization server, a
+gateway and an administration interface, it helps to manage identity related
+problems within http infrastructures. From authentication, authorization and
+access control management the server provides elements of security to http
+services.
 
 ## Status
 
@@ -204,61 +209,7 @@ In order to authenticate to the administration interface you will be asked for c
 
 ## Environment variables
 
-| Variable name                        | description         |
-| ------------------------------------ | ------------------- |
-| `SECRET_KEY_BASE`                    | The Phoenix secret key base. It must be at least 64 characters long. |
-| `BORUTA_SESSION_COOKIE_KEY`          | The session cookie key shared by the web, identity, and admin endpoints. Defaults to `_boruta_web_key`. |
-| `BORUTA_SESSION_COOKIE_SIGNING_SALT` | The signing salt used for the shared session cookie. Defaults to `OCKBuS86`. |
-| `BORUTA_REMEMBER_ME_COOKIE`          | The identity remember-me cookie name. Defaults to `_boruta_identity_web_user_remember_me`. |
-| `POSTGRES_USER`                      | The database user provided as credentials in postgreSQL connections. |
-| `POSTGRES_PASSWORD`                  | The database password provided as credentials in postgreSQL connections. |
-| `POSTGRES_DATABASE`                  | The database name provided in postgreSQL connections. |
-| `POSTGRES_HOST`                      | The database host provided in postgreSQL connections. |
-| `POOL_SIZE`                          | The postgreSQL pool size of each application, the real connection count will be twice that value. |
-| `MAX_LOG_RETENTION_DAYS`             | The number of days the logs are kept to the server. This value defaults to 60. |
-| `DISABLE_FILE_LOGGING`               | Set to `true` to disable file logging. Console logging remains enabled. Defaults to `false`. |
-| `LIBCLUSTER_HOSTS`                   | A comma-separated list of Erlang node names used for libcluster Docker Compose discovery, for example `boruta@boruta-1,boruta@boruta-2`. |
-| `K8S_NAMESPACE`                      | If set along with K8S_SELECTOR, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
-| `K8S_SELECTOR`                       | If set along with K8S_NAMESPACE, it setups libcluster in order to connect boruta erlang nodes in kubernetes together. |
-| `BORUTA_ADMIN_OAUTH_CLIENT_ID`       | An uuidv4 string representing the admin oauth client id. It will be part of the client seeded in the setup task. |
-| `BORUTA_ADMIN_OAUTH_CLIENT_SECRET`   | The admin oauth client secret. It will be part of the client seeded in the setup task. |
-| `BORUTA_ADMIN_OAUTH_BASE_URL`        | The URL base URL of the authorization server admin will use (linked to above client_id and secret, without trailing slash). |
-| `BORUTA_ADMIN_EMAIL`                 | The first admin email. It will be part of the user seeded in the setup task. |
-| `BORUTA_ADMIN_PASSWORD`              | The first admin password. It will be part of the user seeded in the setup task. |
-| `BORUTA_ADMIN_SERVER`                | Enables the admin HTTP listener. Defaults to true. |
-| `BORUTA_ADMIN_HOST`                  | The host that represent the host where boruta admin server will be deployed to. |
-| `BORUTA_ADMIN_BIND`                  | The IP address the boruta admin server will be bound to. |
-| `BORUTA_ADMIN_PORT`                  | The port where boruta admin server will be exposed on. |
-| `BORUTA_ADMIN_BASE_URL`              | The base URL where boruta admin server http endpoint will be deployed to (without trailing slash). |
-| `BORUTA_OAUTH_SCHEME`                | The scheme that will be used for URL building, default to https. |
-| `BORUTA_OAUTH_SERVER`                | Enables the OAuth HTTP listener. Defaults to true. |
-| `BORUTA_OAUTH_HOST`                  | The host where boruta oauth server will be deployed to. |
-| `BORUTA_OAUTH_BIND`                  | The IP address the boruta oauth server will be bound to. |
-| `BORUTA_OAUTH_PORT`                  | The port where boruta oauth server will be exposed on. |
-| `BORUTA_OAUTH_ACCEPTORS`             | The number of acceptor processes for the boruta oauth server. Defaults to 8. |
-| `BORUTA_OAUTH_BASE_URL`              | The base URL where boruta oauth server http endpoint will be deployed to (without trailing slash). |
-| `BORUTA_GATEWAY_SERVER`              | Enables the HTTP gateway listener. Defaults to true. |
-| `BORUTA_GATEWAY_PORT`                | The port where boruta gateway will be exposed on. Defaults to 8083. |
-| `BORUTA_GATEWAY_SIDECAR`             | Enables the HTTP microgateway listener. Defaults to true. |
-| `BORUTA_GATEWAY_SIDECAR_PORT`        | The port where boruta microgateway will be exposed on. Defaults to 8084. |
-| `BORUTA_GATEWAY_PROXY_SERVER`        | Enables the HTTP forward proxy listener. Defaults to true. |
-| `BORUTA_GATEWAY_PROXY_PORT`          | The port where boruta HTTP forward proxy will be exposed on. Defaults to 5555. |
-| `BORUTA_GATEWAY_HTTPS_PROXY_SERVER`  | Enables the HTTPS forward proxy listener. Defaults to true. |
-| `BORUTA_GATEWAY_HTTPS_PROXY_PORT`    | The port where boruta HTTPS forward proxy will be exposed on. Defaults to 4444. |
-| `BORUTA_GATEWAY_HTTPS_SERVER`        | Enables the HTTPS gateway listener. Defaults to false. |
-| `BORUTA_GATEWAY_HTTPS_PORT`          | The port where boruta HTTPS gateway will be exposed on. Defaults to 8043. |
-| `BORUTA_GATEWAY_HTTPS_VERIFY_CLIENT_CERTIFICATE` | Requires and verifies client certificates on the HTTPS gateway listener. Defaults to false. |
-| `BORUTA_GATEWAY_SIDECAR_HTTPS_SERVER` | Enables the HTTPS microgateway listener. Defaults to false. |
-| `BORUTA_GATEWAY_SIDECAR_HTTPS_PORT`  | The port where boruta HTTPS microgateway will be exposed on. Defaults to 8044. |
-| `BORUTA_GATEWAY_SIDECAR_HTTPS_VERIFY_CLIENT_CERTIFICATE` | Requires and verifies client certificates on the HTTPS microgateway listener. Defaults to false. |
-| `BORUTA_GATEWAY_ACCEPTORS`           | The number of acceptor processes for the gateway and microgateway. Defaults to 8. |
-| `BORUTA_GATEWAY_CONFIGURATION_PATH`  | The path containing the gateway static configuration. |
-| `BORUTA_CONFIGURATION_PATH`          | The path containing the boruta static configuration. |
-| `BORUTA_SUB_RESTRICTED`              | If set, the uid of the only user to have access to the administration interface. |
-| `BORUTA_ORGANIZATION_RESTRICTED`     | If set, the uid of the only organization to have access to the administration interface. |
-| `DID_RESOLVER_BASE_URL`              | Did resolver API endpoint, accroding to the [W3C DID resolution specification](https://w3c.github.io/did-resolution/) |
-| `DID_REGISTRAR_BASE_URL`             | Did registrar API endpoint, accroding to the [W3C DID registration specification](https://identity.foundation/did-registration/) |
-| `DID_SERVICES_API_KEY`               | API key granting access to DID revolver and registrar services. |
+See [documentation](https://malach-it.github.io/documentation.boruta/docs/provider-configuration/environment-variables)
 
 ## Code of Conduct
 
@@ -267,6 +218,8 @@ This product community follows the code of conduct available [here](CODE_OF_COND
 ## License
 
 This code is released under the [Apache 2.0](LICENSE.md) license.
+Third-party components and administration color palettes are documented in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## General Terms and Conditions
 

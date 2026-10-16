@@ -1,0 +1,52 @@
+[features]
+hooks = true
+
+# Copy this file to .codex/config.toml and replace /absolute/path/to/boruta-server
+# with your local checkout path. Copy .codex/boruta-hook.env.example to
+# .codex/boruta-hook.env and fill in local values. Keep local config/env files
+# out of git.
+
+[[hooks.SessionStart]]
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "sh -c 'set -a; . /absolute/path/to/boruta-server/.codex/boruta-hook.env; set +a; exec python3 /absolute/path/to/boruta-server/.codex/hooks/boruta_session_start_hook.py'"
+timeout = 15
+statusMessage = "Starting Boruta Codex wallet server"
+
+[[hooks.UserPromptSubmit]]
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = "sh -c 'set -a; . /absolute/path/to/boruta-server/.codex/boruta-hook.env; set +a; exec python3 /absolute/path/to/boruta-server/.codex/hooks/boruta_agent_session_hook.py'"
+timeout = 330
+statusMessage = "Authorizing Codex user prompt through Boruta"
+
+[[hooks.PreToolUse]]
+matcher = "*"
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "sh -c 'set -a; . /absolute/path/to/boruta-server/.codex/boruta-hook.env; set +a; exec python3 /absolute/path/to/boruta-server/.codex/hooks/boruta_agent_session_hook.py'"
+timeout = 30
+statusMessage = "Authorizing Codex tool call through Boruta"
+
+[[hooks.PermissionRequest]]
+matcher = "*"
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = "sh -c 'set -a; . /absolute/path/to/boruta-server/.codex/boruta-hook.env; set +a; exec python3 /absolute/path/to/boruta-server/.codex/hooks/boruta_agent_session_hook.py'"
+timeout = 30
+statusMessage = "Authorizing Codex permission request through Boruta"
+
+[[hooks.PostToolUse]]
+matcher = "*"
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = "sh -c 'set -a; . /absolute/path/to/boruta-server/.codex/boruta-hook.env; set +a; exec python3 /absolute/path/to/boruta-server/.codex/hooks/boruta_agent_session_hook.py'"
+timeout = 30
+statusMessage = "Authorizing Codex tool result through Boruta"
+
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
+command = "sh -c 'set -a; . /absolute/path/to/boruta-server/.codex/boruta-hook.env; set +a; exec python3 /absolute/path/to/boruta-server/.codex/hooks/boruta_agent_session_hook.py'"
+timeout = 30
+statusMessage = "Authorizing Codex turn stop through Boruta"

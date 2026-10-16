@@ -73,8 +73,8 @@ defmodule BorutaAdmin.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: [
         "ecto.create --quiet",
-        "ecto.migrate --quiet -r BorutaIdentity.Repo",
         "ecto.migrate --quiet -r BorutaAuth.Repo",
+        "ecto.migrate --quiet -r BorutaIdentity.Repo",
         "ecto.migrate --quiet",
         "test"
       ]

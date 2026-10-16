@@ -5,7 +5,7 @@
         {{ errorMessage }}
       </div>
 
-      <div class="ui dates form">
+      <form class="ui dates form">
         <div class="ui stackable grid">
           <div class="four wide token-times column">
             <h1>Tokens</h1>
@@ -20,7 +20,7 @@
             <button class="ui fluid blue button" @click="search()" :disabled="pending">Filter</button>
           </div>
         </div>
-      </div>
+      </form>
 
       <div class="ui stackable equal height grid token-summary-row">
         <div class="thirteen wide column">
@@ -318,6 +318,14 @@ import Token from '../../models/token.model'
 
 Chart.register(...registerables)
 
+function defaultStartAt () {
+  return moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm")
+}
+
+function defaultEndAt () {
+  return moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+}
+
 export default {
   name: 'tokens-dashboard',
   components: {
@@ -340,8 +348,8 @@ export default {
       type: this.$route.query.type || '',
       scope: this.$route.query.scope || '',
       dateFilter: {
-        startAt: this.$route.query.startAt || moment().utc().startOf('hour').format("yyyy-MM-DDTHH:mm"),
-        endAt: this.$route.query.endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+        startAt: this.$route.query.startAt || defaultStartAt(),
+        endAt: this.$route.query.endAt || defaultEndAt()
       },
       currentPage: Number(this.$route.query.page || 1),
       tokenQuery: this.$route.query.q || '',
@@ -680,9 +688,22 @@ export default {
         this.scope = scope || ''
         this.type = type || ''
         this.dateFilter = {
-          startAt: startAt || moment().utc().subtract(1, 'month').format("yyyy-MM-DDTHH:mm"),
-          endAt: endAt || moment().utc().endOf('hour').format("yyyy-MM-DDTHH:mm")
+          startAt: startAt || defaultStartAt(),
+          endAt: endAt || defaultEndAt()
         }
+
+        if (!startAt || !endAt) {
+          this.$router.replace({
+            path: this.$route.path,
+            query: {
+              ...this.$route.query,
+              startAt: this.dateFilter.startAt,
+              endAt: this.dateFilter.endAt
+            }
+          })
+          return
+        }
+
         this.getTokens(page, q, client_id, scope, type, this.dateFilter.startAt, this.dateFilter.endAt)
       },
       deep: true,
@@ -820,12 +841,16 @@ export default {
   }
 
   .token-actions {
+    display: flex;
     float: right;
+    gap: .5rem;
     margin: 0 0 1rem 1rem;
     @media (max-width: 768px) {
       float: none;
       margin: 0;
+      margin-bottom: 1rem;
       .button {
+        flex: 1 1 0;
         width: 100%;
       }
     }

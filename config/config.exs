@@ -4,19 +4,7 @@ for config <- "../apps/*/config/config.exs" |> Path.expand(__DIR__) |> Path.wild
   import_config config
 end
 
-config :logger,
-  utc_log: true,
-  backends: [
-    {LoggerFileBackend, :boruta_web_business_logger},
-    {LoggerFileBackend, :boruta_web_request_logger},
-    {LoggerFileBackend, :boruta_identity_business_logger},
-    {LoggerFileBackend, :boruta_identity_request_logger},
-    {LoggerFileBackend, :boruta_admin_business_logger},
-    {LoggerFileBackend, :boruta_admin_request_logger},
-    {LoggerFileBackend, :boruta_gateway_business_logger},
-    {LoggerFileBackend, :boruta_gateway_request_logger},
-    :console
-  ]
+config :logger, utc_log: true
 
 Enum.map([:request, :business], fn type ->
   Enum.map([:boruta_web, :boruta_identity, :boruta_admin, :boruta_gateway], fn application ->
@@ -29,9 +17,12 @@ Enum.map([:request, :business], fn type ->
   end)
 end)
 
-config :logger, :console,
+config :logger, :default_formatter,
   format: "$dateT$timeZ $metadata[$level] $message\n",
   metadata: [:request_id],
+  utc_log: true
+
+config :logger, :default_handler,
   level: :info
 
 config :phoenix, :json_library, Jason

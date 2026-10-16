@@ -19,8 +19,8 @@ defmodule BorutaAdminWeb.ConnCase do
 
   import BorutaIdentity.AccountsFixtures
 
-  alias BorutaAuth.Repo, as: AuthRepo
-  alias BorutaIdentity.Factory, as: IdentityFactory
+  alias BorutaAdmin.IdentityFactory
+  alias BorutaIdentity.Repo, as: IdentityRepo
   alias Ecto.Adapters.SQL.Sandbox
 
   using do
@@ -78,7 +78,7 @@ defmodule BorutaAdminWeb.ConnCase do
 
   def authorized_params(conn, scopes) do
     token =
-      Boruta.Factory.insert(
+      BorutaAdmin.Factory.insert(
         :token,
         type: "access_token",
         scope: Enum.join(scopes, " ")
@@ -93,7 +93,7 @@ defmodule BorutaAdminWeb.ConnCase do
     backend =
       :backend
       |> IdentityFactory.build()
-      |> AuthRepo.insert!()
+      |> IdentityRepo.insert!()
 
     user =
       :user
@@ -101,7 +101,7 @@ defmodule BorutaAdminWeb.ConnCase do
       |> Map.put(:backend, nil)
       |> Map.put(:backend_id, backend.id)
       |> Map.put(:account_type, "internal")
-      |> AuthRepo.insert!()
+      |> IdentityRepo.insert!()
 
     %{user | backend: backend}
   end
@@ -111,7 +111,7 @@ defmodule BorutaAdminWeb.ConnCase do
     resource_owner = %Boruta.Oauth.ResourceOwner{sub: sub}
 
     token =
-      Boruta.Factory.insert(:token,
+      BorutaAdmin.Factory.insert(:token,
         type: "access_token",
         scope: Enum.join(scopes, " "),
         sub: resource_owner.sub

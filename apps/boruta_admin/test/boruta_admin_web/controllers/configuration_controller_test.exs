@@ -1,7 +1,7 @@
 defmodule BorutaAdminWeb.ConfigurationControllerTest do
   use BorutaAdminWeb.ConnCase
 
-  import BorutaIdentity.Factory
+  import BorutaAdmin.IdentityFactory
 
   @update_error_template_attrs %{
     content: "some updated content"

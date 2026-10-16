@@ -8,7 +8,7 @@
         <i v-on:click="deleteOrganization(organization)" class="close icon"></i>
       </div>
     </div>
-    <a v-on:click.prevent="addOrganization()" class="ui blue fluid button">Add an organization</a>
+    <a v-on:click.prevent="addOrganization()" class="ui tertiary fluid button">Add an organization</a>
   </div>
 </template>
 

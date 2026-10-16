@@ -1,6 +1,8 @@
 defmodule BorutaGateway.HttpsGateway do
   @moduledoc false
 
+  require Logger
+
   defmodule Token do
     @moduledoc false
 
@@ -152,23 +154,11 @@ defmodule BorutaGateway.HttpsGateway do
   end
 
   def handle_info(:accept, state) do
-    case accept_downstream(state.listen_socket, state.handshake_timeout) do
-      {:ok, socket} ->
-        {:noreply, state |> reset_exchange(socket) |> arm_idle_timeout()}
-
-      {:error, _error} ->
-        {:stop, :shutdown, state}
-    end
+    accept_next_downstream(state)
   end
 
   def handle_info({:ssl_closed, socket}, %State{socket: socket} = state) do
-    case accept_downstream(state.listen_socket, state.handshake_timeout) do
-      {:ok, socket} ->
-        {:noreply, state |> reset_exchange(socket) |> arm_idle_timeout()}
-
-      {:error, _error} ->
-        {:stop, :shutdown, state}
-    end
+    accept_next_downstream(state)
   end
 
   def handle_info({:tcp_closed, socket}, %State{client_socket: socket} = state) do
@@ -241,6 +231,21 @@ defmodule BorutaGateway.HttpsGateway do
 
   def handle_info(_info, state) do
     {:noreply, state}
+  end
+
+  defp accept_next_downstream(state) do
+    case accept_downstream(state.listen_socket, state.handshake_timeout) do
+      {:ok, socket} ->
+        {:noreply, state |> reset_exchange(socket) |> arm_idle_timeout()}
+
+      {:error, {:handshake, reason}} ->
+        Logger.debug("Rejected TLS handshake: #{inspect(reason)}")
+        send(self(), :accept)
+        {:noreply, state}
+
+      {:error, {:accept, _reason}} ->
+        {:stop, :shutdown, state}
+    end
   end
 
   defp handle_downstream_request(socket, request, state) do
@@ -531,10 +536,20 @@ defmodule BorutaGateway.HttpsGateway do
   defp mtls_options(%Upstream{}), do: []
 
   defp accept_downstream(listen_socket, handshake_timeout) do
-    with {:ok, socket} <- :ssl.transport_accept(listen_socket),
-         {:ok, socket} <- :ssl.handshake(socket, handshake_timeout) do
-      activate_downstream(socket)
-      {:ok, socket}
+    case :ssl.transport_accept(listen_socket) do
+      {:ok, socket} ->
+        case :ssl.handshake(socket, handshake_timeout) do
+          {:ok, socket} ->
+            activate_downstream(socket)
+            {:ok, socket}
+
+          {:error, reason} ->
+            :ssl.close(socket)
+            {:error, {:handshake, reason}}
+        end
+
+      {:error, reason} ->
+        {:error, {:accept, reason}}
     end
   end
 

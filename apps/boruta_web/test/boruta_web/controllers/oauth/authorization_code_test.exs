@@ -1,7 +1,7 @@
 defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
   use BorutaWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
   alias Boruta.Oauth.Client
@@ -50,9 +50,9 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
     setup %{conn: conn} do
       resource_owner = user_fixture()
       client = insert(:client)
-      identity_provider = BorutaIdentity.Factory.insert(:identity_provider, consentable: true)
+      identity_provider = BorutaWeb.IdentityFactory.insert(:identity_provider, consentable: true)
 
-      BorutaIdentity.Factory.insert(:client_identity_provider,
+      BorutaWeb.IdentityFactory.insert(:client_identity_provider,
         client_id: client.id,
         identity_provider: identity_provider
       )
@@ -307,7 +307,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         |> log_in(resource_owner)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
-      BorutaIdentity.Factory.insert(:consent,
+      BorutaWeb.IdentityFactory.insert(:consent,
         user_id: resource_owner.id,
         client_id: client.id,
         scopes: [scope.name]

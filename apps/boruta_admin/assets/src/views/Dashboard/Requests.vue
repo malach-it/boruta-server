@@ -4,7 +4,7 @@
       <div class="ui error message" v-if="error">
         {{ error }}
       </div>
-      <div class="ui dates form">
+      <form class="ui dates form">
         <div class="ui stackable grid">
           <div class="four wide request-times column">
             <h1>Requests</h1>
@@ -16,10 +16,10 @@
             <input type="datetime-local" v-model="dateFilter.endAt" :disabled="pending" />
           </div>
           <div class="two wide request-times column">
-            <button class="ui fluid blue button" @click="getLogs()" :disabled="pending">Filter</button>
+            <button class="ui fluid tertiary button" @click="getLogs()" :disabled="pending">Filter</button>
           </div>
         </div>
-      </div>
+      </form>
       <div class="ui error message" v-if="fetchError">
         An error has occured when fetching logs, message: {{ fetchError }}.
       </div>
@@ -117,9 +117,11 @@ const MAX_GRAPH_REQUEST_LABELS = 50
 const OTHER_REQUEST_LABEL = 'other'
 
 function defaultDateFilter() {
+  const currentHour = moment().utc()
+
   return {
-    startAt: moment().utc().subtract(1, 'hour').format("yyyy-MM-DDTHH:mm"),
-    endAt: moment().utc().format("yyyy-MM-DDTHH:mm")
+    startAt: currentHour.clone().startOf('hour').format("yyyy-MM-DDTHH:mm"),
+    endAt: currentHour.clone().endOf('hour').format("yyyy-MM-DDTHH:mm")
   }
 }
 
@@ -202,7 +204,7 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: this.timeScaleUnit || 'minute',
+              unit: this.timeScaleUnit || 'hour',
               round: true
             }
           }
@@ -228,7 +230,7 @@ export default {
           x: {
             type: 'timeseries',
             time: {
-              unit: this.timeScaleUnit || 'minute',
+              unit: this.timeScaleUnit || 'hour',
               round: true
             }
           }

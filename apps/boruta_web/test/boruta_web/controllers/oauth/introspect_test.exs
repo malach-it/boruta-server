@@ -1,7 +1,7 @@
 defmodule BorutaWeb.Oauth.IntrospectTest do
   use BorutaWeb.ConnCase
 
-  import Boruta.Factory
+  import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
   setup %{conn: conn} do
@@ -137,15 +137,15 @@ defmodule BorutaWeb.Oauth.IntrospectTest do
         {:ok, payload} ->
           assert payload == %{
                    "active" => true,
-                   "aud" => nil,
+                   "aud" => :null,
                    "client_id" => client.id,
                    "exp" => token.expires_at,
                    "iat" => DateTime.to_unix(token.inserted_at),
                    "iss" => "http://localhost:4000",
-                   "resource" => nil,
+                   "resource" => :null,
                    "scope" => token.scope,
-                   "sub" => nil,
-                   "username" => nil
+                   "sub" => :null,
+                   "username" => :null
                  }
 
         _ ->

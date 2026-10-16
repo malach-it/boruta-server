@@ -6,6 +6,33 @@
 
 ### Added
 
+- [gateway] support an opt-in `ecto3_mnesia` repository backend with Mnesia table setup and cache updates; PostgreSQL remains the default, and existing gateway data requires a separate migration
+- [infra] published container images include provenance attestations
+
+### Changed
+
+- [admin] request, business event, and token dashboard date filters use HTML forms
+
+### Fixed
+
+- [admin] invalid YAML configuration file uploads return a bad request response
+- [auth][ssi] universal keys can be created for oauth client id token and verifiable credentials signing
+- [admin] client forms display the JWT authentication public key field for EC signing algorithms
+- [cli] configuration file uploads accept release-local file paths
+- [gateway] invalid TLS handshakes no longer stop HTTPS gateway acceptors
+- [ssi] credential status token resolution verifies tokens against client DIDs
+- [wallet] imported credentials are encrypted in local storage
+
+### Security
+
+- [identity] blocking or deleting a user invalidates browser sessions, authorization codes, and access tokens; the admin API rejects bearer tokens belonging to blocked or deleted users
+
+## [0.12.0] - 2026-09-11
+
+### Added
+
+- [admin] token dashboard provides issuance charts, filtering, full-text search, token-chain details, claim inspection, and revocation controls
+- [admin] administration interface supports selectable Boruta, Gruvbox, and Nord themes
 - [cli] `boruta` and `boruta_admin` releases include a YAML command-line interface for administration resources
 - [gateway] native Phi model trains noise detection with degree-one and sparse degree-two terms over OpenAPI request contexts
 - [gateway] Phi request matching treats the root path as legal for every HTTP method
@@ -17,11 +44,16 @@
 
 ### Changed
 
+- [admin] token dashboard and API default to tokens issued since the beginning of the current hour
+- [admin] request and business event dashboards and log API default to the current UTC hour
+- [admin] sidebar sections reflect authorized scopes and remain expanded across nested dashboard routes
+- [admin] remove the redundant `roles:manage:all` scope from new installations and administration scope requests
 - [admin] new OAuth clients default to confidential
 - [admin] credential presentation template actions use clearer wording
 
 ### Fixed
 
+- [admin] coalesce concurrent logout token revocations
 - [admin] resource activity refreshes when navigating between routes
 - [admin] fix sidebar upstream navigation
 - [admin] form fields wrap correctly on mobile viewports
@@ -30,6 +62,7 @@
 
 ### Security
 
+- [admin] token administration responses omit token values and other reusable secrets
 - validate DID public clients against the issuer, registered redirect URIs, and supported grant types
 - require secret authentication for client and agent credentials grants and introspection, including public clients
 - allow decentralized non-confidential public-client grants without a secret only when issuer-bound

@@ -6,6 +6,8 @@ defmodule BorutaAdminWeb.FallbackController do
   """
   use BorutaAdminWeb, :controller
 
+  alias Boruta.Oauth.Error
+
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)

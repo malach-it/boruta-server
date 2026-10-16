@@ -3,7 +3,7 @@
     <Toaster :active="deleted" message="Organization has been deleted" type="warning" />
     <Toaster :active="errorMessage" :message="errorMessage" type="error" />
     <div class="main buttons">
-      <router-link :to="{ name: 'new-organization' }" class="ui violet main create button">Add a organization</router-link>
+      <router-link :to="{ name: 'new-organization' }" class="ui primary main create button">Add a organization</router-link>
     </div>
     <div class="container">
       <div class="ui error message" v-if="error">
@@ -18,7 +18,7 @@
             <div class="actions">
               <router-link
                 :to="{ name: 'edit-organization', params: { organizationId: organization.id } }"
-                class="ui tiny blue button">edit</router-link>
+                class="ui tiny secondary button">edit</router-link>
               <a v-on:click="deleteOrganization(organization)" class="ui tiny red button">delete</a>
             </div>
             <div class="ui attribute list">

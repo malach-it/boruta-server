@@ -85,6 +85,19 @@ defmodule BorutaAdmin.ConfigurationLoader do
     end
   end
 
+  @spec from_file(configuration_file_path :: String.t()) ::
+          {:ok, result :: map()} | {:error, reason :: String.t()}
+  def from_file(path) do
+    with {:ok, yaml} <- YamlElixir.read_from_file(path),
+         %{"configuration" => configuration, "version" => "1.0"} <- yaml do
+      {:ok, load_configuration(configuration)}
+
+    else
+      _ ->
+        {:error, "Bad configuration file."}
+    end
+  end
+
   def load_configuration(configuration) do
     case Map.fetch(configuration, "aliases") do
       {:ok, aliases} -> Application.put_env(__MODULE__, :aliases, with_default_aliases(aliases))

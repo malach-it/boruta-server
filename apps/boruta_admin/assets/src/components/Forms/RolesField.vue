@@ -8,7 +8,7 @@
         <i v-on:click="deleteRole(role)" class="close icon"></i>
       </div>
     </div>
-    <a v-on:click.prevent="addRole()" class="ui blue fluid button">Add a role</a>
+    <a v-on:click.prevent="addRole()" class="ui tertiary fluid button">Add a role</a>
   </div>
 </template>
 

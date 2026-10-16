@@ -12,7 +12,7 @@
         <input type="text" v-model="organization.label" placeholder="Wonder organization" />
       </div>
       <div class="actions">
-        <button class="ui violet button" :class="{ loading: organization.loading }" :disabled="organization.loading" type="submit">{{ action }}</button>
+        <button class="ui primary button" :class="{ loading: organization.loading }" :disabled="organization.loading" type="submit">{{ action }}</button>
       </div>
     </form>
   </div>

@@ -233,17 +233,25 @@ export default defineComponent({
         throw new Error('Unsupported credentials import file.')
       }
 
-      return payload.credentials.map(({ jwe, credentialId, format, credential }) => {
+      return Promise.all(payload.credentials.map(async ({ jwe, credentialId, format, credential }) => {
         if (jwe) {
-          return { jwe }
+          const { plaintext } = await compactDecrypt(jwe, textEncoder.encode(password), {
+            keyManagementAlgorithms: ['PBES2-HS256+A128KW'],
+            contentEncryptionAlgorithms: ['A256GCM']
+          })
+
+          return this.validateImportedCredential(JSON.parse(textDecoder.decode(plaintext)))
         }
 
-        if (!credentialId || !format || !credential) {
-          throw new Error('Invalid credentials import file.')
-        }
+        return this.validateImportedCredential({ credentialId, format, credential })
+      }))
+    },
+    validateImportedCredential ({ credentialId, format, credential }) {
+      if (!credentialId || !format || !credential) {
+        throw new Error('Invalid credentials import file.')
+      }
 
-        return { credentialId, format, credential }
-      })
+      return { credentialId, format, credential }
     },
     async parseImportPayload (content, password) {
       try {

@@ -400,30 +400,37 @@ defmodule BorutaAdminWeb.LogsControllerTest do
 
   describe "index with default parameters" do
     @tag authorized: ["logs:read:all"]
-    test "returns administration business events from the last hour", %{conn: conn} do
+    test "returns administration business events from the current hour", %{conn: conn} do
       File.mkdir("./log")
       log_path = LogRotate.path(:boruta_admin, :business, Date.utc_today())
       File.rm(log_path)
 
-      log_time = DateTime.utc_now() |> DateTime.add(-1, :second) |> DateTime.truncate(:second)
+      start_at = %{DateTime.utc_now() | minute: 0, second: 0, microsecond: {0, 0}}
+      end_at = start_at |> DateTime.add(1, :hour) |> DateTime.add(-1, :second)
 
       File.write!(
         log_path,
-        "#{DateTime.to_iso8601(log_time)} request_id=default-request [info] boruta_admin client update - success client_id=default-client\n"
+        """
+        #{DateTime.to_iso8601(DateTime.add(start_at, -1, :second))} request_id=previous-hour [info] boruta_admin client update - success client_id=previous-client
+        #{DateTime.to_iso8601(start_at)} request_id=hour-start [info] boruta_admin client update - success client_id=start-client
+        #{DateTime.to_iso8601(DateTime.add(end_at, -1, :second))} request_id=hour-end [info] boruta_admin client update - success client_id=end-client
+        """
       )
 
       on_exit(fn -> File.rm(log_path) end)
 
       assert %{
-               "log_count" => 1,
-               "log_lines" => [log_line]
+               "log_count" => 2,
+               "log_lines" => log_lines
              } =
                response =
                conn
                |> get(Routes.admin_logs_path(conn, :index))
                |> json_response(200)
 
-      assert log_line =~ "request_id=default-request"
+      assert Enum.any?(log_lines, &String.contains?(&1, "request_id=hour-start"))
+      assert Enum.any?(log_lines, &String.contains?(&1, "request_id=hour-end"))
+      refute Enum.any?(log_lines, &String.contains?(&1, "request_id=previous-hour"))
       refute Map.has_key?(response, "events")
     end
   end

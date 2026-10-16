@@ -6,7 +6,12 @@ defmodule BorutaIdentity.Admin do
   import Ecto.Query
 
   alias Boruta.Ecto.Admin
+  alias Boruta.AccessTokensAdapter
+  alias Boruta.AgentTokensAdapter
+  alias Boruta.CodesAdapter
+  alias Boruta.Ecto.Token
   alias BorutaIdentity.Accounts.User
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserRole
   alias BorutaIdentity.IdentityProviders.Backend
@@ -100,6 +105,7 @@ defmodule BorutaIdentity.Admin do
             where: u.id == ^user_id
           )
         )
+
       _ ->
         Repo.one(
           from(u in User,
@@ -349,14 +355,65 @@ defmodule BorutaIdentity.Admin do
           {:ok, user :: User.t()} | {:error, Ecto.Changeset.t()}
   def update_user(user, user_params) do
     with {:ok, user} <-
-           user
-           |> User.changeset(user_params)
-           |> Repo.update(),
+           update_user_and_revoke_access(user, user_params),
          {:ok, user} <-
            maybe_update_user_authorized_scopes(user, user_params),
          {:ok, user} <-
            maybe_update_user_organizations(user, user_params) do
       maybe_update_user_roles(user, user_params)
+    end
+  end
+
+  defp update_user_and_revoke_access(user, %{blocked: true} = user_params) do
+    with {:ok, updated_user} <- user |> User.changeset(user_params) |> Repo.update(),
+         :ok <- revoke_user_access(user.id) do
+      {:ok, updated_user}
+    end
+  end
+
+  defp update_user_and_revoke_access(user, user_params) do
+    user |> User.changeset(user_params) |> Repo.update()
+  end
+
+  defp revoke_user_access(user_id) do
+    Repo.delete_all(from(t in UserToken, where: t.user_id == ^user_id))
+
+    BorutaAuth.Repo.all(
+      from(t in Token,
+        where:
+          t.sub == ^user_id and
+            t.type in ["access_token", "agent_token", "code", "preauthorized_code"],
+        select: {t.id, t.type, t.value}
+      )
+    )
+    |> Enum.reduce_while(:ok, fn {id, type, value}, _acc ->
+      case revoke_user_token(type, value) do
+        :ok ->
+          Boruta.Config.cache_backend().delete({Boruta.Oauth.Token, :id, id})
+          {:cont, :ok}
+
+        error ->
+          {:halt, error}
+      end
+    end)
+  end
+
+  defp revoke_user_token("access_token", value),
+    do: revoke_access_token(AccessTokensAdapter, value)
+
+  defp revoke_user_token("agent_token", value), do: revoke_access_token(AgentTokensAdapter, value)
+
+  defp revoke_user_token(type, value) when type in ["code", "preauthorized_code"] do
+    revoke_access_token(CodesAdapter, value)
+  end
+
+  defp revoke_access_token(adapter, value) do
+    with %Boruta.Oauth.Token{} = token <- adapter.get_by(value: value),
+         {:ok, _} <- adapter.revoke(token) do
+      :ok
+    else
+      nil -> {:error, :token_not_found}
+      error -> error
     end
   end
 
@@ -390,7 +447,8 @@ defmodule BorutaIdentity.Admin do
       user ->
         # TODO delete both provider and domain users in a transaction
         # TODO manage identity federated users
-        with :ok <-
+        with :ok <- revoke_user_access(user.id),
+             :ok <-
                apply(Backend.implementation(user.backend, user.account_type), :delete_user, [
                  user.uid
                ]) do
