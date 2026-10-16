@@ -10,8 +10,12 @@
       <div class="ui info message">
         Scopes are here the ones that are to be requested by the client. They are to be public, accessible to everyone, or private, granted only having a privileged user or client.
       </div>
-      <div class="ui segments" v-if="scopes.length">
-        <div v-for="(scope, index) in scopes" class="ui mini highlightable segment" :key="index">
+      <div class="ui fluid icon input search form">
+        <input type="search" v-model="searchQuery" placeholder="Search scopes" aria-label="Search scopes" />
+        <i class="search icon"></i>
+      </div>
+      <div class="ui segments">
+        <div v-for="scope in filteredScopes" class="ui mini highlightable segment" :key="scope.id || scopes.indexOf(scope)">
           <div v-if="scope.edit">
             <form @submit.prevent="saveScope(scope)" class="ui form">
               <div class="ui stackable grid">
@@ -69,6 +73,7 @@
 </template>
 
 <script>
+import MiniSearch from 'minisearch'
 import Scope from '../../models/scope.model'
 import Toaster from '../../components/Toaster.vue'
 
@@ -80,14 +85,53 @@ export default {
   data () {
     return {
       scopes: [],
+      searchQuery: typeof this.$route.query.q === 'string' ? this.$route.query.q : '',
       saved: false,
       deleted: false,
       errorMessage: false,
       error: null
     }
   },
+  computed: {
+    filteredScopes () {
+      const query = this.searchQuery.trim()
+
+      if (!query) return this.scopes
+
+      const miniSearch = new MiniSearch({
+        fields: ['name', 'label'],
+        searchOptions: {
+          prefix: true,
+          fuzzy: 0.2
+        }
+      })
+
+      miniSearch.addAll(this.scopes.map((scope, index) => ({
+        id: index,
+        name: scope.name || '',
+        label: scope.label || ''
+      })))
+
+      const matchingIndexes = new Set(miniSearch.search(query).map(({ id }) => id))
+      return this.scopes.filter((scope, index) => scope.edit || matchingIndexes.has(index))
+    }
+  },
   mounted () {
     this.getScopes()
+  },
+  watch: {
+    searchQuery (query) {
+      if (query === this.$route.query.q || (!query && !this.$route.query.q)) return
+
+      this.$router.replace({
+        path: this.$route.path,
+        query: { ...this.$route.query, q: query || undefined }
+      })
+    },
+    '$route.query.q' (query) {
+      const searchQuery = typeof query === 'string' ? query : ''
+      if (searchQuery !== this.searchQuery) this.searchQuery = searchQuery
+    }
   },
   methods: {
     getScopes () {
@@ -149,6 +193,9 @@ export default {
 
 <style scoped lang="scss">
 #scope-list {
+  .search {
+    margin-bottom: 1rem;
+  }
   .segments {
     border: none;
     @media screen and (max-width: 768px) {
