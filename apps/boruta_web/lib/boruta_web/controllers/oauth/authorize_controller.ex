@@ -360,8 +360,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp do_authorize(conn, current_user) do
-    client_id = conn.query_params[:client_id]
-    scope = conn.query_params[:scope]
+    client_id = conn.query_params["client_id"]
+    scope = conn.query_params["scope"]
     # TODO invert dependency
     case Accounts.consented?(current_user, client_id, Oauth.Scope.split(scope)) do
       true ->
@@ -373,10 +373,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         )
 
       false ->
-        raise %BorutaWeb.AuthorizeError{
-          message: "Requested scopes require consent.",
-          plug_status: :unprocessable_entity
-        }
+        case conn.query_params["prompt"] do
+          "none" ->
+            prompt_none_error(conn, conn.query_params, "User authorization is required.")
+
+          _ ->
+            redirect(conn,
+              to:
+                IdentityRoutes.user_consent_path(BorutaIdentityWeb.Endpoint, :index, %{
+                  request: request_param(conn)
+                })
+            )
+        end
     end
   end
 
