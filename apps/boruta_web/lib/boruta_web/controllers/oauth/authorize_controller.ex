@@ -152,7 +152,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp ensure_mfa(%Plug.Conn{query_params: query_params} = conn, current_user) do
     identity_provider =
-      IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"])
+      IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"]) ||
+      IdentityProviders.get_identity_provider_by_client_id(ClientsAdapter.public!().id)
 
     totp_authenticated = (get_session(conn, :totp_authenticated) || %{})[get_user_session(conn)]
 

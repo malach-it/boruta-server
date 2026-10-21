@@ -4,7 +4,9 @@ defmodule BorutaWeb.AuthorizeControllerTest do
   import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias Boruta.ClientsAdapter
   alias Boruta.Oauth.Error
+  alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.Repo
   alias BorutaWeb.Oauth.AuthorizeController
 
@@ -84,6 +86,45 @@ defmodule BorutaWeb.AuthorizeControllerTest do
 
       assert redirected_to(conn) =~
                IdentityRoutes.user_session_path(conn, :initialize_webauthn)
+    end
+
+    test "use public client identity provider for second factor authentication", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri,
+      resource_owner: resource_owner
+    } do
+      public_client_id = ClientsAdapter.public!().id
+
+      identity_provider =
+        BorutaIdentity.Factory.insert(:identity_provider,
+          enforce_totp: true,
+          totpable: true
+        )
+
+      {:ok, _} =
+        IdentityProviders.upsert_client_identity_provider(public_client_id, identity_provider.id)
+
+      on_exit(fn ->
+        BorutaIdentity.Cache.delete(
+          {IdentityProviders, :identity_provider_by_client_id, public_client_id}
+        )
+      end)
+
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
+        |> get(
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            state: "state"
+          })
+        )
+
+      assert redirected_to(conn) =~ IdentityRoutes.user_session_path(conn, :initialize_totp)
     end
 
     @tag :skip
