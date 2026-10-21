@@ -25,7 +25,10 @@ defmodule BorutaAdminWeb.ConfigurationController do
     "scope" => "scopes",
     "gateway" => "upstreams",
     "microgateway" => "upstreams",
-    "error_template" => "configuration"
+    "organization" => "users",
+    "error_template" => "configuration",
+    "aliases" => "configuration",
+    "cluster_ca" => "configuration"
   }
 
   def error_template(conn, %{"template_type" => template_type}) do
@@ -107,8 +110,11 @@ defmodule BorutaAdminWeb.ConfigurationController do
   end
 
   defp filter_configuration(configuration, %{"scope" => scope}) do
+    granted_scopes = String.split(scope)
+
     Enum.filter(configuration, fn {key, _value} ->
-      Regex.match?(~r{#{@resource[key]}:manage:all}, scope)
+      required_scope = @resource[key]
+      is_binary(required_scope) and "#{required_scope}:manage:all" in granted_scopes
     end)
     |> Enum.into(%{})
   end

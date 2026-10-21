@@ -104,7 +104,7 @@ defmodule BorutaAdmin.Cli do
     with {:ok, route, required_scope} <- resolve_route(resource, action),
          {:ok, %Client{} = client, sub} <- authenticate_admin_client(request_id),
          {:ok, %Token{} = token, sub} <-
-           create_access_token(client, required_scope, sub) do
+           create_access_token(client, token_scope(route, required_scope), sub) do
       try do
         route
         |> authenticated_conn(token, required_scope, resource_id, request_params, sub)
@@ -195,6 +195,22 @@ defmodule BorutaAdmin.Cli do
       error -> error
     end
   end
+
+  # Configuration uploads apply several resource types in one request. The
+  # controller filters each section by its matching management permission.
+  defp token_scope(
+         %{plug: BorutaAdminWeb.ConfigurationController, plug_opts: :upload_configuration_file},
+         required_scope
+       ) do
+    @controller_scopes
+    |> Map.values()
+    |> Enum.filter(&String.ends_with?(&1, ":manage:all"))
+    |> Kernel.++([required_scope])
+    |> Enum.uniq()
+    |> Enum.join(" ")
+  end
+
+  defp token_scope(_route, required_scope), do: required_scope
 
   defp console_subject do
     System.get_env("BORUTA_COMMAND_SUB") || default_console_subject()

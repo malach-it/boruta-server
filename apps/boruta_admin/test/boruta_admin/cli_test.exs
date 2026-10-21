@@ -142,7 +142,21 @@ defmodule BorutaAdmin.CliTest do
         "boruta-cli-configuration-#{System.unique_integer([:positive])}.yml"
       )
 
-    configuration = "---\nversion: \"1.0\"\nconfiguration: {}\n"
+    suffix = System.unique_integer([:positive])
+    scope_name = "cli-upload-scope-#{suffix}"
+    organization_name = "cli-upload-organization-#{suffix}"
+
+    configuration = """
+    ---
+    version: "1.0"
+    configuration:
+      scope:
+        - name: #{scope_name}
+          public: true
+      organization:
+        - name: #{organization_name}
+    """
+
     File.write!(configuration_path, configuration)
 
     on_exit(fn ->
@@ -157,6 +171,12 @@ defmodule BorutaAdmin.CliTest do
              })
 
     assert %{"errors" => %{}, "file_content" => ^configuration} = Jason.decode!(body)
+    assert Enum.any?(Boruta.Ecto.Admin.list_scopes(), &(&1.name == scope_name))
+
+    assert Enum.any?(
+             BorutaIdentity.Organizations.list_organizations(),
+             &(&1.name == organization_name)
+           )
   end
 
   test "rejects an invalid client secret and logs the authentication failure" do
