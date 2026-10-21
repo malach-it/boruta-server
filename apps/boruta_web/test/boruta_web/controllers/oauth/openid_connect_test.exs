@@ -219,6 +219,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       resource_owner: resource_owner,
       redirect_uri: redirect_uri
     } do
+      grant_openid_consent(resource_owner, client)
+
       request_param =
         Authenticable.request_param(
           get(
@@ -347,6 +349,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       resource_owner: resource_owner,
       redirect_uri: redirect_uri
     } do
+      grant_openid_consent(resource_owner, client)
+
       request_param =
         Authenticable.request_param(
           get(
@@ -395,6 +399,8 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       resource_owner: resource_owner,
       redirect_uri: redirect_uri
     } do
+      grant_openid_consent(resource_owner, client)
+
       request_param =
         Authenticable.request_param(
           get(
@@ -437,6 +443,21 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
                  url
                )
     end
+  end
+
+  defp grant_openid_consent(user, client) do
+    identity_provider = BorutaWeb.IdentityFactory.insert(:identity_provider, consentable: true)
+
+    BorutaWeb.IdentityFactory.insert(:client_identity_provider,
+      client_id: client.id,
+      identity_provider: identity_provider
+    )
+
+    BorutaWeb.IdentityFactory.insert(:consent,
+      user_id: user.id,
+      client_id: client.id,
+      scopes: ["openid"]
+    )
   end
 
   describe "jwks endpoints" do

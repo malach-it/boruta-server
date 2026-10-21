@@ -363,7 +363,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     client_id = conn.query_params["client_id"]
     scope = conn.query_params["scope"]
     # TODO invert dependency
-    case Accounts.consented?(current_user, client_id, Oauth.Scope.split(scope)) do
+    case public_client_request?(conn) ||
+           Accounts.consented?(current_user, client_id, Oauth.Scope.split(scope)) do
       true ->
         conn
         |> delete_session(:preauthorizations)
