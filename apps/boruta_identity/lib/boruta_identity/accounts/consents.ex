@@ -102,14 +102,12 @@ defmodule BorutaIdentity.Accounts.Consents do
 
   def consented?(%User{id: user_id}, client_id, scopes) do
     case Repo.one(
-           from co in Consent,
-             join: cidp in ClientIdentityProvider,
-             on: cidp.client_id == ^client_id,
+           from cidp in ClientIdentityProvider,
              join: idp in assoc(cidp, :identity_provider),
+             left_join: co in Consent,
+             on: co.client_id == ^client_id and co.user_id == ^user_id,
              select: {idp.consentable, co.scopes},
-             where:
-               co.user_id == ^user_id and
-                 co.client_id == ^client_id
+             where: cidp.client_id == ^client_id
          ) do
       nil -> false
       {true, consented_scopes} -> Enum.empty?(scopes -- (consented_scopes || []))

@@ -71,6 +71,52 @@ defmodule BorutaWeb.Oauth.ConsentAuthorizationTest do
     refute URI.parse(redirected_to(resumed)).host == URI.parse(redirect_uri).host
   end
 
+  test "non-consentable provider authorizes without an existing consent", %{conn: conn} do
+    user = user_fixture()
+    client = insert(:client)
+    identity_provider = BorutaWeb.IdentityFactory.insert(:identity_provider, consentable: false)
+
+    BorutaWeb.IdentityFactory.insert(:client_identity_provider,
+      client_id: client.id,
+      identity_provider: identity_provider
+    )
+
+    scope = insert(:scope, public: true)
+    redirect_uri = List.first(client.redirect_uris)
+
+    assert BorutaIdentity.Accounts.consented?(user, client.id, [scope.name])
+
+    consent_redirect =
+      conn
+      |> log_in(user)
+      |> init_test_session(session_chosen: true)
+      |> get(
+        Routes.authorize_path(conn, :authorize, %{
+          response_type: "code",
+          client_id: client.id,
+          redirect_uri: redirect_uri,
+          scope: scope.name
+        })
+      )
+
+    assert redirected_to(consent_redirect) =~ IdentityRoutes.user_consent_path(conn, :index)
+
+    response =
+      consent_redirect
+      |> recycle()
+      |> get(
+        Routes.authorize_path(conn, :authorize, %{
+          response_type: "code",
+          client_id: client.id,
+          redirect_uri: redirect_uri,
+          scope: scope.name
+        })
+      )
+
+    assert URI.parse(redirected_to(response)).host == URI.parse(redirect_uri).host
+    assert URI.parse(redirected_to(response)).query =~ "code="
+  end
+
   test "another user's consent cannot authorize this user", %{
     conn: conn,
     user: user,
