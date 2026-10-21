@@ -5,6 +5,7 @@ defmodule BorutaWeb.AuthorizeControllerTest do
   import BorutaIdentity.AccountsFixtures
 
   alias Boruta.Oauth.Error
+  alias BorutaIdentity.Repo
   alias BorutaWeb.Oauth.AuthorizeController
 
   setup %{conn: conn} do
@@ -43,6 +44,46 @@ defmodule BorutaWeb.AuthorizeControllerTest do
         )
 
       assert redirected_to(conn) =~ IdentityRoutes.choose_session_path(conn, :index)
+    end
+
+    test "requires WebAuthn for a user with a registered credential and no TOTP", %{
+      conn: conn,
+      client: client,
+      redirect_uri: redirect_uri,
+      resource_owner: resource_owner
+    } do
+      identity_provider =
+        BorutaIdentity.Factory.insert(:identity_provider,
+          webauthnable: true,
+          enforce_webauthn: false,
+          enforce_totp: false
+        )
+
+      BorutaIdentity.Factory.insert(:client_identity_provider,
+        client_id: client.id,
+        identity_provider: identity_provider
+      )
+
+      resource_owner =
+        resource_owner
+        |> Ecto.Changeset.change(webauthn_registered_at: DateTime.utc_now())
+        |> Repo.update!()
+
+      conn =
+        conn
+        |> log_in(resource_owner)
+        |> init_test_session(session_chosen: true)
+        |> get(
+          Routes.authorize_path(conn, :authorize, %{
+            response_type: "token",
+            client_id: client.id,
+            redirect_uri: redirect_uri,
+            state: "state"
+          })
+        )
+
+      assert redirected_to(conn) =~
+               IdentityRoutes.user_session_path(conn, :initialize_webauthn)
     end
 
     @tag :skip
