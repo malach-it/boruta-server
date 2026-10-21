@@ -4,11 +4,12 @@ defmodule BorutaIdentity.AdminTest do
   import BorutaIdentity.AccountsFixtures
   import BorutaIdentity.Factory
 
+  alias Boruta.Oauth.Authorization.AccessToken
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.LdapError
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Accounts.UserAuthorizedScope
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Admin
   alias BorutaIdentity.Repo
 
@@ -160,10 +161,10 @@ defmodule BorutaIdentity.AdminTest do
       assert revoked_at
       refute refresh_revoked_at
       assert BorutaAuth.Repo.reload(code).revoked_at
-      assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
+      assert {:error, _} = AccessToken.authorize(value: access.value)
 
       assert {:error, _} =
-               Boruta.Oauth.Authorization.AccessToken.authorize(refresh_token: "delete-refresh")
+               AccessToken.authorize(refresh_token: "delete-refresh")
     end
   end
 
@@ -195,10 +196,10 @@ defmodule BorutaIdentity.AdminTest do
     assert BorutaAuth.Repo.reload(code).revoked_at
     assert BorutaAuth.Repo.reload(agent).revoked_at
     assert Boruta.CodesAdapter.get_by(value: code.value).revoked_at
-    assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
+    assert {:error, _} = AccessToken.authorize(value: access.value)
 
     assert {:error, _} =
-             Boruta.Oauth.Authorization.AccessToken.authorize(refresh_token: "block-refresh")
+             AccessToken.authorize(refresh_token: "block-refresh")
   end
 
   test "a blocked user cannot use a session token" do

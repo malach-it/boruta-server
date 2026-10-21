@@ -4,6 +4,8 @@ defmodule BorutaGateway.MnesiaSetup do
   alias BorutaGateway.MnesiaRepo, as: Repo
   alias BorutaGateway.ServiceRegistry.Record
   alias BorutaGateway.Upstreams.Upstream
+  alias Ecto.Adapters.Mnesia.Migrator
+  alias Ecto.Adapters.Mnesia.Source
 
   def setup do
     case Repo.__adapter__().storage_up(Repo.config()) do
@@ -13,14 +15,14 @@ defmodule BorutaGateway.MnesiaSetup do
     end
 
     migrations =
-      Ecto.Adapters.Mnesia.Migrator.compile(
+      Migrator.compile(
         schemas: [Upstream, Record],
         default_copy: :disc
       )
 
     {:ok, _, _} =
-      Ecto.Adapters.Mnesia.Migrator.with_repo(Repo, fn repo ->
-        Ecto.Adapters.Mnesia.Migrator.run(repo, migrations, sync: true)
+      Migrator.with_repo(Repo, fn repo ->
+        Migrator.run(repo, migrations, sync: true)
       end)
 
     Enum.each([Upstream, Record], &check_table_shape!/1)
@@ -29,11 +31,11 @@ defmodule BorutaGateway.MnesiaSetup do
   end
 
   def with_repo(fun) do
-    Ecto.Adapters.Mnesia.Migrator.with_repo(Repo, fun)
+    Migrator.with_repo(Repo, fun)
   end
 
   defp check_table_shape!(schema) do
-    source = Ecto.Adapters.Mnesia.Source.new(%{schema: schema})
+    source = Source.new(%{schema: schema})
     actual = :mnesia.table_info(source.table, :attributes)
 
     if actual != source.attributes do

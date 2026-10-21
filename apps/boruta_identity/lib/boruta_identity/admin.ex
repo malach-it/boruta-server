@@ -5,15 +5,15 @@ defmodule BorutaIdentity.Admin do
 
   import Ecto.Query
 
-  alias Boruta.Ecto.Admin
   alias Boruta.AccessTokensAdapter
   alias Boruta.AgentTokensAdapter
   alias Boruta.CodesAdapter
+  alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Token
   alias BorutaIdentity.Accounts.User
-  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserRole
+  alias BorutaIdentity.Accounts.UserToken
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Organizations.OrganizationUser
   alias BorutaIdentity.Repo

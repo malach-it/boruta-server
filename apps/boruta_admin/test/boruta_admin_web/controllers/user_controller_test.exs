@@ -5,6 +5,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
   import BorutaAdmin.IdentityFactory
 
   alias Boruta.Ecto.Admin
+  alias Boruta.Oauth.Authorization.AccessToken
   alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
@@ -531,7 +532,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
       user: %User{id: id} = user
     } do
       access = BorutaAdmin.Factory.insert(:token, sub: id, type: "access_token")
-      assert {:ok, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
+      assert {:ok, _} = AccessToken.authorize(value: access.value)
 
       conn =
         put(conn, Routes.admin_user_path(conn, :update, user),
@@ -542,7 +543,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
 
       assert %{"id" => ^id, "blocked" => true} = json_response(conn, 200)["data"]
       assert %User{blocked: true} = Repo.get!(User, id)
-      assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: access.value)
+      assert {:error, _} = AccessToken.authorize(value: access.value)
     end
 
     @tag authorized: ["users:manage:all"]
