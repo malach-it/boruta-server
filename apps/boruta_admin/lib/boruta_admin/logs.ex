@@ -30,6 +30,8 @@ defmodule BorutaAdmin.Logs do
   lines. Parsing, filtering, and aggregation remain centralized in this module.
   """
 
+  alias BorutaAuth.LogSanitizer
+
   @max_log_lines 10_000
   @log_attribute_regex ~r/([^\s=]+)=(?:"([^"]*)"|([^\s]+))/
   @request_log_regex ~r/\A(\d{4}-\d{2}-\d{2}T[^Z]+Z) request_id=([^\s]+) \[info\] ([^\s]+) (\w+) ([^\s]+) - (\w+) (\d{3}) from ([^\s]+) in (\d+)(µs|ms)$/u
@@ -282,6 +284,8 @@ defmodule BorutaAdmin.Logs do
   end
 
   defp parse_request_log(log_line) do
+    log_line = LogSanitizer.redact_sensitive_path_tokens(log_line)
+
     case Regex.run(@request_log_regex, log_line) do
       nil ->
         nil

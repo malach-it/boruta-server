@@ -3,6 +3,7 @@ defmodule BorutaIdentity.Logger do
 
   require Logger
 
+  alias BorutaAuth.LogSanitizer
   alias BorutaIdentityWeb.ErrorHelpers
 
   def start do
@@ -85,7 +86,8 @@ defmodule BorutaIdentity.Logger do
         Logger.log(
           level,
           fn ->
-            %{method: method, request_path: path, status: status, state: state} = conn
+            %{method: method, request_path: request_path, status: status, state: state} = conn
+            path = LogSanitizer.redact_sensitive_path_tokens(request_path)
             status = Integer.to_string(status)
 
             [
