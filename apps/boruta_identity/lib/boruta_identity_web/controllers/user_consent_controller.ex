@@ -6,6 +6,7 @@ defmodule BorutaIdentityWeb.UserConsentController do
   import BorutaIdentityWeb.Authenticable,
     only: [client_id_from_request: 1, scope_from_request: 1, after_sign_in_path: 1]
 
+  alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts
   alias BorutaIdentityWeb.ErrorHelpers
   alias BorutaIdentityWeb.TemplateView
@@ -23,13 +24,22 @@ defmodule BorutaIdentityWeb.UserConsentController do
   def consent(conn, params) do
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
+    requested_scopes = Scope.split(scope_from_request(conn))
 
-    consent_params = %{
-      client_id: client_id,
-      scopes: params["scopes"] || []
-    }
+    consent_params = case params["scopes"] do
+      scopes when is_list(scopes) ->
+        %{
+          client_id: client_id,
+          scopes: Enum.filter(scopes, &is_binary/1) || []
+        }
+      _ ->
+        %{
+          client_id: client_id,
+          scopes: []
+        }
+    end
 
-    Accounts.consent(conn, client_id, current_user, consent_params, __MODULE__)
+    Accounts.consent(conn, client_id, current_user, requested_scopes, consent_params, __MODULE__)
   end
 
   @impl BorutaIdentity.Accounts.ConsentApplication

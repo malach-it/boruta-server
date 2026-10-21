@@ -360,12 +360,24 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp do_authorize(conn, current_user) do
-    conn
-    |> delete_session(:preauthorizations)
-    |> Oauth.authorize(
-      resource_owner(conn, current_user),
-      __MODULE__
-    )
+    client_id = conn.query_params[:client_id]
+    scope = conn.query_params[:scope] |> dbg
+    # TODO invert dependency
+    case Accounts.consented?(current_user, client_id, Oauth.Scope.split(scope)) |> dbg do
+      true ->
+        conn
+        |> delete_session(:preauthorizations)
+        |> Oauth.authorize(
+          resource_owner(conn, current_user),
+          __MODULE__
+        )
+
+      false ->
+        raise %BorutaWeb.AuthorizeError{
+          message: "Requested scopes require consent.",
+          plug_status: :unprocessable_entity
+        }
+    end
   end
 
   @impl Boruta.Oauth.AuthorizeApplication

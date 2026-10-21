@@ -143,7 +143,8 @@ defmodule BorutaIdentity.Accounts do
   ## Consent
 
   defdelegate initialize_consent(context, client_id, user, scope, module), to: Consents
-  defdelegate consent(context, client_id, user, params, module), to: Consents
+  defdelegate consent(context, client_id, user, requested_scopes, params, module), to: Consents
+  defdelegate consented?(user, client_id, scopes), to: Consents
 
   ## Choose session
 

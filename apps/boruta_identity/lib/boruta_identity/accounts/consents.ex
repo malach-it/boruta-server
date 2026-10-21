@@ -29,6 +29,7 @@ defmodule BorutaIdentity.Accounts.Consents do
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders
+  alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.Repo
 
   @spec initialize_consent(
@@ -39,12 +40,12 @@ defmodule BorutaIdentity.Accounts.Consents do
           module :: atom()
         ) :: callback_result :: any()
   defwithclientidp initialize_consent(
-                    context,
-                    client_id,
-                    user,
-                    scope,
-                    module
-                  ) do
+                     context,
+                     client_id,
+                     user,
+                     scope,
+                     module
+                   ) do
     client = Clients.get_client(client_id)
     scopes = Scope.split(scope)
 
@@ -53,6 +54,7 @@ defmodule BorutaIdentity.Accounts.Consents do
         scopes = Admin.get_scopes_by_names(scopes)
 
         module.consent_initialized(context, client, scopes, new_consent_template(client_idp))
+
       _ ->
         module.consent_not_required(context)
     end
@@ -67,16 +69,26 @@ defmodule BorutaIdentity.Accounts.Consents do
           context :: any(),
           client_id :: String.t(),
           user :: User.t(),
+          requested_scopes :: list(String.t()),
           params :: consent_params(),
           module :: atom()
         ) :: callback_result :: any()
-  defwithclientidp consent(context, client_id, user, params, module) do
+  defwithclientidp consent(context, client_id, user, requested_scopes, params, module) do
     _client_idp = client_idp
 
-    case user
-         |> User.consent_changeset(%{consents: [params]})
-         |> Repo.update() do
-      {:ok, _user} ->
+    scopes = requested_scopes -- (requested_scopes -- params[:scopes])
+    user_id = user.id
+
+    consent =
+      Repo.one(
+        from co in Consent,
+          where: co.user_id == ^user_id and co.client_id == ^client_id
+      ) || %Consent{user_id: user.id, client_id: client_id}
+
+    case consent
+         |> Consent.changeset(%{scopes: scopes})
+         |> Repo.insert_or_update() do
+      {:ok, _consent} ->
         module.consented(context, params[:scopes])
 
       {:error, changeset} ->
@@ -84,13 +96,24 @@ defmodule BorutaIdentity.Accounts.Consents do
     end
   end
 
-  @spec consented?(user :: User.t(), client_id :: String.t(), scopes :: list(String.t())) :: boolean()
+  @spec consented?(user :: User.t(), client_id :: String.t(), scopes :: list(String.t())) ::
+          boolean()
   def consented?(%User{}, _client_id, []), do: true
 
   def consented?(%User{id: user_id}, client_id, scopes) do
-    case Repo.one(from c in Consent, where: c.user_id == ^user_id and c.client_id == ^client_id) do
+    case Repo.one(
+           from co in Consent,
+             join: cidp in ClientIdentityProvider,
+             on: cidp.client_id == ^client_id,
+             join: idp in assoc(cidp, :identity_provider),
+             select: {idp.consentable, co.scopes},
+             where:
+               co.user_id == ^user_id and
+                 co.client_id == ^client_id
+         ) do
       nil -> false
-      consent -> Enum.empty?(scopes -- consent.scopes)
+      {true, consented_scopes} -> Enum.empty?(scopes -- (consented_scopes || []))
+      {false, _} -> true
     end
   end
 
