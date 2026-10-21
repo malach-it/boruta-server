@@ -2,7 +2,7 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
-## [Unreleased]
+## [0.13.0] - 2026-10-21
 
 ### Added
 
@@ -13,6 +13,8 @@
 ### Changed
 
 - [admin] request, business event, and token dashboard date filters use HTML forms
+- [infra] example Docker Compose configuration no longer includes the sidecar gateway
+- [ssi] anonymous wallet authorization can proceed without user consent
 
 ### Fixed
 
@@ -22,13 +24,16 @@
 - [cli] configuration file uploads accept release-local file paths
 - [gateway] invalid TLS handshakes no longer stop HTTPS gateway acceptors
 - [ssi] credential status token resolution verifies tokens against client DIDs
+- [ssi] DID service HTTP requests trust the configured service hosts
 - [wallet] imported credentials are encrypted in local storage
+- [identity] non-consentable clients no longer enter a consent redirect loop
 
 ### Security
 
 - [identity] blocking or deleting a user invalidates browser sessions, authorization codes, and access tokens; the admin API rejects bearer tokens belonging to blocked or deleted users
 - [identity] prevent password-reset and confirmation tokens from being exposed in new or retained request logs ([GHSA-xr62-x93r-6qmf](https://github.com/malach-it/boruta-server/security/advisories/GHSA-xr62-x93r-6qmf))
 - [identity] require WebAuthn authentication for users with a registered credential when it is not enforced by the identity provider ([GHSA-pf3v-7cr4-cw64](https://github.com/malach-it/boruta-server/security/advisories/GHSA-pf3v-7cr4-cw64))
+- [auth][identity] enforce required user consent before issuing authorization codes, including when an authenticated user revisits the authorization URL ([GHSA-cqjw-835x-pg9j](https://github.com/malach-it/boruta-server/security/advisories/GHSA-cqjw-835x-pg9j))
 
 
 ## [0.12.0] - 2026-09-11

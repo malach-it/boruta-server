@@ -4,7 +4,7 @@ defmodule BorutaWeb.MixProject do
   def project do
     [
       app: :boruta_web,
-      version: "0.1.0",
+      version: "0.13.0",
       build_path: "../../_build",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
