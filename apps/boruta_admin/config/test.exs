@@ -26,7 +26,7 @@ config :boruta_web, BorutaWeb.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :boruta_gateway, BorutaGateway.Repo,
+config :boruta_gateway, BorutaGateway.PostgresRepo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway_test",

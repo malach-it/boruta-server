@@ -4,7 +4,7 @@ defmodule BorutaGateway.Release do
 
   def migrate do
     for repo <- repos() do
-      if repo == BorutaGateway.Repo and repo.backend() == "mnesia" do
+      if repo == BorutaGateway.MnesiaRepo do
         BorutaGateway.MnesiaSetup.setup()
       else
         repo.__adapter__().storage_up(repo.config())
@@ -22,7 +22,9 @@ defmodule BorutaGateway.Release do
   end
 
   def rollback(repo, version) do
-    if repo == BorutaGateway.Repo and repo.backend() == "mnesia" do
+    repo = if repo == BorutaGateway.Repo, do: repo.repo(), else: repo
+
+    if repo == BorutaGateway.MnesiaRepo do
       raise "Mnesia tables use schema-based setup and cannot be rolled back by SQL migration version"
     end
 
@@ -38,7 +40,12 @@ defmodule BorutaGateway.Release do
   defp repos do
     Enum.flat_map(@apps, fn app ->
       Application.load(app)
+
       Application.fetch_env!(app, :ecto_repos)
+      |> Enum.map(fn
+        BorutaGateway.PostgresRepo -> BorutaGateway.Repo.repo()
+        repo -> repo
+      end)
     end)
     |> Enum.uniq()
   end

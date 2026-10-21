@@ -1,6 +1,6 @@
 import Config
 
-config :boruta_gateway, BorutaGateway.Repo,
+config :boruta_gateway, BorutaGateway.PostgresRepo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway_test",

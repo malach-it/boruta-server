@@ -1,10 +1,10 @@
 # Optional Mnesia gateway repository
 
-`BorutaGateway.Repo` uses PostgreSQL by default. To build it with
-`ecto3_mnesia` 0.3.0 instead, set `BORUTA_GATEWAY_BACKEND=mnesia` **before
-compiling** the umbrella or building a release. Ecto selects the adapter at
-compile time, so changing this variable on an existing release does not switch
-its repository.
+`BorutaGateway.Repo` uses PostgreSQL by default. Both Ecto repositories are
+compiled into the same release. Set `BORUTA_GATEWAY_BACKEND=mnesia` when starting
+the gateway to route through the `ecto3_mnesia` 0.3.0 repository. Restart the
+application after changing the backend; the selected repository is started with
+the application.
 
 Set `BORUTA_GATEWAY_MNESIA_DIR` to an absolute path on persistent storage. The
 gateway creates the Mnesia schema and the `upstreams` and
@@ -18,15 +18,14 @@ For example, from the umbrella root:
 ```sh
 BORUTA_GATEWAY_BACKEND=mnesia \
 BORUTA_GATEWAY_MNESIA_DIR=/var/lib/boruta/gateway-mnesia \
-mix compile --force
+mix run --no-halt
 ```
 
-When switching an existing build between PostgreSQL and Mnesia, run
-`mix compile --force` with the new environment setting before starting it.
+An existing release can select either backend at startup without recompiling.
 
 `boruta_auth` and the other umbrella repositories still use PostgreSQL. Admin
 reads and writes gateway upstreams through `BorutaGateway.Repo`, so an admin
-release must be built with the same backend and reach the same Mnesia cluster.
+release must select the same backend at startup and reach the same Mnesia cluster.
 The Mnesia directory starts empty; existing PostgreSQL gateway rows are not
 copied automatically.
 

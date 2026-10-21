@@ -1,5 +1,8 @@
 import Config
 
+config :boruta_gateway,
+  repo_backend: System.get_env("BORUTA_GATEWAY_BACKEND", "postgres")
+
 config :boruta_auth, BorutaAuth.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
@@ -22,12 +25,14 @@ config :boruta_identity, BorutaIdentity.Repo,
   pool_size: String.to_integer(System.get_env("POOL_SIZE", "5")),
   after_connect: {BorutaIdentity.Repo, :set_limit, []}
 
-config :boruta_gateway, BorutaGateway.Repo,
+config :boruta_gateway, BorutaGateway.MnesiaRepo,
   path:
     System.get_env(
       "BORUTA_GATEWAY_MNESIA_DIR",
-      Path.expand("../tmp/boruta_gateway_mnesia", __DIR__)
-    ),
+      Path.expand("../boruta_gateway_mnesia", __DIR__)
+    )
+
+config :boruta_gateway, BorutaGateway.PostgresRepo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database: System.get_env("POSTGRES_DATABASE") || "boruta_gateway",

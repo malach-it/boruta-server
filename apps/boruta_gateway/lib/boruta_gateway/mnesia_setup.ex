@@ -1,7 +1,7 @@
 defmodule BorutaGateway.MnesiaSetup do
   @moduledoc false
 
-  alias BorutaGateway.Repo
+  alias BorutaGateway.MnesiaRepo, as: Repo
   alias BorutaGateway.ServiceRegistry.Record
   alias BorutaGateway.Upstreams.Upstream
 

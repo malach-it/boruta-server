@@ -11,7 +11,7 @@ defmodule BorutaGateway.Application do
   @impl Application
   def start(_type, _args) do
     children = [
-      BorutaGateway.Repo,
+      BorutaGateway.Repo.repo(),
       %{
         id: ServiceRegistry,
         start: {ServiceRegistry, :start_link, []}
@@ -179,7 +179,7 @@ defmodule BorutaGateway.Application do
     if BorutaGateway.Repo.backend() == "mnesia" do
       BorutaGateway.MnesiaSetup.setup()
     else
-      repo = BorutaGateway.Repo
+      repo = BorutaGateway.Repo.repo()
       repo.__adapter__().storage_up(repo.config())
       Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
     end
@@ -194,7 +194,7 @@ defmodule BorutaGateway.Application do
       with_repo =
         if BorutaGateway.Repo.backend() == "mnesia",
           do: &BorutaGateway.MnesiaSetup.with_repo/1,
-          else: &Ecto.Migrator.with_repo(BorutaGateway.Repo, &1)
+          else: &Ecto.Migrator.with_repo(BorutaGateway.Repo.repo(), &1)
 
       {:ok, _, _} = with_repo.(fn _repo -> ConfigurationLoader.from_file!(configuration_path) end)
     end

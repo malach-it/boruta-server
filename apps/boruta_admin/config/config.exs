@@ -5,7 +5,7 @@ config :boruta_admin,
     BorutaAdmin.Repo,
     BorutaAuth.Repo,
     BorutaIdentity.Repo,
-    BorutaGateway.Repo,
+    BorutaGateway.PostgresRepo,
     BorutaWeb.Repo
   ]
 
