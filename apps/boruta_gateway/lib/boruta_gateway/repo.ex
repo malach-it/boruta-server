@@ -48,6 +48,7 @@ defmodule BorutaGateway.Repo do
 
   def config, do: repo().config()
   def __adapter__, do: repo().__adapter__()
+  def get_dynamic_repo, do: repo().get_dynamic_repo()
 
   def listen(event_name) do
     if backend() == "mnesia" do
