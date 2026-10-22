@@ -10,7 +10,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   use BorutaWeb, :controller
 
   import BorutaIdentityWeb.Authenticable,
-    only: [request_param: 1, get_user_session: 1]
+    only: [request_param: 1, get_user_session: 1, remove_user_session: 1]
 
   alias Boruta.ClientsAdapter
   alias Boruta.Oauth
@@ -23,23 +23,42 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias Boruta.Openid.VerifiablePresentationResponse
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.Deliveries
+  alias BorutaIdentity.Accounts.Sessions
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.VerifiableCredentials
   alias BorutaIdentity.Accounts.VerifiablePresentations
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.ResourceOwners
+  alias BorutaIdentityWeb.MachineSession
   alias BorutaIdentityWeb.Router.Helpers, as: IdentityRoutes
   alias BorutaIdentityWeb.TemplateView
   alias BorutaWeb.PresentationServer
 
-  @public_response_types ["id_token", "code", "vp_token"]
+  @siopv2_response_types ["id_token", "code"]
+  @public_response_types @siopv2_response_types ++ ["vp_token"]
   @presentation_timeout 30_000
 
   def authorize(%Plug.Conn{} = conn, _params) do
-    current_user = conn.assigns[:current_user]
-
     conn = put_unsigned_request(conn)
+
+    {conn, current_user} =
+      case conn.assigns[:current_user] do
+        %User{account_type: "machine"} ->
+          case MachineSession.from_session_authorize(conn) do
+            nil ->
+              _ = Sessions.delete_session(get_user_session(conn))
+              {remove_user_session(conn), nil}
+
+            user ->
+              {conn, user}
+          end
+
+        user ->
+          {conn, user}
+      end
+
+    conn = assign(conn, :current_user, current_user)
 
     with {:unchanged, conn} <- prompt_redirection(conn, current_user),
          {:unchanged, conn} <- max_age_redirection(conn, current_user),
@@ -96,19 +115,23 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
-  defp public_client_request?(%Plug.Conn{
-         query_params: %{
-           "response_type" => response_type,
-           "client_metadata" => _client_metadata
-         }
-       }) do
-    response_type
-    |> String.split(" ")
-    |> List.first()
-    |> then(&(&1 in @public_response_types))
-  end
+  defp public_client_request?(
+         %Plug.Conn{
+           query_params: %{
+             "response_type" => _response_type,
+             "client_metadata" => _client_metadata
+           }
+         } = conn
+       ),
+       do: first_response_type(conn) in @public_response_types
 
   defp public_client_request?(_conn), do: false
+
+  defp first_response_type(%Plug.Conn{query_params: %{"response_type" => response_type}})
+       when is_binary(response_type),
+       do: response_type |> String.split(" ") |> List.first()
+
+  defp first_response_type(_conn), do: nil
 
   defp redirect_if_mfa_required(conn, current_user) do
     case ensure_mfa(conn, current_user) do
@@ -153,7 +176,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp ensure_mfa(%Plug.Conn{query_params: query_params} = conn, current_user) do
     identity_provider =
       IdentityProviders.get_identity_provider_by_client_id(query_params["client_id"]) ||
-      IdentityProviders.get_identity_provider_by_client_id(ClientsAdapter.public!().id)
+        IdentityProviders.get_identity_provider_by_client_id(ClientsAdapter.public!().id)
 
     totp_authenticated = (get_session(conn, :totp_authenticated) || %{})[get_user_session(conn)]
 
@@ -364,7 +387,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     client_id = conn.query_params["client_id"]
     scope = conn.query_params["scope"]
     # TODO invert dependency
-    case public_client_request?(conn) ||
+    case initial_public_authorization?(conn, current_user) ||
            Accounts.consented?(current_user, client_id, Oauth.Scope.split(scope)) do
       true ->
         conn
@@ -390,24 +413,28 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     end
   end
 
+  defp initial_public_authorization?(conn, current_user) do
+    if public_client_request?(conn) && is_nil(conn.query_params["code"]) do
+      case first_response_type(conn) do
+        response_type when response_type in @siopv2_response_types -> true
+        "vp_token" -> is_nil(current_user)
+        _ -> false
+      end
+    else
+      false
+    end
+  end
+
   @impl Boruta.Oauth.AuthorizeApplication
   def preauthorize_success(conn, %AuthorizationSuccess{
-        sub: "did:" <> _key = sub,
+        sub: "did:" <> _key,
         response_types: response_types
       }) do
     case Enum.map(@public_response_types, &String.split(&1, " "))
          |> List.first()
          |> Enum.member?(List.first(response_types)) do
       true ->
-        Oauth.authorize(
-          conn,
-          %ResourceOwner{
-            sub: sub,
-            presentation_configuration:
-              VerifiablePresentations.public_presentation_configuration()
-          },
-          __MODULE__
-        )
+        do_authorize(conn, conn.assigns[:current_user])
 
       false ->
         preauthorize_success(conn, :preauthorized)
@@ -825,15 +852,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       end
 
     %ResourceOwner{
-      sub: current_user.id || anonymous_sub,
+      sub: machine_sub(current_user) || current_user.id || anonymous_sub,
       username: current_user.username,
       last_login_at: current_user.last_login_at,
       blocked: current_user.blocked,
-      extra_claims:
-        Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata),
+      extra_claims: (current_user.id &&
+        Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata)) || %{},
       authorization_details: VerifiableCredentials.authorization_details(current_user, scope),
       credential_configuration: VerifiableCredentials.credential_configuration(current_user),
       presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
     }
   end
+
+  defp machine_sub(%User{account_type: "machine", uid: "did:" <> _key = did}), do: did
+  defp machine_sub(_user), do: nil
 end

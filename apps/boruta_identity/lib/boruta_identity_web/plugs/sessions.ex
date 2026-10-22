@@ -6,6 +6,8 @@ defmodule BorutaIdentityWeb.Sessions do
   import BorutaIdentityWeb.Authenticable, only: [remember_me_cookie: 0, after_sign_in_path: 1]
 
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.Accounts.User
+  alias BorutaIdentityWeb.MachineSession
 
   @doc """
   Authenticates the user by looking into the session
@@ -55,13 +57,21 @@ defmodule BorutaIdentityWeb.Sessions do
   """
   @spec require_authenticated_user(conn :: Plug.Conn.t(), list()) :: conn :: Plug.Conn.t()
   def require_authenticated_user(conn, _opts) do
-    if conn.assigns[:current_user] do
-      conn
-    else
-      conn
-      |> put_flash(:error, "You must log in to access this page.")
-      |> redirect(to: Routes.user_session_path(conn, :new, conn.query_params))
-      |> halt()
+    case conn.assigns[:current_user] do
+      %User{account_type: "machine"} ->
+        case MachineSession.from_session_consent(conn) do
+          nil -> conn |> send_resp(:forbidden, "Invalid machine authorization session.") |> halt()
+          user -> assign(conn, :current_user, user)
+        end
+
+      %User{} ->
+        conn
+
+      _ ->
+        conn
+        |> put_flash(:error, "You must log in to access this page.")
+        |> redirect(to: Routes.user_session_path(conn, :new, conn.query_params))
+        |> halt()
     end
   end
 end

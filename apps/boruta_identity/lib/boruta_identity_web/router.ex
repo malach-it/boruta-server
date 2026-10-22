@@ -59,11 +59,11 @@ defmodule BorutaIdentityWeb.Router do
     get("/users/webauthn", UserSessionController, :initialize_webauthn)
     post("/users/webauthn_authenticate", UserSessionController, :authenticate_webauthn)
     get("/users/choose_session", ChooseSessionController, :index)
-    get("/users/consent", UserConsentController, :index)
-    post("/users/consent", UserConsentController, :consent)
     get("/users/settings", UserSettingsController, :edit)
     put("/users/settings", UserSettingsController, :update)
     post("/users/destroy", UserSettingsController, :destroy)
+    get("/users/consent", UserConsentController, :index)
+    post("/users/consent", UserConsentController, :consent)
   end
 
   scope "/", BorutaIdentityWeb do

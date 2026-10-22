@@ -23,6 +23,7 @@ defmodule BorutaIdentity.Accounts.Consents do
   import BorutaIdentity.Accounts.Utils, only: [defwithclientidp: 2]
   import Ecto.Query, only: [from: 2]
 
+  alias Boruta.ClientsAdapter
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Clients
   alias Boruta.Oauth.Scope
@@ -30,6 +31,7 @@ defmodule BorutaIdentity.Accounts.Consents do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
+  alias BorutaIdentity.IdentityProviders.IdentityProvider
   alias BorutaIdentity.Repo
 
   @spec list_user_consents(Ecto.UUID.t()) :: list(Consent.t())
@@ -55,7 +57,12 @@ defmodule BorutaIdentity.Accounts.Consents do
                      scope,
                      module
                    ) do
-    client = Clients.get_client(client_id)
+    client =
+      case client_id do
+        "did:" <> _key -> %{ClientsAdapter.public!() | name: client_id}
+        _ -> Clients.get_client(client_id)
+      end
+
     scopes = Scope.split(scope)
 
     case {client_idp.consentable, consented?(user, client_id, scopes)} do
@@ -108,6 +115,30 @@ defmodule BorutaIdentity.Accounts.Consents do
   @spec consented?(user :: User.t(), client_id :: String.t(), scopes :: list(String.t())) ::
           boolean()
   def consented?(%User{}, _client_id, []), do: true
+
+  def consented?(%User{id: user_id}, "did:" <> _key = client_id, scopes) do
+    public_client_id = ClientsAdapter.public!().id
+
+    case Repo.one(
+           from cidp in ClientIdentityProvider,
+             join: idp in assoc(cidp, :identity_provider),
+             left_join: co in Consent,
+             on: co.client_id == ^client_id and co.user_id == ^user_id,
+             select: {idp.consentable, co.scopes},
+             where: cidp.client_id == ^public_client_id
+         ) do
+      nil -> false
+      {true, consented_scopes} -> Enum.empty?(scopes -- (consented_scopes || []))
+      {false, _} -> true
+    end
+  end
+
+  def consented?(_user, "did:" <> _key = client_id, _scopes) do
+    case IdentityProviders.get_identity_provider_by_client_id(client_id) do
+      %IdentityProvider{consentable: false} -> true
+      _ -> false
+    end
+  end
 
   def consented?(%User{id: user_id}, client_id, scopes) do
     case Repo.one(

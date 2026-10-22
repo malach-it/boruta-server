@@ -7,9 +7,14 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   alias Boruta.Oauth
   alias Boruta.Oauth.Error
+  alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.TokenResponse
   alias Boruta.Openid
   alias Boruta.Openid.DirectPostResponse
+  alias BorutaIdentity.Accounts.Machine
+  alias BorutaIdentity.Accounts.Sessions
+  alias BorutaIdentity.IdentityProviders.Backend
+  alias BorutaIdentityWeb.Authenticable
   alias BorutaWeb.OauthView
   alias BorutaWeb.PresentationServer
 
@@ -184,9 +189,33 @@ defmodule BorutaWeb.Oauth.TokenController do
 
   def direct_post_success(conn, %DirectPostResponse{id_token: id_token, code: code} = response)
       when not is_nil(id_token) do
-    {:ok, %{"kid" => kid}} = Joken.peek_header(id_token)
-    emit_direct_post_success(response)
+    with {:ok, %{"kid" => kid}} <- Joken.peek_header(id_token),
+         true <- kid == code.sub,
+         {:ok, machine} <- Machine.domain_user!(%ResourceOwner{sub: id_token}, Backend.default!()),
+         {:ok, machine, session_token} <- Sessions.create_user_session(machine) do
+      conn =
+        conn
+        |> fetch_session()
+        |> Authenticable.store_user_session(session_token)
+        |> put_session(:machine_authorization, %{
+          code: code.value,
+          client_id: code.sub,
+          user_id: machine.id
+        })
 
+      emit_direct_post_success(response)
+      redirect_after_machine_authentication(conn, response, kid)
+    else
+      _ ->
+        authentication_failure(conn, %Error{
+          status: :unauthorized,
+          error: :invalid_resource_owner,
+          error_description: "Machine authentication failed."
+        })
+    end
+  end
+
+  defp redirect_after_machine_authentication(conn, response, kid) do
     case tl(String.split(response.code.response_type, " ")) do
       [] ->
         query =
@@ -217,7 +246,7 @@ defmodule BorutaWeb.Oauth.TokenController do
 
         redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
 
-        PresentationServer.authenticated(code.value, redirect_uri)
+        PresentationServer.authenticated(response.code.value, redirect_uri)
         redirect(conn, external: redirect_uri)
     end
   end

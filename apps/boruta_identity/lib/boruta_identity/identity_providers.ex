@@ -6,6 +6,7 @@ defmodule BorutaIdentity.IdentityProviders do
   import Ecto.Query, warn: false
   alias BorutaIdentity.Repo
 
+  alias Boruta.ClientsAdapter
   alias Boruta.Ecto.Scopes
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.IdentityProviders.BackendRole
@@ -119,6 +120,28 @@ defmodule BorutaIdentity.IdentityProviders do
       {0, []} ->
         {:ok, nil}
     end
+  end
+
+  def get_identity_provider_by_client_id("did:" <> _key) do
+    client_id = ClientsAdapter.public!().id
+
+    cache_get({__MODULE__, :identity_provider_by_client_id, client_id}, fn ->
+      case Ecto.UUID.cast(client_id) do
+        {:ok, client_id} ->
+          Repo.one(
+            from(idp in IdentityProvider,
+              join: b in assoc(idp, :backend),
+              left_join: et in assoc(b, :email_templates),
+              join: cidp in assoc(idp, :client_identity_providers),
+              where: cidp.client_id == ^client_id,
+              preload: [backend: {b, email_templates: et}]
+            )
+          )
+
+        :error ->
+          nil
+      end
+    end)
   end
 
   def get_identity_provider_by_client_id(client_id) do

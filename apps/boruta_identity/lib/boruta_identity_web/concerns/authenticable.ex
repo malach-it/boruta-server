@@ -3,7 +3,6 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   use BorutaIdentityWeb, :controller
 
-  alias Boruta.ClientsAdapter
   alias Boruta.Oauth
   alias BorutaIdentity.Accounts
 
@@ -44,6 +43,8 @@ defmodule BorutaIdentityWeb.Authenticable do
     conn
     |> delete_resp_cookie(remember_me_cookie())
     |> delete_session(@session_key)
+    |> delete_session(:machine_authorization)
+    |> delete_session(:live_socket_id)
     |> delete_session(:session_chosen)
     |> delete_session(:preauthorizations)
     |> delete_session(:totp_authenticated)
@@ -73,11 +74,11 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec request_param(conn :: Plug.Conn.t()) :: request_param :: String.t()
   def request_param(conn) do
     case Oauth.Request.authorize_request(conn, %Oauth.ResourceOwner{sub: ""}) do
-      {:ok, %_{client_id: "did:" <> _key, scope: scope}} ->
+      {:ok, %_{client_id: "did:" <> _key = client_id, scope: scope}} ->
         {:ok, jwt, _payload} =
           Joken.encode_and_sign(
             %{
-              "client_id" => ClientsAdapter.public!().id,
+              "client_id" => client_id,
               "scope" => scope,
               "user_return_to" => user_return_to(conn)
             },
