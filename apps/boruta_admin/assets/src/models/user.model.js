@@ -10,6 +10,7 @@ const defaults = {
   loading: false,
   authorize_scopes: false,
   authorized_scopes: [],
+  consents: [],
   roles: [],
   organizations: [],
   uid: '',
@@ -47,6 +48,7 @@ const assign = {
       return { model: new Scope(scope) }
     })
   },
+  consents: function ({ consents }) { this.consents = consents || [] },
   roles: function ({ roles }) {
     this.roles = roles.map((role) => {
       return { model: new Role(role) }

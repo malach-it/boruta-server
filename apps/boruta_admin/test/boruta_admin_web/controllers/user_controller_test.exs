@@ -56,6 +56,7 @@ defmodule BorutaAdminWeb.UserControllerTest do
                "resource" => ["you are unauthorized to access this resource."]
              }
            }
+
   end
 
   @tag user_authorized: ["users:manage:all"]
@@ -134,6 +135,32 @@ defmodule BorutaAdminWeb.UserControllerTest do
       assert %{"last_login_at" => rendered_last_login_at} = json_response(conn, 200)["data"]
       assert {:ok, rendered_last_login_at, 0} = DateTime.from_iso8601(rendered_last_login_at)
       assert DateTime.compare(rendered_last_login_at, last_login_at) == :eq
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "lists user consents", %{conn: conn} do
+      user = insert(:user)
+      other_user = insert(:user)
+
+      consent =
+        insert(:consent, user_id: user.id, client_id: "did:example:client", scopes: ["openid"])
+
+      insert(:consent, user_id: other_user.id, scopes: ["profile"])
+
+      conn = get(conn, Routes.admin_user_path(conn, :show, user))
+
+      assert [
+               %{
+                 "id" => id,
+                 "client_id" => "did:example:client",
+                 "scopes" => ["openid"],
+                 "updated_at" => updated_at
+               }
+             ] =
+               json_response(conn, 200)["data"]["consents"]
+
+      assert id == consent.id
+      assert is_binary(updated_at)
     end
   end
 

@@ -50,6 +50,32 @@
         </div>
         <div class="twelve wide column">
           <UserForm :user="user" @submit="updateUser()" @back="back()" action="Update">
+            <template #consents>
+              <section class="user-consents">
+                <h3>Consents</h3>
+                <div v-if="!user.consents.length" class="ui info message">No consents recorded.</div>
+                <div v-else class="ui three column stackable grid">
+                  <div v-for="consent in user.consents" :key="consent.id" class="ui column">
+                    <div class="ui consent highlightable segment">
+                      <div class="ui attribute list">
+                        <div class="item">
+                          <span class="header">Client ID</span>
+                          <span class="description consent-client-id">{{ consent.client_id }}</span>
+                        </div>
+                        <div class="item">
+                          <span class="header">Scopes</span>
+                          <span class="description">{{ consent.scopes.join(', ') }}</span>
+                        </div>
+                        <div class="item">
+                          <span class="header">Updated at</span>
+                          <span class="description">{{ formatDate(consent.updated_at) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </template>
             <template #activity>
               <div class="user-activity">
                 <div class="activity-heading">
@@ -221,6 +247,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.consent-client-id {
+  overflow-wrap: anywhere;
+}
+
 .activity-heading {
   align-items: flex-start;
   display: flex;

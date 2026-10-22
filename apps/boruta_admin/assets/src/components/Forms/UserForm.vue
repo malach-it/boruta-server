@@ -79,6 +79,7 @@
         <RolesField :currentRoles="user.roles" @delete-role="deleteRole" @add-role="addRole" />
         <h3>Authorized scopes</h3>
         <ScopesField :currentScopes="user.authorized_scopes" @delete-scope="deleteScope" @add-scope="addScope" />
+        <slot name="consents" />
       </div>
       <div v-if="$slots.activity" ref="activity" data-tab="activity" class="ui bottom attached tab segment">
         <slot v-if="activeTab === 'activity'" name="activity" />

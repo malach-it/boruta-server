@@ -25,7 +25,11 @@ defmodule BorutaAdminWeb.UserView do
   end
 
   def render("show.json", %{user: user}) do
-    %{data: render_one(user, UserView, "user.json")}
+    consents =
+      Accounts.list_user_consents(user.id)
+      |> Enum.map(&Map.take(&1, [:id, :client_id, :scopes, :updated_at]))
+
+    %{data: render_one(user, UserView, "user.json") |> Map.put(:consents, consents)}
   end
 
   def render("user.json", %{user: user}) do

@@ -32,6 +32,15 @@ defmodule BorutaIdentity.Accounts.Consents do
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.Repo
 
+  @spec list_user_consents(Ecto.UUID.t()) :: list(Consent.t())
+  def list_user_consents(user_id) do
+    Repo.all(
+      from consent in Consent,
+        where: consent.user_id == ^user_id,
+        order_by: [desc: consent.updated_at]
+    )
+  end
+
   @spec initialize_consent(
           context :: any(),
           client_id :: String.t(),
