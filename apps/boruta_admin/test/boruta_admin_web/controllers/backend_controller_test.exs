@@ -250,6 +250,29 @@ defmodule BorutaAdminWeb.BackendControllerTest do
                "type" => "Elixir.BorutaIdentity.Accounts.Internal"
              } = json_response(conn, 200)["data"]
     end
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "persists and returns a metadata attribute default", %{conn: conn, backend: backend} do
+      fields = [
+        %{
+          "attribute_name" => "job_title",
+          "user_editable" => true,
+          "scopes" => ["credential"],
+          "default_value" => "Engineer"
+        }
+      ]
+
+      conn =
+        patch(conn, Routes.admin_backend_path(conn, :update, backend), %{
+          "backend" => %{"metadata_fields" => fields}
+        })
+
+      assert json_response(conn, 200)["data"]["metadata_fields"] == fields
+      assert Repo.get!(Backend, backend.id).metadata_fields == fields
+
+      conn = get(conn, Routes.admin_backend_path(conn, :show, backend))
+      assert json_response(conn, 200)["data"]["metadata_fields"] == fields
+    end
   end
 
   describe "delete" do

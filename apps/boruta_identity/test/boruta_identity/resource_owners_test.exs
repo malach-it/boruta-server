@@ -140,6 +140,7 @@ defmodule BorutaIdentity.ResourceOwnersTest do
       Repo.insert(%UserRole{user_id: user.id, role_id: role.id})
 
       role_name = role.name
+
       assert %{"roles" => [^role_name]} = ResourceOwners.claims(%ResourceOwner{sub: user.id}, "profile")
     end
 
@@ -166,6 +167,49 @@ defmodule BorutaIdentity.ResourceOwnersTest do
   end
 
   describe "metadata/2" do
+    test "uses a backend default for a missing credential attribute" do
+      user = user_fixture()
+
+      {:ok, backend} =
+        Ecto.Changeset.change(user.backend, %{
+          metadata_fields: [
+            %{
+              "attribute_name" => "job_title",
+              "default_value" => "Engineer",
+              "scopes" => ["credential"]
+            }
+          ]
+        })
+        |> Repo.update()
+
+      user = %{user | backend: backend}
+
+      assert ResourceOwners.metadata(user, "credential")["job_title"] ==
+               %{"value" => "Engineer", "status" => "valid"}
+
+      refute Map.has_key?(ResourceOwners.metadata(user, ""), "job_title")
+
+      assert {:ok, %ResourceOwner{extra_claims: extra_claims}} =
+               ResourceOwners.get_by(sub: user.id, scope: "credential")
+
+      assert extra_claims["job_title"] == %{"value" => "Engineer", "status" => "valid"}
+    end
+
+    test "keeps a user's credential attribute instead of its backend default" do
+      user = user_fixture()
+
+      {:ok, backend} =
+        Ecto.Changeset.change(user.backend, %{
+          metadata_fields: [%{"attribute_name" => "job_title", "default_value" => "Engineer"}]
+        })
+        |> Repo.update()
+
+      metadata = %{"job_title" => %{"value" => "Designer", "status" => "suspended"}}
+      user = %{user | backend: backend, metadata: metadata}
+
+      assert ResourceOwners.metadata(user, "")["job_title"] == metadata["job_title"]
+    end
+
     test "returns user metadata" do
       user = user_fixture()
 

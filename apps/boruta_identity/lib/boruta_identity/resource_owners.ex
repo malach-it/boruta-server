@@ -150,17 +150,35 @@ defmodule BorutaIdentity.ResourceOwners do
   end
 
   @spec metadata(user :: User.t(), scope :: String.t()) :: metadata :: map()
-  def metadata(%User{username: username, metadata: %{} = metadata}, _scope) when metadata == %{},
-    do: %{
-      "email" => username
-    }
-
   def metadata(user, scope) do
     user.metadata
+    |> metadata_defaults(user.backend)
     |> User.metadata_filter(user.backend)
     |> metadata_scope_filter(scope, user.backend)
     |> Enum.into(%{})
     |> Map.put("email", user.username)
+  end
+
+  defp metadata_defaults(metadata, %Backend{metadata_fields: fields}) do
+    Enum.reduce(fields, metadata, fn field, acc ->
+      case field do
+        %{"attribute_name" => name, "default_value" => default_value}
+        when not is_nil(default_value) and default_value != "" ->
+          case Map.get(acc, name) do
+            nil ->
+              Map.put(acc, name, %{"value" => default_value, "status" => "valid"})
+
+            %{"value" => nil} ->
+              Map.put(acc, name, %{"value" => default_value, "status" => "valid"})
+
+            _ ->
+              acc
+          end
+
+        _ ->
+          acc
+      end
+    end)
   end
 
   defp merge_claims(
