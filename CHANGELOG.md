@@ -2,6 +2,27 @@
 
 > Note that 0.X.X releases are reverved for the beta version of the server and may include breaking changes.
 
+## [Unreleased]
+
+### Added
+
+- [admin] user edit pages show saved consents with client IDs, scopes, and update times
+- [ssi] machine users can grant consent for OID4VP requests using their verified DID as the client identity
+
+### Changed
+
+- [ssi] the public client's identity provider configuration controls second factor authentication and machine-user consent
+- [infra] Credo reports functions with cyclomatic complexity above 10
+
+### Fixed
+
+- [ssi] public-client preauthorization resumes with the expected response types
+- [identity] backend metadata defaults persist from the admin form and populate issued credential claims when the user has no value
+
+### Security
+
+- [ssi] machine-user sessions are bound to the originating authorization code and DID, and unrelated authorization requests clear the machine session
+
 ## [0.13.0] - 2026-10-21
 
 ### Added
