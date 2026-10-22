@@ -4,6 +4,7 @@ defmodule BorutaAdminWeb.TokenView do
   alias Boruta.Oauth
   alias Boruta.Openid.VerifiablePresentations
   alias BorutaAdminWeb.TokenView
+  alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Admin
 
@@ -48,6 +49,9 @@ defmodule BorutaAdminWeb.TokenView do
   end
 
   def render("token.json", %{token: token} = assigns) do
+    user = user(token.sub)
+    consent = consent(user, token)
+
     %{
       id: token.id,
       type: token.type,
@@ -58,13 +62,14 @@ defmodule BorutaAdminWeb.TokenView do
           render(TokenView, "token.json", token: previous_code, previous_codes: [])
         end),
       scope: Oauth.Scope.split(token.scope),
+      consented_scopes: consented_scopes(consent),
       requested_scope: Oauth.Scope.split(token.requested_scope),
       redirect_uri: token.redirect_uri,
       expires_at: token.expires_at,
       revoked_at: token.revoked_at,
       refresh_token_revoked_at: token.refresh_token_revoked_at,
       sub: token.sub,
-      user: user(token.sub),
+      user: user,
       public_client_id: token.public_client_id,
       client: client(token.client),
       inserted_at: token.inserted_at,
@@ -125,4 +130,24 @@ defmodule BorutaAdminWeb.TokenView do
   end
 
   defp user(_sub), do: nil
+
+  defp consent(%{id: user_id}, token) do
+    client_id = token.public_client_id || token.client_id
+
+    user_id
+    |> Accounts.list_user_consents()
+    |> Enum.find(fn consent ->
+      consent.client_id == client_id && token.updated_at >= consent.updated_at
+    end)
+  end
+
+  defp consent(_user, _token), do: nil
+
+  defp consented_scopes(nil), do: []
+
+  defp consented_scopes(consent) do
+    Enum.map(consent.scopes, fn scope ->
+      %{scope: scope, updated_at: consent.updated_at}
+    end)
+  end
 end

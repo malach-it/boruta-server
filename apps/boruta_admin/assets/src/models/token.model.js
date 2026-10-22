@@ -5,6 +5,7 @@ import { addClientErrorInterceptor } from './utils'
 const defaults = {
   errors: null,
   client: null,
+  consented_scopes: [],
   previous_codes: []
 }
 
@@ -18,6 +19,7 @@ const assign = {
       .map((previousCode) => new Token(previousCode))
   },
   scope: function ({ scope }) { this.scope = scope },
+  consented_scopes: function ({ consented_scopes }) { this.consented_scopes = consented_scopes || [] },
   requested_scope: function ({ requested_scope }) { this.requested_scope = requested_scope },
   redirect_uri: function ({ redirect_uri }) { this.redirect_uri = redirect_uri },
   expires_at: function ({ expires_at }) { this.expires_at = expires_at },

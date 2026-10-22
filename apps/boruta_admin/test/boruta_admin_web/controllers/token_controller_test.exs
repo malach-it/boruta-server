@@ -333,6 +333,89 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     end
 
     @tag authorized: ["tokens:read:all"]
+    test "shows the user's current consent for the token client", %{conn: conn} do
+      user = IdentityFactory.insert(:user)
+      client = insert(:client)
+
+      IdentityFactory.insert(:consent,
+        user_id: user.id,
+        client_id: client.id,
+        scopes: ["profile", "email"],
+        updated_at: ~N[2026-01-02 03:04:05]
+      )
+
+      IdentityFactory.insert(:consent,
+        user_id: user.id,
+        client_id: "other-client",
+        scopes: ["admin"],
+        updated_at: ~N[2026-01-03 04:05:06]
+      )
+
+      token = insert(:token, client: client, sub: user.id, scope: "openid profile")
+
+      token_without_consent =
+        insert(:token, client: client, sub: IdentityFactory.insert(:user).id)
+
+      response =
+        conn
+        |> get(Routes.admin_token_path(conn, :index), %{"client_id" => client.id})
+        |> json_response(200)
+
+      result = Enum.find(response["data"], &(&1["id"] == token.id))
+      assert result["scope"] == ["openid", "profile"]
+
+      assert result["consented_scopes"] == [
+               %{"scope" => "profile", "updated_at" => "2026-01-02T03:04:05"},
+               %{"scope" => "email", "updated_at" => "2026-01-02T03:04:05"}
+             ]
+
+      result_without_consent =
+        Enum.find(response["data"], &(&1["id"] == token_without_consent.id))
+
+      assert result_without_consent["consented_scopes"] == []
+      refute Map.has_key?(result_without_consent, "consent_updated_at")
+    end
+
+    @tag authorized: ["tokens:read:all"]
+    test "uses the public client DID for machine user consent", %{conn: conn} do
+      machine_did = "did:key:machine"
+
+      user =
+        IdentityFactory.insert(:user,
+          account_type: "machine",
+          uid: machine_did,
+          username: machine_did
+        )
+
+      client = insert(:client)
+      did = "did:key:wallet"
+
+      consent =
+        IdentityFactory.insert(:consent,
+          user_id: user.id,
+          client_id: did,
+          scopes: ["credential:read"]
+        )
+
+      IdentityFactory.insert(:consent, user_id: user.id, client_id: client.id, scopes: ["other"])
+      token = insert(:token, client: client, sub: machine_did, public_client_id: did)
+
+      response =
+        conn
+        |> get(Routes.admin_token_path(conn, :index), %{"client_id" => client.id})
+        |> json_response(200)
+
+      result = Enum.find(response["data"], &(&1["id"] == token.id))
+
+      assert result["consented_scopes"] == [
+               %{
+                 "scope" => "credential:read",
+                 "updated_at" => NaiveDateTime.to_iso8601(consent.updated_at)
+               }
+             ]
+    end
+
+    @tag authorized: ["tokens:read:all"]
     test "does not expose code chain values", %{conn: conn} do
       token =
         insert(:token,

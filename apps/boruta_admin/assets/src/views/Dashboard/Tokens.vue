@@ -173,7 +173,17 @@
                               <div class="item">
                                 <span class="header">Scope</span>
                                 <span class="description" v-if="token.scope.length">
-                                  <span class="ui tiny teal label" v-for="scope in token.scope" :key="scope">{{ scope }}</span>
+                                  <span class="ui teal label" v-for="scope in token.scope" :key="scope">{{ scope }}</span>
+                                </span>
+                                <span class="description" v-else>-</span>
+                              </div>
+                              <div class="item" v-if="token.user">
+                                <span class="header" title="Current consent for this token's client">User consented scopes</span>
+                                <span class="description" v-if="token.consented_scopes.length">
+                                  <span class="ui violet label" v-for="consent in token.consented_scopes" :key="consent.scope">
+                                    {{ consent.scope }}
+                                    <span class="detail" v-if="consent.updated_at">{{ formatDate(consent.updated_at) }}</span>
+                                  </span>
                                 </span>
                                 <span class="description" v-else>-</span>
                               </div>
