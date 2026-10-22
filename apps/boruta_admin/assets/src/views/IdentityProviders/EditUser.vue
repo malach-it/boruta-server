@@ -30,9 +30,12 @@
                   <span class="header">Last login at</span>
                   <span class="description">{{ formatDate(user.last_login_at) }}</span>
                 </div>
-                <div class="item" v-for="(value, key) in user.metadata" :key="key">
+                <div class="item" v-for="(metadata, key) in sidebarMetadata" :key="key">
                   <span class="header">{{ key }}</span>
-                  <span class="description">{{ value.value }}</span>
+                  <span class="description">
+                    {{ metadata.value }}
+                    <span v-if="metadata.isDefault" class="ui mini basic label">default</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -167,6 +170,23 @@ export default {
       activityPending: false,
       activityError: null,
       expandedActivity: {}
+    }
+  },
+  computed: {
+    sidebarMetadata() {
+      const metadata = Object.create(null)
+
+      for (const [key, entry] of Object.entries(this.user.metadata || {})) {
+        metadata[key] = { value: entry?.value, isDefault: false }
+      }
+
+      for (const { attribute_name: name, default_value: defaultValue } of this.user.backend?.metadata_fields || []) {
+        if (defaultValue != null && defaultValue !== '' && metadata[name]?.value == null) {
+          metadata[name] = { value: defaultValue, isDefault: true }
+        }
+      }
+
+      return metadata
     }
   },
   methods: {
