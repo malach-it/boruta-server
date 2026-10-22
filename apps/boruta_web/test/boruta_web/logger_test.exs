@@ -11,7 +11,7 @@ defmodule BorutaWeb.LoggerTest do
   end
 
   describe "authorization_authorize_success_handler/4" do
-    test "logs the correlated user id" do
+    test "logs the correlated user id and authorized scope" do
       log =
         capture_log([level: :info], fn ->
           BorutaWeb.Logger.authorization_authorize_success_handler(
@@ -20,6 +20,7 @@ defmodule BorutaWeb.LoggerTest do
             %{
               client_id: "client-id",
               sub: "user-id",
+              scope: "openid profile",
               type: "preauthorized_code",
               response_mode: nil,
               expires_in: 60
@@ -30,6 +31,7 @@ defmodule BorutaWeb.LoggerTest do
 
       assert log =~ "authorization authorize - success"
       assert log =~ "sub=user-id"
+      assert log =~ ~s(scope="openid profile")
       assert log =~ "type=preauthorized_code"
     end
   end
@@ -44,6 +46,7 @@ defmodule BorutaWeb.LoggerTest do
             %{
               client_id: "client-id",
               sub: "user-id",
+              scope: "openid profile",
               access_token: "access-token",
               agent_token: "agent-token",
               authorization_code: "authorization-code",
@@ -56,6 +59,7 @@ defmodule BorutaWeb.LoggerTest do
         end)
 
       assert log =~ "authorization token - success"
+      assert log =~ ~s(scope="openid profile")
       refute log =~ "access-token"
       refute log =~ "agent-token"
       refute log =~ "refresh-token"

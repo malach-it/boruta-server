@@ -115,7 +115,8 @@ defmodule BorutaWeb.Logger do
           response_mode: response_mode,
           expires_in: expires_in,
           client_id: client_id,
-          sub: sub
+          sub: sub,
+          scope: scope
         },
         _
       ) do
@@ -129,6 +130,7 @@ defmodule BorutaWeb.Logger do
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
+      quoted_log_attribute("scope", scope),
       log_attribute("type", type),
       log_attribute("response_mode", response_mode),
       log_attribute("expires_in", expires_in)
@@ -173,6 +175,7 @@ defmodule BorutaWeb.Logger do
         %{
           client_id: client_id,
           sub: sub,
+          scope: scope,
           token_type: token_type,
           expires_in: expires_in
         },
@@ -188,6 +191,7 @@ defmodule BorutaWeb.Logger do
       "success",
       log_attribute("client_id", client_id),
       log_attribute("sub", sub),
+      quoted_log_attribute("scope", scope),
       log_attribute("token_type", token_type),
       log_attribute("expires_in", expires_in)
     ]

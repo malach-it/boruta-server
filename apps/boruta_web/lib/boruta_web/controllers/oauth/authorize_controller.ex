@@ -509,7 +509,9 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       response.response_mode,
       response.expires_in,
       client_id,
-      current_user && current_user.id
+      current_user && current_user.id,
+      (response.code && response.code.scope) ||
+        (response.access_token && response.access_token.scope)
     )
 
     conn
@@ -782,11 +784,12 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       nil,
       expires_in,
       code.client && code.client.id,
-      code.sub
+      code.sub,
+      code.scope
     )
   end
 
-  defp emit_authorize_success_event(type, response_mode, expires_in, client_id, sub) do
+  defp emit_authorize_success_event(type, response_mode, expires_in, client_id, sub, scope) do
     :telemetry.execute(
       [:authorization, :authorize, :success],
       %{},
@@ -795,7 +798,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         response_mode: response_mode,
         expires_in: expires_in,
         client_id: client_id,
-        sub: sub
+        sub: sub,
+        scope: scope
       }
     )
   end

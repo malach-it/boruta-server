@@ -4,6 +4,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
   import BorutaWeb.Factory
   import BorutaIdentity.AccountsFixtures
 
+  alias Boruta.Oauth.AuthorizeResponse
   alias Boruta.Oauth.Client
   alias Boruta.Oauth.ResourceOwner
   alias Boruta.Oauth.Token
@@ -73,17 +74,20 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
       scope: scope
     } do
       redirect_uri = List.first(client.redirect_uris)
-      request_param = Authenticable.request_param(
-        get(
-          conn,
-          Routes.authorize_path(conn, :authorize, %{
-            response_type: "code",
-            client_id: client.id,
-            redirect_uri: redirect_uri,
-            scope: scope.name
-          })
+
+      request_param =
+        Authenticable.request_param(
+          get(
+            conn,
+            Routes.authorize_path(conn, :authorize, %{
+              response_type: "code",
+              client_id: client.id,
+              redirect_uri: redirect_uri,
+              scope: scope.name
+            })
+          )
         )
-      )
+
       conn =
         conn
         |> log_in(resource_owner)
@@ -100,7 +104,8 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
           })
         )
 
-      assert redirected_to(conn) == IdentityRoutes.user_consent_path(conn, :index, request: request_param)
+      assert redirected_to(conn) ==
+               IdentityRoutes.user_consent_path(conn, :index, request: request_param)
     end
 
     test "logs a pre-authorized code offer with the user id", %{
@@ -129,6 +134,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         expires_at: System.system_time(:second) + 60,
         client: %Client{id: client.id, enforce_tx_code: false},
         sub: resource_owner.id,
+        scope: "openid profile",
         resource_owner: %ResourceOwner{sub: resource_owner.id}
       }
 
@@ -155,8 +161,55 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         %{
           client_id: client_id,
           sub: sub,
+          scope: scope,
           type: "preauthorized_code"
         }
+      }
+
+      assert client_id == client.id
+      assert sub == resource_owner.id
+      assert scope == "openid profile"
+    end
+
+    test "authorization success emits the issued code scope", %{
+      conn: conn,
+      client: client,
+      resource_owner: resource_owner
+    } do
+      test_pid = self()
+      handler_id = {__MODULE__, test_pid, make_ref()}
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:authorization, :authorize, :success],
+          fn event, measurements, metadata, _config ->
+            send(test_pid, {event, measurements, metadata})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      response = %AuthorizeResponse{
+        type: :code,
+        redirect_uri: List.first(client.redirect_uris),
+        code: %Token{type: "code", value: "authorization-code", scope: "openid profile"}
+      }
+
+      conn =
+        conn
+        |> init_test_session(%{})
+        |> assign(:current_user, resource_owner)
+        |> Map.put(:query_params, %{"client_id" => client.id})
+        |> AuthorizeController.authorize_success(response)
+
+      assert redirected_to(conn) =~ "code=authorization-code"
+
+      assert_received {
+        [:authorization, :authorize, :success],
+        %{},
+        %{client_id: client_id, sub: sub, scope: "openid profile", type: :code}
       }
 
       assert client_id == client.id
@@ -192,16 +245,19 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
       resource_owner: resource_owner
     } do
       redirect_uri = List.first(client.redirect_uris)
-      request_param = Authenticable.request_param(
-        get(
-          conn,
-          Routes.authorize_path(conn, :authorize, %{
-            response_type: "code",
-            client_id: client.id,
-            redirect_uri: redirect_uri
-          })
+
+      request_param =
+        Authenticable.request_param(
+          get(
+            conn,
+            Routes.authorize_path(conn, :authorize, %{
+              response_type: "code",
+              client_id: client.id,
+              redirect_uri: redirect_uri
+            })
+          )
         )
-      )
+
       conn =
         conn
         |> log_in(resource_owner)
@@ -233,17 +289,19 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
     } do
       given_state = "state"
       redirect_uri = List.first(client.redirect_uris)
-      request_param = Authenticable.request_param(
-        get(
-          conn,
-          Routes.authorize_path(conn, :authorize, %{
-            response_type: "code",
-            client_id: client.id,
-            redirect_uri: redirect_uri,
-            state: given_state
-          })
+
+      request_param =
+        Authenticable.request_param(
+          get(
+            conn,
+            Routes.authorize_path(conn, :authorize, %{
+              response_type: "code",
+              client_id: client.id,
+              redirect_uri: redirect_uri,
+              state: given_state
+            })
+          )
         )
-      )
 
       conn =
         conn
@@ -262,10 +320,10 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
         )
 
       assert [_, _redirect_uri] =
-        Regex.run(
-          ~r/(#{redirect_uri})\?/,
-          redirected_to(conn)
-        )
+               Regex.run(
+                 ~r/(#{redirect_uri})\?/,
+                 redirected_to(conn)
+               )
 
       [_, code] =
         Regex.run(
@@ -290,6 +348,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
       scope: scope
     } do
       redirect_uri = List.first(client.redirect_uris)
+
       request_param =
         get(
           conn,

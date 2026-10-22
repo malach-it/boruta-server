@@ -31,6 +31,7 @@ defmodule BorutaWeb.Oauth.TokenController do
       %{
         client_id: response.token.client.id,
         sub: response.token.sub,
+        scope: response.token.scope,
         token_type: response.token_type,
         expires_in: response.expires_in
       }

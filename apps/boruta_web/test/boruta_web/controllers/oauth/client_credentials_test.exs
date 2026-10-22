@@ -3,6 +3,9 @@ defmodule BorutaWeb.Oauth.ClientCredentialsTest do
 
   import BorutaWeb.Factory
 
+  alias Boruta.Oauth.{Client, Token, TokenResponse}
+  alias BorutaWeb.Oauth.TokenController
+
   setup %{conn: conn} do
     {:ok, conn: conn}
   end
@@ -136,5 +139,43 @@ defmodule BorutaWeb.Oauth.ClientCredentialsTest do
       assert expires_in
       assert refresh_token
     end
+  end
+
+  test "token success emits the issued token scope", %{conn: conn} do
+    test_pid = self()
+    handler_id = {__MODULE__, test_pid, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler_id,
+        [:authorization, :token, :success],
+        fn event, measurements, metadata, _config ->
+          send(test_pid, {event, measurements, metadata})
+        end,
+        nil
+      )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
+
+    response = %TokenResponse{
+      expires_in: 60,
+      access_token: "access-token",
+      token: %Token{
+        type: "access_token",
+        client: %Client{id: "client-id"},
+        sub: "user-id",
+        scope: "openid profile"
+      }
+    }
+
+    conn = TokenController.token_success(conn, response)
+
+    assert json_response(conn, 200)["access_token"] == "access-token"
+
+    assert_received {
+      [:authorization, :token, :success],
+      %{},
+      %{client_id: "client-id", sub: "user-id", scope: "openid profile"}
+    }
   end
 end
