@@ -333,7 +333,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
     end
 
     @tag authorized: ["tokens:read:all"]
-    test "shows the user's current consent for the token client", %{conn: conn} do
+    test "shows only the user's consented token scopes for the token client", %{conn: conn} do
       user = IdentityFactory.insert(:user)
       client = insert(:client)
 
@@ -365,8 +365,7 @@ defmodule BorutaAdminWeb.TokenControllerTest do
       assert result["scope"] == ["openid", "profile"]
 
       assert result["consented_scopes"] == [
-               %{"scope" => "profile", "updated_at" => "2026-01-02T03:04:05"},
-               %{"scope" => "email", "updated_at" => "2026-01-02T03:04:05"}
+               %{"scope" => "profile", "updated_at" => "2026-01-02T03:04:05"}
              ]
 
       result_without_consent =
@@ -394,11 +393,18 @@ defmodule BorutaAdminWeb.TokenControllerTest do
         IdentityFactory.insert(:consent,
           user_id: user.id,
           client_id: did,
-          scopes: ["credential:read"]
+          scopes: ["credential:read", "credential:write"]
         )
 
       IdentityFactory.insert(:consent, user_id: user.id, client_id: client.id, scopes: ["other"])
-      token = insert(:token, client: client, sub: machine_did, public_client_id: did)
+
+      token =
+        insert(:token,
+          client: client,
+          sub: machine_did,
+          public_client_id: did,
+          scope: "credential:read"
+        )
 
       response =
         conn

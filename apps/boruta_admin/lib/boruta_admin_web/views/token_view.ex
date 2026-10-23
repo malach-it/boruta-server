@@ -62,7 +62,7 @@ defmodule BorutaAdminWeb.TokenView do
           render(TokenView, "token.json", token: previous_code, previous_codes: [])
         end),
       scope: Oauth.Scope.split(token.scope),
-      consented_scopes: consented_scopes(consent),
+      consented_scopes: consented_scopes(consent, token.scope),
       requested_scope: Oauth.Scope.split(token.requested_scope),
       redirect_uri: token.redirect_uri,
       expires_at: token.expires_at,
@@ -143,11 +143,13 @@ defmodule BorutaAdminWeb.TokenView do
 
   defp consent(_user, _token), do: nil
 
-  defp consented_scopes(nil), do: []
+  defp consented_scopes(nil, _token_scope), do: []
 
-  defp consented_scopes(consent) do
-    Enum.map(consent.scopes, fn scope ->
-      %{scope: scope, updated_at: consent.updated_at}
-    end)
+  defp consented_scopes(consent, token_scope) do
+    token_scopes = Oauth.Scope.split(token_scope)
+
+    consent.scopes
+    |> Enum.filter(&(&1 in token_scopes))
+    |> Enum.map(fn scope -> %{scope: scope, updated_at: consent.updated_at} end)
   end
 end

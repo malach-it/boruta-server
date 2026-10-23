@@ -178,7 +178,7 @@
                                 <span class="description" v-else>-</span>
                               </div>
                               <div class="item" v-if="token.user">
-                                <span class="header" title="Current consent for this token's client">User consented scopes</span>
+                                <span class="header" title="Current consent for this token's client within the token's scope">User consented scopes</span>
                                 <span class="description" v-if="token.consented_scopes.length">
                                   <span class="ui violet label" v-for="consent in token.consented_scopes" :key="consent.scope">
                                     {{ consent.scope }}
