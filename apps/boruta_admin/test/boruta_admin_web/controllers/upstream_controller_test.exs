@@ -185,6 +185,18 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
     end
 
     @tag authorized: ["upstreams:manage:all"]
+    test "stores and renders the selected cluster proxy URL", %{conn: conn} do
+      proxy_url = "https://10.0.0.5:8443"
+
+      conn =
+        post(conn, Routes.admin_upstream_path(conn, :create),
+          upstream: Map.merge(@create_attrs, %{mtls_enabled: false, proxy_url: proxy_url})
+        )
+
+      assert %{"proxy_url" => ^proxy_url} = json_response(conn, 201)["data"]
+    end
+
+    @tag authorized: ["upstreams:manage:all"]
     test "accepts an OpenAPI definition but returns only model configuration", %{conn: conn} do
       openapi = Jason.encode!(%{"openapi" => "3.0.0", "paths" => %{}})
 

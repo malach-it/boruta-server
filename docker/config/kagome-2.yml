@@ -11,6 +11,7 @@ configuration:
       host: "kagome-2"
       uris: ["/kagome-2"]
       strip_uri: true
+      proxy_url: ""
   microgateway:
     - scheme: "http"
       port: 4000
