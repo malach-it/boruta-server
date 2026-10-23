@@ -181,7 +181,7 @@ export default {
       }
 
       for (const { attribute_name: name, default_value: defaultValue } of this.user.backend?.metadata_fields || []) {
-        if (defaultValue != null && defaultValue !== '' && metadata[name]?.value == null) {
+        if (defaultValue != null && defaultValue !== '' && !metadata[name]?.value) {
           metadata[name] = { value: defaultValue, isDefault: true }
         }
       }

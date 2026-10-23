@@ -171,6 +171,9 @@ defmodule BorutaIdentity.ResourceOwners do
             %{"value" => nil} ->
               Map.put(acc, name, %{"value" => default_value, "status" => "valid"})
 
+            %{"value" => ""} ->
+              Map.put(acc, name, %{"value" => default_value, "status" => "valid"})
+
             _ ->
               acc
           end
