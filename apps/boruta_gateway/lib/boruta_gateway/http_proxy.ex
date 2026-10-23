@@ -633,7 +633,7 @@ defmodule BorutaGateway.HttpProxy do
       %{status: "online"} = record ->
         {sidecar_port, verify_client_certificate} = sidecar_connection(record, scheme)
 
-        {:service_registry, host, sidecar_port, verify_client_certificate}
+        {:service_registry, record.ip_address, sidecar_port, verify_client_certificate}
 
       _record ->
         {:external, host, port, false}
@@ -692,11 +692,13 @@ defmodule BorutaGateway.HttpProxy do
   end
 
   defp accept_downstream(listen_socket, :tcp, _handshake_timeout) do
-    with {:ok, socket} <- :gen_tcp.accept(listen_socket) do
-      activate_downstream(socket, :tcp)
-      {:ok, socket}
-    else
-      {:error, reason} -> {:error, {:accept, reason}}
+    case :gen_tcp.accept(listen_socket) do
+      {:ok, socket} ->
+        activate_downstream(socket, :tcp)
+        {:ok, socket}
+
+      {:error, reason} ->
+        {:error, {:accept, reason}}
     end
   end
 
