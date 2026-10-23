@@ -829,7 +829,7 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                IdentityProviders.update_backend(backend, %{
                  "verifiable_credentials" => [
                    %{
-                     "claims" => [%{"label" => "Updated label"}],
+                     "claims" => [%{"label" => "Updated label", "expiration" => "3600"}],
                      "display" => %{"logo" => %{"alt_text" => "Updated alternative text"}}
                    }
                  ]
@@ -845,6 +845,22 @@ defmodule BorutaIdentity.IdentityProvidersTest do
       assert updated_claim["name"] == "given_name"
       assert updated_claim["pointer"] == "given_name"
       assert updated_claim["label"] == "Updated label"
+      assert updated_claim["expiration"] == "3600"
+
+      assert [stored_credential] =
+               IdentityProviders.get_backend!(backend.id).verifiable_credentials
+
+      assert [stored_claim] = stored_credential["claims"]
+      assert stored_claim["expiration"] == "3600"
+
+      assert {:ok, %Backend{} = backend} =
+               IdentityProviders.update_backend(backend, %{
+                 "verifiable_credentials" => [%{"claims" => [%{"expiration" => nil}]}]
+               })
+
+      assert [cleared_credential] = backend.verifiable_credentials
+      assert [cleared_claim] = cleared_credential["claims"]
+      assert cleared_claim["expiration"] == nil
     end
 
     test "update_backend/2 deep merges other map attributes" do

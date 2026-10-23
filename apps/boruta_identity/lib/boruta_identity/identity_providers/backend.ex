@@ -199,6 +199,10 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                           "name" => %{"type" => "string"},
                                           "label" => %{"type" => "string"},
                                           "pointer" => %{"type" => "string"},
+                                          "expiration" => %{
+                                            "type" => ["string", "null"],
+                                            "pattern" => "^[1-9][0-9]*$"
+                                          },
                                           # TODO check claims schema
                                           "claims" => %{"type" => "array"},
                                           # TODO check items schema

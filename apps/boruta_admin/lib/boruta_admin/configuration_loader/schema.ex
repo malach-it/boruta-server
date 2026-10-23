@@ -218,7 +218,11 @@ defmodule BorutaAdmin.ConfigurationLoader.Schema do
                   "properties" => %{
                     "name" => %{"type" => "string"},
                     "label" => %{"type" => "string"},
-                    "pointer" => %{"type" => "string"}
+                    "pointer" => %{"type" => "string"},
+                    "expiration" => %{
+                      "type" => ["string", "null"],
+                      "pattern" => "^[1-9][0-9]*$"
+                    }
                   },
                   "required" => ["name", "label", "pointer"]
                 }

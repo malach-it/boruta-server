@@ -30,8 +30,8 @@
         <input type="text" v-model="claim.pointer" placeholder="family_name">
       </div>
       <div class="field" v-if="format === 'vc+sd-jwt'" :class="{ 'error': errors?.verifiable_credentials }">
-        <label>Expiration</label>
-        <input type="text" v-model="claim.expiration" placeholder="3784320000">
+        <label>Claim status TTL <i>(in seconds)</i></label>
+        <input type="text" inputmode="numeric" pattern="[1-9][0-9]*" v-model="claim.expiration" placeholder="3784320000">
       </div>
     </div>
     <div v-if="isObject">
