@@ -22,24 +22,29 @@ defmodule BorutaIdentityWeb.UserConsentController do
   end
 
   def consent(conn, params) do
-    client_id = client_id_from_request(conn)
-    current_user = conn.assigns[:current_user]
-    requested_scopes = Scope.split(scope_from_request(conn))
+    with request when is_binary(request) and request != "" <- conn.query_params["request"],
+         client_id when is_binary(client_id) <- client_id_from_request(conn),
+         scope when is_binary(scope) <- scope_from_request(conn) do
+      current_user = conn.assigns[:current_user]
+      requested_scopes = Scope.split(scope)
 
-    consent_params = case params["scopes"] do
-      scopes when is_list(scopes) ->
-        %{
-          client_id: client_id,
-          scopes: Enum.filter(scopes, &is_binary/1) || []
-        }
-      _ ->
-        %{
-          client_id: client_id,
-          scopes: []
-        }
+      consent_params =
+            %{
+              client_id: client_id,
+              scopes: Enum.filter(scopes, &is_binary/1) || []
+            }
+
+      Accounts.consent(
+        conn,
+        client_id,
+        current_user,
+        requested_scopes,
+        consent_params,
+        __MODULE__
+      )
+    else
+      _ -> send_resp(conn, :conflict, "Authorization request changed. Restart consent.")
     end
-
-    Accounts.consent(conn, client_id, current_user, requested_scopes, consent_params, __MODULE__)
   end
 
   @impl BorutaIdentity.Accounts.ConsentApplication

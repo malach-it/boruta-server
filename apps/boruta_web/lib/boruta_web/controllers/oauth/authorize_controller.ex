@@ -10,7 +10,13 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   use BorutaWeb, :controller
 
   import BorutaIdentityWeb.Authenticable,
-    only: [request_param: 1, get_user_session: 1, remove_user_session: 1]
+    only: [
+      request_param: 1,
+      identity_request_params: 1,
+      prepare_request_param: 1,
+      get_user_session: 1,
+      remove_user_session: 1
+    ]
 
   alias Boruta.ClientsAdapter
   alias Boruta.Oauth
@@ -40,7 +46,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   @presentation_timeout 30_000
 
   def authorize(%Plug.Conn{} = conn, _params) do
-    conn = put_unsigned_request(conn)
+    conn = conn |> put_unsigned_request() |> prepare_request_param()
 
     {conn, current_user} =
       case conn.assigns[:current_user] do
@@ -68,9 +74,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
          {:unchanged, conn} <- preauthorize(conn, current_user) do
       redirect(conn,
         to:
-          IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
-            request: request_param(conn)
-          })
+          IdentityRoutes.user_session_path(
+            BorutaIdentityWeb.Endpoint,
+            :new,
+            identity_request_params(conn)
+          )
       )
     else
       {:preauthorized, conn} ->
@@ -149,9 +157,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
                   IdentityRoutes.user_session_path(
                     BorutaIdentityWeb.Endpoint,
                     action,
-                    %{
-                      request: request_param(conn)
-                    }
+                    identity_request_params(conn)
                   )
               )
 
@@ -163,9 +169,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
               |> put_flash(:warning, reason)
               |> redirect(
                 to:
-                  IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
-                    request: request_param(conn)
-                  })
+                  IdentityRoutes.choose_session_path(
+                    BorutaIdentityWeb.Endpoint,
+                    :index,
+                    identity_request_params(conn)
+                  )
               )
 
             {:redirected, conn}
@@ -291,9 +299,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         conn =
           redirect(conn,
             to:
-              IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
-                request: request_param(conn)
-              })
+              IdentityRoutes.user_session_path(
+                BorutaIdentityWeb.Endpoint,
+                :delete,
+                identity_request_params(conn)
+              )
           )
 
         {:redirected, conn}
@@ -331,9 +341,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     conn =
       redirect(conn,
         to:
-          IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{
-            request: request_param(conn)
-          })
+          IdentityRoutes.user_session_path(
+            BorutaIdentityWeb.Endpoint,
+            :delete,
+            identity_request_params(conn)
+          )
       )
 
     {:redirected, conn}
@@ -405,9 +417,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           _ ->
             redirect(conn,
               to:
-                IdentityRoutes.user_consent_path(BorutaIdentityWeb.Endpoint, :index, %{
-                  request: request_param(conn)
-                })
+                IdentityRoutes.user_consent_path(
+                  BorutaIdentityWeb.Endpoint,
+                  :index,
+                  identity_request_params(conn)
+                )
             )
         end
     end
@@ -454,18 +468,22 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         )
         |> redirect(
           to:
-            IdentityRoutes.user_consent_path(BorutaIdentityWeb.Endpoint, :index, %{
-              request: request_param(conn)
-            })
+            IdentityRoutes.user_consent_path(
+              BorutaIdentityWeb.Endpoint,
+              :index,
+              identity_request_params(conn)
+            )
         )
 
       false ->
         conn
         |> redirect(
           to:
-            IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
-              request: request_param(conn)
-            })
+            IdentityRoutes.choose_session_path(
+              BorutaIdentityWeb.Endpoint,
+              :index,
+              identity_request_params(conn)
+            )
         )
     end
   end
@@ -483,13 +501,15 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           "" ->
             authorize_error(conn, error)
 
-          request ->
+          _request ->
             conn
             |> redirect(
               to:
-                IdentityRoutes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{
-                  request: request
-                })
+                IdentityRoutes.choose_session_path(
+                  BorutaIdentityWeb.Endpoint,
+                  :index,
+                  identity_request_params(conn)
+                )
             )
         end
     end
@@ -516,6 +536,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn
     |> delete_session(:session_chosen)
+    |> delete_session(:authorization_request)
     |> redirect(external: AuthorizeResponse.redirect_to_url(response))
   end
 
@@ -529,6 +550,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
 
     conn
+    |> delete_session(:authorization_request)
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
@@ -554,6 +576,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     # TODO log business event
 
     conn
+    |> delete_session(:authorization_request)
     |> redirect(
       external:
         SiopV2Response.redirect_to_deeplink(response, fn code ->
@@ -572,6 +595,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     # TODO log business event
 
     conn
+    |> delete_session(:authorization_request)
     |> redirect(
       external:
         VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
@@ -593,6 +617,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
 
     conn
+    |> delete_session(:authorization_request)
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
@@ -630,6 +655,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
             conn =
               conn
               |> delete_session(:session_chosen)
+              |> delete_session(:authorization_request)
               |> put_layout(false)
               |> put_view(TemplateView)
               |> render("template.html",
@@ -678,6 +704,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         conn =
           conn
           |> delete_session(:session_chosen)
+          |> delete_session(:authorization_request)
           |> put_layout(false)
           |> put_view(TemplateView)
           |> render("template.html",
@@ -716,9 +743,11 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     |> delete_authentication_sessions()
     |> redirect(
       to:
-        IdentityRoutes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{
-          request: request_param(conn)
-        })
+        IdentityRoutes.user_session_path(
+          BorutaIdentityWeb.Endpoint,
+          :new,
+          identity_request_params(conn)
+        )
     )
   end
 

@@ -4,6 +4,7 @@ import Backend from './backend.model'
 
 const defaults = {
   name: null,
+  request_mode: 'stateless',
   type: 'internal',
   errors: null,
   loading: false,
@@ -13,6 +14,7 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   name: function ({ name }) { this.name = name },
+  request_mode: function ({ request_mode }) { this.request_mode = request_mode },
   type: function ({ type }) { this.type = type },
   backend: function ({ backend }) { this.backend = new Backend(backend) },
   backend_id: function ({ backend_id }) { this.backend_id = backend_id },
@@ -85,6 +87,7 @@ class IdentityProvider {
     const {
       id,
       name,
+      request_mode,
       backend_id,
       check_password,
       choose_session,
@@ -101,6 +104,7 @@ class IdentityProvider {
     return {
       id,
       name,
+      request_mode,
       backend_id,
       check_password,
       choose_session,

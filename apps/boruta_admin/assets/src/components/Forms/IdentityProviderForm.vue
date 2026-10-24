@@ -18,6 +18,13 @@
             <option :value="backend.id" v-for="backend in backends">{{ backend.name }}</option>
           </select>
         </div>
+        <div class="field" :class="{ 'error': identityProvider.errors?.request_mode }">
+          <label>Request mode</label>
+          <select v-model="identityProvider.request_mode">
+            <option value="stateless">Stateless</option>
+            <option value="stateful">Stateful</option>
+          </select>
+        </div>
         <div v-if="identityProvider.isPersisted" class="ui segment">
           <router-link
             :to="{ name: 'edit-layout-template', params: { identityProviderId: identityProvider.id } }"

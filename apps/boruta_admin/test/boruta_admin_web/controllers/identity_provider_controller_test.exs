@@ -285,13 +285,14 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
           identity_provider: Map.put(@create_attrs, :backend_id, backend_id)
         )
 
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+      assert %{"id" => id, "request_mode" => "stateless"} = json_response(conn, 201)["data"]
 
       conn = get(conn, Routes.admin_identity_provider_path(conn, :show, id))
 
       assert %{
                "id" => ^id,
                "name" => "some name",
+               "request_mode" => "stateless",
                "backend" => %{"id" => ^backend_id}
              } = json_response(conn, 200)["data"]
     end
@@ -502,17 +503,31 @@ defmodule BorutaAdminWeb.IdentityProviderControllerTest do
     } do
       conn =
         put(conn, Routes.admin_identity_provider_path(conn, :update, identity_provider),
-          identity_provider: @update_attrs
+          identity_provider: Map.put(@update_attrs, :request_mode, "stateful")
         )
 
-      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+      assert %{"id" => ^id, "request_mode" => "stateful"} = json_response(conn, 200)["data"]
 
       conn = get(conn, Routes.admin_identity_provider_path(conn, :show, id))
 
       assert %{
                "id" => ^id,
-               "name" => "some updated name"
+               "name" => "some updated name",
+               "request_mode" => "stateful"
              } = json_response(conn, 200)["data"]
+    end
+
+    @tag authorized: ["identity-providers:manage:all"]
+    test "rejects an unsupported request mode", %{
+      conn: conn,
+      identity_provider: identity_provider
+    } do
+      conn =
+        put(conn, Routes.admin_identity_provider_path(conn, :update, identity_provider),
+          identity_provider: %{request_mode: "unknown"}
+        )
+
+      assert json_response(conn, 422)["errors"]["request_mode"]
     end
 
     @tag authorized: ["identity-providers:manage:all"]

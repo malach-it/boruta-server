@@ -6,6 +6,7 @@
 
 ### Added
 
+- [identity] identity providers can select stateless (default) or stateful request mode; stateful mode stores the signed request JWT in the session cookie and omits it from initial identity-route URLs. Do not enable stateful mode until login and other identity steps are bound to individual requests.
 - [admin] user edit pages show saved consents with client IDs, scopes, and update times
 - [ssi] machine users can grant consent for OID4VP requests using their verified DID as the client identity
 
@@ -23,6 +24,7 @@
 
 ### Security
 
+- [identity] stateful consent forms submit an opaque request ID and reject missing or replaced requests, preventing an earlier form from granting consent to a different client
 - [ssi] machine-user sessions are bound to the originating authorization code and DID, and unrelated authorization requests clear the machine session
 
 ## [0.13.0] - 2026-10-21

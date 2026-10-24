@@ -5,6 +5,7 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   alias Boruta.Oauth
   alias BorutaIdentity.Accounts
+  alias BorutaIdentity.IdentityProviders
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -12,6 +13,7 @@ defmodule BorutaIdentityWeb.Authenticable do
   @session_key :user_token
   @max_age 60 * 60 * 24 * 60
   @default_remember_me_cookie "_boruta_identity_web_user_remember_me"
+  @authorization_request_key :authorization_request
   @remember_me_options [sign: true, max_age: @max_age, secure: true, same_site: "Lax"]
 
   @spec remember_me_cookie() :: String.t()
@@ -72,37 +74,65 @@ defmodule BorutaIdentityWeb.Authenticable do
   end
 
   @spec request_param(conn :: Plug.Conn.t()) :: request_param :: String.t()
+  def request_param(%Plug.Conn{assigns: %{request_param: request}}), do: request
+
   def request_param(conn) do
     case Oauth.Request.authorize_request(conn, %Oauth.ResourceOwner{sub: ""}) do
-      {:ok, %_{client_id: "did:" <> _key = client_id, scope: scope}} ->
-        {:ok, jwt, _payload} =
-          Joken.encode_and_sign(
-            %{
-              "client_id" => client_id,
-              "scope" => scope,
-              "user_return_to" => user_return_to(conn)
-            },
-            BorutaIdentityWeb.Token.application_signer()
-          )
-
-        jwt
-
       {:ok, %_{client_id: client_id, scope: scope}} ->
-        {:ok, jwt, _payload} =
-          Joken.encode_and_sign(
-            %{
-              "client_id" => client_id,
-              "scope" => scope,
-              "user_return_to" => user_return_to(conn)
-            },
-            BorutaIdentityWeb.Token.application_signer()
-          )
-
-        jwt
+        signed_request_param(conn, client_id, scope)
 
       _ ->
         ""
     end
+  end
+
+  @spec identity_request_params(conn :: Plug.Conn.t()) :: map()
+  def identity_request_params(%Plug.Conn{assigns: %{request_param: _request}}), do: %{}
+  def identity_request_params(conn), do: %{request: request_param(conn)}
+
+  @spec prepare_request_param(conn :: Plug.Conn.t()) :: Plug.Conn.t()
+  def prepare_request_param(conn) do
+    with {:ok, %_{client_id: client_id, scope: scope}} <-
+           Oauth.Request.authorize_request(conn, %Oauth.ResourceOwner{sub: ""}),
+         %{request_mode: "stateful"} <-
+           IdentityProviders.get_identity_provider_by_client_id(client_id) do
+      jwt = signed_request_param(conn, client_id, scope)
+
+      request =
+        case get_session(conn, @authorization_request_key) do
+          %{"id" => id, "jwt" => ^jwt} -> id
+          _ -> SecureRandom.urlsafe_base64(24)
+        end
+
+      conn
+      |> put_session(@authorization_request_key, %{"id" => request, "jwt" => jwt})
+      |> assign(:request_param, request)
+    else
+      _ ->
+        if get_session(conn, @authorization_request_key) do
+          delete_session(conn, @authorization_request_key)
+        else
+          conn
+        end
+    end
+  end
+
+  defp signed_request_param(conn, client_id, scope) do
+    {:ok, jwt, _payload} =
+      Joken.encode_and_sign(
+        request_claims(conn, client_id, scope),
+        BorutaIdentityWeb.Token.application_signer()
+      )
+
+    jwt
+  end
+
+  defp request_claims(conn, client_id, scope) do
+    %{
+      "client_id" => client_id,
+      "scope" => scope,
+      "user_return_to" => user_return_to(conn)
+    }
   end
 
   defp user_return_to(conn) do
@@ -126,12 +156,8 @@ defmodule BorutaIdentityWeb.Authenticable do
   defp encode_query(query), do: URI.encode_query(query)
 
   @spec scope_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
-  def scope_from_request(%Plug.Conn{query_params: query_params}) do
-    with {:ok, claims} <-
-           BorutaIdentityWeb.Token.verify(
-             query_params["request"] || "",
-             BorutaIdentityWeb.Token.application_signer()
-           ),
+  def scope_from_request(conn) do
+    with {:ok, claims} <- claims_from_request(conn),
          {:ok, scope} <- Map.fetch(claims, "scope") do
       scope
     else
@@ -140,41 +166,18 @@ defmodule BorutaIdentityWeb.Authenticable do
   end
 
   @spec client_id_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
-  def client_id_from_request(%Plug.Conn{query_params: %{"request" => request}}) do
-    with {:ok, claims} <-
-           BorutaIdentityWeb.Token.verify(
-             request || "",
-             BorutaIdentityWeb.Token.application_signer()
-           ),
+  def client_id_from_request(conn) do
+    with {:ok, claims} <- claims_from_request(conn),
          {:ok, client_id} <- Map.fetch(claims, "client_id") do
       client_id
     else
       _ -> nil
     end
   end
-
-  def client_id_from_request(%Plug.Conn{assigns: %{request: request}}) do
-    with {:ok, claims} <-
-           BorutaIdentityWeb.Token.verify(
-             request || "",
-             BorutaIdentityWeb.Token.application_signer()
-           ),
-         {:ok, client_id} <- Map.fetch(claims, "client_id") do
-      client_id
-    else
-      _ -> nil
-    end
-  end
-
-  def client_id_from_request(_conn), do: nil
 
   @spec user_return_to_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
-  def user_return_to_from_request(%Plug.Conn{query_params: %{"request" => request}}) do
-    with {:ok, claims} <-
-           BorutaIdentityWeb.Token.verify(
-             request || "",
-             BorutaIdentityWeb.Token.application_signer()
-           ),
+  def user_return_to_from_request(conn) do
+    with {:ok, claims} <- claims_from_request(conn),
          {:ok, user_return_to} <- Map.fetch(claims, "user_return_to") do
       user_return_to
     else
@@ -182,18 +185,21 @@ defmodule BorutaIdentityWeb.Authenticable do
     end
   end
 
-  def user_return_to_from_request(%Plug.Conn{assigns: %{request: request}}) do
-    with {:ok, claims} <-
-           BorutaIdentityWeb.Token.verify(
-             request || "",
-             BorutaIdentityWeb.Token.application_signer()
-           ),
-         {:ok, user_return_to} <- Map.fetch(claims, "user_return_to") do
-      user_return_to
-    else
-      _ -> nil
+  defp claims_from_request(conn) do
+    request = conn.query_params["request"] || conn.assigns[:request] || ""
+
+    case get_session(conn, @authorization_request_key) do
+      %{"id" => ^request, "jwt" => jwt} when request != "" ->
+        BorutaIdentityWeb.Token.verify(jwt, BorutaIdentityWeb.Token.application_signer())
+
+      %{"jwt" => jwt} when request == "" ->
+        BorutaIdentityWeb.Token.verify(jwt, BorutaIdentityWeb.Token.application_signer())
+
+      _ ->
+        BorutaIdentityWeb.Token.verify(
+          request,
+          BorutaIdentityWeb.Token.application_signer()
+        )
     end
   end
-
-  def user_return_to_from_request(_conn), do: nil
 end

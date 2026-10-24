@@ -8,6 +8,18 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProviderTest do
   alias BorutaIdentity.IdentityProviders.Template
   alias BorutaIdentity.Repo
 
+  describe "request_mode" do
+    test "defaults to stateless and accepts only supported modes" do
+      assert %IdentityProvider{request_mode: "stateless"} = %IdentityProvider{}
+
+      changeset = IdentityProvider.changeset(%IdentityProvider{}, %{request_mode: "stateful"})
+      refute Keyword.has_key?(changeset.errors, :request_mode)
+
+      changeset = IdentityProvider.changeset(%IdentityProvider{}, %{request_mode: "invalid"})
+      assert {"is invalid", _} = changeset.errors[:request_mode]
+    end
+  end
+
   describe "template/2" do
     setup do
       identity_provider = insert(:identity_provider, templates: [])

@@ -11,6 +11,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
 
   @type t :: %__MODULE__{
           name: String.t(),
+          request_mode: String.t(),
           backend_id: String.t(),
           backend: Backend.t(),
           registrable: boolean(),
@@ -107,6 +108,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
   @foreign_key_type :binary_id
   schema "identity_providers" do
     field(:name, :string)
+    field(:request_mode, :string, default: "stateless")
     field(:choose_session, :boolean, default: true)
     field(:totpable, :boolean, default: false)
     field(:enforce_totp, :boolean, default: false)
@@ -181,6 +183,7 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
     |> cast(attrs, [
       :id,
       :name,
+      :request_mode,
       :check_password,
       :choose_session,
       :totpable,
@@ -194,7 +197,8 @@ defmodule BorutaIdentity.IdentityProviders.IdentityProvider do
       :backend_id
     ])
     |> unique_constraint(:id, name: :relying_parties_pkey)
-    |> validate_required([:name, :backend_id])
+    |> validate_required([:name, :backend_id, :request_mode])
+    |> validate_inclusion(:request_mode, ["stateful", "stateless"])
     |> unique_constraint(:name)
     |> cast_assoc(:templates, with: &Template.assoc_changeset/2)
     |> foreign_key_constraint(:backend_id, name: :identity_providers_backend_id_fkey)

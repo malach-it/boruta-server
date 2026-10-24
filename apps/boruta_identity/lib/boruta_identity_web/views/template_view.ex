@@ -32,6 +32,7 @@ defmodule BorutaIdentityWeb.TemplateView do
   def context(context, %{conn: conn, identity_provider: identity_provider} = assigns) do
     %Plug.Conn{query_params: query_params} = conn
     request = assigns[:request] || Map.get(query_params, "request")
+    request_params = request_query_params(request)
     backend = identity_provider.backend
 
     federated_servers =
@@ -46,7 +47,7 @@ defmodule BorutaIdentityWeb.TemplateView do
                :authorize,
                backend.id,
                federated_server_name,
-               %{request: request}
+               request_params
              )
          }}
       end)
@@ -182,59 +183,76 @@ defmodule BorutaIdentityWeb.TemplateView do
   defp paths(conn, assigns) do
     %Plug.Conn{query_params: query_params} = conn
     request = assigns[:request] || Map.get(query_params, "request")
+    request_params = request_query_params(request)
 
     %{
       boruta_logo_path: Routes.static_path(BorutaIdentityWeb.Endpoint, "/images/logo-yellow.png"),
       choose_session_path:
-        Routes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, %{request: request}),
+        Routes.choose_session_path(BorutaIdentityWeb.Endpoint, :index, request_params),
       create_user_reset_password_path:
-        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
+        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :create, request_params),
       create_user_confirmation_path:
-        Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
-      create_user_consent_path: Routes.user_consent_path(conn, :consent, %{request: request}),
+        Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, request_params),
+      create_user_consent_path:
+        Routes.user_consent_path(conn, :consent, consent_request_params(conn, request_params)),
       create_user_registration_path:
-        Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
+        Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :create, request_params),
       create_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, %{request: request}),
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :create, request_params),
       create_user_session_totp_authentication_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_totp, %{
-          request: request
-        }),
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_totp, request_params),
       create_user_session_webauthn_authentication_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :authenticate_webauthn, %{
-          request: request
-        }),
+        Routes.user_session_path(
+          BorutaIdentityWeb.Endpoint,
+          :authenticate_webauthn,
+          request_params
+        ),
       delete_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, %{request: request}),
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, request_params),
       edit_user_path:
-        Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :edit, %{request: request}),
+        Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :edit, request_params),
       destroy_user_path:
-        Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :destroy, %{request: request}),
+        Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :destroy, request_params),
       new_user_totp_registration_path:
-        Routes.totp_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+        Routes.totp_path(BorutaIdentityWeb.Endpoint, :new, request_params),
       create_user_totp_registration_path:
-        Routes.totp_path(BorutaIdentityWeb.Endpoint, :register, %{request: request}),
+        Routes.totp_path(BorutaIdentityWeb.Endpoint, :register, request_params),
       new_user_webauthn_registration_path:
-        Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+        Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :new, request_params),
       create_user_webauthn_registration_path:
-        Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :register, %{request: request}),
+        Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :register, request_params),
       new_user_registration_path:
-        Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+        Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :new, request_params),
       new_user_reset_password_path:
-        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+        Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :new, request_params),
       new_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, %{request: request}),
+        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :new, request_params),
       update_user_reset_password_path:
         Routes.user_reset_password_path(
           BorutaIdentityWeb.Endpoint,
           :update,
           Map.get(assigns, :token, ""),
-          %{request: request}
+          request_params
         ),
       update_user_path:
-        Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :update, %{request: request})
+        Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :update, request_params)
     }
   end
+
+  defp request_query_params(request) when request in [nil, ""], do: %{}
+  defp request_query_params(request), do: %{request: request}
+
+  defp consent_request_params(conn, request_params) when request_params == %{} do
+    case Plug.Conn.get_session(conn, :authorization_request) do
+      %{"id" => id, "jwt" => jwt} when is_binary(id) and is_binary(jwt) ->
+        %{request: id}
+
+      _ ->
+        request_params
+    end
+  end
+
+  defp consent_request_params(_conn, request_params), do: request_params
 
   defp errors(%{errors: errors}) do
     formatted_errors = Enum.map(errors, &%{message: &1})
