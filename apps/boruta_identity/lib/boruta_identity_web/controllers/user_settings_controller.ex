@@ -144,6 +144,7 @@ defmodule BorutaIdentityWeb.UserSettingsController do
     |> render("template.html",
       template: template,
       assigns: %{
+        current_user: user,
         errors: [message]
       }
     )
