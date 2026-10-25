@@ -31,6 +31,7 @@ const assign = {
   username: function ({ username }) { this.username = username },
   last_login_at: function ({ last_login_at }) { this.last_login_at = last_login_at },
   totp_registered_at: function ({ totp_registered_at }) { this.totp_registered_at = totp_registered_at },
+  webauthn_registered_at: function ({ webauthn_registered_at }) { this.webauthn_registered_at = webauthn_registered_at },
   federated_metadata: function ({ federated_metadata }) { this.federated_metadata = federated_metadata },
   blocked: function ({ blocked }) { this.blocked = blocked },
   metadata: function ({ metadata: rawMetadata }) {

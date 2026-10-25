@@ -40,6 +40,7 @@ defmodule BorutaAdminWeb.UserView do
       username: user.username,
       last_login_at: user.last_login_at,
       totp_registered_at: user.totp_registered_at,
+      webauthn_registered_at: user.webauthn_registered_at,
       metadata: user.metadata,
       federated_metadata: user.federated_metadata,
       blocked: user.blocked,

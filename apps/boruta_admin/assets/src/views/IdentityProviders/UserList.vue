@@ -32,17 +32,14 @@
               <div class="item">
                 <span class="header">ID</span>
                 <span class="description">{{ user.id }}</span>
-                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item">
                 <span class="header">UID</span>
                 <span class="description">{{ user.uid }}</span>
-                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item">
                 <span class="header">Username</span>
                 <span class="description">{{ user.username }}</span>
-                <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
               </div>
               <div class="item" v-if="user.roles.length">
                 <span class="header">Roles</span>
@@ -60,6 +57,10 @@
                 <span class="header">Backend</span>
                 <span class="description"><router-link :to="{ name: 'edit-backend', params: { backendId: user.backend.id } }">{{ user.backend.name }}</router-link></span>
               </div>
+            </div>
+            <div class="tags">
+              <span class="ui mini basic primary label" v-if="user.webauthn_registered_at">MFA</span>
+              <span class="ui mini basic primary label" v-if="user.totp_registered_at">MFA</span>
             </div>
           </div>
         </div>
@@ -193,6 +194,11 @@ export default {
 <style scoped lang="scss">
 .users.grid {
   margin-bottom: 1em!important;
+}
+.tags {
+  position: absolute;
+  right: 0.1em;
+  bottom: 0.1em
 }
 .roles.description {
   span {
