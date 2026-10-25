@@ -226,6 +226,41 @@ defmodule BorutaIdentity.AdminTest do
   @tag :skip
   test "delete_user/1 with ldap backend"
 
+  describe "Internal.register/2" do
+    setup do
+      {:ok, backend: insert(:backend)}
+    end
+
+    test "registers a user with a UUID uid", %{backend: backend} do
+      uid = Ecto.UUID.generate()
+
+      assert {:ok, %User{uid: ^uid, account_type: "internal"}} =
+               Internal.register(backend, %{
+                 uid: uid,
+                 email: "registered@example.com",
+                 password: "a valid password"
+               })
+
+      assert %Internal.User{id: ^uid} = Repo.get!(Internal.User, uid)
+    end
+
+    test "rejects non-UUID uids without creating a user", %{backend: backend} do
+      for uid <- ["did:key:machine", "not-a-uuid"] do
+        assert {:error, %Ecto.Changeset{} = changeset} =
+                 Internal.register(backend, %{
+                   uid: uid,
+                   email: "registered@example.com",
+                   password: "a valid password"
+                 })
+
+        assert errors_on(changeset).uid == ["must be a UUID"]
+      end
+
+      assert Repo.aggregate(User, :count) == 0
+      assert Repo.aggregate(Internal.User, :count) == 0
+    end
+  end
+
   describe "create_user/2 with an internal backend" do
     setup do
       backend = insert(:backend)
@@ -251,6 +286,14 @@ defmodule BorutaIdentity.AdminTest do
 
       assert {:ok, %User{uid: ^uid}} = Admin.create_user(backend, params)
       assert %Internal.User{id: ^uid} = Repo.get!(Internal.User, uid)
+    end
+
+    test "stores a DID on the internal user", %{backend: backend} do
+      did = "did:key:machine"
+      params = %{uid: did, username: "test@created.email", password: "a valid password"}
+
+      assert {:ok, %User{uid: uid, did: ^did}} = Admin.create_user(backend, params)
+      assert %Internal.User{id: ^uid, did: ^did} = Repo.get!(Internal.User, uid)
     end
 
     test "autogenerates user uid when custom uid is blank", %{backend: backend} do
@@ -390,6 +433,34 @@ defmodule BorutaIdentity.AdminTest do
       user = user_fixture()
 
       {:ok, user: user}
+    end
+
+    test "rejects a DID already used by another user in the same backend", %{user: user} do
+      other_user = user_fixture(%{backend: user.backend})
+      did = "did:key:shared"
+
+      assert {:ok, %User{did: ^did}} = Admin.update_user(other_user, %{did: did})
+      assert {:error, %Ecto.Changeset{} = changeset} = Admin.update_user(user, %{did: did})
+      assert errors_on(changeset).did == ["has already been taken"]
+      assert %User{did: nil} = Repo.get!(User, user.id)
+      assert %Internal.User{did: nil} = Repo.get!(Internal.User, user.uid)
+    end
+
+    test "allows the same DID on different backends", %{user: user} do
+      other_user = user_fixture()
+      did = "did:key:shared"
+
+      assert {:ok, %User{did: ^did}} = Admin.update_user(user, %{did: did})
+      assert {:ok, %User{did: ^did}} = Admin.update_user(other_user, %{did: did})
+    end
+
+    test "keeps both records unchanged when the internal DID is too long", %{user: user} do
+      did = "did:key:" <> String.duplicate("a", 256)
+
+      assert {:error, %Ecto.Changeset{} = changeset} = Admin.update_user(user, %{did: did})
+      assert errors_on(changeset).did == ["should be at most 255 character(s)"]
+      assert %User{did: nil} = Repo.get!(User, user.id)
+      assert %Internal.User{did: nil} = Repo.get!(Internal.User, user.uid)
     end
 
     test "updates user with metadata", %{user: user} do

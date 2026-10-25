@@ -44,6 +44,7 @@ defmodule BorutaAdminWeb.UserController do
   def create(conn, %{"backend_id" => backend_id, "user" => user_params}) do
     create_params = %{
       uid: user_params["uid"],
+      did: user_params["did"],
       username: user_params["username"] || user_params["email"],
       group: user_params["group"],
       blocked: user_params["blocked"] || false,
@@ -112,6 +113,7 @@ defmodule BorutaAdminWeb.UserController do
       [
         {"email", :username},
         {"group", :group},
+        {"did", :did},
         {"blocked", :blocked},
         {"metadata", :metadata},
         {"authorized_scopes", :authorized_scopes},

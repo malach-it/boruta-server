@@ -10,6 +10,7 @@ defmodule BorutaIdentity.Admin do
   alias Boruta.CodesAdapter
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.Token
+  alias BorutaIdentity.Accounts.Internal
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Accounts.UserAuthorizedScope
   alias BorutaIdentity.Accounts.UserRole
@@ -23,6 +24,7 @@ defmodule BorutaIdentity.Admin do
           %{
             optional(:username) => String.t(),
             optional(:uid) => String.t(),
+            optional(:did) => String.t(),
             optional(:password) => String.t(),
             optional(:group) => String.t(),
             optional(:blocked) => boolean(),
@@ -359,21 +361,51 @@ defmodule BorutaIdentity.Admin do
          {:ok, user} <-
            maybe_update_user_authorized_scopes(user, user_params),
          {:ok, user} <-
-           maybe_update_user_organizations(user, user_params) do
-      maybe_update_user_roles(user, user_params)
+           maybe_update_user_organizations(user, user_params),
+         {:ok, user} <- maybe_update_user_roles(user, user_params) do
+      maybe_update_user_did(user, user_params)
     end
   end
 
+  defp maybe_update_user_did(%User{account_type: "internal", uid: uid} = user, %{did: did}) do
+    case Repo.get(Internal.User, uid) do
+      %Internal.User{} = internal_user ->
+        Ecto.Multi.new()
+        |> Ecto.Multi.update(:user, User.changeset(user, %{did: did}))
+        |> Ecto.Multi.update(
+          :internal_user,
+          Internal.User.did_changeset(internal_user, %{did: did})
+        )
+        |> Repo.transaction()
+        |> case do
+          {:ok, %{user: user}} -> {:ok, user}
+          {:error, _operation, changeset, _changes} -> {:error, changeset}
+        end
+
+      nil ->
+        {:error,
+         Ecto.Changeset.change(%Internal.User{})
+         |> Ecto.Changeset.add_error(:did, "internal user not found")}
+    end
+  end
+
+  defp maybe_update_user_did(user, _params), do: {:ok, user}
+
   defp update_user_and_revoke_access(user, %{blocked: true} = user_params) do
-    with {:ok, updated_user} <- user |> User.changeset(user_params) |> Repo.update(),
+    with {:ok, updated_user} <- user |> user_changeset(user_params) |> Repo.update(),
          :ok <- revoke_user_access(user.id) do
       {:ok, updated_user}
     end
   end
 
   defp update_user_and_revoke_access(user, user_params) do
-    user |> User.changeset(user_params) |> Repo.update()
+    user |> user_changeset(user_params) |> Repo.update()
   end
+
+  defp user_changeset(%User{account_type: "internal"} = user, params),
+    do: User.changeset(user, Map.delete(params, :did))
+
+  defp user_changeset(user, params), do: User.changeset(user, params)
 
   defp revoke_user_access(user_id) do
     Repo.delete_all(from(t in UserToken, where: t.user_id == ^user_id))

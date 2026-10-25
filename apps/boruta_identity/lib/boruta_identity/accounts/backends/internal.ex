@@ -37,18 +37,33 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Accounts.Registrations
   def register(backend, registration_params) do
+    changeset =
+      Internal.User.registration_changeset(
+        %Internal.User{
+          group: registration_params[:group],
+          metadata: registration_params[:metadata]
+        },
+        registration_params,
+        %{backend: backend}
+      )
+
+    changeset =
+      case registration_params[:uid] do
+        nil ->
+          changeset
+
+        "" ->
+          changeset
+
+        uid ->
+          case Ecto.UUID.cast(uid) do
+            {:ok, uuid} -> Ecto.Changeset.put_change(changeset, :id, uuid)
+            :error -> Ecto.Changeset.add_error(changeset, :uid, "must be a UUID")
+          end
+      end
+
     with {:ok, user} <-
-           Internal.User.registration_changeset(
-             %Internal.User{
-               group: registration_params[:group],
-               metadata: registration_params[:metadata]
-             },
-             registration_params,
-             %{
-               backend: backend
-             }
-           )
-           |> Repo.insert() do
+           Repo.insert(changeset) do
       {:ok, domain_user!(user, backend)}
     end
   end
@@ -67,36 +82,41 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Accounts.Sessions
   def domain_user!(
-        %Internal.User{id: id, email: email, metadata: metadata, group: group},
+        %Internal.User{id: id, did: did, email: email, metadata: metadata, group: group},
         %Backend{
           id: backend_id
         } = backend,
         repo \\ Repo
       ) do
-    impl_user_params = %{
-      uid: id,
-      username: email,
-      group: group,
-      backend_id: backend_id,
-      account_type: @account_type
-    }
+    case Repo.get_by(User, backend_id: backend_id, uid: id) do
+      nil ->
+        impl_user_params = %{
+          uid: id,
+          did: did,
+          username: email,
+          group: group,
+          backend_id: backend_id,
+          account_type: @account_type
+        }
 
-    {replace, impl_user_params} =
-      case metadata do
-        %{} = metadata ->
-          {[:username, :metadata, :group], Map.put(impl_user_params, :metadata, metadata)}
+        {replace, impl_user_params} =
+          case metadata do
+            %{} = metadata ->
+              {[:username, :metadata, :group, :did], Map.put(impl_user_params, :metadata, metadata)}
 
-        _ ->
-          {[:username, :group], impl_user_params}
-      end
+            _ ->
+              {[:username, :group, :did], impl_user_params}
+          end
 
-    User.implementation_changeset(impl_user_params, backend)
-    |> repo.insert!(
-      on_conflict: {:replace, replace},
-      returning: true,
-      conflict_target: [:backend_id, :uid]
-    )
-    |> Repo.preload([:authorized_scopes, :consents, :backend, :organizations])
+        User.implementation_changeset(impl_user_params, backend)
+        |> repo.insert!(
+          on_conflict: {:replace, replace},
+          returning: true,
+          conflict_target: [:backend_id, :uid]
+        )
+      user ->
+        Repo.preload(user, [:authorized_scopes, :consents, :backend, :organizations])
+    end
   end
 
   # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings
@@ -166,6 +186,10 @@ defmodule BorutaIdentity.Accounts.Internal do
           Repo.rollback(error)
       end
     end)
+  end
+
+  defp internal_user(%{uid: "did:" <> _key = did} = params) do
+    %Internal.User{did: did, group: params[:group], metadata: params[:metadata]}
   end
 
   defp internal_user(%{uid: uid} = params) when is_binary(uid) and uid != "" do

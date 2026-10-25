@@ -28,6 +28,7 @@ defmodule BorutaIdentity.Accounts.User do
   @type t :: %__MODULE__{
           id: String.t() | nil,
           uid: String.t() | nil,
+          did: String.t() | nil,
           username: String.t() | nil,
           password: String.t() | nil,
           metadata: map(),
@@ -70,6 +71,7 @@ defmodule BorutaIdentity.Accounts.User do
     # TODO add email field
     field(:username, :string)
     field(:uid, :string)
+    field(:did, :string)
     field(:group, :string)
     field(:password, :string, virtual: true)
     field(:confirmed_at, :utc_datetime_usec)
@@ -100,6 +102,7 @@ defmodule BorutaIdentity.Accounts.User do
     |> cast(attrs, [
       :backend_id,
       :uid,
+      :did,
       :username,
       :group,
       :metadata,
@@ -110,13 +113,15 @@ defmodule BorutaIdentity.Accounts.User do
     |> metadata_template_filter(backend)
     |> validate_required([:backend_id, :uid, :username, :account_type])
     |> validate_inclusion(:account_type, account_types())
+    |> unique_constraint(:did, name: :users_backend_id_did_index)
     |> validate_metadata()
     |> validate_group()
   end
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:metadata, :group, :blocked])
+    |> cast(attrs, [:metadata, :group, :blocked, :did])
+    |> unique_constraint(:did, name: :users_backend_id_did_index)
     |> validate_group()
     |> validate_metadata()
   end

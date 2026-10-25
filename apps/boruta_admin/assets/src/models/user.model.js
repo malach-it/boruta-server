@@ -14,6 +14,7 @@ const defaults = {
   roles: [],
   organizations: [],
   uid: '',
+  did: '',
   backend_id: '',
   backend: new Backend(),
   last_login_at: null,
@@ -25,6 +26,7 @@ const defaults = {
 const assign = {
   id: function ({ id }) { this.id = id },
   uid: function ({ uid }) { this.uid = uid },
+  did: function ({ did }) { this.did = did || '' },
   backend: function ({ backend }) { this.backend = backend },
   username: function ({ username }) { this.username = username },
   last_login_at: function ({ last_login_at }) { this.last_login_at = last_login_at },
@@ -134,7 +136,7 @@ class User {
   }
 
   get serialized () {
-    const { id, uid, username, password, metadata: rawMetadata, group, blocked, authorized_scopes, roles, organizations } = this
+    const { id, uid, did, username, password, metadata: rawMetadata, group, blocked, authorized_scopes, roles, organizations } = this
 
     const metadata = {}
 
@@ -151,6 +153,7 @@ class User {
     return {
       id,
       uid,
+      did,
       username,
       password,
       metadata,

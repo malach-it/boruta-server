@@ -29,13 +29,18 @@ defmodule BorutaIdentity.Accounts.Machine do
       when is_binary(id_token) do
     with {:ok, jwk, claims} <- VerifiablePresentations.validate_signature(id_token),
          {:ok, sub} <- did_from_jwk(jwk) do
-      upsert_user(sub, claims, backend)
+      case Repo.get_by(User, backend_id: backend.id, did: sub) do
+        nil ->
+          insert_user(sub, backend)
+        user ->
+          {:ok, Repo.preload(user, [:authorized_scopes, :consents, :backend, :organizations])} |> dbg
+      end
     end
   end
 
   def domain_user!(_, _), do: {:error, "Machine id_token is missing."}
 
-  def delete_user(_uid), do: :ok
+  def delete_user(_did), do: :ok
 
   defp did_from_jwk(jwk) do
     case Did.create("key", jwk) do
@@ -44,35 +49,23 @@ defmodule BorutaIdentity.Accounts.Machine do
     end
   end
 
-  defp upsert_user(sub, _claims, %Backend{id: backend_id}) do
-    username = sub
-
+  defp insert_user(sub, %Backend{id: backend_id}) do
     attrs = %{
       uid: sub,
-      username: username,
+      did: sub,
+      username: sub,
       account_type: @account_type,
       backend_id: backend_id
     }
 
     changeset =
       %User{}
-      |> cast(attrs, [:backend_id, :uid, :username, :account_type])
-      |> validate_required([:backend_id, :uid, :username, :account_type])
+      |> cast(attrs, [:backend_id, :username, :uid, :did, :account_type])
+      |> validate_required([:backend_id, :did, :account_type])
       |> validate_inclusion(:account_type, User.account_types())
 
     changeset
-    |> Repo.insert(
-      on_conflict:
-        from(u in User,
-          update: [
-            set: [
-              username: ^username
-            ]
-          ]
-        ),
-      returning: true,
-      conflict_target: [:backend_id, :uid]
-    )
+    |> Repo.insert()
     |> case do
       {:ok, user} ->
         {:ok, Repo.preload(user, [:authorized_scopes, :consents, :backend, :organizations])}

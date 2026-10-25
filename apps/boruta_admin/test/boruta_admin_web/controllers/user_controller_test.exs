@@ -56,7 +56,6 @@ defmodule BorutaAdminWeb.UserControllerTest do
                "resource" => ["you are unauthorized to access this resource."]
              }
            }
-
   end
 
   @tag user_authorized: ["users:manage:all"]
@@ -125,6 +124,26 @@ defmodule BorutaAdminWeb.UserControllerTest do
   end
 
   describe "show user" do
+    @tag authorized: ["users:manage:all"]
+    test "renders the domain user's DID", %{conn: conn} do
+      did = "did:key:domain"
+      user = user_fixture()
+
+      user
+      |> Ecto.Changeset.change(did: did)
+      |> Repo.update!()
+
+      Internal.User
+      |> Repo.get!(user.uid)
+      |> Ecto.Changeset.change(did: "did:key:internal")
+      |> Repo.update!()
+
+      conn = get(conn, Routes.admin_user_path(conn, :show, user))
+
+      assert %{"did" => ^did} = data = json_response(conn, 200)["data"]
+      refute Map.has_key?(data, "account_type")
+    end
+
     @tag authorized: ["users:manage:all"]
     test "renders the last login timestamp", %{conn: conn} do
       last_login_at = DateTime.utc_now() |> DateTime.truncate(:second)
@@ -479,6 +498,31 @@ defmodule BorutaAdminWeb.UserControllerTest do
       insert(:role_scope, role_id: role.id, scope_id: scope.id)
 
       {:ok, conn: conn, user: user, existing_scope: scope, existing_role: role}
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "updates the internal user's DID", %{conn: conn, user: user} do
+      did = "did:key:updated"
+
+      conn = put(conn, Routes.admin_user_path(conn, :update, user), user: %{"did" => did})
+
+      assert %{"did" => ^did} = json_response(conn, 200)["data"]
+      assert %Internal.User{did: ^did} = Repo.get!(Internal.User, user.uid)
+      assert %User{did: ^did} = Repo.get!(User, user.id)
+    end
+
+    @tag authorized: ["users:manage:all"]
+    test "clears the internal user's DID", %{conn: conn, user: user} do
+      Internal.User
+      |> Repo.get!(user.uid)
+      |> Ecto.Changeset.change(did: "did:key:existing")
+      |> Repo.update!()
+
+      conn = put(conn, Routes.admin_user_path(conn, :update, user), user: %{"did" => ""})
+
+      assert %{"did" => nil} = json_response(conn, 200)["data"]
+      assert %Internal.User{did: nil} = Repo.get!(Internal.User, user.uid)
+      assert %User{did: nil} = Repo.get!(User, user.id)
     end
 
     @tag authorized: ["users:manage:all"]

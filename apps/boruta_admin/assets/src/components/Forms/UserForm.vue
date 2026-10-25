@@ -17,7 +17,11 @@
         </div>
         <div class="field" v-if="!user.isPersisted" :class="{ 'error': user.errors?.uid || user.errors?.id }">
           <label>User UID</label>
-          <input type="text" v-model="user.uid" placeholder="Must be an UUIDv4 - Leave blank to autogenerate" />
+          <input type="text" v-model="user.uid" placeholder="Must be an UUIDv4 or a did - Leave blank to autogenerate" />
+        </div>
+        <div class="field" v-if="user.isPersisted" :class="{ 'error': user.errors?.did }">
+          <label>DID</label>
+          <input type="text" v-model="user.did" placeholder="did:..." />
         </div>
         <div class="field" v-if="!user.isPersisted" :class="{ 'error': user.errors?.username }">
           <label>Username</label>

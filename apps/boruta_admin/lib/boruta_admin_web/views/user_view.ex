@@ -36,6 +36,7 @@ defmodule BorutaAdminWeb.UserView do
     %{
       id: user.id,
       uid: user.uid,
+      did: user.did,
       username: user.username,
       last_login_at: user.last_login_at,
       totp_registered_at: user.totp_registered_at,

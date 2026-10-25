@@ -9,6 +9,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
 
   @type t :: %__MODULE__{
           email: String.t(),
+          did: String.t() | nil,
           password: String.t(),
           hashed_password: String.t(),
           metadata: map() | nil,
@@ -21,6 +22,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
   @foreign_key_type Ecto.UUID
   schema "internal_users" do
     field(:email, :string)
+    field(:did, :string)
     field(:password, :string, virtual: true)
     field(:hashed_password, :string)
     field(:metadata, :map, virtual: true)
@@ -105,9 +107,15 @@ defmodule BorutaIdentity.Accounts.Internal.User do
 
   def update_changeset(user, attrs, opts) do
     user
-    |> cast(attrs, [:email, :password, :group])
+    |> cast(attrs, [:email, :did, :password, :group])
     |> validate_required([:email])
     |> validate_password(opts)
+  end
+
+  def did_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:did])
+    |> validate_length(:did, max: 255)
   end
 
   @doc """
