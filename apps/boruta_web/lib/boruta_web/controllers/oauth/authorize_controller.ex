@@ -42,7 +42,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaWeb.PresentationServer
 
   @siopv2_response_types ["id_token", "code"]
-  @public_response_types @siopv2_response_types ++ ["vp_token"]
+  @public_response_types @siopv2_response_types
   @presentation_timeout 30_000
 
   def authorize(%Plug.Conn{} = conn, _params) do

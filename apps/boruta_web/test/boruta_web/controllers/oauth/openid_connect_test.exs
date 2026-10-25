@@ -121,7 +121,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert redirected_to(conn) =~ ~r/error=login_required/
     end
 
-    test "authorizes with prompt=none with anonymous client (verifiable presentation - wallet)",
+    test "rejects anonymous vp_token with prompt=none when no user is logged in",
          %{
            conn: conn,
            redirect_uri: redirect_uri
@@ -140,12 +140,9 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
           })
         )
 
-      assert redirected_to(conn) =~ ~r/request=/
-
-      assert redirected_to(conn) =~
-               ~r/redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fopenid%2Fdirect_post%2F/
-
       assert redirected_to(conn) =~ ~r/#{redirect_uri}/
+      assert redirected_to(conn) =~ "error=login_required"
+      refute redirected_to(conn) =~ "request="
     end
 
     test "authorizes with prompt=none with anonymous client (siopv2 - wallet)", %{
