@@ -174,7 +174,7 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
 
     without_session = get(conn, return_to)
     assert without_session.assigns.current_user == nil
-    assert redirected_to(without_session) =~ "/users/log_in"
+    assert redirected_to(without_session) =~ "/users/consent"
 
     {:ok, request, _claims} =
       Joken.encode_and_sign(
