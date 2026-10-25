@@ -31,7 +31,7 @@ defmodule BorutaIdentityWeb.UserConsentController do
       consent_params =
             %{
               client_id: client_id,
-              scopes: Enum.filter(scopes, &is_binary/1) || []
+              scopes: Enum.filter(requested_scopes, &is_binary/1) || []
             }
 
       Accounts.consent(
