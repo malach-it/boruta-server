@@ -32,8 +32,9 @@ defmodule BorutaIdentity.Accounts.Machine do
       case Repo.get_by(User, backend_id: backend.id, did: sub) do
         nil ->
           insert_user(sub, backend)
+
         user ->
-          {:ok, Repo.preload(user, [:authorized_scopes, :consents, :backend, :organizations])} |> dbg
+          {:ok, Repo.preload(user, [:authorized_scopes, :consents, :backend, :organizations])}
       end
     end
   end
