@@ -868,7 +868,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     scope = conn.query_params["scope"] || ""
 
     %ResourceOwner{
-      sub: machine_sub(current_user) || current_user.id || anonymous_sub(conn.query_params),
+      sub: machine_sub(current_user) || resource_owner_sub(current_user) || public_sub(conn),
       username: current_user.username,
       last_login_at: current_user.last_login_at,
       blocked: current_user.blocked,
@@ -879,16 +879,18 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     }
   end
 
-  defp anonymous_sub(%{"client_id" => "did:" <> _key = did}), do: did
-  defp anonymous_sub(%{"client_metadata" => metadata}) when not is_nil(metadata), do: "unknown"
-  defp anonymous_sub(_params), do: nil
+  defp machine_sub(%User{account_type: "machine", uid: "did:" <> _key = did}), do: did
+  defp machine_sub(_user), do: nil
+
+  defp resource_owner_sub(user), do: user.id
+
+  defp public_sub(conn) do
+    (public_client?(conn) || nil) && conn.query_params["client_id"]
+  end
 
   defp extra_claims(%User{id: nil}, _scope), do: %{}
 
   defp extra_claims(current_user, scope) do
     Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata)
   end
-
-  defp machine_sub(%User{account_type: "machine", uid: "did:" <> _key = did}), do: did
-  defp machine_sub(_user), do: nil
 end

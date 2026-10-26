@@ -39,8 +39,8 @@ defmodule BorutaIdentity.ResourceOwners do
     end
   end
 
-  def get_by(sub: "unknown", scope: _scope), do: %User{}
-  def get_by(sub: "did:" <> _key, scope: _scope), do: %User{}
+  # public client or machine resource owner
+  def get_by(sub: "did:" <> _key = sub, scope: _scope), do: {:ok, %ResourceOwner{sub: sub}}
 
   def get_by(sub: sub, scope: scope) when is_binary(sub) do
     case Ecto.UUID.cast(sub) do
@@ -125,7 +125,6 @@ defmodule BorutaIdentity.ResourceOwners do
   end
 
   @impl Boruta.Oauth.ResourceOwners
-  def authorized_scopes(%ResourceOwner{sub: "unknown"}), do: []
   def authorized_scopes(%ResourceOwner{sub: "did:" <> _key}), do: []
 
   def authorized_scopes(%ResourceOwner{sub: sub}) when not is_nil(sub) do

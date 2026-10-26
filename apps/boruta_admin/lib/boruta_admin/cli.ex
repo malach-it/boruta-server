@@ -217,7 +217,7 @@ defmodule BorutaAdmin.Cli do
   end
 
   defp default_console_subject do
-    username = System.get_env("USER") || System.get_env("USERNAME") || "unknown"
+    username = System.get_env("USER") || System.get_env("USERNAME")
 
     hostname =
       case :inet.gethostname() do
