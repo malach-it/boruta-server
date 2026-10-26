@@ -4,7 +4,6 @@ defmodule BorutaIdentity.Accounts.Machine do
   """
 
   import Ecto.Changeset
-  import Ecto.Query
 
   alias Boruta.Did
   alias Boruta.Oauth.ResourceOwner
@@ -27,7 +26,7 @@ defmodule BorutaIdentity.Accounts.Machine do
           {:ok, User.t()} | {:error, String.t()}
   def domain_user!(%ResourceOwner{sub: id_token}, %Backend{} = backend)
       when is_binary(id_token) do
-    with {:ok, jwk, claims} <- VerifiablePresentations.validate_signature(id_token),
+    with {:ok, jwk, _claims} <- VerifiablePresentations.validate_signature(id_token),
          {:ok, sub} <- did_from_jwk(jwk) do
       case Repo.get_by(User, backend_id: backend.id, did: sub) do
         nil ->

@@ -885,7 +885,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   defp resource_owner_sub(user), do: user.id
 
   defp public_sub(conn) do
-    (public_client?(conn) || nil) && conn.query_params["client_id"]
+    if public_client_request?(conn), do: conn.query_params["client_id"]
   end
 
   defp extra_claims(%User{id: nil}, _scope), do: %{}
