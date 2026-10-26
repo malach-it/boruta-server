@@ -91,31 +91,7 @@ defmodule BorutaIdentity.Accounts.Internal do
     domain_user =
       case repo.get_by(User, backend_id: backend_id, uid: id) do
         nil ->
-          impl_user_params = %{
-            uid: id,
-            did: did,
-            username: email,
-            group: group,
-            backend_id: backend_id,
-            account_type: @account_type
-          }
-
-          {replace, impl_user_params} =
-            case metadata do
-              %{} = metadata ->
-                {[:username, :metadata, :group, :did],
-                 Map.put(impl_user_params, :metadata, metadata)}
-
-              _ ->
-                {[:username, :group, :did], impl_user_params}
-            end
-
-          User.implementation_changeset(impl_user_params, backend)
-          |> repo.insert!(
-            on_conflict: {:replace, replace},
-            returning: true,
-            conflict_target: [:backend_id, :uid]
-          )
+          insert_domain_user!(id, did, email, metadata, group, backend, repo)
 
         %User{username: ^email, did: ^did} = user
         when (is_nil(group) or user.group == group) and
@@ -134,6 +110,33 @@ defmodule BorutaIdentity.Accounts.Internal do
       end
 
     repo.preload(domain_user, [:authorized_scopes, :consents, :backend, :organizations])
+  end
+
+  defp insert_domain_user!(id, did, email, metadata, group, backend, repo) do
+    impl_user_params = %{
+      uid: id,
+      did: did,
+      username: email,
+      group: group,
+      backend_id: backend.id,
+      account_type: @account_type
+    }
+
+    {replace, impl_user_params} =
+      case metadata do
+        %{} = metadata ->
+          {[:username, :metadata, :group, :did], Map.put(impl_user_params, :metadata, metadata)}
+
+        _ ->
+          {[:username, :group, :did], impl_user_params}
+      end
+
+    User.implementation_changeset(impl_user_params, backend)
+    |> repo.insert!(
+      on_conflict: {:replace, replace},
+      returning: true,
+      conflict_target: [:backend_id, :uid]
+    )
   end
 
   # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings
