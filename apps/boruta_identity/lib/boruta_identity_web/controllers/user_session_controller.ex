@@ -227,7 +227,9 @@ defmodule BorutaIdentityWeb.UserSessionController do
   end
 
   @impl BorutaIdentity.TotpAuthenticationApplication
-  def totp_authenticated(%Plug.Conn{} = conn, _user) do
+  def totp_authenticated(%Plug.Conn{} = conn, user) do
+    log_mfa_authentication(conn, user, :totp, :success)
+
     conn
     |> put_session(
       :totp_authenticated,
@@ -244,6 +246,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
         template: template
       }) do
     current_user = conn.assigns.current_user
+    log_mfa_authentication(conn, current_user, :totp, :failure)
 
     conn
     |> put_layout(false)
@@ -266,7 +269,9 @@ defmodule BorutaIdentityWeb.UserSessionController do
   end
 
   @impl BorutaIdentity.WebauthnAuthenticationApplication
-  def webauthn_authenticated(%Plug.Conn{} = conn, _user) do
+  def webauthn_authenticated(%Plug.Conn{} = conn, user) do
+    log_mfa_authentication(conn, user, :webauthn, :success)
+
     conn
     |> put_session(
       :webauthn_authenticated,
@@ -284,6 +289,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
         template: template
       }) do
     current_user = conn.assigns.current_user
+    log_mfa_authentication(conn, current_user, :webauthn, :failure)
 
     conn
     |> put_layout(false)
@@ -296,6 +302,14 @@ defmodule BorutaIdentityWeb.UserSessionController do
         webauthn_options: webauthn_options,
         current_user: current_user
       }
+    )
+  end
+
+  defp log_mfa_authentication(conn, user, factor, result) do
+    :telemetry.execute(
+      [:authentication, factor, result],
+      %{},
+      %{client_id: client_id_from_request(conn), sub: user.id, backend_id: user.backend_id}
     )
   end
 end

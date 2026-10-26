@@ -18,12 +18,20 @@ defmodule BorutaIdentityWeb.TotpController do
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
 
-    totp_authenticated = Map.get(
-      get_session(conn, :totp_authenticated) || %{},
-      get_user_session(conn),
-      false
+    totp_authenticated =
+      Map.get(
+        get_session(conn, :totp_authenticated) || %{},
+        get_user_session(conn),
+        false
+      )
+
+    Totp.initialize_totp_registration(
+      conn,
+      client_id,
+      totp_authenticated,
+      current_user,
+      __MODULE__
     )
-    Totp.initialize_totp_registration(conn, client_id, totp_authenticated, current_user, __MODULE__)
   end
 
   def register(conn, %{"totp" => totp_params}) do
@@ -61,6 +69,7 @@ defmodule BorutaIdentityWeb.TotpController do
         template: template
       }) do
     current_user = conn.assigns.current_user
+    log_registration(conn, current_user, :failure)
 
     conn
     |> put_layout(false)
@@ -81,6 +90,7 @@ defmodule BorutaIdentityWeb.TotpController do
         template: template
       }) do
     current_user = conn.assigns.current_user
+    log_registration(conn, current_user, :failure)
 
     conn
     |> put_layout(false)
@@ -97,7 +107,9 @@ defmodule BorutaIdentityWeb.TotpController do
   end
 
   @impl BorutaIdentity.TotpRegistrationApplication
-  def totp_registration_success(%Plug.Conn{} = conn, _user) do
+  def totp_registration_success(%Plug.Conn{} = conn, user) do
+    log_registration(conn, user, :success)
+
     conn
     |> put_flash(:info, "TOTP authenticator registered successfully.")
     |> put_session(
@@ -105,8 +117,14 @@ defmodule BorutaIdentityWeb.TotpController do
       (get_session(conn, :totp_authenticated) || %{})
       |> Map.put(get_user_session(conn), true)
     )
-    |> redirect(
-      to: after_sign_in_path(conn)
+    |> redirect(to: after_sign_in_path(conn))
+  end
+
+  defp log_registration(conn, user, result) do
+    :telemetry.execute(
+      [:registration, :totp, result],
+      %{},
+      %{client_id: client_id_from_request(conn), sub: user.id, backend_id: user.backend_id}
     )
   end
 end

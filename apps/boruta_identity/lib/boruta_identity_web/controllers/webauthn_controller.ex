@@ -18,12 +18,20 @@ defmodule BorutaIdentityWeb.WebauthnController do
     client_id = client_id_from_request(conn)
     current_user = conn.assigns[:current_user]
 
-    webauthn_authenticated = Map.get(
-      get_session(conn, :webauthn_authenticated) || %{},
-      get_user_session(conn),
-      false
+    webauthn_authenticated =
+      Map.get(
+        get_session(conn, :webauthn_authenticated) || %{},
+        get_user_session(conn),
+        false
+      )
+
+    Webauthn.initialize_webauthn_registration(
+      conn,
+      client_id,
+      webauthn_authenticated,
+      current_user,
+      __MODULE__
     )
-    Webauthn.initialize_webauthn_registration(conn, client_id, webauthn_authenticated, current_user, __MODULE__)
   end
 
   def register(conn, params) do
@@ -63,6 +71,7 @@ defmodule BorutaIdentityWeb.WebauthnController do
         template: template
       }) do
     current_user = conn.assigns[:current_user]
+    log_registration(conn, current_user, :failure)
 
     conn
     |> put_layout(false)
@@ -78,7 +87,9 @@ defmodule BorutaIdentityWeb.WebauthnController do
   end
 
   @impl BorutaIdentity.WebauthnRegistrationApplication
-  def webauthn_registration_success(%Plug.Conn{} = conn, _user) do
+  def webauthn_registration_success(%Plug.Conn{} = conn, user) do
+    log_registration(conn, user, :success)
+
     conn
     |> put_flash(:info, "Passkey registered successfully.")
     |> put_session(
@@ -87,5 +98,13 @@ defmodule BorutaIdentityWeb.WebauthnController do
       |> Map.put(get_user_session(conn), true)
     )
     |> redirect(to: after_sign_in_path(conn))
+  end
+
+  defp log_registration(conn, user, result) do
+    :telemetry.execute(
+      [:registration, :webauthn, result],
+      %{},
+      %{client_id: client_id_from_request(conn), sub: user.id, backend_id: user.backend_id}
+    )
   end
 end

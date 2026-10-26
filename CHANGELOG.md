@@ -6,6 +6,7 @@
 
 ### Added
 
+- [identity] log WebAuthn and TOTP registration and authentication successes and failures
 - [identity] identity providers can select stateless (default) or stateful request mode; stateful mode stores the signed request JWT in the session cookie and omits it from initial identity-route URLs. Do not enable stateful mode until login and other identity steps are bound to individual requests.
 - [admin] user edit pages show saved consents with client IDs, scopes, and update times
 - [ssi] machine users can grant consent for OID4VP requests using their verified DID as the client identity

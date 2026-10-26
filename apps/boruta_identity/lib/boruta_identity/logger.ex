@@ -29,6 +29,46 @@ defmodule BorutaIdentity.Logger do
         &__MODULE__.authentication_log_out_success_handler/4
       },
       {
+        :mfa_totp_registration_success,
+        [:registration, :totp, :success],
+        &__MODULE__.mfa_handler/4
+      },
+      {
+        :mfa_totp_registration_failure,
+        [:registration, :totp, :failure],
+        &__MODULE__.mfa_handler/4
+      },
+      {
+        :mfa_webauthn_registration_success,
+        [:registration, :webauthn, :success],
+        &__MODULE__.mfa_handler/4
+      },
+      {
+        :mfa_webauthn_registration_failure,
+        [:registration, :webauthn, :failure],
+        &__MODULE__.mfa_handler/4
+      },
+      {
+        :mfa_totp_authentication_success,
+        [:authentication, :totp, :success],
+        &__MODULE__.mfa_handler/4
+      },
+      {
+        :mfa_totp_authentication_failure,
+        [:authentication, :totp, :failure],
+        &__MODULE__.mfa_handler/4
+      },
+      {
+        :mfa_webauthn_authentication_success,
+        [:authentication, :webauthn, :success],
+        &__MODULE__.mfa_handler/4
+      },
+      {
+        :mfa_webauthn_authentication_failure,
+        [:authentication, :webauthn, :failure],
+        &__MODULE__.mfa_handler/4
+      },
+      {
         :registration_create_success,
         [:registration, :create, :success],
         &__MODULE__.registration_create_success_handler/4
@@ -132,6 +172,33 @@ defmodule BorutaIdentity.Logger do
           log_attribute("sub", sub),
           log_attribute("backend_id", backend.id),
           log_attribute("provider", backend.type)
+        ]
+      end,
+      type: :business
+    )
+  end
+
+  def mfa_handler(
+        [action, factor, result],
+        _,
+        %{client_id: client_id, sub: sub, backend_id: backend_id},
+        _
+      )
+      when action in [:registration, :authentication] and factor in [:totp, :webauthn] and
+             result in [:success, :failure] do
+    Logger.log(
+      :info,
+      fn ->
+        [
+          "boruta_identity ",
+          Atom.to_string(action),
+          ?\s,
+          Atom.to_string(factor),
+          " - ",
+          Atom.to_string(result),
+          log_attribute("client_id", client_id),
+          log_attribute("sub", sub),
+          log_attribute("backend_id", backend_id)
         ]
       end,
       type: :business
@@ -317,7 +384,7 @@ defmodule BorutaIdentity.Logger do
           log_attribute("client_id", client_id),
           log_attribute("sub", sub),
           log_attribute("provider", backend.type),
-          log_attribute("backend_id", backend.id),
+          log_attribute("backend_id", backend.id)
         ]
       end,
       type: :business
