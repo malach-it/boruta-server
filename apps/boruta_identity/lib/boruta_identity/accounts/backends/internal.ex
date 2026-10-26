@@ -88,35 +88,52 @@ defmodule BorutaIdentity.Accounts.Internal do
         } = backend,
         repo \\ Repo
       ) do
-    case Repo.get_by(User, backend_id: backend_id, uid: id) do
-      nil ->
-        impl_user_params = %{
-          uid: id,
-          did: did,
-          username: email,
-          group: group,
-          backend_id: backend_id,
-          account_type: @account_type
-        }
+    domain_user =
+      case repo.get_by(User, backend_id: backend_id, uid: id) do
+        nil ->
+          impl_user_params = %{
+            uid: id,
+            did: did,
+            username: email,
+            group: group,
+            backend_id: backend_id,
+            account_type: @account_type
+          }
 
-        {replace, impl_user_params} =
-          case metadata do
-            %{} = metadata ->
-              {[:username, :metadata, :group, :did], Map.put(impl_user_params, :metadata, metadata)}
+          {replace, impl_user_params} =
+            case metadata do
+              %{} = metadata ->
+                {[:username, :metadata, :group, :did],
+                 Map.put(impl_user_params, :metadata, metadata)}
 
-            _ ->
-              {[:username, :group, :did], impl_user_params}
-          end
+              _ ->
+                {[:username, :group, :did], impl_user_params}
+            end
 
-        User.implementation_changeset(impl_user_params, backend)
-        |> repo.insert!(
-          on_conflict: {:replace, replace},
-          returning: true,
-          conflict_target: [:backend_id, :uid]
-        )
-      user ->
-        Repo.preload(user, [:authorized_scopes, :consents, :backend, :organizations])
-    end
+          User.implementation_changeset(impl_user_params, backend)
+          |> repo.insert!(
+            on_conflict: {:replace, replace},
+            returning: true,
+            conflict_target: [:backend_id, :uid]
+          )
+
+        %User{username: ^email, did: ^did} = user
+        when (is_nil(group) or user.group == group) and
+               (is_nil(metadata) or user.metadata == metadata) ->
+          user
+
+        user ->
+          attrs = %{did: did}
+          attrs = if is_binary(group), do: Map.put(attrs, :group, group), else: attrs
+          attrs = if is_map(metadata), do: Map.put(attrs, :metadata, metadata), else: attrs
+
+          user
+          |> User.changeset(attrs)
+          |> Ecto.Changeset.change(username: email)
+          |> repo.update!()
+      end
+
+    repo.preload(domain_user, [:authorized_scopes, :consents, :backend, :organizations])
   end
 
   # BorutaIdentity.Accounts.Sessions, BorutaIdentity.Accounts.Settings

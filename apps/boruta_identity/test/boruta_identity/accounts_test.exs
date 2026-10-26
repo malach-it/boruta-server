@@ -20,6 +20,16 @@ defmodule BorutaIdentity.AccountsTest do
 
   setup :set_mox_from_context
 
+  defmodule DomainUserRepo do
+    def get_by(User, _query), do: Process.get(:domain_user)
+    def preload(user, _associations), do: user
+
+    def update!(changeset) do
+      Process.put(:domain_user_updated, true)
+      Ecto.Changeset.apply_changes(changeset)
+    end
+  end
+
   defmodule DummyRegistration do
     @behaviour Accounts.RegistrationApplication
 
@@ -142,6 +152,44 @@ defmodule BorutaIdentity.AccountsTest do
     @impl Accounts.ResetPasswordApplication
     def password_reset_failure(context, error) do
       {:password_reset_failure, context, error}
+    end
+  end
+
+  describe "Internal.domain_user!/3" do
+    test "reuses an unchanged domain user when incoming metadata is absent" do
+      user = %User{
+        uid: "user-1",
+        backend_id: "backend-1",
+        username: "same@example.com",
+        metadata: %{}
+      }
+
+      Process.put(:domain_user, user)
+
+      internal_user = %Internal.User{id: "user-1", email: "same@example.com", metadata: nil}
+      backend = %Backend{id: "backend-1"}
+
+      assert Internal.domain_user!(internal_user, backend, DomainUserRepo) == user
+      refute Process.get(:domain_user_updated)
+    end
+
+    test "updates the domain user when its email changes" do
+      user = %User{
+        uid: "user-1",
+        backend_id: "backend-1",
+        username: "old@example.com",
+        metadata: %{}
+      }
+
+      Process.put(:domain_user, user)
+
+      internal_user = %Internal.User{id: "user-1", email: "new@example.com", metadata: nil}
+      backend = %Backend{id: "backend-1"}
+
+      assert %User{username: "new@example.com"} =
+               Internal.domain_user!(internal_user, backend, DomainUserRepo)
+
+      assert Process.get(:domain_user_updated)
     end
   end
 
