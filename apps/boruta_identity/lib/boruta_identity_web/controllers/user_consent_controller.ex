@@ -24,15 +24,13 @@ defmodule BorutaIdentityWeb.UserConsentController do
   def consent(conn, params) do
     with request when is_binary(request) and request != "" <- conn.query_params["request"],
          client_id when is_binary(client_id) <- client_id_from_request(conn),
-         scope when is_binary(scope) <- scope_from_request(conn) do
+         scope when is_binary(scope) <- scope_from_request(conn),
+         submitted_scopes when is_list(submitted_scopes) <- Map.get(params, "scopes"),
+         true <- Enum.all?(submitted_scopes, &(is_binary(&1) and &1 != "")) do
       current_user = conn.assigns[:current_user]
       requested_scopes = Scope.split(scope)
 
-      consent_params =
-            %{
-              client_id: client_id,
-              scopes: Enum.filter(requested_scopes, &is_binary/1) || []
-            }
+      consent_params = %{client_id: client_id, scopes: submitted_scopes}
 
       Accounts.consent(
         conn,
