@@ -17,8 +17,6 @@
 - [ssi] `vp_token` response type requires resource owner or machine authentication
 - [auth] add public client id unique index
 - [auth] authorization and token success logs include the authorized scope
-- [ssi] the public client's identity provider configuration controls second factor authentication and machine-user consent
-- [infra] Credo reports functions with cyclomatic complexity above 10
 
 ### Fixed
 
