@@ -549,6 +549,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     template =
       IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
 
+    emit_code_authorize_success_event(response.code, response.response_mode)
+
     conn
     |> delete_session(:authorization_request)
     |> put_layout(false)
@@ -573,7 +575,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %Plug.Conn{} = conn,
         %SiopV2Response{response_mode: "direct_post"} = response
       ) do
-    # TODO log business event
+    emit_code_authorize_success_event(response.code, response.response_mode)
 
     conn
     |> delete_session(:authorization_request)
@@ -592,7 +594,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         %Plug.Conn{} = conn,
         %VerifiablePresentationResponse{response_mode: "direct_post"} = response
       ) do
-    # TODO log business event
+    emit_code_authorize_success_event(response.code, response.response_mode)
 
     conn
     |> delete_session(:authorization_request)
@@ -615,6 +617,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     template =
       IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+
+    emit_code_authorize_success_event(response.code, response.response_mode)
 
     conn
     |> delete_session(:authorization_request)
@@ -799,6 +803,10 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   defp emit_credential_offer_authorize_success_event(%CredentialOfferResponse{code: code}) do
+    emit_code_authorize_success_event(code, nil)
+  end
+
+  defp emit_code_authorize_success_event(code, response_mode) do
     expires_in =
       case code.expires_at do
         expires_at when is_integer(expires_at) ->
@@ -810,7 +818,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     emit_authorize_success_event(
       code.type,
-      nil,
+      response_mode,
       expires_in,
       code.client && code.client.id,
       code.sub,
