@@ -93,7 +93,7 @@ defmodule BorutaIdentityWeb.UserSessionController do
   @impl BorutaIdentity.WebauthnAuthenticationApplication
   def webauthn_registration_missing(%Plug.Conn{query_params: query_params} = conn) do
     conn
-    |> put_flash(:warning, "You need to register a TOTP authenticator before continue.")
+    |> put_flash(:warning, "You need to register a Webauthn authenticator before continue.")
     |> redirect(
       to:
         Routes.webauthn_path(BorutaIdentityWeb.Endpoint, :new, %{request: query_params["request"]})
