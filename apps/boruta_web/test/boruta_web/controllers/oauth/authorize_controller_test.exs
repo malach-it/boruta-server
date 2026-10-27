@@ -6,6 +6,9 @@ defmodule BorutaWeb.AuthorizeControllerTest do
 
   alias Boruta.ClientsAdapter
   alias Boruta.Oauth.Error
+  alias Boruta.Oauth.Token
+  alias Boruta.Openid.SiopV2Response
+  alias Boruta.Openid.VerifiablePresentationResponse
   alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.Repo
   alias BorutaWeb.Oauth.AuthorizeController
@@ -152,6 +155,78 @@ defmodule BorutaWeb.AuthorizeControllerTest do
       refute get_session(conn, :session_chosen)
       refute get_session(conn, :totp_authenticated)
       refute get_session(conn, :webauthn_authenticated)
+    end
+  end
+
+  test "direct post authorization responses emit a business success event", %{conn: conn} do
+    test_pid = self()
+    handler_id = {__MODULE__, test_pid, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler_id,
+        [:authorization, :authorize, :success],
+        fn event, measurements, metadata, _config ->
+          send(test_pid, {event, measurements, metadata})
+        end,
+        nil
+      )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
+
+    client = insert(:client) |> then(&ClientsAdapter.get_client(&1.id))
+
+    code = %Token{
+      id: "code-id",
+      type: "preauthorized_code",
+      client: client,
+      sub: "did:key:owner",
+      scope: "openid",
+      expires_at: System.system_time(:second) + 60
+    }
+
+    response_params = %{
+      client_id: "did:key:owner",
+      code: code,
+      scope: code.scope,
+      redirect_uri: "https://wallet.example/callback",
+      issuer: Boruta.Config.issuer(),
+      client: client,
+      response_mode: "direct_post",
+      nonce: "nonce"
+    }
+
+    responses = [
+      struct!(SiopV2Response, response_params),
+      struct!(
+        VerifiablePresentationResponse,
+        Map.put(response_params, :presentation_definition, %{})
+      )
+    ]
+
+    for response <- responses do
+      conn = conn |> init_test_session(%{}) |> AuthorizeController.authorize_success(response)
+
+      redirect_uri =
+        redirected_to(conn) |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+
+      assert redirect_uri["redirect_uri"] =~ "/openid/direct_post/code-id"
+
+      assert_receive {
+        [:authorization, :authorize, :success],
+        %{},
+        %{
+          type: "preauthorized_code",
+          response_mode: "direct_post",
+          client_id: client_id,
+          sub: "did:key:owner",
+          scope: "openid",
+          expires_in: expires_in
+        }
+      }
+
+      assert client_id == client.id
+      assert expires_in in 0..60
     end
   end
 end
