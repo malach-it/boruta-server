@@ -31,7 +31,7 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   def context(context, %{conn: conn, identity_provider: identity_provider} = assigns) do
     %Plug.Conn{query_params: query_params} = conn
-    request = assigns[:request] || Map.get(query_params, "request")
+    request = assigns[:request] || Map.get(query_params, "request") || stored_request_id(conn)
     request_params = request_query_params(request)
     backend = identity_provider.backend
 
@@ -184,7 +184,7 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   defp paths(conn, assigns) do
     %Plug.Conn{query_params: query_params} = conn
-    request = assigns[:request] || Map.get(query_params, "request")
+    request = assigns[:request] || Map.get(query_params, "request") || stored_request_id(conn)
     request_params = request_query_params(request)
 
     %{
@@ -246,6 +246,13 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   defp request_query_params(request) when request in [nil, ""], do: %{}
   defp request_query_params(request), do: %{request: request}
+
+  defp stored_request_id(conn) do
+    case Plug.Conn.get_session(conn, :authorization_request) do
+      %{"id" => id} -> id
+      _ -> nil
+    end
+  end
 
   defp errors(%{errors: errors}) do
     formatted_errors = Enum.map(errors, &%{message: &1})
