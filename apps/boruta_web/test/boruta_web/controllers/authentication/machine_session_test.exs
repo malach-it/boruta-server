@@ -55,7 +55,7 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
     authorization =
       conn
       |> init_test_session(
-        user_token: session_token,
+        user_token: %{client.id => session_token},
         machine_authorization: %{
           code: "other-code",
           client_id: "did:jwk:other",
@@ -71,7 +71,7 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
       )
 
     assert redirected_to(authorization) =~ "/users/log_in"
-    assert get_session(authorization, :user_token) == nil
+    assert get_session(authorization, :user_token) == %{}
     assert get_session(authorization, :machine_authorization) == nil
     assert Accounts.get_user_by_session_token(session_token) == nil
 
@@ -146,7 +146,7 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
     {:ok, machine} = Machine.domain_user!(%ResourceOwner{sub: id_token}, Backend.default!())
 
     assert machine.uid =~ "did:key:"
-    session_token = get_session(direct_post, :user_token)
+    session_token = get_session(direct_post, :user_token)[did]
     assert is_binary(session_token)
     assert Accounts.get_user_by_session_token(session_token).id == machine.id
 
@@ -285,7 +285,7 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
 
       assert deeplink_params["redirect_uri"] =~ "/openid/direct_post/"
       refute redirected_to(siopv2_start) =~ "/users/consent"
-      assert get_session(siopv2_start, :user_token) == nil
+      assert get_session(siopv2_start, :user_token) == %{}
 
       siopv2_start
     end)

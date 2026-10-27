@@ -35,17 +35,18 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
     # TODO test different validation cases
     test "validates request params", %{
       conn: conn,
+      client: client,
       resource_owner: resource_owner
     } do
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true)
 
       assert_raise BorutaWeb.AuthorizeError,
                    "Request is not a valid OAuth request. Need a response_type param.",
                    fn ->
-                     get(conn, "/oauth/authorize")
+                     get(conn, Routes.authorize_path(conn, :authorize, client_id: client.id))
                    end
     end
 
@@ -54,9 +55,11 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
       redirect_uri: redirect_uri,
       resource_owner: resource_owner
     } do
+      invalid_client_id = "6a2f41a3-c54c-fce8-32d2-0324e1c32e22"
+
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, invalid_client_id)
         |> init_test_session(session_chosen: true)
 
       assert_raise BorutaWeb.AuthorizeError, "Invalid client_id or redirect_uri.", fn ->
@@ -64,7 +67,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
           conn,
           Routes.authorize_path(conn, :authorize, %{
             response_type: "token",
-            client_id: "6a2f41a3-c54c-fce8-32d2-0324e1c32e22",
+            client_id: invalid_client_id,
             redirect_uri: redirect_uri,
             state: "state"
           })
@@ -111,7 +114,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
@@ -157,7 +160,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
@@ -215,7 +218,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
     } do
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true)
 
       conn =
@@ -255,7 +258,7 @@ defmodule BorutaWeb.Oauth.ImplicitTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       BorutaWeb.IdentityFactory.insert(:consent,

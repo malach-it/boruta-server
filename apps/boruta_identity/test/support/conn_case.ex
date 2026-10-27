@@ -79,13 +79,14 @@ defmodule BorutaIdentityWeb.ConnCase do
 
   It returns an updated `conn`.
   """
-  def log_in(conn, user, params \\ %{}) do
+  def log_in(conn, user, params \\ %{}, client_id \\ nil) do
     token = generate_user_session_token(user)
 
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
+    |> Plug.Conn.fetch_query_params()
     |> Map.put(:body_params, params)
-    |> Authenticable.store_user_session(token)
+    |> Authenticable.store_user_session(token, client_id)
   end
 
   def with_a_request(%{conn: conn}) do

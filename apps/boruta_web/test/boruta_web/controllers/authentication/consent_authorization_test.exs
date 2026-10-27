@@ -54,13 +54,14 @@ defmodule BorutaWeb.Oauth.ConsentAuthorizationTest do
 
   test "returning to authorize before deciding consent does not issue a code", %{
     conn: conn,
+    client: client,
     user: user,
     authorize_path: authorize_path,
     redirect_uri: redirect_uri
   } do
     consent_redirect =
       conn
-      |> log_in(user)
+      |> log_in_for_client(user, client.id)
       |> init_test_session(session_chosen: true)
       |> get(authorize_path)
 
@@ -88,7 +89,7 @@ defmodule BorutaWeb.Oauth.ConsentAuthorizationTest do
 
     consent_redirect =
       conn
-      |> log_in(user)
+      |> log_in_for_client(user, client.id)
       |> init_test_session(session_chosen: true)
       |> get(
         Routes.authorize_path(conn, :authorize, %{
@@ -133,11 +134,12 @@ defmodule BorutaWeb.Oauth.ConsentAuthorizationTest do
       scopes: [scope.name]
     )
 
-    assert_consent_required(conn, user, authorize_path, redirect_uri)
+    assert_consent_required(conn, user, client.id, authorize_path, redirect_uri)
   end
 
   test "another client's consent cannot authorize this client", %{
     conn: conn,
+    client: client,
     user: user,
     scope: scope,
     authorize_path: authorize_path,
@@ -151,13 +153,13 @@ defmodule BorutaWeb.Oauth.ConsentAuthorizationTest do
       scopes: [scope.name]
     )
 
-    assert_consent_required(conn, user, authorize_path, redirect_uri)
+    assert_consent_required(conn, user, client.id, authorize_path, redirect_uri)
   end
 
-  defp assert_consent_required(conn, user, authorize_path, redirect_uri) do
+  defp assert_consent_required(conn, user, client_id, authorize_path, redirect_uri) do
     response =
       conn
-      |> log_in(user)
+      |> log_in_for_client(user, client_id)
       |> init_test_session(session_chosen: true)
       |> get(authorize_path)
 

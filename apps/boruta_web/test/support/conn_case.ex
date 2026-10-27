@@ -48,4 +48,8 @@ defmodule BorutaWeb.ConnCase do
 
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  def log_in_for_client(conn, user, client_id) do
+    BorutaIdentityWeb.ConnCase.log_in(conn, user, %{}, client_id)
+  end
 end

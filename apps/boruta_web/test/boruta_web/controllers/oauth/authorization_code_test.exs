@@ -30,7 +30,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
     } do
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
 
       conn =
         get(
@@ -90,7 +90,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true)
 
       conn =
@@ -223,7 +223,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
     } do
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true)
 
       assert_raise BorutaWeb.AuthorizeError, "Invalid client_id or redirect_uri.", fn ->
@@ -260,7 +260,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
@@ -305,7 +305,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
@@ -363,7 +363,7 @@ defmodule BorutaWeb.Oauth.AuthorizationCodeTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       BorutaWeb.IdentityFactory.insert(:consent,

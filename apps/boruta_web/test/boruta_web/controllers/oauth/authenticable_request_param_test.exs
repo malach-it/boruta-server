@@ -67,7 +67,8 @@ defmodule BorutaWeb.Oauth.AuthenticableRequestParamTest do
       |> get("/accounts/users/log_in")
 
     assert response(identity_page, 200) =~ "/users/log_in"
-    refute response(identity_page, 200) =~ "request="
+    assert response(identity_page, 200) =~
+             IdentityRoutes.user_session_path(identity_page, :create, request: request)
 
     assert Authenticable.client_id_from_request(%{
              identity_conn

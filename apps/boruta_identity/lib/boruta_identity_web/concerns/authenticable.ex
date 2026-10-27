@@ -46,7 +46,7 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   @spec get_user_session(conn :: Plug.Conn.t()) :: session_token :: String.t()
   def get_user_session(conn) do
-    client_id = client_id_from_request(conn)
+    client_id = client_id_from_request(conn) || conn.query_params["client_id"]
     session = case get_session(conn, @session_key) do
       nil -> %{}
       "" <> _token -> %{}
@@ -57,8 +57,8 @@ defmodule BorutaIdentityWeb.Authenticable do
   end
 
   @spec remove_user_session(conn :: Plug.Conn.t()) :: conn :: Plug.Conn.t()
-  def remove_user_session(conn) do
-    client_id = client_id_from_request(conn)
+  def remove_user_session(conn, client_id \\ nil) do
+    client_id = client_id || client_id_from_request(conn)
     session = case get_session(conn, @session_key) do
       nil -> %{}
       "" <> _token -> %{}

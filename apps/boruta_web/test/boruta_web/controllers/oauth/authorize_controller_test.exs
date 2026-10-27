@@ -35,7 +35,7 @@ defmodule BorutaWeb.AuthorizeControllerTest do
     } do
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
 
       conn =
         get(
@@ -76,7 +76,7 @@ defmodule BorutaWeb.AuthorizeControllerTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true)
         |> get(
           Routes.authorize_path(conn, :authorize, %{
@@ -116,7 +116,7 @@ defmodule BorutaWeb.AuthorizeControllerTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true)
         |> get(
           Routes.authorize_path(conn, :authorize, %{

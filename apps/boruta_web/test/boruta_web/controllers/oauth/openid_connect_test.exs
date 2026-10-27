@@ -235,7 +235,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true, preauthorizations: %{request_param => true})
 
       conn =
@@ -268,7 +268,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
     } do
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(session_chosen: true)
 
       conn =
@@ -296,7 +296,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
     } do
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
 
       conn =
         get(
@@ -321,7 +321,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
     } do
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, "did:key:test")
 
       conn =
         get(
@@ -365,7 +365,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(preauthorizations: %{request_param => true})
 
       conn =
@@ -415,7 +415,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
 
       conn =
         conn
-        |> log_in(resource_owner)
+        |> log_in_for_client(resource_owner, client.id)
         |> init_test_session(preauthorizations: %{request_param => true})
 
       conn =

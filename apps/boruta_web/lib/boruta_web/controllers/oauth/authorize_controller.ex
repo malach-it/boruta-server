@@ -15,7 +15,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       identity_request_params: 1,
       prepare_request_param: 1,
       get_user_session: 1,
-      remove_user_session: 1
+      remove_user_session: 2
     ]
 
   alias Boruta.ClientsAdapter
@@ -54,7 +54,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           case MachineSession.from_session_authorize(conn) do
             nil ->
               _ = Sessions.delete_session(get_user_session(conn))
-              {remove_user_session(conn), nil}
+              {remove_user_session(conn, conn.query_params["client_id"]), nil}
 
             user ->
               {conn, user}
