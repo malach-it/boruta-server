@@ -22,10 +22,10 @@ defmodule BorutaIdentityWeb.UserConsentController do
   end
 
   def consent(conn, params) do
-    with request when is_binary(request) and request != "" <- conn.query_params["request"],
-         client_id when is_binary(client_id) <- client_id_from_request(conn),
-         scope when is_binary(scope) <- scope_from_request(conn),
-         submitted_scopes when is_list(submitted_scopes) <- Map.get(params, "scopes"),
+    scope = scope_from_request(conn)
+    client_id = client_id_from_request(conn)
+
+    with submitted_scopes when is_list(submitted_scopes) <- params["scopes"],
          true <- Enum.all?(submitted_scopes, &(is_binary(&1) and &1 != "")) do
       current_user = conn.assigns[:current_user]
       requested_scopes = Scope.split(scope)
@@ -41,11 +41,28 @@ defmodule BorutaIdentityWeb.UserConsentController do
         __MODULE__
       )
     else
-      _ -> send_resp(conn, :conflict, "Authorization request changed. Restart consent.")
+      _ ->
+        current_user = conn.assigns[:current_user]
+
+        Accounts.initialize_consent(conn, client_id, current_user, scope, __MODULE__)
     end
   end
 
   @impl BorutaIdentity.Accounts.ConsentApplication
+  def consent_initialized(conn, client, [], template) do
+    conn
+    |> put_layout(false)
+    |> put_flash(:warning, "Scope list is empty.")
+    |> put_view(TemplateView)
+    |> render("template.html",
+      template: template,
+      assigns: %{
+        scopes: [],
+        client: client
+      }
+    )
+  end
+
   def consent_initialized(conn, client, scopes, template) do
     conn
     |> put_layout(false)

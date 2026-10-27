@@ -25,7 +25,6 @@ defmodule BorutaIdentity.Accounts.Consents do
 
   alias Boruta.ClientsAdapter
   alias Boruta.Ecto.Admin
-  alias Boruta.Ecto.Clients
   alias Boruta.Oauth.Scope
   alias BorutaIdentity.Accounts.Consent
   alias BorutaIdentity.Accounts.User
@@ -60,7 +59,7 @@ defmodule BorutaIdentity.Accounts.Consents do
     client =
       case client_id do
         "did:" <> _key -> %{ClientsAdapter.public!() | name: client_id}
-        _ -> Clients.get_client(client_id)
+        _ -> ClientsAdapter.get_client(client_id)
       end
 
     scopes = Scope.split(scope)

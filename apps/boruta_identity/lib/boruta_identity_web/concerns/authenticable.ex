@@ -158,17 +158,17 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec scope_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
   def scope_from_request(conn) do
     with {:ok, claims} <- claims_from_request(conn),
-         {:ok, scope} <- Map.fetch(claims, "scope") do
+         {:ok, scope} when scope != :null <- Map.fetch(claims, "scope") do
       scope
     else
-      _ -> nil
+      _ -> ""
     end
   end
 
   @spec client_id_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
   def client_id_from_request(conn) do
     with {:ok, claims} <- claims_from_request(conn),
-         {:ok, client_id} <- Map.fetch(claims, "client_id") do
+         {:ok, client_id} when client_id != :null <- Map.fetch(claims, "client_id") do
       client_id
     else
       _ -> nil
@@ -178,7 +178,7 @@ defmodule BorutaIdentityWeb.Authenticable do
   @spec user_return_to_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
   def user_return_to_from_request(conn) do
     with {:ok, claims} <- claims_from_request(conn),
-         {:ok, user_return_to} <- Map.fetch(claims, "user_return_to") do
+         {:ok, user_return_to} when user_return_to != :null <- Map.fetch(claims, "user_return_to") do
       user_return_to
     else
       _ -> nil

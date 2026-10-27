@@ -21,6 +21,7 @@
 
 ### Fixed
 
+- [identity] consent requests with no scope do not throw an internal server error
 - [identity] prefill user edition form on update failure
 - [ssi] verifiable credential claim status TTL persists from the backend form
 - [ssi] public-client preauthorization resumes with the expected response types
