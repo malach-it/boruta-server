@@ -3,7 +3,11 @@ defmodule BorutaIdentityWeb.Sessions do
 
   use BorutaIdentityWeb, :controller
 
-  import BorutaIdentityWeb.Authenticable, only: [remember_me_cookie: 0, after_sign_in_path: 1]
+  import BorutaIdentityWeb.Authenticable, only: [
+    remember_me_cookie: 1,
+    after_sign_in_path: 1,
+    client_id_from_request: 1
+  ]
 
   alias BorutaIdentity.Accounts
   alias BorutaIdentity.Accounts.User
@@ -21,16 +25,27 @@ defmodule BorutaIdentityWeb.Sessions do
   end
 
   defp ensure_user_token(conn) do
-    if user_token = get_session(conn, :user_token) do
-      {user_token, conn}
-    else
-      conn = fetch_cookies(conn, signed: [remember_me_cookie()])
+    client_id = client_id_from_request(conn) || conn.query_params["client_id"]
+    session = case get_session(conn, :user_token) do
+      nil -> %{}
+      "" <> _token -> %{}
+      session -> session
+    end
 
-      if user_token = conn.cookies[remember_me_cookie()] do
-        {user_token, put_session(conn, :user_token, user_token)}
-      else
-        {nil, conn}
-      end
+    case Map.get(session, client_id) do
+      nil ->
+        conn = fetch_cookies(conn, signed: [remember_me_cookie(client_id)])
+
+        case conn.cookies[remember_me_cookie(client_id)] do
+          nil ->
+            {nil, conn}
+
+          user_token ->
+            {user_token, put_session(conn, :user_token, Map.put(session, client_id, user_token))}
+        end
+
+      user_token ->
+        {user_token, conn}
     end
   end
 

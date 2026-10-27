@@ -6,11 +6,10 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
   alias BorutaIdentity.Accounts.User
   alias BorutaIdentity.Repo
 
+  setup :with_a_request
   setup :register_and_log_in
 
   describe "GET /users/settings" do
-    setup :with_a_request
-
     test "renders settings page", %{conn: conn, request: request} do
       conn = get(conn, Routes.user_settings_path(conn, :edit, request: request))
       response = html_response(conn, 200)
@@ -25,8 +24,6 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
   end
 
   describe "PUT /users/settings" do
-    setup :with_a_request
-
     setup %{identity_provider: identity_provider, user: user} do
       {:ok, _identity_provider} =
         identity_provider
@@ -40,7 +37,12 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
     test "render errors when data is invalid"
 
     test "updates an user with metadata", %{conn: conn, request: request, user: user} do
-      {:ok, _backend} = Ecto.Changeset.change(user.backend, %{metadata_fields: [%{"attribute_name" => "test", "user_editable" => true}]}) |> Repo.update()
+      {:ok, _backend} =
+        Ecto.Changeset.change(user.backend, %{
+          metadata_fields: [%{"attribute_name" => "test", "user_editable" => true}]
+        })
+        |> Repo.update()
+
       conn =
         put(conn, Routes.user_settings_path(conn, :update, request: request), %{
           "user" => %{
@@ -51,7 +53,8 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
 
       assert redirected_to(conn, 302) == Routes.user_settings_path(conn, :edit, request: request)
 
-      assert %User{metadata: %{"test" => %{"value" => "test value", "status" => "valid"}}} = Repo.reload(user)
+      assert %User{metadata: %{"test" => %{"value" => "test value", "status" => "valid"}}} =
+               Repo.reload(user)
     end
 
     test "updates an user without metadata (do not override)", %{
@@ -76,8 +79,6 @@ defmodule BorutaIdentityWeb.UserSettingsControllerTest do
   end
 
   describe "POST /users/destroy" do
-    setup :with_a_request
-
     test "redirects to log in", %{conn: conn, request: request} do
       conn = post(conn, Routes.user_settings_path(conn, :destroy, request: request))
       assert redirected_to(conn) =~ ~r"/users/log_in"

@@ -88,7 +88,7 @@ defmodule BorutaIdentityWeb.ConnCase do
     |> Authenticable.store_user_session(token)
   end
 
-  def with_a_request(_params) do
+  def with_a_request(%{conn: conn}) do
     identity_provider =
       BorutaIdentity.Factory.insert(:identity_provider,
         registrable: true,
@@ -117,6 +117,12 @@ defmodule BorutaIdentityWeb.ConnCase do
         BorutaIdentityWeb.Token.application_signer()
       )
 
-    %{request: jwt, identity_provider: identity_provider, client: client, requested_scope: scope}
+    %{
+      conn: %{conn | query_params: %{"request" => jwt}},
+      request: jwt,
+      identity_provider: identity_provider,
+      client: client,
+      requested_scope: scope
+    }
   end
 end

@@ -137,23 +137,25 @@ defmodule BorutaIdentityWeb.TemplateView do
   end
 
   def context(context, %{code: code} = assigns) do
-
     %{code: code}
     |> Map.merge(context)
     |> context(Map.delete(assigns, :code))
   end
 
   def context(context, %{current_user: current_user} = assigns) do
-    current_user = Map.take(current_user, [:username, :webauthn_registered_at, :totp_registered_at, :metadata])
+    current_user =
+      Map.take(current_user, [:username, :webauthn_registered_at, :totp_registered_at, :metadata])
 
     current_user = %{
       current_user
       | totp_registered_at:
           current_user.totp_registered_at &&
             current_user.totp_registered_at |> DateTime.truncate(:second) |> DateTime.to_string(),
-      webauthn_registered_at:
+        webauthn_registered_at:
           current_user.webauthn_registered_at &&
-            current_user.webauthn_registered_at |> DateTime.truncate(:second) |> DateTime.to_string()
+            current_user.webauthn_registered_at
+            |> DateTime.truncate(:second)
+            |> DateTime.to_string()
     }
 
     %{current_user: current_user}
@@ -193,8 +195,7 @@ defmodule BorutaIdentityWeb.TemplateView do
         Routes.user_reset_password_path(BorutaIdentityWeb.Endpoint, :create, request_params),
       create_user_confirmation_path:
         Routes.user_confirmation_path(BorutaIdentityWeb.Endpoint, :create, request_params),
-      create_user_consent_path:
-        Routes.user_consent_path(conn, :consent, consent_request_params(conn, request_params)),
+      create_user_consent_path: Routes.user_consent_path(conn, :consent, request_params),
       create_user_registration_path:
         Routes.user_registration_path(BorutaIdentityWeb.Endpoint, :create, request_params),
       create_user_session_path:
@@ -208,7 +209,11 @@ defmodule BorutaIdentityWeb.TemplateView do
           request_params
         ),
       delete_user_session_path:
-        Routes.user_session_path(BorutaIdentityWeb.Endpoint, :delete, request_params),
+        Routes.user_session_path(
+          BorutaIdentityWeb.Endpoint,
+          :delete,
+          request_params
+        ),
       edit_user_path:
         Routes.user_settings_path(BorutaIdentityWeb.Endpoint, :edit, request_params),
       destroy_user_path:
@@ -241,18 +246,6 @@ defmodule BorutaIdentityWeb.TemplateView do
 
   defp request_query_params(request) when request in [nil, ""], do: %{}
   defp request_query_params(request), do: %{request: request}
-
-  defp consent_request_params(conn, request_params) when request_params == %{} do
-    case Plug.Conn.get_session(conn, :authorization_request) do
-      %{"id" => id, "jwt" => jwt} when is_binary(id) and is_binary(jwt) ->
-        %{request: id}
-
-      _ ->
-        request_params
-    end
-  end
-
-  defp consent_request_params(_conn, request_params), do: request_params
 
   defp errors(%{errors: errors}) do
     formatted_errors = Enum.map(errors, &%{message: &1})

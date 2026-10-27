@@ -16,37 +16,59 @@ defmodule BorutaIdentityWeb.Authenticable do
   @authorization_request_key :authorization_request
   @remember_me_options [sign: true, max_age: @max_age, secure: true, same_site: "Lax"]
 
-  @spec remember_me_cookie() :: String.t()
-  def remember_me_cookie do
-    :boruta_identity
+  @spec remember_me_cookie(client_id :: String.t()) :: String.t()
+  def remember_me_cookie(client_id) do
+    (:boruta_identity
     |> Application.get_env(BorutaIdentityWeb.Authenticable, [])
-    |> Keyword.get(:remember_me_cookie, @default_remember_me_cookie)
+    |> Keyword.get(:remember_me_cookie, @default_remember_me_cookie)) <>
+      "-#{client_id}"
   end
 
   @spec store_user_session(conn :: Plug.Conn.t(), session_token :: String.t()) ::
           conn :: Plug.Conn.t()
-  def store_user_session(%Plug.Conn{body_params: params} = conn, session_token) do
+  @spec store_user_session(conn :: Plug.Conn.t(), session_token :: String.t(), client_id :: String.t()) ::
+          conn :: Plug.Conn.t()
+  def store_user_session(%Plug.Conn{body_params: params} = conn, session_token, client_id \\ nil) do
     user = session_token && Accounts.get_user_by_session_token(session_token)
+
+    client_id = client_id || client_id_from_request(conn)
+    session = case get_session(conn, @session_key) do
+      nil -> %{}
+      "" <> _token -> %{}
+      session -> session
+    end
 
     conn
     |> assign(:current_user, user)
-    |> put_session(@session_key, session_token)
-    |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(session_token)}")
+    |> put_session(@session_key, Map.put(session, client_id, session_token))
     |> maybe_write_remember_me_cookie(session_token, params["user"])
   end
 
   @spec get_user_session(conn :: Plug.Conn.t()) :: session_token :: String.t()
   def get_user_session(conn) do
-    get_session(conn, @session_key)
+    client_id = client_id_from_request(conn)
+    session = case get_session(conn, @session_key) do
+      nil -> %{}
+      "" <> _token -> %{}
+      session -> session
+    end
+
+    Map.get(session, client_id)
   end
 
   @spec remove_user_session(conn :: Plug.Conn.t()) :: conn :: Plug.Conn.t()
   def remove_user_session(conn) do
+    client_id = client_id_from_request(conn)
+    session = case get_session(conn, @session_key) do
+      nil -> %{}
+      "" <> _token -> %{}
+      session -> session
+    end
+
     conn
-    |> delete_resp_cookie(remember_me_cookie())
-    |> delete_session(@session_key)
+    |> delete_resp_cookie(remember_me_cookie(client_id))
+    |> put_session(@session_key, Map.delete(session, client_id))
     |> delete_session(:machine_authorization)
-    |> delete_session(:live_socket_id)
     |> delete_session(:session_chosen)
     |> delete_session(:preauthorizations)
     |> delete_session(:totp_authenticated)
@@ -55,7 +77,9 @@ defmodule BorutaIdentityWeb.Authenticable do
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => remember_me})
        when remember_me in ["true", "on"] do
-    put_resp_cookie(conn, remember_me_cookie(), token, @remember_me_options)
+    client_id = client_id_from_request(conn)
+
+    put_resp_cookie(conn, remember_me_cookie(client_id), token, @remember_me_options)
   end
 
   defp maybe_write_remember_me_cookie(conn, _token, _params) do

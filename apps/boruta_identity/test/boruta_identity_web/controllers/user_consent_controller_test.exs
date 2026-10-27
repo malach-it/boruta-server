@@ -52,6 +52,7 @@ defmodule BorutaIdentityWeb.UserConsentControllerTest do
 
       valid_conn =
         build_conn()
+        |> Map.put(:query_params, %{"request" => request})
         |> log_in(user)
         |> put_session(:authorization_request, stored_request)
         |> post(Routes.user_consent_path(conn, :consent, request: request_id), %{
@@ -67,11 +68,12 @@ defmodule BorutaIdentityWeb.UserConsentControllerTest do
 
       missing_request_conn =
         build_conn()
+        |> Map.put(:query_params, %{"request" => request})
         |> log_in(user)
         |> put_session(:authorization_request, stored_request)
         |> post(Routes.user_consent_path(conn, :consent), %{"scopes" => [scope.name]})
 
-      assert response(missing_request_conn, 409) =~ "Authorization request changed"
+      assert redirected_to(missing_request_conn) =~ Routes.user_session_path(conn, :new)
     end
 
     test "stale stateful consent form cannot grant another client's scopes", %{
@@ -105,13 +107,14 @@ defmodule BorutaIdentityWeb.UserConsentControllerTest do
 
       conn =
         conn
+        |> Map.put(:query_params, %{"request" => other_request})
         |> log_in(user)
         |> put_session(:authorization_request, %{"id" => "second-request", "jwt" => other_request})
         |> post(Routes.user_consent_path(conn, :consent, request: stale_request_id), %{
           "scopes" => [scope.name]
         })
 
-      assert response(conn, 409) =~ "Authorization request changed"
+      assert redirected_to(conn) =~ Routes.user_session_path(conn, :new)
       refute Repo.get_by(Consent, user_id: user.id, client_id: other_client.id)
       refute Repo.get_by(Consent, user_id: user.id, client_id: client.id)
     end

@@ -4,6 +4,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   import BorutaIdentity.AccountsFixtures
 
   alias BorutaIdentity.Repo
+  alias BorutaIdentityWeb.Authenticable
 
   setup :with_a_request
 
@@ -31,7 +32,12 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
   end
 
   describe "POST /users/log_in" do
-    test "logs the user in with remember me", %{conn: conn, user: user, request: request} do
+    test "logs the user in with remember me", %{
+      conn: conn,
+      user: user,
+      request: request,
+      client: client
+    } do
       conn =
         post(conn, Routes.user_session_path(conn, :create, request: request), %{
           "user" => %{
@@ -41,7 +47,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
           }
         })
 
-      assert conn.resp_cookies["_boruta_identity_web_user_remember_me"]
+      assert conn.resp_cookies[Authenticable.remember_me_cookie(client.id)]
       assert redirected_to(conn) =~ "/"
     end
 
@@ -264,7 +270,7 @@ defmodule BorutaIdentityWeb.UserSessionControllerTest do
 
       assert redirected_to(conn) == Routes.user_session_path(conn, :new, request: request)
       assert get_flash(conn, :info) =~ "Logged out successfully"
-      refute get_session(conn, :user_token)
+      assert get_session(conn, :user_token) == %{}
       refute get_session(conn, :session_chosen)
       refute get_session(conn, :preauthorizations)
       refute get_session(conn, :totp_authenticated)

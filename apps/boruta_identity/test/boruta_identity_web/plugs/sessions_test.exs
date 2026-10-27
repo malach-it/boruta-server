@@ -3,9 +3,8 @@ defmodule BorutaIdentityWeb.SessionsTest do
 
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentityWeb.Authenticable
   alias BorutaIdentityWeb.Sessions
-
-  @remember_me_cookie "_boruta_identity_web_user_remember_me"
 
   setup %{conn: conn} do
     conn =
@@ -18,9 +17,52 @@ defmodule BorutaIdentityWeb.SessionsTest do
   end
 
   describe "fetch_current_user/2" do
+    test "authenticates only the user session belonging to the requesting client", %{conn: conn} do
+      first_user = user_fixture()
+      second_user = user_fixture()
+      first_token = generate_user_session_token(first_user)
+      second_token = generate_user_session_token(second_user)
+      first_client_id = SecureRandom.uuid()
+      second_client_id = SecureRandom.uuid()
+      other_client_id = SecureRandom.uuid()
+
+      conn =
+        put_session(conn, :user_token, %{
+          first_client_id => first_token,
+          second_client_id => second_token
+        })
+
+      assert conn
+             |> with_client_request(first_client_id)
+             |> Sessions.fetch_current_user([])
+             |> Map.get(:assigns)
+             |> Map.get(:current_user)
+             |> Map.get(:id) == first_user.id
+
+      assert conn
+             |> with_client_request(second_client_id)
+             |> Sessions.fetch_current_user([])
+             |> Map.get(:assigns)
+             |> Map.get(:current_user)
+             |> Map.get(:id) == second_user.id
+
+      refute conn
+             |> with_client_request(other_client_id)
+             |> Sessions.fetch_current_user([])
+             |> Map.get(:assigns)
+             |> Map.get(:current_user)
+    end
+
     test "authenticates user from session", %{conn: conn, user: user} do
       user_token = generate_user_session_token(user)
-      conn = conn |> put_session(:user_token, user_token) |> Sessions.fetch_current_user([])
+      client_id = SecureRandom.uuid()
+
+      conn =
+        conn
+        |> with_client_request(client_id)
+        |> put_session(:user_token, %{client_id => user_token})
+        |> Sessions.fetch_current_user([])
+
       assert conn.assigns.current_user.id == user.id
     end
 
@@ -32,21 +74,48 @@ defmodule BorutaIdentityWeb.SessionsTest do
     end
 
     test "authenticates user from cookies", %{conn: conn, user: user} do
+      client_id = SecureRandom.uuid()
+
       logged_in_conn =
         conn
         |> fetch_cookies()
+        |> with_client_request(client_id)
         |> log_in(user, %{"user" => %{"remember_me" => "true"}})
 
-      user_token = logged_in_conn.cookies[@remember_me_cookie]
-      %{value: signed_token} = logged_in_conn.resp_cookies[@remember_me_cookie]
+      user_token = get_session(logged_in_conn, :user_token)[client_id]
+      cookie_name = Authenticable.remember_me_cookie(client_id)
+      %{value: signed_token} = logged_in_conn.resp_cookies[cookie_name]
 
       conn =
         conn
-        |> put_req_cookie(@remember_me_cookie, signed_token)
+        |> with_client_request(client_id)
+        |> put_req_cookie(cookie_name, signed_token)
         |> Sessions.fetch_current_user([])
 
-      assert get_session(conn, :user_token) == user_token
+      assert get_session(conn, :user_token) == %{client_id => user_token}
       assert conn.assigns.current_user.id == user.id
+    end
+
+    test "remember me cookie does not authenticate another client", %{conn: conn, user: user} do
+      client_id = SecureRandom.uuid()
+
+      logged_in_conn =
+        conn
+        |> fetch_cookies()
+        |> with_client_request(client_id)
+        |> log_in(user, %{"user" => %{"remember_me" => "true"}})
+
+      cookie_name = Authenticable.remember_me_cookie(client_id)
+      %{value: signed_token} = logged_in_conn.resp_cookies[cookie_name]
+
+      conn =
+        conn
+        |> with_client_request(SecureRandom.uuid())
+        |> put_req_cookie(cookie_name, signed_token)
+        |> Sessions.fetch_current_user([])
+
+      refute conn.assigns.current_user
+      refute get_session(conn, :user_token)
     end
   end
 
@@ -77,5 +146,15 @@ defmodule BorutaIdentityWeb.SessionsTest do
       refute conn.halted
       refute conn.status
     end
+  end
+
+  defp with_client_request(conn, client_id) do
+    {:ok, request, _claims} =
+      Joken.encode_and_sign(
+        %{"client_id" => client_id},
+        BorutaIdentityWeb.Token.application_signer()
+      )
+
+    %{conn | query_params: %{"request" => request}}
   end
 end

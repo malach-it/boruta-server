@@ -197,7 +197,7 @@ defmodule BorutaWeb.Oauth.TokenController do
       conn =
         conn
         |> fetch_session()
-        |> Authenticable.store_user_session(session_token)
+        |> Authenticable.store_user_session(session_token, code.sub)
         |> put_session(:machine_authorization, %{
           code: code.value,
           client_id: code.sub,

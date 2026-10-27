@@ -3,6 +3,7 @@ defmodule BorutaIdentityWeb.ChooseSessionControllerTest do
 
   import BorutaIdentity.AccountsFixtures
 
+  alias BorutaIdentity.IdentityProviders
   alias BorutaIdentity.Repo
 
   describe "GET /choose_session" do
@@ -16,6 +17,26 @@ defmodule BorutaIdentityWeb.ChooseSessionControllerTest do
 
       assert html_response(conn, 200) =~ "Continue ?"
       refute get_session(conn, :session_chosen)
+    end
+
+    test "includes the stateful request in logout links", %{
+      conn: conn,
+      request: request,
+      identity_provider: identity_provider
+    } do
+      {:ok, _identity_provider} =
+        IdentityProviders.update_identity_provider(identity_provider, %{request_mode: "stateful"})
+
+      request_id = "first-request"
+
+      conn =
+        conn
+        |> log_in(user_fixture())
+        |> put_session(:authorization_request, %{"id" => request_id, "jwt" => request})
+        |> get(Routes.choose_session_path(conn, :index))
+
+      assert html_response(conn, 200) =~
+               Routes.user_session_path(conn, :delete, request: request_id)
     end
 
     test "redirect to log in if identity provider disabled choose_session", %{
