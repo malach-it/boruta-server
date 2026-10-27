@@ -32,8 +32,10 @@ export default {
     this.editor.updateCode(this.content)
   },
   watch: {
-    content(newContent, content) {
-      if (!content) this.editor.updateCode(this.content)
+    content(newContent) {
+      if (this.editor && newContent !== this.editor.toString()) {
+        this.editor.updateCode(newContent ?? '')
+      }
     }
   }
 }

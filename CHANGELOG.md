@@ -22,6 +22,7 @@
 
 ### Fixed
 
+- [admin] resetting a template updates the text editor with the default content immediately
 - [identity] updated identity provider templates no longer serve stale cached content when the update omits the template type
 - [identity] consent requests with no scope do not throw an internal server error
 - [identity] prefill user edition form on update failure
