@@ -188,6 +188,41 @@ defmodule BorutaIdentity.IdentityProvidersTest do
                )
     end
 
+    test "update_identity_provider/2 invalidates a template updated without its type" do
+      identity_provider = identity_provider_fixture()
+
+      template =
+        insert(:new_registration_template,
+          identity_provider: identity_provider,
+          content: "cached content"
+        )
+
+      assert %Template{content: "cached content"} =
+               IdentityProviders.get_identity_provider_template!(
+                 identity_provider.id,
+                 :new_registration
+               )
+
+      IdentityProviders.get_identity_provider_template!(identity_provider.id, :choose_session)
+
+      assert {:ok, %IdentityProvider{}} =
+               IdentityProviders.update_identity_provider(identity_provider, %{
+                 templates: [%{id: template.id, content: "updated content"}]
+               })
+
+      assert %Template{content: "updated content"} =
+               IdentityProviders.get_identity_provider_template!(
+                 identity_provider.id,
+                 :new_registration
+               )
+
+      assert {:ok, true} =
+               BorutaIdentity.Cache.has_key?(
+                 {IdentityProviders, :identity_provider_template, identity_provider.id,
+                  :choose_session}
+               )
+    end
+
     test "update_identity_provider/1 with valid data (with an existing template, delete_if_exists) creates a identity_provider" do
       identity_provider = identity_provider_fixture()
       insert(:template, identity_provider: identity_provider)

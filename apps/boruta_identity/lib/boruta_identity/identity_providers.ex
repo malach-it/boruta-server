@@ -12,6 +12,7 @@ defmodule BorutaIdentity.IdentityProviders do
   alias BorutaIdentity.IdentityProviders.BackendRole
   alias BorutaIdentity.IdentityProviders.ClientIdentityProvider
   alias BorutaIdentity.IdentityProviders.IdentityProvider
+  alias BorutaIdentity.IdentityProviders.Template
 
   def list_identity_providers do
     Repo.all(
@@ -48,12 +49,36 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def update_identity_provider(%IdentityProvider{} = identity_provider, attrs) do
-    clear_identity_provider_by_client_id_cache(identity_provider)
-    clear_identity_provider_templates_cache(identity_provider, attrs)
+    templates_updated? = Map.has_key?(attrs, :templates) or Map.has_key?(attrs, "templates")
 
-    identity_provider
-    |> IdentityProvider.changeset(attrs)
-    |> Repo.update()
+    previous_template_types =
+      if templates_updated? do
+        identity_provider
+        |> Repo.preload(:templates)
+        |> Map.fetch!(:templates)
+        |> Enum.map(& &1.type)
+      else
+        []
+      end
+
+    with {:ok, updated_identity_provider} <-
+           identity_provider
+           |> IdentityProvider.changeset(attrs)
+           |> Repo.update() do
+      :ok = clear_identity_provider_by_client_id_cache(identity_provider)
+
+      if templates_updated? do
+        updated_template_types = Enum.map(updated_identity_provider.templates, & &1.type)
+
+        :ok =
+          clear_identity_provider_templates_cache(
+            identity_provider.id,
+            previous_template_types ++ updated_template_types
+          )
+      end
+
+      {:ok, updated_identity_provider}
+    end
   end
 
   def delete_identity_provider(%IdentityProvider{} = identity_provider) do
@@ -164,8 +189,6 @@ defmodule BorutaIdentity.IdentityProviders do
     end)
   end
 
-  alias BorutaIdentity.IdentityProviders.Template
-
   def get_identity_provider_template!(identity_provider_id, type) do
     cache_get({__MODULE__, :identity_provider_template, identity_provider_id, type}, fn ->
       with %IdentityProvider{} = identity_provider_with_templates <-
@@ -187,13 +210,22 @@ defmodule BorutaIdentity.IdentityProviders do
   end
 
   def upsert_template(%Template{id: template_id} = template, attrs) do
-    :ok = clear_identity_provider_templates_cache(template.identity_provider_id, [template.type])
-
     changeset = Template.changeset(template, attrs)
 
-    case template_id do
-      nil -> Repo.insert(changeset)
-      _ -> Repo.update(changeset)
+    result =
+      case template_id do
+        nil -> Repo.insert(changeset)
+        _ -> Repo.update(changeset)
+      end
+
+    with {:ok, updated_template} <- result do
+      :ok =
+        clear_identity_provider_templates_cache(
+          template.identity_provider_id,
+          [template.type, updated_template.type]
+        )
+
+      {:ok, updated_template}
     end
   end
 
@@ -218,18 +250,6 @@ defmodule BorutaIdentity.IdentityProviders do
       nil -> raise Ecto.NoResultsError, queryable: Template
     end
   end
-
-  defp clear_identity_provider_templates_cache(%IdentityProvider{id: identity_provider_id}, attrs) do
-    types =
-      attrs
-      |> Map.get(:templates, Map.get(attrs, "templates", []))
-      |> Enum.map(&Map.get(&1, :type, Map.get(&1, "type")))
-      |> Enum.reject(&is_nil/1)
-
-    clear_identity_provider_templates_cache(identity_provider_id, types)
-  end
-
-  defp clear_identity_provider_templates_cache(_identity_provider_id, []), do: :ok
 
   defp clear_identity_provider_templates_cache(identity_provider_id, types) when is_list(types) do
     normalized_types = Enum.map(types, &normalize_template_type/1)
