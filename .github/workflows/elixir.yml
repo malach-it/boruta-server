@@ -31,9 +31,7 @@ jobs:
         uses: actions/cache@v3
         id: mix-cache
         with:
-          path: |
-            deps
-            _build
+          path: deps
           key: ${{ runner.os }}-${{ hashFiles('mix.lock') }}
 
             # - name: Check Code Format
@@ -95,9 +93,7 @@ jobs:
         uses: actions/cache@v3
         id: mix-cache
         with:
-          path: |
-            deps
-            _build
+          path: deps
           key: ${{ runner.os }}-${{ matrix.elixir_image }}-${{ hashFiles('mix.lock') }}
 
       - name: Elixir prerequisites
