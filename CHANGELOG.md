@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-28
+
 ### Added
 
 - [identity] scope sessions by requested authorization client id enabling concurrent sessions. The change reset all active sessions.
