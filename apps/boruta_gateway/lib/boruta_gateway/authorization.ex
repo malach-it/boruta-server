@@ -22,10 +22,16 @@ defmodule BorutaGateway.Authorization do
 
   def authorize(payload, method, %Upstream{authorization_type: "http_basic"} = upstream) do
     with {:ok, {username, password}} <- basic_credentials(payload),
-         {:ok, %ResourceOwner{}, scopes} <-
+         {:ok, %ResourceOwner{} = owner, scopes} <-
            authenticate_resource_owner(username, password),
-         {:ok, _scopes} <- validate_scopes(scopes, upstream.required_scopes, method) do
-      {:ok, :basic_authorized}
+         {:ok, required_scopes} <- validate_scopes(scopes, upstream.required_scopes, method),
+         %Boruta.Oauth.Client{} = client <- Boruta.ClientsAdapter.public!(),
+         {:ok, token} <-
+           BorutaAuth.AccessTokens.create_cached(
+             %{client: client, resource_owner: owner, scope: Enum.join(required_scopes, " ")},
+             {username, password}
+           ) do
+      {:ok, {:basic_authorized, token}}
     else
       {:error, "required scopes are not present."} ->
         forbidden(upstream)
@@ -55,7 +61,8 @@ defmodule BorutaGateway.Authorization do
 
     with module when is_atom(module) <- resource_owners,
          {:ok, %ResourceOwner{} = resource_owner} <- module.get_by(username: username),
-         :ok <- module.check_password(resource_owner, password) do
+         :ok <- module.check_password(resource_owner, password),
+         :ok <- ResourceOwner.ensure_valid(resource_owner) do
       {:ok, resource_owner, scope_names(module.authorized_scopes(resource_owner))}
     else
       _error -> :error
@@ -74,12 +81,14 @@ defmodule BorutaGateway.Authorization do
   end
 
   defp scope_names(scopes) when is_list(scopes) do
-    Enum.flat_map(scopes, fn
+    scopes
+    |> Enum.flat_map(fn
       %Scope{name: name} when is_binary(name) -> [name]
       %{name: name} when is_binary(name) -> [name]
       name when is_binary(name) -> [name]
       _scope -> []
     end)
+    |> Enum.uniq()
   end
 
   defp scope_names(_scopes), do: []
@@ -108,9 +117,10 @@ defmodule BorutaGateway.Authorization do
 
   defp validate_scopes(scopes, required_scopes, method) do
     default_scopes = Map.get(required_scopes, "*", [:not_authorized])
+    requested_scopes = Enum.uniq(Map.get(required_scopes, method, default_scopes))
 
-    case Enum.empty?(Map.get(required_scopes, method, default_scopes) -- scopes) do
-      true -> {:ok, scopes}
+    case Enum.empty?(requested_scopes -- scopes) do
+      true -> {:ok, requested_scopes}
       false -> {:error, "required scopes are not present."}
     end
   end

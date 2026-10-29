@@ -354,13 +354,28 @@ defmodule BorutaGateway.RequestsIntegrationTest do
       end)
     end
 
-    test "authorizes HTTP Basic users without forwarding their credentials" do
+    test "forwards authenticated Basic credentials with connection metadata" do
       with_basic_resource_owners(fn ->
         Sandbox.unboxed_run(Repo, fn ->
           try do
             with_upstream_server(
               fn request ->
-                refute request =~ ~r/(?:^|\r\n)authorization\s*:/i
+                [_, bearer] = Regex.run(~r/(?:^|\r\n)Authorization: Bearer ([^\r\n]+)/, request)
+
+                assert {:ok, token} =
+                         Boruta.Oauth.Authorization.AccessToken.authorize(value: bearer)
+
+                assert token.sub == "user-id"
+                assert token.client.id == Boruta.ClientsAdapter.public!().id
+
+                assert request =~
+                         "X-Forwarded-Authorization: Basic " <>
+                           Base.encode64("alice:password")
+
+                assert request =~
+                         ~s(Forwarded: for=127.0.0.1;proto=http;host="localhost:7777")
+
+                refute request =~ "spoofed"
                 teapot_response(request)
               end,
               fn port ->
@@ -382,7 +397,11 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                   Finch.build(
                     :get,
                     "http://localhost:7777/basic/status/418",
-                    [{"authorization", authorization}],
+                    [
+                      {"authorization", authorization},
+                      {"forwarded", "for=spoofed"},
+                      {"x-forwarded-authorization", "Bearer spoofed"}
+                    ],
                     ""
                   )
 
@@ -1518,6 +1537,10 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   end
 
   defp with_basic_resource_owners(fun) do
+    previous_public = Boruta.Ecto.ClientStore.get_public()
+    public = %Boruta.Oauth.Client{id: Ecto.UUID.generate(), access_token_ttl: 3600}
+    {:ok, ^public} = Boruta.Ecto.ClientStore.put_public(public)
+
     previous_adapter =
       Application.get_env(:boruta_gateway, :basic_authorization_resource_owners)
 
@@ -1530,6 +1553,11 @@ defmodule BorutaGateway.RequestsIntegrationTest do
     try do
       fun.()
     after
+      case previous_public do
+        {:ok, client} -> Boruta.Ecto.ClientStore.put_public(client)
+        _ -> Boruta.Ecto.ClientStore.invalidate_public()
+      end
+
       if previous_adapter do
         Application.put_env(
           :boruta_gateway,

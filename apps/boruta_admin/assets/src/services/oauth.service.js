@@ -59,7 +59,7 @@ class Oauth {
     return (this.authorizedScope || '').split(/\s+/).filter(Boolean)
   }
 
-  authorizedScopeFrom ({ id_token, scope }) {
+  authorizedScopeFrom ({ id_token, scope }, fallbackScope = this.requestedScope) {
     let authorizedScope = scope
 
     if (!authorizedScope) {
@@ -72,7 +72,7 @@ class Oauth {
 
     return Array.isArray(authorizedScope)
       ? authorizedScope.join(' ')
-      : (authorizedScope || this.requestedScope)
+      : (authorizedScope || fallbackScope)
   }
 
   setRequestedScope (scopes) {
@@ -98,19 +98,27 @@ class Oauth {
     if (window.frameElement) return
 
     if (response.error) {
-      this.login()
+      return this.login()
     }
 
+    this.storeAuthentication(response)
+  }
+
+  storeAuthentication (response, fallbackScope = this.requestedScope) {
     const { access_token, id_token, expires_in } = response
-    const expires_at = new Date().getTime() + expires_in * 1000
-    const authorizedScope = this.authorizedScopeFrom(response)
+    const authorizedScope = this.authorizedScopeFrom(response, fallbackScope)
 
     this.authorizedScope = authorizedScope
 
     localStorage.setItem('authorized_scope', authorizedScope)
     localStorage.setItem('access_token', access_token)
-    localStorage.setItem('id_token', id_token)
-    localStorage.setItem('token_expires_at', expires_at)
+    if (id_token) localStorage.setItem('id_token', id_token)
+    else localStorage.removeItem('id_token')
+    if (Number.isFinite(Number(expires_in))) {
+      localStorage.setItem('token_expires_at', Date.now() + Number(expires_in) * 1000)
+    } else {
+      localStorage.removeItem('token_expires_at')
+    }
 
     setTimeout(() => {
       const loggedIn = new Event('logged_in')
@@ -119,6 +127,8 @@ class Oauth {
   }
 
   login () {
+    if (this.basicAuthentication) return
+
     const loginNavigation = () => {
         localStorage.setItem('requested_scope', this.requestedScope)
 
@@ -135,6 +145,8 @@ class Oauth {
   }
 
   silentRefresh () {
+    if (this.basicAuthentication) return
+
     this.implicitClient.silentRefresh()
   }
 
@@ -186,10 +198,16 @@ class Oauth {
     return localStorage.getItem('access_token')
   }
 
+  get basicAuthentication () {
+    return window.env.BORUTA_ADMIN_BASIC_AUTH === true
+  }
+
   get isAuthenticated () {
-    const accessToken = localStorage.getItem('access_token')
+    if (this.basicAuthentication) return true
+
+    const accessToken = this.accessToken
     const expiresAt = localStorage.getItem('token_expires_at')
-    return accessToken && parseInt(expiresAt) > new Date().getTime()
+    return Boolean(accessToken && parseInt(expiresAt) > Date.now())
   }
 
   get expiresIn () {

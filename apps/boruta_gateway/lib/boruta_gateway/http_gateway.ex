@@ -316,6 +316,13 @@ defmodule BorutaGateway.HttpGateway do
   end
 
   defp connect_upstream(socket, payload, state, upstream, token, request) do
+    payload =
+      if match?({:basic_authorized, _}, token) do
+        BorutaGateway.ForwardedHeaders.put_basic(payload, remote_ip(socket), :http)
+      else
+        payload
+      end
+
     case upstream.scheme do
       "http" ->
         case :gen_tcp.connect(
@@ -791,10 +798,11 @@ defmodule BorutaGateway.HttpGateway do
     transform_header(payload, upstream, false)
   end
 
-  defp transform_header(payload, upstream, :basic_authorized) do
+  defp transform_header(payload, upstream, {:basic_authorized, token}) do
     payload
-    |> reject_headers(["authorization", "x-forwarded-authorization"])
-    |> transform_header(upstream, false)
+    |> reject_headers(["authorization"])
+    |> put_header("Authorization", "Bearer " <> token.value)
+    |> transform_header(upstream, true)
   end
 
   defp transform_header(payload, upstream, preserve_forwarded_authorization?)

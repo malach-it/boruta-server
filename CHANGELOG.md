@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- [admin] omit Axios bearer headers when Basic authentication is present on the page request, without exposing request credentials to JavaScript
+- [gateway] forward connection metadata, original Basic credentials, and a cache-only public-client bearer token using the client’s configured access-token lifetime and containing the upstream's required scopes after checking the authenticated user's grants
+- [gateway] reuse cached Basic-auth proxy tokens derived with a keyed credential hash, scoped to the user, public client, and required scopes without extending their expiration
+- [admin] enable browser-managed credentials on administration API requests and authentication retries
+- [admin] skip OAuth login redirects and silent refresh when browser Basic authentication is present
+
 ## [0.14.0] - 2026-10-28
 
 ### Added

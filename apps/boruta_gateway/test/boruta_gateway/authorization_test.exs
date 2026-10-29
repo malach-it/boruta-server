@@ -18,11 +18,16 @@ defmodule BorutaGateway.AuthorizationTest do
       do: {:error, "Invalid username or password."}
 
     def authorized_scopes(%Boruta.Oauth.ResourceOwner{username: "alice"}) do
-      [%Boruta.Oauth.Scope{name: "read"}, %{name: "write"}]
+      # A direct grant and a role grant can overlap.
+      [%Boruta.Oauth.Scope{name: "read"}, %{name: "write"}, %{name: "read"}]
     end
   end
 
   setup do
+    previous_public = Boruta.Ecto.ClientStore.get_public()
+    public = %Boruta.Oauth.Client{id: Ecto.UUID.generate(), access_token_ttl: 3600}
+    {:ok, ^public} = Boruta.Ecto.ClientStore.put_public(public)
+
     previous_adapter =
       Application.get_env(:boruta_gateway, :basic_authorization_resource_owners)
 
@@ -33,6 +38,11 @@ defmodule BorutaGateway.AuthorizationTest do
     )
 
     on_exit(fn ->
+      case previous_public do
+        {:ok, client} -> Boruta.Ecto.ClientStore.put_public(client)
+        _ -> Boruta.Ecto.ClientStore.invalidate_public()
+      end
+
       if previous_adapter do
         Application.put_env(
           :boruta_gateway,
@@ -44,17 +54,55 @@ defmodule BorutaGateway.AuthorizationTest do
       end
     end)
 
-    :ok
+    {:ok, public_client: public}
   end
 
-  test "authorizes HTTP Basic credentials against the configured resource owners" do
+  test "caches only upstream-required scopes after checking the user's grants", %{
+    public_client: public
+  } do
     upstream = basic_upstream(%{"GET" => ["read"]})
 
-    assert {:ok, :basic_authorized} =
+    assert {:ok, {:basic_authorized, token}} =
              Authorization.authorize(
                request("alice", "correct:password"),
                "GET",
                upstream
+             )
+
+    assert token.client.id == public.id
+    assert token.scope == "read"
+    assert token.sub == "user-id"
+    assert token.expires_at == DateTime.to_unix(token.inserted_at) + public.access_token_ttl
+    assert {:ok, ^token} = Boruta.Oauth.Authorization.AccessToken.authorize(value: token.value)
+    assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
+  end
+
+  test "uses method-specific scopes, wildcard fallback and empty scope configuration" do
+    for {configuration, expected} <- [
+          {%{}, ""},
+          {%{"*" => ["write"]}, "write"},
+          {%{"*" => ["write"], "GET" => ["read"]}, "read"},
+          {%{"*" => ["write"], "GET" => []}, ""},
+          {%{"GET" => ["read", "read"]}, "read"}
+        ] do
+      assert {:ok, {:basic_authorized, token}} =
+               Authorization.authorize(
+                 request("alice", "correct:password"),
+                 "GET",
+                 basic_upstream(configuration)
+               )
+
+      assert token.scope == expected
+      assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
+    end
+  end
+
+  test "denies a method without a configured rule or wildcard" do
+    assert {:forbidden, _, _} =
+             Authorization.authorize(
+               request("alice", "correct:password"),
+               "GET",
+               basic_upstream(%{"POST" => ["write"]})
              )
   end
 
@@ -67,6 +115,22 @@ defmodule BorutaGateway.AuthorizationTest do
                "GET",
                upstream
              )
+  end
+
+  test "Basic-protected upstreams continue to require Basic credentials" do
+    upstream = basic_upstream()
+
+    assert {:ok, {:basic_authorized, token}} =
+             Authorization.authorize(request("alice", "correct:password"), "GET", upstream)
+
+    assert {:unauthorized, _, _, _} =
+             Authorization.authorize(
+               "GET / HTTP/1.1\r\nAuthorization: Bearer #{token.value}\r\n\r\n",
+               "GET",
+               upstream
+             )
+
+    assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
   end
 
   test "challenges malformed and invalid HTTP Basic credentials" do
@@ -103,6 +167,7 @@ defmodule BorutaGateway.AuthorizationTest do
 
   defp basic_upstream(required_scopes \\ %{}) do
     %Upstream{
+      id: Ecto.UUID.generate(),
       authorize: true,
       authorization_type: "http_basic",
       required_scopes: required_scopes,

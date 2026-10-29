@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "node --experimental-vm-modules --test test/oauth.service.test.cjs test/axios-credentials.test.cjs",
     "serve": "vite",
     "build": "vite build --emptyOutDir",
     "build:watch": "vite build --watch --emptyOutDir",
