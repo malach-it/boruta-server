@@ -4,7 +4,6 @@ defmodule BorutaAuth.TokenGenerator do
 
   @basic_prefix "basic-"
 
-  alias Boruta.Oauth.Client.Crypto
   alias Boruta.ClientsAdapter
 
   def generate_basic(params) do
