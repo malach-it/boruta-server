@@ -80,7 +80,9 @@
               <input type="checkbox" v-model="upstream.forward_basic_auth_token">
               <label>Forward Basic auth access token</label>
             </div>
-            <p>Send the generated access token to the upstream in the Authorization header.</p>
+            <div class="ui info message">
+              Forwards a resource owner owned access token bearer to the upstream
+            </div>
           </div>
           <div class="field" v-if="upstream.authorize" :class="{ 'error': upstream.errors?.required_scopes }">
             <label>Required scopes <i>(leave empty to not filter)</i></label>
