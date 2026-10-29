@@ -6,8 +6,9 @@
 
 ### Added
 
-- [gateway] forward connection metadata, original Basic credentials, and a cache-only public-client bearer token using the client’s configured access-token lifetime and containing the upstream's required scopes after checking the authenticated user's grants
-- [gateway] reuse cached Basic-auth proxy tokens derived with a keyed credential hash, scoped to the user, public client, and required scopes without extending their expiration
+- [gateway] forward connection metadata, original Basic credentials, and a persisted public-client bearer token using the client’s configured access-token lifetime and containing the upstream's required scopes after checking the authenticated user's grants
+
+- [gateway] reuse valid persisted Basic-auth tokens by keyed credential fingerprint and generate fresh bearer values after expiry or revocation
 
 ## [0.14.0] - 2026-10-28
 

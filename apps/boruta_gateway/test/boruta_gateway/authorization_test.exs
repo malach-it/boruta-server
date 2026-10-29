@@ -1,8 +1,11 @@
 defmodule BorutaGateway.AuthorizationTest do
   use ExUnit.Case, async: false
+  use BorutaGateway.DataCase
 
+  alias Boruta.Ecto.Admin
   alias Boruta.Ecto.ClientStore
   alias BorutaGateway.Authorization
+  alias BorutaGateway.BasicAccessTokens
   alias BorutaGateway.Upstreams.Upstream
 
   defmodule ResourceOwners do
@@ -26,7 +29,8 @@ defmodule BorutaGateway.AuthorizationTest do
 
   setup do
     previous_public = ClientStore.get_public()
-    public = %Boruta.Oauth.Client{id: Ecto.UUID.generate(), access_token_ttl: 3600}
+    {:ok, client} = Admin.create_client(%{access_token_ttl: 3600})
+    public = Boruta.ClientsAdapter.get_client(client.id)
     {:ok, ^public} = ClientStore.put_public(public)
 
     previous_adapter =
@@ -58,7 +62,7 @@ defmodule BorutaGateway.AuthorizationTest do
     {:ok, public_client: public}
   end
 
-  test "caches only upstream-required scopes after checking the user's grants", %{
+  test "persists only upstream-required scopes after checking the user's grants", %{
     public_client: public
   } do
     upstream = basic_upstream(%{"GET" => ["read"]})
@@ -73,9 +77,67 @@ defmodule BorutaGateway.AuthorizationTest do
     assert token.client.id == public.id
     assert token.scope == "read"
     assert token.sub == "user-id"
+    persisted = BorutaAuth.Repo.get!(Boruta.Ecto.Token, token.id)
+    assert persisted.value == token.value
+    assert persisted.sub == "user-id"
+    assert persisted.scope == "read"
+    assert persisted.client_id == public.id
     assert token.expires_at == DateTime.to_unix(token.inserted_at) + public.access_token_ttl
     assert {:ok, ^token} = Boruta.Oauth.Authorization.AccessToken.authorize(value: token.value)
     assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
+  end
+
+  test "reuses the persisted token without extending its lifetime" do
+    request = request("alice", "correct:password")
+    upstream = basic_upstream(%{"GET" => ["read"]})
+    assert {:ok, {:basic_authorized, first}} = Authorization.authorize(request, "GET", upstream)
+    assert {:ok, {:basic_authorized, second}} = Authorization.authorize(request, "GET", upstream)
+    assert first.value =~ ~r/^basic-[0-9A-F]{64}$/
+    assert second.id == first.id
+    assert second.value == first.value
+    assert second.expires_at == first.expires_at
+
+    query =
+      Ecto.Query.from(token in Boruta.Ecto.Token, where: token.client_id == ^first.client.id)
+
+    assert BorutaAuth.Repo.aggregate(query, :count) == 1
+  end
+
+  test "concurrent requests reuse an existing persisted token", %{public_client: public} do
+    params = %{
+      client: public,
+      resource_owner: %Boruta.Oauth.ResourceOwner{sub: "concurrent-user"},
+      sub: "concurrent-user",
+      scope: "read"
+    }
+
+    assert {:ok, existing} = BasicAccessTokens.get_or_create(params, {"alice", "password"})
+
+    tokens =
+      1..8
+      |> Task.async_stream(
+        fn _ -> BasicAccessTokens.get_or_create(params, {"alice", "password"}) end,
+        max_concurrency: 4
+      )
+      |> Enum.map(fn {:ok, {:ok, token}} -> token end)
+
+    assert Enum.all?(tokens, &(&1.id == existing.id))
+    query = Ecto.Query.from(token in Boruta.Ecto.Token, where: token.client_id == ^public.id)
+    assert BorutaAuth.Repo.aggregate(query, :count) == 1
+  end
+
+  test "revoking a Basic token persists revocation and invalidates the cache" do
+    assert {:ok, {:basic_authorized, token}} =
+             Authorization.authorize(
+               request("alice", "correct:password"),
+               "GET",
+               basic_upstream(%{"GET" => ["read"]})
+             )
+
+    assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
+    assert {:error, "Not cached."} = Boruta.Ecto.TokenStore.get(value: token.value)
+    assert BorutaAuth.Repo.get!(Boruta.Ecto.Token, token.id).revoked_at
+    assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: token.value)
   end
 
   test "uses method-specific scopes, wildcard fallback and empty scope configuration" do
@@ -94,7 +156,6 @@ defmodule BorutaGateway.AuthorizationTest do
                )
 
       assert token.scope == expected
-      assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
     end
   end
 

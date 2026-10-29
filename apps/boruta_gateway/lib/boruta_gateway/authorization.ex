@@ -27,8 +27,13 @@ defmodule BorutaGateway.Authorization do
          {:ok, required_scopes} <- validate_scopes(scopes, upstream.required_scopes, method),
          %Boruta.Oauth.Client{} = client <- Boruta.ClientsAdapter.public!(),
          {:ok, token} <-
-           BorutaAuth.AccessTokens.create_cached(
-             %{client: client, resource_owner: owner, scope: Enum.join(required_scopes, " ")},
+           BorutaGateway.BasicAccessTokens.get_or_create(
+             %{
+               client: client,
+               resource_owner: owner,
+               sub: owner.sub,
+               scope: Enum.join(required_scopes, " ")
+             },
              {username, password}
            ) do
       {:ok, {:basic_authorized, token}}

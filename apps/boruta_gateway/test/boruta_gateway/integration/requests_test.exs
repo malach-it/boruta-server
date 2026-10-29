@@ -1539,7 +1539,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
 
   defp with_basic_resource_owners(fun) do
     previous_public = ClientStore.get_public()
-    public = %Boruta.Oauth.Client{id: Ecto.UUID.generate(), access_token_ttl: 3600}
+    {:ok, client} = Admin.create_client(%{access_token_ttl: 3600})
+    public = ClientsAdapter.get_client(client.id)
     {:ok, ^public} = ClientStore.put_public(public)
 
     previous_adapter =

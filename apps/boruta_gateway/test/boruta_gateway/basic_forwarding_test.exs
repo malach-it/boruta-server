@@ -1,8 +1,9 @@
 defmodule BorutaGateway.BasicForwardingTest do
   use ExUnit.Case, async: false
+  use BorutaGateway.DataCase
 
+  alias Boruta.Ecto.Admin
   alias Boruta.Ecto.ClientStore
-  alias Boruta.Oauth.Client
   alias BorutaGateway.{Certificate, HttpGateway, HttpsGateway}
   alias BorutaGateway.Upstreams.Upstream
 
@@ -19,7 +20,8 @@ defmodule BorutaGateway.BasicForwardingTest do
   setup do
     previous_adapter = Application.get_env(:boruta_gateway, :basic_authorization_resource_owners)
     previous_public = ClientStore.get_public()
-    public = %Client{id: Ecto.UUID.generate(), access_token_ttl: 3600}
+    {:ok, client} = Admin.create_client(%{access_token_ttl: 3600})
+    public = Boruta.ClientsAdapter.get_client(client.id)
     {:ok, ^public} = ClientStore.put_public(public)
     Application.put_env(:boruta_gateway, :basic_authorization_resource_owners, ResourceOwners)
 
@@ -50,7 +52,7 @@ defmodule BorutaGateway.BasicForwardingTest do
     @transport transport
     @scheme scheme
 
-    test "#{scheme} Basic forwarding carries a cached bearer and unspoofed metadata", %{
+    test "#{scheme} Basic forwarding carries a persisted bearer and unspoofed metadata", %{
       public: public
     } do
       {:ok, upstream_socket} = :gen_tcp.listen(0, [:binary, active: false, reuseaddr: true])

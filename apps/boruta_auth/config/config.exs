@@ -5,8 +5,8 @@ config :boruta_auth,
 
 config :boruta, Boruta.Oauth,
   repo: BorutaAuth.Repo,
+  token_generator: BorutaAuth.TokenGenerator,
   contexts: [
-    access_tokens: BorutaAuth.AccessTokens,
     resource_owners: BorutaIdentity.ResourceOwners
   ],
   issuer: System.get_env("BORUTA_OAUTH_BASE_URL", "http://localhost:4000"),
