@@ -1,6 +1,7 @@
 defmodule BorutaGateway.BasicForwardingTest do
   use ExUnit.Case, async: false
 
+  alias Boruta.Ecto.ClientStore
   alias Boruta.Oauth.Client
   alias BorutaGateway.{Certificate, HttpGateway, HttpsGateway}
   alias BorutaGateway.Upstreams.Upstream
@@ -17,9 +18,9 @@ defmodule BorutaGateway.BasicForwardingTest do
 
   setup do
     previous_adapter = Application.get_env(:boruta_gateway, :basic_authorization_resource_owners)
-    previous_public = Boruta.Ecto.ClientStore.get_public()
+    previous_public = ClientStore.get_public()
     public = %Client{id: Ecto.UUID.generate(), access_token_ttl: 3600}
-    {:ok, ^public} = Boruta.Ecto.ClientStore.put_public(public)
+    {:ok, ^public} = ClientStore.put_public(public)
     Application.put_env(:boruta_gateway, :basic_authorization_resource_owners, ResourceOwners)
 
     on_exit(fn ->
@@ -33,8 +34,8 @@ defmodule BorutaGateway.BasicForwardingTest do
         else: Application.delete_env(:boruta_gateway, :basic_authorization_resource_owners)
 
       case previous_public do
-        {:ok, client} -> Boruta.Ecto.ClientStore.put_public(client)
-        _ -> Boruta.Ecto.ClientStore.invalidate_public()
+        {:ok, client} -> ClientStore.put_public(client)
+        _ -> ClientStore.invalidate_public()
       end
     end)
 

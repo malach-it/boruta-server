@@ -1,6 +1,7 @@
 defmodule BorutaGateway.AuthorizationTest do
   use ExUnit.Case, async: false
 
+  alias Boruta.Ecto.ClientStore
   alias BorutaGateway.Authorization
   alias BorutaGateway.Upstreams.Upstream
 
@@ -24,9 +25,9 @@ defmodule BorutaGateway.AuthorizationTest do
   end
 
   setup do
-    previous_public = Boruta.Ecto.ClientStore.get_public()
+    previous_public = ClientStore.get_public()
     public = %Boruta.Oauth.Client{id: Ecto.UUID.generate(), access_token_ttl: 3600}
-    {:ok, ^public} = Boruta.Ecto.ClientStore.put_public(public)
+    {:ok, ^public} = ClientStore.put_public(public)
 
     previous_adapter =
       Application.get_env(:boruta_gateway, :basic_authorization_resource_owners)
@@ -39,8 +40,8 @@ defmodule BorutaGateway.AuthorizationTest do
 
     on_exit(fn ->
       case previous_public do
-        {:ok, client} -> Boruta.Ecto.ClientStore.put_public(client)
-        _ -> Boruta.Ecto.ClientStore.invalidate_public()
+        {:ok, client} -> ClientStore.put_public(client)
+        _ -> ClientStore.invalidate_public()
       end
 
       if previous_adapter do

@@ -1,6 +1,7 @@
 defmodule BorutaAuth.AccessTokensTest do
   use ExUnit.Case, async: false
 
+  alias Boruta.Oauth.Authorization.AccessToken
   alias Boruta.Oauth.{Client, ResourceOwner}
   alias BorutaAuth.AccessTokens
 
@@ -38,7 +39,7 @@ defmodule BorutaAuth.AccessTokensTest do
     assert token.refresh_token == nil
     assert Boruta.AccessTokensAdapter.get_by(value: token.value) == token
     assert Boruta.AccessTokensAdapter.get_by(refresh_token: token.value) == nil
-    assert {:ok, ^token} = Boruta.Oauth.Authorization.AccessToken.authorize(value: token.value)
+    assert {:ok, ^token} = AccessToken.authorize(value: token.value)
     assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
     assert Boruta.AccessTokensAdapter.get_by(value: token.value) == nil
     refute_receive :sql_query
@@ -52,7 +53,7 @@ defmodule BorutaAuth.AccessTokensTest do
 
     Process.sleep(1_100)
     assert AccessTokens.get_by(value: token.value) == nil
-    assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: token.value)
+    assert {:error, _} = AccessToken.authorize(value: token.value)
   end
 
   test "reuses a credential-derived token without extending its expiration" do
