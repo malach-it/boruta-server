@@ -8,14 +8,15 @@ defmodule BorutaAuth.TokenGenerator do
   alias Boruta.ClientsAdapter
 
   def generate_basic(params) do
+    client = ClientsAdapter.public!()
     payload =
       params
       |> Enum.map(fn
         {:client, %{id: client_id}} ->
-          {:client, client_id}
+          {:client, client_id, client.secret}
 
         {:client_id, client_id} ->
-          {:client, client_id}
+          {:client, client_id, client.secret}
 
         {:sub, sub} ->
           {:sub, sub}
@@ -33,9 +34,9 @@ defmodule BorutaAuth.TokenGenerator do
       |> Enum.sort()
       |> :erlang.term_to_binary()
 
-    client = ClientsAdapter.public!()
+    counter = floor(:os.system_time(:seconds) / client.access_token_ttl)
     @basic_prefix <>
-      (:crypto.mac(:hmac, :sha256, client.secret, payload)
+      (:crypto.mac(:hmac, :sha256, payload, <<counter::size(64)>>)
        |> Base.encode16())
   end
 
