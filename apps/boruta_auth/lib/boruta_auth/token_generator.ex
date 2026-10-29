@@ -47,7 +47,7 @@ defmodule BorutaAuth.TokenGenerator do
   end
 
   def generate(:access_token, token) do
-      Boruta.TokenGenerator.generate(:access_token, token)
+    Boruta.TokenGenerator.generate(:access_token, token)
   end
 
   defdelegate generate(type, token), to: Boruta.TokenGenerator
