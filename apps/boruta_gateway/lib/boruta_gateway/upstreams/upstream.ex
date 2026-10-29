@@ -35,6 +35,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
           strip_uri: boolean(),
           authorize: boolean(),
           authorization_type: String.t(),
+          forward_basic_auth_token: boolean(),
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
           unauthorized_response: String.t() | nil,
@@ -64,6 +65,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
     field(:authorization_type, :string, default: "oauth_bearer")
+    field(:forward_basic_auth_token, :boolean, default: false)
     field(:error_content_type, :string, default: "application/json")
     field(:forbidden_response, :string)
     field(:unauthorized_response, :string)
@@ -103,6 +105,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :strip_uri,
       :authorize,
       :authorization_type,
+      :forward_basic_auth_token,
       :required_scopes,
       :error_content_type,
       :forwarded_token_signature_alg,

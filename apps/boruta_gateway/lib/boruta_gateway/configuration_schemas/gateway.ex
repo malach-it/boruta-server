@@ -8,6 +8,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
       "type" => "object",
       "properties" => %{
         "authorize" => %{"type" => "boolean"},
+        "forward_basic_auth_token" => %{"type" => "boolean"},
         "authorization_type" => %{
           "type" => "string",
           "pattern" => "^(oauth_bearer|http_basic)$"
@@ -65,6 +66,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
       "properties" => %{
         "node_name" => %{"type" => "string"},
         "authorize" => %{"type" => "boolean"},
+        "forward_basic_auth_token" => %{"type" => "boolean"},
         "authorization_type" => %{
           "type" => "string",
           "pattern" => "^(oauth_bearer|http_basic)$"

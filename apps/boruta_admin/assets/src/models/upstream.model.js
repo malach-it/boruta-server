@@ -19,6 +19,7 @@ const defaults = {
   uris: [],
   required_scopes: [],
   authorization_type: 'oauth_bearer',
+  forward_basic_auth_token: false,
   error_content_type: 'application/json',
   forbidden_response: defaultForbiddenResponse,
   unauthorized_response: defaultUnauthorizedResponse,
@@ -59,6 +60,7 @@ const assign = {
     this.uris = uris.map((uri) => ({ uri }))
   },
   authorize: function ({ authorize }) { this.authorize = authorize },
+  forward_basic_auth_token: function ({ forward_basic_auth_token }) { this.forward_basic_auth_token = forward_basic_auth_token },
   authorization_type: function ({ authorization_type }) { this.authorization_type = authorization_type },
   required_scopes: function ({ required_scopes }) {
     this.required_scopes = Object.keys(required_scopes).flatMap((method) => {
@@ -138,6 +140,7 @@ class Upstream {
       strip_uri,
       authorize,
       authorization_type,
+      forward_basic_auth_token,
       required_scopes,
       error_content_type,
       forbidden_response,
@@ -173,6 +176,7 @@ class Upstream {
       strip_uri,
       authorize,
       authorization_type,
+      forward_basic_auth_token,
       error_content_type,
       forbidden_response,
       unauthorized_response,

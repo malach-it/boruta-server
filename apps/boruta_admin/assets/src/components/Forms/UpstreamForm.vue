@@ -75,6 +75,13 @@
               Credentials are verified against users from the default backend and are not forwarded upstream.
             </div>
           </div>
+          <div class="field" v-if="upstream.authorize && upstream.authorization_type === 'http_basic'">
+            <div class="ui toggle checkbox">
+              <input type="checkbox" v-model="upstream.forward_basic_auth_token">
+              <label>Forward Basic auth access token</label>
+            </div>
+            <p>Send the generated access token to the upstream in the Authorization header.</p>
+          </div>
           <div class="field" v-if="upstream.authorize" :class="{ 'error': upstream.errors?.required_scopes }">
             <label>Required scopes <i>(leave empty to not filter)</i></label>
             <GatewayScopesField :currentScopes="upstream.required_scopes" @delete-scope="deleteScope" @add-scope="addScope" />

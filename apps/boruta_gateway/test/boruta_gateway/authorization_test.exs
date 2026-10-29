@@ -62,6 +62,24 @@ defmodule BorutaGateway.AuthorizationTest do
     {:ok, public_client: public}
   end
 
+  test "Basic authentication without forwarding checks credentials and scopes without storing tokens" do
+    upstream = %{basic_upstream(%{"GET" => ["read"]}) | forward_basic_auth_token: false}
+
+    assert {:ok, {:basic_authorized, nil}} =
+             Authorization.authorize(request("alice", "correct:password"), "GET", upstream)
+
+    assert {:unauthorized, _, _, _} =
+             Authorization.authorize(request("alice", "wrong"), "GET", upstream)
+
+    assert {:forbidden, _, _} =
+             Authorization.authorize(request("alice", "correct:password"), "GET", %{
+               upstream
+               | required_scopes: %{"GET" => ["admin"]}
+             })
+
+    assert BorutaAuth.Repo.aggregate(Boruta.Ecto.Token, :count) == 0
+  end
+
   test "persists only upstream-required scopes after checking the user's grants", %{
     public_client: public
   } do
@@ -232,6 +250,7 @@ defmodule BorutaGateway.AuthorizationTest do
       id: Ecto.UUID.generate(),
       authorize: true,
       authorization_type: "http_basic",
+      forward_basic_auth_token: true,
       required_scopes: required_scopes,
       error_content_type: "text/plain",
       forbidden_response: "forbidden",

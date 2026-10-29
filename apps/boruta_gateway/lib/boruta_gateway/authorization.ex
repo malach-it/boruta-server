@@ -25,17 +25,8 @@ defmodule BorutaGateway.Authorization do
          {:ok, %ResourceOwner{} = owner, scopes} <-
            authenticate_resource_owner(username, password),
          {:ok, required_scopes} <- validate_scopes(scopes, upstream.required_scopes, method),
-         %Boruta.Oauth.Client{} = client <- Boruta.ClientsAdapter.public!(),
          {:ok, token} <-
-           BorutaGateway.BasicAccessTokens.get_or_create(
-             %{
-               client: client,
-               resource_owner: owner,
-               sub: owner.sub,
-               scope: Enum.join(required_scopes, " ")
-             },
-             {username, password}
-           ) do
+           maybe_create_basic_token(upstream, owner, required_scopes, {username, password}) do
       {:ok, {:basic_authorized, token}}
     else
       {:error, "required scopes are not present."} ->
@@ -58,6 +49,28 @@ defmodule BorutaGateway.Authorization do
 
       _error ->
         unauthorized(upstream, nil)
+    end
+  end
+
+  defp maybe_create_basic_token(
+         %Upstream{forward_basic_auth_token: false},
+         _owner,
+         _scopes,
+         _credentials
+       ),
+       do: {:ok, nil}
+
+  defp maybe_create_basic_token(
+         %Upstream{forward_basic_auth_token: true},
+         owner,
+         scopes,
+         credentials
+       ) do
+    with %Boruta.Oauth.Client{} = client <- Boruta.ClientsAdapter.public!() do
+      BorutaGateway.BasicAccessTokens.get_or_create(
+        %{client: client, resource_owner: owner, sub: owner.sub, scope: Enum.join(scopes, " ")},
+        credentials
+      )
     end
   end
 

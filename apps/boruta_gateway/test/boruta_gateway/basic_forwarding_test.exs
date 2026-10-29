@@ -47,12 +47,14 @@ defmodule BorutaGateway.BasicForwardingTest do
   for {gateway_module, transport, scheme} <- [
         {HttpGateway, :gen_tcp, :http},
         {HttpsGateway, :ssl, :https}
-      ] do
+      ],
+      forward_token <- [true, false] do
     @gateway_module gateway_module
     @transport transport
     @scheme scheme
+    @forward_token forward_token
 
-    test "#{scheme} Basic forwarding carries a persisted bearer and unspoofed metadata", %{
+    test "#{scheme} Basic forwarding with token forwarding #{forward_token}", %{
       public: public
     } do
       {:ok, upstream_socket} = :gen_tcp.listen(0, [:binary, active: false, reuseaddr: true])
@@ -68,6 +70,7 @@ defmodule BorutaGateway.BasicForwardingTest do
         strip_uri: true,
         authorize: true,
         authorization_type: "http_basic",
+        forward_basic_auth_token: @forward_token,
         required_scopes: %{"GET" => ["read"]}
       }
 
@@ -118,16 +121,22 @@ defmodule BorutaGateway.BasicForwardingTest do
       assert request =~ "X-Forwarded-Authorization: #{basic}\r\n"
       assert request =~ ~s(Forwarded: for=127.0.0.1;proto=#{@scheme};host="admin.localhost:8082")
       refute request =~ "spoofed"
-      [_, bearer] = Regex.run(~r/(?:^|\r\n)Authorization: Bearer ([^\r\n]+)/, request)
-      assert {:ok, token} = Boruta.Oauth.Authorization.AccessToken.authorize(value: bearer)
-      assert token.scope == "read"
-      assert token.sub == "basic-user"
-      assert token.client.id == public.id
 
-      assert token.expires_at ==
-               DateTime.to_unix(token.inserted_at) + token.client.access_token_ttl
+      if @forward_token do
+        [_, bearer] = Regex.run(~r/(?:^|\r\n)Authorization: Bearer ([^\r\n]+)/, request)
+        assert {:ok, token} = Boruta.Oauth.Authorization.AccessToken.authorize(value: bearer)
+        assert token.scope == "read"
+        assert token.sub == "basic-user"
+        assert token.client.id == public.id
 
-      assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
+        assert token.expires_at ==
+                 DateTime.to_unix(token.inserted_at) + token.client.access_token_ttl
+
+        assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
+      else
+        refute request =~ ~r/(?:^|\r\n)Authorization:/i
+        assert BorutaAuth.Repo.aggregate(Boruta.Ecto.Token, :count) == 0
+      end
     end
   end
 

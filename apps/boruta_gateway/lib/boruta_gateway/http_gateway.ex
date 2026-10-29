@@ -798,10 +798,20 @@ defmodule BorutaGateway.HttpGateway do
     transform_header(payload, upstream, false)
   end
 
-  defp transform_header(payload, upstream, {:basic_authorized, token}) do
+  defp transform_header(
+         payload,
+         %Upstream{forward_basic_auth_token: true} = upstream,
+         {:basic_authorized, token}
+       ) do
     payload
     |> reject_headers(["authorization"])
     |> put_header("Authorization", "Bearer " <> token.value)
+    |> transform_header(upstream, true)
+  end
+
+  defp transform_header(payload, upstream, {:basic_authorized, _token}) do
+    payload
+    |> reject_headers(["authorization"])
     |> transform_header(upstream, true)
   end
 
