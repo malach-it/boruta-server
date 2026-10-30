@@ -81,7 +81,7 @@
               <label>Forward Basic auth access token</label>
             </div>
             <div class="ui info message">
-              Forwards a resource owner owned access token bearer to the upstream
+              Forwards a bearer access token authorization header to the upstream
             </div>
           </div>
           <div class="field" v-if="upstream.authorize" :class="{ 'error': upstream.errors?.required_scopes }">
