@@ -4,6 +4,7 @@ defmodule BorutaGateway.AuthorizationTest do
 
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.ClientStore
+  alias Boruta.Oauth.Authorization.AccessToken
   alias BorutaGateway.Authorization
   alias BorutaGateway.BasicAccessTokens
   alias BorutaGateway.Upstreams.Upstream
@@ -101,7 +102,7 @@ defmodule BorutaGateway.AuthorizationTest do
     assert persisted.scope == "read"
     assert persisted.client_id == public.id
     assert token.expires_at == DateTime.to_unix(token.inserted_at) + public.access_token_ttl
-    assert {:ok, ^token} = Boruta.Oauth.Authorization.AccessToken.authorize(value: token.value)
+    assert {:ok, ^token} = AccessToken.authorize(value: token.value)
     assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
   end
 
@@ -155,7 +156,7 @@ defmodule BorutaGateway.AuthorizationTest do
     assert {:ok, _} = Boruta.AccessTokensAdapter.revoke(token)
     assert {:error, "Not cached."} = Boruta.Ecto.TokenStore.get(value: token.value)
     assert BorutaAuth.Repo.get!(Boruta.Ecto.Token, token.id).revoked_at
-    assert {:error, _} = Boruta.Oauth.Authorization.AccessToken.authorize(value: token.value)
+    assert {:error, _} = AccessToken.authorize(value: token.value)
   end
 
   test "uses method-specific scopes, wildcard fallback and empty scope configuration" do

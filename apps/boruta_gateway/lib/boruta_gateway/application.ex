@@ -179,7 +179,7 @@ defmodule BorutaGateway.Application do
     if BorutaGateway.Repo.backend() == "mnesia" do
       BorutaGateway.MnesiaSetup.setup()
     else
-      Enum.map([
+      Enum.each([
         BorutaGateway.Repo.repo(),
         BorutaAuth.Repo
       ], fn repo ->
