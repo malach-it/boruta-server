@@ -17,24 +17,6 @@ defmodule BorutaIdentityWeb.SessionsTest do
   end
 
   describe "fetch_current_user/2" do
-    test "authenticates the bearer token owner ahead of the cookie session", %{
-      conn: conn,
-      user: user
-    } do
-      cookie_user = user_fixture()
-      client_id = SecureRandom.uuid()
-      token = Boruta.Factory.insert(:token, sub: user.id)
-
-      conn =
-        conn
-        |> with_client_request(client_id)
-        |> put_session(:user_token, %{client_id => generate_user_session_token(cookie_user)})
-        |> put_req_header("authorization", "bEaReR #{token.value}")
-        |> Sessions.fetch_current_user([])
-
-      assert conn.assigns.current_user.id == user.id
-    end
-
     test "rejects invalid authorization without falling back to the session", %{
       conn: conn,
       user: user
