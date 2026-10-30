@@ -1,0 +1,51 @@
+name: Publish server to Docker Hub
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dockerhub-server-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][a-zA-Z0-9_.-]+)?$ ]]; then
+            echo "Expected a release tag such as 0.4.1"
+            exit 1
+          fi
+
+      - name: Checkout release
+        uses: actions/checkout@v3
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push server image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          file: Dockerfile.full
+          build-args: |
+            BORUTA_OAUTH_BASE_URL=https://oauth.boruta.patatoid.fr
+          push: true
+          tags: malachit/boruta-server:${{ inputs.tag }}
