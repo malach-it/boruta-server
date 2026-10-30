@@ -1,11 +1,6 @@
 defmodule BorutaGateway.MnesiaSetup do
   @moduledoc false
 
-  alias Boruta.Ecto.AuthorizationRequest
-  alias Boruta.Ecto.Client
-  alias Boruta.Ecto.Credential
-  alias Boruta.Ecto.Scope
-  alias Boruta.Ecto.Token
   alias BorutaGateway.MnesiaRepo, as: Repo
   alias BorutaGateway.ServiceRegistry.Record
   alias BorutaGateway.Upstreams.Upstream
@@ -20,12 +15,7 @@ defmodule BorutaGateway.MnesiaSetup do
     end
 
     schemas = [
-      AuthorizationRequest,
-      Client,
-      Credential,
       Record,
-      Scope,
-      Token,
       Upstream
     ]
 
