@@ -179,9 +179,13 @@ defmodule BorutaGateway.Application do
     if BorutaGateway.Repo.backend() == "mnesia" do
       BorutaGateway.MnesiaSetup.setup()
     else
-      repo = BorutaGateway.Repo.repo()
-      repo.__adapter__().storage_up(repo.config())
-      Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      Enum.map([
+        BorutaGateway.Repo.repo(),
+        BorutaAuth.Repo
+      ], fn repo ->
+        repo.__adapter__().storage_up(repo.config())
+        Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      end)
     end
 
     :ok

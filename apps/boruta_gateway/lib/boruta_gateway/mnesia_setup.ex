@@ -1,6 +1,11 @@
 defmodule BorutaGateway.MnesiaSetup do
   @moduledoc false
 
+  alias Boruta.Ecto.AuthorizationRequest
+  alias Boruta.Ecto.Client
+  alias Boruta.Ecto.Credential
+  alias Boruta.Ecto.Scope
+  alias Boruta.Ecto.Token
   alias BorutaGateway.MnesiaRepo, as: Repo
   alias BorutaGateway.ServiceRegistry.Record
   alias BorutaGateway.Upstreams.Upstream
@@ -14,9 +19,19 @@ defmodule BorutaGateway.MnesiaSetup do
       error -> raise "could not create gateway Mnesia storage: #{inspect(error)}"
     end
 
+    schemas = [
+      AuthorizationRequest,
+      Client,
+      Credential,
+      Record,
+      Scope,
+      Token,
+      Upstream
+    ]
+
     migrations =
       Migrator.compile(
-        schemas: [Upstream, Record],
+        schemas: schemas,
         default_copy: :disc
       )
 
@@ -25,7 +40,7 @@ defmodule BorutaGateway.MnesiaSetup do
         Migrator.run(repo, migrations, sync: true)
       end)
 
-    Enum.each([Upstream, Record], &check_table_shape!/1)
+    Enum.each(schemas, &check_table_shape!/1)
 
     :ok
   end
