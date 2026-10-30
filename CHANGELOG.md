@@ -6,9 +6,7 @@
 
 ### Added
 
-- [gateway] forward connection metadata, original Basic credentials, and a persisted public-client bearer token using the client’s configured access-token lifetime and containing the upstream's required scopes after checking the authenticated user's grants
-
-- [gateway] reuse valid persisted Basic-auth tokens by keyed credential fingerprint and generate fresh bearer values after expiry or revocation
+- [gateway] forward request authorization, original Basic credentials, and a valid access token respectively in forwarded `X-Forwarded-Authorization` and `Authorization` headers.
 
 ## [0.14.0] - 2026-10-28
 
