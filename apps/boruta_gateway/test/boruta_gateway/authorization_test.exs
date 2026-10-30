@@ -110,7 +110,7 @@ defmodule BorutaGateway.AuthorizationTest do
     upstream = basic_upstream(%{"GET" => ["read"]})
     assert {:ok, {:basic_authorized, first}} = Authorization.authorize(request, "GET", upstream)
     assert {:ok, {:basic_authorized, second}} = Authorization.authorize(request, "GET", upstream)
-    assert first.value =~ ~r/^basic-[0-9A-F]{64}$/
+    assert first.value =~ ~r/^basic-[0-9a-f]{64}$/
     assert second.id == first.id
     assert second.value == first.value
     assert second.expires_at == first.expires_at

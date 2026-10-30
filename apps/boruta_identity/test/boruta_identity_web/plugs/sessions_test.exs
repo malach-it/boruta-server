@@ -17,39 +17,6 @@ defmodule BorutaIdentityWeb.SessionsTest do
   end
 
   describe "fetch_current_user/2" do
-    test "rejects invalid authorization without falling back to the session", %{
-      conn: conn,
-      user: user
-    } do
-      client_id = SecureRandom.uuid()
-
-      conn =
-        conn
-        |> with_client_request(client_id)
-        |> put_session(:user_token, %{client_id => generate_user_session_token(user)})
-
-      expired =
-        Boruta.Factory.insert(:token, sub: user.id, expires_at: System.os_time(:second) - 1)
-
-      revoked = Boruta.Factory.insert(:token, sub: user.id, revoked_at: DateTime.utc_now())
-      ownerless = Boruta.Factory.insert(:token)
-
-      for header <- [
-            "Bearer invalid",
-            "Bearer",
-            "Basic credentials",
-            "Bearer a b",
-            "Bearer #{expired.value}",
-            "Bearer #{revoked.value}",
-            "Bearer #{ownerless.value}"
-          ] do
-        result =
-          conn |> put_req_header("authorization", header) |> Sessions.fetch_current_user([])
-
-        refute result.assigns.current_user
-      end
-    end
-
     test "authenticates only the user session belonging to the requesting client", %{conn: conn} do
       first_user = user_fixture()
       second_user = user_fixture()

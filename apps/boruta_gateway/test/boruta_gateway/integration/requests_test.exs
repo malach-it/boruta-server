@@ -387,7 +387,8 @@ defmodule BorutaGateway.RequestsIntegrationTest do
                   uris: ["/basic"],
                   strip_uri: true,
                   authorize: true,
-                  authorization_type: "http_basic"
+                  authorization_type: "http_basic",
+                  forward_basic_auth_token: true
                 })
 
                 Process.sleep(100)
