@@ -96,7 +96,15 @@
                     <pre class="certificate">{{ record.certificate }}</pre>
                   </details>
                 </div>
-                <table class="ui basic compact upstream table" v-if="upstreamsFor(record).length">
+                <div class="ui fluid icon input search form" v-if="upstreamsFor(record).length">
+                  <input
+                    type="search"
+                    v-model="upstreamSearchQueries[record.id]"
+                    :aria-label="`Search upstreams for ${record.node_name}`"
+                    placeholder="Search upstreams" />
+                  <i class="search icon"></i>
+                </div>
+                <table class="ui basic compact upstream table" v-if="filteredUpstreamsFor(record).length">
                   <thead>
                     <tr>
                       <th>Host</th>
@@ -106,7 +114,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="upstream in upstreamsFor(record)" :key="upstream.id">
+                    <tr v-for="upstream in filteredUpstreamsFor(record)" :key="upstream.id">
                       <td>{{ upstream.virtual_host || '-' }}</td>
                       <td>{{ upstream.baseUrl }}</td>
                       <td>
@@ -137,7 +145,7 @@
                   </tbody>
                 </table>
                 <div class="ui small message" v-else>
-                  No upstreams configured for this node.
+                  {{ upstreamsFor(record).length ? 'No matching upstreams.' : 'No upstreams configured for this node.' }}
                 </div>
               </td>
             </tr>
@@ -156,6 +164,7 @@
 
 <script>
 import MiniSearch from 'minisearch'
+import { markRaw } from 'vue'
 import Toaster from '../../components/Toaster.vue'
 import ServiceRegistryRecord from '../../models/service-registry-record.model'
 import Upstream from '../../models/upstream.model'
@@ -171,6 +180,9 @@ export default {
       upstreams: {},
       expandedRecords: {},
       searchQuery: '',
+      upstreamSearchQueries: {},
+      registrySearchIndex: null,
+      upstreamSearchIndexes: {},
       error: null,
       deleted: false,
       pollingInterval: null
@@ -203,6 +215,31 @@ export default {
         return recordsById
       }, {})
 
+      return this.registrySearchIndex.search(query).map(({ id }) => recordsById[id])
+    }
+  },
+  watch: {
+    records: {
+      handler: 'updateRegistrySearchIndex',
+      immediate: true
+    },
+    upstreams: {
+      handler () {
+        this.updateUpstreamSearchIndexes()
+        this.updateRegistrySearchIndex()
+      },
+      immediate: true
+    }
+  },
+  mounted () {
+    this.getData()
+    this.pollingInterval = setInterval(this.getData, 10000)
+  },
+  beforeUnmount () {
+    clearInterval(this.pollingInterval)
+  },
+  methods: {
+    updateRegistrySearchIndex () {
       const miniSearch = new MiniSearch({
         fields: ['node_name', 'ip_address', 'aliases', 'status', 'certificate', 'upstreams'],
         storeFields: ['id'],
@@ -222,17 +259,13 @@ export default {
         upstreams: this.upstreamsFor(record).map(this.upstreamSearchText).join(' ')
       })))
 
-      return miniSearch.search(query).map(({ id }) => recordsById[id])
-    }
-  },
-  mounted () {
-    this.getData()
-    this.pollingInterval = setInterval(this.getData, 10000)
-  },
-  beforeUnmount () {
-    clearInterval(this.pollingInterval)
-  },
-  methods: {
+      this.registrySearchIndex = markRaw(miniSearch)
+    },
+    updateUpstreamSearchIndexes () {
+      this.upstreamSearchIndexes = Object.fromEntries(Object.entries(this.upstreams).map(([nodeName, upstreams]) => {
+        return [nodeName, markRaw(this.createUpstreamSearchIndex(upstreams))]
+      }))
+    },
     getData () {
       Promise.all([ServiceRegistryRecord.all(), Upstream.all()]).then(([records, upstreams]) => {
         this.records = records
@@ -270,6 +303,39 @@ export default {
     },
     upstreamsFor (record) {
       return this.upstreams[record.node_name] || []
+    },
+    filteredUpstreamsFor (record) {
+      const query = (this.upstreamSearchQueries[record.id] || '').trim()
+      const upstreams = this.upstreamsFor(record)
+
+      if (!query) return upstreams
+
+      const miniSearch = this.upstreamSearchIndexes[record.node_name]
+      if (!miniSearch) return []
+
+      const matchingIds = new Set(miniSearch.search(query).map(({ id }) => id))
+      return upstreams.filter(({ id }) => matchingIds.has(id))
+    },
+    createUpstreamSearchIndex (upstreams) {
+      const miniSearch = new MiniSearch({
+        fields: ['text'],
+        searchOptions: {
+          prefix: true,
+          fuzzy: 0.2,
+          combineWith: 'AND'
+        }
+      })
+
+      miniSearch.addAll(upstreams.map((upstream) => ({
+        id: upstream.id,
+        text: [
+          upstream.virtual_host || '-',
+          upstream.baseUrl,
+          ...(upstream.uris || []).map(({ uri }) => uri)
+        ].join(' ')
+      })))
+
+      return miniSearch
     },
     deleteUpstream (upstream) {
       if (!confirm('Are you sure you want to delete this upstream?')) return
@@ -326,8 +392,8 @@ export default {
         upstream.rate_limit_enabled ? 'rate limit enabled' : 'rate limit disabled',
         upstream.strip_uri ? 'strip uri enabled' : 'strip uri disabled',
         ...(upstream.uris || []).map(({ uri }) => uri),
-        ...Object.entries(upstream.required_scopes || {}).flatMap(([method, scopes]) => {
-          return [method, ...(scopes || [])]
+        ...(upstream.required_scopes || []).flatMap(({ method, model }) => {
+          return [method, model.name]
         })
       ].filter((value) => value !== null && value !== undefined).join(' ')
     },
