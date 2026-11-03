@@ -1,10 +1,10 @@
 ![logo-yellow](images/logo-yellow.png)
 
-boruta is an authorization server that aims to implement OAuth 2.0 and satelite
-specifications. On top of authorization, it provides identity management, an
-experimental gateway and administration interfaces. Those provide an identity
-and access management solution that helps to solve identity related problems,
-up to decentralized identity.
+boruta is an identity and access management solution implementing OAuth 2.0
+specifications up to decentralized identity. It includes along with the
+authorization server a gateway and an administration interface that helps to
+provide authentication and authorization to HTTP services with possible
+verifiable credentials issuance and presentation.
 
 ## Status
 
