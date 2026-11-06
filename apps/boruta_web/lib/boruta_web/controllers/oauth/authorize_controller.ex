@@ -448,6 +448,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
          |> List.first()
          |> Enum.member?(List.first(response_types)) do
       true ->
+        current_user = conn.assigns[:current_user]
         do_authorize(conn, current_user)
 
       false ->
