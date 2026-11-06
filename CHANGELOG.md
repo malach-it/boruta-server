@@ -8,6 +8,7 @@
 
 - [admin] service registry upstream lists support per-node search
 - [gateway] forward request authorization, original Basic credentials, and a valid access token respectively in forwarded `X-Forwarded-Authorization` and `Authorization` headers.
+- [admin] expose current user in consent template
 
 ## [0.14.0] - 2026-10-28
 

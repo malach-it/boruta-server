@@ -50,6 +50,8 @@ defmodule BorutaIdentityWeb.UserConsentController do
 
   @impl BorutaIdentity.Accounts.ConsentApplication
   def consent_initialized(conn, client, [], template) do
+    current_user = conn.assigns[:current_user]
+
     conn
     |> put_layout(false)
     |> put_flash(:warning, "Scope list is empty.")
@@ -58,12 +60,15 @@ defmodule BorutaIdentityWeb.UserConsentController do
       template: template,
       assigns: %{
         scopes: [],
-        client: client
+        client: client,
+        current_user: current_user
       }
     )
   end
 
   def consent_initialized(conn, client, scopes, template) do
+    current_user = conn.assigns[:current_user]
+
     conn
     |> put_layout(false)
     |> put_view(TemplateView)
@@ -71,7 +76,8 @@ defmodule BorutaIdentityWeb.UserConsentController do
       template: template,
       assigns: %{
         scopes: scopes,
-        client: client
+        client: client,
+        current_user: current_user
       }
     )
   end
