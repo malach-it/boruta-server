@@ -156,6 +156,7 @@ defmodule BorutaIdentity.Admin do
 
   @type import_users_opts :: %{
           optional(:username_header) => String.t(),
+          optional(:did_header) => String.t(),
           optional(:password_header) => String.t(),
           optional(:hash_password) => boolean(),
           optional(:metadata_headers) => [String.t()]
@@ -169,6 +170,7 @@ defmodule BorutaIdentity.Admin do
         %{
           username_header: "username",
           password_header: "password",
+          did_header: "did",
           hash_password: false
         },
         opts
@@ -197,6 +199,7 @@ defmodule BorutaIdentity.Admin do
         %{
           username: {"username", username_index},
           password: {"password", password_index},
+          did: Enum.find_index(headers, &(&1 == opts[:did_header])),
           metadata: metadata_headers
         }
       end)
@@ -217,7 +220,8 @@ defmodule BorutaIdentity.Admin do
 
       params = %{
         username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
-        metadata: metadata
+        metadata: metadata,
+        did: if(is_integer(headers[:did]), do: Enum.at(row, headers[:did]), else: nil)
       }
 
       password = headers[:password] && Enum.at(row, elem(headers[:password], 1))

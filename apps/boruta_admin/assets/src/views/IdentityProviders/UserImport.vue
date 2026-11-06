@@ -13,6 +13,10 @@
             <input type="text" v-model="options.usernameHeader" placeholder="username" />
           </div>
           <div class="field">
+            <label>DID header (optional)</label>
+            <input type="text" v-model="options.didHeader" placeholder="did" />
+          </div>
+          <div class="field">
             <label>password header</label>
             <input type="text" v-model="options.passwordHeader" placeholder="password" />
           </div>

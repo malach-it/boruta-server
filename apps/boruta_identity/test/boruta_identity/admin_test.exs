@@ -454,13 +454,12 @@ defmodule BorutaIdentity.AdminTest do
       assert {:ok, %User{did: ^did}} = Admin.update_user(other_user, %{did: did})
     end
 
-    test "keeps both records unchanged when the internal DID is too long", %{user: user} do
+    test "persists DIDs longer than 255 characters in both records", %{user: user} do
       did = "did:key:" <> String.duplicate("a", 256)
 
-      assert {:error, %Ecto.Changeset{} = changeset} = Admin.update_user(user, %{did: did})
-      assert errors_on(changeset).did == ["should be at most 255 character(s)"]
-      assert %User{did: nil} = Repo.get!(User, user.id)
-      assert %Internal.User{did: nil} = Repo.get!(Internal.User, user.uid)
+      assert {:ok, %User{did: ^did}} = Admin.update_user(user, %{did: did})
+      assert %User{did: ^did} = Repo.get!(User, user.id)
+      assert %Internal.User{did: ^did} = Repo.get!(Internal.User, user.uid)
     end
 
     test "updates user with metadata", %{user: user} do
@@ -558,10 +557,10 @@ defmodule BorutaIdentity.AdminTest do
     File.write!(
       path,
       NimbleCSV.RFC4180.dump_to_iodata([
-        ["login", "secret", "note"],
-        ["first@example.com", stored_password, "first note"],
-        ["invalid", stored_password, "invalid note"],
-        ["second@example.com", stored_password, "second note"]
+        ["login", "secret", "note", "identifier"],
+        ["first@example.com", stored_password, "first note", "did:key:first"],
+        ["invalid", stored_password, "invalid note", ""],
+        ["second@example.com", stored_password, "second note", ""]
       ])
     )
 
@@ -570,6 +569,7 @@ defmodule BorutaIdentity.AdminTest do
                hash_password: hash_password,
                username_header: "login",
                password_header: "secret",
+               did_header: "identifier",
                metadata_headers: ["note>sanity_note"]
              })
 
@@ -590,6 +590,8 @@ defmodule BorutaIdentity.AdminTest do
              } = user.metadata
 
       internal_user = Repo.get!(Internal.User, user.uid)
+      assert user.did == if(email == "first@example.com", do: "did:key:first", else: nil)
+      assert internal_user.did == user.did
       assert Argon2.verify_pass(password, internal_user.hashed_password)
     end
 

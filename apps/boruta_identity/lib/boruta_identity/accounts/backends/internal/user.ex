@@ -52,7 +52,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
   """
   def registration_changeset(user, attrs, %{backend: backend} = opts) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :password, :did])
     |> validate_required([:email, :password])
     |> change(backend_id: backend.id)
     |> validate_email()
@@ -61,7 +61,7 @@ defmodule BorutaIdentity.Accounts.Internal.User do
 
   def raw_registration_changeset(user, attrs, %{backend: backend}) do
     user
-    |> cast(attrs, [:email, :hashed_password])
+    |> cast(attrs, [:email, :hashed_password, :did])
     |> validate_required([:email, :hashed_password])
     |> change(backend_id: backend.id)
     |> validate_email()
@@ -115,7 +115,6 @@ defmodule BorutaIdentity.Accounts.Internal.User do
   def did_changeset(user, attrs) do
     user
     |> cast(attrs, [:did])
-    |> validate_length(:did, max: 255)
   end
 
   @doc """

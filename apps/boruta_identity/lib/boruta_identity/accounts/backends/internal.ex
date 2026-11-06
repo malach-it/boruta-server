@@ -213,11 +213,20 @@ defmodule BorutaIdentity.Accounts.Internal do
   end
 
   defp internal_user(%{uid: uid} = params) when is_binary(uid) and uid != "" do
-    %Internal.User{id: uid, group: params[:group], metadata: params[:metadata]}
+    %Internal.User{
+      id: uid,
+      did: if(params[:did] in [nil, ""], do: nil, else: params[:did]),
+      group: params[:group],
+      metadata: params[:metadata]
+    }
   end
 
   defp internal_user(params) do
-    %Internal.User{group: params[:group], metadata: params[:metadata]}
+    %Internal.User{
+      did: if(params[:did] in [nil, ""], do: nil, else: params[:did]),
+      group: params[:group],
+      metadata: params[:metadata]
+    }
   end
 
   @impl BorutaIdentity.Admin

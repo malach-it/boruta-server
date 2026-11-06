@@ -207,6 +207,8 @@ User.upload = function ({ backendId, file, options }) {
   formData.append("file", file)
   if (options.usernameHeader && options.usernameHeader !== '')
     formData.append("options[username_header]", options.usernameHeader)
+  if (options.didHeader && options.didHeader !== '')
+    formData.append("options[did_header]", options.didHeader)
   if (options.passwordHeader && options.passwordHeader !== '')
     formData.append("options[password_header]", options.passwordHeader)
   if (options.hashPassword && options.hashPassword !== '')
