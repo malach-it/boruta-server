@@ -46,7 +46,8 @@ defmodule BorutaWeb.Endpoint do
     Plug.Session.call(conn, Plug.Session.init(session_options()))
   end
 
-  defp session_options do
+  @doc false
+  def session_options do
     endpoint_config = Application.get_env(:boruta_web, BorutaWeb.Endpoint)
 
     [

@@ -10,6 +10,10 @@
 - [gateway] forward request authorization, original Basic credentials, and a valid access token respectively in forwarded `X-Forwarded-Authorization` and `Authorization` headers.
 - [admin] expose current user in consent template
 
+### Fixed
+
+- [identity] oversized session cookies are cleaned at preauthorization success, removing stale MFA and preauthorization entries before dropping other client sessions; requests that still exceed the cookie limit clear the session and return a bad request response
+
 ## [0.14.0] - 2026-10-28
 
 ### Added

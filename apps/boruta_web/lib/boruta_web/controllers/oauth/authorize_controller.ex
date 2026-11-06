@@ -448,7 +448,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
          |> List.first()
          |> Enum.member?(List.first(response_types)) do
       true ->
-        do_authorize(conn, conn.assigns[:current_user])
+        do_authorize(conn, current_user)
 
       false ->
         preauthorize_success(conn, :preauthorized)
@@ -466,7 +466,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           :preauthorizations,
           Map.merge(preauthorizations, %{request_param(conn) => true})
         )
-        |> redirect(
+        |> preauthorize_redirect(
           to:
             IdentityRoutes.user_consent_path(
               BorutaIdentityWeb.Endpoint,
@@ -477,7 +477,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
       false ->
         conn
-        |> redirect(
+        |> preauthorize_redirect(
           to:
             IdentityRoutes.choose_session_path(
               BorutaIdentityWeb.Endpoint,
@@ -485,6 +485,25 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
               identity_request_params(conn)
             )
         )
+    end
+  end
+
+  defp preauthorize_redirect(conn, opts) do
+    with_session_capacity(conn, &redirect(&1, opts))
+  end
+
+  defp with_session_capacity(conn, next) do
+    client_id =
+      BorutaIdentityWeb.Authenticable.client_id_from_request(conn) ||
+        conn.query_params["client_id"]
+
+    case BorutaWeb.SessionCookie.clean_if_oversized(conn, client_id, request_param(conn)) do
+      {:ok, conn} ->
+        next.(conn)
+
+      {:error, conn} ->
+        raise BorutaIdentity.Accounts.IdentityProviderError,
+              "Unprocessable request, session is too large."
     end
   end
 
