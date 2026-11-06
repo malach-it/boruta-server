@@ -12,7 +12,7 @@
 
 ### Fixed
 
-- [admin] CSV user imports preserve mapped metadata with both plaintext and hashed passwords (BOR-288)
+- [admin] CSV user imports preserve mapped metadata with both plaintext and hashed passwords
 - [identity] oversized session cookies are cleaned at preauthorization success, removing stale MFA and preauthorization entries before dropping other client sessions; requests that still exceed the cookie limit clear the session and return a bad request response
 
 ## [0.14.0] - 2026-10-28
