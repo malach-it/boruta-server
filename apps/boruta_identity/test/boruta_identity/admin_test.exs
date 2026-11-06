@@ -533,8 +533,68 @@ defmodule BorutaIdentity.AdminTest do
   @tag :skip
   test "create_raw_user/2"
 
-  @tag :skip
-  test "import_users/3"
+  describe "CSV metadata import" do
+    @tag :tmp_dir
+    test "persists mapped metadata with plaintext passwords and reports invalid rows", %{
+      tmp_dir: dir
+    } do
+      assert_metadata_import(dir, true)
+    end
+
+    @tag :tmp_dir
+    test "persists mapped metadata with hashed passwords and reports invalid rows", %{
+      tmp_dir: dir
+    } do
+      assert_metadata_import(dir, false)
+    end
+  end
+
+  defp assert_metadata_import(dir, hash_password) do
+    backend = insert(:backend, metadata_fields: [%{"attribute_name" => "sanity_note"}])
+    password = "valid password for import"
+    stored_password = if hash_password, do: password, else: Argon2.hash_pwd_salt(password)
+    path = Path.join(dir, "users.csv")
+
+    File.write!(
+      path,
+      NimbleCSV.RFC4180.dump_to_iodata([
+        ["login", "secret", "note"],
+        ["first@example.com", stored_password, "first note"],
+        ["invalid", stored_password, "invalid note"],
+        ["second@example.com", stored_password, "second note"]
+      ])
+    )
+
+    assert %{success_count: 2, error_count: 1, errors: [%{line: 2, changeset: changeset}]} =
+             Admin.import_users(backend, path, %{
+               hash_password: hash_password,
+               username_header: "login",
+               password_header: "secret",
+               metadata_headers: ["note>sanity_note"]
+             })
+
+    assert changeset.errors[:email]
+
+    for {email, note} <- [
+          {"first@example.com", "first note"},
+          {"second@example.com", "second note"}
+        ] do
+      user = Repo.get_by!(User, backend_id: backend.id, username: email)
+
+      assert %{
+               "sanity_note" => %{
+                 "value" => ^note,
+                 "status" => "valid",
+                 "origin" => "import - " <> _
+               }
+             } = user.metadata
+
+      internal_user = Repo.get!(Internal.User, user.uid)
+      assert Argon2.verify_pass(password, internal_user.hashed_password)
+    end
+
+    refute Repo.get_by(Internal.User, backend_id: backend.id, email: "invalid")
+  end
 
   @tag :skip
   test "delete_user_authorized_scopes_by_id/1"

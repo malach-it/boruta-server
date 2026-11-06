@@ -222,19 +222,20 @@ defmodule BorutaIdentity.Accounts.Internal do
 
   @impl BorutaIdentity.Admin
   def create_raw_user(backend, params) do
-    # TODO database transaction
-    with {:ok, user} <-
-           Internal.User.raw_registration_changeset(
-             %Internal.User{},
+    Repo.transaction(fn repo ->
+      case Internal.User.raw_registration_changeset(
+             internal_user(params),
              %{
                email: params[:username],
                hashed_password: params[:hashed_password]
              },
              %{backend: backend}
            )
-           |> Repo.insert() do
-      {:ok, domain_user!(user, backend)}
-    end
+           |> repo.insert() do
+        {:ok, user} -> domain_user!(user, backend, repo)
+        {:error, error} -> Repo.rollback(error)
+      end
+    end)
   end
 
   defp get_user_by_reset_password_token(token) do

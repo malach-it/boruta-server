@@ -157,7 +157,8 @@ defmodule BorutaIdentity.Admin do
   @type import_users_opts :: %{
           optional(:username_header) => String.t(),
           optional(:password_header) => String.t(),
-          optional(:hash_password) => boolean()
+          optional(:hash_password) => boolean(),
+          optional(:metadata_headers) => [String.t()]
         }
 
   @spec import_users(backend :: Backend.t(), csv_path :: String.t(), opts :: import_users_opts()) ::
@@ -203,36 +204,27 @@ defmodule BorutaIdentity.Admin do
     File.stream!(csv_path)
     |> CSV.parse_stream(skip_headers: true)
     |> Stream.map(fn row ->
+      metadata =
+        Map.new(headers[:metadata], fn {attribute, index} ->
+          {attribute,
+           %{
+             "value" => Enum.at(row, index),
+             "status" => "valid",
+             "display" => ["status", "origin"],
+             "origin" => "import - #{:os.system_time(:second)}"
+           }}
+        end)
+
+      params = %{
+        username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
+        metadata: metadata
+      }
+
+      password = headers[:password] && Enum.at(row, elem(headers[:password], 1))
+
       case opts[:hash_password] do
-        true ->
-          create_params =
-            %{
-              username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
-              password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
-            }
-            |> Map.put(
-              :metadata,
-              Enum.map(headers[:metadata], fn header ->
-                {elem(header, 0),
-                 %{
-                   "value" => Enum.at(row, elem(header, 1)),
-                   "status" => "valid",
-                   "display" => ["status", "origin"],
-                   "origin" => "import - #{:os.system_time(:second)}"
-                 }}
-              end)
-              |> Enum.into(%{})
-            )
-
-          create_user(backend, create_params)
-
-        _ ->
-          create_params = %{
-            username: headers[:username] && Enum.at(row, elem(headers[:username], 1)),
-            hashed_password: headers[:password] && Enum.at(row, elem(headers[:password], 1))
-          }
-
-          create_raw_user(backend, create_params)
+        true -> create_user(backend, Map.put(params, :password, password))
+        _ -> create_raw_user(backend, Map.put(params, :hashed_password, password))
       end
     end)
     |> Stream.with_index(1)
