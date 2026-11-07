@@ -502,7 +502,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       {:ok, conn} ->
         next.(conn)
 
-      {:error, conn} ->
+      {:error, _conn} ->
         raise BorutaIdentity.Accounts.IdentityProviderError,
               "Unprocessable request, session is too large."
     end
