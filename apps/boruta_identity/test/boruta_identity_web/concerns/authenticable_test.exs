@@ -58,6 +58,31 @@ defmodule BorutaIdentityWeb.AuthenticableTest do
              second_token
   end
 
+  test "logout preserves the stateful authorization request", %{conn: conn} do
+    client_id = SecureRandom.uuid()
+
+    {:ok, jwt, _} =
+      Joken.encode_and_sign(
+        %{"client_id" => client_id, "user_return_to" => "/oauth/authorize?state=original"},
+        BorutaIdentityWeb.Token.application_signer()
+      )
+
+    request = %{"id" => "pending-request", "jwt" => jwt}
+
+    conn =
+      conn
+      |> put_session(:authorization_request, request)
+      |> put_session(:user_token, %{client_id => "old-session"})
+      |> Map.put(:query_params, %{"request" => "pending-request"})
+      |> Phoenix.Controller.fetch_flash()
+      |> BorutaIdentityWeb.UserSessionController.session_deleted()
+
+    assert get_session(conn, :authorization_request) == request
+    assert get_session(conn, :user_token) == %{}
+    assert Authenticable.client_id_from_request(conn) == client_id
+    assert redirected_to(conn) =~ "request=pending-request"
+  end
+
   @tag :skip
   test "after_sign_in_path/2"
 

@@ -556,7 +556,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
     conn
     |> delete_session(:session_chosen)
-    |> delete_session(:authorization_request)
     |> redirect(external: AuthorizeResponse.redirect_to_url(response))
   end
 
@@ -572,7 +571,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_code_authorize_success_event(response.code, response.response_mode)
 
     conn
-    |> delete_session(:authorization_request)
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
@@ -598,7 +596,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_code_authorize_success_event(response.code, response.response_mode)
 
     conn
-    |> delete_session(:authorization_request)
     |> redirect(
       external:
         SiopV2Response.redirect_to_deeplink(response, fn code ->
@@ -617,7 +614,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_code_authorize_success_event(response.code, response.response_mode)
 
     conn
-    |> delete_session(:authorization_request)
     |> redirect(
       external:
         VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
@@ -641,7 +637,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_code_authorize_success_event(response.code, response.response_mode)
 
     conn
-    |> delete_session(:authorization_request)
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
@@ -679,7 +674,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
             conn =
               conn
               |> delete_session(:session_chosen)
-              |> delete_session(:authorization_request)
               |> put_layout(false)
               |> put_view(TemplateView)
               |> render("template.html",
@@ -728,7 +722,6 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
         conn =
           conn
           |> delete_session(:session_chosen)
-          |> delete_session(:authorization_request)
           |> put_layout(false)
           |> put_view(TemplateView)
           |> render("template.html",

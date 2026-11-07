@@ -17,6 +17,25 @@ defmodule BorutaWeb.AuthorizeControllerTest do
     {:ok, conn: conn}
   end
 
+  test "OAuth success preserves the request needed by logout", %{conn: conn} do
+    request = %{"id" => "pending-request", "jwt" => "signed-request"}
+
+    response = %Boruta.Oauth.AuthorizeResponse{
+      type: :code,
+      redirect_uri: "http://redirect.uri",
+      code: %Token{type: :code, value: "code"}
+    }
+
+    conn =
+      conn
+      |> init_test_session(%{authorization_request: request})
+      |> Map.put(:query_params, %{"client_id" => "client"})
+      |> AuthorizeController.authorize_success(response)
+
+    assert get_session(conn, :authorization_request) == request
+    assert redirected_to(conn) =~ "http://redirect.uri"
+  end
+
   describe "#authorize" do
     setup %{conn: conn} do
       resource_owner = user_fixture()
