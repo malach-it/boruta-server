@@ -108,12 +108,16 @@ defmodule BorutaWeb.SessionCookieTest do
         "id" => "current-request",
         "jwt" => String.duplicate("x", 5000)
       })
-      |> AuthorizeController.preauthorize_success(:preauthorized)
 
-    assert conn.status == 400
-    assert conn.halted
-    assert get_session(conn) == %{}
-    assert_cookie_fits(conn)
+    assert {:error, cleaned} =
+             SessionCookie.clean_if_oversized(conn, "current", "current-request")
+
+    assert get_session(cleaned) == %{}
+    assert_cookie_fits(send_resp(cleaned, 200, ""))
+
+    assert_raise BorutaIdentity.Accounts.IdentityProviderError,
+                 "Unprocessable request, session is too large.",
+                 fn -> AuthorizeController.preauthorize_success(conn, :preauthorized) end
   end
 
   defp assert_cookie_fits(conn) do
