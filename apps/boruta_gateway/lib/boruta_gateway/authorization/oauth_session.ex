@@ -205,9 +205,10 @@ defmodule BorutaGateway.Authorization.OauthSession do
       const cookie = '#{@access_cookie}=' + value + '; Path=/; SameSite=Lax; Max-Age=' + age + '#{secure}';
       if (cookie.length <= 4096) {
         document.cookie = cookie;
-        location.replace(target.href);
-      } else { document.documentElement.textContent = 'Access token exceeds cookie size limit.'; }
-    } else { document.documentElement.textContent = 'Invalid authorization response.'; }
+      }
+    }
+
+    location.replace(target.href);
     </script>
     """
 
