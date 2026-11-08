@@ -69,6 +69,7 @@
             <label>Authorization type</label>
             <select v-model="upstream.authorization_type">
               <option value="oauth_bearer">OAuth bearer token</option>
+              <option value="oauth_session">OAuth cookie session</option>
               <option value="http_basic">HTTP Basic credentials</option>
             </select>
             <div class="ui info message" v-if="upstream.authorization_type === 'http_basic'">

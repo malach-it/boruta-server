@@ -398,6 +398,7 @@ export default {
       ].filter((value) => value !== null && value !== undefined).join(' ')
     },
     authorizationTypeLabel (upstream) {
+      if (upstream.authorization_type === 'oauth_session') return 'OAuth session'
       return upstream.authorization_type === 'http_basic'
         ? 'HTTP Basic'
         : 'OAuth bearer'

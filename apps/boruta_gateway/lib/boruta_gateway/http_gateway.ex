@@ -13,7 +13,6 @@ defmodule BorutaGateway.HttpGateway do
 
   alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.Certificate
-  alias BorutaGateway.HttpGateway.Authorization
   alias BorutaGateway.HttpRequest
   alias BorutaGateway.NoiseCancelling
   alias BorutaGateway.Upstreams
@@ -221,7 +220,7 @@ defmodule BorutaGateway.HttpGateway do
   end
 
   defp handle_downstream_request(socket, request, state) do
-    payload = request.header_payload
+    payload = BorutaGateway.Authorization.OauthSession.strip_cookie(request.header_payload)
     header = request.header
     start = :os.system_time(:microsecond)
     request_id = request_id(header)
@@ -231,10 +230,12 @@ defmodule BorutaGateway.HttpGateway do
       {:ok, method, path} ->
         path_info = path_info(path)
 
-        with %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
+        with :ok <- BorutaGateway.Authorization.OauthSession.prepare(header, "http", request.body),
+             %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
              :ok <- check_noise_cancelling(upstream, method, path, state.remote_ip),
              :ok <- rate_limit(socket, upstream),
-             {:ok, token} <- Authorization.authorize(header, method, upstream) do
+             {:ok, token} <-
+               BorutaGateway.Authorization.authorize(header, method, upstream, "http") do
           request =
             Map.merge(request, %{
               start: start,
@@ -245,6 +246,10 @@ defmodule BorutaGateway.HttpGateway do
 
           connect_upstream(socket, payload, state, upstream, token, request)
         else
+          {:browser_response, response} ->
+            :gen_tcp.send(socket, response)
+            {:noreply, close_downstream(socket, state)}
+
           nil ->
             response = "No upstream has been found corresponding to the given request."
 
@@ -837,6 +842,11 @@ defmodule BorutaGateway.HttpGateway do
   end
 
   defp transform_header(payload, upstream, token) do
+    payload =
+      if Regex.match?(~r{(?:^|\r\n)authorization\s*:}i, payload),
+        do: payload,
+        else: put_header(payload, "Authorization", "Bearer " <> token.value)
+
     claims = %{
       "scope" => token.scope,
       "sub" => token.sub,

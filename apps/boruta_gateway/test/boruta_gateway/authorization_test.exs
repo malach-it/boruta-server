@@ -63,6 +63,11 @@ defmodule BorutaGateway.AuthorizationTest do
     {:ok, public_client: public}
   end
 
+  test "unknown authorization types fail closed" do
+    upstream = %Upstream{authorize: true, authorization_type: "unknown"}
+    assert {:unauthorized, _, _, _} = Authorization.authorize("", "GET", upstream)
+  end
+
   test "Basic authentication without forwarding checks credentials and scopes without storing tokens" do
     upstream = %{basic_upstream(%{"GET" => ["read"]}) | forward_basic_auth_token: false}
 

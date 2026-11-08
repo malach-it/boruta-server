@@ -11,7 +11,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "forward_basic_auth_token" => %{"type" => "boolean"},
         "authorization_type" => %{
           "type" => "string",
-          "pattern" => "^(oauth_bearer|http_basic)$"
+          "pattern" => "^(oauth_bearer|oauth_session|http_basic)$"
         },
         "error_content_type" => %{"type" => "string"},
         "forbidden_response" => %{"type" => "string"},
@@ -69,7 +69,7 @@ defmodule BorutaGateway.ConfigurationSchemas.GatewaySchema do
         "forward_basic_auth_token" => %{"type" => "boolean"},
         "authorization_type" => %{
           "type" => "string",
-          "pattern" => "^(oauth_bearer|http_basic)$"
+          "pattern" => "^(oauth_bearer|oauth_session|http_basic)$"
         },
         "error_content_type" => %{"type" => "string"},
         "forbidden_response" => %{"type" => "string"},
