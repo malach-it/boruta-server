@@ -123,7 +123,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> cast(attrs, [:forbidden_response, :unauthorized_response], empty_values: [])
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
-    |> validate_inclusion(:authorization_type, ["oauth_bearer", "http_basic"])
+    |> validate_inclusion(:authorization_type, ["oauth_bearer", "oauth_session", "http_basic"])
     |> validate_mtls_configuration()
     |> validate_inclusion(:rate_limit_count, 1..100_000)
     |> validate_inclusion(:rate_limit_time_unit, ["millisecond", "second", "minute"])
