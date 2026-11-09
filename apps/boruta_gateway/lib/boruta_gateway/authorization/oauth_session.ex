@@ -93,7 +93,7 @@ defmodule BorutaGateway.Authorization.OauthSession do
       result =
         if authorized_header != header && method not in ["GET", "HEAD", "OPTIONS"] &&
              get_header(header, "origin") != origin do
-          {:forbidden, "text/plain", "Invalid request origin"}
+          revoke(header, scheme)
         else
           BorutaGateway.Authorization.OauthBearer.authorize(
             authorized_header,
@@ -135,7 +135,8 @@ defmodule BorutaGateway.Authorization.OauthSession do
       state = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
 
       scopes =
-        Map.get(upstream.required_scopes, method, Map.get(upstream.required_scopes, "*", []))
+        Map.get(upstream.required_scopes, method, []) ++
+          Map.get(upstream.required_scopes, "*", [])
 
       id =
         encode_session(%{
@@ -235,10 +236,9 @@ defmodule BorutaGateway.Authorization.OauthSession do
 
   defp revoke(header, scheme) do
     current_origin = origin(header, scheme)
+    session = request_session(header)
 
     if current_origin && get_header(header, "origin") == current_origin do
-      session = request_session(header)
-
       result =
         case session do
           %{token: value, origin: ^current_origin} ->
@@ -267,7 +267,7 @@ defmodule BorutaGateway.Authorization.OauthSession do
           response(500, [])
       end
     else
-      response(403, [])
+      restart_login(header, scheme, current_origin, session)
     end
   end
 
