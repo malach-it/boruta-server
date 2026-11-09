@@ -145,6 +145,7 @@ defmodule BorutaWeb.Oauth.TokenController do
           %{callback_uri | host: callback_uri.host || "", query: query}
           |> URI.to_string()
 
+        PresentationServer.authenticated(response.code.value, callback_uri)
         redirect(conn, external: callback_uri)
 
       response_types ->
