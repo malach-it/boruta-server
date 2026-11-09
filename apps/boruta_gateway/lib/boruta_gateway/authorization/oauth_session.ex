@@ -149,10 +149,11 @@ defmodule BorutaGateway.Authorization.OauthSession do
       query =
         URI.encode_query(%{
           client_id: client.id,
-          redirect_uri: origin <> @callback_path,
-          response_type: "token",
+          redirect_uri: Boruta.Config.issuer() <> "/accounts/wallet",
+          response_type: "vp_token",
           scope: Enum.join(scopes, " "),
-          state: state
+          state: state,
+          client_metadata: "{}"
         })
 
       url =

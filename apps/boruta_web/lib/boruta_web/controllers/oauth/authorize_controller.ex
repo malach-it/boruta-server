@@ -42,8 +42,8 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   alias BorutaWeb.PresentationServer
 
   @siopv2_response_types ["id_token", "code"]
-  @public_response_types @siopv2_response_types
-  @presentation_timeout 30_000
+  @public_response_types @siopv2_response_types ++ ["vp_token"]
+  @presentation_timeout 300_000
 
   def authorize(%Plug.Conn{} = conn, _params) do
     conn = conn |> put_unsigned_request() |> prepare_request_param()
@@ -93,26 +93,49 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
   end
 
   def authenticated?(conn, %{"code" => code}) do
+    case BorutaWeb.PresentationAuthorization.context(conn, code) do
+      {:ok, context} -> presentation_events(conn, code, context)
+      :error -> send_resp(conn, 401, "Invalid presentation authorization context.")
+    end
+  end
+
+  defp presentation_events(conn, code, context) do
     PresentationServer.start_presentation(code)
 
     conn =
       conn
       |> put_resp_header("content-type", "text/event-stream")
+      |> put_resp_header("cache-control", "no-store")
       |> send_chunked(200)
 
-    receive do
-      {:authenticated, redirect_uri} ->
-        chunk(conn, "event: authenticated\ndata: #{redirect_uri}\n\n")
+    result =
+      receive do
+        {:authenticated, redirect_uri} ->
+          result =
+            if context,
+              do: BorutaWeb.PresentationAuthorization.complete(conn, code, context),
+              else: {:ok, redirect_uri}
 
-      {:message, message} ->
-        chunk(conn, "event: message\ndata: #{message}\n\n")
-    after
-      @presentation_timeout ->
-        PresentationServer.cancel_presentation(code)
-        chunk(conn, "event: timeout\ndata: timeout\n\n")
+        case result do
+            {:ok, url} ->
+              chunk(conn, "event: authenticated\ndata: #{url}\n\n")
+
+            {:error, _} ->
+              chunk(conn, "event: message\ndata: Presentation authorization failed.\n\n")
+          end
+
+        {:message, message} ->
+          chunk(conn, "event: message\ndata: #{message}\n\n")
+      after
+        @presentation_timeout ->
+          PresentationServer.cancel_presentation(code)
+          chunk(conn, "event: timeout\ndata: timeout\n\n")
+      end
+
+    case result do
+      {:ok, streamed_conn} -> streamed_conn
+      {:error, _} -> conn
     end
-
-    conn
   end
 
   def public_client?(conn) do
@@ -637,6 +660,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
     emit_code_authorize_success_event(response.code, response.response_mode)
 
     conn
+    |> BorutaWeb.PresentationAuthorization.bind(response)
     |> put_layout(false)
     |> put_view(TemplateView)
     |> render("template.html",
