@@ -57,90 +57,130 @@ defmodule BorutaGateway.BrowserSessionTest do
              )
   end
 
-  test "browser login preserves query parameters and uses a secure session cookie" do
-    alias Boruta.Ecto.{Admin, ClientStore}
-    previous = ClientStore.get_public()
-    {:ok, client} = Admin.create_client(%{access_token_ttl: 3600})
-    ClientStore.put_public(Boruta.ClientsAdapter.get_client(client.id))
+  for {flow, wallet_uri} <- [
+        {"implicit", nil},
+        {"implicit", "https://wallet.example.com/authorize"},
+        {"verifiable_presentation", nil},
+        {"verifiable_presentation", "https://wallet.example.com/authorize"}
+      ] do
+    @flow flow
+    @wallet_uri wallet_uri
+    @redirect_uri if flow == "verifiable_presentation" && wallet_uri,
+                    do: wallet_uri,
+                    else: "https://example.com/__implicit/callback"
+    test "#{flow} browser login with wallet #{inspect(wallet_uri)} preserves its flow, query parameters and secure session cookie" do
+      alias Boruta.Ecto.{Admin, ClientStore}
+      previous = ClientStore.get_public()
+      {:ok, client} = Admin.create_client(%{access_token_ttl: 3600})
+      ClientStore.put_public(Boruta.ClientsAdapter.get_client(client.id))
 
-    on_exit(fn ->
-      case previous do
-        {:ok, client} -> ClientStore.put_public(client)
-        _ -> ClientStore.invalidate_public()
-      end
-    end)
+      on_exit(fn ->
+        case previous do
+          {:ok, client} -> ClientStore.put_public(client)
+          _ -> ClientStore.invalidate_public()
+        end
+      end)
 
-    upstream = %BorutaGateway.Upstreams.Upstream{
-      authorize: true,
-      authorization_type: "oauth_session",
-      required_scopes: %{}
-    }
+      upstream = %BorutaGateway.Upstreams.Upstream{
+        authorize: true,
+        authorization_type: "oauth_session",
+        oauth_session_flow: @flow,
+        oauth_session_wallet_uri: @wallet_uri,
+        required_scopes: %{}
+      }
 
-    header = "GET /private?view=full HTTP/1.1\r\nHost: example.com\r\nAccept: text/html\r\n\r\n"
+      header = "GET /private?view=full HTTP/1.1\r\nHost: example.com\r\nAccept: text/html\r\n\r\n"
 
-    assert {:browser_response, response} =
-             BorutaGateway.Authorization.authorize(header, "GET", upstream, "https")
+      assert {:browser_response, response} =
+               BorutaGateway.Authorization.authorize(header, "GET", upstream, "https")
 
-    assert response =~ "302 Found"
-    assert response =~ "response_type=token"
-    assert response =~ "; Secure"
-    [_, id] = Regex.run(~r/boruta_gateway_session=([^;]+)/, response)
+      assert response =~ "302 Found"
+      response_type = if @flow == "implicit", do: "token", else: "vp_token"
+      assert response =~ "response_type=#{response_type}"
+      assert response =~ "client_metadata=" == (@flow == "verifiable_presentation")
+      assert response =~ "; Secure"
+      [_, id] = Regex.run(~r/boruta_gateway_session=([^;]+)/, response)
 
-    assert %{target: "/private?view=full", state: state} =
-             BrowserSession.decode_session(id)
+      assert %{target: "/private?view=full", state: state} =
+               BrowserSession.decode_session(id)
 
-    assert response =~ "state=" <> state
-    assert response =~ "redirect_uri=https%3A%2F%2Fexample.com%2F__implicit%2Fcallback"
-    public = Boruta.ClientsAdapter.get_client(client.id)
+      assert BrowserSession.decode_session(id).oauth_session_flow == @flow
+      assert BrowserSession.decode_session(id).oauth_session_wallet_uri == @wallet_uri
 
-    {:ok, token} =
-      Boruta.AccessTokensAdapter.create(%{client: public, scope: "", sub: "user"}, [])
+      assert BrowserSession.decode_session(id).relying_party_redirect_uri ==
+               "https://example.com/__implicit/callback"
 
-    callback_header =
-      "GET /__implicit/callback HTTP/1.1\r\nHost: example.com\r\nCookie: boruta_gateway_session=#{id}\r\n\r\n"
+      assert BrowserSession.decode_session(id).client_id == client.id
 
-    assert {:browser_response, page} = BrowserSession.prepare(callback_header, "https")
-    [_, script] = Regex.run(~r/<script nonce="[^"]+">(.*?)<\/script>/s, page)
-    fragment = URI.encode_query(%{access_token: token.value, state: state, expires_in: 600})
-    result = run_callback(script, fragment)
-    assert result["redirect"] == "https://example.com/private?view=full"
-    assert result["cookie"] =~ "Max-Age=600"
-    assert result["cookie"] =~ "; Secure"
-    refute result["cookie"] =~ "HttpOnly"
-    invalid = run_callback(script, URI.encode_query(%{access_token: token.value, state: "wrong"}))
-    refute invalid["cookie"]
-    refute invalid["redirect"]
-    access_cookie = result["cookie"] |> String.split(";") |> hd()
-    session = id <> "; " <> access_cookie
+      [_, location] = Regex.run(~r/Location: ([^\r\n]+)/, response)
+      query = location |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
 
-    request =
-      "GET /private HTTP/1.1\r\nHost: example.com\r\nCookie: boruta_gateway_session=#{session}\r\n\r\n"
+      refute Map.has_key?(query, "relying_party_session")
+      refute Map.has_key?(query, "relying_party_redirect_uri")
+      refute location =~ id
 
-    assert {:ok, authorized} =
-             BorutaGateway.Authorization.authorize(request, "GET", upstream, "https")
+      assert response =~ "state=" <> state
 
-    assert authorized.value == token.value
+      redirect_uri = @redirect_uri
 
-    revoke_header =
-      "POST /__implicit/revoke HTTP/1.1\r\nHost: example.com\r\nOrigin: https://example.com\r\nCookie: boruta_gateway_session=#{session}\r\n\r\n"
+      assert response =~ URI.encode_query(%{redirect_uri: redirect_uri})
+      public = Boruta.ClientsAdapter.get_client(client.id)
 
-    assert {:browser_response, revoked} = BrowserSession.prepare(revoke_header, "https")
-    assert revoked =~ "302 Found"
-    assert revoked =~ "response_type=token"
-    [_, pending] = Regex.run(~r/boruta_gateway_session=([^;]+)/, revoked)
-    assert %{target: "/private?view=full", state: _} = BrowserSession.decode_session(pending)
-    refute Map.has_key?(BrowserSession.decode_session(pending), :token)
-    assert revoked =~ "; Secure"
-    assert {:browser_response, repeated} = BrowserSession.prepare(revoke_header, "https")
-    assert repeated =~ "302 Found"
+      {:ok, token} =
+        Boruta.AccessTokensAdapter.create(%{client: public, scope: "", sub: "user"}, [])
 
-    assert {:browser_response, redirect} =
-             BorutaGateway.Authorization.authorize(request, "GET", upstream, "https")
+      callback_header =
+        "GET /__implicit/callback HTTP/1.1\r\nHost: example.com\r\nCookie: boruta_gateway_session=#{id}\r\n\r\n"
 
-    assert redirect =~ "response_type=token"
+      assert {:browser_response, page} = BrowserSession.prepare(callback_header, "https")
+      [_, script] = Regex.run(~r/<script nonce="[^"]+">(.*?)<\/script>/s, page)
+      fragment = URI.encode_query(%{access_token: token.value, state: state, expires_in: 600})
+      result = run_callback(script, fragment)
+      assert result["redirect"] == "https://example.com/private?view=full"
+      assert result["cookie"] =~ "Max-Age=600"
+      assert result["cookie"] =~ "; Secure"
+      refute result["cookie"] =~ "HttpOnly"
+
+      invalid =
+        run_callback(script, URI.encode_query(%{access_token: token.value, state: "wrong"}))
+
+      refute invalid["cookie"]
+      assert invalid["redirect"] == "https://example.com/private?view=full"
+      access_cookie = result["cookie"] |> String.split(";") |> hd()
+      session = id <> "; " <> access_cookie
+
+      request =
+        "GET /private HTTP/1.1\r\nHost: example.com\r\nCookie: boruta_gateway_session=#{session}\r\n\r\n"
+
+      assert {:ok, authorized} =
+               BorutaGateway.Authorization.authorize(request, "GET", upstream, "https")
+
+      assert authorized.value == token.value
+
+      revoke_header =
+        "POST /__implicit/revoke HTTP/1.1\r\nHost: example.com\r\nOrigin: https://example.com\r\nCookie: boruta_gateway_session=#{session}\r\n\r\n"
+
+      assert {:browser_response, revoked} = BrowserSession.prepare(revoke_header, "https")
+      assert revoked =~ "302 Found"
+      assert revoked =~ "response_type=#{response_type}"
+      assert revoked =~ URI.encode_query(%{redirect_uri: redirect_uri})
+      [_, pending] = Regex.run(~r/boruta_gateway_session=([^;]+)/, revoked)
+      assert %{target: "/private?view=full", state: _} = BrowserSession.decode_session(pending)
+      assert BrowserSession.decode_session(pending).oauth_session_flow == @flow
+      assert BrowserSession.decode_session(pending).oauth_session_wallet_uri == @wallet_uri
+      refute Map.has_key?(BrowserSession.decode_session(pending), :token)
+      assert revoked =~ "; Secure"
+      assert {:browser_response, repeated} = BrowserSession.prepare(revoke_header, "https")
+      assert repeated =~ "302 Found"
+
+      assert {:browser_response, redirect} =
+               BorutaGateway.Authorization.authorize(request, "GET", upstream, "https")
+
+      assert redirect =~ "response_type=#{response_type}"
+    end
   end
 
-  test "revocation requires a same-origin POST and tolerates a missing cookie" do
+  test "revocation restarts login when the origin or cookie is missing" do
     alias Boruta.Ecto.{Admin, ClientStore}
     previous = ClientStore.get_public()
     {:ok, client} = Admin.create_client(%{access_token_ttl: 3600})
@@ -155,14 +195,14 @@ defmodule BorutaGateway.BrowserSessionTest do
 
     header = "POST /__implicit/revoke HTTP/1.1\r\nHost: example.com\r\n"
     assert {:browser_response, denied} = BrowserSession.prepare(header, "https")
-    assert denied =~ "403 Forbidden"
-    refute denied =~ "Set-Cookie"
+    assert denied =~ "302 Found"
+    assert denied =~ "response_type=vp_token"
 
     assert {:browser_response, empty} =
              BrowserSession.prepare(header <> "Origin: https://example.com\r\n", "https")
 
     assert empty =~ "302 Found"
-    assert empty =~ "response_type=token"
+    assert empty =~ "response_type=vp_token"
 
     assert {:browser_response, method} =
              BrowserSession.prepare(

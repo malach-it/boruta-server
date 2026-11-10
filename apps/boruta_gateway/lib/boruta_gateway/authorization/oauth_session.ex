@@ -4,33 +4,9 @@ defmodule BorutaGateway.Authorization.OauthSession do
   @cookie "boruta_gateway_session"
   @access_cookie "boruta_gateway_access_token"
   @callback_path "/__implicit/callback"
-  @ttl 3600
-  @salt "boruta gateway browser session v1"
 
-  def encode_session(session) do
-    Plug.Crypto.encrypt(secret_key_base(), @salt, session, max_age: @ttl)
-  end
-
-  def decode_session(nil), do: nil
-
-  def decode_session(value) do
-    case Plug.Crypto.decrypt(secret_key_base(), @salt, value, max_age: @ttl) do
-      {:ok, session} when is_map(session) -> session
-      _ -> nil
-    end
-  end
-
-  defp secret_key_base do
-    secret =
-      Application.get_env(:boruta_gateway, :session_secret_key_base) ||
-        Application.fetch_env!(:boruta_identity, BorutaIdentityWeb.Endpoint)[:secret_key_base]
-
-    if is_binary(secret) && byte_size(secret) >= 64 do
-      secret
-    else
-      raise "gateway cookie sessions require SECRET_KEY_BASE of at least 64 bytes"
-    end
-  end
+  defdelegate encode_session(session), to: BorutaAuth.GatewaySession, as: :encode
+  defdelegate decode_session(value), to: BorutaAuth.GatewaySession, as: :decode
 
   def strip_cookie(header) do
     header
@@ -130,7 +106,8 @@ defmodule BorutaGateway.Authorization.OauthSession do
     [_, request_target | _] = String.split(header, " ", parts: 3)
     target = return_to || request_target
 
-    if origin && String.starts_with?(target, "/") && !String.starts_with?(target, "//") do
+    if origin && String.starts_with?(target, "/") && !String.starts_with?(target, "//") &&
+         upstream.oauth_session_flow in ["implicit", "verifiable_presentation"] do
       client = Boruta.ClientsAdapter.public!()
       state = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
 
@@ -143,18 +120,37 @@ defmodule BorutaGateway.Authorization.OauthSession do
           state: state,
           target: target,
           origin: origin,
+          client_id: client.id,
+          relying_party_redirect_uri: origin <> @callback_path,
+          oauth_session_flow: upstream.oauth_session_flow,
+          oauth_session_wallet_uri: upstream.oauth_session_wallet_uri,
           scope: Enum.join(scopes, " ")
         })
 
-      query =
-        URI.encode_query(%{
+      params =
+        %{
           client_id: client.id,
-          redirect_uri: Boruta.Config.issuer() <> "/accounts/wallet",
-          response_type: "vp_token",
           scope: Enum.join(scopes, " "),
-          state: state,
-          client_metadata: "{}"
-        })
+          state: state
+        }
+
+      params =
+        case upstream.oauth_session_flow do
+          "implicit" ->
+            Map.merge(params, %{
+              response_type: "token",
+              redirect_uri: origin <> @callback_path
+            })
+
+          "verifiable_presentation" ->
+            Map.merge(params, %{
+              response_type: "vp_token",
+              client_metadata: "{}",
+              redirect_uri: upstream.oauth_session_wallet_uri || origin <> @callback_path
+            })
+        end
+
+      query = URI.encode_query(params)
 
       url =
         Boruta.Config.issuer()
@@ -280,7 +276,13 @@ defmodule BorutaGateway.Authorization.OauthSession do
       end
 
     scopes = Boruta.Oauth.Scope.split(context[:scope] || "")
-    upstream = %BorutaGateway.Upstreams.Upstream{required_scopes: %{"GET" => scopes}}
+
+    upstream = %BorutaGateway.Upstreams.Upstream{
+      required_scopes: %{"GET" => scopes},
+      oauth_session_flow: context[:oauth_session_flow] || "verifiable_presentation",
+      oauth_session_wallet_uri: context[:oauth_session_wallet_uri]
+    }
+
     begin_login(header, "GET", upstream, current_origin, scheme, context[:target] || "/")
   end
 

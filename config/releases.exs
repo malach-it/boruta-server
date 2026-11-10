@@ -1,8 +1,5 @@
 import Config
 
-config :boruta_gateway,
-  repo_backend: System.get_env("BORUTA_GATEWAY_BACKEND", "postgres")
-
 config :boruta_auth, BorutaAuth.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
@@ -45,6 +42,10 @@ config :boruta_admin, BorutaAdmin.Repo,
   database: System.get_env("POSTGRES_DATABASE") || "boruta_admin",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 2
+
+config :boruta_gateway,
+  repo_backend: System.get_env("BORUTA_GATEWAY_BACKEND", "postgres"),
+  session_secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :boruta_identity, Boruta.Accounts, secret_key_base: System.get_env("SECRET_KEY_BASE")
 
