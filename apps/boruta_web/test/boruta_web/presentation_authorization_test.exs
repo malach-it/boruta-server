@@ -1,6 +1,8 @@
 defmodule BorutaWeb.PresentationAuthorizationTest do
   use BorutaWeb.ConnCase
   import BorutaWeb.Factory
+  alias Boruta.Oauth.Authorization.AccessToken
+  alias BorutaWeb.Oauth.AuthorizeController
   alias BorutaWeb.PresentationAuthorization, as: Presentation
 
   setup %{conn: conn} = tags do
@@ -56,7 +58,7 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
     assert fragment["state"] == ctx.code.state
 
     assert {:ok, token} =
-             Boruta.Oauth.Authorization.AccessToken.authorize(value: fragment["access_token"])
+             AccessToken.authorize(value: fragment["access_token"])
 
     assert token.client.id == ctx.code.client_id
     assert token.sub == ctx.code.sub
@@ -148,7 +150,7 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
       assert :error = Presentation.context(ctx.conn, ctx.code.value)
 
       assert response(
-               BorutaWeb.Oauth.AuthorizeController.authenticated?(ctx.conn, %{
+               AuthorizeController.authenticated?(ctx.conn, %{
                  "code" => ctx.code.value
                }),
                401
@@ -230,7 +232,7 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
     assert fragment["token_type"] == "bearer"
 
     assert {:ok, token} =
-             Boruta.Oauth.Authorization.AccessToken.authorize(value: fragment["access_token"])
+             AccessToken.authorize(value: fragment["access_token"])
 
     assert token.sub == "did:key:presenter"
     assert token.client.id == ctx.code.client_id
@@ -274,7 +276,7 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
     send(self(), {:authenticated, "https://issuer.example/oauth/authorize?code=intermediate"})
 
     conn =
-      BorutaWeb.Oauth.AuthorizeController.authenticated?(ctx.browser, %{"code" => ctx.code.value})
+      AuthorizeController.authenticated?(ctx.browser, %{"code" => ctx.code.value})
 
     assert response(conn, 200) =~
              "event: authenticated\ndata: https://gateway.example/__implicit/callback#"

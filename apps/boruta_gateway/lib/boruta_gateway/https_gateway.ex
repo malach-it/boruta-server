@@ -14,6 +14,7 @@ defmodule BorutaGateway.HttpsGateway do
   use GenServer
 
   alias BorutaAuth.Plugs.RateLimit.Counter
+  alias BorutaGateway.Authorization.OauthSession
   alias BorutaGateway.Certificate
   alias BorutaGateway.HttpRequest
   alias BorutaGateway.NoiseCancelling
@@ -248,7 +249,7 @@ defmodule BorutaGateway.HttpsGateway do
   end
 
   defp handle_downstream_request(socket, request, state) do
-    payload = BorutaGateway.Authorization.OauthSession.strip_cookie(request.header_payload)
+    payload = OauthSession.strip_cookie(request.header_payload)
     header = request.header
     start = :os.system_time(:microsecond)
     request_id = request_id(header)
@@ -259,7 +260,7 @@ defmodule BorutaGateway.HttpsGateway do
         path_info = path_info(path)
 
         with :ok <-
-               BorutaGateway.Authorization.OauthSession.prepare(header, "https", request.body),
+               OauthSession.prepare(header, "https", request.body),
              %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
              :ok <- check_noise_cancelling(upstream, method, path, state.remote_ip),
              :ok <- rate_limit(socket, upstream),
