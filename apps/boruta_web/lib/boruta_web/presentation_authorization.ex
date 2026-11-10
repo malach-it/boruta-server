@@ -130,7 +130,7 @@ defmodule BorutaWeb.PresentationAuthorization do
   def authorize_success(_conn, response),
     do: {:ok, Oauth.AuthorizeResponse.redirect_to_url(response)}
 
-  def authorize_error(_conn, error), do: dbg(error) && {:error, :invalid_authorization}
+  def authorize_error(_conn, _error), do: {:error, :invalid_authorization}
   def resource_owner_error(_conn, _error), do: {:error, :invalid_resource_owner}
 
   def cookie_name(code),

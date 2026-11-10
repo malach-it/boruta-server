@@ -1,6 +1,8 @@
 defmodule BorutaGateway.Authorization.OauthSession do
   @behaviour BorutaGateway.Authorization
   @moduledoc false
+
+  alias Plug.Conn.Cookies
   @cookie "boruta_gateway_session"
   @access_cookie "boruta_gateway_access_token"
   @callback_path "/__implicit/callback"
@@ -11,31 +13,28 @@ defmodule BorutaGateway.Authorization.OauthSession do
   def strip_cookie(header) do
     header
     |> String.split("\r\n")
-    |> Enum.map(fn line ->
-      case String.split(line, ":", parts: 2) do
-        [key, value] ->
-          if String.downcase(key) == "cookie" do
-            cookies =
-              value
-              |> String.split(";")
-              |> Enum.reject(fn item ->
-                Enum.any?(
-                  [@cookie, @access_cookie],
-                  &String.starts_with?(String.trim(item), &1 <> "=")
-                )
-              end)
-              |> Enum.join(";")
+    |> Enum.map_join("\r\n", &strip_cookie_line/1)
+  end
 
-            key <> ":" <> cookies
-          else
-            line
-          end
+  defp strip_cookie_line(line) do
+    case String.split(line, ":", parts: 2) do
+      [key, value] ->
+        if String.downcase(key) == "cookie" do
+          cookies =
+            value |> String.split(";") |> Enum.reject(&gateway_cookie?/1) |> Enum.join(";")
 
-        _ ->
+          key <> ":" <> cookies
+        else
           line
-      end
-    end)
-    |> Enum.join("\r\n")
+        end
+
+      _ ->
+        line
+    end
+  end
+
+  defp gateway_cookie?(item) do
+    Enum.any?([@cookie, @access_cookie], &String.starts_with?(String.trim(item), &1 <> "="))
   end
 
   def prepare(header, scheme, _body \\ "") do
@@ -50,57 +49,53 @@ defmodule BorutaGateway.Authorization.OauthSession do
     end
   end
 
-  def authorize(header, method, upstream, scheme) do
-    if upstream.authorize && upstream.authorization_type == "oauth_session" do
-      origin = origin(header, scheme)
-      session = request_session(header)
+  def authorize(
+        header,
+        method,
+        %{authorize: true, authorization_type: "oauth_session"} = upstream,
+        scheme
+      ) do
+    origin = origin(header, scheme)
+    authorized_header = session_header(header, request_session(header), origin)
 
-      authorized_header =
-        case session do
-          %{token: token, origin: ^origin} ->
-            if get_header(header, "authorization"),
-              do: header,
-              else: header <> "\r\nAuthorization: Bearer " <> token
-
-          _ ->
-            header
-        end
-
-      result =
-        if authorized_header != header && method not in ["GET", "HEAD", "OPTIONS"] &&
-             get_header(header, "origin") != origin do
-          revoke(header, scheme)
-        else
-          BorutaGateway.Authorization.OauthBearer.authorize(
-            authorized_header,
-            method,
-            upstream,
-            scheme
-          )
-        end
-
-      result =
-        case result do
-          {:ok, token} when authorized_header != header ->
-            if token.client.id == Boruta.ClientsAdapter.public!().id,
-              do: result,
-              else: BorutaGateway.Authorization.Helpers.unauthorized(upstream, nil)
-
-          _ ->
-            result
-        end
-
-      case result do
-        {:unauthorized, _, _, _} ->
-          begin_login(header, method, upstream, origin, scheme)
-
-        result ->
-          result
+    result =
+      if authorized_header != header && method not in ["GET", "HEAD", "OPTIONS"] &&
+           get_header(header, "origin") != origin do
+        revoke(header, scheme)
+      else
+        BorutaGateway.Authorization.OauthBearer.authorize(
+          authorized_header,
+          method,
+          upstream,
+          scheme
+        )
       end
-    else
-      BorutaGateway.Authorization.authorize(header, method, upstream)
+
+    case validate_session_client(result, authorized_header != header, upstream) do
+      {:unauthorized, _, _, _} -> begin_login(header, method, upstream, origin, scheme)
+      result -> result
     end
   end
+
+  def authorize(header, method, upstream, scheme) do
+    BorutaGateway.Authorization.authorize(header, method, upstream, scheme)
+  end
+
+  defp session_header(header, %{token: token, origin: origin}, origin) do
+    if get_header(header, "authorization"),
+      do: header,
+      else: header <> "\r\nAuthorization: Bearer " <> token
+  end
+
+  defp session_header(header, _session, _origin), do: header
+
+  defp validate_session_client({:ok, token} = result, true, upstream) do
+    if token.client.id == Boruta.ClientsAdapter.public!().id,
+      do: result,
+      else: BorutaGateway.Authorization.Helpers.unauthorized(upstream, nil)
+  end
+
+  defp validate_session_client(result, _cookie_authorized?, _upstream), do: result
 
   defp begin_login(header, method, upstream, origin, scheme, return_to \\ nil) do
     [_, request_target | _] = String.split(header, " ", parts: 3)
@@ -219,7 +214,7 @@ defmodule BorutaGateway.Authorization.OauthSession do
 
   defp request_session(header) do
     context = decode_session(cookie(header))
-    cookies = (get_header(header, "cookie") || "") |> Plug.Conn.Cookies.decode()
+    cookies = (get_header(header, "cookie") || "") |> Cookies.decode()
 
     with %{} <- context,
          value when is_binary(value) <- cookies[@access_cookie],
@@ -236,25 +231,7 @@ defmodule BorutaGateway.Authorization.OauthSession do
     session = request_session(header)
 
     if current_origin && get_header(header, "origin") == current_origin do
-      result =
-        case session do
-          %{token: value, origin: ^current_origin} ->
-            case Boruta.AccessTokensAdapter.get_by(value: value) do
-              nil ->
-                :ok
-
-              token ->
-                case token.client.id == Boruta.ClientsAdapter.public!().id &&
-                       Boruta.AccessTokensAdapter.revoke(token) do
-                  {:ok, _} -> :ok
-                  false -> :ok
-                  _ -> :error
-                end
-            end
-
-          _ ->
-            :ok
-        end
+      result = revoke_session_token(session, current_origin)
 
       case result do
         :ok ->
@@ -265,6 +242,24 @@ defmodule BorutaGateway.Authorization.OauthSession do
       end
     else
       restart_login(header, scheme, current_origin, session)
+    end
+  end
+
+  defp revoke_session_token(%{token: value, origin: origin}, origin) do
+    case Boruta.AccessTokensAdapter.get_by(value: value) do
+      nil -> :ok
+      token -> revoke_public_token(token)
+    end
+  end
+
+  defp revoke_session_token(_session, _origin), do: :ok
+
+  defp revoke_public_token(token) do
+    case token.client.id == Boruta.ClientsAdapter.public!().id &&
+           Boruta.AccessTokensAdapter.revoke(token) do
+      {:ok, _} -> :ok
+      false -> :ok
+      _ -> :error
     end
   end
 
@@ -287,7 +282,7 @@ defmodule BorutaGateway.Authorization.OauthSession do
   end
 
   defp cookie(header) do
-    (get_header(header, "cookie") || "") |> Plug.Conn.Cookies.decode() |> Map.get(@cookie)
+    (get_header(header, "cookie") || "") |> Cookies.decode() |> Map.get(@cookie)
   end
 
   defp origin(header, scheme) do

@@ -174,7 +174,20 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
 
     without_session = get(conn, return_to)
     assert without_session.assigns.current_user == nil
-    assert redirected_to(without_session) =~ "/users/log_in"
+    assert redirected_to(without_session) =~ "/users/consent"
+    assert MachineSession.from_session_authorize(without_session) == nil
+
+    # The anonymous request may reach consent, but consent still requires login.
+    anonymous_consent =
+      without_session
+      |> recycle()
+      |> Phoenix.ConnTest.dispatch(
+        BorutaIdentityWeb.Endpoint,
+        :get,
+        redirected_to(without_session)
+      )
+
+    assert redirected_to(anonymous_consent) =~ "/users/log_in"
 
     {:ok, request, _claims} =
       Joken.encode_and_sign(
