@@ -168,6 +168,7 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
                "id" => _id,
                "virtual_host" => "virtual.host.test",
                "authorization_type" => "http_basic",
+               "oauth_session_flow" => "verifiable_presentation",
                "mtls_enabled" => true,
                "rate_limit_enabled" => true,
                "rate_limit_count" => 20,
@@ -210,6 +211,40 @@ defmodule BorutaAdminWeb.UpstreamControllerTest do
       upstream = fixture(:upstream)
 
       {:ok, conn: conn, upstream: upstream}
+    end
+
+    @tag authorized: ["upstreams:manage:all"]
+    test "saves and reloads the OAuth session flow", %{conn: conn, upstream: upstream} do
+      path = Routes.admin_upstream_path(conn, :update, upstream)
+
+      for flow <- ["implicit", "verifiable_presentation"] do
+        updated =
+          put(conn, path,
+            upstream: %{authorization_type: "oauth_session", oauth_session_flow: flow}
+          )
+
+        assert %{"oauth_session_flow" => ^flow} = json_response(updated, 200)["data"]
+        shown = get(conn, Routes.admin_upstream_path(conn, :show, upstream))
+        assert %{"oauth_session_flow" => ^flow} = json_response(shown, 200)["data"]
+      end
+
+      invalid = put(conn, path, upstream: %{oauth_session_flow: "invalid"})
+      assert json_response(invalid, 422)["errors"]["oauth_session_flow"]
+    end
+
+    @tag authorized: ["upstreams:manage:all"]
+    test "saves, reloads and clears the session wallet URI", %{conn: conn, upstream: upstream} do
+      path = Routes.admin_upstream_path(conn, :update, upstream)
+      uri = "https://wallet.example.com/authorize"
+      updated = put(conn, path, upstream: %{oauth_session_wallet_uri: uri})
+      assert json_response(updated, 200)["data"]["oauth_session_wallet_uri"] == uri
+      shown = get(conn, Routes.admin_upstream_path(conn, :show, upstream))
+      assert json_response(shown, 200)["data"]["oauth_session_wallet_uri"] == uri
+      cleared = put(conn, path, upstream: %{oauth_session_wallet_uri: ""})
+      assert json_response(cleared, 200)["data"]["oauth_session_wallet_uri"] == nil
+
+      invalid = put(conn, path, upstream: %{oauth_session_wallet_uri: "/relative"})
+      assert json_response(invalid, 422)["errors"]["oauth_session_wallet_uri"]
     end
 
     @tag authorized: ["upstreams:manage:all"]

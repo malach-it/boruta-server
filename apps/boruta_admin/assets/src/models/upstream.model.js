@@ -19,6 +19,8 @@ const defaults = {
   uris: [],
   required_scopes: [],
   authorization_type: 'oauth_bearer',
+  oauth_session_flow: 'verifiable_presentation',
+  oauth_session_wallet_uri: null,
   forward_basic_auth_token: false,
   error_content_type: 'application/json',
   forbidden_response: defaultForbiddenResponse,
@@ -62,6 +64,8 @@ const assign = {
   authorize: function ({ authorize }) { this.authorize = authorize },
   forward_basic_auth_token: function ({ forward_basic_auth_token }) { this.forward_basic_auth_token = forward_basic_auth_token },
   authorization_type: function ({ authorization_type }) { this.authorization_type = authorization_type },
+  oauth_session_flow: function ({ oauth_session_flow }) { this.oauth_session_flow = oauth_session_flow },
+  oauth_session_wallet_uri: function ({ oauth_session_wallet_uri }) { this.oauth_session_wallet_uri = oauth_session_wallet_uri },
   required_scopes: function ({ required_scopes }) {
     this.required_scopes = Object.keys(required_scopes).flatMap((method) => {
       return required_scopes[method].map(name => ({ model: new Scope({ name }), method: method }))
@@ -140,6 +144,8 @@ class Upstream {
       strip_uri,
       authorize,
       authorization_type,
+      oauth_session_flow,
+      oauth_session_wallet_uri,
       forward_basic_auth_token,
       required_scopes,
       error_content_type,
@@ -176,6 +182,8 @@ class Upstream {
       strip_uri,
       authorize,
       authorization_type,
+      oauth_session_flow,
+      oauth_session_wallet_uri,
       forward_basic_auth_token,
       error_content_type,
       forbidden_response,

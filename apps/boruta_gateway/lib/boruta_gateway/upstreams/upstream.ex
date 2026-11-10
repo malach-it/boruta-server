@@ -35,6 +35,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
           strip_uri: boolean(),
           authorize: boolean(),
           authorization_type: String.t(),
+          oauth_session_flow: String.t(),
+          oauth_session_wallet_uri: String.t() | nil,
           forward_basic_auth_token: boolean(),
           error_content_type: String.t() | nil,
           forbidden_response: String.t() | nil,
@@ -65,6 +67,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
     field(:strip_uri, :boolean, default: false)
     field(:authorize, :boolean, default: false)
     field(:authorization_type, :string, default: "oauth_bearer")
+    field(:oauth_session_flow, :string, default: "verifiable_presentation")
+    field(:oauth_session_wallet_uri, :string)
     field(:forward_basic_auth_token, :boolean, default: false)
     field(:error_content_type, :string, default: "application/json")
     field(:forbidden_response, :string)
@@ -105,6 +109,8 @@ defmodule BorutaGateway.Upstreams.Upstream do
       :strip_uri,
       :authorize,
       :authorization_type,
+      :oauth_session_flow,
+      :oauth_session_wallet_uri,
       :forward_basic_auth_token,
       :required_scopes,
       :error_content_type,
@@ -124,6 +130,14 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> validate_required([:scheme, :host, :port])
     |> validate_inclusion(:scheme, ["http", "https"])
     |> validate_inclusion(:authorization_type, ["oauth_bearer", "oauth_session", "http_basic"])
+    |> validate_required([:oauth_session_flow])
+    |> validate_inclusion(:oauth_session_flow, ["implicit", "verifiable_presentation"])
+    |> validate_change(:oauth_session_wallet_uri, fn field, uri ->
+      case Boruta.Oauth.Authorization.Resource.validate(uri) do
+        :ok -> []
+        _ -> [{field, "must be an absolute URI without a fragment"}]
+      end
+    end)
     |> validate_mtls_configuration()
     |> validate_inclusion(:rate_limit_count, 1..100_000)
     |> validate_inclusion(:rate_limit_time_unit, ["millisecond", "second", "minute"])
