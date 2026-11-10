@@ -5,13 +5,14 @@ defmodule BorutaWeb.PresentationAuthorization do
   @salt "presentation implicit authorization v1"
 
   def bind(conn, response) do
-    if implicit?(response.code) do
+    with true <- implicit?(response.code),
+         {:ok, redirect_uri} <- relying_party_redirect_uri(conn, response) do
       params = Map.take(conn.query_params, ~w(client_id redirect_uri state scope resource))
 
       params =
         Map.merge(params, %{
           "client_id" => response.client.id,
-          "redirect_uri" => "http://localhost:4180/__implicit/callback",
+          "redirect_uri" => redirect_uri,
           "scope" => response.code.scope,
           "state" => response.code.state,
           "response_type" => "token"
@@ -35,7 +36,38 @@ defmodule BorutaWeb.PresentationAuthorization do
         path: "/"
       )
     else
-      conn
+      _ -> conn
+    end
+  end
+
+  defp relying_party_redirect_uri(conn, response) do
+    conn = fetch_cookies(conn)
+
+    value = conn.cookies["boruta_gateway_session"]
+
+    case value do
+      nil ->
+        {:ok, response.code.redirect_uri}
+
+      value ->
+        case BorutaAuth.GatewaySession.decode(value) do
+          %{
+            state: state,
+            client_id: client_id,
+            origin: origin,
+            relying_party_redirect_uri: redirect_uri,
+            oauth_session_flow: "verifiable_presentation"
+          }
+          when is_binary(origin) and is_binary(redirect_uri) ->
+            if state == response.code.state && client_id == response.client.id do
+              {:ok, redirect_uri}
+            else
+              :error
+            end
+
+          _ ->
+            :error
+        end
     end
   end
 

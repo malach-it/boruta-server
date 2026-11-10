@@ -60,6 +60,7 @@ defmodule BorutaGateway.UpstreamsTest do
       assert {:ok,
               %Upstream{
                 authorization_type: "oauth_bearer",
+                oauth_session_flow: "verifiable_presentation",
                 error_content_type: "application/json"
               }} =
                Upstreams.create_upstream(@valid_attrs)
@@ -108,6 +109,54 @@ defmodule BorutaGateway.UpstreamsTest do
                Upstreams.create_upstream(Map.put(@valid_attrs, :authorization_type, "unknown"))
 
       assert {"is invalid", _opts} = changeset.errors[:authorization_type]
+    end
+
+    test "OAuth session flow persists and can be changed" do
+      upstream =
+        upstream_fixture(%{authorization_type: "oauth_session", oauth_session_flow: "implicit"})
+
+      assert Upstreams.get_upstream!(upstream.id).oauth_session_flow == "implicit"
+
+      assert {:ok, updated} =
+               Upstreams.update_upstream(upstream, %{
+                 oauth_session_flow: "verifiable_presentation"
+               })
+
+      assert Upstreams.get_upstream!(updated.id).oauth_session_flow == "verifiable_presentation"
+    end
+
+    test "rejects unsupported and null OAuth session flows" do
+      for flow <- ["authorization_code", nil] do
+        assert {:error, changeset} =
+                 Upstreams.create_upstream(Map.put(@valid_attrs, :oauth_session_flow, flow))
+
+        assert changeset.errors[:oauth_session_flow]
+      end
+    end
+
+    test "validates, persists and clears the session wallet URI" do
+      upstream = upstream_fixture()
+
+      for uri <- ["https://wallet.example.com/authorize", "openid4vp://authorize"] do
+        {:ok, upstream} = Upstreams.update_upstream(upstream, %{oauth_session_wallet_uri: uri})
+        assert Upstreams.get_upstream!(upstream.id).oauth_session_wallet_uri == uri
+
+        assert {:ok, updated} =
+                 Upstreams.update_upstream(upstream, %{oauth_session_wallet_uri: ""})
+
+        assert updated.oauth_session_wallet_uri == nil
+      end
+
+      for uri <- [
+            "/relative",
+            "https://wallet.example.com/#fragment",
+            "https://bad wallet.example.com"
+          ] do
+        assert {:error, changeset} =
+                 Upstreams.create_upstream(Map.put(@valid_attrs, :oauth_session_wallet_uri, uri))
+
+        assert changeset.errors[:oauth_session_wallet_uri]
+      end
     end
 
     test "create_upstream/1 preserves blank error responses" do

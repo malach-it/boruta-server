@@ -3,8 +3,20 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
   import BorutaWeb.Factory
   alias BorutaWeb.PresentationAuthorization, as: Presentation
 
-  setup %{conn: conn} do
-    client = insert(:client, redirect_uris: ["https://gateway.example/__implicit/callback"])
+  setup %{conn: conn} = tags do
+    previous = Application.get_env(:boruta_gateway, :session_secret_key_base)
+    Application.put_env(:boruta_gateway, :session_secret_key_base, String.duplicate("g", 64))
+
+    on_exit(fn ->
+      if previous,
+        do: Application.put_env(:boruta_gateway, :session_secret_key_base, previous),
+        else: Application.delete_env(:boruta_gateway, :session_secret_key_base)
+    end)
+
+    wallet_uri = "https://wallet.example/authorize"
+    relying_party_uri = "https://gateway.example/__implicit/callback"
+    client = insert(:client, redirect_uris: [relying_party_uri, wallet_uri])
+    redirect_uri = if tags[:wallet], do: wallet_uri, else: relying_party_uri
 
     code =
       insert(:token,
@@ -14,7 +26,7 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
         sub: "did:key:presenter",
         scope: "",
         state: "gateway-state",
-        redirect_uri: "https://gateway.example/__implicit/callback"
+        redirect_uri: redirect_uri
       )
 
     token = Boruta.CodesAdapter.get_by(value: code.value)
@@ -24,6 +36,146 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
     cookie = bound.resp_cookies[Presentation.cookie_name(code.value)]
     browser = Plug.Test.put_req_cookie(conn, Presentation.cookie_name(code.value), cookie.value)
     %{conn: conn, browser: browser, cookie: cookie, code: code, response: response}
+  end
+
+  @tag :wallet
+  test "recovers the relying party callback from the encrypted gateway cookie", ctx do
+    conn = Plug.Test.put_req_cookie(ctx.conn, "boruta_gateway_session", gateway_session(ctx))
+    {browser, params} = presentation_context(conn, ctx)
+    assert params["redirect_uri"] == "https://gateway.example/__implicit/callback"
+    assert ctx.code.redirect_uri == "https://wallet.example/authorize"
+    refute Map.has_key?(params, "relying_party_session")
+
+    # Subsequent SSE requests only need the issuer's presentation cookie.
+    refute Map.has_key?(fetch_cookies(browser).cookies, "boruta_gateway_session")
+    assert {:ok, url} = Presentation.complete(ctx.conn, ctx.code.value, params)
+    uri = URI.parse(url)
+    assert uri.host == "gateway.example"
+    assert uri.path == "/__implicit/callback"
+    fragment = URI.decode_query(uri.fragment)
+    assert fragment["state"] == ctx.code.state
+
+    assert {:ok, token} =
+             Boruta.Oauth.Authorization.AccessToken.authorize(value: fragment["access_token"])
+
+    assert token.client.id == ctx.code.client_id
+    assert token.sub == ctx.code.sub
+    assert {:error, _} = Presentation.complete(ctx.conn, ctx.code.value, params)
+  end
+
+  @tag :wallet
+  test "ignores query session values and uses the wallet redirect when the cookie is absent",
+       ctx do
+    conn = %{
+      ctx.conn
+      | query_params: %{
+          "relying_party_session" => gateway_session(ctx),
+          "relying_party_redirect_uri" => "https://attacker.example/callback"
+        }
+    }
+
+    {_browser, params} = presentation_context(conn, ctx)
+    assert params["redirect_uri"] == ctx.code.redirect_uri
+    refute Map.has_key?(params, "relying_party_session")
+    refute Map.has_key?(params, "relying_party_redirect_uri")
+    assert {:ok, url} = Presentation.complete(ctx.conn, ctx.code.value, params)
+    assert URI.parse(url).host == "wallet.example"
+  end
+
+  @tag :wallet
+  test "query parameters cannot override a valid gateway cookie", ctx do
+    conn = %{
+      ctx.conn
+      | query_params: %{
+          "relying_party_session" => gateway_session(ctx, %{state: "wrong"}),
+          "redirect_uri" => "https://attacker.example/callback"
+        }
+    }
+
+    conn = Plug.Test.put_req_cookie(conn, "boruta_gateway_session", gateway_session(ctx))
+    {_browser, params} = presentation_context(conn, ctx)
+    assert params["redirect_uri"] == "https://gateway.example/__implicit/callback"
+  end
+
+  @tag :wallet
+  test "an unregistered redirect in an authentic cookie cannot receive an access token", ctx do
+    value =
+      gateway_session(ctx, %{relying_party_redirect_uri: "https://unregistered.example/callback"})
+
+    conn = Plug.Test.put_req_cookie(ctx.conn, "boruta_gateway_session", value)
+    {_browser, params} = presentation_context(conn, ctx)
+    assert params["redirect_uri"] == "https://unregistered.example/callback"
+    assert {:error, _} = Presentation.complete(ctx.conn, ctx.code.value, params)
+    assert BorutaAuth.Repo.get!(Boruta.Ecto.Token, ctx.code.id).revoked_at
+  end
+
+  @tag :wallet
+  test "an authentic cookie can select another registered redirect independently of its origin",
+       ctx do
+    value = gateway_session(ctx, %{relying_party_redirect_uri: ctx.code.redirect_uri})
+    conn = Plug.Test.put_req_cookie(ctx.conn, "boruta_gateway_session", value)
+    {_browser, params} = presentation_context(conn, ctx)
+    assert params["redirect_uri"] == "https://wallet.example/authorize"
+    assert {:ok, url} = Presentation.complete(ctx.conn, ctx.code.value, params)
+    assert URI.parse(url).host == "wallet.example"
+  end
+
+  @tag :wallet
+  test "rejects tampered and mismatched relying party sessions", ctx do
+    expired =
+      Plug.Crypto.encrypt(
+        String.duplicate("g", 64),
+        "boruta gateway browser session v1",
+        BorutaAuth.GatewaySession.decode(gateway_session(ctx)),
+        signed_at: System.system_time(:second) - 3601
+      )
+
+    for value <- [
+          expired,
+          gateway_session(ctx) <> "bad",
+          gateway_session(ctx, %{state: "other-state"}),
+          gateway_session(ctx, %{client_id: "other-client"}),
+          gateway_session(ctx, %{oauth_session_flow: "implicit"}),
+          gateway_session(ctx, %{relying_party_redirect_uri: nil}),
+          gateway_session(ctx, %{origin: nil}),
+          BorutaAuth.GatewaySession.encode(%{}),
+          BorutaAuth.GatewaySession.encode("not a session"),
+          Plug.Crypto.encrypt(String.duplicate("x", 64), "boruta gateway browser session v1", %{})
+        ] do
+      conn = Plug.Test.put_req_cookie(ctx.conn, "boruta_gateway_session", value)
+      bound = Presentation.bind(conn, ctx.response)
+      refute Map.has_key?(bound.resp_cookies, Presentation.cookie_name(ctx.code.value))
+      assert :error = Presentation.context(ctx.conn, ctx.code.value)
+
+      assert response(
+               BorutaWeb.Oauth.AuthorizeController.authenticated?(ctx.conn, %{
+                 "code" => ctx.code.value
+               }),
+               401
+             )
+
+      refute BorutaAuth.Repo.get!(Boruta.Ecto.Token, ctx.code.id).revoked_at
+    end
+  end
+
+  defp presentation_context(conn, ctx) do
+    bound = Presentation.bind(conn, ctx.response)
+    name = Presentation.cookie_name(ctx.code.value)
+    browser = Plug.Test.put_req_cookie(ctx.conn, name, bound.resp_cookies[name].value)
+    assert {:ok, params} = Presentation.context(browser, ctx.code.value)
+    {browser, params}
+  end
+
+  defp gateway_session(ctx, overrides \\ %{}) do
+    %{
+      state: ctx.code.state,
+      client_id: ctx.code.client_id,
+      origin: "https://gateway.example",
+      relying_party_redirect_uri: "https://gateway.example/__implicit/callback",
+      oauth_session_flow: "verifiable_presentation"
+    }
+    |> Map.merge(overrides)
+    |> BorutaAuth.GatewaySession.encode()
   end
 
   @tag :cookie_cleanup
@@ -53,6 +205,7 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
     assert {:ok, params} = Presentation.context(ctx.browser, ctx.code.value)
     assert params["state"] == "gateway-state"
     assert params["response_type"] == "token"
+    assert params["redirect_uri"] == ctx.code.redirect_uri
     assert :error = Presentation.context(ctx.conn, ctx.code.value)
 
     tampered =

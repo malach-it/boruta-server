@@ -29,6 +29,8 @@ const labels = {
   'is_default': 'Default',
   'mtls_enabled': 'Mutual TLS',
   'name': 'Name',
+  'oauth_session_flow': 'Session authentication flow',
+  'oauth_session_wallet_uri': 'Wallet URI',
   'password_hashing_opts': 'Password hashing options',
   'redirect_uris': 'Redirect URIs',
   'refresh_token_ttl': 'Refresh token TTL',
