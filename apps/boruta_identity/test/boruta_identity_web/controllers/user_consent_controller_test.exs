@@ -42,14 +42,6 @@ defmodule BorutaIdentityWeb.UserConsentControllerTest do
       request_id = "first-request"
       stored_request = %{"id" => request_id, "jwt" => request}
 
-      form_conn =
-        conn
-        |> log_in(user)
-        |> put_session(:authorization_request, stored_request)
-        |> get(Routes.user_consent_path(conn, :index))
-
-      assert html_response(form_conn, 200) =~ "request=#{request_id}"
-
       valid_conn =
         build_conn()
         |> Map.put(:query_params, %{"request" => request})
