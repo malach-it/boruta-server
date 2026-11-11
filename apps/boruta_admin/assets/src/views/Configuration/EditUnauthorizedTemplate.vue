@@ -1,0 +1,76 @@
+<template>
+  <div class="container edit-unauthorized-template">
+    <Toaster :active="success" message="Template has been updated" type="success" />
+    <div class="ui error message" v-if="error">
+      {{ error }}
+    </div>
+    <div class="field">
+      <TextEditor :content="content" @codeUpdate="setContent" />
+    </div>
+    <div class="ui segment">
+      <button v-on:click="update()" class="ui primary right floated button" :class="{ loading: template.loading }" :disabled="template.loading">Save</button>
+      <button v-if="template.id" v-on:click="destroy()" class="ui red right floated button">Reset</button>
+      <router-link :to="{ name: 'error-template-list' }" class="ui tertiary button">Back</router-link>
+    </div>
+  </div>
+</template>
+
+<script>
+import ErrorTemplate from '../../models/error-template.model'
+import TextEditor from '../../components/Forms/TextEditor.vue'
+import Toaster from '../../components/Toaster.vue'
+
+export default {
+  name: 'edit-unauthorized-template',
+  components: {
+    TextEditor,
+    Toaster
+  },
+  mounted () {
+    ErrorTemplate.get(401).then((template) => {
+      this.template = template
+      this.content = template.content
+    }).catch((error) => {
+      this.error = error.response?.data?.message || error.message
+    })
+  },
+  data () {
+    return {
+      content: '',
+      template: new ErrorTemplate(),
+      success: false,
+      error: null
+    }
+  },
+  methods: {
+    setContent(code) {
+      this.template.content = code
+    },
+    update () {
+      this.success = false
+      this.template.save().then(() => {
+        this.success = true
+      })
+    },
+    destroy () {
+      if (confirm('Are you sure you want to reset the template?')) {
+        this.template.destroy().then((template) => {
+          this.template = template
+          this.content = template.content
+        })
+      }
+    }
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.edit-unauthorized-template {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  .field {
+    flex: 1;
+  }
+}
+</style>

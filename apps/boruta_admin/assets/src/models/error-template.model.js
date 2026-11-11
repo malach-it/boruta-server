@@ -3,6 +3,7 @@ import { addClientErrorInterceptor } from './utils'
 
 const templates = [
   { type: 400, name: "bad-request", label: "Bad request" },
+  { type: 401, name: "unauthorized", label: "Unauthorized" },
   { type: 403, name: "forbidden", label: "Forbidden" },
   { type: 404, name: "not-found", label: "Not found" },
   { type: 500, name: "internal-server-error", label: "Internal server error" }

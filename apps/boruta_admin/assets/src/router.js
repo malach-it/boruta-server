@@ -77,6 +77,7 @@ import ConfigurationFileUpload from "./views/Configuration/ConfigurationFileUplo
 import ErrorTemplateList from "./views/Configuration/ErrorTemplateList.vue";
 import EditBadRequestTemplate from "./views/Configuration/EditBadRequestTemplate.vue";
 import EditNotFoundTemplate from "./views/Configuration/EditNotFoundTemplate.vue";
+import EditUnauthorizedTemplate from "./views/Configuration/EditUnauthorizedTemplate.vue";
 import EditForbiddenTemplate from "./views/Configuration/EditForbiddenTemplate.vue";
 import EditInternalServerErrorTemplate from "./views/Configuration/EditInternalServerErrorTemplate.vue";
 
@@ -495,6 +496,11 @@ const router = createRouter({
               path: "edit-bad-request-template",
               name: "edit-bad-request-template",
               component: EditBadRequestTemplate,
+            },
+            {
+              path: "edit-unauthorized-template",
+              name: "edit-unauthorized-template",
+              component: EditUnauthorizedTemplate,
             },
             {
               path: "edit-forbidden-template",
