@@ -171,6 +171,20 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :scopes))
   end
 
+  def context(context, %{conn: conn} = assigns) do
+    redirect_uri = BorutaIdentityWeb.Authenticable.redirect_uri_from_request(conn)
+
+    redirect_context =
+      case redirect_uri && URI.new(redirect_uri) do
+        {:ok, uri} -> %{redirect_uri_host: uri.host}
+        _ -> %{redirect_uri_host: nil}
+      end
+
+    redirect_context
+    |> Map.merge(context)
+    |> context(Map.delete(assigns, :conn))
+  end
+
   def context(context, %{}), do: context
 
   defp text_from_credential_offer(credential_offer) do
