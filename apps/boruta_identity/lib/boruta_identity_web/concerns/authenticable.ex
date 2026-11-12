@@ -209,6 +209,16 @@ defmodule BorutaIdentityWeb.Authenticable do
     end
   end
 
+  @spec redirect_uri_from_request(conn :: Plug.Conn.t()) :: String.t() | nil
+  def redirect_uri_from_request(conn) do
+    with user_return_to when is_binary(user_return_to) <- user_return_to_from_request(conn),
+         {:ok, %URI{query: query}} when is_binary(query) <- URI.new(user_return_to) do
+      query |> URI.decode_query() |> Map.get("redirect_uri")
+    else
+      _ -> nil
+    end
+  end
+
   defp claims_from_request(conn) do
     request = conn.query_params["request"] || conn.assigns[:request] || ""
 
