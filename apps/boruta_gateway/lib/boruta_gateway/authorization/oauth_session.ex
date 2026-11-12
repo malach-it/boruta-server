@@ -73,6 +73,7 @@ defmodule BorutaGateway.Authorization.OauthSession do
 
     case validate_session_client(result, authorized_header != header, upstream) do
       {:unauthorized, _, _, _} -> begin_login(header, method, upstream, origin, scheme)
+      {:forbidden, _, _} -> begin_login(header, method, upstream, origin, scheme)
       result -> result
     end
   end
