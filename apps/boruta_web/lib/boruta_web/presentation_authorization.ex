@@ -120,10 +120,49 @@ defmodule BorutaWeb.PresentationAuthorization do
          %Oauth.ResourceOwner{} = owner <- token.resource_owner,
          true <- owner.sub == token.sub,
          {:ok, _revoked} <- Boruta.CodesAdapter.revoke(token) do
-      conn = %{conn | query_params: params}
-      Oauth.authorize(conn, owner, __MODULE__)
+      issue_token(conn, token, owner, params)
     else
       _ -> {:error, :invalid_presentation}
+    end
+  end
+
+  defp issue_token(conn, code, owner, params) do
+    # The verified code grants these private scopes. Re-running ordinary implicit
+    # scope authorization would discard that proof, while granting scopes on the
+    # public client would also authorize callers without a presentation.
+    with true <- params["scope"] == code.scope,
+         {:ok, %Oauth.TokenRequest{} = request} <-
+           Oauth.Request.authorize_request(%{conn | query_params: params}, owner),
+         true <- request.response_types == ["token"],
+         {:ok, client} <-
+           Oauth.Authorization.Client.authorize(
+             id: request.client_id,
+             source: nil,
+             redirect_uri: request.redirect_uri,
+             grant_type: request.grant_type
+           ),
+         {:ok, owner} <- Oauth.Authorization.ResourceOwner.authorize(resource_owner: owner),
+         :ok <- Oauth.Authorization.Nonce.authorize(request),
+         {:ok, resource} <-
+           Oauth.Authorization.Resource.authorize(request.resource, client, code.resource),
+         {:ok, access_token} <-
+           Boruta.AccessTokensAdapter.create(
+             %{
+               client: client,
+               redirect_uri: request.redirect_uri,
+               sub: owner.sub,
+               resource_owner: owner,
+               scope: code.scope,
+               resource: resource,
+               state: code.state,
+               previous_code: code.value
+             },
+             refresh_token: false
+           ) do
+      response = Oauth.AuthorizeResponse.from_tokens(%{token: access_token}, request)
+      authorize_success(conn, response)
+    else
+      _ -> {:error, :invalid_authorization}
     end
   end
 
