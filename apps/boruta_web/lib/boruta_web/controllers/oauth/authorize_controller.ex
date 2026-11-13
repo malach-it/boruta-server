@@ -893,7 +893,7 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       username: current_user.username,
       last_login_at: current_user.last_login_at,
       blocked: current_user.blocked,
-      extra_claims: extra_claims(current_user, scope),
+      extra_claims: ResourceOwners.extra_claims(current_user, scope),
       authorization_details: VerifiableCredentials.authorization_details(current_user, scope),
       credential_configuration: VerifiableCredentials.credential_configuration(current_user),
       presentation_configuration: VerifiablePresentations.presentation_configuration(current_user)
@@ -907,11 +907,5 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp public_sub(conn) do
     if public_client_request?(conn), do: conn.query_params["client_id"]
-  end
-
-  defp extra_claims(%User{id: nil}, _scope), do: %{}
-
-  defp extra_claims(current_user, scope) do
-    Map.merge(ResourceOwners.metadata(current_user, scope), current_user.federated_metadata)
   end
 end

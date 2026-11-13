@@ -218,12 +218,13 @@ class Backend {
     });
 
     function serializeClaim (claim) {
-      const { type, name, label, pointer, expiration, claims, items } = claim
+      const { type, name, label, pointer, default_value, expiration, claims, items } = claim
       return {
         type,
         name,
         label,
         pointer,
+        ...(default_value !== undefined ? { default_value } : {}),
         ...(expiration !== undefined ? { expiration: expiration === '' ? null : expiration } : {}),
         claims: claims.map(serializeClaim),
         items: items.map(serializeClaim)

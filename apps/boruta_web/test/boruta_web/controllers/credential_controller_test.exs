@@ -107,6 +107,89 @@ defmodule BorutaWeb.CredentialControllerTest do
     assert issued_credential_subject(conn, user)["job_title"] == "Engineer"
   end
 
+  test "issues a credential claim default when its source is missing", %{conn: conn} do
+    backend =
+      configure_default_credential(
+        claims: [
+          %{
+            "type" => "attribute",
+            "name" => "job_title",
+            "pointer" => "job_title",
+            "default_value" => "Engineer"
+          }
+        ]
+      )
+
+    user = user_fixture(%{backend: backend})
+    assert issued_credential_subject(conn, user)["job_title"] == "Engineer"
+  end
+
+  test "preserves an existing value instead of a credential claim default", %{conn: conn} do
+    backend =
+      configure_default_credential(
+        metadata_fields: [%{"attribute_name" => "job_title"}],
+        claims: [
+          %{
+            "type" => "attribute",
+            "name" => "job_title",
+            "pointer" => "job_title",
+            "default_value" => "Engineer"
+          }
+        ]
+      )
+
+    user =
+      user_fixture(%{
+        backend: backend,
+        metadata: %{"job_title" => %{"value" => "Designer", "status" => "valid"}}
+      })
+
+    assert issued_credential_subject(conn, user)["job_title"] == "Designer"
+  end
+
+  test "resolves defaults in nested claims and preserves false values", %{conn: conn} do
+    backend =
+      configure_default_credential(
+        metadata_fields: [%{"attribute_name" => "profile"}],
+        claims: [
+          %{
+            "type" => "object",
+            "name" => "employment",
+            "claims" => [
+              %{
+                "type" => "attribute",
+                "name" => "title",
+                "pointer" => "profile.title",
+                "default_value" => "Engineer"
+              },
+              %{
+                "type" => "attribute",
+                "name" => "active",
+                "pointer" => "profile.active",
+                "default_value" => true
+              }
+            ]
+          }
+        ]
+      )
+
+    user =
+      user_fixture(%{
+        backend: backend,
+        metadata: %{
+          "profile" => %{
+            "title" => %{"value" => ""},
+            "active" => %{"value" => false, "status" => "valid"}
+          }
+        }
+      })
+
+    assert issued_credential_subject(conn, user)["employment"] == %{
+             "title" => "Engineer",
+             "active" => false
+           }
+  end
+
   test "issues the user's credential attribute instead of the backend default", %{conn: conn} do
     backend =
       configure_default_credential(

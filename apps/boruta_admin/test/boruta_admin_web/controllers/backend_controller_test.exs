@@ -252,6 +252,38 @@ defmodule BorutaAdminWeb.BackendControllerTest do
     end
 
     @tag authorized: ["identity-providers:manage:all"]
+    test "persists and returns a credential claim default", %{conn: conn, backend: backend} do
+      credentials = [
+        %{
+          "version" => "13",
+          "credential_identifier" => "Employment",
+          "types" => "VerifiableCredential Employment",
+          "format" => "jwt_vc_json",
+          "display" => %{"name" => "Employment", "logo" => %{}},
+          "claims" => [
+            %{
+              "type" => "attribute",
+              "name" => "job_title",
+              "pointer" => "job_title",
+              "default_value" => "Engineer"
+            }
+          ]
+        }
+      ]
+
+      conn =
+        patch(conn, Routes.admin_backend_path(conn, :update, backend), %{
+          "backend" => %{"verifiable_credentials" => credentials}
+        })
+
+      assert json_response(conn, 200)["data"]["verifiable_credentials"] == credentials
+      assert Repo.get!(Backend, backend.id).verifiable_credentials == credentials
+
+      conn = get(conn, Routes.admin_backend_path(conn, :show, backend))
+      assert json_response(conn, 200)["data"]["verifiable_credentials"] == credentials
+    end
+
+    @tag authorized: ["identity-providers:manage:all"]
     test "persists and returns a metadata attribute default", %{conn: conn, backend: backend} do
       fields = [
         %{

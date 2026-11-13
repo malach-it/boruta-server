@@ -29,6 +29,10 @@
         <label>Pointer</label>
         <input type="text" v-model="claim.pointer" placeholder="family_name">
       </div>
+      <div class="field" :class="{ 'error': errors?.verifiable_credentials }">
+        <label>Default value</label>
+        <input type="text" v-model="claim.default_value" placeholder="Used when the referenced value is missing or empty">
+      </div>
       <div class="field" v-if="format === 'vc+sd-jwt'" :class="{ 'error': errors?.verifiable_credentials }">
         <label>Claim status TTL <i>(in seconds)</i></label>
         <input type="text" inputmode="numeric" pattern="[1-9][0-9]*" v-model="claim.expiration" placeholder="3784320000">

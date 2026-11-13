@@ -68,7 +68,7 @@ defmodule BorutaIdentity.ResourceOwners do
            username: username,
            last_login_at: last_login_at,
            blocked: blocked,
-           extra_claims: Map.merge(metadata(user, scope), federated_metadata),
+           extra_claims: extra_claims(user, scope, federated_metadata),
            authorization_details: VerifiableCredentials.authorization_details(user, scope),
            credential_configuration: VerifiableCredentials.credential_configuration(user),
            presentation_configuration: VerifiablePresentations.presentation_configuration(user)
@@ -96,7 +96,7 @@ defmodule BorutaIdentity.ResourceOwners do
            username: email,
            last_login_at: last_login_at,
            blocked: blocked,
-           extra_claims: Map.merge(metadata(user, scope), federated_metadata),
+           extra_claims: extra_claims(user, scope, federated_metadata),
            authorization_details: VerifiableCredentials.authorization_details(user, scope),
            credential_configuration: VerifiableCredentials.credential_configuration(user),
            presentation_configuration: VerifiablePresentations.presentation_configuration(user)
@@ -181,6 +181,60 @@ defmodule BorutaIdentity.ResourceOwners do
           acc
       end
     end)
+  end
+
+  def extra_claims(%User{id: nil} = user, _scope) do
+    credential_claim_defaults(%{}, VerifiableCredentials.credential_configuration(user))
+  end
+
+  def extra_claims(%User{} = user, scope) do
+    extra_claims(user, scope, user.federated_metadata)
+  end
+
+  defp extra_claims(user, scope, federated_metadata) do
+    metadata(user, scope)
+    |> Map.merge(federated_metadata)
+    |> credential_claim_defaults(VerifiableCredentials.credential_configuration(user))
+  end
+
+  defp credential_claim_defaults(metadata, configuration) do
+    Enum.reduce(configuration, metadata, fn {_identifier, credential}, metadata ->
+      Enum.reduce(credential.claims, metadata, &credential_claim_default/2)
+    end)
+  end
+
+  defp credential_claim_default(%{"claims" => [_ | _] = claims}, metadata),
+    do: Enum.reduce(claims, metadata, &credential_claim_default/2)
+
+  defp credential_claim_default(%{"items" => [_ | _] = items}, metadata),
+    do: Enum.reduce(items, metadata, &credential_claim_default/2)
+
+  defp credential_claim_default(%{"pointer" => pointer, "default_value" => default}, metadata)
+       when is_binary(pointer) and not is_nil(default) and default != "" do
+    put_claim_default(metadata, String.split(pointer, "."), default)
+  end
+
+  defp credential_claim_default(_claim, metadata), do: metadata
+
+  defp put_claim_default(metadata, [key], default) do
+    case Map.get(metadata, key) do
+      value when is_nil(value) or value == "" ->
+        Map.put(metadata, key, %{"value" => default, "status" => "valid"})
+
+      %{"value" => value} when is_nil(value) or value == "" ->
+        Map.put(metadata, key, %{"value" => default, "status" => "valid"})
+
+      _ ->
+        metadata
+    end
+  end
+
+  defp put_claim_default(metadata, [key | rest], default) do
+    case Map.get(metadata, key) do
+      nil -> Map.put(metadata, key, put_claim_default(%{}, rest, default))
+      value when is_map(value) -> Map.put(metadata, key, put_claim_default(value, rest, default))
+      _ -> metadata
+    end
   end
 
   defp merge_claims(

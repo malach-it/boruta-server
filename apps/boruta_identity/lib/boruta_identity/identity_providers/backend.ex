@@ -199,6 +199,7 @@ defmodule BorutaIdentity.IdentityProviders.Backend do
                                           "name" => %{"type" => "string"},
                                           "label" => %{"type" => "string"},
                                           "pointer" => %{"type" => "string"},
+                                          "default_value" => %{},
                                           "expiration" => %{
                                             "type" => ["string", "null"],
                                             "pattern" => "^[1-9][0-9]*$"
