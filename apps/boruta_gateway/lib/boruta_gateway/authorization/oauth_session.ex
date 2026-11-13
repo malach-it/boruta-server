@@ -10,6 +10,20 @@ defmodule BorutaGateway.Authorization.OauthSession do
   defdelegate encode_session(session), to: BorutaAuth.GatewaySession, as: :encode
   defdelegate decode_session(value), to: BorutaAuth.GatewaySession, as: :decode
 
+  def strip_cookie(header, upstream) do
+    with issuer when is_binary(issuer) <- Boruta.Config.issuer(),
+         %URI{scheme: scheme, host: host, port: port}
+         when scheme in ["http", "https"] and is_binary(host) and is_integer(port) <-
+           URI.parse(issuer),
+         true <-
+           upstream.scheme == scheme and upstream.port == port and
+             String.downcase(upstream.host) == String.downcase(host) do
+      header
+    else
+      _ -> strip_cookie(header)
+    end
+  end
+
   def strip_cookie(header) do
     header
     |> String.split("\r\n")
