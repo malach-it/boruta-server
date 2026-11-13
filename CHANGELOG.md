@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- [admin] upstream creation preserves supplied IDs for configuration imports while updates retain the existing upstream ID
 - [identity] preserve stateful authorization requests after OAuth success so logout and subsequent login can resolve the client identifier
 - [admin] CSV user imports preserve mapped metadata with both plaintext and hashed passwords
 - [identity] oversized session cookies are cleaned at preauthorization success, removing stale MFA and preauthorization entries before dropping other client sessions; requests that still exceed the cookie limit clear the session and return a bad request response
