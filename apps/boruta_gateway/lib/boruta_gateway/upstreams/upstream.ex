@@ -95,6 +95,7 @@ defmodule BorutaGateway.Upstreams.Upstream do
   @doc false
   def changeset(upstream, attrs) do
     upstream
+    |> cast_creation_id(attrs)
     |> cast(attrs, [
       :node_name,
       :virtual_host,
@@ -139,6 +140,13 @@ defmodule BorutaGateway.Upstreams.Upstream do
     |> validate_uris()
     |> validate_required_scopes_format()
   end
+
+  # Bootstrap imports may supply an ID, but updates must retain the identity
+  # of the record selected by the caller.
+  defp cast_creation_id(%__MODULE__{id: nil} = upstream, attrs),
+    do: cast(upstream, attrs, [:id])
+
+  defp cast_creation_id(upstream, _attrs), do: change(upstream)
 
   defp configure_noise_cancelling(%Ecto.Changeset{valid?: false} = changeset), do: changeset
 

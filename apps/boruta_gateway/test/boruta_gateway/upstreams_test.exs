@@ -65,6 +65,39 @@ defmodule BorutaGateway.UpstreamsTest do
                Upstreams.create_upstream(@valid_attrs)
     end
 
+    test "create_upstream/1 persists a supplied UUID from imported attributes" do
+      id = Ecto.UUID.generate()
+      attrs = @valid_attrs |> Map.new(fn {key, value} -> {Atom.to_string(key), value} end)
+
+      assert {:ok, %Upstream{id: ^id}} = Upstreams.create_upstream(Map.put(attrs, "id", id))
+      assert Upstreams.get_upstream!(id).id == id
+    end
+
+    test "create_upstream/1 generates a UUID when no ID is supplied" do
+      assert {:ok, %Upstream{id: id}} = Upstreams.create_upstream(@valid_attrs)
+      assert {:ok, ^id} = Ecto.UUID.cast(id)
+      assert Upstreams.get_upstream!(id).id == id
+    end
+
+    test "create_upstream/1 rejects an invalid supplied UUID" do
+      assert {:error, changeset} =
+               Upstreams.create_upstream(Map.put(@valid_attrs, :id, "invalid"))
+
+      assert {"is invalid", _opts} = changeset.errors[:id]
+    end
+
+    test "update_upstream/2 retains the existing ID when attributes contain another ID" do
+      upstream = upstream_fixture()
+      original_id = upstream.id
+      other_id = Ecto.UUID.generate()
+
+      assert {:ok, %Upstream{id: ^original_id, host: "update.host"}} =
+               Upstreams.update_upstream(upstream, %{id: other_id, host: "update.host"})
+
+      assert Upstreams.get_upstream!(original_id).host == "update.host"
+      assert Repo.get(Upstream, other_id) == nil
+    end
+
     test "create_upstream/1 accepts HTTP Basic authorization" do
       assert {:ok, %Upstream{authorization_type: "http_basic"}} =
                Upstreams.create_upstream(Map.put(@valid_attrs, :authorization_type, "http_basic"))
