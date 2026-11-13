@@ -143,8 +143,16 @@ defmodule BorutaGateway.Upstreams.Upstream do
 
   # Bootstrap imports may supply an ID, but updates must retain the identity
   # of the record selected by the caller.
-  defp cast_creation_id(%__MODULE__{id: nil} = upstream, attrs),
-    do: cast(upstream, attrs, [:id])
+  defp cast_creation_id(%__MODULE__{id: nil} = upstream, attrs) do
+    upstream
+    |> cast(attrs, [:id])
+    |> validate_change(:id, fn :id, id ->
+      case Ecto.UUID.cast(id) do
+        {:ok, _uuid} -> []
+        :error -> [id: "is invalid"]
+      end
+    end)
+  end
 
   defp cast_creation_id(upstream, _attrs), do: change(upstream)
 
