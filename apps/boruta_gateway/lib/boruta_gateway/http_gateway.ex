@@ -221,7 +221,7 @@ defmodule BorutaGateway.HttpGateway do
   end
 
   defp handle_downstream_request(socket, request, state) do
-    payload = OauthSession.strip_cookie(request.header_payload)
+    payload = request.header_payload
     header = request.header
     start = :os.system_time(:microsecond)
     request_id = request_id(header)
@@ -322,6 +322,8 @@ defmodule BorutaGateway.HttpGateway do
   end
 
   defp connect_upstream(socket, payload, state, upstream, token, request) do
+    payload = OauthSession.strip_cookie(payload, upstream)
+
     payload =
       if match?({:basic_authorized, _}, token) do
         BorutaGateway.ForwardedHeaders.put_basic(payload, remote_ip(socket), :http)
