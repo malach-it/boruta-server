@@ -17,7 +17,11 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
 
     wallet_uri = "https://wallet.example/authorize"
     relying_party_uri = "https://gateway.example/__implicit/callback"
-    client = insert(:client, redirect_uris: [relying_party_uri, wallet_uri])
+    scope = if tags[:private_scope], do: insert(:scope, public: false).name, else: ""
+
+    client =
+      insert(:client, redirect_uris: [relying_party_uri, wallet_uri], authorize_scope: false)
+
     redirect_uri = if tags[:wallet], do: wallet_uri, else: relying_party_uri
 
     code =
@@ -26,7 +30,7 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
         type: "code",
         response_type: "vp_token token",
         sub: "did:key:presenter",
-        scope: "",
+        scope: scope,
         state: "gateway-state",
         redirect_uri: redirect_uri
       )
@@ -236,6 +240,55 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
 
     assert token.sub == "did:key:presenter"
     assert token.client.id == ctx.code.client_id
+    assert {:error, _} = Presentation.complete(ctx.conn, ctx.code.value, params)
+  end
+
+  @tag :private_scope
+  test "a verified presentation grants private scopes without granting them to ordinary implicit requests",
+       ctx do
+    assert {:ok, params} = Presentation.context(ctx.browser, ctx.code.value)
+
+    assert {:ok, request} =
+             Boruta.Oauth.Request.authorize_request(
+               %{ctx.conn | query_params: params},
+               ctx.response.code.resource_owner
+             )
+
+    assert {:error, %Boruta.Oauth.Error{error: :invalid_scope}} =
+             Boruta.Oauth.Authorization.preauthorize(request)
+
+    assert {:ok, url} = Presentation.complete(ctx.conn, ctx.code.value, params)
+    fragment = url |> URI.parse() |> Map.fetch!(:fragment) |> URI.decode_query()
+    assert {:ok, token} = AccessToken.authorize(value: fragment["access_token"])
+    assert token.scope == ctx.code.scope
+    assert token.sub == ctx.code.sub
+    assert token.client.id == ctx.code.client_id
+    assert token.previous_code == ctx.code.value
+    assert {:error, _} = Presentation.complete(ctx.conn, ctx.code.value, params)
+
+    assert {:error, %Boruta.Oauth.Error{error: :invalid_scope}} =
+             Boruta.Oauth.Authorization.preauthorize(request)
+  end
+
+  @tag :private_scope
+  test "completion cannot add scopes to the verified presentation", ctx do
+    extra_scope = insert(:scope, public: false)
+    assert {:ok, params} = Presentation.context(ctx.browser, ctx.code.value)
+    params = Map.put(params, "scope", ctx.code.scope <> " " <> extra_scope.name)
+    assert {:error, _} = Presentation.complete(ctx.conn, ctx.code.value, params)
+    assert BorutaAuth.Repo.get!(Boruta.Ecto.Token, ctx.code.id).revoked_at
+  end
+
+  @tag :private_scope
+  test "private scope completion still requires the implicit grant", ctx do
+    client = BorutaAuth.Repo.get!(Boruta.Ecto.Client, ctx.code.client_id)
+
+    client
+    |> Ecto.Changeset.change(supported_grant_types: ["vp_token"])
+    |> BorutaAuth.Repo.update!()
+
+    Boruta.Ecto.Clients.invalidate(client)
+    assert {:ok, params} = Presentation.context(ctx.browser, ctx.code.value)
     assert {:error, _} = Presentation.complete(ctx.conn, ctx.code.value, params)
   end
 
