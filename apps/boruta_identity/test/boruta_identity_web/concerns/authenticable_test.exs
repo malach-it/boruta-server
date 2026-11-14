@@ -30,6 +30,37 @@ defmodule BorutaIdentityWeb.AuthenticableTest do
     end
   end
 
+  describe "redirect_uri_from_request/1" do
+    test "reads the redirect URI from a signed authorization request", %{conn: conn} do
+      redirect_uri = "https://client.example:8443/callback?view=full&next=%2Fprivate"
+      request = redirect_request(redirect_uri)
+      conn = %{conn | query_params: %{"request" => request}}
+
+      assert Authenticable.redirect_uri_from_request(conn) == redirect_uri
+    end
+
+    test "reads the redirect URI from a stateful authorization request", %{conn: conn} do
+      redirect_uri = "https://client.example/callback"
+
+      conn =
+        conn
+        |> put_session(:authorization_request, %{
+          "id" => "pending-request",
+          "jwt" => redirect_request(redirect_uri)
+        })
+        |> Map.put(:query_params, %{"request" => "pending-request"})
+
+      assert Authenticable.redirect_uri_from_request(conn) == redirect_uri
+      assert Authenticable.redirect_uri_from_request(%{conn | query_params: %{}}) == redirect_uri
+    end
+
+    test "returns nil for missing, invalid or unrelated requests", %{conn: conn} do
+      for params <- [%{}, %{"request" => "invalid"}, %{"request" => redirect_request(nil)}] do
+        assert Authenticable.redirect_uri_from_request(%{conn | query_params: params}) == nil
+      end
+    end
+  end
+
   test "sessions for separate client IDs coexist and logout removes only one", %{conn: conn} do
     first_client_id = SecureRandom.uuid()
     second_client_id = SecureRandom.uuid()
@@ -91,6 +122,18 @@ defmodule BorutaIdentityWeb.AuthenticableTest do
 
   @tag :skip
   test "after_sign_out_path/2"
+
+  defp redirect_request(redirect_uri) do
+    query = if redirect_uri, do: URI.encode_query(%{redirect_uri: redirect_uri}), else: ""
+
+    {:ok, request, _claims} =
+      Joken.encode_and_sign(
+        %{"user_return_to" => "/oauth/authorize?" <> query},
+        BorutaIdentityWeb.Token.application_signer()
+      )
+
+    request
+  end
 
   defp with_client_request(conn, client_id) do
     {:ok, request, _claims} =

@@ -111,7 +111,7 @@ defmodule BorutaGateway.Certificate do
 
   def ssl_options(certificate_path, private_key_path) do
     [
-      {:cert, decode_certificate!(certificate_path)},
+      {:cert, decode_certificate_chain!(certificate_path)},
       {:key, decode_private_key!(private_key_path)}
     ]
   end
@@ -332,6 +332,14 @@ defmodule BorutaGateway.Certificate do
     |> Application.get_env(__MODULE__, [])
     |> Keyword.put(:ssl_options, ssl_options(certificate_path, private_key_path))
     |> then(&Application.put_env(:boruta_gateway, __MODULE__, &1))
+  end
+
+  defp decode_certificate_chain!(certificate_path) do
+    case certificate_path |> File.read!() |> decode_certificates() do
+      [] -> raise "certificate file does not contain a PEM certificate: #{certificate_path}"
+      [certificate] -> certificate
+      certificates -> certificates
+    end
   end
 
   defp decode_certificate!(certificate_path) do

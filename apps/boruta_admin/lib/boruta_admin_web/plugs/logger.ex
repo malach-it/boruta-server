@@ -87,6 +87,8 @@ defmodule BorutaAdminWeb.Logger do
       {[:create, :update], ~w(upstream strip_uri), "strip_uri"},
       {[:create, :update], ~w(upstream authorize), "authorize"},
       {[:create, :update], ~w(upstream authorization_type), "authorization_type"},
+      {[:create, :update], ~w(upstream oauth_session_flow), "oauth_session_flow"},
+      {[:create, :update], ~w(upstream oauth_session_wallet_uri), "oauth_session_wallet_uri"},
       {[:create, :update], ~w(upstream forward_basic_auth_token), "forward_basic_auth_token"},
       {[:create, :update], ~w(upstream error_content_type), "error_content_type"},
       {[:create, :update], ~w(upstream forwarded_token_signature_alg),

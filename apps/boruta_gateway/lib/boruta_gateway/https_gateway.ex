@@ -14,9 +14,9 @@ defmodule BorutaGateway.HttpsGateway do
   use GenServer
 
   alias BorutaAuth.Plugs.RateLimit.Counter
+  alias BorutaGateway.Authorization.OauthSession
   alias BorutaGateway.Certificate
   alias BorutaGateway.HttpRequest
-  alias BorutaGateway.HttpsGateway.Authorization
   alias BorutaGateway.NoiseCancelling
   alias BorutaGateway.Upstreams
   alias BorutaGateway.Upstreams.Upstream
@@ -259,10 +259,13 @@ defmodule BorutaGateway.HttpsGateway do
       {:ok, method, path} ->
         path_info = path_info(path)
 
-        with %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
+        with :ok <-
+               OauthSession.prepare(header, "https", request.body),
+             %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
              :ok <- check_noise_cancelling(upstream, method, path, state.remote_ip),
              :ok <- rate_limit(socket, upstream),
-             {:ok, token} <- Authorization.authorize(header, method, upstream) do
+             {:ok, token} <-
+               BorutaGateway.Authorization.authorize(header, method, upstream, "https") do
           connect_upstream(
             socket,
             payload,
@@ -277,6 +280,10 @@ defmodule BorutaGateway.HttpsGateway do
             })
           )
         else
+          {:browser_response, response} ->
+            send_downstream(socket, response)
+            {:noreply, close_downstream(socket, state)}
+
           nil ->
             response = "No upstream has been found corresponding to the given request."
 
@@ -348,6 +355,8 @@ defmodule BorutaGateway.HttpsGateway do
   end
 
   defp connect_upstream(socket, payload, state, upstream, token, request) do
+    payload = OauthSession.strip_cookie(payload, upstream)
+
     payload =
       if match?({:basic_authorized, _}, token) do
         BorutaGateway.ForwardedHeaders.put_basic(payload, remote_ip(socket), :https)
@@ -900,6 +909,11 @@ defmodule BorutaGateway.HttpsGateway do
   end
 
   defp transform_header(payload, upstream, token) do
+    payload =
+      if Regex.match?(~r{(?:^|\r\n)authorization\s*:}i, payload),
+        do: payload,
+        else: put_header(payload, "Authorization", "Bearer " <> token.value)
+
     claims = %{
       "scope" => token.scope,
       "sub" => token.sub,
