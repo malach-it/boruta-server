@@ -1,6 +1,7 @@
 defmodule BorutaWeb.PresentationAuthorizationTest do
   use BorutaWeb.ConnCase
   import BorutaWeb.Factory
+  alias Boruta.Oauth
   alias Boruta.Oauth.Authorization.AccessToken
   alias BorutaWeb.Oauth.AuthorizeController
   alias BorutaWeb.PresentationAuthorization, as: Presentation
@@ -249,13 +250,13 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
     assert {:ok, params} = Presentation.context(ctx.browser, ctx.code.value)
 
     assert {:ok, request} =
-             Boruta.Oauth.Request.authorize_request(
+             Oauth.Request.authorize_request(
                %{ctx.conn | query_params: params},
                ctx.response.code.resource_owner
              )
 
-    assert {:error, %Boruta.Oauth.Error{error: :invalid_scope}} =
-             Boruta.Oauth.Authorization.preauthorize(request)
+    assert {:error, %Oauth.Error{error: :invalid_scope}} =
+             Oauth.Authorization.preauthorize(request)
 
     assert {:ok, url} = Presentation.complete(ctx.conn, ctx.code.value, params)
     fragment = url |> URI.parse() |> Map.fetch!(:fragment) |> URI.decode_query()
@@ -266,8 +267,8 @@ defmodule BorutaWeb.PresentationAuthorizationTest do
     assert token.previous_code == ctx.code.value
     assert {:error, _} = Presentation.complete(ctx.conn, ctx.code.value, params)
 
-    assert {:error, %Boruta.Oauth.Error{error: :invalid_scope}} =
-             Boruta.Oauth.Authorization.preauthorize(request)
+    assert {:error, %Oauth.Error{error: :invalid_scope}} =
+             Oauth.Authorization.preauthorize(request)
   end
 
   @tag :private_scope
