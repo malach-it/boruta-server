@@ -1371,7 +1371,7 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   end
 
   describe "response completion" do
-    setup_all do
+    setup do
       directory =
         Path.join(System.tmp_dir!(), "boruta-head-response-#{System.unique_integer([:positive])}")
 
