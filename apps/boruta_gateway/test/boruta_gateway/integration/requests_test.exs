@@ -7,8 +7,10 @@ defmodule BorutaGateway.RequestsIntegrationTest do
   alias Boruta.Ecto.Admin
   alias Boruta.Ecto.ClientStore
   alias BorutaAuth.Plugs.RateLimit.Counter
+  alias BorutaGateway.Certificate
   alias BorutaGateway.ConfigurationLoader
   alias BorutaGateway.HttpGateway
+  alias BorutaGateway.HttpsGateway
   alias BorutaGateway.Repo
   alias BorutaGateway.RequestsIntegrationTest.HttpClient
   alias BorutaGateway.Upstreams
@@ -1365,6 +1367,144 @@ defmodule BorutaGateway.RequestsIntegrationTest do
           Repo.delete_all(Upstream)
         end
       end)
+    end
+  end
+
+  describe "response completion" do
+    setup_all do
+      directory =
+        Path.join(System.tmp_dir!(), "boruta-head-response-#{System.unique_integer([:positive])}")
+
+      File.mkdir_p!(directory)
+      File.chmod!(directory, 0o700)
+      on_exit(fn -> File.rm_rf!(directory) end)
+      cert = Path.join(directory, "certificate.pem")
+      key = Path.join(directory, "key.pem")
+
+      {_, 0} =
+        System.cmd(
+          "openssl",
+          [
+            "req",
+            "-x509",
+            "-newkey",
+            "rsa:2048",
+            "-nodes",
+            "-days",
+            "1",
+            "-subj",
+            "/CN=localhost",
+            "-keyout",
+            key,
+            "-out",
+            cert
+          ],
+          stderr_to_stdout: true
+        )
+
+      {:ok, ssl_options: Certificate.ssl_options(cert, key)}
+    end
+
+    setup %{gateway: gateway, transport: transport, ssl_options: ssl_options} do
+      {:ok, listener} = :gen_tcp.listen(0, [:binary, active: false, reuseaddr: true])
+      on_exit(fn -> :gen_tcp.close(listener) end)
+      {:ok, {_, upstream_port}} = :inet.sockname(listener)
+
+      upstream = %Upstream{
+        id: Ecto.UUID.generate(),
+        scheme: "http",
+        host: "127.0.0.1",
+        port: upstream_port,
+        uris: ["/"],
+        strip_uri: false,
+        authorize: false
+      }
+
+      {:ok, spare} = :gen_tcp.listen(0, [:binary, active: false])
+      {:ok, {_, port}} = :inet.sockname(spare)
+      :gen_tcp.close(spare)
+      options = [port: port, num_acceptors: 1, match_function: fn _, _ -> upstream end]
+
+      options =
+        if transport == :ssl,
+          do: options ++ [ssl_options: ssl_options, verify_client_certificate: false],
+          else: options
+
+      start_supervised!(%{
+        id: :gateway,
+        start: {Module.concat(gateway, Server), :start, [options]}
+      })
+
+      socket_options =
+        [:binary, active: false] ++ if(transport == :ssl, do: [verify: :verify_none], else: [])
+
+      {:ok, socket} = transport.connect(~c"127.0.0.1", port, socket_options, 1_000)
+      on_exit(fn -> transport.close(socket) end)
+
+      {:ok, listener: listener, socket: socket}
+    end
+
+    for {gateway, transport} <- [{HttpGateway, :gen_tcp}, {HttpsGateway, :ssl}] do
+      @transport transport
+
+      for {framing, headers} <- [
+            {"content length", "Content-Length: 1159\r\n"},
+            {"chunked encoding", "Transfer-Encoding: chunked\r\n"},
+            {"no body framing", ""}
+          ] do
+        @headers headers
+        @tag gateway: gateway, transport: transport
+        test "#{gateway} completes HEAD with #{framing} while the upstream stays open", context do
+          upstream = send_request(context, "HEAD")
+
+          # Wait for the entire header block before completing a fragmented response.
+          :ok = :gen_tcp.send(upstream, "HTTP/1.1 200 OK\r\n" <> @headers)
+          assert {:error, :timeout} = @transport.recv(context.socket, 0, 50)
+          :ok = :gen_tcp.send(upstream, "\r\n")
+
+          response = recv_until_closed(@transport, context.socket)
+          assert response =~ "HTTP/1.1 200 OK\r\n"
+          assert response =~ @headers
+          assert [_headers, ""] = String.split(response, "\r\n\r\n", parts: 2)
+          assert {:error, :closed} = :gen_tcp.recv(upstream, 0, 1_000)
+        end
+      end
+
+      @tag gateway: gateway, transport: transport
+      test "#{gateway} still waits for a GET response body", context do
+        upstream = send_request(context, "GET")
+        :ok = :gen_tcp.send(upstream, "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\n")
+
+        assert {:ok, headers} = @transport.recv(context.socket, 0, 1_000)
+        assert headers =~ "HTTP/1.1 200 OK"
+        assert {:error, :timeout} = @transport.recv(context.socket, 0, 50)
+
+        :ok = :gen_tcp.send(upstream, "hello")
+        assert recv_until_closed(@transport, context.socket) == "hello"
+        assert {:error, :closed} = :gen_tcp.recv(upstream, 0, 1_000)
+      end
+    end
+  end
+
+  defp send_request(%{transport: transport, socket: socket, listener: listener}, method) do
+    :ok = transport.send(socket, "#{method} /head HTTP/1.1\r\nHost: gateway.test\r\n\r\n")
+    {:ok, upstream} = :gen_tcp.accept(listener, 1_000)
+    on_exit(fn -> :gen_tcp.close(upstream) end)
+    assert {:ok, request} = :gen_tcp.recv(upstream, 0, 1_000)
+    assert request =~ "#{method} /head HTTP/1.1\r\n"
+    upstream
+  end
+
+  defp recv_until_closed(transport, socket, response \\ "") do
+    case transport.recv(socket, 0, 1_000) do
+      {:ok, payload} ->
+        recv_until_closed(transport, socket, response <> payload)
+
+      {:error, :closed} ->
+        response
+
+      other ->
+        flunk("expected the gateway to close the completed response, got: #{inspect(other)}")
     end
   end
 

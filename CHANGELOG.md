@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- [gateway] HTTP and HTTPS gateways complete HEAD responses after receiving headers without waiting for a body, including responses with a nonzero Content-Length
 - [admin] upstream creation preserves supplied IDs for configuration imports while updates retain the existing upstream ID
 - [identity] preserve stateful authorization requests after OAuth success so logout and subsequent login can resolve the client identifier
 - [admin] CSV user imports preserve mapped metadata with both plaintext and hashed passwords

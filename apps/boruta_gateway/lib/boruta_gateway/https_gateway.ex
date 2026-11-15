@@ -474,7 +474,7 @@ defmodule BorutaGateway.HttpsGateway do
       send_downstream(state.socket, payload)
       state = %{state | response: response}
 
-      case message_complete?(response) do
+      case message_complete?(response, state.method) do
         true ->
           {:noreply, close_exchange(state, socket, transport)}
 
@@ -498,7 +498,7 @@ defmodule BorutaGateway.HttpsGateway do
         {:ok, header, body} ->
           send_downstream(state.socket, clean_response_headers(header) <> "\r\n\r\n" <> body)
 
-          case message_complete?(response) do
+          case message_complete?(response, state.method) do
             true ->
               {:noreply, close_exchange(%{state | response: response}, socket, transport)}
 
@@ -1076,7 +1076,7 @@ defmodule BorutaGateway.HttpsGateway do
     end
   end
 
-  defp message_complete?(response) do
+  defp message_complete?(response, method) do
     case split_headers(response) do
       :error ->
         false
@@ -1085,11 +1085,13 @@ defmodule BorutaGateway.HttpsGateway do
         status_code = status_code(header)
         headers = response_headers(header)
 
-        response_body_complete?(status_code, headers, body)
+        response_body_complete?(status_code, method, headers, body)
     end
   end
 
-  defp response_body_complete?(status_code, headers, body) do
+  defp response_body_complete?(_status_code, "HEAD", _headers, _body), do: true
+
+  defp response_body_complete?(status_code, _method, headers, body) do
     cond do
       bodyless_status?(status_code) ->
         true
