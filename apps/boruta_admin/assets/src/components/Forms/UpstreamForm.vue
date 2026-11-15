@@ -69,11 +69,24 @@
             <label>Authorization type</label>
             <select v-model="upstream.authorization_type">
               <option value="oauth_bearer">OAuth bearer token</option>
+              <option value="oauth_session">OAuth cookie session</option>
               <option value="http_basic">HTTP Basic credentials</option>
             </select>
             <div class="ui info message" v-if="upstream.authorization_type === 'http_basic'">
               Credentials are verified against users from the default backend and are not forwarded upstream.
             </div>
+          </div>
+          <div class="field" v-if="upstream.authorize && upstream.authorization_type === 'oauth_session'" :class="{ 'error': upstream.errors?.oauth_session_flow }">
+            <label>Session authentication flow</label>
+            <select v-model="upstream.oauth_session_flow">
+              <option value="implicit">Implicit grant</option>
+              <option value="verifiable_presentation">Verifiable presentation</option>
+            </select>
+          </div>
+          <div class="field" v-if="upstream.authorize && upstream.authorization_type === 'oauth_session' && upstream.oauth_session_flow === 'verifiable_presentation'" :class="{ 'error': upstream.errors?.oauth_session_wallet_uri }">
+            <label>Wallet URI</label>
+            <input type="text" v-model="upstream.oauth_session_wallet_uri" placeholder="https://wallet.example.com/authorize" />
+            <p>Used as the authorization redirect URI. Leave empty to use this gateway’s session callback.</p>
           </div>
           <div class="field" v-if="upstream.authorize && upstream.authorization_type === 'http_basic'">
             <div class="ui toggle checkbox">

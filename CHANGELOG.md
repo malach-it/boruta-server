@@ -6,6 +6,7 @@
 
 ### Added
 
+- [gateway] OAuth session authorization uses an implicit grant against the public client, the borwser is granted access to uptream resources to provide authentication. `__implicit/callback` and `__implicit/revoke` endpoints are exposed to enable the flow.
 - [admin] service registry upstream lists support per-node search
 - [gateway] forward request authorization, original Basic credentials, and a valid access token respectively in forwarded `X-Forwarded-Authorization` and `Authorization` headers.
 - [admin] expose current user in consent template

@@ -27,4 +27,7 @@ config :boruta_auth, BorutaAuth.Scheduler,
 config :boruta_auth, BorutaAuth.LogRotate,
   max_retention_days: String.to_integer(System.get_env("MAX_LOG_RETENTION_DAYS", "60"))
 
+config :boruta_gateway,
+  session_secret_key_base: System.get_env("SECRET_KEY_BASE")
+
 import_config "#{Mix.env()}.exs"

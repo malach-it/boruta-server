@@ -121,7 +121,7 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
       assert redirected_to(conn) =~ ~r/error=login_required/
     end
 
-    test "rejects anonymous vp_token with prompt=none when no user is logged in",
+    test "starts anonymous vp_token authentication with prompt=none without granting access",
          %{
            conn: conn,
            redirect_uri: redirect_uri
@@ -141,8 +141,14 @@ defmodule BorutaWeb.Integration.OpenidConnectTest do
         )
 
       assert redirected_to(conn) =~ ~r/#{redirect_uri}/
-      assert redirected_to(conn) =~ "error=login_required"
-      refute redirected_to(conn) =~ "request="
+      query = conn |> redirected_to() |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+      assert query["request"]
+      assert query["response_type"] == "id_token"
+      assert query["redirect_uri"] =~ "/openid/direct_post/"
+      refute Map.has_key?(query, "access_token")
+      refute Map.has_key?(query, "code")
+      refute Map.has_key?(query, "error")
+      assert conn.assigns[:current_user] == nil
     end
 
     test "authorizes with prompt=none with anonymous client (siopv2 - wallet)", %{
