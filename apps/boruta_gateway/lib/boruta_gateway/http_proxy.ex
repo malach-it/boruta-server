@@ -12,6 +12,7 @@ defmodule BorutaGateway.HttpProxy do
   @default_https_port 443
 
   alias BorutaGateway.Certificate
+  alias BorutaGateway.HopState
   alias BorutaGateway.HttpRequest
   alias BorutaGateway.ServiceRegistry
 
@@ -342,14 +343,21 @@ defmodule BorutaGateway.HttpProxy do
 
   defp forward_request(%State{} = state, scheme, host, port, payload)
        when scheme in ["http", "https"] do
-    forward_request_direct(
-      state,
-      scheme,
-      host,
-      port,
-      payload,
-      resolve_upstream(scheme, host, port)
-    )
+    case HopState.advance(payload) do
+      {:ok, payload} ->
+        forward_request_direct(
+          state,
+          scheme,
+          host,
+          port,
+          payload,
+          resolve_upstream(scheme, host, port)
+        )
+
+      {:error, reason} ->
+        send_downstream(state, HopState.response(reason))
+        {:noreply, close_downstream(log_completed_request(state, HopState.status(reason)))}
+    end
   end
 
   defp forward_request(%State{} = state, _scheme, _host, _port, _payload) do

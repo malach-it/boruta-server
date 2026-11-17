@@ -17,6 +17,7 @@
 - [identity] preserve stateful authorization requests after OAuth success so logout and subsequent login can resolve the client identifier
 - [admin] CSV user imports preserve mapped metadata with both plaintext and hashed passwords
 - [identity] oversized session cookies are cleaned at preauthorization success, removing stale MFA and preauthorization entries before dropping other client sessions; requests that still exceed the cookie limit clear the session and return a bad request response
+- [gateway] track forwarded HTTP and HTTPS requests with `X-Hop-State`, a Base64-encoded binary product of instance public-key fingerprints; return `418 I'm a teapot` when the product indicates a repeated node or forwarding would exceed the 2,500-character limit, and `400 Bad Request` for malformed state. Shared fingerprint factors can cause false loop detections.
 
 ## [0.14.0] - 2026-10-28
 

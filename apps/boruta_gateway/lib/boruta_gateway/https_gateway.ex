@@ -15,6 +15,7 @@ defmodule BorutaGateway.HttpsGateway do
 
   alias BorutaAuth.Plugs.RateLimit.Counter
   alias BorutaGateway.Certificate
+  alias BorutaGateway.HopState
   alias BorutaGateway.HttpRequest
   alias BorutaGateway.HttpsGateway.Authorization
   alias BorutaGateway.NoiseCancelling
@@ -268,7 +269,8 @@ defmodule BorutaGateway.HttpsGateway do
       {:ok, method, path} ->
         path_info = path_info(path)
 
-        with %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
+        with {:ok, payload} <- HopState.advance(payload),
+             %Upstream{} = upstream <- match_upstream(state.match_function, header, path_info),
              :ok <- check_noise_cancelling(upstream, method, path, state.remote_ip),
              :ok <- rate_limit(socket, upstream),
              {:ok, token} <- Authorization.authorize(header, method, upstream) do
@@ -286,6 +288,22 @@ defmodule BorutaGateway.HttpsGateway do
             })
           )
         else
+          {:error, reason} when reason in [:routing_loop, :invalid_hop_state] ->
+            send_downstream(socket, HopState.response(reason))
+
+            log_exchange(
+              state,
+              start,
+              request_id,
+              method,
+              path,
+              nil,
+              HopState.status(reason),
+              :failure
+            )
+
+            {:noreply, close_downstream(socket, state)}
+
           nil ->
             response = "No upstream has been found corresponding to the given request."
 
