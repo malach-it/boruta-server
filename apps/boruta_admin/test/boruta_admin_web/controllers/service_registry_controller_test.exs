@@ -53,14 +53,6 @@ defmodule BorutaAdminWeb.ServiceRegistryControllerTest do
           },
           "services" => [
             %{
-              "name" => "HTTP proxy",
-              "scheme" => "http",
-              "port" => 15_555,
-              "acceptors" => 4,
-              "enabled" => true,
-              "certificate" => nil
-            },
-            %{
               "name" => "HTTPS proxy",
               "scheme" => "https",
               "port" => 14_444,
@@ -102,14 +94,6 @@ defmodule BorutaAdminWeb.ServiceRegistryControllerTest do
              } = configuration
 
       assert [
-               %{
-                 "name" => "HTTP proxy",
-                 "scheme" => "http",
-                 "port" => 15_555,
-                 "acceptors" => 4,
-                 "enabled" => true,
-                 "certificate" => nil
-               },
                %{
                  "name" => "HTTPS proxy",
                  "scheme" => "https",

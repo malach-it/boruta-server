@@ -27,7 +27,6 @@ services:
       - "8083:8083"
       - "8042:8042"
       - "8043:8043"
-      - "8555:5555"
       - "8444:4444"
     volumes:
       - "boruta-logs:/app/log"
@@ -46,7 +45,7 @@ services:
         condition: service_healthy
 
   kagome_1:
-    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.12"
+    image: "kagome:proxy-local"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
@@ -57,6 +56,8 @@ services:
       LIBCLUSTER_HOSTS: *boruta-cluster-hosts
       BORUTA_GATEWAY_ALIASES: "[\"kagome-1\",\"kagome.1.docker\"]"
       BORUTA_GATEWAY_VIRTUAL_HOST: kagome-1
+    volumes:
+      - "boruta-logs:/log"
     networks:
       default:
         aliases:
@@ -66,7 +67,7 @@ services:
         condition: service_healthy
 
   kagome_2:
-    image: "ghcr.io/malach-it/kagome:kubernetes-ingress-controller.alpha.12"
+    image: "kagome:proxy-local"
     env_file: "./.env.example"
     environment:
       MIX_ENV: "prod"
@@ -77,6 +78,8 @@ services:
       LIBCLUSTER_HOSTS: *boruta-cluster-hosts
       BORUTA_GATEWAY_ALIASES: "[\"kagome-2\",\"kagome.2.docker\"]"
       BORUTA_GATEWAY_VIRTUAL_HOST: kagome-2
+    volumes:
+      - "boruta-logs:/log"
     networks:
       default:
         aliases:

@@ -94,6 +94,7 @@ defmodule BorutaGateway.Logger do
     business(%{
       request_id: request_id,
       status: event |> List.last() |> Atom.to_string(),
+      host: Map.get(metadata, :host),
       path: Map.get(metadata, :path),
       upstream: upstream,
       request_time: request_time,
@@ -139,6 +140,7 @@ defmodule BorutaGateway.Logger do
   defp business(%{
          request_id: request_id,
          status: status,
+         host: host,
          path: path,
          upstream: upstream,
          request_time: request_time,
@@ -158,6 +160,7 @@ defmodule BorutaGateway.Logger do
           " - ",
           status,
           log_attribute("path", path),
+          log_attribute("host", host),
           log_attribute("upstream_id", upstream && upstream.id),
           log_attribute("upstream_host", upstream && upstream.host),
           log_attribute("upstream_port", upstream && upstream.port),

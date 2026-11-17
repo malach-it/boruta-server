@@ -17,6 +17,7 @@
 - [identity] preserve stateful authorization requests after OAuth success so logout and subsequent login can resolve the client identifier
 - [admin] CSV user imports preserve mapped metadata with both plaintext and hashed passwords
 - [identity] oversized session cookies are cleaned at preauthorization success, removing stale MFA and preauthorization entries before dropping other client sessions; requests that still exceed the cookie limit clear the session and return a bad request response
+- [gateway] track forwarded HTTP and HTTPS requests with `X-Hop-State`, a Base64-encoded binary product of instance public-key fingerprints; return `418 I'm a teapot` when the product indicates a repeated node or forwarding would exceed the 2,500-character limit, and `400 Bad Request` for malformed state. Shared fingerprint factors can cause false loop detections.
 
 ## [0.14.0] - 2026-10-28
 
@@ -69,7 +70,7 @@
 - [auth][ssi] universal keys can be created for oauth client id token and verifiable credentials signing
 - [admin] client forms display the JWT authentication public key field for EC signing algorithms
 - [cli] configuration file uploads accept release-local file paths
-- [gateway] invalid TLS handshakes no longer stop HTTPS gateway acceptors
+- [gateway] invalid TLS handshakes close connections without stopping gateway or proxy acceptors
 - [ssi] credential status token resolution verifies tokens against client DIDs
 - [ssi] DID service HTTP requests trust the configured service hosts
 - [wallet] imported credentials are encrypted in local storage

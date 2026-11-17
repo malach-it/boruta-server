@@ -165,6 +165,15 @@ export default {
        data: [],
        tmp: {}
     }
+    const proxyDataset = {
+       label: 'proxy time',
+       borderColor: stringToColor('proxy time'),
+       backgroundColor: stringToColor('proxy time'),
+       fill: false,
+       linetension: 0,
+       data: [],
+       tmp: {}
+    }
 
     return {
       overflow: false,
@@ -194,7 +203,7 @@ export default {
       },
       gatewayTimes: {
         labels: [],
-        datasets: [requestDataset, upstreamDataset, gatewayDataset]
+        datasets: [requestDataset, upstreamDataset, gatewayDataset, proxyDataset]
       }
     }
   },
@@ -229,7 +238,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: `Gateway times per ${this.timeScaleUnit}`
+            text: `Gateway and proxy times per ${this.timeScaleUnit}`
           },
           legend: {
             align: 'start',
@@ -296,6 +305,15 @@ export default {
          data: [],
          tmp: {}
       }
+      const proxyDataset = {
+         label: 'proxy time',
+         borderColor: stringToColor('proxy time'),
+         backgroundColor: stringToColor('proxy time'),
+         fill: false,
+         linetension: 0,
+         data: [],
+         tmp: {}
+      }
 
       this.counts = {}
       this.businessEventCounts = {
@@ -304,7 +322,7 @@ export default {
       }
       this.gatewayTimes = {
         labels: [],
-        datasets: [requestDataset, upstreamDataset, gatewayDataset]
+        datasets: [requestDataset, upstreamDataset, gatewayDataset, proxyDataset]
       }
     },
     resetFilters() {

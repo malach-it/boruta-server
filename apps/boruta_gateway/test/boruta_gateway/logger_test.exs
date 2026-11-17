@@ -50,6 +50,7 @@ defmodule BorutaGateway.LoggerTest do
             },
             %{
               request_id: "request-id",
+              host: "gateway.example.com",
               path: "/oauth/authorize",
               upstream: %Upstream{id: "upstream-id", host: "example.com", port: 443},
               upstream_tls: "mtls"
@@ -61,6 +62,7 @@ defmodule BorutaGateway.LoggerTest do
       assert log =~ "request_id=request-id"
       assert log =~ "boruta_gateway gateway proxy - success"
       assert log =~ "path=/oauth/authorize"
+      assert log =~ " host=gateway.example.com"
       assert log =~ "upstream_id=upstream-id"
       assert log =~ "upstream_host=example.com"
       assert log =~ "upstream_port=443"
