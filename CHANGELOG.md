@@ -6,12 +6,14 @@
 
 ### Added
 
+- [admin] the upstream sidebar opens the creation form with the current node preselected
 - [admin] service registry upstream lists support per-node search
 - [gateway] forward request authorization, original Basic credentials, and a valid access token respectively in forwarded `X-Forwarded-Authorization` and `Authorization` headers.
 - [admin] expose current user in consent template
 
 ### Fixed
 
+- [admin] resource views clear earlier load errors after a successful load
 - [gateway] HTTP and HTTPS gateways complete HEAD responses after receiving headers without waiting for a body, including responses with a nonzero Content-Length
 - [admin] upstream creation preserves supplied IDs for configuration imports while updates retain the existing upstream ID
 - [identity] preserve stateful authorization requests after OAuth success so logout and subsequent login can resolve the client identifier
