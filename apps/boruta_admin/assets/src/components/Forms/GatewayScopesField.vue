@@ -77,6 +77,9 @@ export default {
       margin-right: 3em;
     }
   }
+  .field {
+    padding-bottom: 0!important;
+  }
   .ui.icon.input>i.icon.close {
     cursor: pointer;
     pointer-events: all;
