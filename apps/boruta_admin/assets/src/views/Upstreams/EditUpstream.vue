@@ -53,6 +53,7 @@ export default {
   mounted () {
     const { upstreamId } = this.$route.params
     Upstream.get(upstreamId).then((upstream) => {
+      this.error = null
       this.upstream = upstream
     }).catch((error) => {
       this.error = error.response?.data?.message || error.message
@@ -82,6 +83,7 @@ export default {
       handler () {
         const { upstreamId } = this.$route.params
         Upstream.get(upstreamId).then((upstream) => {
+          this.error = null
           this.upstream = upstream
         }).catch((error) => {
           this.error = error.response?.data?.message || error.message

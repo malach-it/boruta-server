@@ -45,6 +45,7 @@ export default {
   mounted() {
     const { organizationId } = this.$route.params
     Organization.get(organizationId).then((organization) => {
+      this.error = null
       this.organization = organization
     }).catch((error) => {
       this.error = error.response?.data?.message || error.message

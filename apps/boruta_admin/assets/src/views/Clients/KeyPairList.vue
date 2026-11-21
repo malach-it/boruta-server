@@ -54,6 +54,7 @@ export default {
   methods: {
     getKeyPairs () {
       KeyPair.all().then(keyPairs => {
+        this.fetchError = null
         this.keyPairs = keyPairs
       }).catch((error) => {
         this.fetchError = error.response?.data?.message || error.message

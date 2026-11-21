@@ -147,6 +147,7 @@ export default {
   methods: {
     getUsers (pageNumber, query) {
       User.all({ query, pageNumber }).then(({ data, currentPage, totalPages, totalEntries }) => {
+        this.error = null
         this.users = data
         this.totalPages = totalPages
         this.totalEntries = totalEntries

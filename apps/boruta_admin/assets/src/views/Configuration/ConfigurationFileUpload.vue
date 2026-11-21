@@ -63,6 +63,7 @@ export default {
   mounted () {
     this.fileContent = null
     ConfigurationFile.get(this.$route.params.type).then(fileContent => {
+      this.error = null
       this.fileContent = fileContent
       this.file = new Blob([fileContent], {type : 'text/plain'})
     }).catch((error) => {

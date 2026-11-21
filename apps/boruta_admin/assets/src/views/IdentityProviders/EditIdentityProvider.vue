@@ -55,6 +55,7 @@ export default {
   mounted () {
     const { identityProviderId } = this.$route.params
     IdentityProvider.get(identityProviderId).then((identityProvider) => {
+      this.error = null
       this.identityProvider = identityProvider
     }).catch((error) => {
       this.error = error.response?.data?.message || error.message

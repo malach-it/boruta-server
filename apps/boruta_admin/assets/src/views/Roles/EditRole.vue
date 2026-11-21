@@ -44,6 +44,7 @@ export default {
   mounted () {
     const { roleId } = this.$route.params
     Role.get(roleId).then((role) => {
+      this.error = null
       this.role = role
     }).catch((error) => {
       this.error = error.response?.data?.message || error.message

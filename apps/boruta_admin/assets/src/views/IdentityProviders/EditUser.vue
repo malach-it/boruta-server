@@ -153,6 +153,7 @@ export default {
   mounted() {
     const { userId } = this.$route.params
     User.get(userId).then((user) => {
+      this.error = null
       this.user = user
       this.getUserActivity()
     }).catch((error) => {

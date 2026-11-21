@@ -52,6 +52,7 @@ export default {
   mounted () {
     const { clientId } = this.$route.params
     Client.get(clientId).then((client) => {
+      this.error = null
       this.client = client
     }).catch((error) => {
       this.error = error.response?.data?.message || error.message

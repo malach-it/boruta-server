@@ -119,6 +119,7 @@ export default {
   methods: {
     getOrganizations (pageNumber, query) {
       Organization.all({ query, pageNumber }).then(({ data, currentPage, totalPages, totalEntries }) => {
+        this.error = null
         this.organizations = data
         this.totalPages = totalPages
         this.totalEntries = totalEntries

@@ -94,6 +94,7 @@ export default {
   methods: {
     getClients () {
       Client.all().then((clients) => {
+        this.error = null
         this.clients = clients
       }).catch((error) => {
         this.error = error.response?.data?.message || error.message

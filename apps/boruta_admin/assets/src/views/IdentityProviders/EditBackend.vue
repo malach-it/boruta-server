@@ -55,6 +55,7 @@ export default {
   mounted () {
     const { backendId } = this.$route.params
     Backend.get(backendId).then((backend) => {
+      this.error = null
       this.backend = backend
     }).catch((error) => {
       this.error = error.response?.data?.message || error.message

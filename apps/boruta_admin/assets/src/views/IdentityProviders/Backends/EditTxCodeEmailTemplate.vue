@@ -34,15 +34,17 @@ export default {
   },
   mounted () {
     const { backendId } = this.$route.params
-    Backend.get(backendId).then((backend) => {
-      this.backend = backend
-    }).catch((error) => {
-      this.error = error.response?.data?.message || error.message
-    })
-    EmailTemplate.get(backendId, 'tx_code').then((template) => {
-      this.template = template
-      this.txtContent = template.txt_content
-      this.htmlContent = template.html_content
+    Promise.all([
+      Backend.get(backendId).then((backend) => {
+        this.backend = backend
+      }),
+      EmailTemplate.get(backendId, 'tx_code').then((template) => {
+        this.template = template
+        this.txtContent = template.txt_content
+        this.htmlContent = template.html_content
+      })
+    ]).then(() => {
+      this.error = null
     }).catch((error) => {
       this.error = error.response?.data?.message || error.message
     })

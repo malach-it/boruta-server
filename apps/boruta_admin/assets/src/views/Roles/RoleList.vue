@@ -63,6 +63,7 @@ export default {
   methods: {
     getRoles () {
       Role.all().then((roles) => {
+        this.error = null
         this.roles = roles
       }).catch((error) => {
         this.error = error.response?.data?.message || error.message

@@ -64,6 +64,7 @@ export default {
   methods: {
     getIdentityProviders () {
       IdentityProvider.all().then((identityProviders) => {
+        this.error = null
         this.identityProviders = identityProviders
       }).catch((error) => {
         this.error = error.response?.data?.message || error.message

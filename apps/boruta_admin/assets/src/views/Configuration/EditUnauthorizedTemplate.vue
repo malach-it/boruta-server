@@ -28,6 +28,7 @@ export default {
   },
   mounted () {
     ErrorTemplate.get(401).then((template) => {
+      this.error = null
       this.template = template
       this.content = template.content
     }).catch((error) => {

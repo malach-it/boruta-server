@@ -29,14 +29,16 @@ export default {
   },
   mounted () {
     const { identityProviderId } = this.$route.params
-    IdentityProvider.get(identityProviderId).then((identityProvider) => {
-      this.identityProvider = identityProvider
-    }).catch((error) => {
-      this.error = error.response?.data?.message || error.message
-    })
-    Template.get(identityProviderId, 'edit_reset_password').then((template) => {
-      this.template = template
-      this.content = template.content
+    Promise.all([
+      IdentityProvider.get(identityProviderId).then((identityProvider) => {
+        this.identityProvider = identityProvider
+      }),
+      Template.get(identityProviderId, 'edit_reset_password').then((template) => {
+        this.template = template
+        this.content = template.content
+      })
+    ]).then(() => {
+      this.error = null
     }).catch((error) => {
       this.error = error.response?.data?.message || error.message
     })

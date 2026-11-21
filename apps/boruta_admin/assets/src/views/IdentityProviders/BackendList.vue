@@ -65,6 +65,7 @@ export default {
   methods: {
     getBackends () {
       Backend.all().then((backends) => {
+        this.error = null
         this.backends = backends
       }).catch((error) => {
         this.error = error.response?.data?.message || error.message

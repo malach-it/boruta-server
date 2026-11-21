@@ -136,6 +136,7 @@ export default {
   methods: {
     getScopes () {
       Scope.all().then((scopes) => {
+        this.error = null
         this.scopes = scopes
       }).catch(error => {
         this.error = error.response?.data?.message || error.message
