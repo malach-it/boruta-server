@@ -53,8 +53,8 @@ export default {
       this.$router.push({ name: 'service-registry' })
     },
     createUpstream () {
-      return this.upstream.save().then(() => {
-        this.$router.push({ name: 'service-registry' })
+      return this.upstream.save().then(({ id }) => {
+        this.$router.push({ name: 'edit-upstream', params: { upstreamId: id } })
       }).catch()
     }
   }

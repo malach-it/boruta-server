@@ -25,8 +25,8 @@ export default {
       this.$router.push({ name: 'role-list' })
     },
     createRole () {
-      return this.role.save().then(() => {
-        this.$router.push({ name: 'role-list' })
+      return this.role.save().then(({ id }) => {
+        this.$router.push({ name: 'edit-role', params: { roleId: id } })
       }).catch()
     }
   }

@@ -39,9 +39,9 @@ export default {
     },
     createOrganization () {
       this.success = false
-      return this.organization.save().then(() => {
+      return this.organization.save().then(({ id }) => {
         this.success = true
-        this.$router.push({ name: 'organization-list' })
+        this.$router.push({ name: 'edit-organization', params: { organizationId: id } })
       }).catch()
     }
   }

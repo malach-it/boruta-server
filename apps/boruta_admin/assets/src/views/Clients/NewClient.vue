@@ -34,8 +34,8 @@ export default {
       this.$router.push({ name: 'client-list' })
     },
     createClient () {
-      return this.client.save().then(() => {
-        this.$router.push({ name: 'client-list' })
+      return this.client.save().then(({ id }) => {
+        this.$router.push({ name: 'edit-client', params: { clientId: id } })
       }).catch()
     }
   }

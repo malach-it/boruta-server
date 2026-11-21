@@ -38,9 +38,9 @@ export default {
     },
     createUser () {
       this.success = false
-      return this.user.save().then(() => {
+      return this.user.save().then(({ id }) => {
         this.success = true
-        this.$router.push({ name: 'edit-user', params: { userId: this.user.id } })
+        this.$router.push({ name: 'edit-user', params: { userId: id } })
       }).catch()
     }
   }
