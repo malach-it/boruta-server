@@ -4,6 +4,14 @@
       <div class="ui stackable grid">
         <div class="four wide column">
           <div class="sidebar">
+            <div class="ui segment">
+              <div class="ui attribute list">
+                <div class="item">
+                  <span class="header">Upstream ID</span>
+                  <span class="description">not-assigned-yet</span>
+                </div>
+              </div>
+            </div>
             <CurrentNodeUpstreams :node-name="upstream.node_name" />
             <router-link :to="{ name: 'service-registry' }" class="ui right floated button">Back</router-link>
           </div>

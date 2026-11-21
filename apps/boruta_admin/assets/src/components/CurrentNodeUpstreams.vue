@@ -1,11 +1,7 @@
 <template>
   <div class="ui current-node-upstreams segment">
-    <h4 class="ui header">Current node upstreams</h4>
-    <div class="ui small grey label">{{ currentNodeName }}</div>
-    <div class="ui small error message" v-if="error">
-      {{ error }}
-    </div>
-    <div class="ui relaxed divided list" v-else-if="currentNodeUpstreams.length">
+    <div class="ui big grey fluid label">{{ currentNodeName }}</div>
+    <div class="ui relaxed divided list" v-if="currentNodeUpstreams.length">
       <router-link
         class="item"
         v-for="currentUpstream in currentNodeUpstreams"
@@ -28,6 +24,10 @@
     <div class="ui small message" v-else>
       No upstreams configured for this node.
     </div>
+    <router-link
+      :disabled="!editedUpstreamId"
+      :to="{ name: 'new-upstream', query: { node_name: currentNodeName } }"
+      class="ui primary fluid button">Create an upstream</router-link>
   </div>
 </template>
 
@@ -39,8 +39,7 @@ export default {
   props: ['nodeName', 'editedUpstreamId'],
   data () {
     return {
-      upstreams: {},
-      error: null
+      upstreams: {}
     }
   },
   mounted () {
@@ -58,9 +57,6 @@ export default {
     getUpstreams () {
       Upstream.all().then((upstreams) => {
         this.upstreams = upstreams
-        this.error = null
-      }).catch((error) => {
-        this.error = error.response?.data?.message || error.message
       })
     },
     isEditedUpstream (upstream) {
@@ -72,9 +68,6 @@ export default {
 
 <style scoped lang="scss">
 .current-node-upstreams {
-  clear: both;
-  margin-top: 1rem;
-
   .label {
     margin: .125rem;
   }
@@ -83,24 +76,23 @@ export default {
     margin-bottom: 0;
   }
 
+  .item {
+    padding: .3em .5em!important;
+    border: 1px solid transparent!important;
+    border-left: 3px solid transparent!important;
+  }
+
   .item.edited-upstream {
-    position: relative;
-    margin-left: -.75rem;
-    padding: .75rem;
     background: color-mix(
       in srgb,
       var(--theme-primary, #2185d0) 16%,
       var(--theme-surface, #fff)
     );
-    border-left: 3px solid var(--theme-primary, #2185d0);
+    border: 1px solid var(--theme-primary, #2185d0)!important;
+    border-left: 3px solid var(--theme-primary, #2185d0)!important;
     border-radius: calc(var(--theme-radius, 8px) * .5);
-    box-shadow: inset 0 0 0 1px color-mix(
-      in srgb,
-      var(--theme-primary, #2185d0) 34%,
-      transparent
-    );
     color: var(--theme-text, inherit);
-    transition: background .18s ease, box-shadow .18s ease;
+    transition: background .15s ease, box-shadow .15s ease;
 
     .header, .meta {
       color: var(--theme-text, inherit)!important;
@@ -116,7 +108,6 @@ export default {
         var(--theme-primary, #2185d0) 24%,
         var(--theme-surface, #fff)
       );
-      box-shadow: inset 0 0 0 1px var(--theme-primary, #2185d0);
     }
   }
 }

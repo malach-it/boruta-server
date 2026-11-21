@@ -315,6 +315,9 @@ export default {
   flex: 1;
   display: flex;
   min-height: calc(100% - 41px);
+  .button[disabled="true"] {
+    opacity: 0.45!important;
+  }
   .main.create.button {
     position: absolute;
     top: .53em;
