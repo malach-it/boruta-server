@@ -15,10 +15,12 @@
 
 - [admin] resource views clear earlier load errors after a successful load
 - [gateway] HTTP and HTTPS gateways complete HEAD responses after receiving headers without waiting for a body, including responses with a nonzero Content-Length
+- [gateway] service registry heartbeats restore missing entries for live nodes, and stale-node cleanup preserves recently refreshed entries
 - [admin] upstream creation preserves supplied IDs for configuration imports while updates retain the existing upstream ID
 - [identity] preserve stateful authorization requests after OAuth success so logout and subsequent login can resolve the client identifier
 - [admin] CSV user imports preserve mapped metadata with both plaintext and hashed passwords
 - [identity] oversized session cookies are cleaned at preauthorization success, removing stale MFA and preauthorization entries before dropping other client sessions; requests that still exceed the cookie limit clear the session and return a bad request response
+- [gateway] service registry record updates distributed and centralized storage separation. Erlang distribution disconnected nodes still appear according to routing abilities.
 
 ## [0.14.0] - 2026-10-28
 

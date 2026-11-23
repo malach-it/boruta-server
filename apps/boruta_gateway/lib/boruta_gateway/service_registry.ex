@@ -629,9 +629,20 @@ defmodule BorutaGateway.ServiceRegistry do
   defp rpc_touch_record_nodes(records, ip_address, node_name, unresponsive_since) do
     now = System.monotonic_time(:millisecond)
 
+    records = case Repo.backend() do
+      "mnesia" ->
+        records
+        |> list_cached_records()
+        |> Enum.reject(&(root_record?(&1)))
+        |> Enum.reject(&(current_record?(&1, ip_address, node_name)))
+
+      _ ->
+        records
+        |> list_cached_records()
+        |> Enum.reject(&(not current_record?(&1, ip_address, node_name)))
+    end
+
     records
-    |> list_cached_records()
-    |> Enum.reject(&(root_record?(&1) || current_record?(&1, ip_address, node_name)))
     |> Enum.reduce({unresponsive_since, MapSet.new()}, fn record,
                                                           {unresponsive_since, deleted_ids} ->
       case rpc_touch_record_node(record) do

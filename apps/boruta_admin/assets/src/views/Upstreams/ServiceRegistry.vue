@@ -5,7 +5,7 @@
       <div class="ui error message" v-if="error">
         {{ error }}
       </div>
-      <h2>Service registry</h2>
+      <h2><span class="ui grey label">experimental</span> Service registry</h2>
       <div class="ui fluid icon input search form">
         <input type="search" v-model="searchQuery" placeholder="Search service registry" />
         <i class="search icon"></i>

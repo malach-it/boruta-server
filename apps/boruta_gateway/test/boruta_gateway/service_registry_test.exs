@@ -318,164 +318,59 @@ defmodule BorutaGateway.ServiceRegistryTest do
     GenServer.stop(pid)
   end
 
-  test "service registry process RPC touches reachable record nodes" do
-    Application.put_env(ConfigurationLoader, :node_name, "reachable-node")
-    Application.put_env(ConfigurationLoader, :aliases, ["service.local"])
+  test "PostgreSQL leaves reachable peers to refresh their own records" do
+    Application.put_env(ConfigurationLoader, :node_name, "reachable-peer")
 
-    reachable_record =
+    peer =
       insert_record!(
-        node_name: "reachable-node",
+        node_name: "reachable-peer",
         erlang_node_name: Atom.to_string(node()),
         ip_address: ServiceRegistry.current_ip_address(),
-        aliases: ["reachable.local"],
         status: "online"
       )
 
     stale_updated_at = ~N[2026-01-01 00:00:00]
 
-    reachable_record
+    peer
     |> Ecto.Changeset.change(updated_at: stale_updated_at)
     |> Repo.update!()
 
     state = %{
       ip_address: ServiceRegistry.current_ip_address(),
       node_name: "service-node",
-      records: %{
-        ServiceRegistry.current_ip_address() => reachable_record,
-        "reachable.local" => reachable_record
-      },
-      unresponsive_since: %{
-        {reachable_record.ip_address, reachable_record.node_name} =>
-          System.monotonic_time(:millisecond)
-      }
+      records: %{peer.ip_address => peer},
+      unresponsive_since: %{}
     }
 
-    assert {:noreply, %{unresponsive_since: unresponsive_since}} =
-             ServiceRegistry.handle_info(:touch_service_registry_record, state)
-
-    assert unresponsive_since == %{}
-    assert %{updated_at: updated_at} = Repo.get!(Record, reachable_record.id)
-    assert NaiveDateTime.compare(updated_at, stale_updated_at) == :gt
+    assert {:noreply, _state} = ServiceRegistry.handle_info(:touch_service_registry_record, state)
+    assert Repo.get!(Record, peer.id).updated_at == stale_updated_at
   end
 
-  @tag capture_log: true
-  test "service registry process remembers unresponsive record nodes" do
-    Application.put_env(ConfigurationLoader, :node_name, "service-node")
-
-    unresponsive_record =
+  test "PostgreSQL keeps expired peer records in storage and in the registry cache" do
+    peer =
       insert_record!(
-        node_name: "unresponsive-node",
-        erlang_node_name: "boruta@unresponsive-node",
+        node_name: "unresponsive-peer",
+        erlang_node_name: "boruta@unresponsive-peer",
         ip_address: "10.0.0.21",
-        aliases: [],
+        aliases: ["peer.local"],
         status: "online"
       )
+
+    records = %{peer.ip_address => peer, "peer.local" => peer}
 
     state = %{
       ip_address: ServiceRegistry.current_ip_address(),
       node_name: "service-node",
-      records: %{"10.0.0.21" => unresponsive_record},
-      unresponsive_since: %{}
-    }
-
-    assert {:noreply, %{records: records, unresponsive_since: unresponsive_since}} =
-             ServiceRegistry.handle_info(:touch_service_registry_record, state)
-
-    assert records["10.0.0.21"] == unresponsive_record
-    assert Map.has_key?(unresponsive_since, {"10.0.0.21", "unresponsive-node"})
-    assert Repo.get!(Record, unresponsive_record.id)
-  end
-
-  test "service registry process skips RPC touch for records without Erlang node names" do
-    Application.put_env(ConfigurationLoader, :node_name, "service-node")
-
-    static_record =
-      insert_record!(
-        node_name: "static-node",
-        erlang_node_name: nil,
-        ip_address: "10.0.0.10",
-        aliases: ["static.local"],
-        status: "online"
-      )
-
-    state = %{
-      ip_address: ServiceRegistry.current_ip_address(),
-      node_name: "service-node",
-      records: %{
-        "10.0.0.10" => static_record,
-        "static.local" => static_record
-      },
-      unresponsive_since: %{}
-    }
-
-    assert {:noreply, %{records: records, unresponsive_since: unresponsive_since}} =
-             ServiceRegistry.handle_info(:touch_service_registry_record, state)
-
-    assert records["10.0.0.10"] == static_record
-    assert records["static.local"] == static_record
-    assert unresponsive_since == %{}
-    assert Repo.get!(Record, static_record.id)
-  end
-
-  @tag capture_log: true
-  test "service registry process remembers record nodes when RPC touch updates no record" do
-    Application.put_env(ConfigurationLoader, :node_name, "missing-node")
-
-    unresponsive_record =
-      insert_record!(
-        node_name: "stale-node",
-        erlang_node_name: Atom.to_string(node()),
-        ip_address: "10.0.0.23",
-        aliases: [],
-        status: "online"
-      )
-
-    state = %{
-      ip_address: ServiceRegistry.current_ip_address(),
-      node_name: "service-node",
-      records: %{"10.0.0.23" => unresponsive_record},
-      unresponsive_since: %{}
-    }
-
-    assert {:noreply, %{records: records, unresponsive_since: unresponsive_since}} =
-             ServiceRegistry.handle_info(:touch_service_registry_record, state)
-
-    assert records["10.0.0.23"] == unresponsive_record
-    assert Map.has_key?(unresponsive_since, {"10.0.0.23", "stale-node"})
-    assert Repo.get!(Record, unresponsive_record.id)
-  end
-
-  @tag capture_log: true
-  test "service registry process deletes record nodes unresponsive for more than 30 seconds" do
-    Application.put_env(ConfigurationLoader, :node_name, "service-node")
-
-    unresponsive_record =
-      insert_record!(
-        node_name: "stale-unresponsive-node",
-        erlang_node_name: "boruta@stale-unresponsive-node",
-        ip_address: "10.0.0.22",
-        aliases: ["stale-unresponsive.local"],
-        status: "online"
-      )
-
-    state = %{
-      ip_address: ServiceRegistry.current_ip_address(),
-      node_name: "service-node",
-      records: %{
-        "10.0.0.22" => unresponsive_record,
-        "stale-unresponsive.local" => unresponsive_record
-      },
+      records: records,
       unresponsive_since: %{
-        {"10.0.0.22", "stale-unresponsive-node"} => System.monotonic_time(:millisecond) - 31_000
+        {peer.ip_address, peer.node_name} => System.monotonic_time(:millisecond) - 31_000
       }
     }
 
-    assert {:noreply, %{records: records, unresponsive_since: unresponsive_since}} =
+    assert {:noreply, %{records: ^records}} =
              ServiceRegistry.handle_info(:touch_service_registry_record, state)
 
-    assert records == %{}
-    assert unresponsive_since == %{}
-    refute Repo.get(Record, unresponsive_record.id)
+    assert Repo.get!(Record, peer.id)
   end
 
   test "upsert_current_record!/0 marks an offline record online" do
