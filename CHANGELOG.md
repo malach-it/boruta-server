@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+- Note wallet id_token format changed. This release may invalidate current machine users, preventing them to authenticate. You may migrate current wallet machine users metadata according to the update of the presented metadata policies.
+
+### Changed
+
+- [ssi] take wallet response mode metadata policy into account for authorization requests
+
 ### Added
 
 - [admin] the upstream sidebar opens the creation form with the current node preselected

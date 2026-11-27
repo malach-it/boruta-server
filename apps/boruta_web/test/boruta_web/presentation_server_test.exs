@@ -10,7 +10,7 @@ defmodule BorutaWeb.PresentationServerTest do
       assert :ok = PresentationServer.start_presentation(code)
       PresentationServer.authenticated(code, "https://client.example/callback")
 
-      assert_receive {:authenticated, "https://client.example/callback"}
+      assert_receive {:authenticated, "https://client.example/callback", nil}
       refute Map.has_key?(presentations(), code)
     end
 

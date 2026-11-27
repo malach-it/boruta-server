@@ -50,7 +50,7 @@ defmodule BorutaIdentity.Accounts.User do
     "type" => "object",
     "properties" => %{
       "value" => %{},
-      "status" => %{"type" => "string"},
+      "status" => %{"type" => "string", "pattern" => "^valid|revoked|suspended"},
       "display" => %{"type" => "array", "items" => %{"type" => "string"}}
     },
     "required" => ["value", "status"]
@@ -121,6 +121,7 @@ defmodule BorutaIdentity.Accounts.User do
   def changeset(user, attrs \\ %{}) do
     user
     |> cast(attrs, [:metadata, :group, :blocked, :did])
+    |> preserve_stale_metadata()
     |> unique_constraint(:did, name: :users_backend_id_did_index)
     |> validate_group()
     |> validate_metadata()
@@ -269,8 +270,31 @@ defmodule BorutaIdentity.Accounts.User do
     end
   end
 
+  defp preserve_stale_metadata(%Ecto.Changeset{data: user} = changeset) do
+    update_change(changeset, :metadata, fn
+      %{} = metadata ->
+        updates = Map.reject(metadata, &stale_metadata?/1)
+
+        Enum.reduce(user.metadata || %{}, updates, fn {key, value} = entry, acc ->
+          if stale_metadata?(entry) || stale_metadata?({key, metadata[key]}) do
+            Map.put(acc, key, value)
+          else
+            acc
+          end
+        end)
+
+      metadata ->
+        metadata
+    end)
+  end
+
+  defp stale_metadata?({_key, %{"status" => "stale"}}), do: true
+  defp stale_metadata?(_entry), do: false
+
   defp validate_metadata(%Ecto.Changeset{changes: %{metadata: metadata}} = changeset) do
-    Enum.reduce_while(metadata, changeset, fn {_attribute, value}, changeset ->
+    metadata
+    |> Enum.reject(&stale_metadata?/1)
+    |> Enum.reduce_while(changeset, fn {_attribute, value}, changeset ->
       case ExJsonSchema.Validator.validate(@metadata_schema, value) do
         :ok ->
           {:cont, changeset}

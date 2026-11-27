@@ -15,8 +15,8 @@ defmodule BorutaWeb.PresentationServer do
     GenServer.call(__MODULE__, {:start_presentation, code})
   end
 
-  def authenticated(code, redirect_uri) do
-    GenServer.cast(__MODULE__, {:authenticated, code, redirect_uri})
+  def authenticated(code, redirect_uri, machine_user \\ nil) do
+    GenServer.cast(__MODULE__, {:authenticated, code, redirect_uri, machine_user})
   end
 
   def cancel_presentation(code) do
@@ -41,8 +41,8 @@ defmodule BorutaWeb.PresentationServer do
     {:reply, :ok, %{state | presentations: presentations}}
   end
 
-  def handle_cast({:authenticated, code, redirect_uri}, state) do
-    send_presentation_message(state, code, {:authenticated, redirect_uri})
+  def handle_cast({:authenticated, code, redirect_uri, machine_user}, state) do
+    send_presentation_message(state, code, {:authenticated, redirect_uri, machine_user})
 
     {:noreply, delete_presentation(state, code)}
   end

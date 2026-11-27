@@ -101,8 +101,14 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
       |> send_chunked(200)
 
     receive do
-      {:authenticated, redirect_uri} ->
-        chunk(conn, "event: authenticated\ndata: #{redirect_uri}\n\n")
+      {:authenticated, redirect_uri, machine_user} ->
+        case preferred_response_mode(machine_user) do
+          "direct_post" ->
+            chunk(conn, "event: message\ndata: wallet requested a same device authorization\n\n")
+
+          _ ->
+            chunk(conn, "event: authenticated\ndata: #{redirect_uri}\n\n")
+        end
 
       {:message, message} ->
         chunk(conn, "event: message\ndata: #{message}\n\n")
@@ -561,98 +567,94 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   def authorize_success(
         %Plug.Conn{} = conn,
-        %SiopV2Response{response_mode: "post"} = response
+        %SiopV2Response{} = response
       ) do
-    {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
+    response_mode = preferred_response_mode(conn.assigns[:current_user]) || response.response_mode
+    emit_code_authorize_success_event(response.code, response_mode)
 
-    template =
-      IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+    case response_mode do
+      "direct_post" ->
+        conn
+        |> redirect(
+          external:
+            SiopV2Response.redirect_to_deeplink(response, fn code ->
+              uri = URI.parse(Boruta.Config.issuer())
 
-    emit_code_authorize_success_event(response.code, response.response_mode)
+              %{uri | path: Routes.token_path(conn, :direct_post, code)}
+              |> URI.to_string()
+            end)
+        )
 
-    conn
-    |> put_layout(false)
-    |> put_view(TemplateView)
-    |> render("template.html",
-      template: template,
-      assigns: %{
-        resource_owner: response.code.resource_owner,
-        presentation_deeplink:
-          SiopV2Response.redirect_to_deeplink(response, fn code ->
-            uri = URI.parse(Boruta.Config.issuer())
+      "post" ->
+        {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
 
-            %{uri | path: Routes.token_path(conn, :direct_post, code)}
-            |> URI.to_string()
-          end),
-        code: response.code.value
-      }
-    )
+        template =
+          IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
+
+        conn
+        |> put_layout(false)
+        |> put_view(TemplateView)
+        |> render("template.html",
+          template: template,
+          assigns: %{
+            resource_owner: response.code.resource_owner,
+            presentation_deeplink:
+              SiopV2Response.redirect_to_deeplink(response, fn code ->
+                uri = URI.parse(Boruta.Config.issuer())
+
+                %{uri | path: Routes.token_path(conn, :direct_post, code)}
+                |> URI.to_string()
+              end),
+            code: response.code.value
+          }
+        )
+    end
   end
 
   def authorize_success(
         %Plug.Conn{} = conn,
-        %SiopV2Response{response_mode: "direct_post"} = response
+        %VerifiablePresentationResponse{} = response
       ) do
-    emit_code_authorize_success_event(response.code, response.response_mode)
+    response_mode = preferred_response_mode(conn.assigns[:current_user]) || response.response_mode
+    emit_code_authorize_success_event(response.code, response_mode)
 
-    conn
-    |> redirect(
-      external:
-        SiopV2Response.redirect_to_deeplink(response, fn code ->
-          uri = URI.parse(Boruta.Config.issuer())
+    case response_mode do
+      "direct_post" ->
+        conn
+        |> redirect(
+          external:
+            VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
+              uri = URI.parse(Boruta.Config.issuer())
 
-          %{uri | path: Routes.token_path(conn, :direct_post, code)}
-          |> URI.to_string()
-        end)
-    )
-  end
+              %{uri | path: Routes.token_path(conn, :direct_post, code)}
+              |> URI.to_string()
+            end)
+        )
 
-  def authorize_success(
-        %Plug.Conn{} = conn,
-        %VerifiablePresentationResponse{response_mode: "direct_post"} = response
-      ) do
-    emit_code_authorize_success_event(response.code, response.response_mode)
+      "post" ->
+        {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
 
-    conn
-    |> redirect(
-      external:
-        VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
-          uri = URI.parse(Boruta.Config.issuer())
+        template =
+          IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
 
-          %{uri | path: Routes.token_path(conn, :direct_post, code)}
-          |> URI.to_string()
-        end)
-    )
-  end
+        conn
+        |> put_layout(false)
+        |> put_view(TemplateView)
+        |> render("template.html",
+          template: template,
+          assigns: %{
+            resource_owner: response.code.resource_owner,
+            presentation_deeplink:
+              VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
+                uri = URI.parse(Boruta.Config.issuer())
 
-  def authorize_success(
-        %Plug.Conn{} = conn,
-        %VerifiablePresentationResponse{response_mode: "post"} = response
-      ) do
-    {:ok, idp} = Accounts.Utils.client_identity_provider(response.client.id)
-
-    template =
-      IdentityProviders.get_identity_provider_template!(idp.id, :cross_device_presentation)
-
-    emit_code_authorize_success_event(response.code, response.response_mode)
-
-    conn
-    |> put_layout(false)
-    |> put_view(TemplateView)
-    |> render("template.html",
-      template: template,
-      assigns: %{
-        resource_owner: response.code.resource_owner,
-        presentation_deeplink:
-          VerifiablePresentationResponse.redirect_to_deeplink(response, fn code ->
-            uri = URI.parse(Boruta.Config.issuer())
-
-            %{uri | path: Routes.token_path(conn, :direct_post, code)}
-            |> URI.to_string()
-          end),
-        code: response.code.value
-      }
-    )
+                %{uri | path: Routes.token_path(conn, :direct_post, code)}
+                |> URI.to_string()
+              end),
+            code: response.code.value
+          }
+        )
+    end
   end
 
   def authorize_success(
@@ -671,22 +673,30 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
         case Deliveries.deliver_tx_code(identity_provider.backend, current_user, tx_code) do
           :ok ->
-            conn =
-              conn
-              |> delete_session(:session_chosen)
-              |> put_layout(false)
-              |> put_view(TemplateView)
-              |> render("template.html",
-                template: template,
-                assigns: %{
-                  resource_owner: response.code.resource_owner,
-                  credential_offer: response,
-                  code: response.code.value
-                }
-              )
+            credential_offer_uri = credential_offer_uri(response)
 
-            emit_credential_offer_authorize_success_event(response)
-            conn
+            case preferred_response_mode(current_user) do
+              "direct_post" ->
+                redirect(conn, external: credential_offer_uri)
+
+              _ ->
+                conn =
+                  conn
+                  |> delete_session(:session_chosen)
+                  |> put_layout(false)
+                  |> put_view(TemplateView)
+                  |> render("template.html",
+                    template: template,
+                    assigns: %{
+                      resource_owner: response.code.resource_owner,
+                      credential_offer_uri: credential_offer_uri,
+                      code: response.code.value
+                    }
+                  )
+
+                emit_credential_offer_authorize_success_event(response)
+                conn
+            end
 
           {:error, _error} ->
             {:error, :bad_request}
@@ -711,34 +721,43 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
           client_id
       end
 
-    case IdentityProviders.get_identity_provider_by_client_id(client_id) do
-      %IdentityProvider{} = identity_provider ->
-        template =
-          IdentityProviders.get_identity_provider_template!(
-            identity_provider.id,
-            :credential_offer
-          )
+    current_user = conn.assigns[:current_user]
+    credential_offer_uri = credential_offer_uri(response)
 
-        conn =
-          conn
-          |> delete_session(:session_chosen)
-          |> put_layout(false)
-          |> put_view(TemplateView)
-          |> render("template.html",
-            template: template,
-            assigns: %{
-              resource_owner: response.code.resource_owner,
-              credential_offer: response,
-              code: response.code.value
-            }
-          )
+    case preferred_response_mode(current_user) do
+      "direct_post" ->
+        redirect(conn, external: credential_offer_uri)
 
-        emit_credential_offer_authorize_success_event(response)
-        conn
+      _ ->
+        case IdentityProviders.get_identity_provider_by_client_id(client_id) do
+          %IdentityProvider{} = identity_provider ->
+            template =
+              IdentityProviders.get_identity_provider_template!(
+                identity_provider.id,
+                :credential_offer
+              )
 
-      nil ->
-        raise BorutaIdentity.Accounts.IdentityProviderError,
-              "identity provider not configured for given OAuth client. Please contact your administrator."
+            conn =
+              conn
+              |> delete_session(:session_chosen)
+              |> put_layout(false)
+              |> put_view(TemplateView)
+              |> render("template.html",
+                template: template,
+                assigns: %{
+                  resource_owner: response.code.resource_owner,
+                  credential_offer_uri: credential_offer_uri,
+                  code: response.code.value
+                }
+              )
+
+            emit_credential_offer_authorize_success_event(response)
+            conn
+
+          nil ->
+            raise BorutaIdentity.Accounts.IdentityProviderError,
+                  "identity provider not configured for given OAuth client. Please contact your administrator."
+        end
     end
   end
 
@@ -907,5 +926,16 @@ defmodule BorutaWeb.Oauth.AuthorizeController do
 
   defp public_sub(conn) do
     if public_client_request?(conn), do: conn.query_params["client_id"]
+  end
+
+  defp preferred_response_mode(%{metadata: %{"response_mode" => %{"value" => mode}}})
+       when mode in ["direct_post", "post"],
+       do: mode
+
+  defp preferred_response_mode(_user), do: nil
+
+  # TODO implement URI generation in boruta_auth
+  defp credential_offer_uri(credential_offer) do
+    "#{credential_offer.redirect_uri}?credential_offer=#{credential_offer |> Map.from_struct() |> Map.take([:credential_configuration_ids, :client_id, :credential_issuer, :grants]) |> Jason.encode!() |> URI.encode_www_form()}"
   end
 end

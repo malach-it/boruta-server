@@ -11,7 +11,11 @@ defmodule BorutaIdentity.Accounts.MachineTest do
   describe "domain_user!/2" do
     test "creates a machine user from a did generated from the resource owner id_token jwk" do
       backend = insert(:backend)
-      id_token = id_token_fixture("did:example:machine", %{"machine_name" => "machine"})
+
+      id_token =
+        id_token_fixture("did:example:machine", %{
+          "machine_name" => "machine"
+        })
 
       assert {:ok, %User{} = user} =
                Machine.domain_user!(%ResourceOwner{sub: id_token}, backend)
@@ -24,6 +28,31 @@ defmodule BorutaIdentity.Accounts.MachineTest do
       assert user.account_type == Machine.account_type()
       assert user.backend_id == backend.id
       assert user.metadata == %{}
+    end
+
+    test "creates a machine user from a did generated from the resource owner id_token jwk (with metadata_policy)" do
+      backend = insert(:backend)
+
+      id_token =
+        id_token_fixture("did:example:machine", %{
+          "metadata_policy" => %{"metadata_policy" => true},
+          "machine_name" => "machine"
+        })
+
+      assert {:ok, %User{} = user} =
+               Machine.domain_user!(%ResourceOwner{sub: id_token}, backend)
+
+      machine_did = machine_did()
+
+      assert user.id
+      assert user.uid == machine_did
+      assert user.username == machine_did()
+      assert user.account_type == Machine.account_type()
+      assert user.backend_id == backend.id
+
+      assert user.metadata == %{
+               "metadata_policy" => %{"value" => true, "status" => "stale", "display" => []}
+             }
     end
 
     test "creates a machine user without an id_token sub claim" do

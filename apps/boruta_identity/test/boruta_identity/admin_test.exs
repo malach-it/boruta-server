@@ -479,6 +479,35 @@ defmodule BorutaIdentity.AdminTest do
       assert {:ok, %User{metadata: ^metadata}} = Admin.update_user(user, user_params)
     end
 
+    test "skips stale metadata entries on update", %{user: user} do
+      stored_stale = %{"status" => "stale", "value" => "stored"}
+      stored_valid = %{"status" => "valid", "value" => "stored"}
+      updated_valid = %{"status" => "valid", "value" => "updated"}
+
+      user =
+        user
+        |> Ecto.Changeset.change(
+          metadata: %{
+            "stale_omitted" => stored_stale,
+            "stale_overwritten" => stored_stale,
+            "valid_submitted_as_stale" => stored_valid
+          }
+        )
+        |> Repo.update!()
+
+      updates = %{
+        "stale_overwritten" => updated_valid,
+        "valid_submitted_as_stale" => %{"status" => "stale"},
+        "new_stale" => %{"status" => "stale"},
+        "new_valid" => updated_valid
+      }
+
+      expected = Map.put(user.metadata, "new_valid", updated_valid)
+
+      assert {:ok, %User{metadata: ^expected}} = Admin.update_user(user, %{metadata: updates})
+      assert %User{metadata: ^expected} = Repo.get!(User, user.id)
+    end
+
     test "returns an error with invalid metadata", %{user: user} do
       {:ok, _backend} =
         Ecto.Changeset.change(user.backend, %{metadata_fields: [%{attribute_name: "test"}]})

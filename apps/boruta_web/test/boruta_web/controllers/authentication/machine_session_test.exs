@@ -17,6 +17,7 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
   alias BorutaIdentity.IdentityProviders.Backend
   alias BorutaIdentity.Repo
   alias BorutaIdentityWeb.MachineSession
+  alias BorutaWeb.PresentationServer
 
   setup_all do
     identity_config = Application.fetch_env!(:boruta_identity, BorutaIdentityWeb.Endpoint)
@@ -120,7 +121,9 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
 
     did = "did:jwk:" <> (Jason.encode!(jwk) |> Base.url_encode64(padding: false))
     signer = Joken.Signer.create("RS256", %{"pem" => private_key}, %{"jwk" => jwk, "kid" => did})
-    {:ok, id_token, _claims} = VerifiablePresentations.Token.generate_and_sign(%{}, signer)
+
+    {:ok, id_token, _claims} =
+      VerifiablePresentations.Token.generate_and_sign(%{"metadata_policy" => %{}}, signer)
 
     code =
       insert(:token,
@@ -133,6 +136,8 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
         redirect_uri: redirect_uri
       )
 
+    assert :ok = PresentationServer.start_presentation(code.value)
+
     direct_post =
       conn
       |> put_req_header("content-type", "application/x-www-form-urlencoded")
@@ -144,6 +149,10 @@ defmodule BorutaWeb.Oauth.MachineSessionTest do
     assert URI.decode_query(redirect_uri.query)["response_type"] == "vp_token"
 
     {:ok, machine} = Machine.domain_user!(%ResourceOwner{sub: id_token}, Backend.default!())
+
+    machine_id = machine.id
+    location = redirected_to(direct_post)
+    assert_receive {:authenticated, ^location, %{id: ^machine_id, account_type: "machine"}}
 
     assert machine.uid =~ "did:key:"
     session_token = get_session(direct_post, :user_token)[did]

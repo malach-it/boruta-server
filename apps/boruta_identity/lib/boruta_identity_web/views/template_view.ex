@@ -89,19 +89,19 @@ defmodule BorutaIdentityWeb.TemplateView do
     |> context(Map.delete(assigns, :resource_owner))
   end
 
-  def context(context, %{credential_offer: credential_offer} = assigns) do
+  def context(context, %{credential_offer_uri: credential_offer_uri} = assigns) do
     {:ok, base64_credential_offer_qr_code} =
-      text_from_credential_offer(credential_offer)
+      credential_offer_uri
       |> QRCode.create()
       |> QRCode.render(:svg)
       |> QRCode.to_base64()
 
     %{
       base64_credential_offer_qr_code: base64_credential_offer_qr_code,
-      credential_offer_deeplink: text_from_credential_offer(credential_offer)
+      credential_offer_deeplink: credential_offer_uri
     }
     |> Map.merge(context)
-    |> context(Map.delete(assigns, :credential_offer))
+    |> context(Map.delete(assigns, :credential_offer_uri))
   end
 
   def context(context, %{presentation_deeplink: presentation_deeplink} = assigns) do
@@ -172,15 +172,6 @@ defmodule BorutaIdentityWeb.TemplateView do
   end
 
   def context(context, %{}), do: context
-
-  defp text_from_credential_offer(credential_offer) do
-    # TODO Jason.Encode implementation for CredentialOfferResponse
-    "#{credential_offer.redirect_uri}?credential_offer=#{credential_offer
-      |> Map.from_struct()
-      |> Map.take([:credential_configuration_ids, :client_id, :credential_issuer, :grants])
-      |> Jason.encode!()
-      |> URI.encode_www_form()}"
-  end
 
   defp paths(conn, assigns) do
     %Plug.Conn{query_params: query_params} = conn

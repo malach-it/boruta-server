@@ -72,7 +72,6 @@
     <div class="ui segment" v-if="id_token">
       <form method="POST" :action="redirect_uri" class="ui form large segment">
         <input type="hidden" name="id_token" :value="id_token" />
-        <input type="hidden" name="metadata_policy" :value="metadata_policy">
         <button class="ui fluid blue button" type="submit">Present your cryptographic key</button>
       </form>
     </div>
@@ -115,7 +114,6 @@ export default defineComponent({
       presentation: null,
       credentials: [],
       id_token: null,
-      metadata_policy: "{}",
       redirect_uri: null,
       vp_token: null,
       requestedKey: null,

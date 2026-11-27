@@ -205,7 +205,7 @@ defmodule BorutaWeb.Oauth.TokenController do
         })
 
       emit_direct_post_success(response)
-      redirect_after_machine_authentication(conn, response, kid)
+      redirect_after_machine_authentication(conn, response, kid, machine)
     else
       _ ->
         authentication_failure(conn, %Error{
@@ -216,7 +216,7 @@ defmodule BorutaWeb.Oauth.TokenController do
     end
   end
 
-  defp redirect_after_machine_authentication(conn, response, kid) do
+  defp redirect_after_machine_authentication(conn, response, kid, machine) do
     case tl(String.split(response.code.response_type, " ")) do
       [] ->
         query =
@@ -247,7 +247,7 @@ defmodule BorutaWeb.Oauth.TokenController do
 
         redirect_uri = issuer() <> Routes.authorize_path(conn, :authorize, params)
 
-        PresentationServer.authenticated(response.code.value, redirect_uri)
+        PresentationServer.authenticated(response.code.value, redirect_uri, machine)
         redirect(conn, external: redirect_uri)
     end
   end

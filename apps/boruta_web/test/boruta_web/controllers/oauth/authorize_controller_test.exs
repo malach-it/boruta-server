@@ -223,8 +223,16 @@ defmodule BorutaWeb.AuthorizeControllerTest do
       )
     ]
 
-    for response <- responses do
-      conn = conn |> init_test_session(%{}) |> AuthorizeController.authorize_success(response)
+    current_user = %{metadata: %{"response_mode" => %{"value" => "direct_post"}}}
+
+    for response <- responses, user <- [nil, current_user] do
+      response = if user, do: %{response | response_mode: "post"}, else: response
+
+      conn =
+        conn
+        |> init_test_session(%{})
+        |> assign(:current_user, user)
+        |> AuthorizeController.authorize_success(response)
 
       redirect_uri =
         redirected_to(conn) |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
