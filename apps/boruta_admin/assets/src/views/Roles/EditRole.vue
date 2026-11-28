@@ -16,11 +16,12 @@
                 </div>
               </div>
             </div>
+            <router-link :to="{ name: 'role-list' }" class="ui right floated button">Back</router-link>
           </div>
         </div>
         <div class="twelve wide column">
           <ResourceEditTabs :resource-id="role.id">
-            <RoleForm :role="role" @submit="updateRole()" @back="back()" action="Update" />
+            <RoleForm :role="role" @submit="updateRole()" action="Update" />
           </ResourceEditTabs>
         </div>
       </div>
@@ -58,9 +59,6 @@ export default {
     }
   },
   methods: {
-    back () {
-      this.$router.push({ name: 'role-list' })
-    },
     updateRole () {
       this.success = false
       return this.role.save().then(() => {

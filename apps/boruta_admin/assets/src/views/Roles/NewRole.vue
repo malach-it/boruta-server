@@ -1,7 +1,16 @@
 <template>
   <div class="new-role">
-    <div class="ui container">
-      <RoleForm :role="role" @submit="createRole()" @back="back()" action="Create" />
+    <div class="container">
+      <div class="ui stackable grid">
+        <div class="four wide column">
+          <div class="sidebar">
+            <router-link :to="{ name: 'role-list' }" class="ui right floated button">Back</router-link>
+          </div>
+        </div>
+        <div class="twelve wide column">
+          <RoleForm :role="role" @submit="createRole()" action="Create" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -21,9 +30,6 @@ export default {
     }
   },
   methods: {
-    back () {
-      this.$router.push({ name: 'role-list' })
-    },
     createRole () {
       return this.role.save().then(({ id }) => {
         this.$router.push({ name: 'edit-role', params: { roleId: id } })
@@ -32,21 +38,3 @@ export default {
   }
 }
 </script>
-
-<style scoped lang="scss">
-.new-role {
-  .field {
-    position: relative;
-    &.roles input {
-      margin-right: 3em;
-    }
-  }
-  .ui.icon.input>i.icon.close {
-    cursor: pointer;
-    pointer-events: all;
-  }
-  .authorized-scopes-select {
-    margin-right: 3em;
-  }
-}
-</style>
